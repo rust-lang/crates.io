@@ -89,8 +89,6 @@ type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'
 #[diesel(
     table_name = crates,
     check_for_backend(diesel::pg::Pg),
-    // This is actually just to skip updating them
-    primary_key(name, max_upload_size),
     treat_none_as_null = true,
 )]
 pub struct NewCrate<'a> {
@@ -110,7 +108,13 @@ impl<'a> NewCrate<'a> {
 
         update(crates::table)
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
-            .set(self)
+            .set((
+                crates::description.eq(self.description),
+                crates::homepage.eq(self.homepage),
+                crates::documentation.eq(self.documentation),
+                crates::readme.eq(self.readme),
+                crates::repository.eq(self.repository),
+            ))
             .returning(Crate::as_returning())
             .get_result(conn)
     }
