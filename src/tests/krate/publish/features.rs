@@ -147,6 +147,14 @@ fn too_many_features_with_custom_limit() {
         .feature("three", &[])
         .feature("four", &[]);
     token.publish_crate(publish_builder).good();
+
+    // see https://github.com/rust-lang/crates.io/issues/7632
+    let publish_builder = PublishBuilder::new("foo", "1.0.1")
+        .feature("one", &[])
+        .feature("two", &[])
+        .feature("three", &[])
+        .feature("four", &[]);
+    token.publish_crate(publish_builder).good();
 }
 
 #[test]
