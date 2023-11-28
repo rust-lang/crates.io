@@ -107,6 +107,9 @@
 }
 
 .num-link {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
     color: var(--fg-color);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
