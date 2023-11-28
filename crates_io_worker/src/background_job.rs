@@ -8,7 +8,7 @@ use serde::Serialize;
 use tracing::instrument;
 
 #[async_trait]
-pub trait BackgroundJob: Serialize + DeserializeOwned + 'static {
+pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Unique name of the task.
     ///
     /// This MUST be unique for the whole application.

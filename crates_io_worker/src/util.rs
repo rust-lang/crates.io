@@ -1,15 +1,26 @@
 use anyhow::anyhow;
+use sentry_core::Hub;
 use std::any::Any;
+use std::future::Future;
 use std::panic::PanicInfo;
 
-pub fn with_sentry_transaction<F, R, E>(transaction_name: &str, callback: F) -> Result<R, E>
+pub async fn with_sentry_transaction<F, R, E, Fut>(
+    transaction_name: &str,
+    callback: F,
+) -> Result<R, E>
 where
-    F: FnOnce() -> Result<R, E>,
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<R, E>>,
 {
+    let hub = Hub::current();
+    let _scope_guard = hub.push_scope();
+
     let tx_ctx = sentry_core::TransactionContext::new(transaction_name, "swirl.perform");
     let tx = sentry_core::start_transaction(tx_ctx);
 
-    let result = sentry_core::with_scope(|scope| scope.set_span(Some(tx.clone().into())), callback);
+    hub.configure_scope(|scope| scope.set_span(Some(tx.clone().into())));
+
+    let result = callback().await;
 
     tx.set_status(match result.is_ok() {
         true => sentry_core::protocol::SpanStatus::Ok,

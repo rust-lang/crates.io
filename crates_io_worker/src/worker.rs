@@ -4,8 +4,11 @@ use crate::storage;
 use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
 use anyhow::anyhow;
 use diesel::prelude::*;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use futures_util::FutureExt;
+use sentry_core::{Hub, SentryFutureExt};
+use std::panic::AssertUnwindSafe;
 use std::time::Duration;
+use tokio::runtime::Handle;
 use tracing::{debug, error, info_span, warn};
 
 pub struct Worker<Context> {
@@ -64,19 +67,21 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
 
             let context = self.context.clone();
 
-            let result = with_sentry_transaction(&job.job_type, || {
-                catch_unwind(AssertUnwindSafe(|| {
-                    let run_task_fn = self
-                        .job_registry
-                        .get(&job.job_type)
-                        .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
+            let future = with_sentry_transaction(&job.job_type, || async {
+                let run_task_fn = self
+                    .job_registry
+                    .get(&job.job_type)
+                    .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;
 
-                    run_task_fn(context, job.data)
-                }))
-                .map_err(|e| try_to_extract_panic_info(&e))
-                // TODO: Replace with flatten() once that stabilizes
-                .and_then(std::convert::identity)
+                AssertUnwindSafe(run_task_fn(context, job.data))
+                    .catch_unwind()
+                    .await
+                    .map_err(|e| try_to_extract_panic_info(&e))
+                    // TODO: Replace with flatten() once that stabilizes
+                    .and_then(std::convert::identity)
             });
+
+            let result = Handle::current().block_on(future.bind_hub(Hub::current()));
 
             match result {
                 Ok(_) => {
