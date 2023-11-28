@@ -77,8 +77,8 @@ devDependencies:
     specifier: 3.1.0
     version: 3.1.0
   '@embroider/compat':
-    specifier: 3.3.1
-    version: 3.3.1(@embroider/core@3.4.2)
+    specifier: 3.4.0
+    version: 3.4.0(@embroider/core@3.4.2)
   '@embroider/core':
     specifier: 3.4.2
     version: 3.4.2
@@ -129,7 +129,7 @@ devDependencies:
     version: 1.0.0
   ember-cli-code-coverage:
     specifier: 2.0.3
-    version: 2.0.3(@embroider/compat@3.3.1)(@embroider/core@3.4.2)
+    version: 2.0.3(@embroider/compat@3.4.0)(@embroider/core@3.4.2)
   ember-cli-dependency-checker:
     specifier: 3.3.2
     version: 3.3.2(ember-cli@5.4.1)
@@ -2160,12 +2160,12 @@ packages:
       - webpack
     dev: true
 
-  /@embroider/compat@3.3.1(@embroider/core@3.4.2):
-    resolution: {integrity: sha512-0jG2GzJqfqEvsNQ8MiU6B4INYQ5UN3YDzIYgXBuT7QEVxtoEAV3yCQNtJgi/BnIjFu+i3WYqSDjByfToDlgphg==}
+  /@embroider/compat@3.4.0(@embroider/core@3.4.2):
+    resolution: {integrity: sha512-XXWgVZkm/XbiVpfV4lI6T+VZwkPm1V9lMd/nFnVNlrvUct/s8jz7EO4hHiWoIfTmC745gki5qx9KLhjXbABfCA==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
-      '@embroider/core': ^3.4.1
+      '@embroider/core': ^3.4.2
     dependencies:
       '@babel/code-frame': 7.23.4
       '@babel/core': 7.23.3(supports-color@8.1.1)
@@ -7714,7 +7714,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-code-coverage@2.0.3(@embroider/compat@3.3.1)(@embroider/core@3.4.2):
+  /ember-cli-code-coverage@2.0.3(@embroider/compat@3.4.0)(@embroider/core@3.4.2):
     resolution: {integrity: sha512-xBItw4kPffuy4QVCniBSwvyzFJiwU/+tqTyoyshug9LtiRDOaOepPVuQ8Ig+e5sYmxp3OXXcaR9iK5IY2J62Zg==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
@@ -7726,7 +7726,7 @@ packages:
       '@embroider/core':
         optional: true
     dependencies:
-      '@embroider/compat': 3.3.1(@embroider/core@3.4.2)
+      '@embroider/compat': 3.4.0(@embroider/core@3.4.2)
       '@embroider/core': 3.4.2
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.2
