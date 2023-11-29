@@ -272,7 +272,6 @@ impl TestAppBuilder {
                 (*app.primary_database).clone(),
                 Arc::new(environment),
             )
-            .num_workers(1)
             .shutdown_when_queue_empty()
             .register_crates_io_job_types();
 
