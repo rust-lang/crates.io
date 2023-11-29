@@ -29,6 +29,7 @@ impl SyncToGitIndex {
 impl BackgroundJob for SyncToGitIndex {
     const JOB_NAME: &'static str = "sync_to_git_index";
     const PRIORITY: i16 = 100;
+    const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;
 
@@ -165,6 +166,7 @@ pub struct SquashIndex;
 #[async_trait]
 impl BackgroundJob for SquashIndex {
     const JOB_NAME: &'static str = "squash_index";
+    const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;
 
@@ -223,6 +225,7 @@ impl NormalizeIndex {
 #[async_trait]
 impl BackgroundJob for NormalizeIndex {
     const JOB_NAME: &'static str = "normalize_index";
+    const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;
 
