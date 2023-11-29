@@ -1,3 +1,4 @@
+use crate::background_job::DEFAULT_QUEUE;
 use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
@@ -5,6 +6,7 @@ use anyhow::anyhow;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
+use std::collections::HashMap;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
@@ -19,7 +21,7 @@ pub type PooledConn = PooledConnection<ConnectionManager<PgConnection>>;
 pub struct Runner<Context> {
     rt_handle: Handle,
     connection_pool: ConnectionPool,
-    queue: Queue<Context>,
+    queues: HashMap<String, Queue<Context>>,
     context: Context,
     shutdown_when_queue_empty: bool,
 }
@@ -29,23 +31,34 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
         Self {
             rt_handle: rt_handle.clone(),
             connection_pool,
-            queue: Queue::default(),
+            queues: HashMap::new(),
             context,
             shutdown_when_queue_empty: false,
         }
     }
 
-    pub fn configure_queue<F>(mut self, f: F) -> Self
-    where
-        F: FnOnce(&mut Queue<Context>) -> &Queue<Context>,
-    {
-        f(&mut self.queue);
+    /// Register a new job type for this job runner.
+    pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
+        let queue = self.queues.entry(J::QUEUE.into()).or_default();
+        queue.job_registry.register::<J>();
         self
     }
 
-    /// Register a new job type for this job runner.
-    pub fn register_job_type<J: BackgroundJob<Context = Context>>(mut self) -> Self {
-        self.queue.job_registry.register::<J>();
+    /// Adjust the configuration of the [DEFAULT_QUEUE] queue.
+    pub fn configure_default_queue<F>(self, f: F) -> Self
+    where
+        F: FnOnce(&mut Queue<Context>) -> &Queue<Context>,
+    {
+        self.configure_queue(DEFAULT_QUEUE, f)
+    }
+
+    /// Adjust the configuration of a queue. If the queue does not exist,
+    /// it will be created.
+    pub fn configure_queue<F>(mut self, name: &str, f: F) -> Self
+    where
+        F: FnOnce(&mut Queue<Context>) -> &Queue<Context>,
+    {
+        f(self.queues.entry(name.into()).or_default());
         self
     }
 
@@ -59,11 +72,10 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
     ///
     /// This returns a `RunningRunner` which can be used to wait for the workers to shutdown.
     pub fn start(&self) -> RunHandle {
-        let queue = &self.queue;
-
-        let handles = (0..queue.num_workers)
-            .map(|i| {
-                let name = format!("background-worker-{i}");
+        let mut handles = Vec::new();
+        for (queue_name, queue) in &self.queues {
+            for i in 1..=queue.num_workers {
+                let name = format!("background-worker-{queue_name}-{i}");
                 info!(worker.name = %name, "Starting worker…");
 
                 let worker = Worker {
@@ -74,11 +86,13 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                     poll_interval: queue.poll_interval,
                 };
 
-                self.rt_handle.spawn_blocking(move || {
+                let handle = self.rt_handle.spawn_blocking(move || {
                     info_span!("worker", worker.name = %name).in_scope(|| worker.run())
-                })
-            })
-            .collect();
+                });
+
+                handles.push(handle);
+            }
+        }
 
         RunHandle { handles }
     }

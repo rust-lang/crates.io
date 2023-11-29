@@ -7,6 +7,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tracing::instrument;
 
+pub const DEFAULT_QUEUE: &str = "default";
+
 #[async_trait]
 pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Unique name of the task.
@@ -18,6 +20,9 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     ///
     /// [Self::enqueue_with_priority] can be used to override the priority value.
     const PRIORITY: i16 = 0;
+
+    /// Job queue where this job will be executed.
+    const QUEUE: &'static str = DEFAULT_QUEUE;
 
     /// The application data provided to this job at runtime.
     type Context: Clone + Send + 'static;
