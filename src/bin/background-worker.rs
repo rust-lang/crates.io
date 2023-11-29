@@ -104,7 +104,7 @@ fn main() -> anyhow::Result<()> {
     });
 
     let runner = Runner::new(runtime.handle(), connection_pool, environment.clone())
-        .num_workers(5)
+        .configure_queue(|queue| queue.num_workers(5))
         .register_crates_io_job_types()
         .start();
 
