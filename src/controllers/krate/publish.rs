@@ -52,7 +52,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| cargo_err(format_args!("invalid upload request: {e}")))?;
 
-    Crate::validate_crate_name(&metadata.name).map_err(cargo_err)?;
+    Crate::validate_crate_name("crate", &metadata.name).map_err(cargo_err)?;
 
     let version = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
@@ -586,7 +586,7 @@ fn convert_dependency(
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
-    Crate::validate_crate_name(&dep.name).map_err(cargo_err)?;
+    Crate::validate_crate_name("dependency", &dep.name).map_err(cargo_err)?;
 
     for feature in &dep.features {
         Crate::validate_feature(feature).map_err(cargo_err)?;

@@ -192,11 +192,18 @@ impl Crate {
             })
     }
 
-    pub fn validate_crate_name(name: &str) -> Result<(), InvalidCrateName> {
+    // Validates the name is a valid crate name.
+    // This is also used for validating the name of dependencies.
+    // So the `for_what` parameter is used to indicate what the name is used for.
+    // It can be "crate" or "dependency".
+    pub fn validate_crate_name(for_what: &str, name: &str) -> Result<(), InvalidCrateName> {
         if name.chars().count() > MAX_NAME_LENGTH {
-            return Err(InvalidCrateName::TooLong(name.into()));
+            return Err(InvalidCrateName::TooLong {
+                what: for_what.into(),
+                name: name.into(),
+            });
         }
-        Crate::validate_create_ident(name)
+        Crate::validate_create_ident(for_what, name)
     }
 
     // Checks that the name is a valid crate name.
@@ -204,23 +211,36 @@ impl Crate {
     // 2. The first character must be an ASCII character.
     // 3. The remaining characters must be ASCII alphanumerics or `-` or `_`.
     // Note: This differs from `valid_dependency_name`, which allows `_` as the first character.
-    fn validate_create_ident(name: &str) -> Result<(), InvalidCrateName> {
+    fn validate_create_ident(for_what: &str, name: &str) -> Result<(), InvalidCrateName> {
         if name.is_empty() {
-            return Err(InvalidCrateName::Empty);
+            return Err(InvalidCrateName::Empty {
+                what: for_what.into(),
+            });
         }
         let mut chars = name.chars();
         if let Some(ch) = chars.next() {
             if ch.is_ascii_digit() {
-                return Err(InvalidCrateName::StartWithDigit(name.into()));
+                return Err(InvalidCrateName::StartWithDigit {
+                    what: for_what.into(),
+                    name: name.into(),
+                });
             }
             if !ch.is_ascii_alphabetic() {
-                return Err(InvalidCrateName::Start(ch, name.into()));
+                return Err(InvalidCrateName::Start {
+                    first_char: ch,
+                    what: for_what.into(),
+                    name: name.into(),
+                });
             }
         }
 
         for ch in chars {
             if !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_') {
-                return Err(InvalidCrateName::Char(ch, name.into()));
+                return Err(InvalidCrateName::Char {
+                    ch,
+                    what: for_what.into(),
+                    name: name.into(),
+                });
             }
         }
 
@@ -559,25 +579,33 @@ pub enum InvalidFeature {
 
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum InvalidCrateName {
-    #[error("the crate name `{0}` is too long (max {MAX_NAME_LENGTH} characters)")]
-    TooLong(String),
-    #[error("crate name cannot be empty")]
-    Empty,
+    #[error("the {what} name `{name}` is too long (max {MAX_NAME_LENGTH} characters)")]
+    TooLong { what: String, name: String },
+    #[error("{what} name cannot be empty")]
+    Empty { what: String },
     #[error(
-        "the name `{0}` cannot be used as a crate name, \
+        "the name `{name}` cannot be used as a {what} name, \
         the name cannot start with a digit"
     )]
-    StartWithDigit(String),
+    StartWithDigit { what: String, name: String },
     #[error(
-        "invalid character `{0}` in crate name: `{1}`, \
+        "invalid character `{first_char}` in {what} name: `{name}`, \
         the first character must be an ASCII character"
     )]
-    Start(char, String),
+    Start {
+        first_char: char,
+        what: String,
+        name: String,
+    },
     #[error(
-        "invalid character `{0}` in crate name: `{1}`, \
+        "invalid character `{ch}` in {what} name: `{name}`, \
         characters must be an ASCII alphanumeric characters, `-`, or `_`"
     )]
-    Char(char, String),
+    Char {
+        ch: char,
+        what: String,
+        name: String,
+    },
 }
 
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
@@ -611,38 +639,68 @@ mod tests {
     fn validate_crate_name() {
         use super::{InvalidCrateName, MAX_NAME_LENGTH};
 
-        assert_ok!(Crate::validate_crate_name("foo"));
+        assert_ok!(Crate::validate_crate_name("crate", "foo"));
         assert_err_eq!(
-            Crate::validate_crate_name("京"),
-            InvalidCrateName::Start('京', "京".into())
-        );
-        assert_err_eq!(Crate::validate_crate_name(""), InvalidCrateName::Empty);
-        assert_err_eq!(
-            Crate::validate_crate_name("💝"),
-            InvalidCrateName::Start('💝', "💝".into())
-        );
-        assert_ok!(Crate::validate_crate_name("foo_underscore"));
-        assert_ok!(Crate::validate_crate_name("foo-dash"));
-        assert_err_eq!(
-            Crate::validate_crate_name("foo+plus"),
-            InvalidCrateName::Char('+', "foo+plus".into())
-        );
-        // Crate names cannot start with an underscore on crates.io.
-        assert_err_eq!(
-            Crate::validate_crate_name("_foo"),
-            InvalidCrateName::Start('_', "_foo".into())
+            Crate::validate_crate_name("crate", "京"),
+            InvalidCrateName::Start {
+                first_char: '京',
+                what: "crate".into(),
+                name: "京".into()
+            }
         );
         assert_err_eq!(
-            Crate::validate_crate_name("-foo"),
-            InvalidCrateName::Start('-', "-foo".into())
+            Crate::validate_crate_name("crate", ""),
+            InvalidCrateName::Empty {
+                what: "crate".into()
+            }
         );
         assert_err_eq!(
-            Crate::validate_crate_name("123"),
-            InvalidCrateName::StartWithDigit("123".into())
+            Crate::validate_crate_name("crate", "💝"),
+            InvalidCrateName::Start {
+                first_char: '💝',
+                what: "crate".into(),
+                name: "💝".into()
+            }
+        );
+        assert_ok!(Crate::validate_crate_name("crate", "foo_underscore"));
+        assert_ok!(Crate::validate_crate_name("crate", "foo-dash"));
+        assert_err_eq!(
+            Crate::validate_crate_name("crate", "foo+plus"),
+            InvalidCrateName::Char {
+                ch: '+',
+                what: "crate".into(),
+                name: "foo+plus".into()
+            }
         );
         assert_err_eq!(
-            Crate::validate_crate_name("o".repeat(MAX_NAME_LENGTH + 1).as_str()),
-            InvalidCrateName::TooLong("o".repeat(MAX_NAME_LENGTH + 1).as_str().into())
+            Crate::validate_crate_name("crate", "_foo"),
+            InvalidCrateName::Start {
+                first_char: '_',
+                what: "crate".into(),
+                name: "_foo".into()
+            }
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("crate", "-foo"),
+            InvalidCrateName::Start {
+                first_char: '-',
+                what: "crate".into(),
+                name: "-foo".into()
+            }
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("crate", "123"),
+            InvalidCrateName::StartWithDigit {
+                what: "crate".into(),
+                name: "123".into()
+            }
+        );
+        assert_err_eq!(
+            Crate::validate_crate_name("crate", "o".repeat(MAX_NAME_LENGTH + 1).as_str()),
+            InvalidCrateName::TooLong {
+                what: "crate".into(),
+                name: "o".repeat(MAX_NAME_LENGTH + 1).as_str().into()
+            }
         );
     }
 
