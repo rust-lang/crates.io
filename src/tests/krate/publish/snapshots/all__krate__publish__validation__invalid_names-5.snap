@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "\"áccênts\" is an invalid crate name (crate names must start with a letter, contain only letters, numbers, hyphens, or underscores and have at most 64 characters)"
+      "detail": "invalid character `á` in crate name: `áccênts`, the first character must be an ASCII character"
     }
   ]
 }

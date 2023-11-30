@@ -5,7 +5,7 @@ expression: response.into_json()
 {
   "errors": [
     {
-      "detail": "\"🦀\" is an invalid dependency name (dependency names must start with a letter, contain only letters, numbers, hyphens, or underscores and have at most 64 characters)"
+      "detail": "invalid character `🦀` in dependency name: `🦀`, the first character must be an ASCII character"
     }
   ]
 }
