@@ -221,6 +221,6 @@ fn runner<Context: Clone + Send + 'static>(
         .build_unchecked(ConnectionManager::new(database_url));
 
     Runner::new(&Handle::current(), connection_pool, context)
-        .num_workers(2)
+        .configure_default_queue(|queue| queue.num_workers(2))
         .shutdown_when_queue_empty()
 }

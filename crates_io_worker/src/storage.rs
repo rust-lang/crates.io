@@ -25,9 +25,13 @@ fn retriable() -> Box<dyn BoxableExpression<background_jobs::table, Pg, SqlType 
 
 /// Finds the next job that is unlocked, and ready to be retried. If a row is
 /// found, it will be locked.
-pub(super) fn find_next_unlocked_job(conn: &mut PgConnection) -> QueryResult<BackgroundJob> {
+pub(super) fn find_next_unlocked_job(
+    conn: &mut PgConnection,
+    job_types: &[String],
+) -> QueryResult<BackgroundJob> {
     background_jobs::table
         .select(BackgroundJob::as_select())
+        .filter(background_jobs::job_type.eq_any(job_types))
         .filter(retriable())
         .order((background_jobs::priority.desc(), background_jobs::id))
         .for_update()

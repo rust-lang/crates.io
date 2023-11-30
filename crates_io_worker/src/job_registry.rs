@@ -29,6 +29,11 @@ impl<Context: Clone + Send + 'static> JobRegistry<Context> {
     pub fn get(&self, key: &str) -> Option<&Arc<RunTaskFn<Context>>> {
         self.entries.get(key)
     }
+
+    /// Returns a list of all registered job types.
+    pub fn job_types(&self) -> Vec<String> {
+        self.entries.keys().cloned().collect()
+    }
 }
 
 fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> RunTaskFnReturn {
@@ -36,4 +41,31 @@ fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> Ru
         let job: J = serde_json::from_value(payload)?;
         job.run(ctx).await
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::BackgroundJob;
+    use async_trait::async_trait;
+    use serde::{Deserialize, Serialize};
+
+    #[test]
+    fn test_job_types() {
+        #[derive(Serialize, Deserialize)]
+        struct TestJob;
+
+        #[async_trait]
+        impl BackgroundJob for TestJob {
+            const JOB_NAME: &'static str = "test";
+            type Context = ();
+            async fn run(&self, _: Self::Context) -> anyhow::Result<()> {
+                Ok(())
+            }
+        }
+
+        let mut registry = JobRegistry::default();
+        registry.register::<TestJob>();
+        assert_eq!(registry.job_types(), vec!["test"]);
+    }
 }

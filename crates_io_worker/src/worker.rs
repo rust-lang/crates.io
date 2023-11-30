@@ -51,11 +51,13 @@ impl<Context: Clone + Send + 'static> Worker<Context> {
     /// - `Ok(None)` if no jobs were waiting
     /// - `Err(...)` if there was an error retrieving the job
     fn run_next_job(&self) -> anyhow::Result<Option<i64>> {
+        let job_types = &self.job_registry.job_types();
+
         let conn = &mut *self.connection_pool.get()?;
 
         conn.transaction(|conn| {
             debug!("Looking for next background worker job…");
-            let Some(job) = storage::find_next_unlocked_job(conn).optional()? else {
+            let Some(job) = storage::find_next_unlocked_job(conn, job_types).optional()? else {
                 return Ok(None);
             };
 
