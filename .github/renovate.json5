@@ -52,7 +52,7 @@
             commitMessageSuffix: "(Rust)",
         },
         {
-            matchManagers: ["regex"],
+            matchManagers: ["custom.regex"],
             matchPackageNames: ["rust"],
             commitMessageTopic: "Rust",
             labels: ["A-backend ⚙️"],
@@ -62,8 +62,8 @@
             groupName: "diesel packages",
         },
         {
-            "matchUpdateTypes": ["digest"],
-            "enabled": false,
+            matchUpdateTypes: ["digest"],
+            enabled: false,
         },
     ],
 }
