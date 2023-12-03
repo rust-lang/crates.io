@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
-use tracing::{info, info_span, warn};
+use tracing::{info, info_span, warn, Instrument};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -87,9 +87,10 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
                     poll_interval: queue.poll_interval,
                 };
 
-                let handle = self.rt_handle.spawn_blocking(move || {
-                    info_span!("worker", worker.name = %name).in_scope(|| worker.run())
-                });
+                let span = info_span!("worker", worker.name = %name);
+                let handle = self
+                    .rt_handle
+                    .spawn(async move { worker.run().instrument(span).await });
 
                 handles.push(handle);
             }

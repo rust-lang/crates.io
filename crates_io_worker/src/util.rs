@@ -28,7 +28,7 @@ where
     F: FnOnce() -> Fut,
     Fut: Future<Output = Result<R, E>>,
 {
-    let hub = Hub::current();
+    let hub = Hub::new_from_top(Hub::current());
     let _scope_guard = hub.push_scope();
 
     let tx_ctx = sentry_core::TransactionContext::new(transaction_name, "swirl.perform");
