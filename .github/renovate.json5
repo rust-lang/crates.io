@@ -34,8 +34,6 @@
             extends: ["schedule:weekly"],
         },
         {
-            // Avoid "Artifact update problem" for pnpm updates when the renovatebot
-            // setup does not support the new version yet.
             matchPackageNames: ["pnpm"],
             minimumReleaseAge: "24 hours",
         },
@@ -52,7 +50,7 @@
             commitMessageSuffix: "(Rust)",
         },
         {
-            matchManagers: ["regex"],
+            matchManagers: ["custom.regex"],
             matchPackageNames: ["rust"],
             commitMessageTopic: "Rust",
             labels: ["A-backend ⚙️"],
@@ -62,8 +60,8 @@
             groupName: "diesel packages",
         },
         {
-            "matchUpdateTypes": ["digest"],
-            "enabled": false,
+            matchUpdateTypes: ["digest"],
+            enabled: false,
         },
     ],
 }
