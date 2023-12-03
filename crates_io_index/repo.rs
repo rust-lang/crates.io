@@ -1,7 +1,7 @@
 use crate::credentials::Credentials;
 use anyhow::{anyhow, Context};
 use base64::{engine::general_purpose, Engine};
-use crates_io_env_vars::var;
+use crates_io_env_vars::{required_var, required_var_parsed, var};
 use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -15,54 +15,46 @@ pub struct RepositoryConfig {
 
 impl RepositoryConfig {
     pub fn from_environment() -> anyhow::Result<Self> {
+        let repo_url: Url = required_var_parsed("GIT_REPO_URL")?;
+        let is_ssh = repo_url.scheme() == "ssh";
+
         let username = var("GIT_HTTP_USER")?;
         let password = var("GIT_HTTP_PWD")?.map(SecretString::from);
-        let http_url = var("GIT_REPO_URL")?;
 
-        let ssh_key = var("GIT_SSH_KEY")?.map(SecretString::from);
-        let ssh_url = var("GIT_SSH_REPO_URL")?;
+        match (is_ssh, username, password) {
+            (true, username, password) => {
+                let ssh_key = SecretString::from(required_var("GIT_SSH_KEY")?);
 
-        match (username, password, http_url, ssh_key, ssh_url) {
-            (extra_user, extra_pass, extra_http_url, Some(encoded_key), Some(ssh_url)) => {
-                if let (Some(_), Some(_), Some(_)) = (extra_user, extra_pass, extra_http_url) {
+                if username.is_some() || password.is_some() {
                     warn!("both http and ssh credentials to authenticate with git are set");
                     info!("note: ssh credentials will take precedence over the http ones");
                 }
 
-                let index_location =
-                    Url::parse(&ssh_url).expect("failed to parse GIT_SSH_REPO_URL");
-
                 let key = general_purpose::STANDARD
-                    .decode(encoded_key.expose_secret())
+                    .decode(ssh_key.expose_secret())
                     .expect("failed to base64 decode the ssh key");
                 let key =
                     String::from_utf8(key).expect("failed to convert the ssh key to a string");
                 let credentials = Credentials::Ssh { key: key.into() };
 
                 Ok(Self {
-                    index_location,
+                    index_location: repo_url,
                     credentials,
                 })
             }
-            (Some(username), Some(password), Some(http_url), None, None) => {
-                let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
+            (false, Some(username), Some(password)) => {
                 let credentials = Credentials::Http { username, password };
 
                 Ok(Self {
-                    index_location,
+                    index_location: repo_url,
                     credentials,
                 })
             }
-            (_, _, Some(http_url), _, _) => {
-                let index_location = Url::parse(&http_url).expect("failed to parse GIT_REPO_URL");
-                let credentials = Credentials::Missing;
 
-                Ok(Self {
-                    index_location,
-                    credentials,
-                })
-            }
-            _ => Err(anyhow!("must have `GIT_REPO_URL` defined")),
+            (false, _, _) => Ok(Self {
+                index_location: repo_url,
+                credentials: Credentials::Missing,
+            }),
         }
     }
 }
