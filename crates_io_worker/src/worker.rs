@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use futures_util::FutureExt;
 use sentry_core::{Hub, SentryFutureExt};
 use std::panic::AssertUnwindSafe;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tracing::{debug, error, info_span, warn};
@@ -14,7 +15,7 @@ use tracing::{debug, error, info_span, warn};
 pub struct Worker<Context> {
     pub(crate) connection_pool: ConnectionPool,
     pub(crate) context: Context,
-    pub(crate) job_registry: JobRegistry<Context>,
+    pub(crate) job_registry: Arc<JobRegistry<Context>>,
     pub(crate) shutdown_when_queue_empty: bool,
     pub(crate) poll_interval: Duration,
 }

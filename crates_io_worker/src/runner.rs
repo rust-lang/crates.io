@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
@@ -81,7 +82,7 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                 let worker = Worker {
                     connection_pool: self.connection_pool.clone(),
                     context: self.context.clone(),
-                    job_registry: queue.job_registry.clone(),
+                    job_registry: Arc::new(queue.job_registry.clone()),
                     shutdown_when_queue_empty: self.shutdown_when_queue_empty,
                     poll_interval: queue.poll_interval,
                 };
