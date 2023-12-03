@@ -20,7 +20,7 @@ pub struct Worker<Context> {
     pub(crate) poll_interval: Duration,
 }
 
-impl<Context: Clone + Send + 'static> Worker<Context> {
+impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
     /// Run background jobs forever, or until the queue is empty if `shutdown_when_queue_empty` is set.
     pub fn run(&self) {
         loop {

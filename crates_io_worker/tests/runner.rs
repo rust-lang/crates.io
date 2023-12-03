@@ -211,7 +211,7 @@ async fn panicking_in_jobs_updates_retry_counter() {
     assert_eq!(tries, 1);
 }
 
-fn runner<Context: Clone + Send + 'static>(
+fn runner<Context: Clone + Send + Sync + 'static>(
     database_url: &str,
     context: Context,
 ) -> Runner<Context> {

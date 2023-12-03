@@ -27,7 +27,7 @@ pub struct Runner<Context> {
     shutdown_when_queue_empty: bool,
 }
 
-impl<Context: Clone + Send + 'static> Runner<Context> {
+impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     pub fn new(rt_handle: &Handle, connection_pool: ConnectionPool, context: Context) -> Self {
         Self {
             rt_handle: rt_handle.clone(),
