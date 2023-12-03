@@ -4,6 +4,7 @@ use crate::worker::Environment;
 use anyhow::Context;
 use async_trait::async_trait;
 use chrono::Utc;
+use crates_io_env_vars::var_parsed;
 use crates_io_index::{Crate, Repository};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -12,6 +13,7 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::process::Command;
 use std::sync::Arc;
+use url::Url;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
@@ -202,6 +204,14 @@ impl BackgroundJob for SquashIndex {
                 // The previous value of HEAD is pushed to a snapshot branch
                 &format!("{original_head}:refs/heads/snapshot-{now}"),
             ]))?;
+
+            if let Some(archive_url) = var_parsed::<Url>("GIT_ARCHIVE_REPO_URL")? {
+                repo.run_command(Command::new("git").args([
+                    "push",
+                    archive_url.as_str(),
+                    &format!("{original_head}:snapshot-{now}"),
+                ]))?;
+            }
 
             info!("The index has been successfully squashed.");
 
