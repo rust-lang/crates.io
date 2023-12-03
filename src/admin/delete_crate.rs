@@ -1,8 +1,11 @@
+use crate::schema::{crate_owners, teams, users};
 use crate::storage::Storage;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
+use diesel::dsl::sql;
 use diesel::prelude::*;
+use diesel::sql_types::Text;
 use std::collections::HashMap;
 
 #[derive(clap::Parser, Debug)]
@@ -29,19 +32,38 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
     let mut crate_names = opts.crate_names;
     crate_names.sort();
 
-    let existing_crates = crates::table
-        .select((crates::name, crates::id))
+    let query_result = crates::table
+        .select((
+            crates::name,
+            crates::id,
+            sql::<Text>(
+                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+            ),
+        ))
+        .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
+        .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
+        .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
         .filter(crates::name.eq_any(&crate_names))
-        .load(conn)
+        .load::<(String, i32, String)>(conn)
         .context("Failed to look up crate name from the database")?;
 
-    let existing_crates: HashMap<String, i32> = existing_crates.into_iter().collect();
+    let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
+    for (name, id, login) in query_result {
+        let entry = existing_crates
+            .entry(name)
+            .or_insert_with(|| (id, Vec::new()));
+
+        entry.1.push(login);
+    }
 
     println!("Deleting the following crates:");
     println!();
     for name in &crate_names {
         match existing_crates.get(name) {
-            Some(id) => println!(" - {name} (id={id})"),
+            Some((id, owners)) => {
+                let owners = owners.join(", ");
+                println!(" - {name} (id={id}, owners={owners})");
+            }
             None => println!(" - {name} (⚠️ crate not found)"),
         }
     }
@@ -57,7 +79,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         .context("Failed to initialize tokio runtime")?;
 
     for name in &crate_names {
-        if let Some(id) = existing_crates.get(name) {
+        if let Some((id, _)) = existing_crates.get(name) {
             info!(%name, "Deleting crate from the database");
             if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
                 warn!(%name, %id, ?error, "Failed to delete crate from the database");
