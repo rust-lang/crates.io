@@ -1,5 +1,4 @@
 use crate::builders::CrateBuilder;
-use crate::util::matchers::is_redirection;
 use crate::util::ChaosProxy;
 use anyhow::{Context, Error};
 use crates_io::models::{NewUser, User};
@@ -7,6 +6,7 @@ use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
 use googletest::prelude::*;
 use reqwest::blocking::{Client, Response};
+use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 use std::process::{Child, Command, Stdio};
@@ -28,7 +28,7 @@ fn normal_startup() {
     let resp = running_server
         .get("api/v1/crates/FOO/1.0.0/download")
         .unwrap();
-    assert_that!(resp.status(), is_redirection());
+    assert_eq!(resp.status(), StatusCode::FOUND);
 
     let location = assert_some!(resp.headers().get("location"));
     let location = assert_ok!(location.to_str());
@@ -52,7 +52,7 @@ fn startup_without_database() {
     let resp = running_server
         .get("api/v1/crates/FOO/1.0.0/download")
         .unwrap();
-    assert_that!(resp.status(), is_redirection());
+    assert_eq!(resp.status(), StatusCode::FOUND);
 
     let location = assert_some!(resp.headers().get("location"));
     let location = assert_ok!(location.to_str());
