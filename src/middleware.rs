@@ -40,9 +40,6 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
     }
 
     let middleware = tower::ServiceBuilder::new()
-        .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
-        .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
-        .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(sentry_tower::NewSentryLayer::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(self::real_ip::middleware))
@@ -88,7 +85,11 @@ pub fn apply_axum_middleware(state: AppState, router: Router<(), TimeoutBody<Bod
             from_fn_with_state(state, balance_capacity::balance_capacity)
         }));
 
-    router.layer(middleware)
+    router
+        .layer(middleware)
+        .layer(TimeoutLayer::new(Duration::from_secs(30)))
+        .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
+        .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
 }
 
 pub fn conditional_layer<L, F: FnOnce() -> L>(condition: bool, layer: F) -> Either<L, Identity> {
