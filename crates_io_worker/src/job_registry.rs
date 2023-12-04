@@ -20,7 +20,7 @@ impl<Context> Default for JobRegistry<Context> {
     }
 }
 
-impl<Context: Clone + Send + 'static> JobRegistry<Context> {
+impl<Context: Clone + Send + Sync + 'static> JobRegistry<Context> {
     pub fn register<J: BackgroundJob<Context = Context>>(&mut self) {
         self.entries
             .insert(J::JOB_NAME.to_string(), Arc::new(runnable::<J>));

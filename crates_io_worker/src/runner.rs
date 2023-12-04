@@ -7,10 +7,11 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
 use futures_util::future::join_all;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
-use tracing::{info, info_span, warn};
+use tracing::{info, info_span, warn, Instrument};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -26,7 +27,7 @@ pub struct Runner<Context> {
     shutdown_when_queue_empty: bool,
 }
 
-impl<Context: Clone + Send + 'static> Runner<Context> {
+impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     pub fn new(rt_handle: &Handle, connection_pool: ConnectionPool, context: Context) -> Self {
         Self {
             rt_handle: rt_handle.clone(),
@@ -81,14 +82,15 @@ impl<Context: Clone + Send + 'static> Runner<Context> {
                 let worker = Worker {
                     connection_pool: self.connection_pool.clone(),
                     context: self.context.clone(),
-                    job_registry: queue.job_registry.clone(),
+                    job_registry: Arc::new(queue.job_registry.clone()),
                     shutdown_when_queue_empty: self.shutdown_when_queue_empty,
                     poll_interval: queue.poll_interval,
                 };
 
-                let handle = self.rt_handle.spawn_blocking(move || {
-                    info_span!("worker", worker.name = %name).in_scope(|| worker.run())
-                });
+                let span = info_span!("worker", worker.name = %name);
+                let handle = self
+                    .rt_handle
+                    .spawn(async move { worker.run().instrument(span).await });
 
                 handles.push(handle);
             }
