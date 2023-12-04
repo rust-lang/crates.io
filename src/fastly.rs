@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use http::HeaderValue;
+use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use secrecy::{ExposeSecret, SecretString};
 
@@ -62,7 +62,7 @@ impl Fastly {
         let mut api_token = HeaderValue::try_from(api_token)?;
         api_token.set_sensitive(true);
 
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HeaderMap::new();
         headers.append("Fastly-Key", api_token);
 
         debug!("sending invalidation request to Fastly");
