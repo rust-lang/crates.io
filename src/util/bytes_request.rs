@@ -83,57 +83,35 @@ fn server_error_response<E: Error + ?Sized>(error: &E) -> Response {
 mod tests {
     use super::BytesRequest;
     use axum::extract::DefaultBodyLimit;
+    use axum::routing::get;
     use axum::Router;
-    use http::StatusCode;
-    use tokio::sync::oneshot;
-    use tokio::task::JoinHandle;
-
-    async fn bytes_request(_req: BytesRequest) {}
-
-    async fn spawn_http_server() -> (
-        String,
-        JoinHandle<Result<(), hyper::Error>>,
-        oneshot::Sender<()>,
-    ) {
-        let (quit_tx, quit_rx) = oneshot::channel::<()>();
-        let addr = ([127, 0, 0, 1], 0).into();
-
-        let router = Router::new()
-            .fallback(bytes_request)
-            .layer(DefaultBodyLimit::max(4096));
-        let make_service = router.into_make_service();
-        let server = hyper::Server::bind(&addr).serve(make_service);
-
-        let url = format!("http://{}", server.local_addr());
-        let server = server.with_graceful_shutdown(async {
-            quit_rx.await.ok();
-        });
-
-        (url, tokio::spawn(server), quit_tx)
-    }
+    use http::{Request, StatusCode};
+    use tower::ServiceExt;
 
     #[tokio::test]
     async fn content_length_too_large() {
-        const ACTUAL_BODY_SIZE: usize = 4097;
+        const BODY_SIZE_LIMIT: usize = 4096;
 
-        let (url, server, quit_tx) = spawn_http_server().await;
+        fn app() -> Router {
+            async fn bytes_request(_req: BytesRequest) {}
 
-        let client = hyper::Client::new();
-        let (mut sender, body) = hyper::Body::channel();
-        sender
-            .send_data(vec![0; ACTUAL_BODY_SIZE].into())
-            .await
-            .unwrap();
-        let req = hyper::Request::put(url).body(body).unwrap();
+            Router::new()
+                .route("/", get(bytes_request))
+                .layer(DefaultBodyLimit::max(BODY_SIZE_LIMIT))
+        }
 
-        let resp = client
-            .request(req)
-            .await
-            .expect("should be a valid response");
+        let body = vec![0; BODY_SIZE_LIMIT + 1];
+        let body = axum::body::Body::from(body);
+        let request = Request::get("/").body(body).unwrap();
+        let response = app().oneshot(request).await.unwrap();
 
-        quit_tx.send(()).unwrap();
-        server.await.unwrap().unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+        let body = vec![0; BODY_SIZE_LIMIT];
+        let body = axum::body::Body::from(body);
+        let request = Request::get("/").body(body).unwrap();
+        let response = app().oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }
