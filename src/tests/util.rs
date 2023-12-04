@@ -106,13 +106,11 @@ pub trait RequestHelper {
             .block_on(router.oneshot(request.map(hyper::Body::from)))
             .unwrap();
 
-        // axum responses can't be converted directly to reqwest responses,
-        // so we have to convert it to a hyper response first.
         let (parts, body) = axum_response.into_parts();
         let bytes = rt.block_on(hyper::body::to_bytes(body)).unwrap();
         let hyper_response = hyper::Response::from_parts(parts, bytes);
 
-        Response::new(hyper_response.into())
+        Response::new(hyper_response)
     }
 
     /// Create a get request
