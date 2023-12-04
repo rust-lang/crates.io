@@ -2,7 +2,6 @@ use crate::util::matchers::is_success;
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
-use std::ops::Deref;
 
 use crates_io::rate_limiter::LimitedAction;
 use http::{header, StatusCode};
@@ -44,6 +43,10 @@ impl<T> Response<T> {
     #[track_caller]
     pub fn into_text(self) -> String {
         assert_ok!(self.response.text())
+    }
+
+    pub fn status(&self) -> StatusCode {
+        self.response.status()
     }
 
     #[track_caller]
@@ -89,14 +92,6 @@ impl Response<()> {
     #[track_caller]
     pub fn assert_forbidden(&self) {
         assert_eq!(self.status(), StatusCode::FORBIDDEN);
-    }
-}
-
-impl<T> Deref for Response<T> {
-    type Target = reqwest::blocking::Response;
-
-    fn deref(&self) -> &Self::Target {
-        &self.response
     }
 }
 
