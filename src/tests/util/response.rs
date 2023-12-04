@@ -1,8 +1,9 @@
 use crate::util::matchers::is_success;
+use bytes::Bytes;
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
-use std::ops::Deref;
+use std::str::from_utf8;
 
 use crates_io::rate_limiter::LimitedAction;
 use http::{header, StatusCode};
@@ -10,7 +11,7 @@ use http::{header, StatusCode};
 /// A type providing helper methods for working with responses
 #[must_use]
 pub struct Response<T> {
-    response: reqwest::blocking::Response,
+    response: hyper::Response<Bytes>,
     return_type: PhantomData<T>,
 }
 
@@ -28,7 +29,7 @@ where
 
 impl<T> Response<T> {
     #[track_caller]
-    pub(super) fn new(response: reqwest::blocking::Response) -> Self {
+    pub(super) fn new(response: hyper::Response<Bytes>) -> Self {
         Self {
             response,
             return_type: PhantomData,
@@ -43,7 +44,12 @@ impl<T> Response<T> {
 
     #[track_caller]
     pub fn into_text(self) -> String {
-        assert_ok!(self.response.text())
+        let bytes = self.response.body();
+        assert_ok!(from_utf8(bytes)).to_string()
+    }
+
+    pub fn status(&self) -> StatusCode {
+        self.response.status()
     }
 
     #[track_caller]
@@ -92,15 +98,7 @@ impl Response<()> {
     }
 }
 
-impl<T> Deref for Response<T> {
-    type Target = reqwest::blocking::Response;
-
-    fn deref(&self) -> &Self::Target {
-        &self.response
-    }
-}
-
-fn json<T>(r: reqwest::blocking::Response) -> T
+fn json<T>(r: hyper::Response<Bytes>) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
@@ -115,7 +113,7 @@ where
     let content_length = assert_ok!(content_length.to_str());
     let content_length: usize = assert_ok!(content_length.parse());
 
-    let bytes = r.bytes().unwrap();
+    let bytes = r.body().clone();
     assert_that!(bytes, len(eq(content_length)));
 
     match serde_json::from_slice(&bytes) {
