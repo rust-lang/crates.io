@@ -21,24 +21,3 @@ impl Matcher for SuccessMatcher {
         }
     }
 }
-
-pub fn is_redirection() -> RedirectionMatcher {
-    RedirectionMatcher
-}
-
-pub struct RedirectionMatcher;
-
-impl Matcher for RedirectionMatcher {
-    type ActualT = StatusCode;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        actual.is_redirection().into()
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> String {
-        match matcher_result {
-            MatcherResult::Match => "is a redirection status code (300-399)".into(),
-            MatcherResult::NoMatch => "isn't a redirection status code (300-399)".into(),
-        }
-    }
-}
