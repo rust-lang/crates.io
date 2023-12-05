@@ -1,8 +1,6 @@
 use anyhow::Context;
 use crates_io_env_vars::required_var;
 use futures_util::{StreamExt, TryStreamExt};
-use http::header::CACHE_CONTROL;
-use http::{HeaderMap, HeaderValue};
 use hyper::body::Bytes;
 use object_store::aws::{AmazonS3, AmazonS3Builder};
 use object_store::local::LocalFileSystem;
@@ -10,6 +8,8 @@ use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::prefix::PrefixStore;
 use object_store::{ClientOptions, ObjectStore, Result};
+use reqwest::header::CACHE_CONTROL;
+use reqwest::header::{HeaderMap, HeaderValue};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
