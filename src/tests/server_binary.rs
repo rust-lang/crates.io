@@ -15,7 +15,7 @@ use std::sync::{mpsc::Sender, Arc};
 use std::time::Duration;
 use url::Url;
 
-const SERVER_BOOT_TIMEOUT_SECONDS: u64 = 30;
+const SERVER_BOOT_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[test]
 fn normal_startup() {
@@ -136,7 +136,7 @@ impl ServerBin {
         // - the server binary requires a database connection now
         // - the server binary doesn't print "listening on port {port}" anymore
         let port: u16 = port_recv
-            .recv_timeout(Duration::from_secs(SERVER_BOOT_TIMEOUT_SECONDS))
+            .recv_timeout(SERVER_BOOT_TIMEOUT)
             .context("the server took too much time to initialize")?
             .parse()?;
 
