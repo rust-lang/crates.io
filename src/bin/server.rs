@@ -10,7 +10,7 @@ use crates_io::github::RealGitHubClient;
 use futures_util::future::FutureExt;
 use prometheus::Encoder;
 use reqwest::Client;
-use std::io::{self, Write};
+use std::io::Write;
 use std::net::SocketAddr;
 use tokio::signal::unix::{signal, SignalKind};
 use tower::Layer;
@@ -58,7 +58,8 @@ fn main() -> anyhow::Result<()> {
 
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
-    let server = rt.block_on(async {
+    // Block the main thread until the server has shutdown
+    rt.block_on(async {
         let socket_addr = (app.config.ip, app.config.port).into();
         let server = hyper::Server::bind(&socket_addr).serve(make_service);
 
@@ -82,11 +83,10 @@ fn main() -> anyhow::Result<()> {
             info!("Starting graceful shutdown");
         });
 
-        Ok::<_, io::Error>(server)
-    })?;
+        server.await?;
 
-    // Block the main thread until the server has shutdown
-    rt.block_on(server)?;
+        Ok::<(), anyhow::Error>(())
+    })?;
 
     info!("Persisting remaining downloads counters");
     match app.downloads_counter.persist_all_shards(&app) {
