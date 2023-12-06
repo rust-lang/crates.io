@@ -58,13 +58,17 @@ fn main() -> anyhow::Result<()> {
 
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
-    let (addr, server) = rt.block_on(async {
+    let server = rt.block_on(async {
         let socket_addr = (app.config.ip, app.config.port).into();
         let server = hyper::Server::bind(&socket_addr).serve(make_service);
 
         // When the user configures PORT=0 the operating system will allocate a random unused port.
         // This fetches that random port and uses it to display the correct url later.
         let addr = server.local_addr();
+
+        // Do not change this line! Removing the line or changing its contents in any way will break
+        // the test suite :)
+        info!("Listening at http://{addr}");
 
         let mut sig_int = signal(SignalKind::interrupt())?;
         let mut sig_term = signal(SignalKind::terminate())?;
@@ -78,12 +82,8 @@ fn main() -> anyhow::Result<()> {
             info!("Starting graceful shutdown");
         });
 
-        Ok::<_, io::Error>((addr, server))
+        Ok::<_, io::Error>(server)
     })?;
-
-    // Do not change this line! Removing the line or changing its contents in any way will break
-    // the test suite :)
-    info!("Listening at http://{addr}");
 
     // Block the main thread until the server has shutdown
     rt.block_on(server)?;
