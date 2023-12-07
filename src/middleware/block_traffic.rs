@@ -2,17 +2,17 @@ use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
 use crate::util::errors::RouteBlocked;
-use axum::extract::{Extension, MatchedPath};
+use axum::extract::{Extension, MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use http::{HeaderMap, StatusCode};
 
-pub async fn middleware<B>(
+pub async fn middleware(
     Extension(real_ip): Extension<RealIp>,
     matched_path: Option<MatchedPath>,
     state: AppState,
-    req: http::Request<B>,
-    next: Next<B>,
+    req: Request,
+    next: Next,
 ) -> Result<impl IntoResponse, Response> {
     block_by_ip(&real_ip, &state, req.headers())?;
     block_by_header(&state, &req)?;
@@ -29,7 +29,7 @@ pub async fn middleware<B>(
 /// to `User-Agent=BLOCKED_UAS` and `BLOCKED_UAS` to `curl/7.54.0,cargo 1.36.0 (c4fcfb725 2019-05-15)`
 /// to block requests from the versions of curl or Cargo specified (values are nonsensical examples).
 /// Values of the headers must match exactly.
-pub fn block_by_header<B>(state: &AppState, req: &http::Request<B>) -> Result<(), Response> {
+pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), Response> {
     let blocked_traffic = &state.config.blocked_traffic;
 
     for (header_name, blocked_values) in blocked_traffic {

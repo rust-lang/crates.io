@@ -1,23 +1,22 @@
-use axum::body::HttpBody;
-use axum::extract::{ConnectInfo, Path};
+use axum::extract::{ConnectInfo, Path, Request};
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
 use http::request::Parts;
-use http::{header, HeaderMap, HeaderValue, Request, StatusCode};
+use http::{header, HeaderMap, HeaderValue, StatusCode};
 use hyper::body::Buf;
 use std::io::{BufRead, Read};
 use std::net::SocketAddr;
 use std::process::{Command, Stdio};
 
-pub async fn http_backend<B: HttpBody>(
+pub async fn http_backend(
     Path(path): Path<String>,
     ConnectInfo(remote_addr): ConnectInfo<SocketAddr>,
-    req: Request<B>,
+    req: Request,
 ) -> Result<Response, StatusCode> {
     let path = format!("/{path}");
 
     let (req, body) = req.into_parts();
-    let body = hyper::body::to_bytes(body)
+    let body = axum::body::to_bytes(body, usize::MAX)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 

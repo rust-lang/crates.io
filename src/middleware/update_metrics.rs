@@ -1,17 +1,16 @@
 use crate::app::AppState;
-use axum::extract::MatchedPath;
+use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::Response;
 
-use http::Request;
 use prometheus::IntGauge;
 use std::time::Instant;
 
-pub async fn update_metrics<B>(
+pub async fn update_metrics(
     state: AppState,
     matched_path: Option<MatchedPath>,
-    req: Request<B>,
-    next: Next<B>,
+    req: Request,
+    next: Next,
 ) -> Response {
     let start_instant = Instant::now();
 

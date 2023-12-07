@@ -1,10 +1,10 @@
 use crate::middleware::log_request::ErrorField;
 use axum::body::Bytes;
-use axum::extract::FromRequest;
+use axum::extract::{FromRequest, Request};
 use axum::response::{IntoResponse, Response};
 use axum::{async_trait, Extension, RequestExt};
-use http::{Request, StatusCode};
-use http_body::{Body, LengthLimitError};
+use http::StatusCode;
+use http_body_util::{BodyExt, LengthLimitError};
 use std::error::Error;
 use std::ops::{Deref, DerefMut};
 
@@ -26,40 +26,34 @@ impl DerefMut for BytesRequest {
 }
 
 #[async_trait]
-impl<S, B> FromRequest<S, B> for BytesRequest
+impl<S> FromRequest<S> for BytesRequest
 where
     S: Send + Sync,
-    B: Body + Send + 'static,
-    B::Data: Send,
-    B::Error: Into<Box<dyn Error + Send + Sync>>,
 {
     type Rejection = Response;
 
-    async fn from_request(req: Request<B>, _state: &S) -> Result<Self, Self::Rejection> {
-        let request = match req.with_limited_body() {
-            Ok(req) => {
-                let (parts, body) = req.into_parts();
+    async fn from_request(req: Request, _state: &S) -> Result<Self, Self::Rejection> {
+        let req = req.with_limited_body();
+        let (parts, body) = req.into_parts();
 
-                let bytes = hyper::body::to_bytes(body).await.map_err(|err| {
-                    if err.downcast_ref::<LengthLimitError>().is_some() {
-                        StatusCode::BAD_REQUEST.into_response()
-                    } else {
-                        server_error_response(&*err)
-                    }
-                })?;
-
-                Request::from_parts(parts, bytes)
+        let collected = body.collect().await.map_err(|err| {
+            let err: Box<dyn Error + Send + Sync> = err.into();
+            let box_error = match err.downcast::<axum::Error>() {
+                Ok(err) => err.into_inner(),
+                Err(err) => err,
+            };
+            let box_error = match box_error.downcast::<axum::Error>() {
+                Ok(err) => err.into_inner(),
+                Err(err) => err,
+            };
+            match box_error.downcast::<LengthLimitError>() {
+                Ok(_) => StatusCode::BAD_REQUEST.into_response(),
+                Err(err) => server_error_response(&*err),
             }
-            Err(req) => {
-                let (parts, body) = req.into_parts();
+        })?;
+        let bytes = collected.to_bytes();
 
-                let bytes = hyper::body::to_bytes(body)
-                    .await
-                    .map_err(|err| server_error_response(&*err.into()))?;
-
-                Request::from_parts(parts, bytes)
-            }
-        };
+        let request = Request::from_parts(parts, bytes);
 
         Ok(BytesRequest(request))
     }

@@ -6,11 +6,13 @@ use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::real_ip::RealIp;
-use axum::headers::UserAgent;
+use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use axum::{Extension, TypedHeader};
-use http::{Method, Request, StatusCode, Uri};
+use axum::Extension;
+use axum_extra::headers::UserAgent;
+use axum_extra::TypedHeader;
+use http::{Method, StatusCode, Uri};
 use parking_lot::Mutex;
 use std::fmt::{self, Display, Formatter};
 use std::ops::Deref;
@@ -116,10 +118,10 @@ impl Display for Metadata<'_> {
     }
 }
 
-pub async fn log_requests<B>(
+pub async fn log_requests(
     request_metadata: RequestMetadata,
-    mut req: Request<B>,
-    next: Next<B>,
+    mut req: Request,
+    next: Next,
 ) -> impl IntoResponse {
     let start_instant = Instant::now();
 

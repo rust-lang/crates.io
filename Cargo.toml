@@ -50,8 +50,8 @@ async-trait = "=0.1.74"
 aws-credential-types = { version = "=1.0.3", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.22.0"
 aws-sdk-cloudfront = "=1.4.0"
-axum = { version = "=0.6.20", features = ["headers", "macros", "matched-path"] }
-axum-extra = { version = "=0.8.0", features = ["cookie-signed"] }
+axum = { version = "=0.7.2", features = ["macros", "matched-path"] }
+axum-extra = { version = "=0.9.0", features = ["cookie-signed", "typed-header"] }
 base64 = "=0.21.5"
 bigdecimal = "=0.4.2"
 cargo-manifest = "=0.12.1"
@@ -62,7 +62,7 @@ crates_io_tarball = { path = "crates_io_tarball" }
 crates_io_worker = { path = "crates_io_worker" }
 chrono = { version = "=0.4.31", default-features = false, features = ["serde"] }
 clap = { version = "=4.4.11", features = ["derive", "env", "unicode", "wrap_help"] }
-cookie = { version = "=0.17.0", features = ["secure"] }
+cookie = { version = "=0.18.0", features = ["secure"] }
 crossbeam-channel = "=0.5.8"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
 derive_builder = "=0.12.0"
@@ -77,9 +77,11 @@ futures-channel = { version = "=0.3.29", default-features = false }
 futures-util = "=0.3.29"
 github-meta = "=0.11.0"
 hex = "=0.4.3"
-http = "=0.2.11"
-http-body = "=0.4.5"
-hyper = { version = "=0.14.27", features = ["backports", "client", "deprecated", "http1"] }
+http = "=1.0.0"
+http-body = "=1.0.0"
+http-body-util = "=0.1.0"
+hyper = { version = "=1.0.1", features = ["client", "http1"] }
+hyper-util = { version = "=0.1.1", features = ["tokio", "server-auto", "http1"] }
 indexmap = { version = "=2.1.0", features = ["serde"] }
 indicatif = "=0.17.7"
 ipnetwork = "=0.20.0"
@@ -98,7 +100,7 @@ reqwest = { version = "=0.11.22", features = ["gzip", "json"] }
 scheduled-thread-pool = "=0.2.7"
 secrecy = "=0.8.0"
 semver = { version = "=1.0.20", features = ["serde"] }
-sentry = { version = "=0.31.8", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
+sentry = { version = "=0.32.0", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
 serde = { version = "=1.0.193", features = ["derive"] }
 serde_json = "=1.0.108"
 sha2 = "=0.10.8"
@@ -109,7 +111,7 @@ thiserror = "=1.0.50"
 tokio = { version = "=1.34.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.8.8"
 tower = "=0.4.13"
-tower-http = { version = "=0.4.4", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
+tower-http = { version = "=0.5.0", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
 typomania = { version = "=0.1.2", default-features = false }
