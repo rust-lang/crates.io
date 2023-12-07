@@ -3,20 +3,21 @@ use crate::util::*;
 use std::collections::HashSet;
 
 use ::insta::assert_display_snapshot;
-use http::{header, HeaderValue, Method, StatusCode};
+use bytes::Bytes;
+use http::{header, Request, StatusCode};
 
 #[test]
 fn user_agent_is_required() {
     let (_app, anon) = TestApp::init().empty();
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates");
-    req.headers_mut().remove(header::USER_AGENT);
+    let req = Request::get("/api/v1/crates").body(Bytes::new()).unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates");
-    req.headers_mut()
-        .insert(header::USER_AGENT, HeaderValue::from_static(""));
+    let req = Request::get("/api/v1/crates")
+        .header(header::USER_AGENT, "")
+        .body(Bytes::new())
+        .unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
@@ -29,8 +30,8 @@ fn user_agent_is_not_required_for_download() {
         CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(conn);
     });
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    req.headers_mut().remove(header::USER_AGENT);
+    let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
+    let req = Request::get(uri).body(Bytes::new()).unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
@@ -47,8 +48,8 @@ fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
         CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(conn);
     });
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    req.headers_mut().remove(header::USER_AGENT);
+    let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
+    let req = Request::get(uri).body(Bytes::new()).unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
@@ -65,21 +66,27 @@ fn block_traffic_via_arbitrary_header_and_value() {
         CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(conn);
     });
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    // A request with a header value we want to block isn't allowed
-    req.header(header::USER_AGENT, "1");
-    req.header("x-request-id", "abcd");
+    let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")
+        // A request with a header value we want to block isn't allowed
+        .header(header::USER_AGENT, "1")
+        .header("x-request-id", "abcd")
+        .body(Bytes::new())
+        .unwrap();
+
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_display_snapshot!(resp.into_text());
 
-    let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    // A request with a header value we don't want to block is allowed, even though there might
-    // be a substring match
-    req.header(
-        header::USER_AGENT,
-        "1value-must-match-exactly-this-is-allowed",
-    );
+    let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")
+        // A request with a header value we don't want to block is allowed, even though there might
+        // be a substring match
+        .header(
+            header::USER_AGENT,
+            "1value-must-match-exactly-this-is-allowed",
+        )
+        .body(Bytes::new())
+        .unwrap();
+
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
