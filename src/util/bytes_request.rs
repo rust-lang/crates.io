@@ -37,15 +37,7 @@ where
         let (parts, body) = req.into_parts();
 
         let collected = body.collect().await.map_err(|err| {
-            let err: Box<dyn Error + Send + Sync> = err.into();
-            let box_error = match err.downcast::<axum::Error>() {
-                Ok(err) => err.into_inner(),
-                Err(err) => err,
-            };
-            let box_error = match box_error.downcast::<axum::Error>() {
-                Ok(err) => err.into_inner(),
-                Err(err) => err,
-            };
+            let box_error = err.into_inner();
             match box_error.downcast::<LengthLimitError>() {
                 Ok(_) => StatusCode::BAD_REQUEST.into_response(),
                 Err(err) => server_error_response(&*err),
