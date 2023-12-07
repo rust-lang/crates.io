@@ -3,20 +3,19 @@ use crate::util::*;
 use std::collections::HashSet;
 
 use ::insta::assert_display_snapshot;
-use bytes::Bytes;
 use http::{header, Request, StatusCode};
 
 #[test]
 fn user_agent_is_required() {
     let (_app, anon) = TestApp::init().empty();
 
-    let req = Request::get("/api/v1/crates").body(Bytes::new()).unwrap();
+    let req = Request::get("/api/v1/crates").body("").unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 
     let req = Request::get("/api/v1/crates")
         .header(header::USER_AGENT, "")
-        .body(Bytes::new())
+        .body("")
         .unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
@@ -31,7 +30,7 @@ fn user_agent_is_not_required_for_download() {
     });
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
-    let req = Request::get(uri).body(Bytes::new()).unwrap();
+    let req = Request::get(uri).body("").unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
@@ -49,7 +48,7 @@ fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     });
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
-    let req = Request::get(uri).body(Bytes::new()).unwrap();
+    let req = Request::get(uri).body("").unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
@@ -70,7 +69,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
         // A request with a header value we want to block isn't allowed
         .header(header::USER_AGENT, "1")
         .header("x-request-id", "abcd")
-        .body(Bytes::new())
+        .body("")
         .unwrap();
 
     let resp = anon.run::<()>(req);
@@ -84,7 +83,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
             header::USER_AGENT,
             "1value-must-match-exactly-this-is-allowed",
         )
-        .body(Bytes::new())
+        .body("")
         .unwrap();
 
     let resp = anon.run::<()>(req);

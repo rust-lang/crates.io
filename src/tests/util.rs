@@ -28,7 +28,7 @@ use crates_io::models::{ApiToken, CreatedApiToken, User};
 
 use http::{Method, Request};
 
-use axum::body::Bytes;
+use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
@@ -92,7 +92,7 @@ pub trait RequestHelper {
 
     /// Run a request that is expected to succeed
     #[track_caller]
-    fn run<T>(&self, request: MockRequest) -> Response<T> {
+    fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
         let app = self.app();
         let rt = app.runtime();
         let router = app.router().clone();
@@ -102,9 +102,8 @@ pub trait RequestHelper {
         let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
         let router = router.layer(MockConnectInfo(mocket_addr));
 
-        let axum_response = rt
-            .block_on(router.oneshot(request.map(axum::body::Body::from)))
-            .unwrap();
+        let request = request.map(Into::into);
+        let axum_response = rt.block_on(router.oneshot(request)).unwrap();
 
         let (parts, body) = axum_response.into_parts();
         let bytes = rt.block_on(axum::body::to_bytes(body, usize::MAX)).unwrap();
