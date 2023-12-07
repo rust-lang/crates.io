@@ -113,10 +113,10 @@ where
     let content_length = assert_ok!(content_length.to_str());
     let content_length: usize = assert_ok!(content_length.parse());
 
-    let bytes = r.body().clone();
-    assert_that!(bytes, len(eq(content_length)));
+    let bytes = r.body();
+    assert_that!(*bytes, len(eq(content_length)));
 
-    match serde_json::from_slice(&bytes) {
+    match serde_json::from_slice(bytes) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {e:?}"),
     }
