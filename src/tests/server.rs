@@ -3,14 +3,20 @@ use crate::util::*;
 use std::collections::HashSet;
 
 use ::insta::assert_display_snapshot;
-use http::{header, Method, StatusCode};
+use http::{header, HeaderValue, Method, StatusCode};
 
 #[test]
 fn user_agent_is_required() {
     let (_app, anon) = TestApp::init().empty();
 
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates");
-    req.header(header::USER_AGENT, "");
+    req.headers_mut().remove(header::USER_AGENT);
+    let resp = anon.run::<()>(req);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+
+    let mut req = anon.request_builder(Method::GET, "/api/v1/crates");
+    req.headers_mut()
+        .insert(header::USER_AGENT, HeaderValue::from_static(""));
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
@@ -24,7 +30,7 @@ fn user_agent_is_not_required_for_download() {
     });
 
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    req.header(header::USER_AGENT, "");
+    req.headers_mut().remove(header::USER_AGENT);
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
@@ -42,7 +48,7 @@ fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     });
 
     let mut req = anon.request_builder(Method::GET, "/api/v1/crates/dl_no_ua/0.99.0/download");
-    req.header(header::USER_AGENT, "");
+    req.headers_mut().remove(header::USER_AGENT);
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
