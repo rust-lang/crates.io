@@ -33,7 +33,7 @@ pub struct RequestMetadata {
     uri: Uri,
     original_path: Option<Extension<OriginalPath>>,
     real_ip: Extension<RealIp>,
-    user_agent: TypedHeader<UserAgent>,
+    user_agent: Option<TypedHeader<UserAgent>>,
     request_id: Option<TypedHeader<XRequestId>>,
     ci_service: Option<CiService>,
 }
@@ -87,7 +87,9 @@ impl Display for Metadata<'_> {
             line.add_field("status", self.status.as_str())?;
         }
 
-        line.add_quoted_field("user_agent", self.request.user_agent.as_str())?;
+        let user_agent = self.request.user_agent.as_ref();
+        let user_agent = user_agent.map(|ua| ua.as_str()).unwrap_or_default();
+        line.add_quoted_field("user_agent", user_agent)?;
 
         if self.request.original_path.is_some() {
             line.add_quoted_field("normalized_path", &self.request.uri)?;
