@@ -63,7 +63,7 @@ async fn jobs_are_locked_when_fetched() {
 
     let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
-    let mut conn = runner.connection().unwrap();
+    let mut conn = test_database.connect();
     let job_id = TestJob.enqueue(&mut conn).unwrap();
 
     assert!(job_exists(job_id, &mut conn));
@@ -107,7 +107,7 @@ async fn jobs_are_deleted_when_successfully_run() {
 
     let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
-    let mut conn = runner.connection().unwrap();
+    let mut conn = test_database.connect();
     assert_eq!(remaining_jobs(&mut conn), 0);
 
     TestJob.enqueue(&mut conn).unwrap();
@@ -147,7 +147,7 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
 
     let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
-    let mut conn = runner.connection().unwrap();
+    let mut conn = test_database.connect();
     TestJob.enqueue(&mut conn).unwrap();
 
     let runner = runner.start();
@@ -195,7 +195,7 @@ async fn panicking_in_jobs_updates_retry_counter() {
 
     let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
 
-    let mut conn = runner.connection().unwrap();
+    let mut conn = test_database.connect();
 
     let job_id = TestJob.enqueue(&mut conn).unwrap();
 
