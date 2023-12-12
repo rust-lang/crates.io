@@ -21,6 +21,7 @@ unused = "warn"
 
 [workspace.lints.clippy]
 all = "warn"
+todo = "warn"
 
 [lints]
 workspace = true
