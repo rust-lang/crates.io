@@ -72,7 +72,7 @@ pub(super) struct BadRequest(pub(super) String);
 #[derive(Debug)]
 pub(super) struct ServerError(pub(super) String);
 #[derive(Debug)]
-pub(crate) struct ServiceUnavailable(pub(super) String);
+pub(crate) struct ServiceUnavailable;
 #[derive(Debug)]
 pub(crate) struct TooManyRequests {
     pub action: LimitedAction,
@@ -117,13 +117,13 @@ impl fmt::Display for ServerError {
 
 impl AppError for ServiceUnavailable {
     fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::SERVICE_UNAVAILABLE)
+        json_error("Service unavailable", StatusCode::SERVICE_UNAVAILABLE)
     }
 }
 
 impl fmt::Display for ServiceUnavailable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        "Service unavailable".fmt(f)
     }
 }
 

@@ -77,8 +77,8 @@ pub fn server_error<S: ToString>(error: S) -> BoxedAppError {
 }
 
 /// Returns an error with status 503 and the provided description as JSON
-pub fn service_unavailable<S: ToString>(error: S) -> BoxedAppError {
-    Box::new(json::ServiceUnavailable(error.to_string()))
+pub fn service_unavailable() -> BoxedAppError {
+    Box::new(json::ServiceUnavailable)
 }
 
 // =============================================================================
@@ -238,7 +238,7 @@ impl From<lettre::address::AddressError> for BoxedAppError {
 impl From<PoolError> for BoxedAppError {
     fn from(err: PoolError) -> BoxedAppError {
         match err {
-            PoolError::UnhealthyPool => service_unavailable("Service unavailable"),
+            PoolError::UnhealthyPool => service_unavailable(),
             _ => Box::new(err),
         }
     }
