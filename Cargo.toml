@@ -21,6 +21,7 @@ unused = "warn"
 
 [workspace.lints.clippy]
 all = "warn"
+dbg_macro = "warn"
 todo = "warn"
 
 [lints]
