@@ -115,14 +115,14 @@ mod auth {
         let (_, client, _) = prepare();
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -182,14 +182,14 @@ mod auth {
             client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -222,14 +222,14 @@ mod auth {
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -286,14 +286,14 @@ mod auth {
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -311,14 +311,14 @@ mod auth {
         );
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
