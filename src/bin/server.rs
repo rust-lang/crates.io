@@ -47,7 +47,9 @@ fn main() -> anyhow::Result<()> {
 
     let axum_router = crates_io::build_handler(app.clone());
 
-    // Apply the `normalize_path` middleware around the axum router
+    // Apply the `normalize_path` middleware around the axum router.
+    //
+    // See https://docs.rs/axum/0.7.2/axum/middleware/index.html#rewriting-request-uri-in-middleware.
     let normalize_path = axum::middleware::from_fn(normalize_path);
     let axum_router = normalize_path.layer(axum_router);
 
