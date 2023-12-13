@@ -2,7 +2,7 @@ use crate::builders::*;
 use crate::util::*;
 use std::collections::HashSet;
 
-use ::insta::assert_display_snapshot;
+use ::insta::assert_json_snapshot;
 use http::{header, Request, StatusCode};
 
 #[test]
@@ -74,7 +74,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
 
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(resp.into_text());
+    assert_json_snapshot!(resp.into_json());
 
     let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")
         // A request with a header value we don't want to block is allowed, even though there might
@@ -100,5 +100,5 @@ fn block_traffic_via_ip() {
 
     let resp = anon.get::<()>("/api/v1/crates");
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(resp.into_text());
+    assert_json_snapshot!(resp.into_json());
 }
