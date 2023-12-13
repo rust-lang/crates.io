@@ -77,8 +77,8 @@ devDependencies:
     specifier: 3.1.0
     version: 3.1.0
   '@embroider/compat':
-    specifier: 3.4.1
-    version: 3.4.1(@embroider/core@3.4.3)
+    specifier: 3.4.2
+    version: 3.4.2(@embroider/core@3.4.3)
   '@embroider/core':
     specifier: 3.4.3
     version: 3.4.3
@@ -129,7 +129,7 @@ devDependencies:
     version: 1.0.0
   ember-cli-code-coverage:
     specifier: 2.0.3
-    version: 2.0.3(@embroider/compat@3.4.1)(@embroider/core@3.4.3)
+    version: 2.0.3(@embroider/compat@3.4.2)(@embroider/core@3.4.3)
   ember-cli-dependency-checker:
     specifier: 3.3.2
     version: 3.3.2(ember-cli@5.5.0)
@@ -377,7 +377,7 @@ packages:
     resolution: {integrity: sha512-BPssCHrBD+0YrxviOa3QzpqwhNIXKEtOa2jQrm4FlmkC2apYgRnQcmPWiGZDlGxiNtltnUFolMe8497Esry+jA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.23.5
+      '@babel/types': 7.23.6
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.20
       jsesc: 2.5.2
@@ -2252,8 +2252,8 @@ packages:
       - webpack
     dev: true
 
-  /@embroider/compat@3.4.1(@embroider/core@3.4.3):
-    resolution: {integrity: sha512-GHANZdos5HwZSlt61kwlKL6LAHPDQNc0xFamLpFFb+GJkmd/wiC1HUWmelxpwAmIx0PCbd/W6bt59vKFihZziQ==}
+  /@embroider/compat@3.4.2(@embroider/core@3.4.3):
+    resolution: {integrity: sha512-aSmEGwiCn5lPkWNRG3We0pLOz/66zzQ+s+owt7n4Qft5c4qBhNxG/iwk2wtT7BpUmohR7F3gF8NkPrAtRz/poQ==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
@@ -7838,7 +7838,7 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-code-coverage@2.0.3(@embroider/compat@3.4.1)(@embroider/core@3.4.3):
+  /ember-cli-code-coverage@2.0.3(@embroider/compat@3.4.2)(@embroider/core@3.4.3):
     resolution: {integrity: sha512-xBItw4kPffuy4QVCniBSwvyzFJiwU/+tqTyoyshug9LtiRDOaOepPVuQ8Ig+e5sYmxp3OXXcaR9iK5IY2J62Zg==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
@@ -7850,7 +7850,7 @@ packages:
       '@embroider/core':
         optional: true
     dependencies:
-      '@embroider/compat': 3.4.1(@embroider/core@3.4.3)
+      '@embroider/compat': 3.4.2(@embroider/core@3.4.3)
       '@embroider/core': 3.4.3
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.2
@@ -12843,6 +12843,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -14042,6 +14043,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:
