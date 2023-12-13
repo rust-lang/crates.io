@@ -4,6 +4,7 @@ mod block_traffic;
 mod common_headers;
 mod debug;
 mod ember_html;
+mod errors;
 pub mod log_request;
 pub mod normalize_path;
 pub mod real_ip;
@@ -25,6 +26,7 @@ use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutLayer};
 
 use crate::app::AppState;
+use crate::middleware::errors::ensure_json_errors;
 use crate::Env;
 
 pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
@@ -62,6 +64,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         }));
 
     let middlewares_2 = tower::ServiceBuilder::new()
+        .layer(from_fn(ensure_json_errors))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
             state.clone(),
