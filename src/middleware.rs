@@ -38,7 +38,14 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
     }
 
-    let middleware = tower::ServiceBuilder::new()
+    // The middleware stacks here have been split for compile performance
+    // reasons. The type signatures of the `ServiceBuilder` were approaching
+    // dozens of kilobytes, triggering exponential behaviors in the compiler.
+    // Splitting the stacks into two smaller stacks seem to avoid this problem.
+    //
+    // See also https://github.com/rust-lang/crates.io/pull/7443.
+
+    let middlewares_1 = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::new_from_top())
         .layer(sentry_tower::SentryHttpLayer::with_transaction())
         .layer(from_fn(self::real_ip::middleware))
@@ -52,7 +59,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         // To enable, set the environment variable: `RUST_LOG=crates_io::middleware=debug`
         .layer(conditional_layer(env == Env::Development, || {
             from_fn(debug::debug_requests)
-        }))
+        }));
+
+    let middlewares_2 = tower::ServiceBuilder::new()
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
             state.clone(),
@@ -85,7 +94,8 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         }));
 
     router
-        .layer(middleware)
+        .layer(middlewares_2)
+        .layer(middlewares_1)
         .layer(TimeoutLayer::new(Duration::from_secs(30)))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
         .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
