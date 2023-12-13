@@ -5,19 +5,24 @@ use axum::Json;
 use http::{header, StatusCode};
 
 /// Convert plain text errors into JSON errors.
+pub async fn middleware(req: Request, next: Next) -> Response {
+    let is_api_request = req.uri().path().starts_with("/api/");
+
+    let mut res = next.run(req).await;
+    if is_api_request {
+        res = ensure_json_errors(res).await;
+    }
+
+    res
+}
+
+/// Convert plain text errors into JSON errors.
 ///
 /// The built-in extractors in [axum] return plain text errors, but our API
 /// contract promises JSON errors. This middleware converts such plain text
 /// errors into corresponding JSON errors, allowing us to use the [axum]
 /// extractors without having to care about the error responses.
-pub async fn ensure_json_errors(req: Request, next: Next) -> Response {
-    let is_api_request = req.uri().path().starts_with("/api/");
-
-    let res = next.run(req).await;
-    if !is_api_request {
-        return res;
-    }
-
+async fn ensure_json_errors(res: Response) -> Response {
     let status = res.status();
     if !status.is_client_error() && !status.is_server_error() {
         return res;
@@ -75,7 +80,7 @@ mod tests {
             .route("/teapot", teapot)
             .route("/api/500", internal.clone())
             .route("/500", internal)
-            .layer(from_fn(ensure_json_errors))
+            .layer(from_fn(middleware))
     }
 
     async fn request(path: &str) -> anyhow::Result<(Parts, Bytes)> {
