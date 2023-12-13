@@ -39,8 +39,8 @@
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/browser": "7.86.0",
-    "@sentry/utils": "7.86.0",
+    "@sentry/browser": "7.87.0",
+    "@sentry/utils": "7.87.0",
     "chart.js": "4.4.1",
     "copy-text-to-clipboard": "3.2.0",
     "date-fns": "2.30.0",
