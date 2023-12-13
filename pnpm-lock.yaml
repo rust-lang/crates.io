@@ -113,8 +113,8 @@ devDependencies:
     specifier: 6.1.1
     version: 6.1.1(@babel/core@7.23.6)(@ember/test-helpers@3.2.1)(qunit@2.20.0)(webpack@5.89.0)
   ember-auto-import:
-    specifier: 2.7.0
-    version: 2.7.0(webpack@5.89.0)
+    specifier: 2.7.1
+    version: 2.7.1(webpack@5.89.0)
   ember-cli:
     specifier: 5.5.0
     version: 5.5.0
@@ -424,26 +424,6 @@ packages:
       lru-cache: 5.1.1
       semver: 6.3.1
 
-  /@babel/helper-create-class-features-plugin@7.23.5(@babel/core@7.23.6):
-    resolution: {integrity: sha512-QELlRWxSpgdwdJzSJn4WAhKC+hvw/AtHbbrIoncKHkhKKR/luAlKkgBDcri1EzWAo8f8VvYVryEHN4tax/V67A==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-    dependencies:
-      '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-function-name': 7.23.0
-      '@babel/helper-member-expression-to-functions': 7.23.0
-      '@babel/helper-optimise-call-expression': 7.22.5
-      '@babel/helper-replace-supers': 7.22.20(@babel/core@7.23.6)
-      '@babel/helper-skip-transparent-expression-wrappers': 7.22.5
-      '@babel/helper-split-export-declaration': 7.22.6
-      semver: 6.3.1
-
   /@babel/helper-create-class-features-plugin@7.23.6(@babel/core@7.23.6):
     resolution: {integrity: sha512-cBXU1vZni/CpGF29iTu4YRbOZt3Wat6zCoMDxRF1MayiEc4URxOj31tT65HUM0CRpMowA3HCJaAOVOUnMf96cw==}
     engines: {node: '>=6.9.0'}
@@ -487,7 +467,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
@@ -699,7 +679,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
 
   /@babel/plugin-proposal-decorators@7.23.6(@babel/core@7.23.6):
@@ -730,7 +710,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
 
   /@babel/plugin-proposal-private-property-in-object@7.21.0-placeholder-for-preset-env.2(@babel/core@7.23.6):
@@ -756,7 +736,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.23.6)
 
@@ -1064,7 +1044,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
 
   /@babel/plugin-transform-class-static-block@7.23.4(@babel/core@7.23.6):
@@ -1077,7 +1057,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-class-static-block': 7.14.5(@babel/core@7.23.6)
 
@@ -1092,7 +1072,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-environment-visitor': 7.22.20
       '@babel/helper-function-name': 7.23.0
       '@babel/helper-optimise-call-expression': 7.22.5
@@ -1212,7 +1192,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-function-name': 7.23.0
       '@babel/helper-plugin-utils': 7.22.5
 
@@ -1383,7 +1363,7 @@ packages:
     dependencies:
       '@babel/compat-data': 7.23.5
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.23.6)
       '@babel/plugin-transform-parameters': 7.23.3(@babel/core@7.23.6)
@@ -1450,7 +1430,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
 
   /@babel/plugin-transform-private-property-in-object@7.23.4(@babel/core@7.23.6):
@@ -1464,7 +1444,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.23.6)
 
@@ -1596,7 +1576,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-typescript': 7.23.3(@babel/core@7.23.6)
 
@@ -1622,7 +1602,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-create-class-features-plugin': 7.23.5(@babel/core@7.23.6)
+      '@babel/helper-create-class-features-plugin': 7.23.6(@babel/core@7.23.6)
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-typescript': 7.23.3(@babel/core@7.23.6)
 
@@ -1695,7 +1675,7 @@ packages:
     dependencies:
       '@babel/compat-data': 7.23.5
       '@babel/core': 7.23.6(supports-color@8.1.1)
-      '@babel/helper-compilation-targets': 7.22.15
+      '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/helper-validator-option': 7.23.5
       '@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression': 7.23.3(@babel/core@7.23.6)
@@ -1942,7 +1922,7 @@ packages:
       '@ember/edition-utils': 1.2.0
       '@ember/string': 3.1.1
       '@embroider/macros': 1.13.3
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
     transitivePeerDependencies:
       - '@glint/template'
@@ -2226,7 +2206,7 @@ packages:
       '@simple-dom/interface': 1.4.0
       broccoli-debug: 0.6.5
       broccoli-funnel: 3.0.8
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-source: 5.5.0(@babel/core@7.23.6)(@glimmer/component@1.1.2)(rsvp@4.8.5)(webpack@5.89.0)
@@ -3791,7 +3771,7 @@ packages:
     peerDependencies:
       ember-source: '>= 4.0.0'
     dependencies:
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-modifier: 4.1.0(ember-source@5.5.0)
@@ -7585,7 +7565,7 @@ packages:
       axe-core: 4.8.2
       body-parser: 1.20.2
       broccoli-persistent-filter: 3.1.3
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-typescript: 4.2.1
       ember-cli-version-checker: 5.1.2
@@ -7655,8 +7635,8 @@ packages:
       - webpack-command
     dev: true
 
-  /ember-auto-import@2.7.0(webpack@5.89.0):
-    resolution: {integrity: sha512-cBEBB6IRRmlCVfyaRmDCfLrywm2HibTosJzIKv4BWF1p2ZokUhXBJjMRwuaG3tbLMV8rmJdLWnSKm8CodsdmQA==}
+  /ember-auto-import@2.7.1(webpack@5.89.0):
+    resolution: {integrity: sha512-8i5pw9DAtIJ+h+iGbYD25GPTyF3gLurokT7b1HBvKkHdOQuqGaXB9aiWA72BnqwA3Kwd3nfgdOml3HEaeQmCKQ==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
@@ -8005,7 +7985,7 @@ packages:
       broccoli-file-creator: 2.1.1
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 4.2.0
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 8.2.0(@babel/core@7.23.6)
       ember-data: 4.12.5(@babel/core@7.23.6)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.5.0)(webpack@5.89.0)
       ember-get-config: 2.1.1
@@ -8418,7 +8398,7 @@ packages:
       '@embroider/macros': 1.13.3
       '@glimmer/env': 0.1.7
       broccoli-merge-trees: 4.2.0
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-inflector: 4.0.2
     transitivePeerDependencies:
@@ -8484,7 +8464,7 @@ packages:
       chalk: 4.1.2
       cli-table3: 0.6.3
       debug: 4.3.4(supports-color@8.1.1)
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-version-checker: 5.1.2
       ember-qunit: 8.0.2(@ember/test-helpers@3.2.1)(ember-source@5.5.0)(qunit@2.20.0)
@@ -8752,7 +8732,7 @@ packages:
       broccoli-funnel: 3.0.8
       broccoli-merge-trees: 4.2.0
       chalk: 4.1.2
-      ember-auto-import: 2.7.0(webpack@5.89.0)
+      ember-auto-import: 2.7.1(webpack@5.89.0)
       ember-cli-babel: 7.26.11
       ember-cli-get-component-path-option: 1.0.0
       ember-cli-is-package-missing: 1.0.0
