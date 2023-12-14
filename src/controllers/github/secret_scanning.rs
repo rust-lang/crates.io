@@ -1,5 +1,6 @@
 use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
+use crate::github::GitHubPublicKey;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::token::HashedToken;
@@ -27,18 +28,6 @@ static PUBLIC_KEY_CACHE: Lazy<Mutex<GitHubPublicKeyCache>> = Lazy::new(|| {
     };
     Mutex::new(cache)
 });
-
-#[derive(Debug, Deserialize, Clone, Eq, Hash, PartialEq)]
-pub struct GitHubPublicKey {
-    pub key_identifier: String,
-    pub key: String,
-    pub is_current: bool,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GitHubPublicKeyList {
-    pub public_keys: Vec<GitHubPublicKey>,
-}
 
 #[derive(Debug, Clone)]
 struct GitHubPublicKeyCache {

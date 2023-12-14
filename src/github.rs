@@ -7,7 +7,6 @@ use serde::de::DeserializeOwned;
 
 use std::str;
 
-use crate::controllers::github::secret_scanning::{GitHubPublicKey, GitHubPublicKeyList};
 use crate::util::errors::{cargo_err, internal, not_found, BoxedAppError};
 use async_trait::async_trait;
 use reqwest::Client;
@@ -218,6 +217,18 @@ pub struct GitHubTeamMembership {
 pub struct GitHubOrgMembership {
     pub state: String,
     pub role: String,
+}
+
+#[derive(Debug, Deserialize, Clone, Eq, Hash, PartialEq)]
+pub struct GitHubPublicKey {
+    pub key_identifier: String,
+    pub key: String,
+    pub is_current: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubPublicKeyList {
+    pub public_keys: Vec<GitHubPublicKey>,
 }
 
 pub fn team_url(login: &str) -> String {
