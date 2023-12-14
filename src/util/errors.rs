@@ -31,8 +31,8 @@ mod json;
 
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
-    InsecurelyGeneratedTokenRevoked, MetricsDisabled, NotFound, OwnershipInvitationExpired,
-    ReadOnlyMode, RouteBlocked, TooManyRequests,
+    InsecurelyGeneratedTokenRevoked, MetricsDisabled, OwnershipInvitationExpired, ReadOnlyMode,
+    RouteBlocked, TooManyRequests,
 };
 
 pub type BoxedAppError = Box<dyn AppError>;
