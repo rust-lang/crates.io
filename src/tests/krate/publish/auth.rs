@@ -13,7 +13,7 @@ fn new_wrong_token() {
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = anon.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -29,7 +29,7 @@ fn new_wrong_token() {
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })

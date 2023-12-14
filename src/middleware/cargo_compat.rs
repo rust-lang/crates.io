@@ -1,8 +1,56 @@
-use axum::extract::Request;
+use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
-use http::{header, StatusCode};
+use axum::{Extension, Json};
+use http::{header, Method, StatusCode};
+
+/// Convert plain text errors into JSON errors and adjust status codes.
+pub async fn middleware(
+    matched_path: Option<Extension<MatchedPath>>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let is_api_request = req.uri().path().starts_with("/api/");
+    let is_cargo_endpoint = matched_path
+        .map(|m| is_cargo_endpoint(req.method(), m.as_str()))
+        .unwrap_or(false);
+
+    let mut res = next.run(req).await;
+    if is_api_request {
+        res = ensure_json_errors(res).await;
+    }
+    if is_cargo_endpoint {
+        // cargo until 1.34.0 expected crates.io to always return 200 OK for
+        // all requests, even if they failed. If a different status code was
+        // returned, cargo would show the raw JSON response to the user, instead
+        // of a friendly error message.
+        //
+        // With cargo 1.34.0 this issue got resolved (see https://github.com/rust-lang/cargo/pull/6771),
+        // for successful requests still only "200 OK" was expected and no other
+        // 2xx status code. This will change with cargo 1.76.0 (see https://github.com/rust-lang/cargo/pull/13158),
+        // but for backwards compatibility we still return "200 OK" for now for
+        // all endpoints that are relevant for cargo.
+        *res.status_mut() = StatusCode::OK;
+    }
+
+    res
+}
+
+fn is_cargo_endpoint(method: &Method, path: &str) -> bool {
+    const CARGO_ENDPOINTS: &[(Method, &str)] = &[
+        (Method::PUT, "/api/v1/crates/new"),
+        (Method::DELETE, "/api/v1/crates/:crate_id/:version/yank"),
+        (Method::PUT, "/api/v1/crates/:crate_id/:version/unyank"),
+        (Method::GET, "/api/v1/crates/:crate_id/owners"),
+        (Method::PUT, "/api/v1/crates/:crate_id/owners"),
+        (Method::DELETE, "/api/v1/crates/:crate_id/owners"),
+        (Method::GET, "/api/v1/crates"),
+    ];
+
+    CARGO_ENDPOINTS
+        .iter()
+        .any(|(m, p)| m == method && p == &path)
+}
 
 /// Convert plain text errors into JSON errors.
 ///
@@ -10,14 +58,7 @@ use http::{header, StatusCode};
 /// contract promises JSON errors. This middleware converts such plain text
 /// errors into corresponding JSON errors, allowing us to use the [axum]
 /// extractors without having to care about the error responses.
-pub async fn ensure_json_errors(req: Request, next: Next) -> Response {
-    let is_api_request = req.uri().path().starts_with("/api/");
-
-    let res = next.run(req).await;
-    if !is_api_request {
-        return res;
-    }
-
+async fn ensure_json_errors(res: Response) -> Response {
     let status = res.status();
     if !status.is_client_error() && !status.is_server_error() {
         return res;
@@ -55,7 +96,7 @@ mod tests {
     use super::*;
     use axum::body::Body;
     use axum::middleware::from_fn;
-    use axum::routing::get;
+    use axum::routing::{get, put};
     use axum::Router;
     use bytes::Bytes;
     use http::response::Parts;
@@ -75,11 +116,27 @@ mod tests {
             .route("/teapot", teapot)
             .route("/api/500", internal.clone())
             .route("/500", internal)
-            .layer(from_fn(ensure_json_errors))
+            .route("/api/v1/crates/new", put(|| async { StatusCode::CREATED }))
+            .route(
+                "/api/v1/crates/:crate_id/owners",
+                get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+            )
+            .layer(from_fn(middleware))
     }
 
     async fn request(path: &str) -> anyhow::Result<(Parts, Bytes)> {
-        let request = Request::get(path).body(Body::empty())?;
+        request_inner(Method::GET, path).await
+    }
+
+    async fn put_request(path: &str) -> anyhow::Result<(Parts, Bytes)> {
+        request_inner(Method::PUT, path).await
+    }
+
+    async fn request_inner(method: Method, path: &str) -> anyhow::Result<(Parts, Bytes)> {
+        let request = Request::builder()
+            .method(method)
+            .uri(path)
+            .body(Body::empty())?;
         let response = build_app().oneshot(request).await?;
         let (parts, body) = response.into_parts();
         let bytes = axum::body::to_bytes(body, usize::MAX).await?;
@@ -149,5 +206,14 @@ mod tests {
         }
         "###);
         assert_debug_snapshot!(bytes, @r###"b"Internal Server Error""###);
+    }
+
+    #[tokio::test]
+    async fn test_cargo_endpoint_status() {
+        let (parts, _bytes) = put_request("/api/v1/crates/new").await.unwrap();
+        assert_eq!(parts.status, StatusCode::OK);
+
+        let (parts, _bytes) = request("/api/v1/crates/foo/owners").await.unwrap();
+        assert_eq!(parts.status, StatusCode::OK);
     }
 }

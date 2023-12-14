@@ -3,6 +3,7 @@ use crate::{RequestHelper, TestApp};
 
 use diesel::prelude::*;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn can_hit_read_only_endpoints_in_read_only_mode() {
@@ -31,7 +32,8 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     });
 
     let response = token.delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank");
-    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]

@@ -75,7 +75,7 @@ impl<T> Response<T> {
             detail: String,
         }
 
-        assert_eq!(self.status(), StatusCode::TOO_MANY_REQUESTS);
+        assert_eq!(self.status(), StatusCode::OK);
 
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
         let error: ErrorResponse = json(self.response);
