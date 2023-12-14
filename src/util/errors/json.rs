@@ -33,8 +33,6 @@ impl fmt::Display for NotFound {
 
 #[derive(Debug)]
 pub(super) struct Forbidden;
-#[derive(Debug)]
-pub(crate) struct ReadOnlyMode;
 
 impl AppError for Forbidden {
     fn response(&self) -> Response {
@@ -48,6 +46,9 @@ impl fmt::Display for Forbidden {
         "must be logged in to perform that action".fmt(f)
     }
 }
+
+#[derive(Debug)]
+pub(crate) struct ReadOnlyMode;
 
 impl AppError for ReadOnlyMode {
     fn response(&self) -> Response {
@@ -67,17 +68,6 @@ impl fmt::Display for ReadOnlyMode {
 
 #[derive(Debug)]
 pub(super) struct Ok(pub(super) String);
-#[derive(Debug)]
-pub(super) struct BadRequest(pub(super) String);
-#[derive(Debug)]
-pub(super) struct ServerError(pub(super) String);
-#[derive(Debug)]
-pub(crate) struct ServiceUnavailable;
-#[derive(Debug)]
-pub(crate) struct TooManyRequests {
-    pub action: LimitedAction,
-    pub retry_after: NaiveDateTime,
-}
 
 impl AppError for Ok {
     fn response(&self) -> Response {
@@ -91,6 +81,9 @@ impl fmt::Display for Ok {
     }
 }
 
+#[derive(Debug)]
+pub(super) struct BadRequest(pub(super) String);
+
 impl AppError for BadRequest {
     fn response(&self) -> Response {
         json_error(&self.0, StatusCode::BAD_REQUEST)
@@ -102,6 +95,9 @@ impl fmt::Display for BadRequest {
         self.0.fmt(f)
     }
 }
+
+#[derive(Debug)]
+pub(super) struct ServerError(pub(super) String);
 
 impl AppError for ServerError {
     fn response(&self) -> Response {
@@ -115,6 +111,9 @@ impl fmt::Display for ServerError {
     }
 }
 
+#[derive(Debug)]
+pub(crate) struct ServiceUnavailable;
+
 impl AppError for ServiceUnavailable {
     fn response(&self) -> Response {
         json_error("Service unavailable", StatusCode::SERVICE_UNAVAILABLE)
@@ -125,6 +124,12 @@ impl fmt::Display for ServiceUnavailable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         "Service unavailable".fmt(f)
     }
+}
+
+#[derive(Debug)]
+pub(crate) struct TooManyRequests {
+    pub action: LimitedAction,
+    pub retry_after: NaiveDateTime,
 }
 
 impl AppError for TooManyRequests {
