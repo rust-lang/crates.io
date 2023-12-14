@@ -236,11 +236,11 @@ fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResu
 
 fn ensure_not_locked(user: &User) -> AppResult<()> {
     if let Some(reason) = &user.account_lock_reason {
-        let still_locked = if let Some(until) = user.account_lock_until {
-            until > Utc::now().naive_utc()
-        } else {
-            true
-        };
+        let still_locked = user
+            .account_lock_until
+            .map(|until| until > Utc::now().naive_utc())
+            .unwrap_or(true);
+
         if still_locked {
             return Err(account_locked(reason, user.account_lock_until));
         }
