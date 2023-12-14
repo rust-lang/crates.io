@@ -5,7 +5,7 @@ use crate::util::errors::{cargo_err, AppResult};
 use crate::{app::App, schema::teams};
 
 use crate::models::{Crate, Team, User};
-use crate::schema::{crate_owners, users};
+use crate::schema::crate_owners;
 use crate::sql::{lower, pg_enum};
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
@@ -71,11 +71,7 @@ impl Owner {
                 app, conn, name, req_user,
             )?))
         } else {
-            users::table
-                .filter(lower(users::gh_login).eq(name.to_lowercase()))
-                .filter(users::gh_id.ne(-1))
-                .order(users::gh_id.desc())
-                .first(conn)
+            User::find_by_login(conn, name)
                 .optional()?
                 .map(Owner::User)
                 .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
@@ -97,11 +93,7 @@ impl Owner {
                 .map(Owner::Team)
                 .ok_or_else(|| cargo_err(format_args!("could not find team with login `{name}`")))
         } else {
-            users::table
-                .filter(lower(users::gh_login).eq(name.to_lowercase()))
-                .filter(users::gh_id.ne(-1))
-                .order(users::gh_id.desc())
-                .first(conn)
+            User::find_by_login(conn, name)
                 .optional()?
                 .map(Owner::User)
                 .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
