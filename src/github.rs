@@ -79,7 +79,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        self._request(url, &format!("token {}", auth.secret()))
+        self._request(url, &format!("Bearer {}", auth.secret()))
             .await
     }
 
