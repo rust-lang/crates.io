@@ -342,59 +342,118 @@ fn server_error_response(error: String) -> axum::response::Response {
         .into_response()
 }
 
-#[test]
-fn chain_error_internal() {
-    assert_eq!(
-        Err::<(), _>(internal("inner"))
-            .map_err(|err| err.chain(internal("middle")))
-            .map_err(|err| err.chain(internal("outer")))
-            .unwrap_err()
-            .to_string(),
-        "outer caused by middle caused by inner"
-    );
-    assert_eq!(
-        Err::<(), _>(internal("inner"))
-            .map_err(|err| err.chain(internal("outer")))
-            .unwrap_err()
-            .to_string(),
-        "outer caused by inner"
-    );
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::middleware::log_request::CauseField;
+    use axum::response::IntoResponse;
+    use diesel::result::Error as DieselError;
+    use http::StatusCode;
 
-    // Don't do this, the user will see a generic 500 error instead of the intended message
-    assert_eq!(
-        Err::<(), _>(cargo_err("inner"))
-            .map_err(|err| err.chain(internal("outer")))
-            .unwrap_err()
-            .to_string(),
-        "outer caused by inner"
-    );
-    assert_eq!(
-        Err::<(), _>(forbidden())
-            .map_err(|err| err.chain(internal("outer")))
-            .unwrap_err()
-            .to_string(),
-        "outer caused by must be logged in to perform that action"
-    );
-}
+    #[test]
+    fn http_error_responses() {
+        use crate::serde::de::Error;
 
-#[test]
-fn chain_error_user_facing() {
-    // Do this rarely, the user will only see the outer error
-    assert_eq!(
-        Err::<(), _>(cargo_err("inner"))
-            .map_err(|err| err.chain(cargo_err("outer")))
-            .unwrap_err()
-            .to_string(),
-        "outer caused by inner" // never logged
-    );
+        // Types for handling common error status codes
+        assert_eq!(bad_request("").response().status(), StatusCode::BAD_REQUEST);
+        assert_eq!(forbidden().response().status(), StatusCode::FORBIDDEN);
+        assert_eq!(
+            BoxedAppError::from(DieselError::NotFound)
+                .response()
+                .status(),
+            StatusCode::NOT_FOUND
+        );
+        assert_eq!(not_found().response().status(), StatusCode::NOT_FOUND);
 
-    // The outer error is sent as a response to the client.
-    // The inner error never bubbles up to the logging middleware
-    assert_eq!(
-        Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
-            .map_err(|err| err.chain(cargo_err("outer")))
+        // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
+        assert_eq!(cargo_err("").response().status(), StatusCode::OK);
+
+        // Inner errors are captured for logging when wrapped by a user facing error
+        let response = "-1"
+            .parse::<u8>()
+            .map_err(|err| err.chain(internal("middle error")))
+            .map_err(|err| err.chain(bad_request("outer user facing error")))
             .unwrap_err()
-            .to_string(),
-        "outer caused by permission denied" // never logged
-    );
+            .into_response();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(
+            response.extensions().get::<CauseField>().unwrap().0,
+            "middle error caused by invalid digit found in string"
+        );
+
+        // All other error types are converted to internal server errors
+        assert_eq!(
+            internal("").response().status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            BoxedAppError::from(serde_json::Error::custom("ExpectedColon"))
+                .response()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            BoxedAppError::from(::std::io::Error::new(::std::io::ErrorKind::Other, ""))
+                .response()
+                .status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+    }
+
+    #[test]
+    fn chain_error_internal() {
+        assert_eq!(
+            Err::<(), _>(internal("inner"))
+                .map_err(|err| err.chain(internal("middle")))
+                .map_err(|err| err.chain(internal("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by middle caused by inner"
+        );
+        assert_eq!(
+            Err::<(), _>(internal("inner"))
+                .map_err(|err| err.chain(internal("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by inner"
+        );
+
+        // Don't do this, the user will see a generic 500 error instead of the intended message
+        assert_eq!(
+            Err::<(), _>(cargo_err("inner"))
+                .map_err(|err| err.chain(internal("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by inner"
+        );
+        assert_eq!(
+            Err::<(), _>(forbidden())
+                .map_err(|err| err.chain(internal("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by must be logged in to perform that action"
+        );
+    }
+
+    #[test]
+    fn chain_error_user_facing() {
+        // Do this rarely, the user will only see the outer error
+        assert_eq!(
+            Err::<(), _>(cargo_err("inner"))
+                .map_err(|err| err.chain(cargo_err("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by inner" // never logged
+        );
+
+        // The outer error is sent as a response to the client.
+        // The inner error never bubbles up to the logging middleware
+        assert_eq!(
+            Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
+                .map_err(|err| err.chain(cargo_err("outer")))
+                .unwrap_err()
+                .to_string(),
+            "outer caused by permission denied" // never logged
+        );
+    }
 }
