@@ -1,8 +1,9 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::util::errors::{cargo_err, AppResult, NotFound};
+use crate::util::errors::{cargo_err, AppResult};
 
+use crate::github::GitHubError;
 use oauth2::AccessToken;
 use tokio::runtime::Handle;
 
@@ -211,8 +212,8 @@ async fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool>
         .await
     {
         Ok(membership) => Ok(membership.state == "active" && membership.role == "admin"),
-        Err(e) if e.is::<NotFound>() => Ok(false),
-        Err(e) => Err(e),
+        Err(GitHubError::NotFound(_)) => Ok(false),
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -232,7 +233,7 @@ async fn team_with_gh_id_contains_user(
         .await
     {
         // Officially how `false` is returned
-        Err(ref e) if e.is::<NotFound>() => return Ok(false),
+        Err(GitHubError::NotFound(_)) => return Ok(false),
         x => x?,
     };
 

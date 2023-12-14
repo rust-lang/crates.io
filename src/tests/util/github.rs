@@ -1,10 +1,10 @@
+use anyhow::anyhow;
 use async_trait::async_trait;
 use crates_io::controllers::github::secret_scanning::GitHubPublicKey;
 use crates_io::github::{
-    GitHubClient, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
-    GithubUser,
+    GitHubClient, GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam,
+    GitHubTeamMembership, GithubUser,
 };
-use crates_io::util::errors::{not_found, AppResult};
 use oauth2::AccessToken;
 
 pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
@@ -67,7 +67,7 @@ impl MockGitHubClient {
 
 #[async_trait]
 impl GitHubClient for MockGitHubClient {
-    async fn current_user(&self, _auth: &AccessToken) -> AppResult<GithubUser> {
+    async fn current_user(&self, _auth: &AccessToken) -> Result<GithubUser, GitHubError> {
         let user = &self.data.users[0];
         Ok(GithubUser {
             id: user.id,
@@ -82,7 +82,7 @@ impl GitHubClient for MockGitHubClient {
         &self,
         org_name: &str,
         _auth: &AccessToken,
-    ) -> AppResult<GitHubOrganization> {
+    ) -> Result<GitHubOrganization, GitHubError> {
         let org = self
             .data
             .orgs
@@ -100,7 +100,7 @@ impl GitHubClient for MockGitHubClient {
         org_name: &str,
         team_name: &str,
         auth: &AccessToken,
-    ) -> AppResult<GitHubTeam> {
+    ) -> Result<GitHubTeam, GitHubError> {
         let team = self
             .data
             .orgs
@@ -124,7 +124,7 @@ impl GitHubClient for MockGitHubClient {
         team_id: i32,
         username: &str,
         _auth: &AccessToken,
-    ) -> AppResult<GitHubTeamMembership> {
+    ) -> Result<GitHubTeamMembership, GitHubError> {
         let team = self
             .data
             .orgs
@@ -149,7 +149,7 @@ impl GitHubClient for MockGitHubClient {
         org_id: i32,
         username: &str,
         _auth: &AccessToken,
-    ) -> AppResult<GitHubOrgMembership> {
+    ) -> Result<GitHubOrgMembership, GitHubError> {
         let org = self
             .data
             .orgs
@@ -179,9 +179,13 @@ impl GitHubClient for MockGitHubClient {
         &self,
         _username: &str,
         _password: &str,
-    ) -> AppResult<Vec<GitHubPublicKey>> {
+    ) -> Result<Vec<GitHubPublicKey>, GitHubError> {
         Ok(self.data.public_keys.iter().map(Into::into).collect())
     }
+}
+
+fn not_found() -> GitHubError {
+    GitHubError::NotFound(anyhow!("404"))
 }
 
 pub(crate) struct MockData {
