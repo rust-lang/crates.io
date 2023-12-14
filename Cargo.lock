@@ -966,6 +966,7 @@ dependencies = [
  "clap",
  "cookie",
  "crates_io_env_vars",
+ "crates_io_github",
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_tarball",
@@ -1035,6 +1036,19 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "dotenvy",
+]
+
+[[package]]
+name = "crates_io_github"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "oauth2",
+ "reqwest",
+ "serde",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]

@@ -1,9 +1,8 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use crates_io::controllers::github::secret_scanning::GitHubPublicKey;
-use crates_io::github::{
-    GitHubClient, GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam,
-    GitHubTeamMembership, GithubUser,
+use crates_io_github::{
+    GitHubClient, GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubPublicKey,
+    GitHubTeam, GitHubTeamMembership, GithubUser,
 };
 use oauth2::AccessToken;
 

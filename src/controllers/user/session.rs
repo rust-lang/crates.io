@@ -6,12 +6,12 @@ use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use tokio::runtime::Handle;
 
 use crate::email::Emails;
-use crate::github::GithubUser;
 use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::errors::ReadOnlyMode;
 use crate::views::EncodableMe;
+use crates_io_github::GithubUser;
 
 /// Handles the `GET /api/private/session/begin` route.
 ///

@@ -6,6 +6,7 @@ use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
+use crates_io_github::GitHubPublicKey;
 use http::HeaderMap;
 use once_cell::sync::Lazy;
 use p256::ecdsa::signature::Verifier;
@@ -27,18 +28,6 @@ static PUBLIC_KEY_CACHE: Lazy<Mutex<GitHubPublicKeyCache>> = Lazy::new(|| {
     };
     Mutex::new(cache)
 });
-
-#[derive(Debug, Deserialize, Clone, Eq, Hash, PartialEq)]
-pub struct GitHubPublicKey {
-    pub key_identifier: String,
-    pub key: String,
-    pub is_current: bool,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GitHubPublicKeyList {
-    pub public_keys: Vec<GitHubPublicKey>,
-}
 
 #[derive(Debug, Clone)]
 struct GitHubPublicKeyCache {

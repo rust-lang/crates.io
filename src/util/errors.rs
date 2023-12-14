@@ -29,6 +29,7 @@ use crate::middleware::log_request::{CauseField, ErrorField};
 
 mod json;
 
+use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
     InsecurelyGeneratedTokenRevoked, MetricsDisabled, OwnershipInvitationExpired, ReadOnlyMode,
@@ -277,6 +278,23 @@ impl From<crates_io_worker::EnqueueError> for BoxedAppError {
 impl From<JoinError> for BoxedAppError {
     fn from(err: JoinError) -> BoxedAppError {
         Box::new(err)
+    }
+}
+
+impl From<GitHubError> for BoxedAppError {
+    fn from(error: GitHubError) -> Self {
+        match error {
+            GitHubError::Permission(_) => cargo_err(
+                "It looks like you don't have permission \
+                     to query a necessary property from GitHub \
+                     to complete this request. \
+                     You may need to re-authenticate on \
+                     crates.io to grant permission to read \
+                     GitHub org memberships.",
+            ),
+            GitHubError::NotFound(_) => not_found(),
+            _ => internal(format!("didn't get a 200 result from github: {error}")),
+        }
     }
 }
 

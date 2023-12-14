@@ -8,11 +8,11 @@ use std::sync::Arc;
 
 use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
-use crate::github::GitHubClient;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
+use crates_io_github::GitHubClient;
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;

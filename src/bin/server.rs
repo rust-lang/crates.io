@@ -7,7 +7,7 @@ use std::{sync::Arc, time::Duration};
 
 use axum::extract::Request;
 use axum::ServiceExt;
-use crates_io::github::RealGitHubClient;
+use crates_io_github::RealGitHubClient;
 use hyper::body::Incoming;
 use hyper_util::rt::TokioIo;
 use prometheus::Encoder;

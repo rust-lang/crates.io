@@ -1,5 +1,8 @@
 //! This module implements functionality for interacting with GitHub.
 
+#[macro_use]
+extern crate tracing;
+
 use oauth2::AccessToken;
 use reqwest::{self, header};
 
@@ -7,10 +10,9 @@ use serde::de::DeserializeOwned;
 
 use std::str;
 
-use crate::controllers::github::secret_scanning::{GitHubPublicKey, GitHubPublicKeyList};
-use crate::util::errors::{cargo_err, internal, not_found, BoxedAppError};
 use async_trait::async_trait;
 use reqwest::Client;
+use serde::Deserialize;
 
 type Result<T> = std::result::Result<T, GitHubError>;
 
@@ -170,23 +172,6 @@ impl From<reqwest::Error> for GitHubError {
     }
 }
 
-impl From<GitHubError> for BoxedAppError {
-    fn from(error: GitHubError) -> Self {
-        match error {
-            GitHubError::Permission(_) => cargo_err(
-                "It looks like you don't have permission \
-                     to query a necessary property from GitHub \
-                     to complete this request. \
-                     You may need to re-authenticate on \
-                     crates.io to grant permission to read \
-                     GitHub org memberships.",
-            ),
-            GitHubError::NotFound(_) => not_found(),
-            _ => internal(format!("didn't get a 200 result from github: {error}")),
-        }
-    }
-}
-
 #[derive(Debug, Deserialize)]
 pub struct GithubUser {
     pub avatar_url: Option<String>,
@@ -218,6 +203,18 @@ pub struct GitHubTeamMembership {
 pub struct GitHubOrgMembership {
     pub state: String,
     pub role: String,
+}
+
+#[derive(Debug, Deserialize, Clone, Eq, Hash, PartialEq)]
+pub struct GitHubPublicKey {
+    pub key_identifier: String,
+    pub key: String,
+    pub is_current: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubPublicKeyList {
+    pub public_keys: Vec<GitHubPublicKey>,
 }
 
 pub fn team_url(login: &str) -> String {
