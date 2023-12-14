@@ -9,6 +9,7 @@ use tokio::runtime::Handle;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
+use crate::sql::lower;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -71,6 +72,13 @@ impl<'a> NewTeam<'a> {
 }
 
 impl Team {
+    pub fn find_by_login(conn: &mut PgConnection, login: &str) -> QueryResult<Self> {
+        teams::table
+            .filter(lower(teams::login).eq(&login.to_lowercase()))
+            .first(conn)
+            .map_err(Into::into)
+    }
+
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
     ///
     /// # Panics
