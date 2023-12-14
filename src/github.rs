@@ -7,7 +7,6 @@ use serde::de::DeserializeOwned;
 
 use std::str;
 
-use crate::util::errors::{cargo_err, internal, not_found, BoxedAppError};
 use async_trait::async_trait;
 use reqwest::Client;
 
@@ -165,23 +164,6 @@ impl From<reqwest::Error> for GitHubError {
             Some(Status::UNAUTHORIZED) | Some(Status::FORBIDDEN) => Self::Permission(error.into()),
             Some(Status::NOT_FOUND) => Self::NotFound(error.into()),
             _ => Self::Other(error.into()),
-        }
-    }
-}
-
-impl From<GitHubError> for BoxedAppError {
-    fn from(error: GitHubError) -> Self {
-        match error {
-            GitHubError::Permission(_) => cargo_err(
-                "It looks like you don't have permission \
-                     to query a necessary property from GitHub \
-                     to complete this request. \
-                     You may need to re-authenticate on \
-                     crates.io to grant permission to read \
-                     GitHub org memberships.",
-            ),
-            GitHubError::NotFound(_) => not_found(),
-            _ => internal(format!("didn't get a 200 result from github: {error}")),
         }
     }
 }
