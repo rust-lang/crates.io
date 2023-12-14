@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use crates_io::github::{
+use crates_io_github::{
     GitHubClient, GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubPublicKey,
     GitHubTeam, GitHubTeamMembership, GithubUser,
 };

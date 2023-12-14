@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use crate::app::App;
 use crate::util::errors::{cargo_err, AppResult};
 
-use crate::github::GitHubError;
+use crates_io_github::GitHubError;
 use oauth2::AccessToken;
 use tokio::runtime::Handle;
 

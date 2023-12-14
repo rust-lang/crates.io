@@ -1,12 +1,12 @@
 use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
-use crate::github::GitHubPublicKey;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
+use crates_io_github::GitHubPublicKey;
 use http::HeaderMap;
 use once_cell::sync::Lazy;
 use p256::ecdsa::signature::Verifier;

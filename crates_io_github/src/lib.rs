@@ -1,5 +1,8 @@
 //! This module implements functionality for interacting with GitHub.
 
+#[macro_use]
+extern crate tracing;
+
 use oauth2::AccessToken;
 use reqwest::{self, header};
 
@@ -9,6 +12,7 @@ use std::str;
 
 use async_trait::async_trait;
 use reqwest::Client;
+use serde::Deserialize;
 
 type Result<T> = std::result::Result<T, GitHubError>;
 

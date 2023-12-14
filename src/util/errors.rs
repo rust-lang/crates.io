@@ -29,7 +29,7 @@ use crate::middleware::log_request::{CauseField, ErrorField};
 
 mod json;
 
-use crate::github::GitHubError;
+use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
     InsecurelyGeneratedTokenRevoked, MetricsDisabled, OwnershipInvitationExpired, ReadOnlyMode,
