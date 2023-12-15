@@ -1,14 +1,9 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{forbidden, not_found, MetricsDisabled};
-use axum::response::IntoResponse;
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
-pub async fn prometheus(
-    app: AppState,
-    Path(kind): Path<String>,
-    req: Parts,
-) -> AppResult<Response> {
+pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> AppResult<String> {
     if let Some(expected_token) = &app.config.metrics_authorization_token {
         let provided_token = req
             .headers
@@ -32,11 +27,5 @@ pub async fn prometheus(
     })
     .await?;
 
-    let output = TextEncoder::new().encode_to_string(&metrics)?;
-
-    Ok((
-        [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
-        output,
-    )
-        .into_response())
+    Ok(TextEncoder::new().encode_to_string(&metrics)?)
 }
