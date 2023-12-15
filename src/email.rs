@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use crate::config;
 use crate::Env;
 use lettre::message::header::ContentType;
+use lettre::message::Mailbox;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::SmtpTransport;
@@ -14,6 +15,7 @@ use rand::distributions::{Alphanumeric, DistString};
 pub struct Emails {
     backend: EmailBackend,
     domain: String,
+    from: Mailbox,
 }
 
 const DEFAULT_FROM: &str = "noreply@crates.io";
@@ -25,6 +27,8 @@ impl Emails {
         let login = dotenvy::var("MAILGUN_SMTP_LOGIN");
         let password = dotenvy::var("MAILGUN_SMTP_PASSWORD");
         let server = dotenvy::var("MAILGUN_SMTP_SERVER");
+
+        let from = login.as_deref().unwrap_or(DEFAULT_FROM).parse().unwrap();
 
         let backend = match (login, password, server) {
             (Ok(login), Ok(password), Ok(server)) => EmailBackend::Smtp {
@@ -43,7 +47,11 @@ impl Emails {
 
         let domain = config.domain_name.clone();
 
-        Self { backend, domain }
+        Self {
+            backend,
+            domain,
+            from,
+        }
     }
 
     /// Create a new test backend that stores all the outgoing emails in memory, allowing for tests
@@ -54,6 +62,7 @@ impl Emails {
                 mails: Arc::new(Mutex::new(Vec::new())),
             },
             domain: "crates.io".into(),
+            from: DEFAULT_FROM.parse().unwrap(),
         }
     }
 
@@ -181,7 +190,7 @@ Source type: {source}\n",
         let email = Message::builder()
             .message_id(Some(message_id.clone()))
             .to(recipient.parse()?)
-            .from(self.sender_address().parse()?)
+            .from(self.from.clone())
             .subject(subject)
             .header(ContentType::TEXT_PLAIN)
             .body(body.to_string())?;
@@ -221,14 +230,6 @@ Source type: {source}\n",
         }
 
         Ok(())
-    }
-
-    fn sender_address(&self) -> &str {
-        match &self.backend {
-            EmailBackend::Smtp { login, .. } => login,
-            EmailBackend::FileSystem { .. } => DEFAULT_FROM,
-            EmailBackend::Memory { .. } => DEFAULT_FROM,
-        }
     }
 }
 
