@@ -106,23 +106,23 @@ impl Owner {
     }
 
     pub fn kind(&self) -> i32 {
-        match *self {
+        match self {
             Owner::User(_) => OwnerKind::User as i32,
             Owner::Team(_) => OwnerKind::Team as i32,
         }
     }
 
     pub fn login(&self) -> &str {
-        match *self {
-            Owner::User(ref user) => &user.gh_login,
-            Owner::Team(ref team) => &team.login,
+        match self {
+            Owner::User(user) => &user.gh_login,
+            Owner::Team(team) => &team.login,
         }
     }
 
     pub fn id(&self) -> i32 {
-        match *self {
-            Owner::User(ref user) => user.id,
-            Owner::Team(ref team) => team.id,
+        match self {
+            Owner::User(user) => user.id,
+            Owner::Team(team) => team.id,
         }
     }
 }
