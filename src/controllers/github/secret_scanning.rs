@@ -180,10 +180,13 @@ fn send_notification_email(
         return Err(anyhow!("No address found"));
     };
 
-    state
-        .emails
-        .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
-        .map_err(|error| anyhow!("{error}"))?;
+    state.emails.send_token_exposed_notification(
+        &email,
+        &alert.url,
+        "GitHub",
+        &alert.source,
+        &token.name,
+    )?;
 
     Ok(())
 }
