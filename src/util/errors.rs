@@ -29,6 +29,7 @@ use crate::middleware::log_request::{CauseField, ErrorField};
 
 mod json;
 
+use crate::email::EmailError;
 use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
@@ -221,6 +222,23 @@ impl From<DieselError> for BoxedAppError {
 impl From<http::Error> for BoxedAppError {
     fn from(err: http::Error) -> BoxedAppError {
         Box::new(err)
+    }
+}
+
+impl From<EmailError> for BoxedAppError {
+    fn from(error: EmailError) -> Self {
+        match error {
+            EmailError::AddressError(error) => Box::new(error),
+            EmailError::MessageBuilderError(error) => Box::new(error),
+            EmailError::SmtpTransportError(error) => {
+                error!(?error, "Failed to send email");
+                server_error("Failed to send the email")
+            }
+            EmailError::FileTransportError(error) => {
+                error!(?error, "Failed to send email");
+                server_error("Email file could not be generated")
+            }
+        }
     }
 }
 

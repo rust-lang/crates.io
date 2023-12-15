@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use crate::util::errors::{server_error, BoxedAppError};
-
 use crate::config;
 use crate::Env;
 use lettre::message::header::ContentType;
@@ -240,23 +238,6 @@ pub enum EmailError {
     SmtpTransportError(#[from] lettre::transport::smtp::Error),
     #[error(transparent)]
     FileTransportError(#[from] lettre::transport::file::Error),
-}
-
-impl From<EmailError> for BoxedAppError {
-    fn from(error: EmailError) -> Self {
-        match error {
-            EmailError::AddressError(error) => Box::new(error),
-            EmailError::MessageBuilderError(error) => Box::new(error),
-            EmailError::SmtpTransportError(error) => {
-                error!(?error, "Failed to send email");
-                server_error("Failed to send the email")
-            }
-            EmailError::FileTransportError(error) => {
-                error!(?error, "Failed to send email");
-                server_error("Email file could not be generated")
-            }
-        }
-    }
 }
 
 #[derive(Clone)]
