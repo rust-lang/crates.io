@@ -248,9 +248,9 @@ dependencies = [
 
 [[package]]
 name = "aws-ip-ranges"
-version = "0.29.0"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c8dd039d1641971b2cb87cea2738073953646d13a08efabc6302ddca2e8e46d"
+checksum = "2c0a185564b17e708f258aa37e3de6ddddffd1214768484c24a947189ab23799"
 dependencies = [
  "serde",
  "serde_json",
@@ -1043,6 +1043,26 @@ dependencies = [
  "htmlescape",
  "insta",
  "url",
+]
+
+[[package]]
+name = "crates_io_smoke_test"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "clap",
+ "crates_io_index",
+ "reqwest",
+ "secrecy",
+ "semver",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
