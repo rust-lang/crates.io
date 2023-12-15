@@ -213,7 +213,8 @@ pub async fn regenerate_token_and_send(
             let email: Email = update(Email::belonging_to(user))
                 .set(emails::token.eq(sql("DEFAULT")))
                 .get_result(conn)
-                .map_err(|_| bad_request("Email could not be found"))?;
+                .optional()?
+                .ok_or_else(|| bad_request("Email could not be found"))?;
 
             state
                 .emails

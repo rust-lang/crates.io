@@ -76,8 +76,9 @@ impl Owner {
                 .filter(users::gh_id.ne(-1))
                 .order(users::gh_id.desc())
                 .first(conn)
+                .optional()?
                 .map(Owner::User)
-                .map_err(|_| cargo_err(format_args!("could not find user with login `{name}`")))
+                .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
         }
     }
 
@@ -92,16 +93,18 @@ impl Owner {
             teams::table
                 .filter(lower(teams::login).eq(&name.to_lowercase()))
                 .first(conn)
+                .optional()?
                 .map(Owner::Team)
-                .map_err(|_| cargo_err(format_args!("could not find team with login `{name}`")))
+                .ok_or_else(|| cargo_err(format_args!("could not find team with login `{name}`")))
         } else {
             users::table
                 .filter(lower(users::gh_login).eq(name.to_lowercase()))
                 .filter(users::gh_id.ne(-1))
                 .order(users::gh_id.desc())
                 .first(conn)
+                .optional()?
                 .map(Owner::User)
-                .map_err(|_| cargo_err(format_args!("could not find user with login `{name}`")))
+                .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
         }
     }
 
