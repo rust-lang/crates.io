@@ -31,7 +31,7 @@ impl CrateOwnerInvitation {
         crate_id: i32,
         conn: &mut PgConnection,
         config: &config::Server,
-    ) -> AppResult<NewCrateOwnerInvitationOutcome> {
+    ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
         #[derive(Insertable, Clone, Copy, Debug)]
         #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
         struct NewRecord {
@@ -43,7 +43,7 @@ impl CrateOwnerInvitation {
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
         // expired, instead of returning "already exists".
-        conn.transaction(|conn| -> AppResult<()> {
+        conn.transaction(|conn| -> QueryResult<()> {
             // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
             // use the model's `is_expired` method, centralizing our expiration checking logic.
             let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
@@ -81,16 +81,16 @@ impl CrateOwnerInvitation {
         })
     }
 
-    pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut PgConnection) -> AppResult<Self> {
-        Ok(crate_owner_invitations::table
+    pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut PgConnection) -> QueryResult<Self> {
+        crate_owner_invitations::table
             .find((user_id, crate_id))
-            .first::<Self>(conn)?)
+            .first::<Self>(conn)
     }
 
-    pub fn find_by_token(token: &str, conn: &mut PgConnection) -> AppResult<Self> {
-        Ok(crate_owner_invitations::table
+    pub fn find_by_token(token: &str, conn: &mut PgConnection) -> QueryResult<Self> {
+        crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
-            .first::<Self>(conn)?)
+            .first::<Self>(conn)
     }
 
     pub fn accept(self, conn: &mut PgConnection, config: &config::Server) -> AppResult<()> {
@@ -122,7 +122,7 @@ impl CrateOwnerInvitation {
         })
     }
 
-    pub fn decline(self, conn: &mut PgConnection) -> AppResult<()> {
+    pub fn decline(self, conn: &mut PgConnection) -> QueryResult<()> {
         // The check to prevent declining expired invitations is *explicitly* missing. We do not
         // care if an expired invitation is declined, as that just removes the invitation from the
         // database.

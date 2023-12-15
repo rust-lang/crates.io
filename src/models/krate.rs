@@ -436,7 +436,7 @@ impl Crate {
         &self,
         conn: &mut PgConnection,
         options: PaginationOptions,
-    ) -> AppResult<(Vec<ReverseDependency>, i64)> {
+    ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
 
