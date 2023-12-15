@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use crate::config;
@@ -31,14 +30,19 @@ impl Emails {
         let from = login.as_deref().unwrap_or(DEFAULT_FROM).parse().unwrap();
 
         let backend = match (login, password, server) {
-            (Ok(login), Ok(password), Ok(server)) => EmailBackend::Smtp {
-                server,
-                login,
-                password,
-            },
-            _ => EmailBackend::FileSystem {
-                path: "/tmp".into(),
-            },
+            (Ok(login), Ok(password), Ok(server)) => {
+                let transport = SmtpTransport::relay(&server)
+                    .unwrap()
+                    .credentials(Credentials::new(login, password))
+                    .authentication(vec![Mechanism::Plain])
+                    .build();
+
+                EmailBackend::Smtp(Box::new(transport))
+            }
+            _ => {
+                let transport = FileTransport::new("/tmp");
+                EmailBackend::FileSystem(Arc::new(transport))
+            }
         };
 
         if config.base.env == Env::Production && !matches!(backend, EmailBackend::Smtp { .. }) {
@@ -196,29 +200,13 @@ Source type: {source}\n",
             .body(body.to_string())?;
 
         match &self.backend {
-            EmailBackend::Smtp {
-                server,
-                login,
-                password,
-            } => {
-                SmtpTransport::relay(server).and_then(|transport| {
-                    transport
-                        .credentials(Credentials::new(login.clone(), password.clone()))
-                        .authentication(vec![Mechanism::Plain])
-                        .build()
-                        .send(&email)
-                })?;
-
+            EmailBackend::Smtp(transport) => {
+                transport.send(&email)?;
                 info!(?message_id, ?subject, "Email sent");
             }
-            EmailBackend::FileSystem { path } => {
-                let id = FileTransport::new(path).send(&email)?;
-
-                info!(
-                    path = ?path.join(format!("{id}.eml")),
-                    ?subject,
-                    "Email sent"
-                );
+            EmailBackend::FileSystem(transport) => {
+                let id = transport.send(&email)?;
+                info!(%id, ?subject, "Email sent");
             }
             EmailBackend::Memory { mails } => {
                 mails.lock().unwrap().push(StoredEmail {
@@ -248,13 +236,9 @@ pub enum EmailError {
 #[derive(Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
-    Smtp {
-        server: String,
-        login: String,
-        password: String,
-    },
+    Smtp(Box<SmtpTransport>),
     /// Backend used locally during development, will store the emails in the provided directory.
-    FileSystem { path: PathBuf },
+    FileSystem(Arc<FileTransport>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
     Memory { mails: Arc<Mutex<Vec<StoredEmail>>> },
 }
@@ -263,15 +247,12 @@ enum EmailBackend {
 impl std::fmt::Debug for EmailBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EmailBackend::Smtp { server, login, .. } => {
+            EmailBackend::Smtp(_) => {
                 // The password field is *intentionally* not included
-                f.debug_struct("Smtp")
-                    .field("server", server)
-                    .field("login", login)
-                    .finish()?;
+                f.debug_tuple("Smtp").finish()?;
             }
-            EmailBackend::FileSystem { path } => {
-                f.debug_struct("FileSystem").field("path", path).finish()?;
+            EmailBackend::FileSystem(transport) => {
+                f.debug_tuple("FileSystem").field(transport).finish()?;
             }
             EmailBackend::Memory { .. } => f.write_str("Memory")?,
         }
