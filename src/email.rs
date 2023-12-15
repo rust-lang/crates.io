@@ -13,6 +13,7 @@ use rand::distributions::{Alphanumeric, DistString};
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
+    domain: String,
 }
 
 impl Emails {
@@ -38,7 +39,9 @@ impl Emails {
             panic!("only the smtp backend is allowed in production");
         }
 
-        Self { backend }
+        let domain = config.domain_name.clone();
+
+        Self { backend, domain }
     }
 
     /// Create a new test backend that stores all the outgoing emails in memory, allowing for tests
@@ -48,6 +51,7 @@ impl Emails {
             backend: EmailBackend::Memory {
                 mails: Arc::new(Mutex::new(Vec::new())),
             },
+            domain: "crates.io".into(),
         }
     }
 
@@ -67,9 +71,7 @@ impl Emails {
             "Hello {}! Welcome to crates.io. Please click the
 link below to verify your email address. Thank you!\n
 https://{}/confirm/{}",
-            user_name,
-            crate::config::domain_name(),
-            token
+            user_name, self.domain, token
         );
 
         self.send(email, subject, &body)
@@ -88,7 +90,7 @@ https://{}/confirm/{}",
             "{user_name} has invited you to become an owner of the crate {crate_name}!\n
 Visit https://{domain}/accept-invite/{token} to accept this invitation,
 or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            domain = crate::config::domain_name()
+            domain = self.domain
         );
 
         self.send(email, subject, &body)
@@ -101,7 +103,7 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
         crate_name: &str,
         squats: &[typomania::checks::Squat],
     ) -> Result<(), EmailError> {
-        let domain = crate::config::domain_name();
+        let domain = &self.domain;
         let subject = "Possible typosquatting in new crate";
         let body = format!(
             "New crate {crate_name} may be typosquatting one or more other crates.\n
@@ -140,7 +142,7 @@ Please review your account at https://{domain} to confirm that no\n
 unexpected changes have been made to your settings or crates.\n
 \n
 Source type: {source}\n",
-            domain = crate::config::domain_name()
+            domain = self.domain
         );
         if url.is_empty() {
             body.push_str("\nWe were not informed of the URL where the token was found.\n");
@@ -171,7 +173,7 @@ Source type: {source}\n",
         let message_id = format!(
             "<{}@{}>",
             Alphanumeric.sample_string(&mut rand::thread_rng(), 32),
-            crate::config::domain_name(),
+            self.domain,
         );
 
         let email = Message::builder()
