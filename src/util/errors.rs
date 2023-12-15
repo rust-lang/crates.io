@@ -224,18 +224,6 @@ impl From<http::Error> for BoxedAppError {
     }
 }
 
-impl From<lettre::error::Error> for BoxedAppError {
-    fn from(err: lettre::error::Error) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
-impl From<lettre::address::AddressError> for BoxedAppError {
-    fn from(err: lettre::address::AddressError) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<PoolError> for BoxedAppError {
     fn from(err: PoolError) -> BoxedAppError {
         match err {

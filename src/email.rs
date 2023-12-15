@@ -245,8 +245,8 @@ pub enum EmailError {
 impl From<EmailError> for BoxedAppError {
     fn from(error: EmailError) -> Self {
         match error {
-            EmailError::AddressError(error) => error.into(),
-            EmailError::MessageBuilderError(error) => error.into(),
+            EmailError::AddressError(error) => Box::new(error),
+            EmailError::MessageBuilderError(error) => Box::new(error),
             EmailError::SmtpTransportError(error) => {
                 error!(?error, "Failed to send email");
                 server_error("Failed to send the email")
