@@ -18,7 +18,7 @@ use std::time::Duration;
 use tokio::sync::Mutex;
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
-static PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours
+const PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours
 
 // Cache of public keys that have been fetched from GitHub API
 static PUBLIC_KEY_CACHE: Lazy<Mutex<GitHubPublicKeyCache>> = Lazy::new(|| {
