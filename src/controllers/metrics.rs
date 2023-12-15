@@ -1,7 +1,7 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{forbidden, not_found, MetricsDisabled};
 use axum::response::IntoResponse;
-use prometheus::{Encoder, TextEncoder};
+use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
 pub async fn prometheus(
@@ -32,8 +32,7 @@ pub async fn prometheus(
     })
     .await?;
 
-    let mut output = Vec::new();
-    TextEncoder::new().encode(&metrics, &mut output)?;
+    let output = TextEncoder::new().encode_to_string(&metrics)?;
 
     Ok((
         [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
