@@ -22,11 +22,11 @@ impl Emails {
     /// Create a new instance detecting the backend from the environment. This will either connect
     /// to a SMTP server or store the emails on the local filesystem.
     pub fn from_environment(config: &config::Server) -> Self {
-        let backend = match (
-            dotenvy::var("MAILGUN_SMTP_LOGIN"),
-            dotenvy::var("MAILGUN_SMTP_PASSWORD"),
-            dotenvy::var("MAILGUN_SMTP_SERVER"),
-        ) {
+        let login = dotenvy::var("MAILGUN_SMTP_LOGIN");
+        let password = dotenvy::var("MAILGUN_SMTP_PASSWORD");
+        let server = dotenvy::var("MAILGUN_SMTP_SERVER");
+
+        let backend = match (login, password, server) {
             (Ok(login), Ok(password), Ok(server)) => EmailBackend::Smtp {
                 server,
                 login,
