@@ -126,9 +126,8 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
+    conn: &mut PgConnection,
 ) -> Result<GitHubSecretAlertFeedbackLabel, BoxedAppError> {
-    let conn = &mut *state.db_write()?;
-
     let hashed_token = HashedToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
@@ -217,10 +216,12 @@ pub async fn verify(
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
     spawn_blocking(move || {
+        let conn = &mut *state.db_write()?;
+
         let feedback = alerts
             .into_iter()
             .map(|alert| {
-                let label = alert_revoke_token(&state, &alert)?;
+                let label = alert_revoke_token(&state, &alert, conn)?;
                 Ok(GitHubSecretAlertFeedback {
                     token_raw: alert.token,
                     token_type: alert.r#type,
