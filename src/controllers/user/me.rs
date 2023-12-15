@@ -209,7 +209,7 @@ pub async fn regenerate_token_and_send(
             return Err(bad_request("current user does not match requested user"));
         }
 
-        conn.transaction(|conn| {
+        conn.transaction(|conn| -> AppResult<_> {
             let email: Email = update(Email::belonging_to(user))
                 .set(emails::token.eq(sql("DEFAULT")))
                 .get_result(conn)
@@ -219,6 +219,7 @@ pub async fn regenerate_token_and_send(
             state
                 .emails
                 .send_user_confirm(&email.email, &user.gh_login, &email.token)
+                .map_err(Into::into)
         })?;
 
         ok_true()
