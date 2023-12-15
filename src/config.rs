@@ -8,5 +8,4 @@ pub use self::balance_capacity::BalanceCapacityConfig;
 pub use self::base::Base;
 pub use self::database_pools::{DatabasePools, DbPoolConfig};
 pub use self::sentry::SentryConfig;
-pub(crate) use self::server::domain_name;
 pub use self::server::Server;
