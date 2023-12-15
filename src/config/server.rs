@@ -202,7 +202,7 @@ impl Server {
             page_offset_ua_blocklist,
             page_offset_cidr_blocklist,
             excluded_crate_names,
-            domain_name: domain_name(),
+            domain_name: dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into()),
             allowed_origins,
             downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
                 .map(Duration::from_millis)
@@ -234,10 +234,6 @@ impl Server {
     pub fn env(&self) -> Env {
         self.base.env
     }
-}
-
-pub(crate) fn domain_name() -> String {
-    dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into())
 }
 
 /// Parses a CIDR block string to a valid `IpNetwork` struct.
