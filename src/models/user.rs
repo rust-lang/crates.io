@@ -8,6 +8,7 @@ use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
+use crate::sql::lower;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
@@ -118,6 +119,14 @@ impl User {
         let api_token = ApiToken::find_by_api_token(conn, token)?;
 
         Ok(Self::find(conn, api_token.user_id)?)
+    }
+
+    pub fn find_by_login(conn: &mut PgConnection, login: &str) -> QueryResult<User> {
+        users::table
+            .filter(lower(users::gh_login).eq(login.to_lowercase()))
+            .filter(users::gh_id.ne(-1))
+            .order(users::gh_id.desc())
+            .first(conn)
     }
 
     pub fn owning(krate: &Crate, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
