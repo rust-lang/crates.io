@@ -14,10 +14,11 @@ use p256::ecdsa::VerifyingKey;
 use p256::PublicKey;
 use serde_json as json;
 use std::str::FromStr;
+use std::time::Duration;
 use tokio::sync::Mutex;
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
-static PUBLIC_KEY_CACHE_LIFETIME_SECONDS: i64 = 60 * 60 * 24; // 24 hours
+static PUBLIC_KEY_CACHE_LIFETIME_SECONDS: u64 = 60 * 60 * 24; // 24 hours
 
 // Cache of public keys that have been fetched from GitHub API
 static PUBLIC_KEY_CACHE: Lazy<Mutex<GitHubPublicKeyCache>> = Lazy::new(|| {
@@ -38,8 +39,7 @@ struct GitHubPublicKeyCache {
 /// Check if cache of public keys is populated and not expired
 fn is_cache_valid(timestamp: Option<chrono::DateTime<chrono::Utc>>) -> bool {
     timestamp.is_some_and(|timestamp| {
-        chrono::Utc::now()
-            < timestamp + chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
+        chrono::Utc::now() < timestamp + Duration::from_secs(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
     })
 }
 
@@ -244,15 +244,15 @@ mod tests {
     fn test_is_cache_valid() {
         assert!(!is_cache_valid(None));
         assert!(!is_cache_valid(Some(
-            chrono::Utc::now() - chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
+            chrono::Utc::now() - Duration::from_secs(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
         )));
         assert!(is_cache_valid(Some(
-            chrono::Utc::now() - chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS - 1)
+            chrono::Utc::now() - Duration::from_secs(PUBLIC_KEY_CACHE_LIFETIME_SECONDS - 1)
         )));
         assert!(is_cache_valid(Some(chrono::Utc::now())));
         // shouldn't happen, but just in case of time travel
         assert!(is_cache_valid(Some(
-            chrono::Utc::now() + chrono::Duration::seconds(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
+            chrono::Utc::now() + Duration::from_secs(PUBLIC_KEY_CACHE_LIFETIME_SECONDS)
         )));
     }
 }
