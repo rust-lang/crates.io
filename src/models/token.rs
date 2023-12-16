@@ -34,7 +34,11 @@ pub struct ApiToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &mut PgConnection, user_id: i32, name: &str) -> AppResult<CreatedApiToken> {
+    pub fn insert(
+        conn: &mut PgConnection,
+        user_id: i32,
+        name: &str,
+    ) -> QueryResult<CreatedApiToken> {
         Self::insert_with_scopes(conn, user_id, name, None, None, None)
     }
 
@@ -45,7 +49,7 @@ impl ApiToken {
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
-    ) -> AppResult<CreatedApiToken> {
+    ) -> QueryResult<CreatedApiToken> {
         let token = PlainToken::generate();
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
