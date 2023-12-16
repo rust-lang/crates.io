@@ -127,7 +127,7 @@ fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
     conn: &mut PgConnection,
-) -> Result<GitHubSecretAlertFeedbackLabel, BoxedAppError> {
+) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
     let hashed_token = HashedToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
@@ -180,10 +180,13 @@ fn send_notification_email(
         return Err(anyhow!("No address found"));
     };
 
-    state
-        .emails
-        .send_token_exposed_notification(&email, &alert.url, "GitHub", &alert.source, &token.name)
-        .map_err(|error| anyhow!("{error}"))?;
+    state.emails.send_token_exposed_notification(
+        &email,
+        &alert.url,
+        "GitHub",
+        &alert.source,
+        &token.name,
+    )?;
 
     Ok(())
 }
@@ -228,7 +231,7 @@ pub async fn verify(
                     label,
                 })
             })
-            .collect::<Result<_, BoxedAppError>>()?;
+            .collect::<QueryResult<_>>()?;
 
         Ok(Json(feedback))
     })
