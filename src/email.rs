@@ -16,7 +16,7 @@ pub struct Emails {
     domain: String,
 }
 
-const DEFAULT_FROM: &str = "test@localhost";
+const DEFAULT_FROM: &str = "noreply@crates.io";
 
 impl Emails {
     /// Create a new instance detecting the backend from the environment. This will either connect
