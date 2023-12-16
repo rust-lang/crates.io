@@ -16,6 +16,8 @@ pub struct Emails {
     domain: String,
 }
 
+const DEFAULT_FROM: &str = "noreply@crates.io";
+
 impl Emails {
     /// Create a new instance detecting the backend from the environment. This will either connect
     /// to a SMTP server or store the emails on the local filesystem.
@@ -224,8 +226,8 @@ Source type: {source}\n",
     fn sender_address(&self) -> &str {
         match &self.backend {
             EmailBackend::Smtp { login, .. } => login,
-            EmailBackend::FileSystem { .. } => "test@localhost",
-            EmailBackend::Memory { .. } => "test@localhost",
+            EmailBackend::FileSystem { .. } => DEFAULT_FROM,
+            EmailBackend::Memory { .. } => DEFAULT_FROM,
         }
     }
 }
