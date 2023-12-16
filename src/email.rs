@@ -1,13 +1,14 @@
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::config;
 use crate::Env;
+use lettre::address::Envelope;
 use lettre::message::header::ContentType;
 use lettre::message::Mailbox;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::SmtpTransport;
+use lettre::transport::stub::StubTransport;
 use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
@@ -31,14 +32,19 @@ impl Emails {
         let from = login.as_deref().unwrap_or(DEFAULT_FROM).parse().unwrap();
 
         let backend = match (login, password, server) {
-            (Ok(login), Ok(password), Ok(server)) => EmailBackend::Smtp {
-                server,
-                login,
-                password,
-            },
-            _ => EmailBackend::FileSystem {
-                path: "/tmp".into(),
-            },
+            (Ok(login), Ok(password), Ok(server)) => {
+                let transport = SmtpTransport::relay(&server)
+                    .unwrap()
+                    .credentials(Credentials::new(login, password))
+                    .authentication(vec![Mechanism::Plain])
+                    .build();
+
+                EmailBackend::Smtp(Box::new(transport))
+            }
+            _ => {
+                let transport = FileTransport::new("/tmp");
+                EmailBackend::FileSystem(Arc::new(transport))
+            }
         };
 
         if config.base.env == Env::Production && !matches!(backend, EmailBackend::Smtp { .. }) {
@@ -58,9 +64,7 @@ impl Emails {
     /// to later assert the mails were sent.
     pub fn new_in_memory() -> Self {
         Self {
-            backend: EmailBackend::Memory {
-                mails: Arc::new(Mutex::new(Vec::new())),
-            },
+            backend: EmailBackend::Memory(StubTransport::new_ok()),
             domain: "crates.io".into(),
             from: DEFAULT_FROM.parse().unwrap(),
         }
@@ -165,9 +169,9 @@ Source type: {source}\n",
 
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
-    pub fn mails_in_memory(&self) -> Option<Vec<StoredEmail>> {
-        if let EmailBackend::Memory { mails } = &self.backend {
-            Some(mails.lock().unwrap().clone())
+    pub fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {
+        if let EmailBackend::Memory(transport) = &self.backend {
+            Some(transport.messages())
         } else {
             None
         }
@@ -196,36 +200,16 @@ Source type: {source}\n",
             .body(body.to_string())?;
 
         match &self.backend {
-            EmailBackend::Smtp {
-                server,
-                login,
-                password,
-            } => {
-                SmtpTransport::relay(server).and_then(|transport| {
-                    transport
-                        .credentials(Credentials::new(login.clone(), password.clone()))
-                        .authentication(vec![Mechanism::Plain])
-                        .build()
-                        .send(&email)
-                })?;
-
+            EmailBackend::Smtp(transport) => {
+                transport.send(&email)?;
                 info!(?message_id, ?subject, "Email sent");
             }
-            EmailBackend::FileSystem { path } => {
-                let id = FileTransport::new(path).send(&email)?;
-
-                info!(
-                    path = ?path.join(format!("{id}.eml")),
-                    ?subject,
-                    "Email sent"
-                );
+            EmailBackend::FileSystem(transport) => {
+                let id = transport.send(&email)?;
+                info!(%id, ?subject, "Email sent");
             }
-            EmailBackend::Memory { mails } => {
-                mails.lock().unwrap().push(StoredEmail {
-                    to: recipient.into(),
-                    subject: subject.into(),
-                    body: body.into(),
-                });
+            EmailBackend::Memory(transport) => {
+                transport.send(&email)?;
             }
         }
 
@@ -243,37 +227,32 @@ pub enum EmailError {
     SmtpTransportError(#[from] lettre::transport::smtp::Error),
     #[error(transparent)]
     FileTransportError(#[from] lettre::transport::file::Error),
+    #[error(transparent)]
+    StubTransportError(#[from] lettre::transport::stub::Error),
 }
 
 #[derive(Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
-    Smtp {
-        server: String,
-        login: String,
-        password: String,
-    },
+    Smtp(Box<SmtpTransport>),
     /// Backend used locally during development, will store the emails in the provided directory.
-    FileSystem { path: PathBuf },
+    FileSystem(Arc<FileTransport>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
-    Memory { mails: Arc<Mutex<Vec<StoredEmail>>> },
+    Memory(StubTransport),
 }
 
 // Custom Debug implementation to avoid showing the SMTP password.
 impl std::fmt::Debug for EmailBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EmailBackend::Smtp { server, login, .. } => {
+            EmailBackend::Smtp(_) => {
                 // The password field is *intentionally* not included
-                f.debug_struct("Smtp")
-                    .field("server", server)
-                    .field("login", login)
-                    .finish()?;
+                f.debug_tuple("Smtp").finish()?;
             }
-            EmailBackend::FileSystem { path } => {
-                f.debug_struct("FileSystem").field("path", path).finish()?;
+            EmailBackend::FileSystem(transport) => {
+                f.debug_tuple("FileSystem").field(transport).finish()?;
             }
-            EmailBackend::Memory { .. } => f.write_str("Memory")?,
+            EmailBackend::Memory(transport) => f.debug_tuple("Memory").field(transport).finish()?,
         }
         Ok(())
     }
