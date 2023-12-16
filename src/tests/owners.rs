@@ -901,17 +901,18 @@ fn highest_gh_id_is_most_recent_account_we_know_of() {
 }
 
 fn extract_token_from_invite_email(emails: &Emails) -> String {
+    let emails = emails.mails_in_memory().unwrap();
+
     let message = emails
-        .mails_in_memory()
-        .unwrap()
         .into_iter()
-        .find(|m| m.subject.contains("invitation"))
+        .map(|(_envelope, message)| message)
+        .find(|m| m.contains("Subject: Crate ownership invitation"))
         .expect("missing email");
 
     // Simple (but kinda fragile) parser to extract the token.
     let before_token = "/accept-invite/";
     let after_token = " ";
-    let body = message.body.as_str();
+    let body = message.as_str();
     let before_pos = body.find(before_token).unwrap() + before_token.len();
     let after_pos = before_pos + body[before_pos..].find(after_token).unwrap();
     body[before_pos..after_pos].to_string()

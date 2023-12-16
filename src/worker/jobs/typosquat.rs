@@ -74,6 +74,7 @@ fn check(
 #[cfg(test)]
 mod tests {
     use crate::{test_util::pg_connection, typosquat::test_util::Faker};
+    use lettre::Address;
 
     use super::*;
 
@@ -116,7 +117,7 @@ mod tests {
         let sent_mail = emails.mails_in_memory().unwrap();
         assert!(!sent_mail.is_empty());
         let sent = sent_mail.into_iter().next().unwrap();
-        assert_eq!(&sent.to, "admin@example.com");
+        assert_eq!(&sent.0.to(), &["admin@example.com".parse::<Address>()?]);
 
         Ok(())
     }

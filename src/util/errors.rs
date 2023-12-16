@@ -238,6 +238,10 @@ impl From<EmailError> for BoxedAppError {
                 error!(?error, "Failed to send email");
                 server_error("Email file could not be generated")
             }
+            EmailError::StubTransportError(error) => {
+                error!(?error, "Failed to send email");
+                server_error("Failed to send the email")
+            }
         }
     }
 }

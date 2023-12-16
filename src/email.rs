@@ -1,12 +1,14 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::config;
 use crate::Env;
+use lettre::address::Envelope;
 use lettre::message::header::ContentType;
 use lettre::message::Mailbox;
 use lettre::transport::file::FileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::SmtpTransport;
+use lettre::transport::stub::StubTransport;
 use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
@@ -62,9 +64,7 @@ impl Emails {
     /// to later assert the mails were sent.
     pub fn new_in_memory() -> Self {
         Self {
-            backend: EmailBackend::Memory {
-                mails: Arc::new(Mutex::new(Vec::new())),
-            },
+            backend: EmailBackend::Memory(StubTransport::new_ok()),
             domain: "crates.io".into(),
             from: DEFAULT_FROM.parse().unwrap(),
         }
@@ -169,9 +169,9 @@ Source type: {source}\n",
 
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
-    pub fn mails_in_memory(&self) -> Option<Vec<StoredEmail>> {
-        if let EmailBackend::Memory { mails } = &self.backend {
-            Some(mails.lock().unwrap().clone())
+    pub fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {
+        if let EmailBackend::Memory(transport) = &self.backend {
+            Some(transport.messages())
         } else {
             None
         }
@@ -208,12 +208,8 @@ Source type: {source}\n",
                 let id = transport.send(&email)?;
                 info!(%id, ?subject, "Email sent");
             }
-            EmailBackend::Memory { mails } => {
-                mails.lock().unwrap().push(StoredEmail {
-                    to: recipient.into(),
-                    subject: subject.into(),
-                    body: body.into(),
-                });
+            EmailBackend::Memory(transport) => {
+                transport.send(&email)?;
             }
         }
 
@@ -231,6 +227,8 @@ pub enum EmailError {
     SmtpTransportError(#[from] lettre::transport::smtp::Error),
     #[error(transparent)]
     FileTransportError(#[from] lettre::transport::file::Error),
+    #[error(transparent)]
+    StubTransportError(#[from] lettre::transport::stub::Error),
 }
 
 #[derive(Clone)]
@@ -240,7 +238,7 @@ enum EmailBackend {
     /// Backend used locally during development, will store the emails in the provided directory.
     FileSystem(Arc<FileTransport>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
-    Memory { mails: Arc<Mutex<Vec<StoredEmail>>> },
+    Memory(StubTransport),
 }
 
 // Custom Debug implementation to avoid showing the SMTP password.
@@ -254,7 +252,7 @@ impl std::fmt::Debug for EmailBackend {
             EmailBackend::FileSystem(transport) => {
                 f.debug_tuple("FileSystem").field(transport).finish()?;
             }
-            EmailBackend::Memory { .. } => f.write_str("Memory")?,
+            EmailBackend::Memory(transport) => f.debug_tuple("Memory").field(transport).finish()?,
         }
         Ok(())
     }
