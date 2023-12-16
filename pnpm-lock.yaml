@@ -57,7 +57,7 @@ devDependencies:
     version: 7.23.6(supports-color@8.1.1)
   '@babel/eslint-parser':
     specifier: 7.23.3
-    version: 7.23.3(@babel/core@7.23.6)(eslint@8.55.0)
+    version: 7.23.3(@babel/core@7.23.6)(eslint@8.56.0)
   '@babel/plugin-proposal-decorators':
     specifier: 7.23.6
     version: 7.23.6(@babel/core@7.23.6)
@@ -230,32 +230,32 @@ devDependencies:
     specifier: 0.9.0
     version: 0.9.0(ember-source@5.5.0)
   eslint:
-    specifier: 8.55.0
-    version: 8.55.0
+    specifier: 8.56.0
+    version: 8.56.0
   eslint-config-prettier:
     specifier: 9.1.0
-    version: 9.1.0(eslint@8.55.0)
+    version: 9.1.0(eslint@8.56.0)
   eslint-plugin-ember:
     specifier: 11.12.0
-    version: 11.12.0(eslint@8.55.0)
+    version: 11.12.0(eslint@8.56.0)
   eslint-plugin-ember-concurrency:
     specifier: 0.5.1
-    version: 0.5.1(eslint@8.55.0)
+    version: 0.5.1(eslint@8.56.0)
   eslint-plugin-import-helpers:
     specifier: 1.3.1
-    version: 1.3.1(eslint@8.55.0)
+    version: 1.3.1(eslint@8.56.0)
   eslint-plugin-prettier:
     specifier: 5.0.1
-    version: 5.0.1(eslint-config-prettier@9.1.0)(eslint@8.55.0)(prettier@3.1.1)
+    version: 5.0.1(eslint-config-prettier@9.1.0)(eslint@8.56.0)(prettier@3.1.1)
   eslint-plugin-qunit:
     specifier: 8.0.1
-    version: 8.0.1(eslint@8.55.0)
+    version: 8.0.1(eslint@8.56.0)
   eslint-plugin-qunit-dom:
     specifier: 0.2.0
-    version: 0.2.0(eslint@8.55.0)
+    version: 0.2.0(eslint@8.56.0)
   eslint-plugin-unicorn:
     specifier: 49.0.0
-    version: 49.0.0(eslint@8.55.0)
+    version: 49.0.0(eslint@8.56.0)
   globby:
     specifier: 14.0.0
     version: 14.0.0
@@ -346,7 +346,7 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@babel/eslint-parser@7.23.3(@babel/core@7.23.6)(eslint@8.55.0):
+  /@babel/eslint-parser@7.23.3(@babel/core@7.23.6)(eslint@8.56.0):
     resolution: {integrity: sha512-9bTuNlyx7oSstodm1cR1bECj4fkiknsDa1YniISkJemMY3DGhJNYBECbe6QD/q54mp2J8VO66jW3/7uP//iFCw==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
@@ -358,7 +358,7 @@ packages:
     dependencies:
       '@babel/core': 7.23.6(supports-color@8.1.1)
       '@nicolo-ribaudo/eslint-scope-5-internals': 5.1.1-v1
-      eslint: 8.55.0
+      eslint: 8.56.0
       eslint-visitor-keys: 2.1.0
       semver: 6.3.1
     dev: true
@@ -2464,13 +2464,13 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@eslint-community/eslint-utils@4.4.0(eslint@8.55.0):
+  /@eslint-community/eslint-utils@4.4.0(eslint@8.56.0):
     resolution: {integrity: sha512-1/sA4dwrzBAyeUoQ6oxahHKmrZvsnLCg4RfxW3ZFGGmQkSNQPFNLV9CUEFQP1x9EYXHTo5p6xdhZM1Ne9p/AfA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
       eslint-visitor-keys: 3.4.3
     dev: true
 
@@ -2496,8 +2496,8 @@ packages:
       - supports-color
     dev: true
 
-  /@eslint/js@8.55.0:
-    resolution: {integrity: sha512-qQfo2mxH5yVom1kacMtZZJFVdW+E70mqHMJvVg6WTLo+VBuQJ4TojZlfWBjK0ve5BdEeNAVxOsl/nvNMpJOaJA==}
+  /@eslint/js@8.56.0:
+    resolution: {integrity: sha512-gMsVel9D7f2HLkBma9VbtzZRehRogVRfbr++f06nL2vnCGCNlzOD+/MUov/F4p8myyAHspEhVobgjpX64q5m6A==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
@@ -9172,28 +9172,28 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /eslint-config-prettier@9.1.0(eslint@8.55.0):
+  /eslint-config-prettier@9.1.0(eslint@8.56.0):
     resolution: {integrity: sha512-NSWl5BFQWEPi1j4TjVNItzYV7dZXZ+wP6I6ZhrBGpChQhZRUaElihE9uRRkcbRnNb76UMKDF3r+WTmNcGPKsqw==}
     hasBin: true
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
     dev: true
 
   /eslint-formatter-kakoune@1.0.0:
     resolution: {integrity: sha512-Uk/TVLt6Nf6Xoz7C1iYuZjOSdJxe5aaauGRke8JhKeJwD66Y61/pY2FjtLP04Ooq9PwV34bzrkKkU2UZ5FtDRA==}
     dev: true
 
-  /eslint-plugin-ember-concurrency@0.5.1(eslint@8.55.0):
+  /eslint-plugin-ember-concurrency@0.5.1(eslint@8.56.0):
     resolution: {integrity: sha512-sQjDs/pZt2+882M15hnEdmcxh7LIObP9d8kt5yw5nKNR6tGF5SIBPx00Jji61KYISakFHzSgcZfgquK3dfY8xA==}
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
     dev: true
 
-  /eslint-plugin-ember@11.12.0(eslint@8.55.0):
+  /eslint-plugin-ember@11.12.0(eslint@8.56.0):
     resolution: {integrity: sha512-7Ow1ky5JnRR0k3cxuvgYi4AWTe9DzGjlLgOJbU5VABLgr7Q0iq3ioC+YwAP79nV48cpw2HOgMgkZ1MynuIg59g==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
@@ -9205,8 +9205,8 @@ packages:
       ember-rfc176-data: 0.3.18
       ember-template-imports: 3.4.2
       ember-template-recast: 6.1.4
-      eslint: 8.55.0
-      eslint-utils: 3.0.0(eslint@8.55.0)
+      eslint: 8.56.0
+      eslint-utils: 3.0.0(eslint@8.56.0)
       estraverse: 5.3.0
       lodash.camelcase: 4.3.0
       lodash.kebabcase: 4.1.1
@@ -9217,15 +9217,15 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-import-helpers@1.3.1(eslint@8.55.0):
+  /eslint-plugin-import-helpers@1.3.1(eslint@8.56.0):
     resolution: {integrity: sha512-MrACDozK6TmTJoCFHD71Ew3r5210Za3zlTrhX+fQGsyvxceaFvAI9AcvZ/8oSU0pZ61G3nDEn6mXY0T4S8cJEg==}
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
     dev: true
 
-  /eslint-plugin-prettier@5.0.1(eslint-config-prettier@9.1.0)(eslint@8.55.0)(prettier@3.1.1):
+  /eslint-plugin-prettier@5.0.1(eslint-config-prettier@9.1.0)(eslint@8.56.0)(prettier@3.1.1):
     resolution: {integrity: sha512-m3u5RnR56asrwV/lDC4GHorlW75DsFfmUcjfCYylTUs85dBRnB7VM6xG8eCMJdeDRnppzmxZVf1GEPJvl1JmNg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -9239,43 +9239,43 @@ packages:
       eslint-config-prettier:
         optional: true
     dependencies:
-      eslint: 8.55.0
-      eslint-config-prettier: 9.1.0(eslint@8.55.0)
+      eslint: 8.56.0
+      eslint-config-prettier: 9.1.0(eslint@8.56.0)
       prettier: 3.1.1
       prettier-linter-helpers: 1.0.0
       synckit: 0.8.6
     dev: true
 
-  /eslint-plugin-qunit-dom@0.2.0(eslint@8.55.0):
+  /eslint-plugin-qunit-dom@0.2.0(eslint@8.56.0):
     resolution: {integrity: sha512-uqqkzj3k5ee36XOkr6Y9DfTC/6uXq/aWuuo14o79Bky+SmQy3NzK+Vee7UBICDEHhi7SDsFPxdsBFm9cjNAuvg==}
     engines: {node: 12.* || 14.* || >= 16.*}
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
     dev: true
 
-  /eslint-plugin-qunit@8.0.1(eslint@8.55.0):
+  /eslint-plugin-qunit@8.0.1(eslint@8.56.0):
     resolution: {integrity: sha512-3bFOPryXoQOez95oP/JfWTxHBc/bgDQQZqTuv9uYTwH5sdIvSM2TES1iHDcy/F/LvqiqIpscDAOPAjlqSCnNPg==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
     dependencies:
-      eslint-utils: 3.0.0(eslint@8.55.0)
+      eslint-utils: 3.0.0(eslint@8.56.0)
       requireindex: 1.2.0
     transitivePeerDependencies:
       - eslint
     dev: true
 
-  /eslint-plugin-unicorn@49.0.0(eslint@8.55.0):
+  /eslint-plugin-unicorn@49.0.0(eslint@8.56.0):
     resolution: {integrity: sha512-0fHEa/8Pih5cmzFW5L7xMEfUTvI9WKeQtjmKpTUmY+BiFCDxkxrTdnURJOHKykhtwIeyYsxnecbGvDCml++z4Q==}
     engines: {node: '>=16'}
     peerDependencies:
       eslint: '*'
     dependencies:
       '@babel/helper-validator-identifier': 7.22.20
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.55.0)
+      '@eslint-community/eslint-utils': 4.4.0(eslint@8.56.0)
       ci-info: 3.9.0
       clean-regexp: 1.0.0
-      eslint: 8.55.0
+      eslint: 8.56.0
       esquery: 1.5.0
       indent-string: 4.0.0
       is-builtin-module: 3.2.1
@@ -9311,13 +9311,13 @@ packages:
       estraverse: 5.3.0
     dev: true
 
-  /eslint-utils@3.0.0(eslint@8.55.0):
+  /eslint-utils@3.0.0(eslint@8.56.0):
     resolution: {integrity: sha512-uuQC43IGctw68pJA1RgbQS8/NP7rch6Cwd4j3ZBtgo4/8Flj4eGE7ZYSZRN3iq5pVUv6GPdW5Z1RFleo84uLDA==}
     engines: {node: ^10.0.0 || ^12.0.0 || >= 14.0.0}
     peerDependencies:
       eslint: '*'
     dependencies:
-      eslint: 8.55.0
+      eslint: 8.56.0
       eslint-visitor-keys: 2.1.0
     dev: true
 
@@ -9331,15 +9331,15 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /eslint@8.55.0:
-    resolution: {integrity: sha512-iyUUAM0PCKj5QpwGfmCAG9XXbZCWsqP/eWAWrG/W0umvjuLRBECwSFdt+rCntju0xEH7teIABPwXpahftIaTdA==}
+  /eslint@8.56.0:
+    resolution: {integrity: sha512-Go19xM6T9puCOWntie1/P997aXxFsOi37JIHRWI514Hc6ZnaHGKY9xFhrU65RT6CcBEzZoGG1e6Nq+DT04ZtZQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     hasBin: true
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.55.0)
+      '@eslint-community/eslint-utils': 4.4.0(eslint@8.56.0)
       '@eslint-community/regexpp': 4.10.0
       '@eslint/eslintrc': 2.1.4
-      '@eslint/js': 8.55.0
+      '@eslint/js': 8.56.0
       '@humanwhocodes/config-array': 0.11.13
       '@humanwhocodes/module-importer': 1.0.1
       '@nodelib/fs.walk': 1.2.8
@@ -15754,6 +15754,7 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    requiresBuild: true
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}
