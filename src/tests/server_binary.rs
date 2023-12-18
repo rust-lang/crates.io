@@ -26,7 +26,7 @@ fn normal_startup() {
 
     // Ensure the application correctly responds to download requests
     let resp = running_server
-        .get("api/v1/crates/FOO/1.0.0/download")
+        .get("api/v1/crates/foo/1.0.0/download")
         .unwrap();
     assert_eq!(resp.status(), StatusCode::FOUND);
 
