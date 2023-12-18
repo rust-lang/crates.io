@@ -2,7 +2,7 @@
 extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{metrics::LogEncoder, util::errors::AppResult, App, Emails};
+use crates_io::{metrics::LogEncoder, App, Emails};
 use std::{sync::Arc, time::Duration};
 
 use axum::extract::Request;
@@ -241,7 +241,7 @@ fn log_instance_metrics_thread(app: Arc<App>) {
     });
 }
 
-fn log_instance_metrics_inner(app: &App) -> AppResult<()> {
+fn log_instance_metrics_inner(app: &App) -> anyhow::Result<()> {
     let families = app.instance_metrics.gather(app)?;
 
     let mut stdout = std::io::stdout();
