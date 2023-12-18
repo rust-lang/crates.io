@@ -65,6 +65,7 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct PossibleTyposquatEmail<'a> {
     pub domain: &'a str,
     pub crate_name: &'a str,
@@ -102,7 +103,7 @@ Specific squat checks that triggered:\n
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
-    domain: String,
+    pub domain: String,
     from: Mailbox,
 }
 
@@ -186,22 +187,6 @@ impl Emails {
             domain: &self.domain,
             crate_name,
             token,
-        };
-
-        self.send(recipient, email)
-    }
-
-    /// Attempts to send a notification that a new crate may be typosquatting another crate.
-    pub fn send_possible_typosquat_notification(
-        &self,
-        recipient: &str,
-        crate_name: &str,
-        squats: &[typomania::checks::Squat],
-    ) -> Result<(), EmailError> {
-        let email = PossibleTyposquatEmail {
-            domain: &self.domain,
-            crate_name,
-            squats,
         };
 
         self.send(recipient, email)

@@ -5,6 +5,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::PgConnection;
 use typomania::Package;
 
+use crate::email::PossibleTyposquatEmail;
 use crate::tasks::spawn_blocking;
 use crate::{
     typosquat::{Cache, Crate},
@@ -60,9 +61,19 @@ fn check(
             // hopefully care to check into things more closely.
             info!(?squats, "Found potential typosquatting");
 
-            for email in cache.iter_emails() {
-                if let Err(e) = emails.send_possible_typosquat_notification(email, name, &squats) {
-                    error!(?e, ?email, "Failed to send possible typosquat notification");
+            let email = PossibleTyposquatEmail {
+                domain: &emails.domain,
+                crate_name: name,
+                squats: &squats,
+            };
+
+            for recipient in cache.iter_emails() {
+                if let Err(error) = emails.send(recipient, email.clone()) {
+                    error!(
+                        ?error,
+                        ?recipient,
+                        "Failed to send possible typosquat notification"
+                    );
                 }
             }
         }
