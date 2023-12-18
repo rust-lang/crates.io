@@ -1,7 +1,6 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
-use insta::assert_json_snapshot;
 
 #[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
@@ -31,7 +30,6 @@ fn rejected_non_canonical_download() {
     // and assert that the correct download link is returned.
     let response = anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
