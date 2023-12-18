@@ -8,6 +8,7 @@ use diesel::sql_types::{Bool, Text};
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
+use crate::email::OwnerInviteEmail;
 use crate::models::version::TopVersions;
 use crate::models::{
     CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
@@ -373,16 +374,18 @@ impl Crate {
                 let config = &app.config;
                 match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        if let Ok(Some(email)) = user.verified_email(conn) {
+                        if let Ok(Some(recipient)) = user.verified_email(conn) {
                             // Swallow any error. Whether or not the email is sent, the invitation
                             // entry will be created in the database and the user will see the
                             // invitation when they visit https://crates.io/me/pending-invites/.
-                            let _ = app.emails.send_owner_invite(
-                                &email,
-                                &req_user.gh_login,
-                                &self.name,
-                                &plaintext_token,
-                            );
+                            let email = OwnerInviteEmail {
+                                user_name: &req_user.gh_login,
+                                domain: &app.emails.domain,
+                                crate_name: &self.name,
+                                token: &plaintext_token,
+                            };
+
+                            let _ = app.emails.send(&recipient, email);
                         }
 
                         Ok(format!(
