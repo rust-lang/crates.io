@@ -82,9 +82,6 @@ pub async fn download(
                 app.downloads_counter.increment(version_id);
 
                 if canonical_crate_name != crate_name {
-                    app.instance_metrics
-                        .downloads_non_canonical_crate_name_total
-                        .inc();
                     req.request_log().add("bot", "dl");
 
                     return Err(not_found());
