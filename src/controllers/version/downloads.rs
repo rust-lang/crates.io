@@ -82,8 +82,6 @@ pub async fn download(
                 app.downloads_counter.increment(version_id);
 
                 if canonical_crate_name != crate_name {
-                    req.request_log().add("bot", "dl");
-
                     return Err(not_found());
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
