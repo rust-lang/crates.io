@@ -66,41 +66,6 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
 }
 
 #[derive(Debug, Clone)]
-pub struct PossibleTyposquatEmail<'a> {
-    pub domain: &'a str,
-    pub crate_name: &'a str,
-    pub squats: &'a [typomania::checks::Squat],
-}
-
-impl Email for PossibleTyposquatEmail<'_> {
-    const SUBJECT: &'static str = "Possible typosquatting in new crate";
-
-    fn body(&self) -> String {
-        let squats = self
-            .squats
-            .iter()
-            .map(|squat| {
-                let domain = self.domain;
-                let crate_name = squat.package();
-                format!("- {squat} (https://{domain}/crates/{crate_name})\n")
-            })
-            .collect::<Vec<_>>()
-            .join("");
-
-        format!(
-            "New crate {crate_name} may be typosquatting one or more other crates.\n
-Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
-\n
-Specific squat checks that triggered:\n
-\n
-{squats}",
-            domain = self.domain,
-            crate_name = self.crate_name,
-        )
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
     pub domain: String,
