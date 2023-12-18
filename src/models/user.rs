@@ -3,7 +3,8 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::email::{Emails, UserConfirmEmail};
+use crate::controllers::user::me::UserConfirmEmail;
+use crate::email::Emails;
 use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};

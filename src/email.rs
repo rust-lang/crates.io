@@ -17,31 +17,6 @@ pub trait Email {
     fn body(&self) -> String;
 }
 
-pub struct UserConfirmEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-    pub token: &'a str,
-}
-
-impl Email for UserConfirmEmail<'_> {
-    const SUBJECT: &'static str = "Please confirm your email address";
-
-    fn body(&self) -> String {
-        // Create a URL with token string as path to send to user
-        // If user clicks on path, look email/user up in database,
-        // make sure tokens match
-
-        format!(
-            "Hello {user_name}! Welcome to crates.io. Please click the
-link below to verify your email address. Thank you!\n
-https://{domain}/confirm/{token}",
-            user_name = self.user_name,
-            domain = self.domain,
-            token = self.token,
-        )
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
