@@ -27,8 +27,8 @@ dependencies:
     specifier: 3.2.0
     version: 3.2.0
   date-fns:
-    specifier: 2.30.0
-    version: 2.30.0
+    specifier: 3.0.0
+    version: 3.0.0
   highlight.js:
     specifier: 11.9.0
     version: 11.9.0
@@ -7104,6 +7104,11 @@ packages:
     engines: {node: '>=0.11'}
     dependencies:
       '@babel/runtime': 7.23.6
+    dev: true
+
+  /date-fns@3.0.0:
+    resolution: {integrity: sha512-xjDz3rNN9jp+Lh3P/4MeY4E5HkaRnEnrJCcrdRZnKdn42gJlIe6hwrrwVXePRwVR2kh1UcMnz00erYBnHF8PFA==}
+    dev: false
 
   /date-time@2.1.0:
     resolution: {integrity: sha512-/9+C44X7lot0IeiyfgJmETtRMhBidBYM2QFFIkGa0U1k+hSyY87Nw7PY3eDqpvCBm7I3WCSfPeZskW/YYq6m4g==}
