@@ -3,12 +3,14 @@ use crate::Env;
 use lettre::address::Envelope;
 use lettre::message::header::ContentType;
 use lettre::message::Mailbox;
-use lettre::transport::file::FileTransport;
+use lettre::transport::file::AsyncFileTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
-use lettre::transport::smtp::SmtpTransport;
-use lettre::transport::stub::StubTransport;
-use lettre::{Address, Message, Transport};
+use lettre::transport::smtp::AsyncSmtpTransport;
+use lettre::transport::stub::AsyncStubTransport;
+use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use rand::distributions::{Alphanumeric, DistString};
+use std::sync::Arc;
+use tokio::runtime::Handle;
 
 pub trait Email {
     fn subject(&self) -> String;
@@ -36,7 +38,7 @@ impl Emails {
 
         let backend = match (login, password, server) {
             (Ok(login), Ok(password), Ok(server)) => {
-                let transport = SmtpTransport::relay(&server)
+                let transport = AsyncSmtpTransport::<Tokio1Executor>::relay(&server)
                     .unwrap()
                     .credentials(Credentials::new(login, password))
                     .authentication(vec![Mechanism::Plain])
@@ -45,8 +47,8 @@ impl Emails {
                 EmailBackend::Smtp(Box::new(transport))
             }
             _ => {
-                let transport = FileTransport::new("/tmp");
-                EmailBackend::FileSystem(transport)
+                let transport = AsyncFileTransport::new("/tmp");
+                EmailBackend::FileSystem(Arc::new(transport))
             }
         };
 
@@ -67,7 +69,7 @@ impl Emails {
     /// to later assert the mails were sent.
     pub fn new_in_memory() -> Self {
         Self {
-            backend: EmailBackend::Memory(StubTransport::new_ok()),
+            backend: EmailBackend::Memory(AsyncStubTransport::new_ok()),
             domain: "crates.io".into(),
             from: DEFAULT_FROM.parse().unwrap(),
         }
@@ -75,9 +77,9 @@ impl Emails {
 
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
-    pub fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {
+    pub async fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {
         if let EmailBackend::Memory(transport) = &self.backend {
-            Some(transport.messages())
+            Some(transport.messages().await)
         } else {
             None
         }
@@ -110,7 +112,9 @@ impl Emails {
             .header(ContentType::TEXT_PLAIN)
             .body(body)?;
 
-        self.backend.send(email).map_err(EmailError::TransportError)
+        Handle::current()
+            .block_on(self.backend.send(email))
+            .map_err(EmailError::TransportError)
     }
 }
 
@@ -129,19 +133,19 @@ enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
     ///
     /// This is using `Box` to avoid a large size difference between variants.
-    Smtp(Box<SmtpTransport>),
+    Smtp(Box<AsyncSmtpTransport<Tokio1Executor>>),
     /// Backend used locally during development, will store the emails in the provided directory.
-    FileSystem(FileTransport),
+    FileSystem(Arc<AsyncFileTransport<Tokio1Executor>>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
-    Memory(StubTransport),
+    Memory(AsyncStubTransport),
 }
 
 impl EmailBackend {
-    fn send(&self, message: Message) -> anyhow::Result<()> {
+    async fn send(&self, message: Message) -> anyhow::Result<()> {
         match self {
-            EmailBackend::Smtp(transport) => transport.send(&message).map(|_| ())?,
-            EmailBackend::FileSystem(transport) => transport.send(&message).map(|_| ())?,
-            EmailBackend::Memory(transport) => transport.send(&message).map(|_| ())?,
+            EmailBackend::Smtp(transport) => transport.send(message).await.map(|_| ())?,
+            EmailBackend::FileSystem(transport) => transport.send(message).await.map(|_| ())?,
+            EmailBackend::Memory(transport) => transport.send(message).await.map(|_| ())?,
         }
 
         Ok(())
@@ -158,6 +162,7 @@ pub struct StoredEmail {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tasks::spawn_blocking;
 
     struct TestEmail;
 
@@ -171,20 +176,25 @@ mod tests {
         }
     }
 
-    #[test]
-    fn sending_to_invalid_email_fails() {
-        let emails = Emails::new_in_memory();
+    #[tokio::test]
+    async fn sending_to_invalid_email_fails() {
+        let fut = spawn_blocking(|| {
+            let emails = Emails::new_in_memory();
 
-        assert_err!(emails.send(
-            "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)",
-            TestEmail
-        ));
+            let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
+            emails.send(address, TestEmail).map_err(anyhow::Error::from)
+        });
+        assert_err!(fut.await);
     }
 
-    #[test]
-    fn sending_to_valid_email_succeeds() {
-        let emails = Emails::new_in_memory();
+    #[tokio::test]
+    async fn sending_to_valid_email_succeeds() {
+        let fut = spawn_blocking(|| {
+            let emails = Emails::new_in_memory();
 
-        assert_ok!(emails.send("someone@example.com", TestEmail));
+            let address = "someone@example.com";
+            emails.send(address, TestEmail).map_err(anyhow::Error::from)
+        });
+        assert_ok!(fut.await);
     }
 }

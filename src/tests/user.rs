@@ -1,4 +1,5 @@
 use crate::models::{ApiToken, Email, NewUser, User};
+use crate::tasks::spawn_blocking;
 use crate::tests::{
     new_user,
     util::{MockCookieUser, RequestHelper},
@@ -112,15 +113,21 @@ async fn github_with_email_does_not_overwrite_email() {
 
     // Simulate logging in to crates.io after changing your email in GitHub
 
+    let emails = app.as_inner().emails.clone();
+
     let u = NewUser {
         // Use the same github ID to link to the existing account
         gh_id: model.gh_id,
         // the rest of the fields are arbitrary
         ..new_user("arbitrary_username")
     };
-    let u = u
-        .create_or_update(Some(new_github_email), &app.as_inner().emails, &mut conn)
-        .unwrap();
+    let u = spawn_blocking(move || {
+        let u = u.create_or_update(Some(new_github_email), &emails, &mut conn)?;
+        Ok::<_, anyhow::Error>(u)
+    })
+    .await
+    .unwrap();
+
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
     let json = user_with_different_email_in_github.show_me().await;
@@ -161,9 +168,14 @@ async fn test_confirm_user_email() {
     // email directly into the database and we want to test the verification flow here.
     let email = "potato2@example.com";
 
-    let u = new_user("arbitrary_username")
-        .create_or_update(Some(email), &app.as_inner().emails, &mut conn)
-        .unwrap();
+    let emails = app.as_inner().emails.clone();
+    let (u, mut conn) = spawn_blocking(move || {
+        let u = new_user("arbitrary_username").create_or_update(Some(email), &emails, &mut conn)?;
+        Ok::<_, anyhow::Error>((u, conn))
+    })
+    .await
+    .unwrap();
+
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
 
@@ -195,9 +207,15 @@ async fn test_existing_user_email() {
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
     let email = "potahto@example.com";
-    let u = new_user("arbitrary_username")
-        .create_or_update(Some(email), &app.as_inner().emails, &mut conn)
-        .unwrap();
+
+    let emails = app.as_inner().emails.clone();
+    let (u, mut conn) = spawn_blocking(move || {
+        let u = new_user("arbitrary_username").create_or_update(Some(email), &emails, &mut conn)?;
+        Ok::<_, anyhow::Error>((u, conn))
+    })
+    .await
+    .unwrap();
+
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
         // `NULL` in the `token_generated_at` column.

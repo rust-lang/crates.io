@@ -180,7 +180,7 @@ impl TestApp {
     }
 
     pub async fn emails(&self) -> Vec<String> {
-        let emails = self.as_inner().emails.mails_in_memory().unwrap();
+        let emails = self.as_inner().emails.mails_in_memory().await.unwrap();
         emails.into_iter().map(|(_, email)| email).collect()
     }
 

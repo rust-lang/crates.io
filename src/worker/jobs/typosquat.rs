@@ -127,8 +127,8 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn integration() -> anyhow::Result<()> {
+    #[tokio::test]
+    async fn integration() -> anyhow::Result<()> {
         let emails = Emails::new_in_memory();
         let (_test_db, mut conn) = test_db_connection();
 
@@ -138,6 +138,7 @@ mod tests {
 
         // Prime the cache so it only includes the crate we just created.
         let cache = Cache::new(vec!["admin@example.com".to_string()], &mut conn)?;
+        let cache = Arc::new(cache);
 
         // Now we'll create new crates: one problematic, one not so.
         let other_user = faker::user(&mut conn, "b")?;
@@ -157,12 +158,25 @@ mod tests {
         )?;
 
         // Run the check with a crate that shouldn't cause problems.
-        check(&emails, &cache, &mut conn, &angel.name)?;
-        assert!(emails.mails_in_memory().unwrap().is_empty());
+        let mut conn = spawn_blocking({
+            let emails = emails.clone();
+            let cache = cache.clone();
+            move || {
+                check(&emails, &cache, &mut conn, &angel.name)?;
+                Ok::<_, anyhow::Error>(conn)
+            }
+        })
+        .await?;
+        assert!(emails.mails_in_memory().await.unwrap().is_empty());
 
         // Now run the check with a less innocent crate.
-        check(&emails, &cache, &mut conn, &demon.name)?;
-        let sent_mail = emails.mails_in_memory().unwrap();
+        spawn_blocking({
+            let emails = emails.clone();
+            let cache = cache.clone();
+            move || check(&emails, &cache, &mut conn, &demon.name)
+        })
+        .await?;
+        let sent_mail = emails.mails_in_memory().await.unwrap();
         assert!(!sent_mail.is_empty());
         let sent = sent_mail.into_iter().next().unwrap();
         assert_eq!(&sent.0.to(), &["admin@example.com".parse::<Address>()?]);

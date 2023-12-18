@@ -184,11 +184,14 @@ mod tests {
         let (_test_db, mut conn) = test_db_connection();
 
         // Set up a user and a token that is about to expire.
-        let user = NewUser::new(0, "a", None, None, "token").create_or_update(
-            Some("testuser@test.com"),
-            &Emails::new_in_memory(),
-            &mut conn,
-        )?;
+        let (user, mut conn) = spawn_blocking(move || {
+            let user = NewUser::new(0, "a", None, None, "token");
+            let emails = Emails::new_in_memory();
+            let user = user.create_or_update(Some("testuser@test.com"), &emails, &mut conn)?;
+            Ok::<_, anyhow::Error>((user, conn))
+        })
+        .await?;
+
         let token = PlainToken::generate();
 
         let token: ApiToken = diesel::insert_into(api_tokens::table)
@@ -217,10 +220,17 @@ mod tests {
         }
 
         // Check that the token is about to expire.
-        check(&emails, &mut conn)?;
+        let mut conn = spawn_blocking({
+            let emails = emails.clone();
+            move || {
+                check(&emails, &mut conn)?;
+                Ok::<_, anyhow::Error>(conn)
+            }
+        })
+        .await?;
 
         // Check that an email was sent.
-        let sent_mail = emails.mails_in_memory().unwrap();
+        let sent_mail = emails.mails_in_memory().await.unwrap();
         assert_eq!(sent_mail.len(), 1);
         let sent = &sent_mail[0];
         assert_eq!(&sent.0.to(), &["testuser@test.com".parse::<Address>()?]);
@@ -255,10 +265,14 @@ mod tests {
             .get_result(&mut conn)?;
 
         // Check that the token is not about to expire.
-        check(&emails, &mut conn)?;
+        spawn_blocking({
+            let emails = emails.clone();
+            move || check(&emails, &mut conn)
+        })
+        .await?;
 
         // Check that no email was sent.
-        let sent_mail = emails.mails_in_memory().unwrap();
+        let sent_mail = emails.mails_in_memory().await.unwrap();
         assert_eq!(sent_mail.len(), 1);
 
         Ok(())
