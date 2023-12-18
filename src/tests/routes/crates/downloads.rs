@@ -40,9 +40,7 @@ pub fn assert_dl_count(
 
 #[test]
 fn download() {
-    let (app, anon, user) = TestApp::init()
-        .with_config(|config| config.reject_non_canonical_downloads = false)
-        .with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -67,19 +65,17 @@ fn download() {
     assert_dl_count(&anon, "foo_download/1.0.0", None, 1);
     assert_dl_count(&anon, "foo_download", None, 1);
 
-    download("FOO_DOWNLOAD/1.0.0");
-    persist_downloads_count(&app);
-    assert_dl_count(&anon, "FOO_DOWNLOAD/1.0.0", None, 2);
-    assert_dl_count(&anon, "FOO_DOWNLOAD", None, 2);
+    let response = anon.get::<()>("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     let yesterday = (Utc::now().date_naive() + Duration::days(-1)).format("%F");
     let query = format!("before_date={yesterday}");
-    assert_dl_count(&anon, "FOO_DOWNLOAD/1.0.0", Some(&query), 0);
+    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 0);
     // crate/downloads always returns the last 90 days and ignores date params
-    assert_dl_count(&anon, "FOO_DOWNLOAD", Some(&query), 2);
+    assert_dl_count(&anon, "foo_download", Some(&query), 1);
 
     let tomorrow = (Utc::now().date_naive() + Duration::days(1)).format("%F");
     let query = format!("before_date={tomorrow}");
-    assert_dl_count(&anon, "FOO_DOWNLOAD/1.0.0", Some(&query), 2);
-    assert_dl_count(&anon, "FOO_DOWNLOAD", Some(&query), 2);
+    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 1);
+    assert_dl_count(&anon, "foo_download", Some(&query), 1);
 }
