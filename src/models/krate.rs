@@ -8,7 +8,7 @@ use diesel::sql_types::{Bool, Text};
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
-use crate::email::OwnerInviteEmail;
+use crate::email::Email;
 use crate::models::version::TopVersions;
 use crate::models::{
     CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
@@ -536,6 +536,29 @@ impl Crate {
                 Ok(krate)
             })
             .collect()
+    }
+}
+
+struct OwnerInviteEmail<'a> {
+    user_name: &'a str,
+    domain: &'a str,
+    crate_name: &'a str,
+    token: &'a str,
+}
+
+impl Email for OwnerInviteEmail<'_> {
+    const SUBJECT: &'static str = "Crate ownership invitation";
+
+    fn body(&self) -> String {
+        format!(
+            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
+Visit https://{domain}/accept-invite/{token} to accept this invitation,
+or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
+            user_name = self.user_name,
+            domain = self.domain,
+            crate_name = self.crate_name,
+            token = self.token,
+        )
     }
 }
 

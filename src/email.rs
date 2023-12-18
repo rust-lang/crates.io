@@ -42,29 +42,6 @@ https://{domain}/confirm/{token}",
     }
 }
 
-pub struct OwnerInviteEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-    pub crate_name: &'a str,
-    pub token: &'a str,
-}
-
-impl Email for OwnerInviteEmail<'_> {
-    const SUBJECT: &'static str = "Crate ownership invitation";
-
-    fn body(&self) -> String {
-        format!(
-            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
-Visit https://{domain}/accept-invite/{token} to accept this invitation,
-or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            user_name = self.user_name,
-            domain = self.domain,
-            crate_name = self.crate_name,
-            token = self.token,
-        )
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
