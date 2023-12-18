@@ -99,40 +99,6 @@ Specific squat checks that triggered:\n
     }
 }
 
-pub struct TokenExposedEmail<'a> {
-    pub domain: &'a str,
-    pub reporter: &'a str,
-    pub source: &'a str,
-    pub token_name: &'a str,
-    pub url: &'a str,
-}
-
-impl Email for TokenExposedEmail<'_> {
-    const SUBJECT: &'static str = "Exposed API token found";
-
-    fn body(&self) -> String {
-        let mut body = format!(
-            "{reporter} has notified us that your crates.io API token {token_name}\n
-has been exposed publicly. We have revoked this token as a precaution.\n
-Please review your account at https://{domain} to confirm that no\n
-unexpected changes have been made to your settings or crates.\n
-\n
-Source type: {source}\n",
-            domain = self.domain,
-            reporter = self.reporter,
-            source = self.source,
-            token_name = self.token_name,
-        );
-        if self.url.is_empty() {
-            body.push_str("\nWe were not informed of the URL where the token was found.\n");
-        } else {
-            body.push_str(&format!("\nURL where the token was found: {}\n", self.url));
-        }
-
-        body
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
