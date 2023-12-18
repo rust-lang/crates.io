@@ -50,7 +50,6 @@ pub struct Server {
     pub metrics_authorization_token: Option<String>,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub force_unconditional_redirects: bool,
-    pub reject_non_canonical_downloads: bool,
     pub blocked_routes: HashSet<String>,
     pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
@@ -211,7 +210,6 @@ impl Server {
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             force_unconditional_redirects: var("FORCE_UNCONDITIONAL_REDIRECTS")?.is_some(),
-            reject_non_canonical_downloads: var("REJECT_NON_CANONICAL_DOWNLOADS")?.is_some(),
             blocked_routes: var("BLOCKED_ROUTES")?
                 .map(|routes| routes.split(',').map(|s| s.into()).collect())
                 .unwrap_or_default(),

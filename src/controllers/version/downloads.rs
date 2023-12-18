@@ -87,12 +87,10 @@ pub async fn download(
                         .inc();
                     req.request_log().add("bot", "dl");
 
-                    if app.config.reject_non_canonical_downloads {
-                        return Err(Box::new(NonCanonicalDownload {
-                            requested_name: crate_name,
-                            canonical_name: canonical_crate_name,
-                        }));
-                    }
+                    return Err(Box::new(NonCanonicalDownload {
+                        requested_name: crate_name,
+                        canonical_name: canonical_crate_name,
+                    }));
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
