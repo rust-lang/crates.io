@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use std::borrow::Cow;
 
 use crate::app::App;
-use crate::email::Emails;
+use crate::email::{Emails, UserConfirmEmail};
 use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
@@ -100,7 +100,12 @@ impl<'a> NewUser<'a> {
 
                 if let Some(token) = token {
                     // Swallows any error. Some users might insert an invalid email address here.
-                    let _ = emails.send_user_confirm(user_email, &user.gh_login, &token);
+                    let email = UserConfirmEmail {
+                        user_name: &user.gh_login,
+                        domain: &emails.domain,
+                        token: &token,
+                    };
+                    let _ = emails.send(user_email, email);
                 }
             }
 

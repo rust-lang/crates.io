@@ -6,6 +6,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::*;
 
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
+use crate::email::UserConfirmEmail;
 use crate::models::{
     CrateOwner, Email, Follow, NewEmail, OwnerKind, User, Version, VersionOwnerAction,
 };
@@ -157,9 +158,13 @@ pub async fn update_user(
             // an invalid email set in their GitHub profile, and we should let them sign in even though
             // we're trying to silently use their invalid address during signup and can't send them an
             // email. They'll then have to provide a valid email address.
-            let _ = state
-                .emails
-                .send_user_confirm(user_email, &user.gh_login, &token);
+            let email = UserConfirmEmail {
+                user_name: &user.gh_login,
+                domain: &state.emails.domain,
+                token: &token,
+            };
+
+            let _ = state.emails.send(user_email, email);
 
             Ok(())
         })?;
@@ -216,10 +221,13 @@ pub async fn regenerate_token_and_send(
                 .optional()?
                 .ok_or_else(|| bad_request("Email could not be found"))?;
 
-            state
-                .emails
-                .send_user_confirm(&email.email, &user.gh_login, &email.token)
-                .map_err(Into::into)
+            let email1 = UserConfirmEmail {
+                user_name: &user.gh_login,
+                domain: &state.emails.domain,
+                token: &email.token,
+            };
+
+            state.emails.send(&email.email, email1).map_err(Into::into)
         })?;
 
         ok_true()

@@ -100,22 +100,6 @@ impl Emails {
         }
     }
 
-    /// Attempts to send a confirmation email.
-    pub fn send_user_confirm(
-        &self,
-        recipient: &str,
-        user_name: &str,
-        token: &str,
-    ) -> Result<(), EmailError> {
-        let email = UserConfirmEmail {
-            user_name,
-            domain: &self.domain,
-            token,
-        };
-
-        self.send(recipient, email)
-    }
-
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
     pub fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {
