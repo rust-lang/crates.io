@@ -12,6 +12,127 @@ use lettre::transport::stub::StubTransport;
 use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
+pub trait Email {
+    const SUBJECT: &'static str;
+    fn body(&self) -> String;
+}
+
+pub struct UserConfirmEmail<'a> {
+    pub user_name: &'a str,
+    pub domain: &'a str,
+    pub token: &'a str,
+}
+
+impl Email for UserConfirmEmail<'_> {
+    const SUBJECT: &'static str = "Please confirm your email address";
+
+    fn body(&self) -> String {
+        // Create a URL with token string as path to send to user
+        // If user clicks on path, look email/user up in database,
+        // make sure tokens match
+
+        format!(
+            "Hello {user_name}! Welcome to crates.io. Please click the
+link below to verify your email address. Thank you!\n
+https://{domain}/confirm/{token}",
+            user_name = self.user_name,
+            domain = self.domain,
+            token = self.token,
+        )
+    }
+}
+
+pub struct OwnerInviteEmail<'a> {
+    pub user_name: &'a str,
+    pub domain: &'a str,
+    pub crate_name: &'a str,
+    pub token: &'a str,
+}
+
+impl Email for OwnerInviteEmail<'_> {
+    const SUBJECT: &'static str = "Crate ownership invitation";
+
+    fn body(&self) -> String {
+        format!(
+            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
+Visit https://{domain}/accept-invite/{token} to accept this invitation,
+or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
+            user_name = self.user_name,
+            domain = self.domain,
+            crate_name = self.crate_name,
+            token = self.token,
+        )
+    }
+}
+
+pub struct PossibleTyposquatEmail<'a> {
+    pub domain: &'a str,
+    pub crate_name: &'a str,
+    pub squats: &'a [typomania::checks::Squat],
+}
+
+impl Email for PossibleTyposquatEmail<'_> {
+    const SUBJECT: &'static str = "Possible typosquatting in new crate";
+
+    fn body(&self) -> String {
+        let squats = self
+            .squats
+            .iter()
+            .map(|squat| {
+                let domain = self.domain;
+                let crate_name = squat.package();
+                format!("- {squat} (https://{domain}/crates/{crate_name})\n")
+            })
+            .collect::<Vec<_>>()
+            .join("");
+
+        format!(
+            "New crate {crate_name} may be typosquatting one or more other crates.\n
+Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
+\n
+Specific squat checks that triggered:\n
+\n
+{squats}",
+            domain = self.domain,
+            crate_name = self.crate_name,
+        )
+    }
+}
+
+pub struct TokenExposedEmail<'a> {
+    pub domain: &'a str,
+    pub reporter: &'a str,
+    pub source: &'a str,
+    pub token_name: &'a str,
+    pub url: &'a str,
+}
+
+impl Email for TokenExposedEmail<'_> {
+    const SUBJECT: &'static str = "Exposed API token found";
+
+    fn body(&self) -> String {
+        let mut body = format!(
+            "{reporter} has notified us that your crates.io API token {token_name}\n
+has been exposed publicly. We have revoked this token as a precaution.\n
+Please review your account at https://{domain} to confirm that no\n
+unexpected changes have been made to your settings or crates.\n
+\n
+Source type: {source}\n",
+            domain = self.domain,
+            reporter = self.reporter,
+            source = self.source,
+            token_name = self.token_name,
+        );
+        if self.url.is_empty() {
+            body.push_str("\nWe were not informed of the URL where the token was found.\n");
+        } else {
+            body.push_str(&format!("\nURL where the token was found: {}\n", self.url));
+        }
+
+        body
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Emails {
     backend: EmailBackend,
@@ -73,98 +194,71 @@ impl Emails {
     /// Attempts to send a confirmation email.
     pub fn send_user_confirm(
         &self,
-        email: &str,
+        recipient: &str,
         user_name: &str,
         token: &str,
     ) -> Result<(), EmailError> {
-        // Create a URL with token string as path to send to user
-        // If user clicks on path, look email/user up in database,
-        // make sure tokens match
+        let email = UserConfirmEmail {
+            user_name,
+            domain: &self.domain,
+            token,
+        };
 
-        let subject = "Please confirm your email address";
-        let body = format!(
-            "Hello {}! Welcome to crates.io. Please click the
-link below to verify your email address. Thank you!\n
-https://{}/confirm/{}",
-            user_name, self.domain, token
-        );
-
-        self.send(email, subject, &body)
+        self.send(recipient, email)
     }
 
     /// Attempts to send an ownership invitation.
     pub fn send_owner_invite(
         &self,
-        email: &str,
+        recipient: &str,
         user_name: &str,
         crate_name: &str,
         token: &str,
     ) -> Result<(), EmailError> {
-        let subject = "Crate ownership invitation";
-        let body = format!(
-            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
-Visit https://{domain}/accept-invite/{token} to accept this invitation,
-or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            domain = self.domain
-        );
+        let email = OwnerInviteEmail {
+            user_name,
+            domain: &self.domain,
+            crate_name,
+            token,
+        };
 
-        self.send(email, subject, &body)
+        self.send(recipient, email)
     }
 
     /// Attempts to send a notification that a new crate may be typosquatting another crate.
     pub fn send_possible_typosquat_notification(
         &self,
-        email: &str,
+        recipient: &str,
         crate_name: &str,
         squats: &[typomania::checks::Squat],
     ) -> Result<(), EmailError> {
-        let domain = &self.domain;
-        let subject = "Possible typosquatting in new crate";
-        let body = format!(
-            "New crate {crate_name} may be typosquatting one or more other crates.\n
-Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
-\n
-Specific squat checks that triggered:\n
-\n
-{squats}",
-            squats = squats
-                .iter()
-                .map(|squat| format!(
-                    "- {squat} (https://{domain}/crates/{crate_name})\n",
-                    crate_name = squat.package()
-                ))
-                .collect::<Vec<_>>()
-                .join(""),
-        );
+        let email = PossibleTyposquatEmail {
+            domain: &self.domain,
+            crate_name,
+            squats,
+        };
 
-        self.send(email, subject, &body)
+        self.send(recipient, email)
     }
 
     /// Attempts to send an API token exposure notification email
     pub fn send_token_exposed_notification(
         &self,
-        email: &str,
+        recipient: &str,
         url: &str,
         reporter: &str,
         source: &str,
         token_name: &str,
     ) -> Result<(), EmailError> {
-        let subject = "Exposed API token found";
-        let mut body = format!(
-            "{reporter} has notified us that your crates.io API token {token_name}\n
-has been exposed publicly. We have revoked this token as a precaution.\n
-Please review your account at https://{domain} to confirm that no\n
-unexpected changes have been made to your settings or crates.\n
-\n
-Source type: {source}\n",
-            domain = self.domain
-        );
-        if url.is_empty() {
-            body.push_str("\nWe were not informed of the URL where the token was found.\n");
-        } else {
-            body.push_str(&format!("\nURL where the token was found: {url}\n"));
-        }
-        self.send(email, subject, &body)
+        let email = TokenExposedEmail {
+            domain: &self.domain,
+            reporter,
+            source,
+            token_name,
+            url,
+        };
+
+        self.send(recipient, email)
     }
 
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
@@ -177,7 +271,7 @@ Source type: {source}\n",
         }
     }
 
-    fn send(&self, recipient: &str, subject: &str, body: &str) -> Result<(), EmailError> {
+    pub fn send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
         // The message ID is normally generated by the SMTP server, but if we let it generate the
         // ID there will be no way for the crates.io application to know the ID of the message it
         // just sent, as it's not included in the SMTP response.
@@ -191,13 +285,16 @@ Source type: {source}\n",
             self.domain,
         );
 
+        let subject = E::SUBJECT;
+        let body = email.body();
+
         let email = Message::builder()
             .message_id(Some(message_id.clone()))
             .to(recipient.parse()?)
             .from(self.from.clone())
             .subject(subject)
             .header(ContentType::TEXT_PLAIN)
-            .body(body.to_string())?;
+            .body(body)?;
 
         match &self.backend {
             EmailBackend::Smtp(transport) => {
@@ -269,14 +366,23 @@ pub struct StoredEmail {
 mod tests {
     use super::*;
 
+    struct TestEmail;
+
+    impl Email for TestEmail {
+        const SUBJECT: &'static str = "test";
+
+        fn body(&self) -> String {
+            "test".into()
+        }
+    }
+
     #[test]
     fn sending_to_invalid_email_fails() {
         let emails = Emails::new_in_memory();
 
         assert_err!(emails.send(
             "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)",
-            "test",
-            "test",
+            TestEmail
         ));
     }
 
@@ -284,6 +390,6 @@ mod tests {
     fn sending_to_valid_email_succeeds() {
         let emails = Emails::new_in_memory();
 
-        assert_ok!(emails.send("someone@example.com", "test", "test"));
+        assert_ok!(emails.send("someone@example.com", TestEmail));
     }
 }
