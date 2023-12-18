@@ -241,26 +241,6 @@ impl Emails {
         self.send(recipient, email)
     }
 
-    /// Attempts to send an API token exposure notification email
-    pub fn send_token_exposed_notification(
-        &self,
-        recipient: &str,
-        url: &str,
-        reporter: &str,
-        source: &str,
-        token_name: &str,
-    ) -> Result<(), EmailError> {
-        let email = TokenExposedEmail {
-            domain: &self.domain,
-            reporter,
-            source,
-            token_name,
-            url,
-        };
-
-        self.send(recipient, email)
-    }
-
     /// This is supposed to be used only during tests, to retrieve the messages stored in the
     /// "memory" backend. It's not cfg'd away because our integration tests need to access this.
     pub fn mails_in_memory(&self) -> Option<Vec<(Envelope, String)>> {

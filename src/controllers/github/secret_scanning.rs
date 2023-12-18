@@ -1,5 +1,6 @@
 use crate::app::AppState;
 use crate::controllers::frontend_prelude::*;
+use crate::email::TokenExposedEmail;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
 use crate::util::token::HashedToken;
@@ -176,17 +177,19 @@ fn send_notification_email(
     conn: &mut PgConnection,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id).context("Failed to find user")?;
-    let Some(email) = user.email(conn)? else {
+    let Some(recipient) = user.email(conn)? else {
         return Err(anyhow!("No address found"));
     };
 
-    state.emails.send_token_exposed_notification(
-        &email,
-        &alert.url,
-        "GitHub",
-        &alert.source,
-        &token.name,
-    )?;
+    let email = TokenExposedEmail {
+        domain: &state.config.domain_name,
+        reporter: "GitHub",
+        source: &alert.source,
+        token_name: &token.name,
+        url: &alert.url,
+    };
+
+    state.emails.send(&recipient, email)?;
 
     Ok(())
 }
