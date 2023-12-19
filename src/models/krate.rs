@@ -383,7 +383,7 @@ impl Crate {
                                 user_name: &req_user.gh_login,
                                 domain: &app.emails.domain,
                                 crate_name: &self.name,
-                                token: SecretString::from(plaintext_token),
+                                token: plaintext_token,
                             };
 
                             let _ = app.emails.send(&recipient, email);

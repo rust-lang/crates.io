@@ -1,5 +1,6 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
+use secrecy::SecretString;
 
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
@@ -9,7 +10,7 @@ use crate::util::errors::{AppResult, OwnershipInvitationExpired};
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
     AlreadyExists,
-    InviteCreated { plaintext_token: String },
+    InviteCreated { plaintext_token: SecretString },
 }
 
 /// The model representing a row in the `crate_owner_invitations` database table.
@@ -75,7 +76,7 @@ impl CrateOwnerInvitation {
 
         Ok(match res {
             Some(record) => NewCrateOwnerInvitationOutcome::InviteCreated {
-                plaintext_token: record.token,
+                plaintext_token: SecretString::from(record.token),
             },
             None => NewCrateOwnerInvitationOutcome::AlreadyExists,
         })
