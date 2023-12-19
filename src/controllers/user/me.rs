@@ -225,7 +225,7 @@ pub async fn regenerate_token_and_send(
             let email1 = UserConfirmEmail {
                 user_name: &user.gh_login,
                 domain: &state.emails.domain,
-                token: SecretString::from(email.token),
+                token: email.token,
             };
 
             state.emails.send(&email.email, email1).map_err(Into::into)
