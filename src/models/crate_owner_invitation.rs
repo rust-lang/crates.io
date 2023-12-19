@@ -13,7 +13,7 @@ pub enum NewCrateOwnerInvitationOutcome {
 }
 
 /// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Identifiable, Queryable)]
+#[derive(Clone, Debug, Identifiable, Queryable)]
 #[diesel(primary_key(invited_user_id, crate_id))]
 pub struct CrateOwnerInvitation {
     pub invited_user_id: i32,
