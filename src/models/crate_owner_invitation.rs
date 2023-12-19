@@ -21,7 +21,8 @@ pub struct CrateOwnerInvitation {
     pub invited_by_user_id: i32,
     pub crate_id: i32,
     pub created_at: NaiveDateTime,
-    pub token: String,
+    #[diesel(deserialize_as = String)]
+    pub token: SecretString,
     pub token_created_at: Option<NaiveDateTime>,
 }
 
@@ -76,7 +77,7 @@ impl CrateOwnerInvitation {
 
         Ok(match res {
             Some(record) => NewCrateOwnerInvitationOutcome::InviteCreated {
-                plaintext_token: SecretString::from(record.token),
+                plaintext_token: record.token,
             },
             None => NewCrateOwnerInvitationOutcome::AlreadyExists,
         })
