@@ -5,6 +5,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::PgConnection;
 use typomania::Package;
 
+use crate::email::Email;
 use crate::tasks::spawn_blocking;
 use crate::{
     typosquat::{Cache, Crate},
@@ -60,15 +61,60 @@ fn check(
             // hopefully care to check into things more closely.
             info!(?squats, "Found potential typosquatting");
 
-            for email in cache.iter_emails() {
-                if let Err(e) = emails.send_possible_typosquat_notification(email, name, &squats) {
-                    error!(?e, ?email, "Failed to send possible typosquat notification");
+            let email = PossibleTyposquatEmail {
+                domain: &emails.domain,
+                crate_name: name,
+                squats: &squats,
+            };
+
+            for recipient in cache.iter_emails() {
+                if let Err(error) = emails.send(recipient, email.clone()) {
+                    error!(
+                        ?error,
+                        ?recipient,
+                        "Failed to send possible typosquat notification"
+                    );
                 }
             }
         }
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct PossibleTyposquatEmail<'a> {
+    domain: &'a str,
+    crate_name: &'a str,
+    squats: &'a [typomania::checks::Squat],
+}
+
+impl Email for PossibleTyposquatEmail<'_> {
+    const SUBJECT: &'static str = "Possible typosquatting in new crate";
+
+    fn body(&self) -> String {
+        let squats = self
+            .squats
+            .iter()
+            .map(|squat| {
+                let domain = self.domain;
+                let crate_name = squat.package();
+                format!("- {squat} (https://{domain}/crates/{crate_name})\n")
+            })
+            .collect::<Vec<_>>()
+            .join("");
+
+        format!(
+            "New crate {crate_name} may be typosquatting one or more other crates.\n
+Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
+\n
+Specific squat checks that triggered:\n
+\n
+{squats}",
+            domain = self.domain,
+            crate_name = self.crate_name,
+        )
+    }
 }
 
 #[cfg(test)]

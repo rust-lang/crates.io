@@ -8,6 +8,7 @@ use diesel::sql_types::{Bool, Text};
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
+use crate::email::Email;
 use crate::models::version::TopVersions;
 use crate::models::{
     CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
@@ -373,16 +374,18 @@ impl Crate {
                 let config = &app.config;
                 match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        if let Ok(Some(email)) = user.verified_email(conn) {
+                        if let Ok(Some(recipient)) = user.verified_email(conn) {
                             // Swallow any error. Whether or not the email is sent, the invitation
                             // entry will be created in the database and the user will see the
                             // invitation when they visit https://crates.io/me/pending-invites/.
-                            let _ = app.emails.send_owner_invite(
-                                &email,
-                                &req_user.gh_login,
-                                &self.name,
-                                &plaintext_token,
-                            );
+                            let email = OwnerInviteEmail {
+                                user_name: &req_user.gh_login,
+                                domain: &app.emails.domain,
+                                crate_name: &self.name,
+                                token: &plaintext_token,
+                            };
+
+                            let _ = app.emails.send(&recipient, email);
                         }
 
                         Ok(format!(
@@ -533,6 +536,29 @@ impl Crate {
                 Ok(krate)
             })
             .collect()
+    }
+}
+
+struct OwnerInviteEmail<'a> {
+    user_name: &'a str,
+    domain: &'a str,
+    crate_name: &'a str,
+    token: &'a str,
+}
+
+impl Email for OwnerInviteEmail<'_> {
+    const SUBJECT: &'static str = "Crate ownership invitation";
+
+    fn body(&self) -> String {
+        format!(
+            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
+Visit https://{domain}/accept-invite/{token} to accept this invitation,
+or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
+            user_name = self.user_name,
+            domain = self.domain,
+            crate_name = self.crate_name,
+            token = self.token,
+        )
     }
 }
 
