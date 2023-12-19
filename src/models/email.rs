@@ -3,7 +3,7 @@ use chrono::NaiveDateTime;
 use crate::models::User;
 use crate::schema::emails;
 
-#[derive(Debug, Queryable, AsChangeset, Identifiable, Associations)]
+#[derive(Debug, Queryable, Identifiable, Associations)]
 #[diesel(belongs_to(User))]
 pub struct Email {
     pub id: i32,
