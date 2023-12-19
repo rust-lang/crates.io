@@ -112,15 +112,21 @@ impl Emails {
 
         match &self.backend {
             EmailBackend::Smtp(transport) => {
-                transport.send(&email)?;
+                transport
+                    .send(&email)
+                    .map_err(|error| EmailError::TransportError(error.into()))?;
                 info!(?message_id, ?subject, "Email sent");
             }
             EmailBackend::FileSystem(transport) => {
-                let id = transport.send(&email)?;
+                let id = transport
+                    .send(&email)
+                    .map_err(|error| EmailError::TransportError(error.into()))?;
                 info!(%id, ?subject, "Email sent");
             }
             EmailBackend::Memory(transport) => {
-                transport.send(&email)?;
+                transport
+                    .send(&email)
+                    .map_err(|error| EmailError::TransportError(error.into()))?;
             }
         }
 
@@ -135,11 +141,7 @@ pub enum EmailError {
     #[error(transparent)]
     MessageBuilderError(#[from] lettre::error::Error),
     #[error(transparent)]
-    SmtpTransportError(#[from] lettre::transport::smtp::Error),
-    #[error(transparent)]
-    FileTransportError(#[from] lettre::transport::file::Error),
-    #[error(transparent)]
-    StubTransportError(#[from] lettre::transport::stub::Error),
+    TransportError(anyhow::Error),
 }
 
 #[derive(Clone)]

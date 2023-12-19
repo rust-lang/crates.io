@@ -230,15 +230,7 @@ impl From<EmailError> for BoxedAppError {
         match error {
             EmailError::AddressError(error) => Box::new(error),
             EmailError::MessageBuilderError(error) => Box::new(error),
-            EmailError::SmtpTransportError(error) => {
-                error!(?error, "Failed to send email");
-                server_error("Failed to send the email")
-            }
-            EmailError::FileTransportError(error) => {
-                error!(?error, "Failed to send email");
-                server_error("Email file could not be generated")
-            }
-            EmailError::StubTransportError(error) => {
+            EmailError::TransportError(error) => {
                 error!(?error, "Failed to send email");
                 server_error("Failed to send the email")
             }
