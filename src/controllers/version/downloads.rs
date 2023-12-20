@@ -8,9 +8,9 @@ use crate::db::PoolError;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::{Crate, VersionDownload};
 use crate::schema::*;
+use crate::util::errors::not_found;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
-use std::fmt::Display;
 use tokio::runtime::Handle;
 use tracing::Instrument;
 
@@ -87,7 +87,7 @@ pub async fn download(
                         .inc();
                     req.request_log().add("bot", "dl");
 
-                    return Err(Box::new(NonCanonicalDownload));
+                    return Err(not_found());
                 } else {
                     // The version_id is only cached if the provided crate name was canonical.
                     // Non-canonical requests fallback to the "slow" path with a DB query, but
@@ -141,21 +141,6 @@ pub async fn download(
         Ok(Json(json!({ "url": redirect_url })).into_response())
     } else {
         Ok(redirect(redirect_url))
-    }
-}
-
-#[derive(Debug)]
-struct NonCanonicalDownload;
-
-impl Display for NonCanonicalDownload {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Non-canonical crate downloads are no longer supported")
-    }
-}
-
-impl AppError for NonCanonicalDownload {
-    fn response(&self) -> Response {
-        StatusCode::NOT_FOUND.into_response()
     }
 }
 
