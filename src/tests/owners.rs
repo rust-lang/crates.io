@@ -366,7 +366,7 @@ fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -388,7 +388,7 @@ fn owner_change_via_publish_token() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
@@ -409,7 +409,7 @@ fn owner_change_without_auth() {
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
     let response = anon.put::<()>(&url, body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.into_json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })

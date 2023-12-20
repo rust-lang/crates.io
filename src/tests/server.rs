@@ -11,7 +11,7 @@ fn user_agent_is_required() {
 
     let req = Request::get("/api/v1/crates").body("").unwrap();
     let resp = anon.run::<()>(req);
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.into_json());
 
     let req = Request::get("/api/v1/crates")
@@ -19,7 +19,7 @@ fn user_agent_is_required() {
         .body("")
         .unwrap();
     let resp = anon.run::<()>(req);
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.into_json());
 }
 
@@ -101,6 +101,6 @@ fn block_traffic_via_ip() {
         .empty();
 
     let resp = anon.get::<()>("/api/v1/crates");
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.into_json());
 }
