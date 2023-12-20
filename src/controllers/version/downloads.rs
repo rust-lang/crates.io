@@ -63,16 +63,8 @@ pub async fn download(
                     // not load the version ID from the database.
                     let metric = &app.instance_metrics.downloads_select_query_execution_time;
                     let version_id = metric.observe_closure_duration(|| {
-                        info_span!("db.query", message = "SELECT ... FROM versions").in_scope(
-                            || {
-                                versions::table
-                                    .inner_join(crates::table)
-                                    .select(versions::id)
-                                    .filter(crates::name.eq(&crate_name))
-                                    .filter(versions::num.eq(&version))
-                                    .first::<i32>(&mut *conn)
-                            },
-                        )
+                        info_span!("db.query", message = "SELECT ... FROM versions")
+                            .in_scope(|| get_version_id(&crate_name, &version, &mut conn))
                     })?;
 
                     // The increment does not happen instantly, but it's deferred to be executed in a batch
@@ -124,6 +116,15 @@ pub async fn download(
     } else {
         Ok(redirect(redirect_url))
     }
+}
+
+fn get_version_id(krate: &str, version: &str, conn: &mut PgConnection) -> QueryResult<i32> {
+    versions::table
+        .inner_join(crates::table)
+        .select(versions::id)
+        .filter(crates::name.eq(&krate))
+        .filter(versions::num.eq(&version))
+        .first::<i32>(conn)
 }
 
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
