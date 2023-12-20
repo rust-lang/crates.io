@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/crates/list.rs
+expression: response.into_json()
+---
+{
+  "errors": [
+    {
+      "detail": "invalid seek parameter"
+    }
+  ]
+}

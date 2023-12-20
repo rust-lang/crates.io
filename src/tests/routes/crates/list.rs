@@ -6,6 +6,7 @@ use crates_io::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
+use insta::assert_json_snapshot;
 
 #[test]
 fn index() {
@@ -791,6 +792,15 @@ fn test_pages_work_even_with_seek_based_pagination() {
     // Calling with page=2 will revert to offset-based pagination
     let second = anon.search("page=2&per_page=1");
     assert!(second.meta.next_page.unwrap().contains("page=3"));
+}
+
+#[test]
+fn invalid_seek_parameter() {
+    let (_app, anon, _cookie) = TestApp::init().with_user();
+
+    let response = anon.get::<()>("/api/v1/crates?seek=broken");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]
