@@ -6,9 +6,8 @@ use super::version_and_crate;
 use crate::controllers::prelude::*;
 use crate::db::PoolError;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{Crate, VersionDownload};
+use crate::models::VersionDownload;
 use crate::schema::*;
-use crate::util::errors::not_found;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
 use tokio::runtime::Handle;
@@ -61,7 +60,7 @@ pub async fn download(
             if let Some(mut conn) = conn {
                 // Returns the crate name as stored in the database, or an error if we could
                 // not load the version ID from the database.
-                let (version_id, canonical_crate_name) = app
+                let version_id = app
                     .instance_metrics
                     .downloads_select_query_execution_time
                     .observe_closure_duration(|| {
@@ -69,10 +68,10 @@ pub async fn download(
                             || {
                                 versions::table
                                     .inner_join(crates::table)
-                                    .select((versions::id, crates::name))
-                                    .filter(Crate::with_name(&crate_name))
+                                    .select(versions::id)
+                                    .filter(crates::name.eq(&crate_name))
                                     .filter(versions::num.eq(&version))
-                                    .first::<(i32, String)>(&mut *conn)
+                                    .first::<i32>(&mut *conn)
                             },
                         )
                     })?;
@@ -81,27 +80,23 @@ pub async fn download(
                 // along with other downloads. See crate::downloads_counter for the implementation.
                 app.downloads_counter.increment(version_id);
 
-                if canonical_crate_name != crate_name {
-                    return Err(not_found());
-                } else {
-                    // The version_id is only cached if the provided crate name was canonical.
-                    // Non-canonical requests fallback to the "slow" path with a DB query, but
-                    // we typically only get a few hundred non-canonical requests in a day anyway.
-                    let span = info_span!("cache.write", ?cache_key);
+                // The version_id is only cached if the provided crate name was canonical.
+                // Non-canonical requests fallback to the "slow" path with a DB query, but
+                // we typically only get a few hundred non-canonical requests in a day anyway.
+                let span = info_span!("cache.write", ?cache_key);
 
-                    // SAFETY: This block_on should not panic. block_on will panic if the
-                    // current thread is an executor thread of a Tokio runtime. (Will panic
-                    // by "Cannot start a runtime from within a runtime"). Here, we are in
-                    // a spawn_blocking call because of conduit_compat, so our current thread
-                    // is not an executor of the runtime.
-                    Handle::current().block_on(
-                        app.version_id_cacher
-                            .insert(cache_key, version_id)
-                            .instrument(span),
-                    );
-                }
+                // SAFETY: This block_on should not panic. block_on will panic if the
+                // current thread is an executor thread of a Tokio runtime. (Will panic
+                // by "Cannot start a runtime from within a runtime"). Here, we are in
+                // a spawn_blocking call because of conduit_compat, so our current thread
+                // is not an executor of the runtime.
+                Handle::current().block_on(
+                    app.version_id_cacher
+                        .insert(cache_key, version_id)
+                        .instrument(span),
+                );
 
-                Ok((canonical_crate_name, version))
+                Ok((crate_name, version))
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
