@@ -248,7 +248,7 @@ pub(crate) struct RawSeekPayload(String);
 
 impl RawSeekPayload {
     pub(crate) fn decode<D: for<'a> Deserialize<'a>>(&self) -> AppResult<D> {
-        decode_seek(&self.0)
+        decode_seek(&self.0).map_err(|_| bad_request("invalid seek parameter"))
     }
 }
 
@@ -294,7 +294,7 @@ pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
 }
 
 /// Decode a list of params previously encoded with [`encode_seek`].
-pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> AppResult<D> {
+pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> anyhow::Result<D> {
     let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
     Ok(decoded)
 }
