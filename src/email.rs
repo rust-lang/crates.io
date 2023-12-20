@@ -110,21 +110,7 @@ impl Emails {
             .header(ContentType::TEXT_PLAIN)
             .body(body)?;
 
-        match &self.backend {
-            EmailBackend::Smtp(transport) => {
-                transport.send(&email)?;
-                info!(?message_id, ?subject, "Email sent");
-            }
-            EmailBackend::FileSystem(transport) => {
-                let id = transport.send(&email)?;
-                info!(%id, ?subject, "Email sent");
-            }
-            EmailBackend::Memory(transport) => {
-                transport.send(&email)?;
-            }
-        }
-
-        Ok(())
+        self.backend.send(email).map_err(EmailError::TransportError)
     }
 }
 
@@ -135,11 +121,7 @@ pub enum EmailError {
     #[error(transparent)]
     MessageBuilderError(#[from] lettre::error::Error),
     #[error(transparent)]
-    SmtpTransportError(#[from] lettre::transport::smtp::Error),
-    #[error(transparent)]
-    FileTransportError(#[from] lettre::transport::file::Error),
-    #[error(transparent)]
-    StubTransportError(#[from] lettre::transport::stub::Error),
+    TransportError(anyhow::Error),
 }
 
 #[derive(Clone)]
@@ -150,6 +132,18 @@ enum EmailBackend {
     FileSystem(Arc<FileTransport>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
     Memory(StubTransport),
+}
+
+impl EmailBackend {
+    fn send(&self, message: Message) -> anyhow::Result<()> {
+        match self {
+            EmailBackend::Smtp(transport) => transport.send(&message).map(|_| ())?,
+            EmailBackend::FileSystem(transport) => transport.send(&message).map(|_| ())?,
+            EmailBackend::Memory(transport) => transport.send(&message).map(|_| ())?,
+        }
+
+        Ok(())
+    }
 }
 
 // Custom Debug implementation to avoid showing the SMTP password.
