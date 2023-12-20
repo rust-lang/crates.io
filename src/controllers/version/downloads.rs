@@ -63,8 +63,7 @@ pub async fn download(
                     // not load the version ID from the database.
                     let metric = &app.instance_metrics.downloads_select_query_execution_time;
                     let version_id = metric.observe_closure_duration(|| {
-                        info_span!("db.query", message = "SELECT ... FROM versions")
-                            .in_scope(|| get_version_id(&crate_name, &version, &mut conn))
+                        get_version_id(&crate_name, &version, &mut conn)
                     })?;
 
                     // The increment does not happen instantly, but it's deferred to be executed in a batch
@@ -118,6 +117,7 @@ pub async fn download(
     }
 }
 
+#[instrument("db.query", skip(conn), fields(message = "SELECT ... FROM versions"))]
 fn get_version_id(krate: &str, version: &str, conn: &mut PgConnection) -> QueryResult<i32> {
     versions::table
         .inner_join(crates::table)
