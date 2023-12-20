@@ -10,7 +10,6 @@ use crate::models::VersionDownload;
 use crate::schema::*;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
-use tokio::runtime::Handle;
 use tracing::Instrument;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
@@ -39,91 +38,85 @@ pub async fn download(
     } else {
         app.instance_metrics.version_id_cache_misses.inc();
 
-        let app = app.clone();
-        let crate_name = crate_name.clone();
-        let version = version.clone();
-        spawn_blocking::<_, _, BoxedAppError>(move || {
-            // When no database connection is ready unconditional redirects will be performed. This could
-            // happen if the pool is not healthy or if an operator manually configured the application to
-            // always perform unconditional redirects (for example as part of the mitigations for an
-            // outage). See the comments below for a description of what unconditional redirects do.
-            let conn = if app.config.force_unconditional_redirects {
-                None
-            } else {
-                match app.db_read_prefer_primary() {
-                    Ok(conn) => Some(conn),
-                    Err(PoolError::UnhealthyPool) => None,
-                    Err(err) => return Err(err.into()),
+        let version_id = spawn_blocking::<_, _, BoxedAppError>({
+            let app = app.clone();
+            let crate_name = crate_name.clone();
+            let version = version.clone();
+
+            move || {
+                // When no database connection is ready unconditional redirects will be performed. This could
+                // happen if the pool is not healthy or if an operator manually configured the application to
+                // always perform unconditional redirects (for example as part of the mitigations for an
+                // outage). See the comments below for a description of what unconditional redirects do.
+                let conn = if app.config.force_unconditional_redirects {
+                    None
+                } else {
+                    match app.db_read_prefer_primary() {
+                        Ok(conn) => Some(conn),
+                        Err(PoolError::UnhealthyPool) => None,
+                        Err(err) => return Err(err.into()),
+                    }
+                };
+
+                if let Some(mut conn) = conn {
+                    // Returns the crate name as stored in the database, or an error if we could
+                    // not load the version ID from the database.
+                    let version_id =
+                        app.instance_metrics
+                            .downloads_select_query_execution_time
+                            .observe_closure_duration(|| {
+                                info_span!("db.query", message = "SELECT ... FROM versions")
+                                    .in_scope(|| {
+                                        versions::table
+                                            .inner_join(crates::table)
+                                            .select(versions::id)
+                                            .filter(crates::name.eq(&crate_name))
+                                            .filter(versions::num.eq(&version))
+                                            .first::<i32>(&mut *conn)
+                                    })
+                            })?;
+
+                    // The increment does not happen instantly, but it's deferred to be executed in a batch
+                    // along with other downloads. See crate::downloads_counter for the implementation.
+                    app.downloads_counter.increment(version_id);
+
+                    Ok(Some(version_id))
+                } else {
+                    // The download endpoint is the most critical route in the whole crates.io application,
+                    // as it's relied upon by users and automations to download crates. Keeping it working
+                    // is the most important thing for us.
+                    //
+                    // The endpoint relies on the database to fetch the canonical crate name (with the
+                    // right capitalization and hyphenation), but that's only needed to serve clients who
+                    // don't call the endpoint with the crate's canonical name.
+                    //
+                    // Thankfully Cargo always uses the right name when calling the endpoint, and we can
+                    // keep it working during a full database outage by unconditionally redirecting without
+                    // checking whether the crate exists or the right name is used. Non-Cargo clients might
+                    // get a 404 response instead of a 500, but that's worth it.
+                    //
+                    // Without a working database we also can't count downloads, but that's also less
+                    // critical than keeping Cargo downloads operational.
+
+                    app.instance_metrics
+                        .downloads_unconditional_redirects_total
+                        .inc();
+
+                    req.request_log().add("unconditional_redirect", "true");
+
+                    Ok(None)
                 }
-            };
-
-            if let Some(mut conn) = conn {
-                // Returns the crate name as stored in the database, or an error if we could
-                // not load the version ID from the database.
-                let version_id = app
-                    .instance_metrics
-                    .downloads_select_query_execution_time
-                    .observe_closure_duration(|| {
-                        info_span!("db.query", message = "SELECT ... FROM versions").in_scope(
-                            || {
-                                versions::table
-                                    .inner_join(crates::table)
-                                    .select(versions::id)
-                                    .filter(crates::name.eq(&crate_name))
-                                    .filter(versions::num.eq(&version))
-                                    .first::<i32>(&mut *conn)
-                            },
-                        )
-                    })?;
-
-                // The increment does not happen instantly, but it's deferred to be executed in a batch
-                // along with other downloads. See crate::downloads_counter for the implementation.
-                app.downloads_counter.increment(version_id);
-
-                // The version_id is only cached if the provided crate name was canonical.
-                // Non-canonical requests fallback to the "slow" path with a DB query, but
-                // we typically only get a few hundred non-canonical requests in a day anyway.
-                let span = info_span!("cache.write", ?cache_key);
-
-                // SAFETY: This block_on should not panic. block_on will panic if the
-                // current thread is an executor thread of a Tokio runtime. (Will panic
-                // by "Cannot start a runtime from within a runtime"). Here, we are in
-                // a spawn_blocking call because of conduit_compat, so our current thread
-                // is not an executor of the runtime.
-                Handle::current().block_on(
-                    app.version_id_cacher
-                        .insert(cache_key, version_id)
-                        .instrument(span),
-                );
-
-                Ok(())
-            } else {
-                // The download endpoint is the most critical route in the whole crates.io application,
-                // as it's relied upon by users and automations to download crates. Keeping it working
-                // is the most important thing for us.
-                //
-                // The endpoint relies on the database to fetch the canonical crate name (with the
-                // right capitalization and hyphenation), but that's only needed to serve clients who
-                // don't call the endpoint with the crate's canonical name.
-                //
-                // Thankfully Cargo always uses the right name when calling the endpoint, and we can
-                // keep it working during a full database outage by unconditionally redirecting without
-                // checking whether the crate exists or the right name is used. Non-Cargo clients might
-                // get a 404 response instead of a 500, but that's worth it.
-                //
-                // Without a working database we also can't count downloads, but that's also less
-                // critical than keeping Cargo downloads operational.
-
-                app.instance_metrics
-                    .downloads_unconditional_redirects_total
-                    .inc();
-
-                req.request_log().add("unconditional_redirect", "true");
-
-                Ok(())
             }
         })
-        .await?
+        .await?;
+
+        if let Some(version_id) = version_id {
+            let span = info_span!("cache.write", ?cache_key);
+            app.version_id_cacher
+                .insert(cache_key, version_id)
+                .instrument(span)
+                .await;
+        }
     };
 
     let redirect_url = app.storage.crate_location(&crate_name, &version);
