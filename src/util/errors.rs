@@ -193,12 +193,6 @@ impl<E: Error + Send + 'static> AppError for E {
     }
 }
 
-impl From<base64::DecodeError> for BoxedAppError {
-    fn from(err: base64::DecodeError) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<diesel::ConnectionError> for BoxedAppError {
     fn from(err: diesel::ConnectionError) -> BoxedAppError {
         Box::new(err)
