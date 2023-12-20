@@ -61,20 +61,19 @@ pub async fn download(
                 if let Some(mut conn) = conn {
                     // Returns the crate name as stored in the database, or an error if we could
                     // not load the version ID from the database.
-                    let version_id =
-                        app.instance_metrics
-                            .downloads_select_query_execution_time
-                            .observe_closure_duration(|| {
-                                info_span!("db.query", message = "SELECT ... FROM versions")
-                                    .in_scope(|| {
-                                        versions::table
-                                            .inner_join(crates::table)
-                                            .select(versions::id)
-                                            .filter(crates::name.eq(&crate_name))
-                                            .filter(versions::num.eq(&version))
-                                            .first::<i32>(&mut *conn)
-                                    })
-                            })?;
+                    let metric = &app.instance_metrics.downloads_select_query_execution_time;
+                    let version_id = metric.observe_closure_duration(|| {
+                        info_span!("db.query", message = "SELECT ... FROM versions").in_scope(
+                            || {
+                                versions::table
+                                    .inner_join(crates::table)
+                                    .select(versions::id)
+                                    .filter(crates::name.eq(&crate_name))
+                                    .filter(versions::num.eq(&version))
+                                    .first::<i32>(&mut *conn)
+                            },
+                        )
+                    })?;
 
                     // The increment does not happen instantly, but it's deferred to be executed in a batch
                     // along with other downloads. See crate::downloads_counter for the implementation.
