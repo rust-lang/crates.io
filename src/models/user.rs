@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use secrecy::SecretString;
 use std::borrow::Cow;
 
 use crate::app::App;
@@ -92,19 +93,20 @@ impl<'a> NewUser<'a> {
                     email: user_email,
                 };
 
-                let token: Option<String> = insert_into(emails::table)
+                let token = insert_into(emails::table)
                     .values(&new_email)
                     .on_conflict_do_nothing()
                     .returning(emails::token)
                     .get_result(conn)
-                    .optional()?;
+                    .optional()?
+                    .map(SecretString::new);
 
                 if let Some(token) = token {
                     // Swallows any error. Some users might insert an invalid email address here.
                     let email = UserConfirmEmail {
                         user_name: &user.gh_login,
                         domain: &emails.domain,
-                        token: &token,
+                        token,
                     };
                     let _ = emails.send(user_email, email);
                 }

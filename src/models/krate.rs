@@ -5,6 +5,7 @@ use diesel::associations::Identifiable;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
+use secrecy::{ExposeSecret, SecretString};
 
 use crate::app::App;
 use crate::controllers::helpers::pagination::*;
@@ -382,7 +383,7 @@ impl Crate {
                                 user_name: &req_user.gh_login,
                                 domain: &app.emails.domain,
                                 crate_name: &self.name,
-                                token: &plaintext_token,
+                                token: plaintext_token,
                             };
 
                             let _ = app.emails.send(&recipient, email);
@@ -543,7 +544,7 @@ struct OwnerInviteEmail<'a> {
     user_name: &'a str,
     domain: &'a str,
     crate_name: &'a str,
-    token: &'a str,
+    token: SecretString,
 }
 
 impl Email for OwnerInviteEmail<'_> {
@@ -557,7 +558,7 @@ or go to https://{domain}/me/pending-invites to manage all of your crate ownersh
             user_name = self.user_name,
             domain = self.domain,
             crate_name = self.crate_name,
-            token = self.token,
+            token = self.token.expose_secret(),
         )
     }
 }

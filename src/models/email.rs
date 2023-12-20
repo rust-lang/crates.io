@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use secrecy::SecretString;
 
 use crate::models::User;
 use crate::schema::emails;
@@ -10,7 +11,8 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
-    pub token: String,
+    #[diesel(deserialize_as = String, serialize_as = String)]
+    pub token: SecretString,
     pub token_generated_at: Option<NaiveDateTime>,
 }
 

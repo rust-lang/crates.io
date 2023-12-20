@@ -1,4 +1,5 @@
 use crate::auth::AuthCheck;
+use secrecy::{ExposeSecret, SecretString};
 use std::collections::HashMap;
 
 use crate::controllers::frontend_prelude::*;
@@ -144,13 +145,14 @@ pub async fn update_user(
                 email: user_email,
             };
 
-            let token: String = insert_into(emails::table)
+            let token = insert_into(emails::table)
                 .values(&new_email)
                 .on_conflict(user_id)
                 .do_update()
                 .set(&new_email)
                 .returning(emails::token)
                 .get_result(conn)
+                .map(SecretString::new)
                 .map_err(|_| server_error("Error in creating token"))?;
 
             // This swallows any errors that occur while attempting to send the email. Some users have
@@ -160,7 +162,7 @@ pub async fn update_user(
             let email = UserConfirmEmail {
                 user_name: &user.gh_login,
                 domain: &state.emails.domain,
-                token: &token,
+                token,
             };
 
             let _ = state.emails.send(user_email, email);
@@ -223,7 +225,7 @@ pub async fn regenerate_token_and_send(
             let email1 = UserConfirmEmail {
                 user_name: &user.gh_login,
                 domain: &state.emails.domain,
-                token: &email.token,
+                token: email.token,
             };
 
             state.emails.send(&email.email, email1).map_err(Into::into)
@@ -300,7 +302,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 pub struct UserConfirmEmail<'a> {
     pub user_name: &'a str,
     pub domain: &'a str,
-    pub token: &'a str,
+    pub token: SecretString,
 }
 
 impl crate::email::Email for UserConfirmEmail<'_> {
@@ -317,7 +319,7 @@ link below to verify your email address. Thank you!\n
 https://{domain}/confirm/{token}",
             user_name = self.user_name,
             domain = self.domain,
-            token = self.token,
+            token = self.token.expose_secret(),
         )
     }
 }
