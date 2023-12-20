@@ -30,18 +30,18 @@ pub async fn download(
         .instrument(info_span!("cache.read", ?cache_key))
         .await;
 
-    let (crate_name, version) = if let Some(version_id) = cache_result {
+    if let Some(version_id) = cache_result {
         app.instance_metrics.version_id_cache_hits.inc();
 
         // The increment does not happen instantly, but it's deferred to be executed in a batch
         // along with other downloads. See crate::downloads_counter for the implementation.
         app.downloads_counter.increment(version_id);
-
-        (crate_name, version)
     } else {
         app.instance_metrics.version_id_cache_misses.inc();
 
         let app = app.clone();
+        let crate_name = crate_name.clone();
+        let version = version.clone();
         spawn_blocking::<_, _, BoxedAppError>(move || {
             // When no database connection is ready unconditional redirects will be performed. This could
             // happen if the pool is not healthy or if an operator manually configured the application to
@@ -96,7 +96,7 @@ pub async fn download(
                         .instrument(span),
                 );
 
-                Ok((crate_name, version))
+                Ok(())
             } else {
                 // The download endpoint is the most critical route in the whole crates.io application,
                 // as it's relied upon by users and automations to download crates. Keeping it working
@@ -120,7 +120,7 @@ pub async fn download(
 
                 req.request_log().add("unconditional_redirect", "true");
 
-                Ok((crate_name, version))
+                Ok(())
             }
         })
         .await?
