@@ -56,6 +56,10 @@ pub struct Server {
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
 
+    /// Instructs the `cargo_compat` middleware to always reply with `200 OK`
+    /// for all endpoints that are relevant for cargo.
+    pub use_cargo_compat_status_codes: bool,
+
     /// Should the server serve the frontend assets in the `dist` directory?
     pub serve_dist: bool,
 
@@ -221,6 +225,8 @@ impl Server {
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment()?,
+            use_cargo_compat_status_codes: !var("CARGO_COMPAT_STATUS_CODES")?
+                .is_some_and(|v| v == "n"),
             serve_dist: true,
             serve_html: true,
             content_security_policy: Some(content_security_policy.parse()?),

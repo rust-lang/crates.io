@@ -1,4 +1,4 @@
-use axum::extract::{MatchedPath, Request};
+use axum::extract::{MatchedPath, Request, State};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
@@ -6,6 +6,7 @@ use http::{header, Method, StatusCode};
 
 /// Convert plain text errors into JSON errors and adjust status codes.
 pub async fn middleware(
+    State(use_cargo_compat_status_codes): State<bool>,
     matched_path: Option<Extension<MatchedPath>>,
     req: Request,
     next: Next,
@@ -30,7 +31,9 @@ pub async fn middleware(
         // 2xx status code. This will change with cargo 1.76.0 (see https://github.com/rust-lang/cargo/pull/13158),
         // but for backwards compatibility we still return "200 OK" for now for
         // all endpoints that are relevant for cargo.
-        *res.status_mut() = StatusCode::OK;
+        if use_cargo_compat_status_codes || res.status().is_success() {
+            *res.status_mut() = StatusCode::OK;
+        }
     }
 
     res
@@ -95,7 +98,7 @@ async fn convert_to_json_response(res: Response) -> anyhow::Result<Response> {
 mod tests {
     use super::*;
     use axum::body::Body;
-    use axum::middleware::from_fn;
+    use axum::middleware::from_fn_with_state;
     use axum::routing::{get, put};
     use axum::Router;
     use bytes::Bytes;
@@ -121,7 +124,7 @@ mod tests {
                 "/api/v1/crates/:crate_id/owners",
                 get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
             )
-            .layer(from_fn(middleware))
+            .layer(from_fn_with_state(true, middleware))
     }
 
     async fn request(path: &str) -> anyhow::Result<(Parts, Bytes)> {

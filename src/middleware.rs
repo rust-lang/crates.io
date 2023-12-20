@@ -62,8 +62,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
             from_fn(debug::debug_requests)
         }));
 
+    let only_200 = state.config.use_cargo_compat_status_codes;
     let middlewares_2 = tower::ServiceBuilder::new()
-        .layer(from_fn(cargo_compat::middleware))
+        .layer(from_fn_with_state(only_200, cargo_compat::middleware))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
             state.clone(),
