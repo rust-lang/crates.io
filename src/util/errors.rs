@@ -219,12 +219,6 @@ impl From<DieselError> for BoxedAppError {
     }
 }
 
-impl From<http::Error> for BoxedAppError {
-    fn from(err: http::Error) -> BoxedAppError {
-        Box::new(err)
-    }
-}
-
 impl From<EmailError> for BoxedAppError {
     fn from(error: EmailError) -> Self {
         match error {
