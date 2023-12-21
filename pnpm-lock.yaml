@@ -27,8 +27,8 @@ dependencies:
     specifier: 3.2.0
     version: 3.2.0
   date-fns:
-    specifier: 3.0.4
-    version: 3.0.4
+    specifier: 3.0.5
+    version: 3.0.5
   highlight.js:
     specifier: 11.9.0
     version: 11.9.0
@@ -7111,8 +7111,8 @@ packages:
       '@babel/runtime': 7.23.6
     dev: true
 
-  /date-fns@3.0.4:
-    resolution: {integrity: sha512-+daptVi95nJ/D4TPS7/gbUqneVMA0Izr4qYAsL2ZZwtcDtEP8Zge765mbXhTqWYdTSG79/VtbBigQTluiE9DBQ==}
+  /date-fns@3.0.5:
+    resolution: {integrity: sha512-Q4Tq5c5s/Zl/zbgdWf6pejn9ru7UwdIlLfvEEg1hVsQNQ7LKt76qIduagIT9OPK7+JCv1mAKherdU6bOqGYDnw==}
     dev: false
 
   /date-time@2.1.0:
@@ -15694,6 +15694,7 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    requiresBuild: true
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}
