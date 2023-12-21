@@ -16,7 +16,7 @@ path = "lib.rs"
 testing = []
 
 [dependencies]
-anyhow = "=1.0.75"
+anyhow = "=1.0.76"
 base64 = "=0.21.5"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
 dotenvy = "=0.15.7"
