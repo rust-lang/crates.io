@@ -8,6 +8,7 @@ use crate::Env;
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
+use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use http::HeaderValue;
@@ -56,9 +57,9 @@ pub struct Server {
     pub cdn_user_agent: String,
     pub balance_capacity: BalanceCapacityConfig,
 
-    /// Instructs the `cargo_compat` middleware to always reply with `200 OK`
-    /// for all endpoints that are relevant for cargo.
-    pub use_cargo_compat_status_codes: bool,
+    /// Instructs the `cargo_compat` middleware whether to adjust response
+    /// status codes to `200 OK` for all endpoints that are relevant for cargo.
+    pub cargo_compat_status_code_config: StatusCodeConfig,
 
     /// Should the server serve the frontend assets in the `dist` directory?
     pub serve_dist: bool,
@@ -225,8 +226,8 @@ impl Server {
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
             balance_capacity: BalanceCapacityConfig::from_environment()?,
-            use_cargo_compat_status_codes: !var("CARGO_COMPAT_STATUS_CODES")?
-                .is_some_and(|v| v == "n"),
+            cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
+                .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
             serve_html: true,
             content_security_policy: Some(content_security_policy.parse()?),

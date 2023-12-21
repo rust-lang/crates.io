@@ -3,6 +3,7 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use anyhow::Context;
 use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
+use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
@@ -431,7 +432,7 @@ fn simple_config() -> config::Server {
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code
         // enforcement off eventually.
-        use_cargo_compat_status_codes: false,
+        cargo_compat_status_code_config: StatusCodeConfig::Disabled,
 
         // The frontend code is not needed for the backend tests.
         serve_dist: false,
