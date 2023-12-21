@@ -1,7 +1,7 @@
 pub mod app;
 mod balance_capacity;
 mod block_traffic;
-mod cargo_compat;
+pub mod cargo_compat;
 mod common_headers;
 mod debug;
 mod ember_html;
@@ -63,7 +63,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         }));
 
     let middlewares_2 = tower::ServiceBuilder::new()
-        .layer(from_fn(cargo_compat::middleware))
+        .layer(from_fn_with_state(
+            state.config.cargo_compat_status_code_config,
+            cargo_compat::middleware,
+        ))
         .layer(from_fn_with_state(state.clone(), session::attach_session))
         .layer(from_fn_with_state(
             state.clone(),
