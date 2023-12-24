@@ -76,8 +76,8 @@ diesel_full_text_search = "=2.1.1"
 diesel_migrations = { version = "=2.1.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
 flate2 = "=1.0.28"
-futures-channel = { version = "=0.3.29", default-features = false }
-futures-util = "=0.3.29"
+futures-channel = { version = "=0.3.30", default-features = false }
+futures-util = "=0.3.30"
 github-meta = "=0.11.0"
 hex = "=0.4.3"
 http = "=1.0.0"
