@@ -133,18 +133,3 @@ impl fmt::Display for InsecurelyGeneratedTokenRevoked {
         Result::Ok(())
     }
 }
-
-#[derive(Debug)]
-pub(crate) struct MetricsDisabled;
-
-impl AppError for MetricsDisabled {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::NOT_FOUND)
-    }
-}
-
-impl fmt::Display for MetricsDisabled {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Metrics are disabled on this crates.io instance")
-    }
-}
