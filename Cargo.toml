@@ -47,7 +47,7 @@ default = ["slow-tests"]
 slow-tests = []
 
 [dependencies]
-anyhow = "=1.0.76"
+anyhow = "=1.0.77"
 async-trait = "=0.1.75"
 aws-credential-types = { version = "=1.1.1", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.40.0"
