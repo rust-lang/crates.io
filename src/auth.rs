@@ -174,8 +174,10 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
         return Ok(None);
     };
 
-    let user = User::find(conn, id)
-        .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
+    let user = User::find(conn, id).map_err(|err| {
+        req.request_log().add("cause", err);
+        internal("user_id from cookie not found in database")
+    })?;
 
     ensure_not_locked(&user)?;
 
