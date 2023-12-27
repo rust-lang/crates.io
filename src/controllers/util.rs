@@ -1,5 +1,6 @@
 use super::prelude::*;
-use crate::util::errors::{forbidden, internal, AppError, AppResult};
+use crate::middleware::log_request::RequestLogExt;
+use crate::util::errors::{forbidden, AppResult};
 use http::request::Parts;
 use http::{Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version};
 
@@ -20,7 +21,9 @@ pub fn verify_origin<T: RequestPartsExt>(req: &T) -> AppResult<()> {
     if let Some(bad_origin) = bad_origin {
         let error_message =
             format!("only same-origin requests can be authenticated. got {bad_origin:?}");
-        return Err(internal(&error_message).chain(forbidden()));
+
+        req.request_log().add("cause", error_message);
+        return Err(forbidden());
     }
     Ok(())
 }
