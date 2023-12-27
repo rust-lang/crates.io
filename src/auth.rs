@@ -204,7 +204,10 @@ fn authenticate_via_token<T: RequestPartsExt>(
         if e.is::<InsecurelyGeneratedTokenRevoked>() {
             e
         } else {
-            e.chain(internal("invalid token")).chain(forbidden())
+            let cause = format!("invalid token caused by {e}");
+            req.request_log().add("cause", cause);
+
+            forbidden()
         }
     })?;
 
