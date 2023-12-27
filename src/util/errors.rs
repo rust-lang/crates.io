@@ -255,28 +255,6 @@ impl AppError for InternalAppError {
     }
 }
 
-#[derive(Debug)]
-struct InternalAppErrorStatic {
-    description: &'static str,
-}
-
-impl fmt::Display for InternalAppErrorStatic {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)?;
-        Ok(())
-    }
-}
-
-impl AppError for InternalAppErrorStatic {
-    fn response(&self) -> axum::response::Response {
-        error!(error = %self.description, "Internal Server Error");
-
-        sentry::capture_message(self.description, sentry::Level::Error);
-
-        server_error_response(self.description.to_string())
-    }
-}
-
 pub fn internal<S: ToString>(error: S) -> BoxedAppError {
     Box::new(InternalAppError {
         description: error.to_string(),
