@@ -5,7 +5,7 @@ use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
+    account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
 use diesel::PgConnection;
@@ -241,7 +241,10 @@ fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResu
     }
 
     // Unable to authenticate the user
-    return Err(internal("no cookie session or auth header found").chain(forbidden()));
+    let cause = "no cookie session or auth header found";
+    req.request_log().add("cause", cause);
+
+    return Err(forbidden());
 }
 
 fn ensure_not_locked(user: &User) -> AppResult<()> {
