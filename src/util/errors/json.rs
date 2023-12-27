@@ -135,37 +135,6 @@ impl fmt::Display for InsecurelyGeneratedTokenRevoked {
 }
 
 #[derive(Debug)]
-pub(super) struct AccountLocked {
-    pub(super) reason: String,
-    pub(super) until: Option<NaiveDateTime>,
-}
-
-impl AppError for AccountLocked {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::FORBIDDEN)
-    }
-}
-
-impl fmt::Display for AccountLocked {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(until) = self.until {
-            let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
-            write!(
-                f,
-                "This account is locked until {}. Reason: {}",
-                until, self.reason
-            )
-        } else {
-            write!(
-                f,
-                "This account is indefinitely locked. Reason: {}",
-                self.reason
-            )
-        }
-    }
-}
-
-#[derive(Debug)]
 pub(crate) struct OwnershipInvitationExpired {
     pub(crate) crate_name: String,
 }

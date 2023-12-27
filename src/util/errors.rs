@@ -59,10 +59,12 @@ pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
 }
 
 pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppError {
-    Box::new(json::AccountLocked {
-        reason: reason.to_string(),
-        until,
-    })
+    let detail = until
+        .map(|until| until.format("%Y-%m-%d at %H:%M:%S UTC"))
+        .map(|until| format!("This account is locked until {until}. Reason: {reason}"))
+        .unwrap_or_else(|| format!("This account is indefinitely locked. Reason: {reason}"));
+
+    custom(StatusCode::FORBIDDEN, detail)
 }
 
 pub fn forbidden() -> BoxedAppError {
