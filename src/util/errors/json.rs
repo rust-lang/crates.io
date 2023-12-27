@@ -1,5 +1,6 @@
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use std::borrow::Cow;
 use std::fmt;
 
 use super::{AppError, BoxedAppError, InternalAppErrorStatic};
@@ -15,37 +16,6 @@ fn json_error(detail: &str, status: StatusCode) -> Response {
 }
 
 // The following structs are empty and do not provide a custom message to the user
-
-#[derive(Debug)]
-pub(crate) struct NotFound;
-
-impl AppError for NotFound {
-    fn response(&self) -> Response {
-        json_error("Not Found", StatusCode::NOT_FOUND)
-    }
-}
-
-impl fmt::Display for NotFound {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Not Found".fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct Forbidden;
-
-impl AppError for Forbidden {
-    fn response(&self) -> Response {
-        let detail = "must be logged in to perform that action";
-        json_error(detail, StatusCode::FORBIDDEN)
-    }
-}
-
-impl fmt::Display for Forbidden {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "must be logged in to perform that action".fmt(f)
-    }
-}
 
 #[derive(Debug)]
 pub(crate) struct ReadOnlyMode;
@@ -66,63 +36,28 @@ impl fmt::Display for ReadOnlyMode {
 
 // The following structs wrap owned data and provide a custom message to the user
 
-#[derive(Debug)]
-pub(super) struct Ok(pub(super) String);
-
-impl AppError for Ok {
-    fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::OK)
-    }
+pub fn custom(status: StatusCode, detail: impl Into<Cow<'static, str>>) -> BoxedAppError {
+    Box::new(CustomApiError {
+        status,
+        detail: detail.into(),
+    })
 }
 
-impl fmt::Display for Ok {
+#[derive(Debug, Clone)]
+pub struct CustomApiError {
+    status: StatusCode,
+    detail: Cow<'static, str>,
+}
+
+impl fmt::Display for CustomApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        self.detail.fmt(f)
     }
 }
 
-#[derive(Debug)]
-pub(super) struct BadRequest(pub(super) String);
-
-impl AppError for BadRequest {
+impl AppError for CustomApiError {
     fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::BAD_REQUEST)
-    }
-}
-
-impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct ServerError(pub(super) String);
-
-impl AppError for ServerError {
-    fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::INTERNAL_SERVER_ERROR)
-    }
-}
-
-impl fmt::Display for ServerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct ServiceUnavailable;
-
-impl AppError for ServiceUnavailable {
-    fn response(&self) -> Response {
-        json_error("Service unavailable", StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
-
-impl fmt::Display for ServiceUnavailable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Service unavailable".fmt(f)
+        json_error(&self.detail, self.status)
     }
 }
 
