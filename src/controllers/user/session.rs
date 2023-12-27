@@ -6,6 +6,7 @@ use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use tokio::runtime::Handle;
 
 use crate::email::Emails;
+use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
@@ -83,6 +84,7 @@ pub async fn authorize(
     req: Parts,
 ) -> AppResult<Json<EncodableMe>> {
     let app_clone = app.clone();
+    let request_log = req.request_log().clone();
 
     spawn_blocking(move || {
         // Make sure that the state we just got matches the session state that we
@@ -97,7 +99,11 @@ pub async fn authorize(
             .github_oauth
             .exchange_code(query.code)
             .request(http_client)
-            .map_err(|err| err.chain(server_error("Error obtaining token")))?;
+            .map_err(|err| {
+                request_log.add("cause", err);
+                server_error("Error obtaining token")
+            })?;
+
         let token = token.access_token();
 
         // Fetch the user info from GitHub using the access token we just got and create a user record
