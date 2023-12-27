@@ -106,17 +106,6 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
     }
-
-    fn chain<E>(self, error: E) -> BoxedAppError
-    where
-        Self: Sized,
-        E: AppError,
-    {
-        Box::new(ChainedError {
-            error,
-            cause: Box::new(self),
-        })
-    }
 }
 
 impl dyn AppError {
@@ -154,31 +143,6 @@ impl IntoResponse for BoxedAppError {
 }
 
 pub type AppResult<T> = Result<T, BoxedAppError>;
-
-// =============================================================================
-// Chaining errors
-
-#[derive(Debug)]
-struct ChainedError<E> {
-    error: E,
-    cause: BoxedAppError,
-}
-
-impl<E: AppError> AppError for ChainedError<E> {
-    fn response(&self) -> axum::response::Response {
-        self.error.response()
-    }
-
-    fn cause(&self) -> Option<&dyn AppError> {
-        Some(&*self.cause)
-    }
-}
-
-impl<E: AppError> fmt::Display for ChainedError<E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} caused by {}", self.error, self.cause)
-    }
-}
 
 // =============================================================================
 // Error impls
@@ -353,8 +317,6 @@ fn server_error_response(error: String) -> axum::response::Response {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::middleware::log_request::CauseField;
-    use axum::response::IntoResponse;
     use diesel::result::Error as DieselError;
     use http::StatusCode;
 
@@ -376,19 +338,6 @@ mod tests {
         // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
         assert_eq!(cargo_err("").response().status(), StatusCode::OK);
 
-        // Inner errors are captured for logging when wrapped by a user facing error
-        let response = "-1"
-            .parse::<u8>()
-            .map_err(|err| err.chain(internal("middle error")))
-            .map_err(|err| err.chain(bad_request("outer user facing error")))
-            .unwrap_err()
-            .into_response();
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-        assert_eq!(
-            response.extensions().get::<CauseField>().unwrap().0,
-            "middle error caused by invalid digit found in string"
-        );
-
         // All other error types are converted to internal server errors
         assert_eq!(
             internal("").response().status(),
@@ -405,63 +354,6 @@ mod tests {
                 .response()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
-        );
-    }
-
-    #[test]
-    fn chain_error_internal() {
-        assert_eq!(
-            Err::<(), _>(internal("inner"))
-                .map_err(|err| err.chain(internal("middle")))
-                .map_err(|err| err.chain(internal("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by middle caused by inner"
-        );
-        assert_eq!(
-            Err::<(), _>(internal("inner"))
-                .map_err(|err| err.chain(internal("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by inner"
-        );
-
-        // Don't do this, the user will see a generic 500 error instead of the intended message
-        assert_eq!(
-            Err::<(), _>(cargo_err("inner"))
-                .map_err(|err| err.chain(internal("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by inner"
-        );
-        assert_eq!(
-            Err::<(), _>(forbidden())
-                .map_err(|err| err.chain(internal("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by must be logged in to perform that action"
-        );
-    }
-
-    #[test]
-    fn chain_error_user_facing() {
-        // Do this rarely, the user will only see the outer error
-        assert_eq!(
-            Err::<(), _>(cargo_err("inner"))
-                .map_err(|err| err.chain(cargo_err("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by inner" // never logged
-        );
-
-        // The outer error is sent as a response to the client.
-        // The inner error never bubbles up to the logging middleware
-        assert_eq!(
-            Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied))
-                .map_err(|err| err.chain(cargo_err("outer")))
-                .unwrap_err()
-                .to_string(),
-            "outer caused by permission denied" // never logged
         );
     }
 }
