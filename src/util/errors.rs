@@ -25,7 +25,7 @@ use http::StatusCode;
 use tokio::task::JoinError;
 
 use crate::db::PoolError;
-use crate::middleware::log_request::{CauseField, ErrorField};
+use crate::middleware::log_request::ErrorField;
 
 mod json;
 
@@ -93,16 +93,6 @@ pub trait AppError: Send + fmt::Display + fmt::Debug + 'static {
     /// where it is eventually logged and turned into a status 500 response.
     fn response(&self) -> axum::response::Response;
 
-    /// The cause of an error response
-    ///
-    /// If present, an error provided to the `LogRequests` middleware.
-    ///
-    /// This is intended for use with the `ChainError` trait, where a user facing
-    /// error may wrap an internal error we still want to log.
-    fn cause(&self) -> Option<&dyn AppError> {
-        None
-    }
-
     fn get_type_id(&self) -> TypeId {
         TypeId::of::<Self>()
     }
@@ -119,10 +109,6 @@ impl AppError for BoxedAppError {
         (**self).response()
     }
 
-    fn cause(&self) -> Option<&dyn AppError> {
-        (**self).cause()
-    }
-
     fn get_type_id(&self) -> TypeId {
         (**self).get_type_id()
     }
@@ -130,15 +116,7 @@ impl AppError for BoxedAppError {
 
 impl IntoResponse for BoxedAppError {
     fn into_response(self) -> axum::response::Response {
-        let mut response = self.response();
-
-        if let Some(cause) = self.cause() {
-            response
-                .extensions_mut()
-                .insert(CauseField(cause.to_string()));
-        }
-
-        response
+        self.response()
     }
 }
 
