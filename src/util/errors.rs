@@ -34,7 +34,7 @@ use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
 pub(crate) use json::{
     custom, InsecurelyGeneratedTokenRevoked, MetricsDisabled, OwnershipInvitationExpired,
-    ReadOnlyMode, RouteBlocked, TooManyRequests,
+    ReadOnlyMode, TooManyRequests,
 };
 
 pub type BoxedAppError = Box<dyn AppError>;

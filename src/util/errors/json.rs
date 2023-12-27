@@ -201,25 +201,3 @@ impl fmt::Display for MetricsDisabled {
         f.write_str("Metrics are disabled on this crates.io instance")
     }
 }
-
-#[derive(Debug)]
-pub(crate) struct RouteBlocked;
-
-impl AppError for RouteBlocked {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
-
-impl fmt::Display for RouteBlocked {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("This route is temporarily blocked. See https://status.crates.io.")
-    }
-}
-
-impl IntoResponse for RouteBlocked {
-    fn into_response(self) -> Response {
-        let body = Json(json!({ "errors": [{ "detail": self.to_string() }] }));
-        (StatusCode::SERVICE_UNAVAILABLE, body).into_response()
-    }
-}
