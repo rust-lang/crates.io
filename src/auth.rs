@@ -211,8 +211,10 @@ fn authenticate_via_token<T: RequestPartsExt>(
         }
     })?;
 
-    let user = User::find(conn, token.user_id)
-        .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
+    let user = User::find(conn, token.user_id).map_err(|err| {
+        req.request_log().add("cause", err);
+        internal("user_id from token not found in database")
+    })?;
 
     ensure_not_locked(&user)?;
 
