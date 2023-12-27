@@ -36,15 +36,6 @@ pub(crate) use json::{custom, InsecurelyGeneratedTokenRevoked, ReadOnlyMode, Too
 
 pub type BoxedAppError = Box<dyn AppError>;
 
-/// Returns an error with status 200 and the provided description as JSON
-///
-/// This is for backwards compatibility with cargo endpoints.  For all other
-/// endpoints, use helpers like `bad_request` or `server_error` which set a
-/// correct status code.
-pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
-    custom(StatusCode::OK, error.to_string())
-}
-
 // The following are intended to be used for errors being sent back to the Ember
 // frontend, not to cargo as cargo does not handle non-200 response codes well
 // (see <https://github.com/rust-lang/cargo/issues/3995>), but Ember requires
@@ -301,9 +292,6 @@ mod tests {
             StatusCode::NOT_FOUND
         );
         assert_eq!(not_found().response().status(), StatusCode::NOT_FOUND);
-
-        // cargo_err errors are returned as 200 so that cargo displays this nicely on the command line
-        assert_eq!(cargo_err("").response().status(), StatusCode::OK);
 
         // All other error types are converted to internal server errors
         assert_eq!(
