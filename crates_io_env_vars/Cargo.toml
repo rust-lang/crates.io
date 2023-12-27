@@ -8,5 +8,5 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.76"
+anyhow = "=1.0.77"
 dotenvy = "=0.15.7"
