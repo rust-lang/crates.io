@@ -1,11 +1,12 @@
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
+use http::StatusCode;
 use secrecy::SecretString;
 
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
-use crate::util::errors::{AppResult, OwnershipInvitationExpired};
+use crate::util::errors::{custom, AppResult};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -97,11 +98,17 @@ impl CrateOwnerInvitation {
 
     pub fn accept(self, conn: &mut PgConnection, config: &config::Server) -> AppResult<()> {
         if self.is_expired(config) {
-            let crate_name = crates::table
+            let crate_name: String = crates::table
                 .find(self.crate_id)
                 .select(crates::name)
                 .first(conn)?;
-            return Err(Box::new(OwnershipInvitationExpired { crate_name }));
+
+            let detail = format!(
+                "The invitation to become an owner of the {crate_name} crate expired. \
+                Please reach out to an owner of the crate to request a new invitation.",
+            );
+
+            return Err(custom(StatusCode::GONE, detail));
         }
 
         conn.transaction(|conn| {

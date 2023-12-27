@@ -135,28 +135,6 @@ impl fmt::Display for InsecurelyGeneratedTokenRevoked {
 }
 
 #[derive(Debug)]
-pub(crate) struct OwnershipInvitationExpired {
-    pub(crate) crate_name: String,
-}
-
-impl AppError for OwnershipInvitationExpired {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::GONE)
-    }
-}
-
-impl fmt::Display for OwnershipInvitationExpired {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "The invitation to become an owner of the {} crate expired. \
-             Please reach out to an owner of the crate to request a new invitation.",
-            self.crate_name
-        )
-    }
-}
-
-#[derive(Debug)]
 pub(crate) struct MetricsDisabled;
 
 impl AppError for MetricsDisabled {
