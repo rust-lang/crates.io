@@ -67,17 +67,20 @@ impl AuthCheck {
             if !self.allow_token {
                 let error_message =
                     "API Token authentication was explicitly disallowed for this API";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
 
             if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
                 let error_message = "Endpoint scope mismatch";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
 
             if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
                 let error_message = "Crate scope mismatch";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
         }
 
