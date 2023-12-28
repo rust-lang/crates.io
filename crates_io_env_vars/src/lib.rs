@@ -81,3 +81,83 @@ fn required<T>(res: anyhow::Result<Option<T>>, key: &str) -> anyhow::Result<T> {
         Err(error) => Err(error),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use claims::*;
+    use once_cell::sync::Lazy;
+    use std::sync::Mutex;
+
+    const TEST_VAR: &str = "CRATES_IO_ENV_VARS_TEST_VAR";
+
+    /// A mutex to ensure that the tests don't run in parallel, since they all
+    /// modify the shared environment variable.
+    static MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+    #[test]
+    fn test_var() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "test");
+        assert_some_eq!(assert_ok!(var(TEST_VAR)), "test");
+
+        std::env::remove_var(TEST_VAR);
+        assert_none!(assert_ok!(var(TEST_VAR)));
+    }
+
+    #[test]
+    fn test_required_var() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "test");
+        assert_ok_eq!(required_var(TEST_VAR), "test");
+
+        std::env::remove_var(TEST_VAR);
+        let error = assert_err!(required_var(TEST_VAR));
+        assert_eq!(
+            error.to_string(),
+            "Failed to find required CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+        );
+    }
+
+    #[test]
+    fn test_var_parsed() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "42");
+        assert_some_eq!(assert_ok!(var_parsed::<i32>(TEST_VAR)), 42);
+
+        std::env::set_var(TEST_VAR, "test");
+        let error = assert_err!(var_parsed::<i32>(TEST_VAR));
+        assert_eq!(
+            error.to_string(),
+            "Failed to parse CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+        );
+
+        std::env::remove_var(TEST_VAR);
+        assert_none!(assert_ok!(var_parsed::<i32>(TEST_VAR)));
+    }
+
+    #[test]
+    fn test_required_var_parsed() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "42");
+        assert_ok_eq!(required_var_parsed::<i32>(TEST_VAR), 42);
+
+        std::env::set_var(TEST_VAR, "test");
+        let error = assert_err!(required_var_parsed::<i32>(TEST_VAR));
+        assert_eq!(
+            error.to_string(),
+            "Failed to parse CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+        );
+
+        std::env::remove_var(TEST_VAR);
+        let error = assert_err!(required_var_parsed::<i32>(TEST_VAR));
+        assert_eq!(
+            error.to_string(),
+            "Failed to find required CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+        );
+    }
+}

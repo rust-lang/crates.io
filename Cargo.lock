@@ -1000,7 +1000,9 @@ name = "crates_io_env_vars"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "claims",
  "dotenvy",
+ "once_cell",
 ]
 
 [[package]]

@@ -10,3 +10,7 @@ workspace = true
 [dependencies]
 anyhow = "=1.0.76"
 dotenvy = "=0.15.7"
+
+[dev-dependencies]
+claims = "=0.7.1"
+once_cell = "1.19.0"
