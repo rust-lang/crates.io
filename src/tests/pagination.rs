@@ -24,6 +24,6 @@ fn pagination_blocks_ip_from_cidr_block_list() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.into_json(),
-        json!({ "errors": [{ "detail": "requested page offset is too large" }] })
+        json!({ "errors": [{ "detail": "Page 2 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives." }] })
     );
 }
