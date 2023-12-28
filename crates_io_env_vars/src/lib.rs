@@ -82,6 +82,45 @@ fn required<T>(res: anyhow::Result<Option<T>>, key: &str) -> anyhow::Result<T> {
     }
 }
 
+/// Reads an environment variable and parses it as a comma-separated list, or
+/// returns an empty list if the variable is not set.
+#[track_caller]
+pub fn list(key: &str) -> anyhow::Result<Vec<String>> {
+    let values = match var(key)? {
+        None => vec![],
+        Some(s) if s.is_empty() => vec![],
+        Some(s) => s.split(',').map(str::trim).map(String::from).collect(),
+    };
+
+    Ok(values)
+}
+
+/// Reads an environment variable and parses it as a comma-separated list, or
+/// returns an empty list if the variable is not set. Each individual value is
+/// parsed using [FromStr].
+#[track_caller]
+pub fn list_parsed<T, E, F, C>(key: &str, f: F) -> anyhow::Result<Vec<T>>
+where
+    F: Fn(&str) -> C,
+    C: Context<T, E>,
+{
+    let values = match var(key)? {
+        None => vec![],
+        Some(s) if s.is_empty() => vec![],
+        Some(s) => s
+            .split(',')
+            .map(str::trim)
+            .map(|s| {
+                f(s).with_context(|| {
+                    format!("Failed to parse value \"{s}\" of {key} environment variable")
+                })
+            })
+            .collect::<Result<_, _>>()?,
+    };
+
+    Ok(values)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,5 +198,46 @@ mod tests {
             error.to_string(),
             "Failed to find required CRATES_IO_ENV_VARS_TEST_VAR environment variable"
         );
+    }
+
+    #[test]
+    fn test_list() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "test");
+        assert_ok_eq!(list(TEST_VAR), vec!["test"]);
+
+        std::env::set_var(TEST_VAR, "test, foo,   bar   ");
+        assert_ok_eq!(list(TEST_VAR), vec!["test", "foo", "bar"]);
+
+        std::env::set_var(TEST_VAR, "");
+        assert_ok_eq!(list(TEST_VAR), Vec::<String>::new());
+
+        std::env::remove_var(TEST_VAR);
+        assert_ok_eq!(list(TEST_VAR), Vec::<String>::new());
+    }
+
+    #[test]
+    fn test_list_parsed() {
+        let _guard = MUTEX.lock().unwrap();
+
+        std::env::set_var(TEST_VAR, "42");
+        assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), vec![42]);
+
+        std::env::set_var(TEST_VAR, "42, 1,   -53   ");
+        assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), vec![42, 1, -53]);
+
+        std::env::set_var(TEST_VAR, "42, what");
+        let error = assert_err!(list_parsed(TEST_VAR, i32::from_str));
+        assert_eq!(
+            error.to_string(),
+            "Failed to parse value \"what\" of CRATES_IO_ENV_VARS_TEST_VAR environment variable"
+        );
+
+        std::env::set_var(TEST_VAR, "");
+        assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), Vec::<i32>::new());
+
+        std::env::remove_var(TEST_VAR);
+        assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), Vec::<i32>::new());
     }
 }
