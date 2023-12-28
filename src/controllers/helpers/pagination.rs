@@ -103,7 +103,11 @@ impl PaginationOptionsBuilder {
                         && is_useragent_or_ip_blocked(config, req)
                     {
                         req.request_log().add("cause", "large page offset");
-                        return Err(bad_request("requested page offset is too large"));
+
+                        let error =
+                            format!("Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.");
+
+                        return Err(bad_request(error));
                     }
                 }
 
