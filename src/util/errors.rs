@@ -32,10 +32,7 @@ mod json;
 use crate::email::EmailError;
 use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
-pub(crate) use json::{
-    InsecurelyGeneratedTokenRevoked, MetricsDisabled, OwnershipInvitationExpired, ReadOnlyMode,
-    RouteBlocked, TooManyRequests,
-};
+pub(crate) use json::{custom, InsecurelyGeneratedTokenRevoked, ReadOnlyMode, TooManyRequests};
 
 pub type BoxedAppError = Box<dyn AppError>;
 
@@ -45,7 +42,7 @@ pub type BoxedAppError = Box<dyn AppError>;
 /// endpoints, use helpers like `bad_request` or `server_error` which set a
 /// correct status code.
 pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
-    Box::new(json::Ok(error.to_string()))
+    custom(StatusCode::OK, error.to_string())
 }
 
 // The following are intended to be used for errors being sent back to the Ember
@@ -55,32 +52,35 @@ pub fn cargo_err<S: ToString>(error: S) -> BoxedAppError {
 
 /// Return an error with status 400 and the provided description as JSON
 pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
-    Box::new(json::BadRequest(error.to_string()))
+    custom(StatusCode::BAD_REQUEST, error.to_string())
 }
 
 pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppError {
-    Box::new(json::AccountLocked {
-        reason: reason.to_string(),
-        until,
-    })
+    let detail = until
+        .map(|until| until.format("%Y-%m-%d at %H:%M:%S UTC"))
+        .map(|until| format!("This account is locked until {until}. Reason: {reason}"))
+        .unwrap_or_else(|| format!("This account is indefinitely locked. Reason: {reason}"));
+
+    custom(StatusCode::FORBIDDEN, detail)
 }
 
 pub fn forbidden() -> BoxedAppError {
-    Box::new(json::Forbidden)
+    let detail = "must be logged in to perform that action";
+    custom(StatusCode::FORBIDDEN, detail)
 }
 
 pub fn not_found() -> BoxedAppError {
-    Box::new(json::NotFound)
+    custom(StatusCode::NOT_FOUND, "Not Found")
 }
 
 /// Returns an error with status 500 and the provided description as JSON
 pub fn server_error<S: ToString>(error: S) -> BoxedAppError {
-    Box::new(json::ServerError(error.to_string()))
+    custom(StatusCode::INTERNAL_SERVER_ERROR, error.to_string())
 }
 
 /// Returns an error with status 503 and the provided description as JSON
 pub fn service_unavailable() -> BoxedAppError {
-    Box::new(json::ServiceUnavailable)
+    custom(StatusCode::SERVICE_UNAVAILABLE, "Service unavailable")
 }
 
 // =============================================================================

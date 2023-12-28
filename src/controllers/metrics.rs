@@ -1,5 +1,5 @@
 use crate::controllers::frontend_prelude::*;
-use crate::util::errors::{forbidden, not_found, MetricsDisabled};
+use crate::util::errors::{custom, forbidden, not_found};
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
@@ -17,7 +17,8 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
     } else {
         // To avoid accidentally leaking metrics if the environment variable is not set, prevent
         // access to any metrics endpoint if the authorization token is not configured.
-        return Err(Box::new(MetricsDisabled));
+        let detail = "Metrics are disabled on this crates.io instance";
+        return Err(custom(StatusCode::NOT_FOUND, detail));
     }
 
     let metrics = spawn_blocking(move || match kind.as_str() {

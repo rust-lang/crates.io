@@ -1,5 +1,6 @@
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use std::borrow::Cow;
 use std::fmt;
 
 use super::{AppError, BoxedAppError, InternalAppErrorStatic};
@@ -15,37 +16,6 @@ fn json_error(detail: &str, status: StatusCode) -> Response {
 }
 
 // The following structs are empty and do not provide a custom message to the user
-
-#[derive(Debug)]
-pub(crate) struct NotFound;
-
-impl AppError for NotFound {
-    fn response(&self) -> Response {
-        json_error("Not Found", StatusCode::NOT_FOUND)
-    }
-}
-
-impl fmt::Display for NotFound {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Not Found".fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct Forbidden;
-
-impl AppError for Forbidden {
-    fn response(&self) -> Response {
-        let detail = "must be logged in to perform that action";
-        json_error(detail, StatusCode::FORBIDDEN)
-    }
-}
-
-impl fmt::Display for Forbidden {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "must be logged in to perform that action".fmt(f)
-    }
-}
 
 #[derive(Debug)]
 pub(crate) struct ReadOnlyMode;
@@ -66,63 +36,28 @@ impl fmt::Display for ReadOnlyMode {
 
 // The following structs wrap owned data and provide a custom message to the user
 
-#[derive(Debug)]
-pub(super) struct Ok(pub(super) String);
-
-impl AppError for Ok {
-    fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::OK)
-    }
+pub fn custom(status: StatusCode, detail: impl Into<Cow<'static, str>>) -> BoxedAppError {
+    Box::new(CustomApiError {
+        status,
+        detail: detail.into(),
+    })
 }
 
-impl fmt::Display for Ok {
+#[derive(Debug, Clone)]
+pub struct CustomApiError {
+    status: StatusCode,
+    detail: Cow<'static, str>,
+}
+
+impl fmt::Display for CustomApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        self.detail.fmt(f)
     }
 }
 
-#[derive(Debug)]
-pub(super) struct BadRequest(pub(super) String);
-
-impl AppError for BadRequest {
+impl AppError for CustomApiError {
     fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::BAD_REQUEST)
-    }
-}
-
-impl fmt::Display for BadRequest {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct ServerError(pub(super) String);
-
-impl AppError for ServerError {
-    fn response(&self) -> Response {
-        json_error(&self.0, StatusCode::INTERNAL_SERVER_ERROR)
-    }
-}
-
-impl fmt::Display for ServerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct ServiceUnavailable;
-
-impl AppError for ServiceUnavailable {
-    fn response(&self) -> Response {
-        json_error("Service unavailable", StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
-
-impl fmt::Display for ServiceUnavailable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Service unavailable".fmt(f)
+        json_error(&self.detail, self.status)
     }
 }
 
@@ -196,95 +131,5 @@ impl fmt::Display for InsecurelyGeneratedTokenRevoked {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(TOKEN_FORMAT_ERROR)?;
         Result::Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct AccountLocked {
-    pub(super) reason: String,
-    pub(super) until: Option<NaiveDateTime>,
-}
-
-impl AppError for AccountLocked {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::FORBIDDEN)
-    }
-}
-
-impl fmt::Display for AccountLocked {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(until) = self.until {
-            let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
-            write!(
-                f,
-                "This account is locked until {}. Reason: {}",
-                until, self.reason
-            )
-        } else {
-            write!(
-                f,
-                "This account is indefinitely locked. Reason: {}",
-                self.reason
-            )
-        }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct OwnershipInvitationExpired {
-    pub(crate) crate_name: String,
-}
-
-impl AppError for OwnershipInvitationExpired {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::GONE)
-    }
-}
-
-impl fmt::Display for OwnershipInvitationExpired {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "The invitation to become an owner of the {} crate expired. \
-             Please reach out to an owner of the crate to request a new invitation.",
-            self.crate_name
-        )
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct MetricsDisabled;
-
-impl AppError for MetricsDisabled {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::NOT_FOUND)
-    }
-}
-
-impl fmt::Display for MetricsDisabled {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Metrics are disabled on this crates.io instance")
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct RouteBlocked;
-
-impl AppError for RouteBlocked {
-    fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
-
-impl fmt::Display for RouteBlocked {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("This route is temporarily blocked. See https://status.crates.io.")
-    }
-}
-
-impl IntoResponse for RouteBlocked {
-    fn into_response(self) -> Response {
-        let body = Json(json!({ "errors": [{ "detail": self.to_string() }] }));
-        (StatusCode::SERVICE_UNAVAILABLE, body).into_response()
     }
 }

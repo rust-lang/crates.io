@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
-use crate::util::errors::RouteBlocked;
+use crate::util::errors::custom;
 use axum::extract::{Extension, MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
@@ -87,7 +87,9 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> Response {
 pub fn block_routes(matched_path: Option<&MatchedPath>, state: &AppState) -> Result<(), Response> {
     if let Some(matched_path) = matched_path {
         if state.config.blocked_routes.contains(matched_path.as_str()) {
-            return Err(RouteBlocked.into_response());
+            let body = "This route is temporarily blocked. See https://status.crates.io.";
+            let error = custom(StatusCode::SERVICE_UNAVAILABLE, body);
+            return Err(error.into_response());
         }
     }
 
