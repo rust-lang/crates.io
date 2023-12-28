@@ -119,7 +119,7 @@ impl VisibilityConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_util::pg_connection;
+    use crate::test_util::test_db_connection;
     use diesel::prelude::*;
     use std::collections::HashSet;
     use std::iter::FromIterator;
@@ -128,7 +128,7 @@ mod tests {
     /// test database.
     #[test]
     fn check_visibility_config() {
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         let db_columns = HashSet::<Column>::from_iter(get_db_columns(conn));
         let vis_columns = VisibilityConfig::get()
             .0

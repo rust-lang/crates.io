@@ -145,21 +145,12 @@ impl<'a> NewCategory<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_util::pg_connection_no_transaction;
-    use diesel::connection::SimpleConnection;
-
-    fn pg_connection() -> PgConnection {
-        let mut conn = pg_connection_no_transaction();
-        // These tests deadlock if run concurrently
-        conn.batch_execute("BEGIN; LOCK categories IN ACCESS EXCLUSIVE MODE")
-            .unwrap();
-        conn
-    }
+    use crate::test_util::test_db_connection;
 
     #[test]
     fn category_toplevel_excludes_subcategories() {
         use self::categories;
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 (
@@ -199,7 +190,7 @@ mod tests {
             )
         };
 
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 0),
@@ -225,7 +216,7 @@ mod tests {
     #[test]
     fn category_toplevel_applies_limit_and_offset() {
         use self::categories;
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 (
@@ -269,7 +260,7 @@ mod tests {
             )
         };
 
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
@@ -307,7 +298,7 @@ mod tests {
             )
         };
 
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
@@ -349,7 +340,7 @@ mod tests {
             )
         };
 
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),

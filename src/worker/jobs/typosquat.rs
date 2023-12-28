@@ -119,7 +119,7 @@ Specific squat checks that triggered:\n
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::pg_connection, typosquat::test_util::Faker};
+    use crate::{test_util::test_db_connection, typosquat::test_util::Faker};
     use lettre::Address;
 
     use super::*;
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn integration() -> anyhow::Result<()> {
         let emails = Emails::new_in_memory();
-        let mut conn = pg_connection();
+        let (_test_db, mut conn) = test_db_connection();
         let mut faker = Faker::new();
 
         // Set up a user and a popular crate to match against.
