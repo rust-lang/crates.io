@@ -10,10 +10,11 @@ use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
-use crates_io_env_vars::{required_var, var, var_parsed};
+use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
+use std::str::FromStr;
 use std::time::Duration;
 
 const DEFAULT_VERSION_ID_CACHE_SIZE: u64 = 10_000;
@@ -119,36 +120,15 @@ impl Server {
 
         let port = var_parsed("PORT")?.unwrap_or(8888);
 
-        let blocked_ips = match var("BLOCKED_IPS")? {
-            None => HashSet::new(),
-            Some(s) if s.is_empty() => HashSet::new(),
-            Some(s) => s
-                .split(',')
-                .map(|s| s.trim().parse())
-                .collect::<Result<_, _>>()?,
-        };
+        let blocked_ips = HashSet::from_iter(list_parsed("BLOCKED_IPS", IpAddr::from_str)?);
 
         let allowed_origins = AllowedOrigins::from_default_env()?;
-        let page_offset_ua_blocklist = match var("WEB_PAGE_OFFSET_UA_BLOCKLIST")? {
-            None => vec![],
-            Some(s) if s.is_empty() => vec![],
-            Some(s) => s.split(',').map(String::from).collect(),
-        };
-        let page_offset_cidr_blocklist = match var("WEB_PAGE_OFFSET_CIDR_BLOCKLIST")? {
-            None => vec![],
-            Some(s) if s.is_empty() => vec![],
-            Some(s) => s
-                .split(',')
-                .map(parse_cidr_block)
-                .collect::<Result<_, _>>()?,
-        };
+        let page_offset_ua_blocklist = list("WEB_PAGE_OFFSET_UA_BLOCKLIST")?;
+        let page_offset_cidr_blocklist =
+            list_parsed("WEB_PAGE_OFFSET_CIDR_BLOCKLIST", parse_cidr_block)?;
 
         let base = Base::from_environment()?;
-        let excluded_crate_names = match var("EXCLUDED_CRATE_NAMES")? {
-            None => vec![],
-            Some(s) if s.is_empty() => vec![],
-            Some(s) => s.split(',').map(String::from).collect(),
-        };
+        let excluded_crate_names = list("EXCLUDED_CRATE_NAMES")?;
 
         let max_blocking_threads = var_parsed("SERVER_THREADS")?;
 
@@ -215,9 +195,7 @@ impl Server {
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             force_unconditional_redirects: var("FORCE_UNCONDITIONAL_REDIRECTS")?.is_some(),
-            blocked_routes: var("BLOCKED_ROUTES")?
-                .map(|routes| routes.split(',').map(|s| s.into()).collect())
-                .unwrap_or_default(),
+            blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
             version_id_cache_size: var_parsed("VERSION_ID_CACHE_SIZE")?
                 .unwrap_or(DEFAULT_VERSION_ID_CACHE_SIZE),
             version_id_cache_ttl: Duration::from_secs(
