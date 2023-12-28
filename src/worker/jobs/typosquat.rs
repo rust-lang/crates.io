@@ -127,32 +127,32 @@ mod tests {
     #[test]
     fn integration() -> anyhow::Result<()> {
         let emails = Emails::new_in_memory();
-        let mut faker = Faker::new(pg_connection());
+        let mut conn = pg_connection();
+        let mut faker = Faker::new();
 
         // Set up a user and a popular crate to match against.
-        let user = faker.user("a")?;
-        faker.crate_and_version("my-crate", "It's awesome", &user, 100)?;
+        let user = faker.user(&mut conn, "a")?;
+        faker.crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100)?;
 
         // Prime the cache so it only includes the crate we just created.
-        let cache = Cache::new(vec!["admin@example.com".to_string()], faker.borrow_conn())?;
+        let cache = Cache::new(vec!["admin@example.com".to_string()], &mut conn)?;
 
         // Now we'll create new crates: one problematic, one not so.
-        let other_user = faker.user("b")?;
+        let other_user = faker.user(&mut conn, "b")?;
         let (angel, _version) = faker.crate_and_version(
+            &mut conn,
             "innocent-crate",
             "I'm just a simple, innocent crate",
             &other_user,
             0,
         )?;
         let (demon, _version) = faker.crate_and_version(
+            &mut conn,
             "mycrate",
             "I'm even more innocent, obviously",
             &other_user,
             0,
         )?;
-
-        // OK, we're done faking stuff.
-        let mut conn = faker.into_conn();
 
         // Run the check with a crate that shouldn't cause problems.
         check(&emails, &cache, &mut conn, &angel.name)?;

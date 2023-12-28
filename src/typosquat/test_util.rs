@@ -11,30 +11,21 @@ use crate::{
 };
 
 pub struct Faker {
-    conn: PgConnection,
     emails: Emails,
     id: i32,
 }
 
 impl Faker {
-    pub fn new(conn: PgConnection) -> Self {
+    pub fn new() -> Self {
         Self {
-            conn,
             emails: Emails::new_in_memory(),
             id: Default::default(),
         }
     }
 
-    pub fn borrow_conn(&mut self) -> &mut PgConnection {
-        &mut self.conn
-    }
-
-    pub fn into_conn(self) -> PgConnection {
-        self.conn
-    }
-
     pub fn add_crate_to_team(
         &mut self,
+        conn: &mut PgConnection,
         user: &User,
         krate: &Crate,
         team: &Owner,
@@ -49,13 +40,14 @@ impl Faker {
                 owner_kind: OwnerKind::Team,
                 email_notifications: true,
             })
-            .execute(&mut self.conn)?;
+            .execute(conn)?;
 
         Ok(())
     }
 
     pub fn crate_and_version(
         &mut self,
+        conn: &mut PgConnection,
         name: &str,
         description: &str,
         user: &User,
@@ -66,12 +58,12 @@ impl Faker {
             description: Some(description),
             ..Default::default()
         }
-        .create(&mut self.conn, user.id)?;
+        .create(conn, user.id)?;
 
         diesel::update(crates::table)
             .filter(crates::id.eq(krate.id))
             .set(crates::downloads.eq(downloads))
-            .execute(&mut self.conn)?;
+            .execute(conn)?;
 
         let version = NewVersion::new(
             krate.id,
@@ -85,13 +77,18 @@ impl Faker {
             None,
         )
         .unwrap()
-        .save(&mut self.conn, "someone@example.com")
+        .save(conn, "someone@example.com")
         .unwrap();
 
         Ok((krate, version))
     }
 
-    pub fn team(&mut self, org: &str, team: &str) -> anyhow::Result<Owner> {
+    pub fn team(
+        &mut self,
+        conn: &mut PgConnection,
+        org: &str,
+        team: &str,
+    ) -> anyhow::Result<Owner> {
         Ok(Owner::Team(
             NewTeam::new(
                 &format!("github:{org}:{team}"),
@@ -100,16 +97,16 @@ impl Faker {
                 Some(team.to_string()),
                 None,
             )
-            .create_or_update(&mut self.conn)?,
+            .create_or_update(conn)?,
         ))
     }
 
-    pub fn user(&mut self, login: &str) -> anyhow::Result<User> {
+    pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> anyhow::Result<User> {
         Ok(
             NewUser::new(self.next_id(), login, None, None, "token").create_or_update(
                 None,
                 &self.emails,
-                &mut self.conn,
+                conn,
             )?,
         )
     }
