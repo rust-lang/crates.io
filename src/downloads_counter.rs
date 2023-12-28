@@ -246,7 +246,7 @@ mod tests {
     use super::*;
     use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User};
-    use crate::test_util::pg_connection;
+    use crate::test_util::test_db_connection;
     use diesel::PgConnection;
     use semver::Version;
     use std::collections::BTreeMap;
@@ -254,7 +254,7 @@ mod tests {
     #[test]
     fn test_increment_and_persist_all() {
         let counter = DownloadsCounter::new();
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         let mut state = State::new(conn);
 
         let v1 = state.new_version(conn);
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn test_increment_and_persist_shard() {
         let counter = DownloadsCounter::new();
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         let mut state = State::new(conn);
 
         let v1 = state.new_version(conn);
@@ -386,7 +386,7 @@ mod tests {
         F: Fn(&DashMap<i32, AtomicUsize>, i32, i32) -> bool,
     {
         let counter = DownloadsCounter::new();
-        let conn = &mut pg_connection();
+        let (_test_db, conn) = &mut test_db_connection();
         let mut state = State::new(conn);
 
         let v1 = state.new_version(conn);

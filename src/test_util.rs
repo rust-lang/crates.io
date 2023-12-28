@@ -1,15 +1,14 @@
 #![cfg(test)]
 
-use crates_io_env_vars::required_var;
+use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 
-pub fn pg_connection_no_transaction() -> PgConnection {
-    let database_url = required_var("TEST_DATABASE_URL").unwrap();
-    PgConnection::establish(&database_url).unwrap()
-}
-
-pub fn pg_connection() -> PgConnection {
-    let mut conn = pg_connection_no_transaction();
-    conn.begin_test_transaction().unwrap();
-    conn
+pub fn test_db_connection() -> (
+    TestDatabase,
+    PooledConnection<ConnectionManager<PgConnection>>,
+) {
+    let test_db = TestDatabase::new();
+    let conn = test_db.connect();
+    (test_db, conn)
 }

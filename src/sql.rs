@@ -59,7 +59,7 @@ mod tests {
     use super::*;
     use crate::db::sql_types::semver::Triple;
     use crate::schema::sql_types::SemverTriple;
-    use crate::test_util::pg_connection;
+    use crate::test_util::test_db_connection;
     use diesel::prelude::*;
     use diesel::select;
 
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn to_semver_no_prerelease_works() {
-        let mut conn = pg_connection();
+        let (_test_db, mut conn) = test_db_connection();
 
         #[track_caller]
         fn test(conn: &mut PgConnection, text: &str, expected: Option<(u64, u64, u64)>) {
