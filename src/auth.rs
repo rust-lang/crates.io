@@ -5,7 +5,7 @@ use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    account_locked, forbidden, internal, AppError, AppResult, InsecurelyGeneratedTokenRevoked,
+    account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use chrono::Utc;
 use diesel::PgConnection;
@@ -67,17 +67,20 @@ impl AuthCheck {
             if !self.allow_token {
                 let error_message =
                     "API Token authentication was explicitly disallowed for this API";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
 
             if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
                 let error_message = "Endpoint scope mismatch";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
 
             if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
                 let error_message = "Crate scope mismatch";
-                return Err(internal(error_message).chain(forbidden()));
+                request.request_log().add("cause", error_message);
+                return Err(forbidden());
             }
         }
 
@@ -171,8 +174,10 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
         return Ok(None);
     };
 
-    let user = User::find(conn, id)
-        .map_err(|err| err.chain(internal("user_id from cookie not found in database")))?;
+    let user = User::find(conn, id).map_err(|err| {
+        req.request_log().add("cause", err);
+        internal("user_id from cookie not found in database")
+    })?;
 
     ensure_not_locked(&user)?;
 
@@ -199,12 +204,17 @@ fn authenticate_via_token<T: RequestPartsExt>(
         if e.is::<InsecurelyGeneratedTokenRevoked>() {
             e
         } else {
-            e.chain(internal("invalid token")).chain(forbidden())
+            let cause = format!("invalid token caused by {e}");
+            req.request_log().add("cause", cause);
+
+            forbidden()
         }
     })?;
 
-    let user = User::find(conn, token.user_id)
-        .map_err(|err| err.chain(internal("user_id from token not found in database")))?;
+    let user = User::find(conn, token.user_id).map_err(|err| {
+        req.request_log().add("cause", err);
+        internal("user_id from token not found in database")
+    })?;
 
     ensure_not_locked(&user)?;
 
@@ -231,7 +241,10 @@ fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResu
     }
 
     // Unable to authenticate the user
-    return Err(internal("no cookie session or auth header found").chain(forbidden()));
+    let cause = "no cookie session or auth header found";
+    req.request_log().add("cause", cause);
+
+    return Err(forbidden());
 }
 
 fn ensure_not_locked(user: &User) -> AppResult<()> {

@@ -670,9 +670,9 @@ pub fn add_dependencies(
 impl From<TarballError> for BoxedAppError {
     fn from(error: TarballError) -> Self {
         match error {
-            TarballError::Malformed(err) => err.chain(cargo_err(
+            TarballError::Malformed(_err) => cargo_err(
                 "uploaded tarball is malformed or too large when decompressed",
-            )),
+            ),
             TarballError::InvalidPath(path) => cargo_err(format!("invalid path found: {path}")),
             TarballError::UnexpectedSymlink(path) => {
                 cargo_err(format!("unexpected symlink or hard link found: {path}"))

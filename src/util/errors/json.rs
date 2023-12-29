@@ -1,10 +1,11 @@
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{Extension, Json};
 use std::borrow::Cow;
 use std::fmt;
 
-use super::{AppError, BoxedAppError, InternalAppErrorStatic};
+use super::{AppError, BoxedAppError};
 
+use crate::middleware::log_request::CauseField;
 use crate::rate_limiter::LimitedAction;
 use chrono::NaiveDateTime;
 use http::{header, StatusCode};
@@ -106,13 +107,9 @@ impl InsecurelyGeneratedTokenRevoked {
 
 impl AppError for InsecurelyGeneratedTokenRevoked {
     fn response(&self) -> Response {
-        json_error(&self.to_string(), StatusCode::UNAUTHORIZED)
-    }
-
-    fn cause(&self) -> Option<&dyn AppError> {
-        Some(&InternalAppErrorStatic {
-            description: "insecurely generated, revoked 2020-07",
-        })
+        let cause = CauseField("insecurely generated, revoked 2020-07".to_string());
+        let response = json_error(&self.to_string(), StatusCode::UNAUTHORIZED);
+        (Extension(cause), response).into_response()
     }
 }
 
