@@ -47,7 +47,6 @@ fn runnable<J: BackgroundJob>(ctx: J::Context, payload: serde_json::Value) -> Ru
 mod tests {
     use super::*;
     use crate::BackgroundJob;
-    use async_trait::async_trait;
     use serde::{Deserialize, Serialize};
 
     #[test]
@@ -55,7 +54,6 @@ mod tests {
         #[derive(Serialize, Deserialize)]
         struct TestJob;
 
-        #[async_trait]
         impl BackgroundJob for TestJob {
             const JOB_NAME: &'static str = "test";
             type Context = ();

@@ -1,6 +1,5 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use async_trait::async_trait;
 use crates_io_worker::BackgroundJob;
 use diesel::{sql_query, RunQueryDsl};
 use std::sync::Arc;
@@ -8,7 +7,6 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize)]
 pub struct DailyDbMaintenance;
 
-#[async_trait]
 impl BackgroundJob for DailyDbMaintenance {
     const JOB_NAME: &'static str = "daily_db_maintenance";
 

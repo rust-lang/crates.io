@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, Runner};
@@ -42,7 +41,6 @@ async fn jobs_are_locked_when_fetched() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
 
-    #[async_trait]
     impl BackgroundJob for TestJob {
         const JOB_NAME: &'static str = "test";
         type Context = TestContext;
@@ -86,7 +84,6 @@ async fn jobs_are_deleted_when_successfully_run() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
 
-    #[async_trait]
     impl BackgroundJob for TestJob {
         const JOB_NAME: &'static str = "test";
         type Context = ();
@@ -128,7 +125,6 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
 
-    #[async_trait]
     impl BackgroundJob for TestJob {
         const JOB_NAME: &'static str = "test";
         type Context = TestContext;
@@ -181,7 +177,6 @@ async fn panicking_in_jobs_updates_retry_counter() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
 
-    #[async_trait]
     impl BackgroundJob for TestJob {
         const JOB_NAME: &'static str = "test";
         type Context = ();

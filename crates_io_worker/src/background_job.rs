@@ -1,15 +1,14 @@
 use crate::errors::EnqueueError;
 use crate::schema::background_jobs;
-use async_trait::async_trait;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::future::Future;
 use tracing::instrument;
 
 pub const DEFAULT_QUEUE: &str = "default";
 
-#[async_trait]
 pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Unique name of the task.
     ///
@@ -27,8 +26,8 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// The application data provided to this job at runtime.
     type Context: Clone + Send + 'static;
 
-    /// Execute the task. This method should define its logic
-    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()>;
+    /// Execute the task. This method should define its logic.
+    fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
     fn enqueue(&self, conn: &mut PgConnection) -> Result<i64, EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)
