@@ -22,7 +22,7 @@ mod prelude {
     use crate::controllers::util::RequestPartsExt;
     pub use crate::middleware::app::RequestApp;
     pub use crate::tasks::spawn_blocking;
-    pub use crate::util::errors::{cargo_err, AppError, AppResult, BoxedAppError};
+    pub use crate::util::errors::{cargo_err, AppResult, BoxedAppError};
     pub use crate::util::BytesRequest;
     use indexmap::IndexMap;
 
