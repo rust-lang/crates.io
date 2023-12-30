@@ -84,7 +84,6 @@ http = "=1.0.0"
 http-body = "=1.0.0"
 http-body-util = "=0.1.0"
 hyper = { version = "=1.1.0", features = ["client", "http1"] }
-hyper-util = { version = "=0.1.2", features = ["tokio", "server-auto", "http1"] }
 indexmap = { version = "=2.1.0", features = ["serde"] }
 indicatif = "=0.17.7"
 ipnetwork = "=0.20.0"
