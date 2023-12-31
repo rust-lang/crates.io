@@ -16,10 +16,7 @@ use crates_io::{
         EncodableOwner, EncodableVersion, GoodCrate,
     },
 };
-use std::{
-    borrow::Cow,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use diesel::prelude::*;
 
@@ -106,7 +103,7 @@ fn new_user(login: &str) -> NewUser<'_> {
         gh_login: login,
         name: None,
         gh_avatar: None,
-        gh_access_token: Cow::Borrowed("some random token"),
+        gh_access_token: "some random token",
     }
 }
 

@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use secrecy::SecretString;
-use std::borrow::Cow;
 
 use crate::app::App;
 use crate::controllers::user::me::UserConfirmEmail;
@@ -33,7 +32,7 @@ pub struct NewUser<'a> {
     pub gh_login: &'a str,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
-    pub gh_access_token: Cow<'a, str>,
+    pub gh_access_token: &'a str,
 }
 
 impl<'a> NewUser<'a> {
@@ -49,7 +48,7 @@ impl<'a> NewUser<'a> {
             gh_login,
             name,
             gh_avatar,
-            gh_access_token: Cow::Borrowed(gh_access_token),
+            gh_access_token,
         }
     }
 
