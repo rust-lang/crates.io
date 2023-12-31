@@ -846,7 +846,6 @@ fn test_accept_expired_invitation_by_mail() {
 #[test]
 fn inactive_users_dont_get_invitations() {
     use crates_io::models::NewUser;
-    use std::borrow::Cow;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token();
     let owner = owner.as_model();
@@ -861,7 +860,7 @@ fn inactive_users_dont_get_invitations() {
             gh_login: invited_gh_login,
             name: None,
             gh_avatar: None,
-            gh_access_token: Cow::Borrowed("some random token"),
+            gh_access_token: "some random token",
         }
         .create_or_update(None, &app.as_inner().emails, conn)
         .unwrap();
