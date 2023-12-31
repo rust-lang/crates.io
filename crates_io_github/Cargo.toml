@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.76"
-async-trait = "=0.1.75"
+async-trait = "=0.1.76"
 oauth2 = { version = "=4.4.2", default-features = false }
 reqwest = { version = "=0.11.23", features = ["json"] }
 serde = { version = "=1.0.193", features = ["derive"] }
