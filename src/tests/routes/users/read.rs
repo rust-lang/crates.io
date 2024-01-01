@@ -17,7 +17,7 @@ fn show() {
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").good();
     assert_eq!(json.user.login, "Bar");
-    assert_eq!(json.user.url, Some("https://github.com/Bar".into()));
+    assert_eq!(json.user.url, "https://github.com/Bar");
 }
 
 #[test]
