@@ -506,7 +506,7 @@ pub struct EncodablePublicUser {
     pub login: String,
     pub name: Option<String>,
     pub avatar: Option<String>,
-    pub url: Option<String>,
+    pub url: String,
 }
 
 /// Converts a `User` model into an `EncodablePublicUser` for JSON serialization.
@@ -525,7 +525,7 @@ impl From<User> for EncodablePublicUser {
             avatar: gh_avatar,
             login: gh_login,
             name,
-            url: Some(url),
+            url,
         }
     }
 }
@@ -740,7 +740,7 @@ mod tests {
                     login: String::new(),
                     name: None,
                     avatar: None,
-                    url: None,
+                    url: String::new(),
                 },
                 time: NaiveDate::from_ymd_opt(2017, 1, 6)
                     .unwrap()
