@@ -38,8 +38,14 @@ pub fn assert_dl_count(
     assert_eq!(total_downloads, count);
 }
 
+pub fn download(client: &impl RequestHelper, name_and_version: &str) {
+    let url = format!("/api/v1/crates/{name_and_version}/download");
+    let response = client.get::<()>(&url);
+    assert_eq!(response.status(), StatusCode::FOUND);
+}
+
 #[test]
-fn download() {
+fn test_download() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -49,14 +55,8 @@ fn download() {
             .expect_build(conn);
     });
 
-    let download = |name_and_version: &str| {
-        let url = format!("/api/v1/crates/{name_and_version}/download");
-        let response = anon.get::<()>(&url);
-        assert_eq!(response.status(), StatusCode::FOUND);
-        // TODO: test the with_json code path
-    };
-
-    download("foo_download/1.0.0");
+    // TODO: test the with_json code path
+    download(&anon, "foo_download/1.0.0");
     // No downloads are counted until the counters are persisted
     assert_dl_count(&anon, "foo_download/1.0.0", None, 0);
     assert_dl_count(&anon, "foo_download", None, 0);
