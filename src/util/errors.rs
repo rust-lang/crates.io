@@ -83,6 +83,12 @@ pub fn service_unavailable() -> BoxedAppError {
     custom(StatusCode::SERVICE_UNAVAILABLE, "Service unavailable")
 }
 
+pub fn version_not_found(krate: &str, version: &str) -> BoxedAppError {
+    cargo_err(format_args!(
+        "crate `{krate}` does not have a version `{version}`"
+    ))
+}
+
 // =============================================================================
 // AppError trait
 
