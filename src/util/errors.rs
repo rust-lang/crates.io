@@ -84,9 +84,8 @@ pub fn service_unavailable() -> BoxedAppError {
 }
 
 pub fn version_not_found(krate: &str, version: &str) -> BoxedAppError {
-    cargo_err(format_args!(
-        "crate `{krate}` does not have a version `{version}`"
-    ))
+    let detail = format!("crate `{krate}` does not have a version `{version}`");
+    custom(StatusCode::NOT_FOUND, detail)
 }
 
 // =============================================================================
