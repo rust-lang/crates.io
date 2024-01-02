@@ -70,7 +70,12 @@ fn modify_yank(
     let owners = krate.owners(conn)?;
 
     if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
-        return Err(cargo_err("must already be an owner to yank or unyank"));
+        if user.is_admin {
+            let action = if yanked { "yanking" } else { "unyanking" };
+            warn!("Admin {} is {action} crate {}", user.gh_login, krate.name);
+        } else {
+            return Err(cargo_err("must already be an owner to yank or unyank"));
+        }
     }
 
     if version.yanked == yanked {

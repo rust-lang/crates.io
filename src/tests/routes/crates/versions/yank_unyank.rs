@@ -97,7 +97,7 @@ mod auth {
     use crate::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
     use crates_io::models::token::{CrateScope, EndpointScope};
-    use crates_io::schema::{crates, versions};
+    use crates_io::schema::{crates, users, versions};
     use diesel::prelude::*;
 
     const CRATE_NAME: &str = "fyk";
@@ -358,6 +358,30 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
+    }
+
+    #[test]
+    fn admin() {
+        let (app, _, _) = prepare();
+
+        let admin = app.db_new_user("admin");
+
+        app.db(|conn| {
+            diesel::update(admin.as_model())
+                .set(users::is_admin.eq(true))
+                .execute(conn)
+                .unwrap();
+        });
+
+        let response = admin.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
+
+        let response = admin.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 }
