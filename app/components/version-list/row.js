@@ -51,6 +51,10 @@ export default class VersionRow extends Component {
     return this.args.version.crate?.owner_user?.findBy('id', this.session.currentUser?.id);
   }
 
+  get canYank() {
+    return this.isOwner || this.session.currentUser?.is_admin;
+  }
+
   @action setFocused(value) {
     this.focused = value;
   }

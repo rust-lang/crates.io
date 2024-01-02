@@ -107,7 +107,7 @@
     {{/if}}
   </div>
 
-  {{#if this.isOwner}}
+  {{#if this.canYank}}
     <YankButton @version={{@version}} local-class="yank-button" />
   {{/if}}
 </div>
