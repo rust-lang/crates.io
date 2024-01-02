@@ -8,6 +8,7 @@ use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
+use crate::util::errors::version_not_found;
 use crate::worker::jobs;
 use tokio::runtime::Handle;
 
@@ -49,7 +50,7 @@ fn modify_yank(
     // lifetime issues with `req`.
 
     if semver::Version::parse(version).is_err() {
-        return Err(cargo_err(format_args!("invalid semver: {version}")));
+        return Err(version_not_found(crate_name, version));
     }
 
     let conn = &mut *state.db_write()?;

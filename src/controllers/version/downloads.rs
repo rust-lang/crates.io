@@ -8,6 +8,7 @@ use crate::db::PoolError;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::VersionDownload;
 use crate::schema::*;
+use crate::util::errors::version_not_found;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
 use tracing::Instrument;
@@ -135,7 +136,7 @@ pub async fn downloads(
 ) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         if semver::Version::parse(&version).is_err() {
-            return Err(cargo_err(format_args!("invalid semver: {version}")));
+            return Err(version_not_found(&crate_name, &version));
         }
 
         let conn = &mut *app.db_read()?;
