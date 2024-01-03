@@ -30,6 +30,7 @@ pub enum Command {
         #[arg()]
         name: String,
     },
+    SyncAdmins,
 }
 
 pub fn run(command: Command) -> Result<()> {
@@ -57,6 +58,9 @@ pub fn run(command: Command) -> Result<()> {
             target_name,
         } => {
             jobs::DumpDb::new(database_url.expose_secret(), target_name).enqueue(conn)?;
+        }
+        Command::SyncAdmins => {
+            jobs::SyncAdmins.enqueue(conn)?;
         }
         Command::DailyDbMaintenance => {
             jobs::DailyDbMaintenance.enqueue(conn)?;
