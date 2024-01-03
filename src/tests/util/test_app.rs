@@ -7,6 +7,7 @@ use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crates_io::storage::StorageConfig;
+use crates_io::team_repo::MockTeamRepo;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{App, Emails, Env};
 use crates_io_index::testing::UpstreamIndex;
@@ -80,6 +81,7 @@ impl TestApp {
             index: None,
             build_job_runner: false,
             use_chaos_proxy: false,
+            team_repo: MockTeamRepo::new(),
         }
     }
 
@@ -204,6 +206,7 @@ pub struct TestAppBuilder {
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
     use_chaos_proxy: bool,
+    team_repo: MockTeamRepo,
 }
 
 impl TestAppBuilder {
@@ -259,11 +262,13 @@ impl TestAppBuilder {
                 index_location: index.url(),
                 credentials: Credentials::Missing,
             };
+
             let environment = Environment::builder()
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
                 .connection_pool(app.primary_database.clone())
                 .emails(app.emails.clone())
+                .team_repo(Box::new(self.team_repo))
                 .build()
                 .unwrap();
 
@@ -348,6 +353,11 @@ impl TestAppBuilder {
 
     pub fn with_chaos_proxy(mut self) -> Self {
         self.use_chaos_proxy = true;
+        self
+    }
+
+    pub fn with_team_repo(mut self, team_repo: MockTeamRepo) -> Self {
+        self.team_repo = team_repo;
         self
     }
 
