@@ -55,6 +55,7 @@ pub mod sql;
 pub mod ssh;
 pub mod storage;
 pub mod tasks;
+pub mod team_repo;
 mod test_util;
 pub mod typosquat;
 pub mod util;
