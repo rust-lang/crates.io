@@ -7,6 +7,7 @@
 use crate::controllers::frontend_prelude::*;
 
 use crate::models::VersionOwnerAction;
+use crate::util::errors::version_not_found;
 use crate::views::{EncodableDependency, EncodableVersion};
 
 use super::version_and_crate;
@@ -24,7 +25,7 @@ pub async fn dependencies(
 ) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         if semver::Version::parse(&version).is_err() {
-            return Err(cargo_err(format_args!("invalid semver: {version}")));
+            return Err(version_not_found(&crate_name, &version));
         }
 
         let conn = &mut state.db_read()?;
@@ -61,7 +62,7 @@ pub async fn show(
 ) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         if semver::Version::parse(&version).is_err() {
-            return Err(cargo_err(format_args!("invalid semver: {version}")));
+            return Err(version_not_found(&crate_name, &version));
         }
 
         let conn = &mut state.db_read()?;

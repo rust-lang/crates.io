@@ -15,7 +15,7 @@ use crate::models::{
     CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{version_not_found, AppResult};
 
 use crate::models::helpers::with_count::*;
 use crate::schema::*;
@@ -191,12 +191,7 @@ impl Crate {
             .filter(versions::num.eq(version))
             .first(conn)
             .optional()?
-            .ok_or_else(|| {
-                cargo_err(format_args!(
-                    "crate `{}` does not have a version `{}`",
-                    self.name, version
-                ))
-            })
+            .ok_or_else(|| version_not_found(&self.name, version))
     }
 
     // Validates the name is a valid crate name.
