@@ -329,7 +329,12 @@ pub async fn readme(
 pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
+
         let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
             .all_versions()
             .left_outer_join(users::table)
