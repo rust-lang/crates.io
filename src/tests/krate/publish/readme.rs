@@ -10,7 +10,7 @@ fn new_krate_with_readme() {
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("hello world");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -30,7 +30,7 @@ fn new_krate_with_empty_readme() {
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -49,7 +49,7 @@ fn new_krate_with_readme_and_plus_version() {
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0+foo").readme("hello world");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });

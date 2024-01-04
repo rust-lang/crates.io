@@ -60,7 +60,7 @@ fn empty_feature_name() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert!(app.stored_files().is_empty());
 }
 
@@ -71,7 +71,7 @@ fn invalid_feature_name1() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -82,7 +82,7 @@ fn invalid_feature_name2() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -92,7 +92,7 @@ fn invalid_feature_name_start_with_hyphen() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("-foo1.bar", &[]);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert!(app.stored_files().is_empty());
 }
 
@@ -112,7 +112,7 @@ fn too_many_features() {
         .feature("five", &[]);
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -138,7 +138,7 @@ fn too_many_features_with_custom_limit() {
         .feature("five", &[]);
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
@@ -169,7 +169,7 @@ fn too_many_enabled_features() {
         .feature("default", &["one", "two", "three", "four", "five"]);
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -191,7 +191,7 @@ fn too_many_enabled_features_with_custom_limit() {
         .feature("default", &["one", "two", "three", "four", "five"]);
     let response = token.publish_crate(publish_builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 
     let publish_builder =

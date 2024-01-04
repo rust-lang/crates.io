@@ -22,7 +22,7 @@ fn create_token_invalid_request() {
     let response = user.put::<()>("/api/v1/me/tokens", invalid);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
     );
 }
@@ -34,7 +34,7 @@ fn create_token_no_name() {
     let response = user.put::<()>("/api/v1/me/tokens", empty_name);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "name must have a value" }] })
     );
 }
@@ -51,7 +51,7 @@ fn create_token_exceeded_tokens_per_user() {
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
     );
 }
@@ -62,7 +62,7 @@ fn create_token_success() {
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -112,7 +112,7 @@ fn cannot_create_token_with_token() {
     );
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
     );
 }
@@ -131,7 +131,7 @@ fn create_token_with_scopes() {
 
     let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -174,7 +174,7 @@ fn create_token_with_null_scopes() {
 
     let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",
@@ -209,7 +209,7 @@ fn create_token_with_empty_crate_scope() {
     let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "invalid crate scope" }] })
     );
 }
@@ -229,7 +229,7 @@ fn create_token_with_invalid_endpoint_scope() {
     let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "invalid endpoint scope" }] })
     );
 }
@@ -249,7 +249,7 @@ fn create_token_with_expiry_date() {
 
     let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
         ".api_token.last_used_at" => "[datetime]",

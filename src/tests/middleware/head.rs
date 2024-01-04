@@ -8,7 +8,7 @@ fn head_method_works() {
     let req = anon.request_builder(Method::HEAD, "/api/v1/summary");
     let res = anon.run::<()>(req);
     assert_eq!(res.status(), StatusCode::OK);
-    assert_eq!(res.into_text(), "");
+    assert_eq!(res.text(), "");
 }
 
 #[test]
@@ -18,5 +18,5 @@ fn head_method_works_for_404() {
     let req = anon.request_builder(Method::HEAD, "/unknown");
     let res = anon.run::<()>(req);
     assert_eq!(res.status(), StatusCode::NOT_FOUND);
-    assert_eq!(res.into_text(), "");
+    assert_eq!(res.text(), "");
 }

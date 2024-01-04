@@ -48,7 +48,7 @@ fn github_secret_alert_revokes_token() {
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     // Ensure that the token was revoked
     app.db(|conn| {
@@ -103,7 +103,7 @@ fn github_secret_alert_for_revoked_token() {
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     // Ensure that the token is still revoked
     app.db(|conn| {
@@ -146,7 +146,7 @@ fn github_secret_alert_for_unknown_token() {
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     // Ensure that the token was not revoked
     app.db(|conn| {

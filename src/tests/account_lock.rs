@@ -31,7 +31,7 @@ fn account_locked_indefinitely() {
 
     let error_message = format!("This account is indefinitely locked. Reason: {LOCK_REASON}");
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": error_message }] })
     );
 }
@@ -49,7 +49,7 @@ fn account_locked_with_future_expiry() {
 
     let error_message = format!("This account is locked until {until}. Reason: {LOCK_REASON}");
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": error_message }] })
     );
 }

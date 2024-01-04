@@ -22,7 +22,7 @@ fn list_empty() {
     let (_, _, user) = TestApp::init().with_user();
     let response = user.get::<()>("/api/v1/me/tokens");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
+    let json = response.json();
     let response_tokens = json["api_tokens"].as_array().unwrap();
     assert_eq!(response_tokens.len(), 0);
 }
@@ -58,7 +58,7 @@ fn list_tokens() {
 
     let response = user.get::<()>("/api/v1/me/tokens");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".api_tokens[].id" => insta::any_id_redaction(),
         ".api_tokens[].created_at" => "[datetime]",
         ".api_tokens[].last_used_at" => "[datetime]",
@@ -101,7 +101,7 @@ fn list_recently_expired_tokens() {
 
     let response = user.get::<()>("/api/v1/me/tokens?expired_days=30");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
+    let json = response.json();
     let response_tokens = json["api_tokens"].as_array().unwrap();
     assert_eq!(response_tokens.len(), 2);
     assert_response_tokens_contain_name(response_tokens, "bar");
@@ -109,7 +109,7 @@ fn list_recently_expired_tokens() {
 
     let response = user.get::<()>("/api/v1/me/tokens?expired_days=60");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
+    let json = response.json();
     let response_tokens = json["api_tokens"].as_array().unwrap();
     assert_eq!(response_tokens.len(), 3);
     assert_response_tokens_contain_name(response_tokens, "bar");
@@ -131,7 +131,7 @@ fn list_tokens_exclude_revoked() {
     // List tokens expecting them all to be there.
     let response = user.get::<()>("/api/v1/me/tokens");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
+    let json = response.json();
     let response_tokens = json["api_tokens"].as_array().unwrap();
     assert_eq!(response_tokens.len(), 2);
 
@@ -142,7 +142,7 @@ fn list_tokens_exclude_revoked() {
     // Check that we now have one less token being listed.
     let response = user.get::<()>("/api/v1/me/tokens");
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.into_json();
+    let json = response.json();
     let response_tokens = json["api_tokens"].as_array().unwrap();
     assert_eq!(response_tokens.len(), 1);
     assert_eq!(response_tokens[0]["name"], json!("baz"));

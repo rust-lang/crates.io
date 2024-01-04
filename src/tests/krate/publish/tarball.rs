@@ -16,7 +16,7 @@ fn new_krate_wrong_files() {
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
     );
 
@@ -46,7 +46,7 @@ fn new_krate_tarball_with_hard_links() {
 
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -56,7 +56,7 @@ fn empty_body() {
 
     let response = user.publish_crate(&[] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -66,7 +66,7 @@ fn json_len_truncated() {
 
     let response = token.publish_crate(&[0u8, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -76,7 +76,7 @@ fn json_bytes_truncated() {
 
     let response = token.publish_crate(&[100u8, 0, 0, 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -86,7 +86,7 @@ fn tarball_len_truncated() {
 
     let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -96,6 +96,6 @@ fn tarball_bytes_truncated() {
 
     let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

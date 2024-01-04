@@ -23,7 +23,7 @@ fn pagination_blocks_ip_from_cidr_block_list() {
     let response = anon.get_with_query::<()>("/api/v1/crates", "page=2&per_page=1");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "Page 2 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives." }] })
     );
 }

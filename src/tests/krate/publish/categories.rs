@@ -18,7 +18,7 @@ fn good_categories() {
     let crate_to_publish = PublishBuilder::new("foo_good_cat", "1.0.0").category("cat1");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -31,7 +31,7 @@ fn ignored_categories() {
     let crate_to_publish = PublishBuilder::new("foo_ignored_cat", "1.0.0").category("bar");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -51,6 +51,6 @@ fn too_many_categories() {
             .category("six"),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

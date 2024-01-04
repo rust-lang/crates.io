@@ -42,7 +42,7 @@ fn yank_by_a_non_owner_fails() {
     let response = token.yank("foo_not", "1.0.0");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "must already be an owner to yank or unyank" }] })
     );
 }
@@ -131,7 +131,7 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -139,7 +139,7 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -151,12 +151,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -167,12 +167,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -186,12 +186,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -206,7 +206,7 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -214,7 +214,7 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -228,12 +228,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -250,7 +250,7 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -258,7 +258,7 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -276,12 +276,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -298,12 +298,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 
@@ -320,7 +320,7 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -328,7 +328,7 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -347,7 +347,7 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -355,7 +355,7 @@ mod auth {
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_eq!(
-            response.into_json(),
+            response.json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
         assert!(!is_yanked(&app));
@@ -376,12 +376,12 @@ mod auth {
 
         let response = admin.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
         let response = admin.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
     }
 }

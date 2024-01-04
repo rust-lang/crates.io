@@ -38,7 +38,7 @@ fn old_tokens_give_specific_error_message() {
     let response = anon.run::<()>(request);
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": TOKEN_FORMAT_ERROR }] })
     );
 }

@@ -23,11 +23,11 @@ fn me() {
 
     let response = anon.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(response.into_text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     app.db(|conn| {
         CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
@@ -35,7 +35,7 @@ fn me() {
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]

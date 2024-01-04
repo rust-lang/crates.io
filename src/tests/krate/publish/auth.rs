@@ -15,7 +15,7 @@ fn new_wrong_token() {
     let response = anon.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 
@@ -31,7 +31,7 @@ fn new_wrong_token() {
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
     assert_that!(app.stored_files(), empty());
@@ -52,7 +52,7 @@ fn new_krate_wrong_user() {
 
     let response = another_user.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }
