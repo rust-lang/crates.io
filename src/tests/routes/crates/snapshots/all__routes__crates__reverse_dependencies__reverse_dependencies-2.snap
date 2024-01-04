@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/crates/reverse_dependencies.rs
+expression: response.json()
+---
+{
+  "dependencies": [],
+  "meta": {
+    "total": 0
+  },
+  "versions": []
+}

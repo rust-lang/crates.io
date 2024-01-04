@@ -1,23 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
-use crate::CrateMeta;
-use crates_io::views::{EncodableDependency, EncodableVersion};
 use http::StatusCode;
-use insta::assert_display_snapshot;
-
-#[derive(Deserialize)]
-struct RevDeps {
-    dependencies: Vec<EncodableDependency>,
-    versions: Vec<EncodableVersion>,
-    meta: CrateMeta,
-}
-
-impl crate::util::MockAnonymousUser {
-    fn reverse_dependencies(&self, krate_name: &str) -> RevDeps {
-        let url = format!("/api/v1/crates/{krate_name}/reverse_dependencies");
-        self.get(&url).good()
-    }
-}
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 #[test]
 fn reverse_dependencies() {
@@ -36,18 +20,20 @@ fn reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 1);
-    assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c1");
-    assert_eq!(deps.versions.len(), 1);
-    assert_eq!(deps.versions[0].krate, "c2");
-    assert_eq!(deps.versions[0].num, "1.1.0");
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 
     // c1 has no dependent crates.
-    let deps = anon.reverse_dependencies("c2");
-    assert_eq!(deps.dependencies.len(), 0);
-    assert_eq!(deps.meta.total, 0);
+    let response = anon.get::<()>("/api/v1/crates/c2/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -65,10 +51,12 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 1);
-    assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c1");
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -86,9 +74,12 @@ fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 0);
-    assert_eq!(deps.meta.total, 0);
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -109,10 +100,12 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 1);
-    assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c1");
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -130,10 +123,12 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 1);
-    assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c1");
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 
     app.db(|conn| {
         use crates_io::schema::versions;
@@ -145,9 +140,12 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
             .unwrap();
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 0);
-    assert_eq!(deps.meta.total, 0);
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -180,17 +178,12 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.versions.len(), 2);
-
-    let c2_version = deps.versions.iter().find(|v| v.krate == "c2").unwrap();
-    assert_none!(&c2_version.published_by);
-
-    let c3_version = deps.versions.iter().find(|v| v.krate == "c3").unwrap();
-    assert_eq!(
-        c3_version.published_by.as_ref().unwrap().login,
-        user.gh_login
-    );
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
@@ -209,13 +202,12 @@ fn reverse_dependencies_query_supports_u64_version_number_parts() {
             .expect_build(conn);
     });
 
-    let deps = anon.reverse_dependencies("c1");
-    assert_eq!(deps.dependencies.len(), 1);
-    assert_eq!(deps.meta.total, 1);
-    assert_eq!(deps.dependencies[0].crate_id, "c1");
-    assert_eq!(deps.versions.len(), 1);
-    assert_eq!(deps.versions[0].krate, "c2");
-    assert_eq!(deps.versions[0].num, large_but_valid_version_number);
+    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
 }
 
 #[test]
