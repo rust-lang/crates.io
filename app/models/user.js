@@ -11,6 +11,7 @@ export default class User extends Model {
   @attr email_verified;
   @attr email_verification_sent;
   @attr name;
+  @attr is_admin;
   @attr login;
   @attr avatar;
   @attr url;

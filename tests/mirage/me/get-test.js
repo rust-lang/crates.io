@@ -22,6 +22,7 @@ module('Mirage | GET /api/v1/me', function (hooks) {
         email: 'user-1@crates.io',
         email_verification_sent: true,
         email_verified: true,
+        is_admin: false,
         login: 'user-1',
         name: 'User 1',
         url: 'https://github.com/user-1',

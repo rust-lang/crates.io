@@ -1,0 +1,18 @@
+---
+source: src/tests/routes/me/get.rs
+expression: response.into_json()
+---
+{
+  "owned_crates": [],
+  "user": {
+    "avatar": null,
+    "email": "something@example.com",
+    "email_verification_sent": true,
+    "email_verified": true,
+    "id": 1,
+    "is_admin": false,
+    "login": "foo",
+    "name": null,
+    "url": "https://github.com/foo"
+  }
+}

@@ -1,6 +1,8 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::views::{EncodablePrivateUser, OwnedCrate};
+use http::StatusCode;
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 impl crate::util::MockCookieUser {
     pub fn show_me(&self) -> UserShowPrivateResponse {
@@ -17,22 +19,23 @@ pub struct UserShowPrivateResponse {
 
 #[test]
 fn me() {
-    let url = "/api/v1/me";
-    let (app, anon) = TestApp::init().empty();
-    anon.get(url).assert_forbidden();
+    let (app, anon, user) = TestApp::init().with_user();
 
-    let user = app.db_new_user("foo");
-    let json = user.show_me();
+    let response = anon.get::<()>("/api/v1/me");
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(response.into_text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 
-    assert_eq!(json.owned_crates.len(), 0);
+    let response = user.get::<()>("/api/v1/me");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
 
     app.db(|conn| {
         CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
-        assert_eq!(json.user.email, user.as_model().email(conn).unwrap());
     });
-    let updated_json = user.show_me();
 
-    assert_eq!(updated_json.owned_crates.len(), 1);
+    let response = user.get::<()>("/api/v1/me");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.into_json());
 }
 
 #[test]

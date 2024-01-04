@@ -22,6 +22,7 @@ pub struct User {
     pub gh_id: i32,
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<NaiveDateTime>,
+    pub is_admin: bool,
 }
 
 /// Represents a new user record insertable to the `users` table

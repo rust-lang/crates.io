@@ -97,6 +97,8 @@ mod auth {
     use crate::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
     use crates_io::models::token::{CrateScope, EndpointScope};
+    use crates_io::schema::{crates, users, versions};
+    use diesel::prelude::*;
 
     const CRATE_NAME: &str = "fyk";
     const CRATE_VERSION: &str = "1.0.0";
@@ -110,9 +112,21 @@ mod auth {
         (app, anon, cookie)
     }
 
+    fn is_yanked(app: &TestApp) -> bool {
+        app.db(|conn| {
+            versions::table
+                .inner_join(crates::table)
+                .select(versions::yanked)
+                .filter(crates::name.eq(CRATE_NAME))
+                .filter(versions::num.eq(CRATE_VERSION))
+                .get_result(conn)
+                .unwrap()
+        })
+    }
+
     #[test]
     fn unauthenticated() {
-        let (_, client, _) = prepare();
+        let (app, client, _) = prepare();
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -120,6 +134,7 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -127,57 +142,64 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn cookie_user() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client = client.db_new_token("test-token");
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_not_expired() {
         let expired_at = Utc::now() + Duration::days(7);
 
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client =
             client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_expired() {
         let expired_at = Utc::now() - Duration::days(7);
 
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client =
             client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
 
@@ -187,6 +209,7 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -194,26 +217,29 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_correct_endpoint_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client =
             client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None);
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_incorrect_endpoint_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client = client.db_new_scoped_token(
             "test-token",
             None,
@@ -227,6 +253,7 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -234,11 +261,12 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_correct_crate_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
@@ -249,15 +277,17 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_correct_wildcard_crate_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let wildcard = format!("{}*", CRATE_NAME.chars().next().unwrap());
         let client = client.db_new_scoped_token(
             "test-token",
@@ -269,15 +299,17 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_incorrect_crate_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo").unwrap()]),
@@ -291,6 +323,7 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -298,11 +331,12 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
     }
 
     #[test]
     fn token_user_with_incorrect_wildcard_crate_scope() {
-        let (_, _, client) = prepare();
+        let (app, _, client) = prepare();
         let client = client.db_new_scoped_token(
             "test-token",
             Some(vec![CrateScope::try_from("foo*").unwrap()]),
@@ -316,6 +350,7 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -323,5 +358,30 @@ mod auth {
             response.into_json(),
             json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
         );
+        assert!(!is_yanked(&app));
+    }
+
+    #[test]
+    fn admin() {
+        let (app, _, _) = prepare();
+
+        let admin = app.db_new_user("admin");
+
+        app.db(|conn| {
+            diesel::update(admin.as_model())
+                .set(users::is_admin.eq(true))
+                .execute(conn)
+                .unwrap();
+        });
+
+        let response = admin.yank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(is_yanked(&app));
+
+        let response = admin.unyank(CRATE_NAME, CRATE_VERSION);
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert!(!is_yanked(&app));
     }
 }
