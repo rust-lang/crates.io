@@ -3,7 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::versions;
 use diesel::{prelude::*, update};
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 #[test]
 fn versions() {
@@ -31,4 +31,13 @@ fn versions() {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
     });
+}
+
+#[test]
+fn test_unknown_crate() {
+    let (_, anon) = TestApp::init().empty();
+
+    let response = anon.get::<()>("/api/v1/crates/unknown/versions");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
 }
