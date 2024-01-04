@@ -2,6 +2,8 @@ use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crate::CrateMeta;
 use crates_io::views::{EncodableDependency, EncodableVersion};
+use http::StatusCode;
+use insta::assert_display_snapshot;
 
 #[derive(Deserialize)]
 struct RevDeps {
@@ -214,4 +216,13 @@ fn reverse_dependencies_query_supports_u64_version_number_parts() {
     assert_eq!(deps.versions.len(), 1);
     assert_eq!(deps.versions[0].krate, "c2");
     assert_eq!(deps.versions[0].num, large_but_valid_version_number);
+}
+
+#[test]
+fn test_unknown_crate() {
+    let (_, anon) = TestApp::init().empty();
+
+    let response = anon.get::<()>("/api/v1/crates/unknown/reverse_dependencies");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
 }
