@@ -31,7 +31,7 @@ fn not_github() {
     let response = token.add_named_owner("foo_not_github", "dropbox:foo:foo");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "unknown organization handler, only 'github:org:team' is supported" }] })
     );
 }
@@ -47,7 +47,7 @@ fn weird_name() {
     let response = token.add_named_owner("foo_weird_name", "github:foo/../bar:wut");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "organization cannot contain special characters like /" }] })
     );
 }
@@ -64,7 +64,7 @@ fn one_colon() {
     let response = token.add_named_owner("foo_one_colon", "github:foo");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "missing github team argument; format is github:org:team" }] })
     );
 }
@@ -81,7 +81,7 @@ fn add_nonexistent_team() {
         token.add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "could not find the github team test-org/this-does-not-exist" }] })
     );
 }
@@ -192,7 +192,7 @@ fn add_team_as_non_member() {
     let response = token.add_named_owner("foo_team_non_member", "github:test-org:core");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "only members of a team or organization owners can add it as an owner" }] })
     );
 }
@@ -217,7 +217,7 @@ fn remove_team_as_named_owner() {
     let response = token_on_both_teams.remove_named_owner("foo_remove_team", username);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
     );
 
@@ -230,7 +230,7 @@ fn remove_team_as_named_owner() {
     let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
     );
 }
@@ -257,7 +257,7 @@ fn remove_team_as_team_owner() {
         token_on_one_team.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
     );
 
@@ -267,7 +267,7 @@ fn remove_team_as_team_owner() {
         token_org_owner.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
     );
 }
@@ -316,7 +316,7 @@ fn publish_not_owned() {
     let response = user_on_one_team.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
     );
 }
@@ -341,7 +341,7 @@ fn publish_org_owner_owned() {
     let response = user_org_owner.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
     );
 }
@@ -388,7 +388,7 @@ fn add_owners_as_org_owner() {
     let response = token_org_owner.add_named_owner("foo_add_owner", "arbitrary_username");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
     );
 }
@@ -413,7 +413,7 @@ fn add_owners_as_team_owner() {
     let response = token_on_one_team.add_named_owner("foo_add_owner", "arbitrary_username");
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
     );
 }

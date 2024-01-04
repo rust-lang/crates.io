@@ -13,7 +13,7 @@ impl crate::util::MockCookieUser {
         let url = format!("/api/v1/confirm/{email_token}");
         let response = self.put::<()>(&url, &[] as &[u8]);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
     }
 }
 

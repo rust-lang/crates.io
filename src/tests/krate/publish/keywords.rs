@@ -13,7 +13,7 @@ fn good_keywords() {
         .keyword("1password");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -26,17 +26,17 @@ fn bad_keywords() {
         PublishBuilder::new("foo_bad_key", "1.0.0").keyword("super-long-keyword-name-oh-no");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("?@?%");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("áccênts");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -52,6 +52,6 @@ fn too_many_keywords() {
             .keyword("six"),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

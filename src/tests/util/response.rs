@@ -38,7 +38,7 @@ impl<T> Response<T> {
 
     /// Consume the response body and convert it to a JSON value
     #[track_caller]
-    pub fn into_json(&self) -> Value {
+    pub fn json(&self) -> Value {
         json(&self.response)
     }
 

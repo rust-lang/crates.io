@@ -30,7 +30,7 @@ impl crate::util::MockCookieUser {
         let model = self.as_model();
         let response = self.update_email_more_control(model.id, Some(email));
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
     }
 }
 
@@ -51,14 +51,14 @@ fn test_empty_email_not_added() {
     let response = user.update_email_more_control(model.id, Some(""));
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 
     let response = user.update_email_more_control(model.id, None);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
 }
@@ -80,7 +80,7 @@ fn test_other_users_cannot_change_my_email() {
     );
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "current user does not match requested user" }] })
     );
 
@@ -90,7 +90,7 @@ fn test_other_users_cannot_change_my_email() {
     );
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }

@@ -13,7 +13,7 @@ fn anonymous_user_unauthorized() {
     let response: Response<()> = anon.get(URL);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(response.into_json().to_string().as_bytes(), MUST_LOGIN);
+    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn token_auth_cannot_find_token() {
     let response: Response<()> = anon.run(request);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(response.into_json().to_string().as_bytes(), MUST_LOGIN);
+    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
 }
 
 // Ensure that an unexpected authentication error is available for logging.  The user would see

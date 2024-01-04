@@ -12,7 +12,7 @@ fn invalid_dependency_name() {
         PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -48,7 +48,7 @@ fn invalid_dependency_rename() {
             .dependency(DependencyBuilder::new("package-name").rename("💩")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -66,7 +66,7 @@ fn invalid_dependency_name_starts_with_digit() {
             .dependency(DependencyBuilder::new("package-name").rename("1-foo")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -84,7 +84,7 @@ fn invalid_dependency_name_contains_unicode_chars() {
             .dependency(DependencyBuilder::new("package-name").rename("foo-🦀-bar")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -103,7 +103,7 @@ fn invalid_too_long_dependency_name() {
                 DependencyBuilder::new("package-name").rename("f".repeat(65).as_str()),
             ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -120,7 +120,7 @@ fn empty_dependency_name() {
             .dependency(DependencyBuilder::new("package-name").rename("")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -192,7 +192,7 @@ fn new_krate_with_broken_dependency_requirement() {
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -211,7 +211,7 @@ fn reject_new_krate_with_non_exact_dependency() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -239,7 +239,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
         PublishBuilder::new("depends-on-alt-registry", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -258,7 +258,7 @@ fn new_krate_with_wildcard_dependency() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -273,7 +273,7 @@ fn new_krate_dependency_missing() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -309,6 +309,6 @@ fn invalid_feature_name() {
             .dependency(DependencyBuilder::new("bar").add_feature("🍺")),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

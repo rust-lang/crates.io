@@ -13,7 +13,7 @@ fn new_krate() {
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = user.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -40,7 +40,7 @@ fn new_krate_with_token() {
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -56,7 +56,7 @@ fn new_krate_weird_version() {
     let crate_to_publish = PublishBuilder::new("foo_weird", "0.0.0-pre");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -79,7 +79,7 @@ fn new_krate_twice() {
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -109,7 +109,7 @@ fn new_krate_duplicate_version() {
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }

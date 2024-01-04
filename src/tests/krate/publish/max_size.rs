@@ -47,7 +47,7 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
 
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -85,7 +85,7 @@ fn tarball_bigger_than_max_upload_size() {
 
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -106,7 +106,7 @@ fn new_krate_gzip_bomb() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }
@@ -125,7 +125,7 @@ fn new_krate_too_big() {
 
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }

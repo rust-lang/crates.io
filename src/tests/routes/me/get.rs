@@ -27,7 +27,7 @@ fn me() {
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     app.db(|conn| {
         CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
@@ -35,7 +35,7 @@ fn me() {
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]

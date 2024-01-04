@@ -12,7 +12,7 @@ fn workspace_inheritance() {
             .custom_manifest("[package]\nname = \"foo\"\nversion.workspace = true\n"),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -23,5 +23,5 @@ fn workspace_inheritance_with_dep() {
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
     ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }

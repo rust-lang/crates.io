@@ -14,7 +14,7 @@ fn daily_limit() {
     let crate_to_publish = PublishBuilder::new("foo_daily_limit", "1.0.0");
     let response = user.publish_crate(crate_to_publish);
     assert!(response.status().is_success());
-    let json = response.into_json();
+    let json = response.json();
     assert_eq!(
         json["errors"][0]["detail"],
         "You have published too many versions of this crate in the last 24 hours"

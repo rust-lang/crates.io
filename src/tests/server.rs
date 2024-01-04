@@ -12,7 +12,7 @@ fn user_agent_is_required() {
     let req = Request::get("/api/v1/crates").body("").unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_json_snapshot!(resp.into_json());
+    assert_json_snapshot!(resp.json());
 
     let req = Request::get("/api/v1/crates")
         .header(header::USER_AGENT, "")
@@ -20,7 +20,7 @@ fn user_agent_is_required() {
         .unwrap();
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_json_snapshot!(resp.into_json());
+    assert_json_snapshot!(resp.json());
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
 
     let resp = anon.run::<()>(req);
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_json_snapshot!(resp.into_json());
+    assert_json_snapshot!(resp.json());
 
     let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")
         // A request with a header value we don't want to block is allowed, even though there might
@@ -102,5 +102,5 @@ fn block_traffic_via_ip() {
 
     let resp = anon.get::<()>("/api/v1/crates");
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    assert_json_snapshot!(resp.into_json());
+    assert_json_snapshot!(resp.json());
 }

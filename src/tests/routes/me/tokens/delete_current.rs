@@ -39,7 +39,7 @@ fn revoke_current_token_without_auth() {
     let response = anon.delete::<()>("/api/v1/tokens/current");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
     );
 }
@@ -62,7 +62,7 @@ fn revoke_current_token_with_cookie_user() {
     let response = user.delete::<()>("/api/v1/tokens/current");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "token not provided" }] })
     );
 

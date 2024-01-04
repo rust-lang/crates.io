@@ -14,7 +14,7 @@ fn empty_json() {
 
     let response = token.publish_crate(body);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -26,7 +26,7 @@ fn invalid_names() {
         let crate_to_publish = PublishBuilder::new(name, "1.0.0");
         let response = token.publish_crate(crate_to_publish);
         assert_eq!(response.status(), StatusCode::OK);
-        assert_json_snapshot!(response.into_json());
+        assert_json_snapshot!(response.json());
     };
 
     bad_name("");
@@ -54,7 +54,7 @@ fn invalid_version() {
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
     let response = token.publish_crate(body);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -68,13 +68,13 @@ fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
         .unset_license()
@@ -83,7 +83,7 @@ fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }
@@ -95,7 +95,7 @@ fn invalid_license() {
     let response =
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -107,7 +107,7 @@ fn invalid_urls() {
         PublishBuilder::new("foo", "1.0.0").documentation("javascript:alert('boom')"),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
 }

@@ -20,14 +20,14 @@ fn boolean_readme() {
             readme = false"#,
     ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
 
     let response = token.get::<()>("/api/v1/crates/foo/1.0.0");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
@@ -43,7 +43,7 @@ fn missing_manifest() {
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest());
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn manifest_casing() {
             .no_manifest(),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -79,7 +79,7 @@ fn multiple_manifests() {
             .no_manifest(),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn invalid_manifest() {
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn invalid_manifest_missing_name() {
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nversion = \"1.0.0\""),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -110,7 +110,7 @@ fn invalid_manifest_missing_version() {
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nname = \"foo\""),
     );
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]
@@ -122,11 +122,11 @@ fn invalid_rust_version() {
             "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"\"\n",
         ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"1.0.0-beta.2\"\n",
     ));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }

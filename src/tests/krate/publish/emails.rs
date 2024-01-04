@@ -18,7 +18,7 @@ fn new_krate_without_any_email_fails() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
 
@@ -37,6 +37,6 @@ fn new_krate_with_unverified_email_fails() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

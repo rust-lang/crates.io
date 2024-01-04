@@ -92,7 +92,7 @@ fn following() {
     let response = user.get_with_query::<()>("/api/v1/me/updates", "page=0");
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": "page indexing starts from 1, page 0 is invalid" }] })
     );
 }

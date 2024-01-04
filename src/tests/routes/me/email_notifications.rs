@@ -15,7 +15,7 @@ impl crate::util::MockCookieUser {
     fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) {
         let response = self.put::<()>("/api/v1/me/email_notifications", json!(updates).to_string());
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.into_json(), json!({ "ok": true }));
+        assert_eq!(response.json(), json!({ "ok": true }));
     }
 }
 

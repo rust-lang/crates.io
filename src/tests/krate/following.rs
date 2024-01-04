@@ -6,19 +6,19 @@ use http::StatusCode;
 fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
     let response = user.get::<()>(&format!("/api/v1/crates/{crate_name}/following"));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.into_json(), json!({ "following": expected }));
+    assert_eq!(response.json(), json!({ "following": expected }));
 }
 
 fn follow(crate_name: &str, user: &impl RequestHelper) {
     let response = user.put::<()>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8]);
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.into_json(), json!({ "ok": true }));
+    assert_eq!(response.json(), json!({ "ok": true }));
 }
 
 fn unfollow(crate_name: &str, user: &impl RequestHelper) {
     let response = user.delete::<()>(&format!("/api/v1/crates/{crate_name}/follow"));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.into_json(), json!({ "ok": true }));
+    assert_eq!(response.json(), json!({ "ok": true }));
 }
 
 #[test]

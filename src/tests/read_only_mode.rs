@@ -33,7 +33,7 @@ fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
 
     let response = token.delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank");
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
-    assert_json_snapshot!(response.into_json());
+    assert_json_snapshot!(response.json());
 }
 
 #[test]

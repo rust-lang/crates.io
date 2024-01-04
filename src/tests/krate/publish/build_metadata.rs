@@ -8,7 +8,7 @@ fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
 
     let response = token.publish_crate(PublishBuilder::new("foo", v1));
     assert_eq!(response.status(), StatusCode::OK);
-    assert_json_snapshot!(response.into_json(), {
+    assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
@@ -16,7 +16,7 @@ fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
     let response = token.publish_crate(PublishBuilder::new("foo", v2));
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
-        response.into_json(),
+        response.json(),
         json!({ "errors": [{ "detail": expected_error }] })
     );
 }
