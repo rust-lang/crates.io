@@ -2,7 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 #[test]
 fn show() {
@@ -87,6 +87,15 @@ fn show_minimal() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
+}
+
+#[test]
+fn test_missing() {
+    let (_, anon) = TestApp::init().empty();
+
+    let response = anon.get::<()>("/api/v1/crates/missing");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
 }
 
 #[test]
