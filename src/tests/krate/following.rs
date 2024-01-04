@@ -79,6 +79,23 @@ fn test_following() {
 }
 
 #[test]
+fn test_unknown_crate() {
+    let (_, _, user) = TestApp::init().with_user();
+
+    let response = user.get::<()>("/api/v1/crates/unknown-crate/following");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let response = user.put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8]);
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let response = user.delete::<()>("/api/v1/crates/unknown-crate/follow");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+}
+
+#[test]
 fn test_api_token_auth() {
     const CRATE_TO_FOLLOW: &str = "some_crate_to_follow";
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
