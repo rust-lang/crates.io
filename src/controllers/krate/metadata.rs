@@ -369,7 +369,12 @@ pub async fn reverse_dependencies(
     spawn_blocking(move || {
         let pagination_options = PaginationOptions::builder().gather(&req)?;
         let conn = &mut *app.db_read()?;
-        let krate: Crate = Crate::by_name(&name).first(conn)?;
+
+        let krate: Crate = Crate::by_name(&name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&name))?;
+
         let (rev_deps, total) = krate.reverse_dependencies(conn, pagination_options)?;
         let rev_deps: Vec<_> = rev_deps
             .into_iter()
