@@ -55,16 +55,27 @@ fn test_following() {
         CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(conn);
     });
 
+    // Check that initially we are not following the crate yet.
     assert_is_following(CRATE_NAME, false, &user);
-    follow(CRATE_NAME, &user);
+
+    // Follow the crate and check that we are now following it.
     follow(CRATE_NAME, &user);
     assert_is_following(CRATE_NAME, true, &user);
     assert_that!(user.search("following=1").crates, len(eq(1)));
 
-    unfollow(CRATE_NAME, &user);
+    // Follow the crate again and check that we are still following it
+    // (aka. the request is idempotent).
+    follow(CRATE_NAME, &user);
+    assert_is_following(CRATE_NAME, true, &user);
+
+    // Unfollow the crate and check that we are not following it anymore.
     unfollow(CRATE_NAME, &user);
     assert_is_following(CRATE_NAME, false, &user);
     assert_that!(user.search("following=1").crates, empty());
+
+    // Unfollow the crate again and check that this call is also idempotent.
+    unfollow(CRATE_NAME, &user);
+    assert_is_following(CRATE_NAME, false, &user);
 }
 
 #[test]
