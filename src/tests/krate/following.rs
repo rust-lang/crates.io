@@ -2,6 +2,7 @@ use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
+use insta::assert_display_snapshot;
 
 fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
     let response = user.get::<()>(&format!("/api/v1/crates/{crate_name}/following"));
@@ -22,10 +23,32 @@ fn unfollow(crate_name: &str, user: &impl RequestHelper) {
 }
 
 #[test]
+fn test_unauthenticated_requests() {
+    const CRATE_NAME: &str = "foo";
+
+    let (app, anon, user) = TestApp::init().with_user();
+
+    app.db(|conn| {
+        CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(conn);
+    });
+
+    let response = anon.get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"));
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+
+    let response = anon.put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8]);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+
+    let response = anon.delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"));
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+}
+
+#[test]
 fn following() {
     const CRATE_NAME: &str = "foo_following";
 
-    // TODO: Test anon requests as well?
     let (app, _, user) = TestApp::init().with_user();
 
     app.db(|conn| {
