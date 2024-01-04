@@ -83,6 +83,11 @@ pub fn service_unavailable() -> BoxedAppError {
     custom(StatusCode::SERVICE_UNAVAILABLE, "Service unavailable")
 }
 
+pub fn crate_not_found(krate: &str) -> BoxedAppError {
+    let detail = format!("crate `{krate}` does not exist");
+    custom(StatusCode::NOT_FOUND, detail)
+}
+
 pub fn version_not_found(krate: &str, version: &str) -> BoxedAppError {
     let detail = format!("crate `{krate}` does not have a version `{version}`");
     custom(StatusCode::NOT_FOUND, detail)
