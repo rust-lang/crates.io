@@ -23,7 +23,7 @@ where
     #[track_caller]
     pub fn good(self) -> T {
         assert_that!(self.status(), is_success());
-        json(self.response)
+        json(&self.response)
     }
 }
 
@@ -38,12 +38,12 @@ impl<T> Response<T> {
 
     /// Consume the response body and convert it to a JSON value
     #[track_caller]
-    pub fn into_json(self) -> Value {
-        json(self.response)
+    pub fn into_json(&self) -> Value {
+        json(&self.response)
     }
 
     #[track_caller]
-    pub fn into_text(self) -> String {
+    pub fn into_text(&self) -> String {
         let bytes = self.response.body();
         assert_ok!(from_utf8(bytes)).to_string()
     }
@@ -78,7 +78,7 @@ impl<T> Response<T> {
         assert_eq!(self.status(), StatusCode::TOO_MANY_REQUESTS);
 
         let expected_message_start = format!("{}. Please try again after ", action.error_message());
-        let error: ErrorResponse = json(self.response);
+        let error: ErrorResponse = json(&self.response);
         assert_that!(error.errors, len(eq(1)));
         assert_that!(error.errors[0].detail, starts_with(expected_message_start));
     }
@@ -98,7 +98,7 @@ impl Response<()> {
     }
 }
 
-fn json<T>(r: hyper::Response<Bytes>) -> T
+fn json<T>(r: &hyper::Response<Bytes>) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
