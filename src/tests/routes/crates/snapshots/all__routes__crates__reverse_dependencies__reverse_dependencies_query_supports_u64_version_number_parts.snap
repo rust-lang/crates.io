@@ -1,0 +1,54 @@
+---
+source: src/tests/routes/crates/reverse_dependencies.rs
+expression: response.json()
+---
+{
+  "dependencies": [
+    {
+      "crate_id": "c1",
+      "default_features": false,
+      "downloads": 0,
+      "features": [],
+      "id": 1,
+      "kind": "normal",
+      "optional": false,
+      "req": ">= 0",
+      "target": null,
+      "version_id": 2
+    }
+  ],
+  "meta": {
+    "total": 1
+  },
+  "versions": [
+    {
+      "audit_actions": [],
+      "checksum": "                                                                ",
+      "crate": "c2",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "dl_path": "/api/v1/crates/c2/1.0.18446744073709551615/download",
+      "downloads": 0,
+      "features": {},
+      "id": 2,
+      "license": null,
+      "links": {
+        "authors": "/api/v1/crates/c2/1.0.18446744073709551615/authors",
+        "dependencies": "/api/v1/crates/c2/1.0.18446744073709551615/dependencies",
+        "version_downloads": "/api/v1/crates/c2/1.0.18446744073709551615/downloads"
+      },
+      "num": "1.0.18446744073709551615",
+      "published_by": {
+        "avatar": null,
+        "id": 1,
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/c2/1.0.18446744073709551615/readme",
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yanked": false
+    }
+  ]
+}
