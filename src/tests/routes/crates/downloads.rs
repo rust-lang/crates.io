@@ -3,6 +3,7 @@ use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use crates_io::views::EncodableVersionDownload;
 use http::StatusCode;
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 #[derive(Deserialize)]
 struct Downloads {
@@ -38,8 +39,14 @@ pub fn assert_dl_count(
     assert_eq!(total_downloads, count);
 }
 
+pub fn download(client: &impl RequestHelper, name_and_version: &str) {
+    let url = format!("/api/v1/crates/{name_and_version}/download");
+    let response = client.get::<()>(&url);
+    assert_eq!(response.status(), StatusCode::FOUND);
+}
+
 #[test]
-fn download() {
+fn test_download() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -49,14 +56,8 @@ fn download() {
             .expect_build(conn);
     });
 
-    let download = |name_and_version: &str| {
-        let url = format!("/api/v1/crates/{name_and_version}/download");
-        let response = anon.get::<()>(&url);
-        assert_eq!(response.status(), StatusCode::FOUND);
-        // TODO: test the with_json code path
-    };
-
-    download("foo_download/1.0.0");
+    // TODO: test the with_json code path
+    download(&anon, "foo_download/1.0.0");
     // No downloads are counted until the counters are persisted
     assert_dl_count(&anon, "foo_download/1.0.0", None, 0);
     assert_dl_count(&anon, "foo_download", None, 0);
@@ -78,4 +79,55 @@ fn download() {
     let query = format!("before_date={tomorrow}");
     assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 1);
     assert_dl_count(&anon, "foo_download", Some(&query), 1);
+}
+
+#[test]
+fn test_downloads() {
+    let (app, anon, cookie) = TestApp::init().with_user();
+
+    app.db(|conn| {
+        let user_id = cookie.as_model().id;
+        CrateBuilder::new("foo", user_id)
+            .version("1.0.0")
+            .expect_build(conn);
+    });
+
+    download(&anon, "foo/1.0.0");
+    persist_downloads_count(&app);
+
+    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".version_downloads[].date" => "[date]",
+    });
+
+    // check different crate name
+    let response = anon.get::<()>("/api/v1/crates/bar/1.0.0/downloads");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(
+        response.text(),
+        @r###"{"errors":[{"detail":"Not Found"}]}"###
+    );
+
+    // check non-canonical crate name
+    let response = anon.get::<()>("/api/v1/crates/FOO/1.0.0/downloads");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.json(), json);
+
+    // check missing version
+    let response = anon.get::<()>("/api/v1/crates/foo/2.0.0/downloads");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(
+        response.text(),
+        @r###"{"errors":[{"detail":"crate `foo` does not have a version `2.0.0`"}]}"###
+    );
+
+    // check invalid version
+    let response = anon.get::<()>("/api/v1/crates/foo/invalid-version/downloads");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(
+        response.text(),
+        @r###"{"errors":[{"detail":"crate `foo` does not have a version `invalid-version`"}]}"###
+    );
 }
