@@ -10,6 +10,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::models::{Crate, CrateVersions, Version, VersionDownload};
 use crate::schema::version_downloads;
 use crate::sql::to_char;
+use crate::util::errors::crate_not_found;
 use crate::views::EncodableVersionDownload;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
@@ -19,7 +20,10 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         use diesel::sql_types::BigInt;
 
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
 
         let mut versions: Vec<Version> = krate.all_versions().load(conn)?;
         versions

@@ -111,7 +111,7 @@ fn test_crate_downloads() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_display_snapshot!(
         response.text(),
-        @r###"{"errors":[{"detail":"Not Found"}]}"###
+        @r###"{"errors":[{"detail":"crate `bar` does not exist"}]}"###
     );
 
     // check non-canonical crate name
