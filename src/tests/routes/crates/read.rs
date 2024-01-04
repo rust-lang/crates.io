@@ -54,10 +54,7 @@ fn show_minimal() {
     let user = user.as_model();
 
     app.db(|conn| {
-        use crates_io::schema::versions;
-        use diesel::{update, ExpressionMethods};
-
-        let krate = CrateBuilder::new("foo_show_minimal", user.id)
+        CrateBuilder::new("foo_show_minimal", user.id)
             .description("description")
             .documentation("https://example.com")
             .homepage("http://example.com")
@@ -67,18 +64,7 @@ fn show_minimal() {
             .keyword("kw1")
             .downloads(20)
             .recent_downloads(10)
-            .expect_build(conn);
-
-        // Make version 1.0.0 mimic a version published before we started recording who published
-        // versions
-        let none: Option<i32> = None;
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0"))
-            .set(versions::published_by.eq(none))
-            .execute(conn)
-            .unwrap();
-
-        krate
+            .expect_build(conn)
     });
 
     let response = anon.get::<()>("/api/v1/crates/foo_show_minimal?include=");
