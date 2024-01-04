@@ -28,7 +28,10 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
 
         let downloads = VersionDownload::belonging_to(latest_five)
             .filter(version_downloads::date.gt(date(now - 90.days())))
-            .order(version_downloads::date.asc())
+            .order((
+                version_downloads::date.asc(),
+                version_downloads::version_id.desc(),
+            ))
             .load(conn)?
             .into_iter()
             .map(VersionDownload::into)
