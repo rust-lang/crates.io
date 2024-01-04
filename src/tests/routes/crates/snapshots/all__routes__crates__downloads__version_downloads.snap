@@ -1,0 +1,13 @@
+---
+source: src/tests/routes/crates/downloads.rs
+expression: json
+---
+{
+  "version_downloads": [
+    {
+      "date": "[date]",
+      "downloads": 3,
+      "version": 1
+    }
+  ]
+}

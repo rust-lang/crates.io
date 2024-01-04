@@ -82,17 +82,60 @@ fn test_download() {
 }
 
 #[test]
-fn test_downloads() {
+fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
 
     app.db(|conn| {
         let user_id = cookie.as_model().id;
         CrateBuilder::new("foo", user_id)
             .version("1.0.0")
+            .version("1.1.0")
             .expect_build(conn);
     });
 
     download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.1.0");
+    persist_downloads_count(&app);
+
+    let response = anon.get::<()>("/api/v1/crates/foo/downloads");
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".version_downloads[].date" => "[date]",
+    });
+
+    // check different crate name
+    let response = anon.get::<()>("/api/v1/crates/bar/downloads");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(
+        response.text(),
+        @r###"{"errors":[{"detail":"Not Found"}]}"###
+    );
+
+    // check non-canonical crate name
+    let response = anon.get::<()>("/api/v1/crates/FOO/downloads");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.json(), json);
+}
+
+#[test]
+fn test_version_downloads() {
+    let (app, anon, cookie) = TestApp::init().with_user();
+
+    app.db(|conn| {
+        let user_id = cookie.as_model().id;
+        CrateBuilder::new("foo", user_id)
+            .version("1.0.0")
+            .version("1.1.0")
+            .expect_build(conn);
+    });
+
+    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.1.0");
     persist_downloads_count(&app);
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads");
