@@ -43,7 +43,7 @@ impl<T> Response<T> {
     }
 
     #[track_caller]
-    pub fn into_text(&self) -> String {
+    pub fn text(&self) -> String {
         let bytes = self.response.body();
         assert_ok!(from_utf8(bytes)).to_string()
     }
