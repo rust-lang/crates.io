@@ -1,0 +1,37 @@
+---
+source: src/tests/routes/crates/read.rs
+expression: response.json()
+---
+{
+  "categories": null,
+  "crate": {
+    "badges": null,
+    "categories": null,
+    "created_at": "[datetime]",
+    "description": "description",
+    "documentation": "https://example.com",
+    "downloads": 20,
+    "exact_match": false,
+    "homepage": "http://example.com",
+    "id": "foo_show_minimal",
+    "keywords": null,
+    "links": {
+      "owner_team": "/api/v1/crates/foo_show_minimal/owner_team",
+      "owner_user": "/api/v1/crates/foo_show_minimal/owner_user",
+      "owners": "/api/v1/crates/foo_show_minimal/owners",
+      "reverse_dependencies": "/api/v1/crates/foo_show_minimal/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo_show_minimal/downloads",
+      "versions": "/api/v1/crates/foo_show_minimal/versions"
+    },
+    "max_stable_version": null,
+    "max_version": "0.0.0",
+    "name": "foo_show_minimal",
+    "newest_version": "0.0.0",
+    "recent_downloads": null,
+    "repository": null,
+    "updated_at": "[datetime]",
+    "versions": null
+  },
+  "keywords": null,
+  "versions": null
+}

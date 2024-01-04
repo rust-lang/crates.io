@@ -58,6 +58,7 @@ struct CrateMeta {
     prev_page: Option<String>,
 }
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct CrateResponse {
     #[serde(rename = "crate")]
     krate: EncodableCrate,
