@@ -1,13 +1,9 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use crates_io::schema::versions;
-use crates_io::views::EncodableVersion;
 use diesel::{prelude::*, update};
-
-#[derive(Deserialize)]
-struct VersionsList {
-    versions: Vec<EncodableVersion>,
-}
+use http::StatusCode;
+use insta::{assert_display_snapshot, assert_json_snapshot};
 
 #[test]
 fn versions() {
@@ -29,16 +25,19 @@ fn versions() {
             .unwrap();
     });
 
-    let json: VersionsList = anon.get("/api/v1/crates/foo_versions/versions").good();
+    let response = anon.get::<()>("/api/v1/crates/foo_versions/versions");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
+}
 
-    assert_eq!(json.versions.len(), 3);
-    assert_eq!(json.versions[0].num, "1.0.0");
-    assert_some_eq!(&json.versions[0].rust_version, "1.64");
-    assert_eq!(json.versions[1].num, "0.5.1");
-    assert_eq!(json.versions[2].num, "0.5.0");
-    assert_none!(&json.versions[0].published_by);
-    assert_eq!(
-        json.versions[1].published_by.as_ref().unwrap().login,
-        user.gh_login
-    );
+#[test]
+fn test_unknown_crate() {
+    let (_, anon) = TestApp::init().empty();
+
+    let response = anon.get::<()>("/api/v1/crates/unknown/versions");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
 }
