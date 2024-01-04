@@ -46,7 +46,7 @@ fn test_unauthenticated_requests() {
 }
 
 #[test]
-fn following() {
+fn test_following() {
     const CRATE_NAME: &str = "foo_following";
 
     let (app, _, user) = TestApp::init().with_user();
@@ -68,7 +68,7 @@ fn following() {
 }
 
 #[test]
-fn getting_followed_crates_allows_api_token_auth() {
+fn test_api_token_auth() {
     const CRATE_TO_FOLLOW: &str = "some_crate_to_follow";
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
 
