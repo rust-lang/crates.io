@@ -19,7 +19,7 @@ env:
   # renovate: datasource=crate depName=diesel_cli versioning=semver
   DIESEL_CLI_VERSION: 2.1.1
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 8.13.1
+  PNPM_VERSION: 8.14.0
 
 jobs:
   changed-files:
