@@ -15,6 +15,7 @@ use crate::models::{
     TopVersions, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
+use crate::util::errors::crate_not_found;
 use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
@@ -140,7 +141,10 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .unwrap_or_default();
 
         let conn = &mut *app.db_read()?;
-        let krate: Crate = Crate::by_name(&name).first(conn)?;
+        let krate: Crate = Crate::by_name(&name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&name))?;
 
         let versions_publishers_and_audit_actions = if include.versions {
             let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
