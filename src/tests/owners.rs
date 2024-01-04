@@ -18,6 +18,7 @@ use chrono::{Duration, Utc};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use diesel::prelude::*;
 use http::StatusCode;
+use insta::assert_display_snapshot;
 
 #[derive(Deserialize)]
 struct TeamResponse {
@@ -571,6 +572,35 @@ fn deleted_ownership_isnt_in_owner_user() {
 
     let json: UserResponse = anon.get("/api/v1/crates/foo_my_packages/owner_user").good();
     assert_eq!(json.users.len(), 0);
+}
+
+#[test]
+fn test_unknown_crate() {
+    let (app, _, user) = TestApp::full().with_user();
+    app.db_new_user("bar");
+
+    let response = user.get::<()>("/api/v1/crates/unknown/owners");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let response = user.get::<()>("/api/v1/crates/unknown/owner_team");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let response = user.get::<()>("/api/v1/crates/unknown/owner_user");
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let body = json!({ "owners": ["bar"] });
+    let body = serde_json::to_vec(&body).unwrap();
+
+    let response = user.put::<()>("/api/v1/crates/unknown/owners", body.clone());
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+
+    let response = user.delete_with_body::<()>("/api/v1/crates/unknown/owners", body);
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
 }
 
 #[test]
