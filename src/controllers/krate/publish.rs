@@ -303,7 +303,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             if let Some(daily_version_limit) = app.config.new_version_rate_limit {
                 let published_today = count_versions_published_today(krate.id, conn)?;
                 if published_today >= daily_version_limit as i64 {
-                    return Err(cargo_err(
+                    return Err(custom(
+                        StatusCode::TOO_MANY_REQUESTS,
                         "You have published too many versions of this crate in the last 24 hours",
                     ));
                 }
