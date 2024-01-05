@@ -1,5 +1,6 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
+use http::StatusCode;
 
 #[test]
 fn daily_limit() {
@@ -13,7 +14,7 @@ fn daily_limit() {
 
     let crate_to_publish = PublishBuilder::new("foo_daily_limit", "1.0.0");
     let response = user.publish_crate(crate_to_publish);
-    assert!(response.status().is_success());
+    assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
     let json = response.json();
     assert_eq!(
         json["errors"][0]["detail"],
