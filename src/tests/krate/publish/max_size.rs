@@ -84,7 +84,7 @@ fn tarball_bigger_than_max_upload_size() {
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
     let response = token.publish_crate(body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
