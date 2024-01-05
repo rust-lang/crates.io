@@ -78,7 +78,7 @@ fn main() -> anyhow::Result<()> {
 
     let emails = Emails::from_environment(&config);
     let fastly = Fastly::from_environment(client.clone());
-    let team_repo = TeamRepoImpl::new(client);
+    let team_repo = TeamRepoImpl::default();
 
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
