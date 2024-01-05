@@ -84,15 +84,15 @@ fn test_unknown_crate() {
 
     let response = user.get::<()>("/api/v1/crates/unknown-crate/following");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user.put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8]);
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user.delete::<()>("/api/v1/crates/unknown-crate/follow");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Not Found"}]}"###);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 }
 
 #[test]

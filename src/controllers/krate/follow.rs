@@ -6,9 +6,15 @@ use diesel::associations::Identifiable;
 use crate::controllers::frontend_prelude::*;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
+use crate::util::errors::crate_not_found;
 
 fn follow_target(crate_name: &str, conn: &mut PgConnection, user_id: i32) -> AppResult<Follow> {
-    let crate_id = Crate::by_name(crate_name).select(crates::id).first(conn)?;
+    let crate_id = Crate::by_name(crate_name)
+        .select(crates::id)
+        .first(conn)
+        .optional()?
+        .ok_or_else(|| crate_not_found(crate_name))?;
+
     Ok(Follow { user_id, crate_id })
 }
 

@@ -4,6 +4,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
+use crate::util::errors::crate_not_found;
 use crate::views::EncodableOwner;
 use axum::body::Bytes;
 use tokio::runtime::Handle;
@@ -12,7 +13,11 @@ use tokio::runtime::Handle;
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
+
         let owners = krate
             .owners(conn)?
             .into_iter()
@@ -28,7 +33,11 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
+
         let owners = Team::owning(&krate, conn)?
             .into_iter()
             .map(Owner::into)
@@ -43,7 +52,11 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
+
         let owners = User::owning(&krate, conn)?
             .into_iter()
             .map(Owner::into)
@@ -111,7 +124,11 @@ fn modify_owners(
     let user = auth.user();
 
     conn.transaction(|conn| {
-        let krate: Crate = Crate::by_name(crate_name).first(conn)?;
+        let krate: Crate = Crate::by_name(crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(crate_name))?;
+
         let owners = krate.owners(conn)?;
 
         match Handle::current().block_on(user.rights(app, &owners))? {

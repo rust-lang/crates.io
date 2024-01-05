@@ -15,6 +15,7 @@ use crate::models::{
     TopVersions, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
+use crate::util::errors::crate_not_found;
 use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
@@ -140,7 +141,10 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .unwrap_or_default();
 
         let conn = &mut *app.db_read()?;
-        let krate: Crate = Crate::by_name(&name).first(conn)?;
+        let krate: Crate = Crate::by_name(&name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&name))?;
 
         let versions_publishers_and_audit_actions = if include.versions {
             let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
@@ -325,7 +329,12 @@ pub async fn readme(
 pub async fn versions(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+
+        let krate: Crate = Crate::by_name(&crate_name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&crate_name))?;
+
         let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
             .all_versions()
             .left_outer_join(users::table)
@@ -360,7 +369,12 @@ pub async fn reverse_dependencies(
     spawn_blocking(move || {
         let pagination_options = PaginationOptions::builder().gather(&req)?;
         let conn = &mut *app.db_read()?;
-        let krate: Crate = Crate::by_name(&name).first(conn)?;
+
+        let krate: Crate = Crate::by_name(&name)
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&name))?;
+
         let (rev_deps, total) = krate.reverse_dependencies(conn, pagination_options)?;
         let rev_deps: Vec<_> = rev_deps
             .into_iter()
