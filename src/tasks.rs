@@ -15,8 +15,9 @@ where
     R: Send + 'static,
     E: Send + From<JoinError> + 'static,
 {
+    let current_span = tracing::Span::current();
     let hub = Hub::current();
-    tokio::task::spawn_blocking(move || Hub::run(hub, f))
+    tokio::task::spawn_blocking(move || current_span.in_scope(|| Hub::run(hub, f)))
         .await
         // Convert `JoinError` to `E`
         .map_err(Into::into)
