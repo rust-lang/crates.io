@@ -27,7 +27,7 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
-use crate::util::errors::{cargo_err, internal, AppResult};
+use crate::util::errors::{cargo_err, custom, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
@@ -120,7 +120,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         );
 
         if content_length > maximums.max_upload_size {
-            return Err(cargo_err(format_args!(
+            return Err(custom(StatusCode::PAYLOAD_TOO_LARGE, format!(
                 "max upload size is: {}",
                 maximums.max_upload_size
             )));

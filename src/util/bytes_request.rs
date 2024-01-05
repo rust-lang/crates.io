@@ -39,7 +39,7 @@ where
         let collected = body.collect().await.map_err(|err| {
             let box_error = err.into_inner();
             match box_error.downcast::<LengthLimitError>() {
-                Ok(_) => StatusCode::BAD_REQUEST.into_response(),
+                Ok(_) => StatusCode::PAYLOAD_TOO_LARGE.into_response(),
                 Err(err) => server_error_response(&*err),
             }
         })?;
@@ -91,7 +91,7 @@ mod tests {
         let request = Request::get("/").body(body).unwrap();
         let response = app().oneshot(request).await.unwrap();
 
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
 
         let body = vec![0; BODY_SIZE_LIMIT];
         let body = axum::body::Body::from(body);
