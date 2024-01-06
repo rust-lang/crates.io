@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::config;
 use crate::Env;
 use lettre::address::Envelope;
@@ -48,7 +46,7 @@ impl Emails {
             }
             _ => {
                 let transport = FileTransport::new("/tmp");
-                EmailBackend::FileSystem(Arc::new(transport))
+                EmailBackend::FileSystem(transport)
             }
         };
 
@@ -127,9 +125,11 @@ pub enum EmailError {
 #[derive(Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
+    ///
+    /// This is using `Box` to avoid a large size difference between variants.
     Smtp(Box<SmtpTransport>),
     /// Backend used locally during development, will store the emails in the provided directory.
-    FileSystem(Arc<FileTransport>),
+    FileSystem(FileTransport),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
     Memory(StubTransport),
 }
