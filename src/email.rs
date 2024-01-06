@@ -124,7 +124,7 @@ pub enum EmailError {
     TransportError(anyhow::Error),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum EmailBackend {
     /// Backend used in production to send mails using SMTP.
     Smtp(Box<SmtpTransport>),
@@ -142,23 +142,6 @@ impl EmailBackend {
             EmailBackend::Memory(transport) => transport.send(&message).map(|_| ())?,
         }
 
-        Ok(())
-    }
-}
-
-// Custom Debug implementation to avoid showing the SMTP password.
-impl std::fmt::Debug for EmailBackend {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            EmailBackend::Smtp(_) => {
-                // The password field is *intentionally* not included
-                f.debug_tuple("Smtp").finish()?;
-            }
-            EmailBackend::FileSystem(transport) => {
-                f.debug_tuple("FileSystem").field(transport).finish()?;
-            }
-            EmailBackend::Memory(transport) => f.debug_tuple("Memory").field(transport).finish()?,
-        }
         Ok(())
     }
 }
