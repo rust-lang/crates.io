@@ -95,16 +95,13 @@ pub async fn remove_owners(
 fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
     #[derive(Deserialize)]
     struct Request {
-        // identical, for back-compat (owners preferred)
-        users: Option<Vec<String>>,
-        owners: Option<Vec<String>>,
+        #[serde(alias = "users")]
+        owners: Vec<String>,
     }
     let request: Request =
         serde_json::from_slice(req.body()).map_err(|_| cargo_err("invalid json request"))?;
-    request
-        .owners
-        .or(request.users)
-        .ok_or_else(|| cargo_err("invalid json request"))
+
+    Ok(request.owners)
 }
 
 fn modify_owners(
