@@ -85,6 +85,12 @@ pub async fn remove_owners(
     spawn_blocking(move || modify_owners(&app, &crate_name, &req, false)).await
 }
 
+#[derive(Deserialize)]
+struct ChangeOwnersRequest {
+    #[serde(alias = "users")]
+    owners: Vec<String>,
+}
+
 /// Parse the JSON request body of requests to modify the owners of a crate.
 ///
 /// The format is:
@@ -93,11 +99,6 @@ pub async fn remove_owners(
 /// {"owners": ["username", "github:org:team", ...]}
 /// ```
 fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
-    #[derive(Deserialize)]
-    struct ChangeOwnersRequest {
-        #[serde(alias = "users")]
-        owners: Vec<String>,
-    }
     let request: ChangeOwnersRequest =
         serde_json::from_slice(req.body()).map_err(|_| cargo_err("invalid json request"))?;
 
