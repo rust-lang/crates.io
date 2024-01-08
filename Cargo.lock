@@ -973,6 +973,7 @@ dependencies = [
  "parking_lot",
  "prometheus",
  "rand",
+ "regex",
  "reqwest",
  "scheduled-thread-pool",
  "secrecy",
