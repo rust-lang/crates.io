@@ -3,6 +3,7 @@ use crate::schema::{background_jobs, crates};
 use crate::worker::jobs;
 use anyhow::Result;
 use crates_io_worker::BackgroundJob;
+use diesel::dsl::exists;
 use diesel::prelude::*;
 use secrecy::{ExposeSecret, SecretString};
 
@@ -30,7 +31,11 @@ pub enum Command {
         #[arg()]
         name: String,
     },
-    SyncAdmins,
+    SyncAdmins {
+        /// Force a sync even if one is already in progress
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 pub fn run(command: Command) -> Result<()> {
@@ -59,7 +64,26 @@ pub fn run(command: Command) -> Result<()> {
         } => {
             jobs::DumpDb::new(database_url.expose_secret(), target_name).enqueue(conn)?;
         }
-        Command::SyncAdmins => {
+        Command::SyncAdmins { force } => {
+            if !force {
+                // By default, we don't want to enqueue a sync if one is already
+                // in progress. If a sync fails due to e.g. an expired pinned
+                // certificate we don't want to keep adding new jobs to the
+                // queue, since the existing job will be retried until it
+                // succeeds.
+
+                let query = background_jobs::table
+                    .filter(background_jobs::job_type.eq(jobs::SyncAdmins::JOB_NAME));
+
+                if diesel::select(exists(query)).get_result(conn)? {
+                    info!(
+                        "Did not enqueue {}, existing job already in progress",
+                        jobs::SyncAdmins::JOB_NAME
+                    );
+                    return Ok(());
+                }
+            }
+
             jobs::SyncAdmins.enqueue(conn)?;
         }
         Command::DailyDbMaintenance => {
