@@ -2250,6 +2250,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2662,9 +2671,9 @@ dependencies = [
 
 [[package]]
 name = "object_store"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2524735495ea1268be33d200e1ee97455096a0846295a21548cd2f3541de7050"
+checksum = "d139f545f64630e2e3688fd9f81c470888ab01edeb72d13b4e86c566f1130000"
 dependencies = [
  "async-trait",
  "base64 0.21.5",
@@ -2673,7 +2682,7 @@ dependencies = [
  "futures",
  "humantime",
  "hyper 0.14.28",
- "itertools",
+ "itertools 0.12.0",
  "parking_lot",
  "percent-encoding",
  "quick-xml",
@@ -3243,6 +3252,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rustls",
+ "rustls-native-certs",
  "rustls-pemfile",
  "serde",
  "serde_json",
@@ -3258,7 +3268,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
- "webpki-roots",
  "winreg",
 ]
 
@@ -4333,7 +4342,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38f8c4efb88486b445b83759c6589b97a0fe4cf82bd36be336c164b49af13bef"
 dependencies = [
  "bitflip",
- "itertools",
+ "itertools 0.11.0",
  "thiserror",
  "tracing",
 ]
@@ -4601,12 +4610,6 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "webpki-roots"
-version = "0.25.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1778a42e8b3b90bff8d0f5032bf22250792889a5cdc752aa0020c84abe3aaf10"
 
 [[package]]
 name = "winapi"
