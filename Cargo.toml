@@ -64,7 +64,7 @@ crates_io_markdown = { path = "crates_io_markdown" }
 crates_io_tarball = { path = "crates_io_tarball" }
 crates_io_worker = { path = "crates_io_worker" }
 chrono = { version = "=0.4.31", default-features = false, features = ["serde"] }
-clap = { version = "=4.4.13", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.4.14", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.0", features = ["secure"] }
 crossbeam-channel = "=0.5.11"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
