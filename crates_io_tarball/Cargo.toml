@@ -11,7 +11,7 @@ workspace = true
 builder = []
 
 [dependencies]
-cargo-manifest = "=0.12.1"
+cargo-manifest = "=0.13.0"
 derive_deref = "=1.1.1"
 flate2 = "=1.0.28"
 semver = { version = "=1.0.21", features = ["serde"] }
