@@ -15,6 +15,7 @@ fn test_sync_admins_job() {
         vec![
             mock_member("existing-admin", 1),
             mock_member("new-admin", 3),
+            mock_member("new-admin-without-account", 4),
         ],
     );
 
@@ -50,6 +51,14 @@ fn test_sync_admins_job() {
         .collect::<Vec<_>>();
 
     assert_debug_snapshot!(emails);
+
+    // Run the job again to verify that no new emails are sent
+    // for `new-admin-without-account`.
+    app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
+    app.run_pending_background_jobs();
+
+    let emails = app.as_inner().emails.mails_in_memory().unwrap();
+    assert_eq!(emails.len(), 2);
 }
 
 fn mock_team(name: impl Into<String>, members: Vec<Member>) -> Team {
