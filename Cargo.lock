@@ -695,13 +695,13 @@ dependencies = [
 
 [[package]]
 name = "cargo-manifest"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78d013e7f1d7783aa824b5096f12af7c583e58b7a169a04998d5fe20d940cbb9"
+checksum = "bf6ff49a028a52bf61913e19f5ba3b9bd34145cc97eb1649865576c8f06b408d"
 dependencies = [
  "serde",
  "thiserror",
- "toml 0.7.8",
+ "toml 0.8.8",
 ]
 
 [[package]]
@@ -4141,7 +4141,6 @@ version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd79e69d3b627db300ff956027cc6c3798cef26d22526befdfcd12feeb6d2257"
 dependencies = [
- "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",
@@ -4154,6 +4153,7 @@ version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1a195ec8c9da26928f773888e0742ca3ca1040c6cd859c919c9f59c1954ab35"
 dependencies = [
+ "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",
