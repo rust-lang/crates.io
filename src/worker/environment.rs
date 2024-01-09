@@ -2,6 +2,7 @@ use crate::cloudfront::CloudFront;
 use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
+use crate::team_repo::TeamRepo;
 use crate::typosquat;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
@@ -25,6 +26,7 @@ pub struct Environment {
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
     pub emails: Emails,
+    pub team_repo: Box<dyn TeamRepo + Send + Sync>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(default, setter(skip))]

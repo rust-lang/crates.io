@@ -18,6 +18,7 @@ use crates_io::cloudfront::CloudFront;
 use crates_io::db::DieselPool;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
+use crates_io::team_repo::TeamRepoImpl;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{config, Emails};
 use crates_io::{db, ssh};
@@ -76,7 +77,8 @@ fn main() -> anyhow::Result<()> {
         .expect("Couldn't build client");
 
     let emails = Emails::from_environment(&config);
-    let fastly = Fastly::from_environment(client);
+    let fastly = Fastly::from_environment(client.clone());
+    let team_repo = TeamRepoImpl::default();
 
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
@@ -90,6 +92,7 @@ fn main() -> anyhow::Result<()> {
         .storage(storage)
         .connection_pool(DieselPool::new_background_worker(connection_pool.clone()))
         .emails(emails)
+        .team_repo(Box::new(team_repo))
         .build()?;
 
     let environment = Arc::new(environment);
