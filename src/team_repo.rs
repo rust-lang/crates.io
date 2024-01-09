@@ -49,11 +49,13 @@ impl Default for TeamRepoImpl {
 }
 
 fn build_client() -> Client {
-    let lets_encrypt_cert = Certificate::from_pem(certs::LETS_ENCRYPT).unwrap();
+    let x1_cert = Certificate::from_pem(certs::ISRG_ROOT_X1).unwrap();
+    let x2_cert = Certificate::from_pem(certs::ISRG_ROOT_X2).unwrap();
 
     Client::builder()
         .tls_built_in_root_certs(false)
-        .add_root_certificate(lets_encrypt_cert)
+        .add_root_certificate(x1_cert)
+        .add_root_certificate(x2_cert)
         .build()
         .unwrap()
 }
