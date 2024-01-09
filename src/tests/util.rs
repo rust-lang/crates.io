@@ -139,8 +139,15 @@ pub trait RequestHelper {
     /// Issue a PUT request
     #[track_caller]
     fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        let body = body.into();
+        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
+
         let mut request = self.request_builder(Method::PUT, path);
-        *request.body_mut() = body.into();
+        *request.body_mut() = body;
+        if is_json {
+            request.header(header::CONTENT_TYPE, "application/json");
+        }
+
         self.run(request)
     }
 
@@ -154,8 +161,15 @@ pub trait RequestHelper {
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
     #[track_caller]
     fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        let body = body.into();
+        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
+
         let mut request = self.request_builder(Method::DELETE, path);
-        *request.body_mut() = body.into();
+        *request.body_mut() = body;
+        if is_json {
+            request.header(header::CONTENT_TYPE, "application/json");
+        }
+
         self.run(request)
     }
 
