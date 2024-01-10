@@ -72,7 +72,10 @@ fn modify_yank(
     if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
-            warn!("Admin {} is {action} crate {}", user.gh_login, krate.name);
+            warn!(
+                "Admin {} is {action} {}@{}",
+                user.gh_login, krate.name, version.num
+            );
         } else {
             return Err(cargo_err("must already be an owner to yank or unyank"));
         }
