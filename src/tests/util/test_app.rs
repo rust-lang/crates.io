@@ -420,6 +420,7 @@ fn simple_config() -> config::Server {
         max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_features: 10,
+        max_dependencies: 10,
         rate_limiter: Default::default(),
         new_version_rate_limit: Some(10),
         blocked_traffic: Default::default(),
