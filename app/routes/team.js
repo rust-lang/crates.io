@@ -1,3 +1,4 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
@@ -23,7 +24,7 @@ export default class TeamRoute extends Route {
 
       return { crates, team };
     } catch (error) {
-      if (error.errors?.some(e => e.detail === 'Not Found')) {
+      if (error instanceof NotFoundError) {
         this.notifications.error(`Team '${params.team_id}' does not exist`);
         return this.router.replaceWith('index');
       }
