@@ -9,7 +9,7 @@ pub(super) static CRATE_NAME_ALPHABET: &str =
 pub(super) static SUFFIX_SEPARATORS: &[&str] = &["-", "_"];
 
 /// Commonly used suffixes when building crate names.
-pub(super) static SUFFIXES: &[&str] = &["api", "cli", "core", "lib", "rs", "rust", "sys"];
+pub(super) static SUFFIXES: &[&str] = &["api", "cargo", "cli", "core", "lib", "rs", "rust", "sys"];
 
 /// The number of crates to consider in the "top crates" corpus.
 pub(super) static TOP_CRATES: i64 = 3000;

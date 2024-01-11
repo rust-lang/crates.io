@@ -3,28 +3,29 @@ use typomania::{
     Corpus, Package,
 };
 
-/// A typomania check that checks if commonly used suffixes have been added or removed.
-pub struct Suffixes {
+/// A typomania check that checks if commonly used prefixes or suffixes have been added to or
+/// removed from a package name.
+pub struct Affixes {
+    affixes: Vec<String>,
     separators: Vec<String>,
-    suffixes: Vec<String>,
 }
 
-impl Suffixes {
-    pub fn new<Sep, Suf>(separators: Sep, suffixes: Suf) -> Self
+impl Affixes {
+    pub fn new<Aff, Sep>(affixes: Aff, separators: Sep) -> Self
     where
+        Aff: Iterator,
+        Aff::Item: ToString,
         Sep: Iterator,
         Sep::Item: ToString,
-        Suf: Iterator,
-        Suf::Item: ToString,
     {
         Self {
+            affixes: affixes.map(|s| s.to_string()).collect(),
             separators: separators.map(|s| s.to_string()).collect(),
-            suffixes: suffixes.map(|s| s.to_string()).collect(),
         }
     }
 }
 
-impl Check for Suffixes {
+impl Check for Affixes {
     fn check(
         &self,
         corpus: &dyn Corpus,
@@ -34,11 +35,32 @@ impl Check for Suffixes {
         let mut squats = Vec::new();
 
         for separator in self.separators.iter() {
-            for suffix in self.suffixes.iter() {
-                let combo = format!("{separator}{suffix}");
+            for affix in self.affixes.iter() {
+                // If the package being examined starts with this prefix and separator combo, then
+                // we should see if it exists without that prefix in the popular crate corpus.
+                let combo = format!("{affix}{separator}");
+                if let Some(stem) = name.strip_prefix(&combo) {
+                    if corpus.possible_squat(stem, name, package)? {
+                        squats.push(Squat::Custom {
+                            message: format!("adds the {combo} prefix"),
+                            package: stem.to_string(),
+                        })
+                    }
+                }
+
+                // Alternatively, let's see if adding the prefix and separator combo to the package
+                // results in something popular; eg somebody trying to squat `foo` with `rs-foo`.
+                let prefixed = format!("{combo}{name}");
+                if corpus.possible_squat(&prefixed, name, package)? {
+                    squats.push(Squat::Custom {
+                        message: format!("removes the {combo} prefix"),
+                        package: prefixed,
+                    });
+                }
 
                 // If the package being examined ends in this separator and suffix combo, then we
-                // should see if it exists in the popular crate corpus.
+                // should see if it exists without that suffix in the popular crate corpus.
+                let combo = format!("{separator}{affix}");
                 if let Some(stem) = name.strip_suffix(&combo) {
                     if corpus.possible_squat(stem, name, package)? {
                         squats.push(Squat::Custom {
@@ -74,16 +96,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_suffixes() -> anyhow::Result<()> {
+    fn test_affixes() -> anyhow::Result<()> {
         let popular = TestCorpus::default()
             .with_package(TestPackage::new("foo", "foo", ["Alice", "Bob"]))
             .with_package(TestPackage::new("bar-rs", "Rust bar", ["Charlie"]))
-            .with_package(TestPackage::new("quux_sys", "libquux", ["Alice"]));
+            .with_package(TestPackage::new("quux_sys", "libquux", ["Alice"]))
+            .with_package(TestPackage::new("core-xyz", "Core xyz", ["Alice"]));
 
         let harness = Harness::empty_builder()
-            .with_check(Suffixes::new(
-                ["-", "_"].iter(),
+            .with_check(Affixes::new(
                 ["core", "rs", "sys"].iter(),
+                ["-", "_"].iter(),
             ))
             .build(popular);
 
@@ -103,8 +126,10 @@ mod tests {
         // Now try some packages that should be.
         for package in [
             TestPackage::new("foo-rs", "no shared author", ["Charlie"]),
+            TestPackage::new("rs-foo", "no shared author", ["Charlie"]),
             TestPackage::new("quux", "libquux", ["Charlie"]),
             TestPackage::new("quux_sys_rs", "libquux... for Rust?", ["Charlie"]),
+            TestPackage::new("xyz", "unprefixed core-xyz", ["Charlie"]),
         ]
         .into_iter()
         {
