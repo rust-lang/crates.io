@@ -1,3 +1,4 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
@@ -12,7 +13,7 @@ export default class CrateRoute extends Route {
     try {
       return await this.store.findRecord('crate', crateName);
     } catch (error) {
-      if (error.errors?.some(e => e.detail === 'Not Found')) {
+      if (error instanceof NotFoundError) {
         let title = `${crateName}: Crate not found`;
         this.router.replaceWith('catch-all', { transition, error, title });
       } else {

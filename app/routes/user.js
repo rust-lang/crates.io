@@ -1,3 +1,4 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
@@ -22,7 +23,7 @@ export default class UserRoute extends Route {
 
       return { crates, user };
     } catch (error) {
-      if (error.errors?.some(e => e.detail === 'Not Found')) {
+      if (error instanceof NotFoundError) {
         this.notifications.error(`User '${params.user_id}' does not exist`);
         return this.router.replaceWith('index');
       }
