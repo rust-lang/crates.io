@@ -130,6 +130,11 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     .await
 }
 
+/// Handles the `GET /crates/new` special case.
+pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+    show(app, Path("new".to_string()), req).await
+}
+
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     spawn_blocking(move || {

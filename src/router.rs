@@ -18,7 +18,9 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Routes used by `cargo`
         .route(
             "/api/v1/crates/new",
-            put(krate::publish::publish).layer(DefaultBodyLimit::max(MAX_PUBLISH_CONTENT_LENGTH)),
+            put(krate::publish::publish)
+                .layer(DefaultBodyLimit::max(MAX_PUBLISH_CONTENT_LENGTH))
+                .get(krate::metadata::show_new),
         )
         .route(
             "/api/v1/crates/:crate_id/owners",

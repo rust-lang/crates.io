@@ -131,3 +131,16 @@ fn block_bad_documentation_url() {
     let json = anon.show_crate("foo_bad_doc_url");
     assert_eq!(json.krate.documentation, None);
 }
+
+#[test]
+fn test_new_name() {
+    let (app, anon, user) = TestApp::init().with_user();
+    app.db(|conn| CrateBuilder::new("new", user.as_model().id).expect_build(conn));
+
+    let response = anon.get::<()>("/api/v1/crates/new?include=");
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+}
