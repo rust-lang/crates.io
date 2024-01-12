@@ -7,7 +7,7 @@ use typomania::{
     Harness,
 };
 
-use super::{checks::Suffixes, config, database::TopCrates};
+use super::{checks::Affixes, config, database::TopCrates};
 
 static NOTIFICATION_EMAILS_ENV: &str = "TYPOSQUAT_NOTIFICATION_EMAILS";
 
@@ -72,9 +72,9 @@ impl Cache {
                     .with_check(Typos::new(config::TYPOS.iter().map(|(c, typos)| {
                         (*c, typos.iter().map(|ss| ss.to_string()).collect())
                     })))
-                    .with_check(Suffixes::new(
-                        config::SUFFIX_SEPARATORS.iter(),
+                    .with_check(Affixes::new(
                         config::SUFFIXES.iter(),
+                        config::SUFFIX_SEPARATORS.iter(),
                     ))
                     .build(top),
             ),
