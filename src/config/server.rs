@@ -24,6 +24,9 @@ const DEFAULT_VERSION_ID_CACHE_TTL: u64 = 5 * 60; // 5 minutes
 /// enable. This value can be overridden in the database on a per-crate basis.
 const DEFAULT_MAX_FEATURES: usize = 300;
 
+/// Maximum number of dependencies a crate can have.
+const DEFAULT_MAX_DEPENDENCIES: usize = 500;
+
 pub struct Server {
     pub base: Base,
     pub ip: IpAddr,
@@ -36,6 +39,7 @@ pub struct Server {
     pub gh_client_secret: ClientSecret,
     pub max_upload_size: u64,
     pub max_unpack_size: u64,
+    pub max_dependencies: usize,
     pub max_features: usize,
     pub rate_limiter: HashMap<LimitedAction, RateLimiterConfig>,
     pub new_version_rate_limit: Option<u32>,
@@ -177,6 +181,7 @@ impl Server {
             gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
+            max_dependencies: DEFAULT_MAX_DEPENDENCIES,
             max_features: DEFAULT_MAX_FEATURES,
             rate_limiter,
             new_version_rate_limit: var_parsed("MAX_NEW_VERSIONS_DAILY")?,

@@ -257,6 +257,26 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
         }
 
+        let deps = convert_dependencies(
+            tarball_info.manifest.dependencies.as_ref(),
+            tarball_info.manifest.dev_dependencies.as_ref(),
+            tarball_info.manifest.build_dependencies.as_ref(),
+            tarball_info.manifest.target.as_ref()
+        );
+
+        let max_dependencies = app.config.max_dependencies;
+        if deps.len() > max_dependencies {
+            return Err(cargo_err(format!(
+                "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
+                \n\
+                If you have a use case that requires an increase of this limit, \
+                please send us an email to help@crates.io to discuss the details."
+            )));
+        }
+
+        for dep in &deps {
+            validate_dependency(dep)?;
+        }
 
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
@@ -336,17 +356,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 api_token_id,
                 VersionAction::Publish,
             )?;
-
-            let deps = convert_dependencies(
-                tarball_info.manifest.dependencies.as_ref(),
-                tarball_info.manifest.dev_dependencies.as_ref(),
-                tarball_info.manifest.build_dependencies.as_ref(),
-                tarball_info.manifest.target.as_ref()
-            );
-
-            for dep in &deps {
-                validate_dependency(dep)?;
-            }
 
             // Link this new version to all dependencies
             add_dependencies(conn, &deps, version.id)?;
