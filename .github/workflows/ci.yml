@@ -82,7 +82,7 @@ jobs:
       - run: rustup component add rustfmt
       - run: rustup component add clippy
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - run: cargo fmt --check --all
       - run: cargo clippy --all-targets --all-features --workspace
@@ -97,7 +97,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - run: cargo install cargo-deny --vers ${{ env.CARGO_DENY_VERSION }}
       - run: cargo deny check
@@ -132,7 +132,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: Swatinem/rust-cache@a22603398250b864f7190077025cf752307154dc # v2.7.2
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
       - run: diesel database setup --locked-schema
