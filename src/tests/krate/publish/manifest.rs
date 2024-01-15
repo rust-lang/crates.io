@@ -42,7 +42,7 @@ fn missing_manifest() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest());
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -58,7 +58,7 @@ fn manifest_casing() {
             )
             .no_manifest(),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -78,7 +78,7 @@ fn multiple_manifests() {
             )
             .no_manifest(),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -87,7 +87,7 @@ fn invalid_manifest() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -98,7 +98,7 @@ fn invalid_manifest_missing_name() {
     let response = token.publish_crate(
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nversion = \"1.0.0\""),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -109,7 +109,7 @@ fn invalid_manifest_missing_version() {
     let response = token.publish_crate(
         PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nname = \"foo\""),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 

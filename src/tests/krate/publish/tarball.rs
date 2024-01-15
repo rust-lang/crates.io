@@ -14,7 +14,7 @@ fn new_krate_wrong_files() {
         .add_file("bar-1.0.0/a", "");
 
     let response = user.publish_crate(builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
@@ -45,7 +45,7 @@ fn new_krate_tarball_with_hard_links() {
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
     let response = token.publish_crate(body);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

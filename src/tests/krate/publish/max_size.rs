@@ -105,7 +105,7 @@ fn new_krate_gzip_bomb() {
     let crate_to_publish = PublishBuilder::new("foo", "1.1.0").add_file("foo-1.1.0/a", body);
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());
@@ -124,7 +124,7 @@ fn new_krate_too_big() {
         .add_file("foo_big-1.0.0/big", &[b'a'; 2000] as &[_]);
 
     let response = user.publish_crate(builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());

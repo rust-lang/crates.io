@@ -680,19 +680,19 @@ pub fn add_dependencies(
 impl From<TarballError> for BoxedAppError {
     fn from(error: TarballError) -> Self {
         match error {
-            TarballError::Malformed(_err) => cargo_err(
+            TarballError::Malformed(_err) => bad_request(
                 "uploaded tarball is malformed or too large when decompressed",
             ),
-            TarballError::InvalidPath(path) => cargo_err(format!("invalid path found: {path}")),
+            TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             TarballError::UnexpectedSymlink(path) => {
-                cargo_err(format!("unexpected symlink or hard link found: {path}"))
+                bad_request(format!("unexpected symlink or hard link found: {path}"))
             }
             TarballError::IO(err) => err.into(),
             TarballError::MissingManifest => {
-                cargo_err("uploaded tarball is missing a `Cargo.toml` manifest file")
+                bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")
             }
             TarballError::IncorrectlyCasedManifest(name) => {
-                cargo_err(format!(
+                bad_request(format!(
                     "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
                     name = name.to_string_lossy(),
                 ))
@@ -708,11 +708,11 @@ impl From<TarballError> for BoxedAppError {
                     })
                     .collect::<Vec<_>>()
                     .join("`, `");
-                cargo_err(format!(
+                bad_request(format!(
                     "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
                 ))
             }
-            TarballError::InvalidManifest(err) => cargo_err(format!(
+            TarballError::InvalidManifest(err) => bad_request(format!(
                 "failed to parse `Cargo.toml` manifest file\n\n{err}"
             )),
         }
