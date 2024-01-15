@@ -59,7 +59,7 @@ fn empty_feature_name() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert!(app.stored_files().is_empty());
 }
@@ -70,7 +70,7 @@ fn invalid_feature_name1() {
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -81,7 +81,7 @@ fn invalid_feature_name2() {
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -91,7 +91,7 @@ fn invalid_feature_name_start_with_hyphen() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("-foo1.bar", &[]);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert!(app.stored_files().is_empty());
 }
@@ -111,7 +111,7 @@ fn too_many_features() {
         .feature("four", &[])
         .feature("five", &[]);
     let response = token.publish_crate(publish_builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -137,7 +137,7 @@ fn too_many_features_with_custom_limit() {
         .feature("four", &[])
         .feature("five", &[]);
     let response = token.publish_crate(publish_builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 
@@ -168,7 +168,7 @@ fn too_many_enabled_features() {
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);
     let response = token.publish_crate(publish_builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -190,7 +190,7 @@ fn too_many_enabled_features_with_custom_limit() {
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);
     let response = token.publish_crate(publish_builder);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 

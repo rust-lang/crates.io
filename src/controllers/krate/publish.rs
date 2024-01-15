@@ -221,7 +221,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let features = tarball_info.manifest.features.unwrap_or_default();
         let num_features = features.len();
         if num_features > max_features {
-            return Err(cargo_err(format!(
+            return Err(bad_request(format!(
                 "crates.io only allows a maximum number of {max_features} \
                 features, but your crate is declaring {num_features} features.\n\
                 \n\
@@ -234,11 +234,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         for (key, values) in features.iter() {
-            Crate::validate_feature_name(key).map_err(cargo_err)?;
+            Crate::validate_feature_name(key).map_err(bad_request)?;
 
             let num_features = values.len();
             if num_features > max_features {
-                return Err(cargo_err(format!(
+                return Err(bad_request(format!(
                     "crates.io only allows a maximum number of {max_features} \
                     features or dependencies that another feature can enable, \
                     but the \"{key}\" feature of your crate is enabling \
@@ -253,7 +253,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             for value in values.iter() {
-                Crate::validate_feature(value).map_err(cargo_err)?;
+                Crate::validate_feature(value).map_err(bad_request)?;
             }
         }
 
