@@ -25,7 +25,7 @@ fn invalid_names() {
     let bad_name = |name: &str| {
         let crate_to_publish = PublishBuilder::new(name, "1.0.0");
         let response = token.publish_crate(crate_to_publish);
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_json_snapshot!(response.json());
     };
 

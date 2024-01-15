@@ -52,7 +52,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))?;
 
-    Crate::validate_crate_name("crate", &metadata.name).map_err(cargo_err)?;
+    Crate::validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
 
     let version = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
@@ -298,7 +298,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             if is_reserved_name(persist.name, conn)? {
-                return Err(cargo_err("cannot upload a crate with a reserved name"));
+                return Err(bad_request("cannot upload a crate with a reserved name"));
             }
 
             // To avoid race conditions, we try to insert
