@@ -418,6 +418,18 @@ fn owner_change_without_auth() {
 }
 
 #[test]
+fn test_owner_change_with_legacy_field() {
+    let (app, _, user1) = TestApp::full().with_user();
+    app.db(|conn| CrateBuilder::new("foo", user1.as_model().id).expect_build(conn));
+    app.db_new_user("user2");
+
+    let input = r#"{"users": ["user2"]}"#;
+    let response = user1.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"###);
+}
+
+#[test]
 fn invite_already_invited_user() {
     let (app, _, _, owner) = TestApp::init().with_token();
     app.db_new_user("invited_user");
