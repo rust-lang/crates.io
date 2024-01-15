@@ -51,7 +51,7 @@ fn new_krate_wrong_user() {
     let crate_to_publish = PublishBuilder::new("foo_wrong", "2.0.0");
 
     let response = another_user.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());

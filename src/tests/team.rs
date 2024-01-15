@@ -228,7 +228,7 @@ fn remove_team_as_named_owner() {
     let user_on_one_team = app.db_new_user("user-one-team");
     let crate_to_publish = PublishBuilder::new("foo_remove_team", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
@@ -314,7 +314,7 @@ fn publish_not_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
@@ -339,7 +339,7 @@ fn publish_org_owner_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_org_owner.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
