@@ -91,27 +91,15 @@ struct ChangeOwnersRequest {
     owners: Vec<String>,
 }
 
-/// Parse the JSON request body of requests to modify the owners of a crate.
-///
-/// The format is:
-///
-/// ```json
-/// {"owners": ["username", "github:org:team", ...]}
-/// ```
-fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
-    let request: ChangeOwnersRequest =
-        serde_json::from_slice(req.body()).map_err(|_| cargo_err("invalid json request"))?;
-
-    Ok(request.owners)
-}
-
 fn modify_owners(
     app: &AppState,
     crate_name: &str,
     req: &Request<Bytes>,
     add: bool,
 ) -> AppResult<Json<Value>> {
-    let logins = parse_owners_request(req)?;
+    let logins = serde_json::from_slice::<ChangeOwnersRequest>(req.body())
+        .map_err(|_| cargo_err("invalid json request"))?
+        .owners;
 
     let conn = &mut *app.db_write()?;
     let auth = AuthCheck::default()
