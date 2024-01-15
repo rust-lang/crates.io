@@ -186,7 +186,10 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
             (total, next_page, None, results, conn)
         } else {
-            let query = query.pages_pagination(pagination);
+            let query = query.pages_pagination_with_count_query(
+                pagination,
+                filter_params.make_query(&req, conn)?.count(),
+            );
             let data: Paginated<(Crate, bool, Option<i64>)> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
