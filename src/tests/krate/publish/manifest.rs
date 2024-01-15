@@ -121,12 +121,12 @@ fn invalid_rust_version() {
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"\"\n",
         ));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"1.0.0-beta.2\"\n",
     ));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }

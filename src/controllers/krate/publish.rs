@@ -511,7 +511,7 @@ fn validate_rust_version(value: &str) -> AppResult<()> {
     match semver::VersionReq::parse(value) {
         // Exclude semver operators like `^` and pre-release identifiers
         Ok(_) if value.chars().all(|c| c.is_ascii_digit() || c == '.') => Ok(()),
-        Ok(_) | Err(..) => Err(cargo_err(
+        Ok(_) | Err(..) => Err(bad_request(
             "failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value",
         )),
     }
