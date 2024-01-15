@@ -68,13 +68,13 @@ fn license_and_description_required() {
         .unset_description();
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
@@ -83,7 +83,7 @@ fn license_and_description_required() {
         .unset_description();
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     assert_that!(app.stored_files(), empty());

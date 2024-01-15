@@ -157,7 +157,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
         if !missing.is_empty() {
             let message = missing_metadata_error_message(&missing);
-            return Err(cargo_err(&message));
+            return Err(bad_request(&message));
         }
 
         if let Some(ref license) = license {
