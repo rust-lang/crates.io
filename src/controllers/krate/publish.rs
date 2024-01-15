@@ -27,7 +27,7 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
-use crate::util::errors::{bad_request, cargo_err, custom, internal, AppResult};
+use crate::util::errors::{bad_request, custom, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
