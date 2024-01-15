@@ -487,14 +487,14 @@ fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
     // Manually check the string, as `Url::parse` may normalize relative URLs
     // making it difficult to ensure that both slashes are present.
     if !url.starts_with("http://") && !url.starts_with("https://") {
-        return Err(cargo_err(format_args!(
+        return Err(bad_request(format_args!(
             "URL for field `{field}` must begin with http:// or https:// (url: {url})"
         )));
     }
 
     // Ensure the entire URL parses as well
     Url::parse(url)
-        .map_err(|_| cargo_err(format_args!("`{field}` is not a valid url: `{url}`")))?;
+        .map_err(|_| bad_request(format_args!("`{field}` is not a valid url: `{url}`")))?;
     Ok(())
 }
 
