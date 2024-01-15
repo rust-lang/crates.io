@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{bad_request, AppResult};
 
 use crate::db::sql_types::semver::Triple;
 use crate::models::{Crate, Dependency, User};
@@ -168,7 +168,7 @@ impl NewVersion {
                 .filter(split_part(versions::num, "+", 1).eq(num_no_build));
 
             if select(exists(already_uploaded)).get_result(conn)? {
-                return Err(cargo_err(format_args!(
+                return Err(bad_request(format_args!(
                     "crate version `{}` is already uploaded",
                     num_no_build
                 )));
