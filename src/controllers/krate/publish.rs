@@ -192,16 +192,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .unwrap_or_default();
 
         if keywords.len() > 5 {
-            return Err(cargo_err("expected at most 5 keywords per crate"));
+            return Err(bad_request("expected at most 5 keywords per crate"));
         }
 
         for keyword in keywords.iter() {
             if keyword.len() > 20 {
-                return Err(cargo_err(format!(
+                return Err(bad_request(format!(
                     "\"{keyword}\" is an invalid keyword (keywords must have less than 20 characters)"
                 )));
             } else if !Keyword::valid_name(keyword) {
-                return Err(cargo_err(format!("\"{keyword}\" is an invalid keyword")));
+                return Err(bad_request(format!("\"{keyword}\" is an invalid keyword")));
             }
         }
 
