@@ -27,7 +27,7 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
-use crate::util::errors::{cargo_err, custom, internal, AppResult};
+use crate::util::errors::{bad_request, cargo_err, custom, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
@@ -50,7 +50,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let (json_bytes, tarball_bytes) = split_body(bytes)?;
 
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
-        .map_err(|e| cargo_err(format_args!("invalid upload request: {e}")))?;
+        .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))?;
 
     Crate::validate_crate_name("crate", &metadata.name).map_err(cargo_err)?;
 
