@@ -161,7 +161,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         if let Some(ref license) = license {
-            parse_license_expr(license).map_err(|e| cargo_err(format_args!(
+            parse_license_expr(license).map_err(|e| bad_request(format_args!(
                 "unknown or invalid license expression; \
                 see http://opensource.org/licenses for options, \
                 and http://spdx.org/licenses/ for their identifiers\n\

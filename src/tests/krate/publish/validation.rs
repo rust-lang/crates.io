@@ -95,7 +95,7 @@ fn invalid_license() {
 
     let response =
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
