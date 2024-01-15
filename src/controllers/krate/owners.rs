@@ -6,7 +6,6 @@ use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::util::errors::crate_not_found;
 use crate::views::EncodableOwner;
-use axum::body::Bytes;
 use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
@@ -71,22 +70,24 @@ pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppR
 pub async fn add_owners(
     app: AppState,
     Path(crate_name): Path<String>,
-    req: BytesRequest,
+    parts: Parts,
+    Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || modify_owners(&app, &crate_name, &req, true)).await
+    spawn_blocking(move || modify_owners(&app, &crate_name, parts, body, true)).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
 pub async fn remove_owners(
     app: AppState,
     Path(crate_name): Path<String>,
-    req: BytesRequest,
+    parts: Parts,
+    Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || modify_owners(&app, &crate_name, &req, false)).await
+    spawn_blocking(move || modify_owners(&app, &crate_name, parts, body, false)).await
 }
 
 #[derive(Deserialize)]
-struct ChangeOwnersRequest {
+pub struct ChangeOwnersRequest {
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
@@ -94,18 +95,17 @@ struct ChangeOwnersRequest {
 fn modify_owners(
     app: &AppState,
     crate_name: &str,
-    req: &Request<Bytes>,
+    parts: Parts,
+    body: ChangeOwnersRequest,
     add: bool,
 ) -> AppResult<Json<Value>> {
-    let logins = serde_json::from_slice::<ChangeOwnersRequest>(req.body())
-        .map_err(|_| cargo_err("invalid json request"))?
-        .owners;
+    let logins = body.owners;
 
     let conn = &mut *app.db_write()?;
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(crate_name)
-        .check(req, conn)?;
+        .check(&parts, conn)?;
 
     let user = auth.user();
 

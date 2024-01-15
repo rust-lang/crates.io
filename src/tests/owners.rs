@@ -438,32 +438,32 @@ fn test_owner_change_with_invalid_json() {
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
     let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
 
     let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
 
-    // `users` is not an array
-    let input = r#"{"owners": ["foo", "bar"], "users": "baz"}"#;
+    // `owners` is not an array
+    let input = r#"{"owners": "foo"}"#;
     let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
 
     let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
 
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
     let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
 
     let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
 }
 
 #[test]
