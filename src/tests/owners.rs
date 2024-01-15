@@ -430,6 +430,43 @@ fn test_owner_change_with_legacy_field() {
 }
 
 #[test]
+fn test_owner_change_with_invalid_json() {
+    let (app, _, user) = TestApp::full().with_user();
+    app.db_new_user("bar");
+    app.db(|conn| CrateBuilder::new("foo", user.as_model().id).expect_build(conn));
+
+    // incomplete input
+    let input = r#"{"owners": ["foo", }"#;
+    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+
+    let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+
+    // `users` is not an array
+    let input = r#"{"owners": ["foo", "bar"], "users": "baz"}"#;
+    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+
+    let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+
+    // missing `owners` and/or `users` fields
+    let input = r#"{}"#;
+    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+
+    let response = user.delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+}
+
+#[test]
 fn invite_already_invited_user() {
     let (app, _, _, owner) = TestApp::init().with_token();
     app.db_new_user("invited_user");
