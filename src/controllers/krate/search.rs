@@ -5,6 +5,7 @@ use diesel::dsl::*;
 use diesel::sql_types::Array;
 use diesel_full_text_search::*;
 use indexmap::IndexMap;
+use once_cell::sync::OnceCell;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
@@ -40,31 +41,46 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
-        use diesel::sql_types::{Bool, Text};
+        use diesel::sql_types::Bool;
 
         let params = req.query();
-        let sort = params.get("sort").map(|s| &**s);
-        let include_yanked = params
-            .get("include_yanked")
+        let option_param = |s| params.get(s).map(|v| v.as_str());
+        let sort = option_param("sort");
+        let include_yanked = option_param("include_yanked")
             .map(|s| s == "yes")
             .unwrap_or(true);
 
         // Remove 0x00 characters from the query string because Postgres can not
         // handle them and will return an error, which would cause us to throw
         // an Internal Server Error ourselves.
-        let q_string = params.get("q").map(|q| q.replace('\u{0}', ""));
+        let q_string = option_param("q").map(|q| q.replace('\u{0}', ""));
+
+        let filter_params = FilterParams {
+            q_string: q_string.as_deref(),
+            include_yanked,
+            category: option_param("category"),
+            all_keywords: option_param("all_keywords"),
+            keyword: option_param("keyword"),
+            letter: option_param("letter"),
+            user_id: option_param("user_id").and_then(|s| s.parse::<i32>().ok()),
+            team_id: option_param("team_id").and_then(|s| s.parse::<i32>().ok()),
+            following: option_param("following").is_some(),
+            has_ids: option_param("ids[]").is_some(),
+            ..Default::default()
+        };
 
         let selection = (
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
             recent_crate_downloads::downloads.nullable(),
         );
-        let mut query = crates::table
-            .left_join(recent_crate_downloads::table)
-            .select(selection)
-            .into_boxed();
 
-        let mut supports_seek = true;
+        let conn = &mut *app.db_read()?;
+        let mut supports_seek = filter_params.supports_seek();
+        let mut query = filter_params
+            .make_query(&req, conn)?
+            .left_join(recent_crate_downloads::table)
+            .select(selection);
 
         if let Some(q_string) = &q_string {
             // Searching with a query string always puts the exact match at the start of the results,
@@ -72,16 +88,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             supports_seek = false;
 
             if !q_string.is_empty() {
-                let sort = params.get("sort").map(|s| &**s).unwrap_or("relevance");
-
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string)
-                    .sql(")");
-                query = query.filter(
-                    q.clone()
-                        .matches(crates::textsearchable_index_col)
-                        .or(Crate::loosly_matches_name(q_string)),
-                );
+                let sort = sort.unwrap_or("relevance");
 
                 query = query.select((
                     ALL_COLUMNS,
@@ -91,136 +98,14 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 query = query.order(Crate::with_name(q_string).desc());
 
                 if sort == "relevance" {
+                    let q = to_tsquery_with_search_config(
+                        configuration::TsConfigurationByName("english"),
+                        q_string,
+                    );
                     let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                     query = query.then_order_by(rank.desc())
                 }
             }
-        }
-
-        if let Some(cat) = params.get("category") {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            query = query.filter(
-                crates::id.eq_any(
-                    crates_categories::table
-                        .select(crates_categories::crate_id)
-                        .inner_join(categories::table)
-                        .filter(
-                            categories::slug
-                                .eq(cat)
-                                .or(categories::slug.like(format!("{cat}::%"))),
-                        ),
-                ),
-            );
-        }
-
-        let conn = &mut *app.db_read()?;
-
-        if let Some(kws) = params.get("all_keywords") {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            let names: Vec<_> = kws
-                .split_whitespace()
-                .map(|name| name.to_lowercase())
-                .collect();
-
-            query = query.filter(
-                // FIXME: Just use `.contains` in Diesel 2.0
-                // https://github.com/diesel-rs/diesel/issues/2066
-                Contains::new(
-                    crates_keywords::table
-                        .inner_join(keywords::table)
-                        .filter(crates_keywords::crate_id.eq(crates::id))
-                        .select(array_agg(keywords::keyword))
-                        .single_value(),
-                    names.into_sql::<Array<Text>>(),
-                ),
-            );
-        } else if let Some(kw) = params.get("keyword") {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            query = query.filter(
-                crates::id.eq_any(
-                    crates_keywords::table
-                        .select(crates_keywords::crate_id)
-                        .inner_join(keywords::table)
-                        .filter(lower(keywords::keyword).eq(lower(kw))),
-                ),
-            );
-        } else if let Some(letter) = params.get("letter") {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            let pattern = format!(
-                "{}%",
-                letter
-                    .chars()
-                    .next()
-                    .ok_or_else(|| bad_request("letter value must contain 1 character"))?
-                    .to_lowercase()
-                    .collect::<String>()
-            );
-            query = query.filter(canon_crate_name(crates::name).like(pattern));
-        } else if let Some(user_id) = params.get("user_id").and_then(|s| s.parse::<i32>().ok()) {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            query = query.filter(
-                crates::id.eq_any(
-                    CrateOwner::by_owner_kind(OwnerKind::User)
-                        .select(crate_owners::crate_id)
-                        .filter(crate_owners::owner_id.eq(user_id)),
-                ),
-            );
-        } else if let Some(team_id) = params.get("team_id").and_then(|s| s.parse::<i32>().ok()) {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            query = query.filter(
-                crates::id.eq_any(
-                    CrateOwner::by_owner_kind(OwnerKind::Team)
-                        .select(crate_owners::crate_id)
-                        .filter(crate_owners::owner_id.eq(team_id)),
-                ),
-            );
-        } else if params.get("following").is_some() {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            let user_id = AuthCheck::default().check(&req, conn)?.user_id();
-
-            query = query.filter(
-                crates::id.eq_any(
-                    follows::table
-                        .select(follows::crate_id)
-                        .filter(follows::user_id.eq(user_id)),
-                ),
-            );
-        } else if params.get("ids[]").is_some() {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            let query_bytes = req.uri.query().unwrap_or("").as_bytes();
-            let ids: Vec<_> = url::form_urlencoded::parse(query_bytes)
-                .filter(|(key, _)| key == "ids[]")
-                .map(|(_, value)| value.to_string())
-                .collect();
-
-            query = query.filter(crates::name.eq_any(ids));
-        }
-
-        if !include_yanked {
-            // Calculating the total number of results with filters is not supported yet.
-            supports_seek = false;
-
-            query = query.filter(exists(
-                versions::table
-                    .filter(versions::crate_id.eq(crates::id))
-                    .filter(versions::yanked.eq(false)),
-            ));
         }
 
         // Any sort other than 'relevance' (default) would ignore exact crate name matches
@@ -280,8 +165,9 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             //
             // If this becomes a problem in the future the crates count could be denormalized, at least
             // for the filterless happy path.
+            let count_query = filter_params.make_query(&req, conn)?.count();
             let total: i64 = info_span!("db.query", message = "SELECT COUNT(*) FROM crates")
-                .in_scope(|| crates::table.count().get_result(conn))?;
+                .in_scope(|| count_query.get_result(conn))?;
 
             let results: Vec<(Crate, bool, Option<i64>)> =
                 info_span!("db.query", message = "SELECT ... FROM crates")
@@ -354,6 +240,176 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         })))
     })
     .await
+}
+
+#[derive(Default)]
+struct FilterParams<'a> {
+    q_string: Option<&'a str>,
+    include_yanked: bool,
+    category: Option<&'a str>,
+    all_keywords: Option<&'a str>,
+    keyword: Option<&'a str>,
+    letter: Option<&'a str>,
+    user_id: Option<i32>,
+    team_id: Option<i32>,
+    following: bool,
+    has_ids: bool,
+    _auth_user_id: OnceCell<i32>,
+    _ids: OnceCell<Option<Vec<String>>>,
+}
+
+impl<'a> FilterParams<'a> {
+    fn ids(&self, req: &Parts) -> Option<&[String]> {
+        self._ids
+            .get_or_init(|| {
+                if self.has_ids {
+                    let query_bytes = req.uri.query().unwrap_or("").as_bytes();
+                    let v = url::form_urlencoded::parse(query_bytes)
+                        .filter(|(key, _)| key == "ids[]")
+                        .map(|(_, value)| value.to_string())
+                        .collect::<Vec<_>>();
+                    Some(v)
+                } else {
+                    None
+                }
+            })
+            .as_deref()
+    }
+
+    fn authed_user_id(&self, req: &Parts, conn: &mut PgConnection) -> AppResult<&i32> {
+        self._auth_user_id.get_or_try_init(|| {
+            let user_id = AuthCheck::default().check(req, conn)?.user_id();
+            Ok(user_id)
+        })
+    }
+
+    fn supports_seek(&self) -> bool {
+        // Calculating the total number of results with filters is supported but paging is not supported yet.
+        !(self.q_string.is_some()
+            || self.category.is_some()
+            || self.all_keywords.is_some()
+            || self.keyword.is_some()
+            || self.letter.is_some()
+            || self.user_id.is_some()
+            || self.team_id.is_some()
+            || self.following
+            || self.has_ids
+            || !self.include_yanked)
+    }
+
+    fn make_query(
+        &'a self,
+        req: &Parts,
+        conn: &mut PgConnection,
+    ) -> AppResult<crates::BoxedQuery<'a, diesel::pg::Pg>> {
+        use diesel::sql_types::Text;
+        let mut query = crates::table.into_boxed();
+
+        if let Some(q_string) = self.q_string {
+            if !q_string.is_empty() {
+                let q = to_tsquery_with_search_config(
+                    configuration::TsConfigurationByName("english"),
+                    q_string,
+                );
+                query = query.filter(
+                    q.matches(crates::textsearchable_index_col)
+                        .or(Crate::loosly_matches_name(q_string)),
+                );
+            }
+        }
+
+        if let Some(cat) = self.category {
+            query = query.filter(
+                crates::id.eq_any(
+                    crates_categories::table
+                        .select(crates_categories::crate_id)
+                        .inner_join(categories::table)
+                        .filter(
+                            categories::slug
+                                .eq(cat)
+                                .or(categories::slug.like(format!("{cat}::%"))),
+                        ),
+                ),
+            );
+        }
+
+        if let Some(kws) = self.all_keywords {
+            let names: Vec<_> = kws
+                .split_whitespace()
+                .map(|name| name.to_lowercase())
+                .collect();
+
+            query = query.filter(
+                // FIXME: Just use `.contains` in Diesel 2.0
+                // https://github.com/diesel-rs/diesel/issues/2066
+                Contains::new(
+                    crates_keywords::table
+                        .inner_join(keywords::table)
+                        .filter(crates_keywords::crate_id.eq(crates::id))
+                        .select(array_agg(keywords::keyword))
+                        .single_value(),
+                    names.into_sql::<Array<Text>>(),
+                ),
+            );
+        } else if let Some(kw) = self.keyword {
+            query = query.filter(
+                crates::id.eq_any(
+                    crates_keywords::table
+                        .select(crates_keywords::crate_id)
+                        .inner_join(keywords::table)
+                        .filter(lower(keywords::keyword).eq(lower(kw))),
+                ),
+            );
+        } else if let Some(letter) = self.letter {
+            let pattern = format!(
+                "{}%",
+                letter
+                    .chars()
+                    .next()
+                    .ok_or_else(|| bad_request("letter value must contain 1 character"))?
+                    .to_lowercase()
+                    .collect::<String>()
+            );
+            query = query.filter(canon_crate_name(crates::name).like(pattern));
+        } else if let Some(user_id) = self.user_id {
+            query = query.filter(
+                crates::id.eq_any(
+                    CrateOwner::by_owner_kind(OwnerKind::User)
+                        .select(crate_owners::crate_id)
+                        .filter(crate_owners::owner_id.eq(user_id)),
+                ),
+            );
+        } else if let Some(team_id) = self.team_id {
+            query = query.filter(
+                crates::id.eq_any(
+                    CrateOwner::by_owner_kind(OwnerKind::Team)
+                        .select(crate_owners::crate_id)
+                        .filter(crate_owners::owner_id.eq(team_id)),
+                ),
+            );
+        } else if self.following {
+            let user_id = self.authed_user_id(req, conn)?;
+            query = query.filter(
+                crates::id.eq_any(
+                    follows::table
+                        .select(follows::crate_id)
+                        .filter(follows::user_id.eq(user_id)),
+                ),
+            );
+        } else if self.ids(req).is_some() {
+            query = query.filter(crates::name.eq_any(self.ids(req).unwrap()));
+        }
+
+        if !self.include_yanked {
+            query = query.filter(exists(
+                versions::table
+                    .filter(versions::crate_id.eq(crates::id))
+                    .filter(versions::yanked.eq(false)),
+            ));
+        }
+
+        Ok(query)
+    }
 }
 
 diesel::infix_operator!(Contains, "@>");
