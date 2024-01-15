@@ -57,7 +57,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let version = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
         Err(_) => {
-            return Err(cargo_err(format_args!(
+            return Err(bad_request(format_args!(
                 "\"{}\" is an invalid semver version",
                 metadata.vers
             )))

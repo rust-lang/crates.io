@@ -54,6 +54,7 @@ fn invalid_version() {
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
     let response = token.publish_crate(body);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
