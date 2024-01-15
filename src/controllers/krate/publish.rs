@@ -443,12 +443,12 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 
     if bytes.len() < 4 {
         // Avoid panic in `get_u32_le()` if there is not enough remaining data
-        return Err(cargo_err("invalid metadata length"));
+        return Err(bad_request("invalid metadata length"));
     }
 
     let json_len = bytes.get_u32_le() as usize;
     if json_len > bytes.len() {
-        return Err(cargo_err(format!(
+        return Err(bad_request(format!(
             "invalid metadata length for remaining payload: {json_len}"
         )));
     }
@@ -457,12 +457,12 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 
     if bytes.len() < 4 {
         // Avoid panic in `get_u32_le()` if there is not enough remaining data
-        return Err(cargo_err("invalid tarball length"));
+        return Err(bad_request("invalid tarball length"));
     }
 
     let tarball_len = bytes.get_u32_le() as usize;
     if tarball_len > bytes.len() {
-        return Err(cargo_err(format!(
+        return Err(bad_request(format!(
             "invalid tarball length for remaining payload: {tarball_len}"
         )));
     }
