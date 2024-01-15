@@ -96,7 +96,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         let verified_email_address = user.verified_email(conn)?;
         let verified_email_address = verified_email_address.ok_or_else(|| {
-            cargo_err(format!(
+            bad_request(format!(
                 "A verified email address is required to publish crates to crates.io. \
              Visit https://{}/settings/profile to set and verify your email address.",
                 app.config.domain_name,
