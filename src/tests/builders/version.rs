@@ -22,6 +22,7 @@ pub struct VersionBuilder<'a> {
     rust_version: Option<String>,
 }
 
+#[allow(dead_code)]
 impl<'a> VersionBuilder<'a> {
     /// Creates a VersionBuilder from a string slice `num` representing the version's number.
     ///

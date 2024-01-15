@@ -1,4 +1,3 @@
-pub mod deprecated;
 pub mod downloads;
 pub mod metadata;
 pub mod yank;

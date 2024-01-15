@@ -20,4 +20,3 @@ pub mod metrics;
 pub mod session;
 pub mod summary;
 pub mod users;
-pub mod versions;
