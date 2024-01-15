@@ -266,7 +266,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         let max_dependencies = app.config.max_dependencies;
         if deps.len() > max_dependencies {
-            return Err(cargo_err(format!(
+            return Err(bad_request(format!(
                 "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
                 \n\
                 If you have a use case that requires an increase of this limit, \
@@ -596,27 +596,27 @@ fn convert_dependency(
 }
 
 pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
-    Crate::validate_crate_name("dependency", &dep.name).map_err(cargo_err)?;
+    Crate::validate_crate_name("dependency", &dep.name).map_err(bad_request)?;
 
     for feature in &dep.features {
-        Crate::validate_feature(feature).map_err(cargo_err)?;
+        Crate::validate_feature(feature).map_err(bad_request)?;
     }
 
     if let Some(registry) = &dep.registry {
         if !registry.is_empty() {
-            return Err(cargo_err(format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
+            return Err(bad_request(format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
         }
     }
 
     match semver::VersionReq::parse(&dep.version_req) {
         Err(_) => {
-            return Err(cargo_err(format_args!(
+            return Err(bad_request(format_args!(
                 "\"{}\" is an invalid version requirement",
                 dep.version_req
             )));
         }
         Ok(req) if req == semver::VersionReq::STAR => {
-            return Err(cargo_err(format_args!("wildcard (`*`) dependency constraints are not allowed \
+            return Err(bad_request(format_args!("wildcard (`*`) dependency constraints are not allowed \
                 on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
                 libraries-use--as-a-version-for-their-dependencies for more \
                 information", dep.name)));
@@ -625,7 +625,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
     }
 
     if let Some(toml_name) = &dep.explicit_name_in_toml {
-        Crate::validate_dependency_name(toml_name).map_err(cargo_err)?;
+        Crate::validate_dependency_name(toml_name).map_err(bad_request)?;
     }
 
     Ok(())
@@ -650,7 +650,7 @@ pub fn add_dependencies(
         .map(|dep| {
             // Match only identical names to ensure the index always references the original crate name
             let Some(&crate_id) = crate_ids.get(&dep.name) else {
-                return Err(cargo_err(format_args!(
+                return Err(bad_request(format_args!(
                     "no known crate named `{}`",
                     dep.name
                 )));

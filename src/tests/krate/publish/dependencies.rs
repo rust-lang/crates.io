@@ -11,7 +11,7 @@ fn invalid_dependency_name() {
     let response = token.publish_crate(
         PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -47,7 +47,7 @@ fn invalid_dependency_rename() {
         PublishBuilder::new("new-krate", "1.0.0")
             .dependency(DependencyBuilder::new("package-name").rename("💩")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -65,7 +65,7 @@ fn invalid_dependency_name_starts_with_digit() {
         PublishBuilder::new("new-krate", "1.0.0")
             .dependency(DependencyBuilder::new("package-name").rename("1-foo")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -83,7 +83,7 @@ fn invalid_dependency_name_contains_unicode_chars() {
         PublishBuilder::new("new-krate", "1.0.0")
             .dependency(DependencyBuilder::new("package-name").rename("foo-🦀-bar")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -102,7 +102,7 @@ fn invalid_too_long_dependency_name() {
             .publish_crate(PublishBuilder::new("new-krate", "1.0.0").dependency(
                 DependencyBuilder::new("package-name").rename("f".repeat(65).as_str()),
             ));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -119,7 +119,7 @@ fn empty_dependency_name() {
         PublishBuilder::new("new-krate", "1.0.0")
             .dependency(DependencyBuilder::new("package-name").rename("")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -191,7 +191,7 @@ fn new_krate_with_broken_dependency_requirement() {
 
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -210,7 +210,7 @@ fn reject_new_krate_with_non_exact_dependency() {
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -238,7 +238,7 @@ fn reject_new_crate_with_alternative_registry_dependency() {
     let crate_to_publish =
         PublishBuilder::new("depends-on-alt-registry", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -257,7 +257,7 @@ fn new_krate_with_wildcard_dependency() {
     let crate_to_publish = PublishBuilder::new("new_wild", "1.0.0").dependency(dependency);
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -272,7 +272,7 @@ fn new_krate_dependency_missing() {
     let crate_to_publish = PublishBuilder::new("foo_missing", "1.0.0").dependency(dependency);
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -308,7 +308,7 @@ fn invalid_feature_name() {
         PublishBuilder::new("foo", "1.0.0")
             .dependency(DependencyBuilder::new("bar").add_feature("🍺")),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -329,7 +329,7 @@ fn test_dep_limit() {
         .dependency(DependencyBuilder::new("dep-b"));
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"###);
 
     let crate_to_publish =
