@@ -211,7 +211,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .unwrap_or_default();
 
         if categories.len() > 5 {
-            return Err(cargo_err("expected at most 5 categories per crate"));
+            return Err(bad_request("expected at most 5 categories per crate"));
         }
 
         let max_features = existing_crate.as_ref()
