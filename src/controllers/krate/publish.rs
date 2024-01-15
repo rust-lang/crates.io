@@ -314,7 +314,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }
 
             if krate.name != *name {
-                return Err(cargo_err(format_args!(
+                return Err(bad_request(format_args!(
                     "crate was previously named `{}`",
                     krate.name
                 )));
