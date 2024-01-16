@@ -10,8 +10,6 @@ env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-tarpaulin versioning=semver
   CARGO_TARPAULIN_VERSION: 0.27.3
-  # renovate: datasource=crate depName=diesel_cli versioning=semver
-  DIESEL_CLI_VERSION: 2.1.1
 
 jobs:
   coverage:
@@ -20,8 +18,7 @@ jobs:
 
     env:
       RUST_BACKTRACE: 1
-      DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
-      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/postgres
       RUSTFLAGS: "-D warnings"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
@@ -41,13 +38,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      # Set up Rust
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
-
-      # Set up database
-      - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
-      - run: diesel database setup --locked-schema
 
       # Set up cargo-tarpaulin and run the tests
       - run: cargo install cargo-tarpaulin --version ${{ env.CARGO_TARPAULIN_VERSION }}

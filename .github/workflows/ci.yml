@@ -16,8 +16,6 @@ env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.14.3
-  # renovate: datasource=crate depName=diesel_cli versioning=semver
-  DIESEL_CLI_VERSION: 2.1.1
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 8.14.1
 
@@ -110,8 +108,7 @@ jobs:
 
     env:
       RUST_BACKTRACE: 1
-      DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
-      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/cargo_registry_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost/postgres
       RUSTFLAGS: "-D warnings"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
@@ -131,12 +128,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
-
-      - run: cargo install diesel_cli --vers ${{ env.DIESEL_CLI_VERSION }} --no-default-features --features postgres --debug
-      - run: diesel database setup --locked-schema
-
       - run: cargo build --tests --workspace
       - run: cargo test --workspace
 
