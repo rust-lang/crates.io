@@ -11,7 +11,7 @@ fn workspace_inheritance() {
         PublishBuilder::new("foo", "1.0.0")
             .custom_manifest("[package]\nname = \"foo\"\nversion.workspace = true\n"),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -22,6 +22,6 @@ fn workspace_inheritance_with_dep() {
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\n\n[dependencies]\nserde.workspace = true\n",
     ));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }

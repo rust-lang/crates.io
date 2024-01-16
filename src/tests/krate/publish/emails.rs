@@ -17,7 +17,7 @@ fn new_krate_without_any_email_fails() {
     let crate_to_publish = PublishBuilder::new("foo_no_email", "1.0.0");
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }
@@ -36,7 +36,7 @@ fn new_krate_with_unverified_email_fails() {
     let crate_to_publish = PublishBuilder::new("foo_unverified_email", "1.0.0");
 
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

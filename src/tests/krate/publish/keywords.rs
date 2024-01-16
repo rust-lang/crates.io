@@ -25,17 +25,17 @@ fn bad_keywords() {
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key", "1.0.0").keyword("super-long-keyword-name-oh-no");
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("?@?%");
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("áccênts");
     let response = token.publish_crate(crate_to_publish);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
@@ -51,7 +51,7 @@ fn too_many_keywords() {
             .keyword("five")
             .keyword("six"),
     );
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files(), empty());
 }

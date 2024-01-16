@@ -14,7 +14,7 @@ fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
     });
 
     let response = token.publish_crate(PublishBuilder::new("foo", v2));
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": expected_error }] })
