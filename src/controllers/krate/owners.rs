@@ -85,26 +85,10 @@ pub async fn remove_owners(
     spawn_blocking(move || modify_owners(&app, &crate_name, &req, false)).await
 }
 
-/// Parse the JSON request body of requests to modify the owners of a crate.
-///
-/// The format is:
-///
-/// ```json
-/// {"owners": ["username", "github:org:team", ...]}
-/// ```
-fn parse_owners_request(req: &Request<Bytes>) -> AppResult<Vec<String>> {
-    #[derive(Deserialize)]
-    struct Request {
-        // identical, for back-compat (owners preferred)
-        users: Option<Vec<String>>,
-        owners: Option<Vec<String>>,
-    }
-    let request: Request =
-        serde_json::from_slice(req.body()).map_err(|_| cargo_err("invalid json request"))?;
-    request
-        .owners
-        .or(request.users)
-        .ok_or_else(|| cargo_err("invalid json request"))
+#[derive(Deserialize)]
+struct ChangeOwnersRequest {
+    #[serde(alias = "users")]
+    owners: Vec<String>,
 }
 
 fn modify_owners(
@@ -113,7 +97,9 @@ fn modify_owners(
     req: &Request<Bytes>,
     add: bool,
 ) -> AppResult<Json<Value>> {
-    let logins = parse_owners_request(req)?;
+    let logins = serde_json::from_slice::<ChangeOwnersRequest>(req.body())
+        .map_err(|_| cargo_err("invalid json request"))?
+        .owners;
 
     let conn = &mut *app.db_write()?;
     let auth = AuthCheck::default()
