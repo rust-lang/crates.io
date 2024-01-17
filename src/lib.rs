@@ -53,6 +53,7 @@ mod router;
 pub mod schema;
 pub mod sentry;
 pub mod sql;
+pub mod sqs;
 pub mod ssh;
 pub mod storage;
 pub mod tasks;

@@ -1,11 +1,12 @@
 mod message;
 
 use crate::config::CdnLogStorageConfig;
+use crate::sqs::{SqsQueue, SqsQueueImpl};
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::Context;
 use aws_credential_types::Credentials;
-use aws_sdk_sqs::config::{BehaviorVersion, Region};
+use aws_sdk_sqs::config::Region;
 use crates_io_cdn_logs::{count_downloads, Decompressor};
 use crates_io_env_vars::required_var;
 use crates_io_worker::BackgroundJob;
@@ -158,13 +159,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
 
         let credentials = Credentials::from_keys(access_key, secret_key, None);
 
-        let config = aws_sdk_sqs::Config::builder()
-            .credentials_provider(credentials)
-            .region(Region::new(region))
-            .behavior_version(BehaviorVersion::v2023_11_09())
-            .build();
-
-        let client = aws_sdk_sqs::Client::from_conf(config);
+        let queue = SqsQueueImpl::new(queue_url, Region::new(region), credentials);
 
         info!("Receiving messages from the CDN log queue…");
         let mut num_remaining = self.max_messages;
@@ -173,12 +168,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
             num_remaining -= batch_size;
 
             debug!("Receiving next {batch_size} messages from the CDN log queue…");
-            let response = client
-                .receive_message()
-                .queue_url(&queue_url)
-                .max_number_of_messages(batch_size as i32)
-                .send()
-                .await?;
+            let response = queue.receive_messages(batch_size as i32).await?;
 
             let messages = response.messages();
             debug!(
@@ -200,11 +190,8 @@ impl BackgroundJob for ProcessCdnLogQueue {
                 };
 
                 debug!("Deleting message {message_id} from the CDN log queue…");
-                client
-                    .delete_message()
-                    .queue_url(&queue_url)
-                    .receipt_handle(receipt_handle)
-                    .send()
+                queue
+                    .delete_message(receipt_handle)
                     .await
                     .with_context(|| {
                         format!("Failed to delete message {message_id} from the CDN log queue")
