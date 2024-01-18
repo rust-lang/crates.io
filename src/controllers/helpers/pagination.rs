@@ -306,7 +306,7 @@ pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> anyhow::Res
 #[cfg(test)]
 mod tests {
     use super::*;
-    use http::{Method, StatusCode};
+    use http::{Method, Request, StatusCode};
 
     #[test]
     fn no_pagination_param() {
