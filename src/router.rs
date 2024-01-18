@@ -40,12 +40,6 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             "/api/v1/crates/:crate_id/:version/download",
             get(version::downloads::download),
         )
-        // Routes that appear to be unused
-        .route("/api/v1/versions", get(version::deprecated::index))
-        .route(
-            "/api/v1/versions/:version_id",
-            get(version::deprecated::show_by_id),
-        )
         // Routes used by the frontend
         .route("/api/v1/crates/:crate_id", get(krate::metadata::show))
         .route(
