@@ -373,7 +373,7 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use http::{Method, StatusCode};
+    use http::{Method, Request, StatusCode};
 
     #[test]
     fn no_pagination_param() {

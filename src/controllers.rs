@@ -16,7 +16,7 @@ mod prelude {
     pub use diesel::prelude::*;
     pub use serde_json::Value;
 
-    pub use http::{header, request::Parts, Request, StatusCode};
+    pub use http::{header, request::Parts, StatusCode};
 
     pub use crate::app::AppState;
     use crate::controllers::util::RequestPartsExt;
