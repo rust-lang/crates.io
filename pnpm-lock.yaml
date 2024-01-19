@@ -18,8 +18,8 @@ dependencies:
     specifier: 7.93.0
     version: 7.93.0
   '@sentry/utils':
-    specifier: 7.93.0
-    version: 7.93.0
+    specifier: 7.94.0
+    version: 7.94.0
   chart.js:
     specifier: 4.4.1
     version: 4.4.1
@@ -3105,11 +3105,23 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
+  /@sentry/types@7.94.0:
+    resolution: {integrity: sha512-477p14hsZB0ZhP6qTpCu5LeQCpgC/3WsZWLcQMFD3m7zE3yibfzF1017kSSSmSdqi0Jrh6fTSH4mSUez1bpbCg==}
+    engines: {node: '>=8'}
+    dev: false
+
   /@sentry/utils@7.93.0:
     resolution: {integrity: sha512-Iovj7tUnbgSkh/WrAaMrd5UuYjW7AzyzZlFDIUrwidsyIdUficjCG2OIxYzh76H6nYIx9SxewW0R54Q6XoB4uA==}
     engines: {node: '>=8'}
     dependencies:
       '@sentry/types': 7.93.0
+    dev: false
+
+  /@sentry/utils@7.94.0:
+    resolution: {integrity: sha512-rBhzBOZoxGPhpMGZcP6y4GlfE3tj96VvhewM/wRxHw3xOCG09CXww64gdkNvPn58XLIi5q/aajP6ABL20WsXSg==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/types': 7.94.0
     dev: false
 
   /@simple-dom/document@1.4.0:
