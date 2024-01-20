@@ -43,7 +43,7 @@
     "@sentry/utils": "7.94.1",
     "chart.js": "4.4.1",
     "copy-text-to-clipboard": "3.2.0",
-    "date-fns": "3.2.0",
+    "date-fns": "3.3.0",
     "highlight.js": "11.9.0",
     "macro-decorators": "0.1.2",
     "mermaid": "10.7.0",
