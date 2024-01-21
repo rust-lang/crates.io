@@ -4,7 +4,6 @@ use crate::auth::AuthCheck;
 use diesel::dsl::*;
 use diesel::sql_types::{Array, Text};
 use diesel_full_text_search::*;
-use indexmap::IndexMap;
 use once_cell::sync::OnceCell;
 
 use crate::controllers::cargo_prelude::*;
@@ -149,7 +148,6 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let (total, next_page, prev_page, data, conn) = if supports_seek && !explicit_page {
             // Equivalent of:
             // `WHERE name > (SELECT name FROM crates WHERE id = $1) LIMIT $2`
-            query = query.limit(pagination.per_page);
             if let Some(seek) = seek {
                 let crate_name: String = crates::table
                     .find(seek)
@@ -164,26 +162,22 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             //
             // If this becomes a problem in the future the crates count could be denormalized, at least
             // for the filterless happy path.
-            let count_query = filter_params.make_query(&req, conn)?.count();
-            let total: i64 = info_span!("db.query", message = "SELECT COUNT(*) FROM crates")
-                .in_scope(|| count_query.get_result(conn))?;
-
-            let results: Vec<(Crate, bool, Option<i64>)> =
-                info_span!("db.query", message = "SELECT ... FROM crates")
+            let query = query.pages_pagination_with_count_query(
+                pagination,
+                filter_params.make_query(&req, conn)?.count(),
+            );
+            let data: Paginated<(Crate, bool, Option<i64>)> =
+                info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
 
-            let next_page = if let Some(last) = results.last() {
-                let mut params = IndexMap::new();
-                params.insert(
-                    "seek".into(),
-                    crate::controllers::helpers::pagination::encode_seek(last.0.id)?,
-                );
-                Some(req.query_with_params(params))
-            } else {
-                None
-            };
-
-            (total, next_page, None, results, conn)
+            (
+                data.total(),
+                data.next_seek_params(|last| last.0.id)?
+                    .map(|p| req.query_with_params(p)),
+                None,
+                data.into_iter().collect::<Vec<_>>(),
+                conn,
+            )
         } else {
             let query = query.pages_pagination_with_count_query(
                 pagination,

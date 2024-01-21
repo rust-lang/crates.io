@@ -198,6 +198,31 @@ impl<T> Paginated<T> {
         Some(opts)
     }
 
+    pub(crate) fn next_seek_params<S, F>(&self, f: F) -> AppResult<Option<IndexMap<String, String>>>
+    where
+        F: Fn(&T) -> S,
+        S: Serialize,
+    {
+        if self.is_explicit_page() || self.records_and_total.len() < self.options.per_page as usize
+        {
+            return Ok(None);
+        }
+
+        let mut opts = IndexMap::new();
+        match self.options.page {
+            Page::Unspecified | Page::Seek(_) => {
+                let seek = f(&self.records_and_total.last().unwrap().record);
+                opts.insert("seek".into(), encode_seek(seek)?);
+            }
+            Page::Numeric(_) => unreachable!(),
+        };
+        Ok(Some(opts))
+    }
+
+    fn is_explicit_page(&self) -> bool {
+        matches!(&self.options.page, Page::Numeric(_))
+    }
+
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.records_and_total.iter().map(|row| &row.record)
     }

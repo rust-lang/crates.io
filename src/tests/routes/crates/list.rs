@@ -794,12 +794,13 @@ fn seek_based_pagination() {
         if let Some(new_url) = resp.meta.next_page {
             assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url);
+            assert_eq!(resp.meta.total, 3);
         } else {
             assert_that!(resp.crates, empty());
+            assert_eq!(resp.meta.total, 0);
         }
 
         assert_eq!(resp.meta.prev_page, None);
-        assert_eq!(resp.meta.total, 3);
     }
 
     assert_eq!(calls, 4);
