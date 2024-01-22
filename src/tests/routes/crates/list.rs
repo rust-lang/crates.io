@@ -267,6 +267,8 @@ fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
+    // To test that the unique ordering of seed-based pagination is correct, we need to
+    // set some columns to the same value.
     app.db(|conn| {
         let krate1 = CrateBuilder::new("foo_sort", user.id)
             .description("bar_sort baz_sort const")
@@ -283,12 +285,12 @@ fn index_sorting() {
         let krate3 = CrateBuilder::new("baz_sort", user.id)
             .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
             .downloads(100_000)
-            .recent_downloads(10)
+            .recent_downloads(50)
             .expect_build(conn);
 
         let krate4 = CrateBuilder::new("other_sort", user.id)
             .description("other_sort const")
-            .downloads(999_999)
+            .downloads(100_000)
             .expect_build(conn);
 
         // Set the created at column for each crate
@@ -300,11 +302,7 @@ fn index_sorting() {
             .set(crates::created_at.eq(now - 1.weeks()))
             .execute(conn)
             .unwrap();
-        update(&krate3)
-            .set(crates::created_at.eq(now - 2.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate4)
+        update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
             .set(crates::created_at.eq(now - 3.weeks()))
             .execute(conn)
             .unwrap();
@@ -314,12 +312,8 @@ fn index_sorting() {
             .set(crates::updated_at.eq(now - 3.weeks()))
             .execute(conn)
             .unwrap();
-        update(&krate2)
+        update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
             .set(crates::updated_at.eq(now - 5.days()))
-            .execute(conn)
-            .unwrap();
-        update(&krate3)
-            .set(crates::updated_at.eq(now - 10.seconds()))
             .execute(conn)
             .unwrap();
         update(&krate4)
@@ -331,14 +325,14 @@ fn index_sorting() {
     // Sort by downloads
     for json in search_both(&anon, "sort=downloads") {
         assert_eq!(json.meta.total, 4);
-        assert_eq!(json.crates[0].name, "other_sort");
-        assert_eq!(json.crates[1].name, "baz_sort");
+        assert_eq!(json.crates[0].name, "baz_sort");
+        assert_eq!(json.crates[1].name, "other_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=downloads");
-    assert_eq!(resp[0].crates[0].name, "other_sort");
-    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[0].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "other_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
@@ -364,14 +358,14 @@ fn index_sorting() {
     for json in search_both(&anon, "sort=recent-updates") {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "other_sort");
-        assert_eq!(json.crates[1].name, "baz_sort");
-        assert_eq!(json.crates[2].name, "bar_sort");
+        assert_eq!(json.crates[1].name, "bar_sort");
+        assert_eq!(json.crates[2].name, "baz_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=recent-updates");
     assert_eq!(resp[0].crates[0].name, "other_sort");
-    assert_eq!(resp[1].crates[0].name, "baz_sort");
-    assert_eq!(resp[2].crates[0].name, "bar_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "baz_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
@@ -391,6 +385,82 @@ fn index_sorting() {
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
+
+    use std::cmp::Reverse;
+
+    fn decode_seek<D: for<'a> serde::Deserialize<'a>>(seek: &str) -> anyhow::Result<D> {
+        use base64::{engine::general_purpose, Engine};
+        let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
+        Ok(decoded)
+    }
+
+    // Sort by alpha with query
+    for query in ["sort=alpha&q=bar_sort", "sort=alpha&q=sort"] {
+        let (resp, calls) = page_with_seek(&anon, query);
+        assert_eq!(calls, resp[0].meta.total + 1);
+        let decoded_seeks = resp
+            .iter()
+            .filter_map(|cl| {
+                cl.meta
+                    .next_page
+                    .as_ref()
+                    .map(|next_page| (next_page, cl.crates[0].name.to_owned()))
+            })
+            .filter_map(|(q, name)| {
+                let query = url::form_urlencoded::parse(q.trim_start_matches('?').as_bytes())
+                    .into_owned()
+                    .collect::<indexmap::IndexMap<String, String>>();
+                query.get("seek").map(|s| {
+                    let d = decode_seek::<(bool, i32)>(s).unwrap();
+                    (d.0, name)
+                })
+            })
+            .collect::<Vec<_>>();
+        // ordering (exact match desc, name asc)
+        let mut sorted = decoded_seeks.to_vec();
+        sorted.sort_by_key(|k| (Reverse(k.0), k.1.to_owned()));
+        assert_eq!(sorted, decoded_seeks);
+        for json in search_both(&anon, query) {
+            assert_eq!(json.meta.total, resp[0].meta.total);
+            for (c, r) in json.crates.iter().zip(&resp) {
+                assert_eq!(c.name, r.crates[0].name);
+            }
+        }
+    }
+
+    // Sort by relevance
+    for query in ["q=foo_sort", "q=sort"] {
+        let (resp, calls) = page_with_seek(&anon, query);
+        assert_eq!(calls, resp[0].meta.total + 1);
+        let decoded_seeks = resp
+            .iter()
+            .filter_map(|cl| {
+                cl.meta
+                    .next_page
+                    .as_ref()
+                    .map(|next_page| (next_page, cl.crates[0].name.to_owned()))
+            })
+            .filter_map(|(q, name)| {
+                let query = url::form_urlencoded::parse(q.trim_start_matches('?').as_bytes())
+                    .into_owned()
+                    .collect::<indexmap::IndexMap<String, String>>();
+                query.get("seek").map(|s| {
+                    let d = decode_seek::<(bool, f32, i32)>(s).unwrap();
+                    (d.0, (d.1 * 1e12) as i64, name)
+                })
+            })
+            .collect::<Vec<_>>();
+        // ordering (exact match desc, rank desc, name asc)
+        let mut sorted = decoded_seeks.clone();
+        sorted.sort_by_key(|k| (Reverse(k.0), Reverse(k.1), k.2.to_owned()));
+        assert_eq!(sorted, decoded_seeks);
+        for json in search_both(&anon, query) {
+            assert_eq!(json.meta.total, resp[0].meta.total);
+            for (c, r) in json.crates.iter().zip(&resp) {
+                assert_eq!(c.name, r.crates[0].name);
+            }
+        }
+    }
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
