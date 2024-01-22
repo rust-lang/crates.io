@@ -732,17 +732,16 @@ fn pagination_links_included_if_applicable() {
         CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
-    // This uses a filter (`letter=p`) to disable seek-based pagination, as seek-based pagination
-    // does not return page numbers. If the test fails after expanding the scope of seek-based
-    // pagination replace the filter with something else still using pages.
+    // This uses a filter (`page=n`) to disable seek-based pagination, as seek-based pagination
+    // does not return page numbers.
 
-    let page1 = anon.search("letter=p&per_page=1");
+    let page1 = anon.search("letter=p&page=1&per_page=1");
     let page2 = anon.search("letter=p&page=2&per_page=1");
     let page3 = anon.search("letter=p&page=3&per_page=1");
     let page4 = anon.search("letter=p&page=4&per_page=1");
 
     assert_eq!(
-        Some("?letter=p&per_page=1&page=2".to_string()),
+        Some("?letter=p&page=2&per_page=1".to_string()),
         page1.meta.next_page
     );
     assert_eq!(None, page1.meta.prev_page);
