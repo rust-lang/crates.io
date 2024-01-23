@@ -3,7 +3,8 @@ import ApplicationSerializer from './application';
 export default class CrateOwnerInviteSerializer extends ApplicationSerializer {
   primaryKey = 'crate_id';
 
-  modelNameFromPayloadKey() {
+  modelNameFromPayloadKey(payloadKey) {
+    if (payloadKey === 'users') return 'user';
     return 'crate-owner-invite';
   }
 
@@ -11,11 +12,10 @@ export default class CrateOwnerInviteSerializer extends ApplicationSerializer {
     return 'crate_owner_invite';
   }
 
-  normalizeResponse(store, schema, payload, id, requestType) {
-    if (payload.users) {
-      delete payload.users;
-    }
-
-    return super.normalizeResponse(store, schema, payload, id, requestType);
+  keyForRelationship(key) {
+    // Ember Data expects e.g. an `inviter` key in the payload, but the backend
+    // uses `inviter_id` instead. This method makes sure that Ember Data can
+    // find the correct relationship.
+    return `${key}_id`;
   }
 }

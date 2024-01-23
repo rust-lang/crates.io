@@ -31,8 +31,5 @@ export default BaseSerializer.extend({
 
     hash.invitee_id = Number(hash.invitee_id);
     hash.inviter_id = Number(hash.inviter_id);
-
-    let inviter = this.schema.users.find(hash.inviter_id);
-    hash.invited_by_username = inviter.login;
   },
 });
