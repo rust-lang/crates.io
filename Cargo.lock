@@ -220,9 +220,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "aws-credential-types"
-version = "1.1.2"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a7cb3510b95492bd9014b60e2e3bee3e48bc516e220316f8e6b60df18b47331"
+checksum = "d67c6836a1009b23e3f4cd1457c83e0aa49a490d9c3033b53c3f7b8cf2facc0f"
 dependencies = [
  "aws-smithy-async",
  "aws-smithy-runtime-api",
@@ -232,9 +232,9 @@ dependencies = [
 
 [[package]]
 name = "aws-http"
-version = "0.60.2"
+version = "0.60.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a95d41abe4e941399fdb4bc2f54713eac3c839d98151875948bb24e66ab658f2"
+checksum = "a081f0c4576f7549dd255987d2d23920eccaa90cdd21d6440f91e0d7537f0e0d"
 dependencies = [
  "aws-smithy-runtime-api",
  "aws-smithy-types",
@@ -258,9 +258,9 @@ dependencies = [
 
 [[package]]
 name = "aws-runtime"
-version = "1.1.2"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "233cca219c6705d525ace011d6f9bc51aaf32fce5b4c41661d2d7ff22d9b4d49"
+checksum = "ab7bf4b9b083e6dc86e2bb4fb09a4daca97e12cc0bc174a6f51fe624c23aa87f"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -279,9 +279,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudfront"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74d37f4c8076ac519c149d7bb97d8e3aa7ab381fd876a59783d95dcc64b25569"
+checksum = "c83ce486619178a618b6320f2c82037bd055f0c3a164b3bc57c5c5aecef9dd47"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -302,9 +302,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sigv4"
-version = "1.1.2"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b92384b39aedb258aa734fe0e7b2ffcd13f33e68227251a72cd2635e0acc8f1a"
+checksum = "511879249616f30e30fd2fa81edb4833784f65dd5d56053b7de2e2bcb583dda7"
 dependencies = [
  "aws-credential-types",
  "aws-smithy-http",
@@ -315,6 +315,7 @@ dependencies = [
  "hex",
  "hmac",
  "http 0.2.11",
+ "http 1.0.0",
  "once_cell",
  "percent-encoding",
  "sha2",
@@ -436,9 +437,9 @@ dependencies = [
 
 [[package]]
 name = "aws-types"
-version = "1.1.2"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8549aa62c5b7db5c57ab915200ee214b4f5d8f19b29a4a8fa0b3ad3bca1380e3"
+checksum = "ee2739d97d47f47cdf0d27982019a405dcc736df25925d1a75049f1faa79df88"
 dependencies = [
  "aws-credential-types",
  "aws-smithy-async",
