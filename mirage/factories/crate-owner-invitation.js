@@ -2,6 +2,7 @@ import { Factory } from 'miragejs';
 
 export default Factory.extend({
   createdAt: '2016-12-24T12:34:56Z',
+  expiresAt: '2017-01-24T12:34:56Z',
   token: i => `secret-token-${i}`,
 
   afterCreate(invite) {
