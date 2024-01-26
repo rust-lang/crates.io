@@ -8,5 +8,8 @@ edition = "2021"
 workspace = true
 
 [dependencies]
+chrono = { version = "=0.4.33", features = ["serde"] }
+semver = "=1.0.21"
 
 [dev-dependencies]
+insta = "=1.34.0"
