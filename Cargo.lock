@@ -1028,6 +1028,7 @@ name = "crates_io_cdn_logs"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-compression",
  "chrono",
  "claims",
  "criterion",
