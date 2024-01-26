@@ -988,10 +988,13 @@ dependencies = [
 name = "crates_io_cdn_logs"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "claims",
  "insta",
+ "percent-encoding",
  "semver",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]

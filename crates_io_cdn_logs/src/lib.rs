@@ -1,3 +1,4 @@
+pub mod cloudfront;
 mod download_map;
 mod paths;
 #[cfg(test)]
