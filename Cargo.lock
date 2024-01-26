@@ -991,6 +991,8 @@ dependencies = [
  "chrono",
  "insta",
  "semver",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
