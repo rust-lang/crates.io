@@ -985,6 +985,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_cdn_logs"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "insta",
+ "semver",
+]
+
+[[package]]
 name = "crates_io_env_vars"
 version = "0.0.0"
 dependencies = [
