@@ -13,5 +13,6 @@ semver = "=1.0.21"
 tracing = "=0.1.40"
 
 [dev-dependencies]
+claims = "=0.7.1"
 insta = "=1.34.0"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }

@@ -1,4 +1,5 @@
 mod download_map;
+mod paths;
 #[cfg(test)]
 mod test_utils;
 
