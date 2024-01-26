@@ -1031,6 +1031,7 @@ dependencies = [
  "async-compression",
  "chrono",
  "claims",
+ "clap",
  "criterion",
  "insta",
  "percent-encoding",
