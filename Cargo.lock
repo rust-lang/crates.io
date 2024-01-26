@@ -994,6 +994,8 @@ dependencies = [
  "insta",
  "percent-encoding",
  "semver",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber",
