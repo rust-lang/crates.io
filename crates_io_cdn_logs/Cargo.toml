@@ -19,6 +19,11 @@ tracing = "=0.1.40"
 
 [dev-dependencies]
 claims = "=0.7.1"
+criterion = { version = "=0.5.1", features = ["async_tokio"] }
 insta = "=1.34.0"
 tokio = { version = "=1.35.1", features = ["macros", "rt"] }
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
+
+[[bench]]
+name = "count_downloads"
+harness = false
