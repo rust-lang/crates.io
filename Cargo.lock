@@ -957,6 +957,7 @@ dependencies = [
  "claims",
  "clap",
  "cookie",
+ "crates_io_cdn_logs",
  "crates_io_env_vars",
  "crates_io_github",
  "crates_io_index",

@@ -57,6 +57,7 @@ axum-extra = { version = "=0.9.2", features = ["cookie-signed", "typed-header"] 
 base64 = "=0.21.7"
 bigdecimal = "=0.4.2"
 cargo-manifest = "=0.13.0"
+crates_io_cdn_logs = { path = "crates_io_cdn_logs" }
 crates_io_env_vars = { path = "crates_io_env_vars" }
 crates_io_github = { path = "crates_io_github" }
 crates_io_index = { path = "crates_io_index" }
