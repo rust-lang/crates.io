@@ -3,7 +3,7 @@ use crates_io_test_db::TestDatabase;
 
 #[test]
 fn dump_db_and_reimport_dump() {
-    crates_io::util::tracing::init_for_test();
+    let _guard = crates_io::util::tracing::init_for_test();
 
     let db_one = TestDatabase::new();
 
