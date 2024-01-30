@@ -329,3 +329,27 @@ fn test_unknown_crate() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
+
+#[test]
+fn test_unknown_user() {
+    let (app, _, cookie) = TestApp::full().with_user();
+
+    app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
+
+    let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
+}
+
+#[test]
+fn test_unknown_team() {
+    let (app, _, cookie) = TestApp::full().with_user();
+
+    app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
+
+    let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown"}]}"###);
+}
