@@ -1,6 +1,5 @@
 mod cargo_prelude {
     pub use super::prelude::*;
-    pub use crate::util::errors::cargo_err;
 }
 
 mod frontend_prelude {
