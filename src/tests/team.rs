@@ -79,7 +79,7 @@ fn add_nonexistent_team() {
 
     let response =
         token.add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "could not find the github team test-org/this-does-not-exist" }] })

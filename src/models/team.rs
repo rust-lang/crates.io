@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{bad_request, cargo_err, AppResult};
 
 use crates_io_github::GitHubError;
 use oauth2::AccessToken;
@@ -150,7 +150,7 @@ impl Team {
         let team = Handle::current()
             .block_on(app.github.team_by_name(org_name, team_name, &token))
             .map_err(|_| {
-                cargo_err(format_args!(
+                bad_request(format_args!(
                     "could not find the github team {org_name}/{team_name}"
                 ))
             })?;
