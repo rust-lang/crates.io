@@ -2,7 +2,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 
 use crate::app::App;
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{bad_request, AppResult};
 
 use crate::models::{Crate, Team, User};
 use crate::schema::crate_owners;
@@ -74,7 +74,7 @@ impl Owner {
             User::find_by_login(conn, name)
                 .optional()?
                 .map(Owner::User)
-                .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
+                .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))
         }
     }
 
@@ -89,12 +89,12 @@ impl Owner {
             Team::find_by_login(conn, name)
                 .optional()?
                 .map(Owner::Team)
-                .ok_or_else(|| cargo_err(format_args!("could not find team with login `{name}`")))
+                .ok_or_else(|| bad_request(format_args!("could not find team with login `{name}`")))
         } else {
             User::find_by_login(conn, name)
                 .optional()?
                 .map(Owner::User)
-                .ok_or_else(|| cargo_err(format_args!("could not find user with login `{name}`")))
+                .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))
         }
     }
 

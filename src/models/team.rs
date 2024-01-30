@@ -1,7 +1,8 @@
 use diesel::prelude::*;
+use http::StatusCode;
 
 use crate::app::App;
-use crate::util::errors::{cargo_err, AppResult};
+use crate::util::errors::{bad_request, custom, AppResult};
 
 use crates_io_github::GitHubError;
 use oauth2::AccessToken;
@@ -99,7 +100,7 @@ impl Team {
                 // unwrap is documented above as part of the calling contract
                 let org = chunks.next().unwrap();
                 let team = chunks.next().ok_or_else(|| {
-                    cargo_err(
+                    bad_request(
                         "missing github team argument; \
                          format is github:org:team",
                     )
@@ -113,7 +114,7 @@ impl Team {
                     req_user,
                 )
             }
-            _ => Err(cargo_err(
+            _ => Err(bad_request(
                 "unknown organization handler, \
                  only 'github:org:team' is supported",
             )),
@@ -140,7 +141,7 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-            return Err(cargo_err(format_args!(
+            return Err(bad_request(format_args!(
                 "organization cannot contain special \
                  characters like {c}"
             )));
@@ -150,7 +151,7 @@ impl Team {
         let team = Handle::current()
             .block_on(app.github.team_by_name(org_name, team_name, &token))
             .map_err(|_| {
-                cargo_err(format_args!(
+                bad_request(format_args!(
                     "could not find the github team {org_name}/{team_name}"
                 ))
             })?;
@@ -158,7 +159,8 @@ impl Team {
         let org_id = team.organization.id;
 
         if !Handle::current().block_on(can_add_team(app, org_id, team.id, req_user))? {
-            return Err(cargo_err(
+            return Err(custom(
+                StatusCode::FORBIDDEN,
                 "only members of a team or organization owners can add it as an owner",
             ));
         }

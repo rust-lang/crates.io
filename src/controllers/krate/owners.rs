@@ -4,7 +4,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::prelude::*;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, Owner, Rights, Team, User};
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{bad_request, crate_not_found, custom};
 use crate::views::EncodableOwner;
 use tokio::runtime::Handle;
 
@@ -121,12 +121,16 @@ fn modify_owners(
             Rights::Full => {}
             // Yes!
             Rights::Publish => {
-                return Err(cargo_err(
+                return Err(custom(
+                    StatusCode::FORBIDDEN,
                     "team members don't have permission to modify owners",
                 ));
             }
             Rights::None => {
-                return Err(cargo_err("only owners have permission to modify owners"));
+                return Err(custom(
+                    StatusCode::FORBIDDEN,
+                    "only owners have permission to modify owners",
+                ));
             }
         }
 
@@ -136,7 +140,7 @@ fn modify_owners(
                 let login_test =
                     |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
                 if owners.iter().any(login_test) {
-                    return Err(cargo_err(format_args!("`{login}` is already an owner")));
+                    return Err(bad_request(format_args!("`{login}` is already an owner")));
                 }
                 let msg = krate.owner_add(app, conn, user, login)?;
                 msgs.push(msg);
@@ -147,7 +151,7 @@ fn modify_owners(
                 krate.owner_remove(conn, login)?;
             }
             if User::owning(&krate, conn)?.is_empty() {
-                return Err(cargo_err(
+                return Err(bad_request(
                     "cannot remove all individual owners of a crate. \
                      Team member don't have permission to modify owners, so \
                      at least one individual owner is required.",
