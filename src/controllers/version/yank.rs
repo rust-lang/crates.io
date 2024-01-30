@@ -8,7 +8,7 @@ use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::version_not_found;
+use crate::util::errors::{custom, version_not_found};
 use crate::worker::jobs;
 use tokio::runtime::Handle;
 
@@ -77,7 +77,10 @@ fn modify_yank(
                 user.gh_login, krate.name, version.num
             );
         } else {
-            return Err(cargo_err("must already be an owner to yank or unyank"));
+            return Err(custom(
+                StatusCode::FORBIDDEN,
+                "must already be an owner to yank or unyank",
+            ));
         }
     }
 
