@@ -121,19 +121,19 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         // to ensure predictable pagination behavior.
         if sort == Some("downloads") {
             seek = Some(Seek::Downloads);
-            query = query.order((crates::downloads.desc(), crates::id.asc()))
+            query = query.order((crates::downloads.desc(), crates::id.desc()))
         } else if sort == Some("recent-downloads") {
             seek = Some(Seek::RecentDownloads);
             query = query.order((
                 recent_crate_downloads::downloads.desc().nulls_last(),
-                crates::id.asc(),
+                crates::id.desc(),
             ))
         } else if sort == Some("recent-updates") {
             seek = Some(Seek::RecentUpdates);
-            query = query.order((crates::updated_at.desc(), crates::id.asc()));
+            query = query.order((crates::updated_at.desc(), crates::id.desc()));
         } else if sort == Some("new") {
             seek = Some(Seek::New);
-            query = query.order((crates::created_at.desc(), crates::id.asc()));
+            query = query.order((crates::created_at.desc(), crates::id.desc()));
         } else {
             seek = seek.or(Some(Seek::Name));
             // Since the name is unique value, the inherent ordering becomes naturally unique.
@@ -413,12 +413,12 @@ impl<'a> FilterParams<'a> {
             }
             SeekPayload::New(New(created_at, id)) => {
                 // Equivalent of:
-                // `WHERE (created_at = created_at' AND id > id') OR created_at < created_at'`
+                // `WHERE (created_at = created_at' AND id < id') OR created_at < created_at'`
                 vec![
                     Box::new(
                         crates::created_at
                             .eq(created_at)
-                            .and(crates::id.gt(id))
+                            .and(crates::id.lt(id))
                             .nullable(),
                     ),
                     Box::new(crates::created_at.lt(created_at).nullable()),
@@ -426,12 +426,12 @@ impl<'a> FilterParams<'a> {
             }
             SeekPayload::RecentUpdates(RecentUpdates(updated_at, id)) => {
                 // Equivalent of:
-                // `WHERE (updated_at = updated_at' AND id > id') OR updated_at < updated_at'`
+                // `WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'`
                 vec![
                     Box::new(
                         crates::updated_at
                             .eq(updated_at)
-                            .and(crates::id.gt(id))
+                            .and(crates::id.lt(id))
                             .nullable(),
                     ),
                     Box::new(crates::updated_at.lt(updated_at).nullable()),
@@ -440,17 +440,17 @@ impl<'a> FilterParams<'a> {
             SeekPayload::RecentDownloads(RecentDownloads(recent_downloads, id)) => {
                 // Equivalent of:
                 // for recent_downloads is not None:
-                // `WHERE (recent_downloads = recent_downloads' AND id > id')
+                // `WHERE (recent_downloads = recent_downloads' AND id < id')
                 //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)`
                 // for recent_downloads is None:
-                // `WHERE (recent_downloads IS NULL AND id > id')`
+                // `WHERE (recent_downloads IS NULL AND id < id')`
                 match recent_downloads {
                     Some(dl) => {
                         vec![
                             Box::new(
                                 recent_crate_downloads::downloads
                                     .eq(dl)
-                                    .and(crates::id.gt(id))
+                                    .and(crates::id.lt(id))
                                     .nullable(),
                             ),
                             Box::new(
@@ -465,7 +465,7 @@ impl<'a> FilterParams<'a> {
                         vec![Box::new(
                             recent_crate_downloads::downloads
                                 .is_null()
-                                .and(crates::id.gt(id))
+                                .and(crates::id.lt(id))
                                 .nullable(),
                         )]
                     }
@@ -473,12 +473,12 @@ impl<'a> FilterParams<'a> {
             }
             SeekPayload::Downloads(Downloads(downloads, id)) => {
                 // Equivalent of:
-                // `WHERE (downloads = downloads' AND id > id') OR downloads < downloads'`
+                // `WHERE (downloads = downloads' AND id < id') OR downloads < downloads'`
                 vec![
                     Box::new(
                         crates::downloads
                             .eq(downloads)
-                            .and(crates::id.gt(id))
+                            .and(crates::id.lt(id))
                             .nullable(),
                     ),
                     Box::new(crates::downloads.lt(downloads).nullable()),
@@ -486,7 +486,7 @@ impl<'a> FilterParams<'a> {
             }
             SeekPayload::Query(Query(exact_match, id)) => {
                 // Equivalent of:
-                // `WHERE (exact_match = exact_match' AND name > name') OR exact_match <
+                // `WHERE (exact_match = exact_match' AND name < name') OR exact_match <
                 // exact_match'`
                 let q_string = self.q_string.expect("q_string should not be None");
                 let name_exact_match = Crate::with_name(q_string);

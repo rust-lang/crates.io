@@ -325,14 +325,14 @@ fn index_sorting() {
     // Sort by downloads
     for json in search_both(&anon, "sort=downloads") {
         assert_eq!(json.meta.total, 4);
-        assert_eq!(json.crates[0].name, "baz_sort");
-        assert_eq!(json.crates[1].name, "other_sort");
+        assert_eq!(json.crates[0].name, "other_sort");
+        assert_eq!(json.crates[1].name, "baz_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=downloads");
-    assert_eq!(resp[0].crates[0].name, "baz_sort");
-    assert_eq!(resp[1].crates[0].name, "other_sort");
+    assert_eq!(resp[0].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "baz_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
@@ -341,14 +341,14 @@ fn index_sorting() {
     // Sort by recent-downloads
     for json in search_both(&anon, "sort=recent-downloads") {
         assert_eq!(json.meta.total, 4);
-        assert_eq!(json.crates[0].name, "foo_sort");
-        assert_eq!(json.crates[1].name, "baz_sort");
+        assert_eq!(json.crates[0].name, "baz_sort");
+        assert_eq!(json.crates[1].name, "foo_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads");
-    assert_eq!(resp[0].crates[0].name, "foo_sort");
-    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[0].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "other_sort");
     assert_eq!(resp[3].meta.total, 4);
@@ -358,14 +358,14 @@ fn index_sorting() {
     for json in search_both(&anon, "sort=recent-updates") {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "other_sort");
-        assert_eq!(json.crates[1].name, "bar_sort");
-        assert_eq!(json.crates[2].name, "baz_sort");
+        assert_eq!(json.crates[1].name, "baz_sort");
+        assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=recent-updates");
     assert_eq!(resp[0].crates[0].name, "other_sort");
-    assert_eq!(resp[1].crates[0].name, "bar_sort");
-    assert_eq!(resp[2].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
@@ -374,14 +374,14 @@ fn index_sorting() {
     for json in search_both(&anon, "sort=new") {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "bar_sort");
-        assert_eq!(json.crates[1].name, "baz_sort");
-        assert_eq!(json.crates[2].name, "other_sort");
+        assert_eq!(json.crates[1].name, "other_sort");
+        assert_eq!(json.crates[2].name, "baz_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=new");
     assert_eq!(resp[0].crates[0].name, "bar_sort");
-    assert_eq!(resp[1].crates[0].name, "baz_sort");
-    assert_eq!(resp[2].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "other_sort");
+    assert_eq!(resp[2].crates[0].name, "baz_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
@@ -466,14 +466,14 @@ fn index_sorting() {
     // by descending downloads
     for json in search_both(&anon, "sort=recent-downloads") {
         assert_eq!(json.meta.total, 4);
-        assert_eq!(json.crates[0].name, "foo_sort");
-        assert_eq!(json.crates[1].name, "baz_sort");
+        assert_eq!(json.crates[0].name, "baz_sort");
+        assert_eq!(json.crates[1].name, "foo_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
     let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads");
-    assert_eq!(resp[0].crates[0].name, "foo_sort");
-    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[0].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "other_sort");
     assert_eq!(resp[3].meta.total, 4);
