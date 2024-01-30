@@ -1,7 +1,13 @@
+mod message;
+
 use crate::config::CdnLogStorageConfig;
+use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::Context;
+use aws_credential_types::Credentials;
+use aws_sdk_sqs::config::{BehaviorVersion, Region};
 use crates_io_cdn_logs::{count_downloads, Decompressor};
+use crates_io_env_vars::required_var;
 use crates_io_worker::BackgroundJob;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
@@ -125,6 +131,142 @@ impl ProcessCdnLog {
             .collect::<Vec<_>>();
 
         info!("Top 30 downloads: {top_downloads:?}");
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, clap::Parser)]
+pub struct ProcessCdnLogQueue {
+    /// The maximum number of messages to receive from the queue and process.
+    #[clap(long, default_value = "1")]
+    max_messages: usize,
+}
+
+impl BackgroundJob for ProcessCdnLogQueue {
+    const JOB_NAME: &'static str = "process_cdn_log_queue";
+
+    type Context = Arc<Environment>;
+
+    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        const MAX_BATCH_SIZE: usize = 10;
+
+        let access_key = required_var("CDN_LOG_QUEUE_ACCESS_KEY")?;
+        let secret_key = required_var("CDN_LOG_QUEUE_SECRET_KEY")?;
+        let queue_url = required_var("CDN_LOG_QUEUE_URL")?;
+        let region = required_var("CDN_LOG_QUEUE_REGION")?;
+
+        let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+        let config = aws_sdk_sqs::Config::builder()
+            .credentials_provider(credentials)
+            .region(Region::new(region))
+            .behavior_version(BehaviorVersion::v2023_11_09())
+            .build();
+
+        let client = aws_sdk_sqs::Client::from_conf(config);
+
+        info!("Receiving messages from the CDN log queue…");
+        let mut num_remaining = self.max_messages;
+        while num_remaining > 0 {
+            let batch_size = num_remaining.min(MAX_BATCH_SIZE);
+            num_remaining -= batch_size;
+
+            debug!("Receiving next {batch_size} messages from the CDN log queue…");
+            let response = client
+                .receive_message()
+                .queue_url(&queue_url)
+                .max_number_of_messages(batch_size as i32)
+                .send()
+                .await?;
+
+            let messages = response.messages();
+            debug!(
+                "Received {num_messages} messages from the CDN log queue",
+                num_messages = messages.len()
+            );
+            if messages.is_empty() {
+                info!("No more messages to receive from the CDN log queue");
+                break;
+            }
+
+            for message in messages {
+                let message_id = message.message_id().unwrap_or("<unknown>");
+                debug!("Processing message: {message_id}");
+
+                let Some(receipt_handle) = message.receipt_handle() else {
+                    warn!("Message {message_id} has no receipt handle; skipping");
+                    continue;
+                };
+
+                debug!("Deleting message {message_id} from the CDN log queue…");
+                client
+                    .delete_message()
+                    .queue_url(&queue_url)
+                    .receipt_handle(receipt_handle)
+                    .send()
+                    .await
+                    .with_context(|| {
+                        format!("Failed to delete message {message_id} from the CDN log queue")
+                    })?;
+
+                let Some(body) = message.body() else {
+                    warn!("Message {message_id} has no body; skipping");
+                    continue;
+                };
+
+                let message = match serde_json::from_str::<message::Message>(body) {
+                    Ok(message) => message,
+                    Err(err) => {
+                        warn!("Failed to parse message {message_id}: {err}");
+                        continue;
+                    }
+                };
+
+                if message.records.is_empty() {
+                    warn!("Message {message_id} has no records; skipping");
+                    continue;
+                }
+
+                let pool = ctx.connection_pool.clone();
+                spawn_blocking({
+                    let message_id = message_id.to_owned();
+                    move || {
+                        let mut conn = pool
+                            .get()
+                            .context("Failed to acquire database connection")?;
+
+                        for record in message.records {
+                            let region = record.aws_region;
+                            let bucket = record.s3.bucket.name;
+                            let path = record.s3.object.key;
+
+                            let path = match object_store::path::Path::from_url_path(&path) {
+                                Ok(path) => path,
+                                Err(err) => {
+                                    warn!("Failed to parse path ({path}): {err}");
+                                    continue;
+                                }
+                            };
+
+                            info!("Enqueuing processing job for message {message_id}… ({path})");
+                            let job = ProcessCdnLog::new(region, bucket, path.as_ref().to_owned());
+
+                            job.enqueue(&mut conn).with_context(|| {
+                                format!("Failed to enqueue processing job for message {message_id}")
+                            })?;
+
+                            debug!("Enqueued processing job for message {message_id}");
+                        }
+
+                        Ok::<_, anyhow::Error>(())
+                    }
+                })
+                .await?;
+
+                debug!("Processed message: {message_id}");
+            }
+        }
 
         Ok(())
     }

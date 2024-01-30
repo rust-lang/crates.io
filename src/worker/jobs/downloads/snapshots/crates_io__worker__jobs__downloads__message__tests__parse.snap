@@ -1,0 +1,7 @@
+---
+source: src/worker/jobs/downloads/message.rs
+expression: event
+---
+Message {
+    records: [],
+}

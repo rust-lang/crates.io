@@ -1,0 +1,30 @@
+---
+source: src/worker/jobs/downloads/message.rs
+expression: event
+---
+Message {
+    records: [
+        Record {
+            aws_region: "us-west-1",
+            s3: S3 {
+                bucket: Bucket {
+                    name: "rust-staging-crates-io-logs",
+                },
+                object: Object {
+                    key: "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz",
+                },
+            },
+        },
+        Record {
+            aws_region: "us-west-1",
+            s3: S3 {
+                bucket: Bucket {
+                    name: "rust-staging-crates-io-logs",
+                },
+                object: Object {
+                    key: "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz",
+                },
+            },
+        },
+    ],
+}

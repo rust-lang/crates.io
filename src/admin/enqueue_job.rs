@@ -31,6 +31,7 @@ pub enum Command {
         #[arg()]
         name: String,
     },
+    ProcessCdnLogQueue(jobs::ProcessCdnLogQueue),
     SyncAdmins {
         /// Force a sync even if one is already in progress
         #[arg(long)]
@@ -88,6 +89,9 @@ pub fn run(command: Command) -> Result<()> {
         }
         Command::DailyDbMaintenance => {
             jobs::DailyDbMaintenance.enqueue(conn)?;
+        }
+        Command::ProcessCdnLogQueue(job) => {
+            job.enqueue(conn)?;
         }
         Command::SquashIndex => {
             jobs::SquashIndex.enqueue(conn)?;
