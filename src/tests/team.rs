@@ -190,7 +190,7 @@ fn add_team_as_non_member() {
     });
 
     let response = token.add_named_owner("foo_team_non_member", "github:test-org:core");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only members of a team or organization owners can add it as an owner" }] })

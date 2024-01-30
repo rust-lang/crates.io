@@ -1,7 +1,8 @@
 use diesel::prelude::*;
+use http::StatusCode;
 
 use crate::app::App;
-use crate::util::errors::{bad_request, cargo_err, AppResult};
+use crate::util::errors::{bad_request, custom, AppResult};
 
 use crates_io_github::GitHubError;
 use oauth2::AccessToken;
@@ -158,7 +159,8 @@ impl Team {
         let org_id = team.organization.id;
 
         if !Handle::current().block_on(can_add_team(app, org_id, team.id, req_user))? {
-            return Err(cargo_err(
+            return Err(custom(
+                StatusCode::FORBIDDEN,
                 "only members of a team or organization owners can add it as an owner",
             ));
         }
