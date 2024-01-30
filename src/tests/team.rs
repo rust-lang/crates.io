@@ -29,7 +29,7 @@ fn not_github() {
     });
 
     let response = token.add_named_owner("foo_not_github", "dropbox:foo:foo");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "unknown organization handler, only 'github:org:team' is supported" }] })
@@ -45,7 +45,7 @@ fn weird_name() {
     });
 
     let response = token.add_named_owner("foo_weird_name", "github:foo/../bar:wut");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "organization cannot contain special characters like /" }] })
@@ -62,7 +62,7 @@ fn one_colon() {
     });
 
     let response = token.add_named_owner("foo_one_colon", "github:foo");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "missing github team argument; format is github:org:team" }] })

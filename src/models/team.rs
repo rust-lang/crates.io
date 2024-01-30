@@ -99,7 +99,7 @@ impl Team {
                 // unwrap is documented above as part of the calling contract
                 let org = chunks.next().unwrap();
                 let team = chunks.next().ok_or_else(|| {
-                    cargo_err(
+                    bad_request(
                         "missing github team argument; \
                          format is github:org:team",
                     )
@@ -113,7 +113,7 @@ impl Team {
                     req_user,
                 )
             }
-            _ => Err(cargo_err(
+            _ => Err(bad_request(
                 "unknown organization handler, \
                  only 'github:org:team' is supported",
             )),
@@ -140,7 +140,7 @@ impl Team {
         }
 
         if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-            return Err(cargo_err(format_args!(
+            return Err(bad_request(format_args!(
                 "organization cannot contain special \
                  characters like {c}"
             )));
