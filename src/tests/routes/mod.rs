@@ -17,6 +17,7 @@ pub mod crates;
 pub mod keywords;
 pub mod me;
 pub mod metrics;
+mod private;
 pub mod session;
 pub mod summary;
 pub mod users;
