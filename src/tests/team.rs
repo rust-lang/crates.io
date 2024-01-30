@@ -215,7 +215,7 @@ fn remove_team_as_named_owner() {
     // Removing the individual owner is not allowed, since team members don't
     // have permission to manage ownership
     let response = token_on_both_teams.remove_named_owner("foo_remove_team", username);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -255,7 +255,7 @@ fn remove_team_as_team_owner() {
 
     let response =
         token_on_one_team.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
@@ -265,7 +265,7 @@ fn remove_team_as_team_owner() {
     let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
     let response =
         token_org_owner.remove_named_owner("foo_remove_team_owner", "github:test-org:all");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
@@ -386,7 +386,7 @@ fn add_owners_as_org_owner() {
     let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
 
     let response = token_org_owner.add_named_owner("foo_add_owner", "arbitrary_username");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
@@ -411,7 +411,7 @@ fn add_owners_as_team_owner() {
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let response = token_on_one_team.add_named_owner("foo_add_owner", "arbitrary_username");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })

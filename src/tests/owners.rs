@@ -171,7 +171,7 @@ fn owners_can_remove_self() {
 
     // Deleting yourself when you're the only owner isn't allowed.
     let response = token.remove_named_owner("owners_selfremove", username);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -189,7 +189,7 @@ fn owners_can_remove_self() {
 
     // After you delete yourself, you no longer have permissions to manage the crate.
     let response = token.remove_named_owner("owners_selfremove", username);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
@@ -210,7 +210,7 @@ fn modify_multiple_owners() {
 
     // Deleting all owners is not allowed.
     let response = token.remove_named_owners("owners_multiple", &[username, "user2", "user3"]);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
@@ -228,7 +228,7 @@ fn modify_multiple_owners() {
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token.add_named_owners("owners_multiple", &["user2", username]);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "`foo` is already an owner" }] })
