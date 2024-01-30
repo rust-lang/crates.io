@@ -226,7 +226,8 @@ impl From<JoinError> for BoxedAppError {
 impl From<GitHubError> for BoxedAppError {
     fn from(error: GitHubError) -> Self {
         match error {
-            GitHubError::Permission(_) => cargo_err(
+            GitHubError::Permission(_) => custom(
+                StatusCode::FORBIDDEN,
                 "It looks like you don't have permission \
                      to query a necessary property from GitHub \
                      to complete this request. \
