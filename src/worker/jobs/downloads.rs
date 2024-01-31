@@ -1,6 +1,7 @@
 mod message;
 
 use crate::config::{CdnLogQueueConfig, CdnLogStorageConfig};
+use crate::db::DieselPool;
 use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
@@ -149,9 +150,39 @@ impl BackgroundJob for ProcessCdnLogQueue {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-        const MAX_BATCH_SIZE: usize = 10;
-
         let queue = Self::build_queue(&ctx.config.cdn_log_queue);
+        self.run(queue, &ctx.connection_pool).await
+    }
+}
+
+impl ProcessCdnLogQueue {
+    fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
+        match config {
+            CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
+            CdnLogQueueConfig::SQS {
+                access_key,
+                secret_key,
+                region,
+                queue_url,
+            } => {
+                use secrecy::ExposeSecret;
+
+                let secret_key = secret_key.expose_secret();
+                let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+                let region = Region::new(region.to_owned());
+
+                Box::new(SqsQueueImpl::new(queue_url, region, credentials))
+            }
+        }
+    }
+
+    async fn run(
+        &self,
+        queue: Box<dyn SqsQueue + Send + Sync>,
+        connection_pool: &DieselPool,
+    ) -> anyhow::Result<()> {
+        const MAX_BATCH_SIZE: usize = 10;
 
         info!("Receiving messages from the CDN log queue…");
         let mut num_remaining = self.max_messages;
@@ -207,7 +238,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
                     continue;
                 }
 
-                let pool = ctx.connection_pool.clone();
+                let pool = connection_pool.clone();
                 spawn_blocking({
                     let message_id = message_id.to_owned();
                     move || {
@@ -248,29 +279,6 @@ impl BackgroundJob for ProcessCdnLogQueue {
         }
 
         Ok(())
-    }
-}
-
-impl ProcessCdnLogQueue {
-    fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
-        match config {
-            CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
-            CdnLogQueueConfig::SQS {
-                access_key,
-                secret_key,
-                region,
-                queue_url,
-            } => {
-                use secrecy::ExposeSecret;
-
-                let secret_key = secret_key.expose_secret();
-                let credentials = Credentials::from_keys(access_key, secret_key, None);
-
-                let region = Region::new(region.to_owned());
-
-                Box::new(SqsQueueImpl::new(queue_url, region, credentials))
-            }
-        }
     }
 }
 
