@@ -1,9 +1,11 @@
+use crate::config::CdnLogStorageConfig;
 use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_cdn_logs::{count_downloads, Decompressor};
-use crates_io_env_vars::required_var;
 use crates_io_worker::BackgroundJob;
 use object_store::aws::AmazonS3Builder;
+use object_store::local::LocalFileSystem;
+use object_store::memory::InMemory;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
 use std::collections::HashSet;
@@ -33,16 +35,9 @@ impl BackgroundJob for ProcessCdnLog {
 
     type Context = Arc<Environment>;
 
-    async fn run(&self, _ctx: Self::Context) -> anyhow::Result<()> {
-        let access_key = required_var("AWS_ACCESS_KEY")?;
-        let secret_key = required_var("AWS_SECRET_KEY")?;
-
-        let store = AmazonS3Builder::new()
-            .with_region(&self.region)
-            .with_bucket_name(&self.bucket)
-            .with_access_key_id(access_key)
-            .with_secret_access_key(secret_key)
-            .build()
+    async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        let store = self
+            .build_store(&ctx.config.cdn_log_storage)
             .context("Failed to build object store")?;
 
         let path = object_store::path::Path::parse(&self.path)
@@ -102,5 +97,31 @@ impl BackgroundJob for ProcessCdnLog {
         info!("Top 30 downloads: {top_downloads:?}");
 
         Ok(())
+    }
+}
+
+impl ProcessCdnLog {
+    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Box<dyn ObjectStore>> {
+        match config {
+            CdnLogStorageConfig::S3 {
+                access_key,
+                secret_key,
+            } => {
+                use secrecy::ExposeSecret;
+
+                let store = AmazonS3Builder::new()
+                    .with_region(&self.region)
+                    .with_bucket_name(&self.bucket)
+                    .with_access_key_id(access_key)
+                    .with_secret_access_key(secret_key.expose_secret())
+                    .build()?;
+
+                Ok(Box::new(store))
+            }
+            CdnLogStorageConfig::Local { path } => {
+                Ok(Box::new(LocalFileSystem::new_with_prefix(path)?))
+            }
+            CdnLogStorageConfig::Memory => Ok(Box::new(InMemory::new())),
+        }
     }
 }

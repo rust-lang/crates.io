@@ -2,7 +2,9 @@ use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use anyhow::Context;
-use crates_io::config::{self, BalanceCapacityConfig, Base, DatabasePools, DbPoolConfig};
+use crates_io::config::{
+    self, BalanceCapacityConfig, Base, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
+};
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
@@ -422,6 +424,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         db,
         storage,
+        cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
