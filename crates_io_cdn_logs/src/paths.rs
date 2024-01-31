@@ -57,6 +57,13 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_path_with_dashes() {
+        let path = "/crates/foo-bar/foo-bar-1.0.0-rc.1.crate";
+        let result = assert_some!(parse_path(path));
+        assert_eq!(format(&result), "foo-bar@1.0.0-rc.1");
+    }
+
+    #[test]
     fn test_parse_path_empty() {
         assert_none!(parse_path(""));
     }
