@@ -129,3 +129,50 @@ impl ProcessCdnLog {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_process_cdn_log() {
+        let _guard = crate::util::tracing::init_for_test();
+
+        let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
+
+        let job = ProcessCdnLog::new(
+            "us-west-1".to_string(),
+            "bucket".to_string(),
+            path.to_string(),
+        );
+
+        let config = CdnLogStorageConfig::memory();
+        let store = assert_ok!(job.build_store(&config));
+
+        // Add dummy data into the store
+        {
+            let bytes =
+                include_bytes!("../../../crates_io_cdn_logs/test_data/cloudfront/basic.log.gz");
+
+            store.put(&path.into(), bytes[..].into()).await.unwrap();
+        }
+
+        assert_ok!(job.run(store).await);
+    }
+
+    #[tokio::test]
+    async fn test_s3_builder() {
+        let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
+
+        let job = ProcessCdnLog::new(
+            "us-west-1".to_string(),
+            "bucket".to_string(),
+            path.to_string(),
+        );
+
+        let access_key = "access_key".into();
+        let secret_key = "secret_key".to_string().into();
+        let config = CdnLogStorageConfig::s3(access_key, secret_key);
+        assert_ok!(job.build_store(&config));
+    }
+}
