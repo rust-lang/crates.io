@@ -285,6 +285,16 @@ impl ProcessCdnLogQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aws_sdk_sqs::operation::receive_message::builders::ReceiveMessageOutputBuilder;
+    use aws_sdk_sqs::types::builders::MessageBuilder;
+    use aws_sdk_sqs::types::Message;
+    use crates_io_test_db::TestDatabase;
+    use crates_io_worker::schema::background_jobs;
+    use diesel::prelude::*;
+    use diesel::r2d2::{ConnectionManager, Pool};
+    use diesel::QueryDsl;
+    use insta::assert_snapshot;
+    use parking_lot::Mutex;
 
     #[tokio::test]
     async fn test_process_cdn_log() {
@@ -326,5 +336,186 @@ mod tests {
         let secret_key = "secret_key".to_string().into();
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
         assert_ok!(job.build_store(&config));
+    }
+
+    #[tokio::test]
+    async fn test_process_cdn_log_queue() {
+        let _guard = crate::util::tracing::init_for_test();
+
+        let mut queue = Box::new(MockSqsQueue::new());
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| {
+                Ok(ReceiveMessageOutputBuilder::default()
+                    .messages(message("123", "us-west-1", "bucket", "path"))
+                    .build())
+            });
+
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| Ok(ReceiveMessageOutputBuilder::default().build()));
+
+        let deleted_handles = record_deleted_handles(&mut queue);
+
+        let test_database = TestDatabase::new();
+        let connection_pool = build_connection_pool(test_database.url());
+
+        let job = ProcessCdnLogQueue { max_messages: 100 };
+        assert_ok!(job.run(queue, &connection_pool).await);
+
+        assert_snapshot!(deleted_handles.lock().join(","), @"123");
+        assert_snapshot!(open_jobs(&mut test_database.connect()), @"us-west-1 | bucket | path");
+    }
+
+    #[tokio::test]
+    async fn test_process_cdn_log_queue_multi_page() {
+        let _guard = crate::util::tracing::init_for_test();
+
+        let mut queue = Box::new(MockSqsQueue::new());
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| {
+                Ok(ReceiveMessageOutputBuilder::default()
+                    .messages(message("1", "us-west-1", "bucket", "path1"))
+                    .messages(message("2", "us-west-1", "bucket", "path2"))
+                    .messages(message("3", "us-west-1", "bucket", "path3"))
+                    .messages(message("4", "us-west-1", "bucket", "path4"))
+                    .messages(message("5", "us-west-1", "bucket", "path5"))
+                    .messages(message("6", "us-west-1", "bucket", "path6"))
+                    .messages(message("7", "us-west-1", "bucket", "path7"))
+                    .messages(message("8", "us-west-1", "bucket", "path8"))
+                    .messages(message("9", "us-west-1", "bucket", "path9"))
+                    .messages(message("10", "us-west-1", "bucket", "path10"))
+                    .build())
+            });
+
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| {
+                Ok(ReceiveMessageOutputBuilder::default()
+                    .messages(message("11", "us-west-1", "bucket", "path11"))
+                    .build())
+            });
+
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| Ok(ReceiveMessageOutputBuilder::default().build()));
+
+        let deleted_handles = record_deleted_handles(&mut queue);
+
+        let test_database = TestDatabase::new();
+        let connection_pool = build_connection_pool(test_database.url());
+
+        let job = ProcessCdnLogQueue { max_messages: 100 };
+        assert_ok!(job.run(queue, &connection_pool).await);
+
+        assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
+        assert_snapshot!(open_jobs(&mut test_database.connect()), @r###"
+        us-west-1 | bucket | path1
+        us-west-1 | bucket | path2
+        us-west-1 | bucket | path3
+        us-west-1 | bucket | path4
+        us-west-1 | bucket | path5
+        us-west-1 | bucket | path6
+        us-west-1 | bucket | path7
+        us-west-1 | bucket | path8
+        us-west-1 | bucket | path9
+        us-west-1 | bucket | path10
+        us-west-1 | bucket | path11
+        "###);
+    }
+
+    #[tokio::test]
+    async fn test_process_cdn_log_queue_parse_error() {
+        let _guard = crate::util::tracing::init_for_test();
+
+        let mut queue = Box::new(MockSqsQueue::new());
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| {
+                let message = MessageBuilder::default()
+                    .message_id("1")
+                    .receipt_handle("1")
+                    .body(serde_json::to_string("{}").unwrap())
+                    .build();
+
+                Ok(ReceiveMessageOutputBuilder::default()
+                    .messages(message)
+                    .build())
+            });
+
+        queue
+            .expect_receive_messages()
+            .once()
+            .returning(|_max_messages| Ok(ReceiveMessageOutputBuilder::default().build()));
+
+        let deleted_handles = record_deleted_handles(&mut queue);
+
+        let test_database = TestDatabase::new();
+        let connection_pool = build_connection_pool(test_database.url());
+
+        let job = ProcessCdnLogQueue { max_messages: 100 };
+        assert_ok!(job.run(queue, &connection_pool).await);
+
+        assert_snapshot!(deleted_handles.lock().join(","), @"1");
+        assert_snapshot!(open_jobs(&mut test_database.connect()), @"");
+    }
+
+    fn record_deleted_handles(queue: &mut MockSqsQueue) -> Arc<Mutex<Vec<String>>> {
+        let deleted_handles = Arc::new(Mutex::new(vec![]));
+
+        queue.expect_delete_message().returning({
+            let deleted_handles = deleted_handles.clone();
+            move |receipt_handle| {
+                deleted_handles.lock().push(receipt_handle.to_owned());
+                Ok(())
+            }
+        });
+
+        deleted_handles
+    }
+
+    fn build_connection_pool(url: &str) -> DieselPool {
+        let pool = Pool::builder().build(ConnectionManager::new(url)).unwrap();
+        DieselPool::new_background_worker(pool)
+    }
+
+    fn message(id: &str, region: &str, bucket: &str, path: &str) -> Message {
+        let json = json!({
+            "Records": [{
+                "awsRegion": region,
+                "s3": {
+                    "bucket": { "name": bucket },
+                    "object": { "key": path },
+                }
+            }]
+        });
+
+        MessageBuilder::default()
+            .message_id(id)
+            .receipt_handle(id)
+            .body(serde_json::to_string(&json).unwrap())
+            .build()
+    }
+
+    fn open_jobs(conn: &mut PgConnection) -> String {
+        let jobs = background_jobs::table
+            .select((background_jobs::job_type, background_jobs::data))
+            .load::<(String, serde_json::Value)>(conn)
+            .unwrap();
+
+        jobs.into_iter()
+            .inspect(|(job_type, _data)| assert_eq!(job_type, ProcessCdnLog::JOB_NAME))
+            .map(|(_job_type, data)| data)
+            .map(|data| serde_json::from_value::<ProcessCdnLog>(data).unwrap())
+            .map(|job| format!("{} | {} | {}", job.region, job.bucket, job.path))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
