@@ -4,3 +4,4 @@ pub mod metadata;
 pub mod owners;
 pub mod publish;
 pub mod search;
+pub mod versions;

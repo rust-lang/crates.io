@@ -68,7 +68,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         )
         .route(
             "/api/v1/crates/:crate_id/versions",
-            get(krate::metadata::versions),
+            get(krate::versions::versions),
         )
         .route(
             "/api/v1/crates/:crate_id/follow",
