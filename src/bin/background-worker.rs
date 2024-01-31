@@ -86,6 +86,7 @@ fn main() -> anyhow::Result<()> {
         .build_unchecked(ConnectionManager::new(db_url));
 
     let environment = Environment::builder()
+        .config(Arc::new(config))
         .repository_config(repository_config)
         .cloudfront(cloudfront)
         .fastly(fastly)

@@ -270,6 +270,7 @@ impl TestAppBuilder {
             };
 
             let environment = Environment::builder()
+                .config(app.config.clone())
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
                 .connection_pool(app.primary_database.clone())

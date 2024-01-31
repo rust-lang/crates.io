@@ -16,6 +16,8 @@ use std::time::Instant;
 #[derive(Builder)]
 #[builder(pattern = "owned")]
 pub struct Environment {
+    pub config: Arc<crate::config::Server>,
+
     repository_config: RepositoryConfig,
     #[builder(default, setter(skip))]
     repository: Mutex<Option<Repository>>,
