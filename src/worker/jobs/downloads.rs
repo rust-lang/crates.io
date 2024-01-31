@@ -40,6 +40,36 @@ impl BackgroundJob for ProcessCdnLog {
             .build_store(&ctx.config.cdn_log_storage)
             .context("Failed to build object store")?;
 
+        self.run(store).await
+    }
+}
+
+impl ProcessCdnLog {
+    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Box<dyn ObjectStore>> {
+        match config {
+            CdnLogStorageConfig::S3 {
+                access_key,
+                secret_key,
+            } => {
+                use secrecy::ExposeSecret;
+
+                let store = AmazonS3Builder::new()
+                    .with_region(&self.region)
+                    .with_bucket_name(&self.bucket)
+                    .with_access_key_id(access_key)
+                    .with_secret_access_key(secret_key.expose_secret())
+                    .build()?;
+
+                Ok(Box::new(store))
+            }
+            CdnLogStorageConfig::Local { path } => {
+                Ok(Box::new(LocalFileSystem::new_with_prefix(path)?))
+            }
+            CdnLogStorageConfig::Memory => Ok(Box::new(InMemory::new())),
+        }
+    }
+
+    async fn run(&self, store: Box<dyn ObjectStore>) -> anyhow::Result<()> {
         let path = object_store::path::Path::parse(&self.path)
             .with_context(|| format!("Failed to parse path: {:?}", self.path))?;
 
@@ -97,31 +127,5 @@ impl BackgroundJob for ProcessCdnLog {
         info!("Top 30 downloads: {top_downloads:?}");
 
         Ok(())
-    }
-}
-
-impl ProcessCdnLog {
-    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Box<dyn ObjectStore>> {
-        match config {
-            CdnLogStorageConfig::S3 {
-                access_key,
-                secret_key,
-            } => {
-                use secrecy::ExposeSecret;
-
-                let store = AmazonS3Builder::new()
-                    .with_region(&self.region)
-                    .with_bucket_name(&self.bucket)
-                    .with_access_key_id(access_key)
-                    .with_secret_access_key(secret_key.expose_secret())
-                    .build()?;
-
-                Ok(Box::new(store))
-            }
-            CdnLogStorageConfig::Local { path } => {
-                Ok(Box::new(LocalFileSystem::new_with_prefix(path)?))
-            }
-            CdnLogStorageConfig::Memory => Ok(Box::new(InMemory::new())),
-        }
     }
 }
