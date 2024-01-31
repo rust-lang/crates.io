@@ -1,3 +1,7 @@
+//! # Fastly CDN log parsing
+//!
+//! see <https://docs.fastly.com/en/guides/changing-log-line-formats#classic-format>.
+
 mod json;
 
 use crate::paths::parse_path;

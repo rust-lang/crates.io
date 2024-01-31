@@ -1,3 +1,8 @@
+//! # CloudFront log parsing
+//!
+//! see <https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html#LogFileFormat>
+//! and <https://www.w3.org/TR/WD-logfile.html>.
+
 use crate::paths::parse_path;
 use crate::DownloadsMap;
 use chrono::NaiveDate;
