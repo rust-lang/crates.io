@@ -1,14 +1,13 @@
 mod message;
 
-use crate::config::CdnLogStorageConfig;
-use crate::sqs::{SqsQueue, SqsQueueImpl};
+use crate::config::{CdnLogQueueConfig, CdnLogStorageConfig};
+use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
 use crates_io_cdn_logs::{count_downloads, Decompressor};
-use crates_io_env_vars::required_var;
 use crates_io_worker::BackgroundJob;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
@@ -152,14 +151,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         const MAX_BATCH_SIZE: usize = 10;
 
-        let access_key = required_var("CDN_LOG_QUEUE_ACCESS_KEY")?;
-        let secret_key = required_var("CDN_LOG_QUEUE_SECRET_KEY")?;
-        let queue_url = required_var("CDN_LOG_QUEUE_URL")?;
-        let region = required_var("CDN_LOG_QUEUE_REGION")?;
-
-        let credentials = Credentials::from_keys(access_key, secret_key, None);
-
-        let queue = SqsQueueImpl::new(queue_url, Region::new(region), credentials);
+        let queue = Self::build_queue(&ctx.config.cdn_log_queue);
 
         info!("Receiving messages from the CDN log queue…");
         let mut num_remaining = self.max_messages;
@@ -256,6 +248,29 @@ impl BackgroundJob for ProcessCdnLogQueue {
         }
 
         Ok(())
+    }
+}
+
+impl ProcessCdnLogQueue {
+    fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
+        match config {
+            CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
+            CdnLogQueueConfig::SQS {
+                access_key,
+                secret_key,
+                region,
+                queue_url,
+            } => {
+                use secrecy::ExposeSecret;
+
+                let secret_key = secret_key.expose_secret();
+                let credentials = Credentials::from_keys(access_key, secret_key, None);
+
+                let region = Region::new(region.to_owned());
+
+                Box::new(SqsQueueImpl::new(queue_url, region, credentials))
+            }
+        }
     }
 }
 
