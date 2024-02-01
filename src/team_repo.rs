@@ -13,22 +13,19 @@ use reqwest::{Certificate, Client};
 #[automock]
 #[async_trait]
 pub trait TeamRepo {
-    async fn get_team(&self, name: &str) -> anyhow::Result<Team>;
+    async fn get_permission(&self, name: &str) -> anyhow::Result<Permission>;
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Team {
-    pub name: String,
-    pub kind: String,
-    pub members: Vec<Member>,
+pub struct Permission {
+    pub people: Vec<Person>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Member {
+pub struct Person {
     pub name: String,
     pub github: String,
     pub github_id: i32,
-    pub is_lead: bool,
 }
 
 pub struct TeamRepoImpl {
@@ -62,8 +59,8 @@ fn build_client() -> Client {
 
 #[async_trait]
 impl TeamRepo for TeamRepoImpl {
-    async fn get_team(&self, name: &str) -> anyhow::Result<Team> {
-        let url = format!("https://team-api.infra.rust-lang.org/v1/teams/{name}.json");
+    async fn get_permission(&self, name: &str) -> anyhow::Result<Permission> {
+        let url = format!("https://team-api.infra.rust-lang.org/v1/permissions/{name}.json");
         let response = self.client.get(url).send().await?.error_for_status()?;
         Ok(response.json().await?)
     }

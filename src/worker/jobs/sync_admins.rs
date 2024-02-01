@@ -9,8 +9,8 @@ use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-/// See <https://github.com/rust-lang/team/blob/master/teams/crates-io-admins.toml>.
-const TEAM_NAME: &str = "crates-io-admins";
+/// See <https://github.com/rust-lang/team/pull/1197>.
+const PERMISSION_NAME: &str = "crates_io_admin";
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncAdmins;
@@ -23,7 +23,7 @@ impl BackgroundJob for SyncAdmins {
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Syncing admins from rust-lang/team repo…");
 
-        let repo_admins = ctx.team_repo.get_team(TEAM_NAME).await?.members;
+        let repo_admins = ctx.team_repo.get_permission(PERMISSION_NAME).await?.people;
         let repo_admin_ids = repo_admins
             .iter()
             .map(|m| m.github_id)
