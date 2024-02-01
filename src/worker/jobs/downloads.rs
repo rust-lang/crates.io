@@ -251,6 +251,11 @@ impl ProcessCdnLogQueue {
                             let bucket = record.s3.bucket.name;
                             let path = record.s3.object.key;
 
+                            if Self::is_ignored_path(&path) {
+                                debug!("Skipping ignored path: {path}");
+                                continue;
+                            }
+
                             let path = match object_store::path::Path::from_url_path(&path) {
                                 Ok(path) => path,
                                 Err(err) => {
@@ -279,6 +284,10 @@ impl ProcessCdnLogQueue {
         }
 
         Ok(())
+    }
+
+    fn is_ignored_path(path: &str) -> bool {
+        path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
     }
 }
 
@@ -465,6 +474,29 @@ mod tests {
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"");
+    }
+
+    #[test]
+    fn test_ignored_path() {
+        let is_ignored = ProcessCdnLogQueue::is_ignored_path;
+
+        let valid_paths = vec![
+            "cloudfront/static.crates.io/EJED5RT0WA7HA.2024-02-01-10.6a8be093.gz",
+            "cloudfront/static.staging.crates.io/E6OCLKYH9FE8V.2024-02-01-10.5da9e90c.gz",
+            "fastly-requests/static.crates.io/2024-02-01T09:00:00.000-4AIwSEQyIFDSzdAT1Fqt.log.zst",
+            "fastly-requests/static.staging.crates.io/2024-02-01T09:00:00.000-QPF3Ea8eICqLkzaoC_Wt.log.zst"
+        ];
+        for path in valid_paths {
+            assert!(!is_ignored(path));
+        }
+
+        let ignored_paths = vec![
+            "cloudfront/index.crates.io/EUGCXGQIH3GQ3.2024-02-01-10.2e068fc2.gz",
+            "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-02-01-10.900ddeaf.gz",
+        ];
+        for path in ignored_paths {
+            assert!(is_ignored(path));
+        }
     }
 
     fn record_deleted_handles(queue: &mut MockSqsQueue) -> Arc<Mutex<Vec<String>>> {
