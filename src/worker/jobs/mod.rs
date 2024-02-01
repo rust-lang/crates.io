@@ -6,6 +6,7 @@ use diesel::sql_types::{Int2, Jsonb, Text};
 use std::fmt::Display;
 
 mod daily_db_maintenance;
+mod downloads;
 pub mod dump_db;
 mod git;
 mod readmes;
@@ -14,6 +15,7 @@ mod typosquat;
 mod update_downloads;
 
 pub use self::daily_db_maintenance::DailyDbMaintenance;
+pub use self::downloads::{ProcessCdnLog, ProcessCdnLogQueue};
 pub use self::dump_db::DumpDb;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::readmes::RenderAndUploadReadme;

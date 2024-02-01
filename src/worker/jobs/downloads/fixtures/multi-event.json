@@ -1,0 +1,72 @@
+{
+    "Records": [
+        {
+            "eventVersion": "2.1",
+            "eventSource": "aws:s3",
+            "awsRegion": "us-west-1",
+            "eventTime": "2024-01-16T16:24:06.554Z",
+            "eventName": "ObjectCreated:Put",
+            "userIdentity": {
+                "principalId": "AWS:AROASLZSKMR5WNLFCYRXL:prod.iad.dbs.datafeeds.aws.internal"
+            },
+            "requestParameters": {
+                "sourceIPAddress": "72.21.217.31"
+            },
+            "responseElements": {
+                "x-amz-request-id": "WK0MBXBCXJ4Y1KDX",
+                "x-amz-id-2": "Rwojcx6M4ZoUCE8gETkqTmOPO2zKbF7AFeZshk1/nYxdtng47pBPRwsSxbscaQTZu2PVbT9w+u9LTq2KVsoleencxqJ3vCex"
+            },
+            "s3": {
+                "s3SchemaVersion": "1.0",
+                "configurationId": "cloudfront",
+                "bucket": {
+                    "name": "rust-staging-crates-io-logs",
+                    "ownerIdentity": {
+                        "principalId": "A266IOH8VA1FN7"
+                    },
+                    "arn": "arn:aws:s3:::rust-staging-crates-io-logs"
+                },
+                "object": {
+                    "key": "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz",
+                    "size": 710,
+                    "eTag": "4c8266e632a8f1ed489c19821680da6e",
+                    "sequencer": "0065A6ADA6765BF0F0"
+                }
+            }
+        },
+        {
+            "eventVersion": "2.1",
+            "eventSource": "aws:s3",
+            "awsRegion": "us-west-1",
+            "eventTime": "2024-01-16T16:24:06.554Z",
+            "eventName": "ObjectCreated:Put",
+            "userIdentity": {
+                "principalId": "AWS:AROASLZSKMR5WNLFCYRXL:prod.iad.dbs.datafeeds.aws.internal"
+            },
+            "requestParameters": {
+                "sourceIPAddress": "72.21.217.31"
+            },
+            "responseElements": {
+                "x-amz-request-id": "WK0MBXBCXJ4Y1KDX",
+                "x-amz-id-2": "Rwojcx6M4ZoUCE8gETkqTmOPO2zKbF7AFeZshk1/nYxdtng47pBPRwsSxbscaQTZu2PVbT9w+u9LTq2KVsoleencxqJ3vCex"
+            },
+            "s3": {
+                "s3SchemaVersion": "1.0",
+                "configurationId": "cloudfront",
+                "bucket": {
+                    "name": "rust-staging-crates-io-logs",
+                    "ownerIdentity": {
+                        "principalId": "A266IOH8VA1FN7"
+                    },
+                    "arn": "arn:aws:s3:::rust-staging-crates-io-logs"
+                },
+                "object": {
+                    "key": "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz",
+                    "size": 710,
+                    "eTag": "4c8266e632a8f1ed489c19821680da6e",
+                    "sequencer": "0065A6ADA6765BF0F0"
+                }
+            }
+        }
+    ]
+}

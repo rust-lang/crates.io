@@ -8,6 +8,8 @@ use crate::Env;
 use super::base::Base;
 use super::database_pools::DatabasePools;
 use crate::config::balance_capacity::BalanceCapacityConfig;
+use crate::config::cdn_log_storage::CdnLogStorageConfig;
+use crate::config::CdnLogQueueConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
@@ -34,6 +36,8 @@ pub struct Server {
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub storage: StorageConfig,
+    pub cdn_log_storage: CdnLogStorageConfig,
+    pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
@@ -172,6 +176,8 @@ impl Server {
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
+            cdn_log_storage: CdnLogStorageConfig::from_env()?,
+            cdn_log_queue: CdnLogQueueConfig::from_env()?,
             base,
             ip,
             port,

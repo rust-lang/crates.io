@@ -34,7 +34,7 @@ pub struct App {
     pub github_oauth: BasicClient,
 
     /// The server configuration
-    pub config: config::Server,
+    pub config: Arc<config::Server>,
 
     /// Cache the `version_id` of a `canonical_crate_name:semver` pair
     ///
@@ -158,7 +158,7 @@ impl App {
             instance_metrics,
             balance_capacity: Default::default(),
             rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
-            config,
+            config: Arc::new(config),
         }
     }
 
