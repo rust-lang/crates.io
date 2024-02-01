@@ -1,6 +1,6 @@
 use crate::util::TestApp;
 use crates_io::schema::{emails, users};
-use crates_io::team_repo::{Member, MockTeamRepo, Team};
+use crates_io::team_repo::{MockTeamRepo, Permission, Person};
 use crates_io::worker::jobs::SyncAdmins;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -10,19 +10,16 @@ use regex::Regex;
 
 #[test]
 fn test_sync_admins_job() {
-    let mock_response = mock_team(
-        "crates-io",
-        vec![
-            mock_member("existing-admin", 1),
-            mock_member("new-admin", 3),
-            mock_member("new-admin-without-account", 4),
-        ],
-    );
+    let mock_response = mock_permission(vec![
+        mock_person("existing-admin", 1),
+        mock_person("new-admin", 3),
+        mock_person("new-admin-without-account", 4),
+    ]);
 
     let mut team_repo = MockTeamRepo::new();
     team_repo
-        .expect_get_team()
-        .with(mockall::predicate::eq("crates-io-admins"))
+        .expect_get_permission()
+        .with(mockall::predicate::eq("crates_io_admin"))
         .returning(move |_| Ok(mock_response.clone()));
 
     let (app, _) = TestApp::full().with_team_repo(team_repo).empty();
@@ -61,22 +58,17 @@ fn test_sync_admins_job() {
     assert_eq!(emails.len(), 2);
 }
 
-fn mock_team(name: impl Into<String>, members: Vec<Member>) -> Team {
-    Team {
-        name: name.into(),
-        kind: "marker-team".to_string(),
-        members,
-    }
+fn mock_permission(people: Vec<Person>) -> Permission {
+    Permission { people }
 }
 
-fn mock_member(name: impl Into<String>, github_id: i32) -> Member {
+fn mock_person(name: impl Into<String>, github_id: i32) -> Person {
     let name = name.into();
     let github = name.clone();
-    Member {
+    Person {
         name,
         github,
         github_id,
-        is_lead: false,
     }
 }
 
