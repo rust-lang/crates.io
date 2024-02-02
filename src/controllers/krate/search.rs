@@ -2,7 +2,7 @@
 
 use crate::auth::AuthCheck;
 use diesel::dsl::*;
-use diesel::sql_types::Array;
+use diesel::sql_types::{Array, Text};
 use diesel_full_text_search::*;
 use indexmap::IndexMap;
 use once_cell::sync::OnceCell;
@@ -98,10 +98,9 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 query = query.order(Crate::with_name(q_string).desc());
 
                 if sort == "relevance" {
-                    let q = to_tsquery_with_search_config(
-                        configuration::TsConfigurationByName("english"),
-                        q_string,
-                    );
+                    let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                        .bind::<Text, _>(q_string)
+                        .sql(")");
                     let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                     query = query.then_order_by(rank.desc())
                 }
@@ -305,15 +304,13 @@ impl<'a> FilterParams<'a> {
         req: &Parts,
         conn: &mut PgConnection,
     ) -> AppResult<crates::BoxedQuery<'a, diesel::pg::Pg>> {
-        use diesel::sql_types::Text;
         let mut query = crates::table.into_boxed();
 
         if let Some(q_string) = self.q_string {
             if !q_string.is_empty() {
-                let q = to_tsquery_with_search_config(
-                    configuration::TsConfigurationByName("english"),
-                    q_string,
-                );
+                let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                    .bind::<Text, _>(q_string)
+                    .sql(")");
                 query = query.filter(
                     q.matches(crates::textsearchable_index_col)
                         .or(Crate::loosly_matches_name(q_string)),
