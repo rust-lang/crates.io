@@ -65,6 +65,9 @@ fn index_queries() {
     assert_eq!(anon.search("q=readme").meta.total, 1);
     assert_eq!(anon.search("q=description").meta.total, 1);
 
+    // Query containing a space
+    assert_eq!(anon.search("q=foo%20kw3").meta.total, 1);
+
     assert_eq!(anon.search_by_user_id(user.id).crates.len(), 4);
     assert_eq!(anon.search_by_user_id(0).crates.len(), 0);
 
