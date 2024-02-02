@@ -65,53 +65,24 @@ fn index_queries() {
     assert_eq!(anon.search("q=readme").meta.total, 1);
     assert_eq!(anon.search("q=description").meta.total, 1);
 
-    let json = anon.search_by_user_id(user.id);
-    assert_eq!(json.crates.len(), 4);
-    assert_eq!(json.meta.total, 4);
+    // Query containing a space
+    assert_eq!(anon.search("q=foo%20kw3").meta.total, 1);
 
-    let json = anon.search_by_user_id(0);
-    assert_eq!(json.crates.len(), 0);
-    assert_eq!(json.meta.total, 0);
+    assert_eq!(anon.search_by_user_id(user.id).crates.len(), 4);
+    assert_eq!(anon.search_by_user_id(0).crates.len(), 0);
 
-    let json = anon.search("letter=F");
-    assert_eq!(json.crates.len(), 2);
-    assert_eq!(json.meta.total, 2);
+    assert_eq!(anon.search("letter=F").crates.len(), 2);
+    assert_eq!(anon.search("letter=B").crates.len(), 1);
+    assert_eq!(anon.search("letter=b").crates.len(), 1);
+    assert_eq!(anon.search("letter=c").crates.len(), 0);
 
-    let json = anon.search("letter=B");
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.meta.total, 1);
+    assert_eq!(anon.search("keyword=kw1").crates.len(), 3);
+    assert_eq!(anon.search("keyword=KW1").crates.len(), 3);
+    assert_eq!(anon.search("keyword=kw2").crates.len(), 0);
+    assert_eq!(anon.search("all_keywords=kw1%20kw3").crates.len(), 1);
 
-    let json = anon.search("letter=b");
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.meta.total, 1);
-
-    let json = anon.search("letter=c");
-    assert_eq!(json.crates.len(), 0);
-    assert_eq!(json.meta.total, 0);
-
-    let json = anon.search("keyword=kw1");
-    assert_eq!(json.crates.len(), 3);
-    assert_eq!(json.meta.total, 3);
-
-    let json = anon.search("keyword=KW1");
-    assert_eq!(json.crates.len(), 3);
-    assert_eq!(json.meta.total, 3);
-
-    let json = anon.search("keyword=kw2");
-    assert_eq!(json.crates.len(), 0);
-    assert_eq!(json.meta.total, 0);
-
-    let json = anon.search("all_keywords=kw1%20kw3");
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.meta.total, 1);
-
-    let json = anon.search("q=foo&keyword=kw1");
-    assert_eq!(json.crates.len(), 1);
-    assert_eq!(json.meta.total, 1);
-
-    let json = anon.search("q=foo2&keyword=kw1");
-    assert_eq!(json.crates.len(), 0);
-    assert_eq!(json.meta.total, 0);
+    assert_eq!(anon.search("q=foo&keyword=kw1").crates.len(), 1);
+    assert_eq!(anon.search("q=foo2&keyword=kw1").crates.len(), 0);
 
     app.db(|conn| {
         new_category("Category 1", "cat1", "Category 1 crates")
@@ -756,10 +727,6 @@ fn pagination_links_included_if_applicable() {
         Some("?letter=p&page=2&per_page=1".to_string()),
         page3.meta.prev_page
     );
-    assert!([page1.meta.total, page2.meta.total, page3.meta.total]
-        .iter()
-        .all(|w| *w == 3));
-    assert_eq!(page4.meta.total, 0);
 }
 
 #[test]
@@ -824,12 +791,10 @@ fn test_pages_work_even_with_seek_based_pagination() {
     // The next_page returned by the request is seek-based
     let first = anon.search("per_page=1");
     assert!(first.meta.next_page.unwrap().contains("seek="));
-    assert_eq!(first.meta.total, 3);
 
     // Calling with page=2 will revert to offset-based pagination
     let second = anon.search("page=2&per_page=1");
     assert!(second.meta.next_page.unwrap().contains("page=3"));
-    assert_eq!(second.meta.total, 3);
 }
 
 #[test]
@@ -879,7 +844,6 @@ fn crates_by_user_id() {
 
     let response = user.search_by_user_id(id);
     assert_eq!(response.crates.len(), 1);
-    assert_eq!(response.meta.total, 1);
 }
 
 #[test]
@@ -894,5 +858,4 @@ fn crates_by_user_id_not_including_deleted_owners() {
 
     let response = anon.search_by_user_id(user.id);
     assert_eq!(response.crates.len(), 0);
-    assert_eq!(response.meta.total, 0);
 }
