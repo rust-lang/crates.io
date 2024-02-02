@@ -350,6 +350,8 @@ where
         out.push_sql(") t LIMIT ");
         out.push_bind_param::<BigInt, _>(&self.options.per_page)?;
         if let Some(offset) = self.options.offset() {
+            // Injection safety: `offset()` returns `Option<i64>`, so this interpolation is constrained to known
+            // valid values and this is not vulnerable to user injection attacks.
             out.push_sql(format!(" OFFSET {offset}").as_str());
         }
         Ok(())
