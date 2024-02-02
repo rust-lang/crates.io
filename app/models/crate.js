@@ -2,6 +2,7 @@ import Model, { attr, hasMany } from '@ember-data/model';
 import { waitForPromise } from '@ember/test-waiters';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
+import { cached } from 'tracked-toolbox';
 
 export default class Crate extends Model {
   @attr name;
@@ -41,6 +42,41 @@ export default class Crate extends Model {
     }
   }
 
+  @cached get versionIdsBySemver() {
+    let versions = this.versions.toArray() ?? [];
+    return versions.sort(compareVersionBySemver).map(v => v.id);
+  }
+
+  @cached get versionIdsByDate() {
+    let versions = this.versions.toArray() ?? [];
+    return versions.sort(compareVersionByDate).map(v => v.id);
+  }
+
+  @cached get firstVersionId() {
+    return this.versionIdsByDate.at(-1);
+  }
+
+  @cached get versionsObj() {
+    let versions = this.versions.toArray() ?? [];
+    return Object.fromEntries(versions.map(v => [v.id, v]));
+  }
+
+  @cached get releaseTrackSet() {
+    let map = new Map();
+    let trackSet = new Set();
+    let { versionsObj: versions, versionIdsBySemver } = this;
+    for (let id of versionIdsBySemver) {
+      let { releaseTrack, isPrerelease, yanked } = versions[id];
+      if (releaseTrack && !isPrerelease && !map.has(releaseTrack)) {
+        if (!yanked) {
+          map.set(releaseTrack, id);
+        }
+        trackSet.add(id);
+      }
+    }
+    return trackSet;
+  }
+
   get owners() {
     let teams = this.owner_team.toArray() ?? [];
     let users = this.owner_user.toArray() ?? [];
@@ -76,4 +112,26 @@ export default class Crate extends Model {
       throw response;
     }
   }
+}
+
+function compareVersionBySemver(a, b) {
+  let aSemver = a.semver;
+  let bSemver = b.semver;
+
+  if (aSemver === bSemver) {
+    return b.created_at - a.created_at;
+  } else if (aSemver === null) {
+    return 1;
+  } else if (bSemver === null) {
+    return -1;
+  } else {
+    return bSemver.compare(aSemver);
+  }
+}
+
+function compareVersionByDate(a, b) {
+  let bDate = b.created_at.getTime();
+  let aDate = a.created_at.getTime();
+
+  return bDate === aDate ? parseInt(b.id) - parseInt(a.id) : bDate - aDate;
 }

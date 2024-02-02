@@ -11,25 +11,8 @@ export default class SearchController extends Controller {
   }
 
   get sortedVersions() {
-    let versions = this.model.versions.toArray();
+    let { versionIdsBySemver, versionIdsByDate, versionsObj: versions } = this.model;
 
-    return this.sort === 'semver'
-      ? versions.sort(compareBySemver)
-      : versions.sort((a, b) => b.created_at - a.created_at);
-  }
-}
-
-function compareBySemver(a, b) {
-  let aSemver = a.semver;
-  let bSemver = b.semver;
-
-  if (aSemver === bSemver) {
-    return b.created_at - a.created_at;
-  } else if (aSemver === null) {
-    return 1;
-  } else if (bSemver === null) {
-    return -1;
-  } else {
-    return bSemver.compare(aSemver);
+    return (this.sort === 'semver' ? versionIdsBySemver : versionIdsByDate).map(id => versions[id]);
   }
 }
