@@ -7,6 +7,7 @@ use crate::worker::Environment;
 use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
+use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 
@@ -93,38 +94,43 @@ async fn run(
                     format!("Failed to delete message {message_id} from the CDN log queue")
                 })?;
 
-            let Some(body) = message.body() else {
-                warn!("Message {message_id} has no body; skipping");
-                continue;
-            };
-
-            let message = match serde_json::from_str::<super::message::Message>(body) {
-                Ok(message) => message,
-                Err(err) => {
-                    warn!(%body, "Failed to parse message {message_id}: {err}");
-                    continue;
-                }
-            };
-
-            if message.records.is_empty() {
-                warn!("Message {message_id} has no records; skipping");
-                continue;
-            }
-
-            let jobs = jobs_from_message(message);
-
-            let pool = connection_pool.clone();
-            spawn_blocking({
-                let message_id = message_id.to_owned();
-                move || enqueue_jobs(jobs, &message_id, &pool)
-            })
-            .await?;
-
+            process_message(message, connection_pool).await?;
             debug!("Processed message: {message_id}");
         }
     }
 
     Ok(())
+}
+
+async fn process_message(message: &Message, connection_pool: &DieselPool) -> anyhow::Result<()> {
+    let message_id = message.message_id().unwrap_or("<unknown>");
+
+    let Some(body) = message.body() else {
+        warn!("Message {message_id} has no body; skipping");
+        return Ok(());
+    };
+
+    let message = match serde_json::from_str::<super::message::Message>(body) {
+        Ok(message) => message,
+        Err(err) => {
+            warn!(%body, "Failed to parse message {message_id}: {err}");
+            return Ok(());
+        }
+    };
+
+    if message.records.is_empty() {
+        warn!("Message {message_id} has no records; skipping");
+        return Ok(());
+    }
+
+    let jobs = jobs_from_message(message);
+
+    let pool = connection_pool.clone();
+    spawn_blocking({
+        let message_id = message_id.to_owned();
+        move || enqueue_jobs(jobs, &message_id, &pool)
+    })
+    .await
 }
 
 fn jobs_from_message(message: super::message::Message) -> Vec<ProcessCdnLog> {
