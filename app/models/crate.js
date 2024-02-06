@@ -63,18 +63,14 @@ export default class Crate extends Model {
 
   @cached get releaseTrackSet() {
     let map = new Map();
-    let trackSet = new Set();
     let { versionsObj: versions, versionIdsBySemver } = this;
     for (let id of versionIdsBySemver) {
       let { releaseTrack, isPrerelease, yanked } = versions[id];
-      if (releaseTrack && !isPrerelease && !map.has(releaseTrack)) {
-        if (!yanked) {
-          map.set(releaseTrack, id);
-        }
-        trackSet.add(id);
+      if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
+        map.set(releaseTrack, id);
       }
     }
-    return trackSet;
+    return new Set(map.values());
   }
 
   get owners() {

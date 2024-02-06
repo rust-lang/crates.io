@@ -189,7 +189,7 @@ module('Model | Version', function (hooks) {
         [
           { num: '0.4.0', isHighestOfReleaseTrack: false },
           { num: '0.4.1', isHighestOfReleaseTrack: true },
-          { num: '0.4.2', isHighestOfReleaseTrack: true },
+          { num: '0.4.2', isHighestOfReleaseTrack: false },
         ],
       );
     });
@@ -221,7 +221,7 @@ module('Model | Version', function (hooks) {
           { num: '0.4.0', isHighestOfReleaseTrack: false },
           { num: '0.4.1', isHighestOfReleaseTrack: false },
           { num: '0.4.2', isHighestOfReleaseTrack: true },
-          { num: '0.4.3', isHighestOfReleaseTrack: true },
+          { num: '0.4.3', isHighestOfReleaseTrack: false },
         ],
       );
     });
