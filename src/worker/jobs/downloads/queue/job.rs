@@ -112,6 +112,31 @@ impl ProcessCdnLogQueue {
                     continue;
                 }
 
+                let jobs = message
+                    .records
+                    .into_iter()
+                    .filter_map(|record| {
+                        let region = record.aws_region;
+                        let bucket = record.s3.bucket.name;
+                        let path = record.s3.object.key;
+
+                        if Self::is_ignored_path(&path) {
+                            debug!("Skipping ignored path: {path}");
+                            return None;
+                        }
+
+                        let path = match object_store::path::Path::from_url_path(&path) {
+                            Ok(path) => path,
+                            Err(err) => {
+                                warn!("Failed to parse path ({path}): {err}");
+                                return None;
+                            }
+                        };
+
+                        Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
+                    })
+                    .collect::<Vec<_>>();
+
                 let pool = connection_pool.clone();
                 spawn_blocking({
                     let message_id = message_id.to_owned();
@@ -120,31 +145,12 @@ impl ProcessCdnLogQueue {
                             .get()
                             .context("Failed to acquire database connection")?;
 
-                        for record in message.records {
-                            let region = record.aws_region;
-                            let bucket = record.s3.bucket.name;
-                            let path = record.s3.object.key;
-
-                            if Self::is_ignored_path(&path) {
-                                debug!("Skipping ignored path: {path}");
-                                continue;
-                            }
-
-                            let path = match object_store::path::Path::from_url_path(&path) {
-                                Ok(path) => path,
-                                Err(err) => {
-                                    warn!("Failed to parse path ({path}): {err}");
-                                    continue;
-                                }
-                            };
-
+                        for job in jobs {
+                            let path = &job.path;
                             info!("Enqueuing processing job for message {message_id}… ({path})");
-                            let job = ProcessCdnLog::new(region, bucket, path.as_ref().to_owned());
-
                             job.enqueue(&mut conn).with_context(|| {
                                 format!("Failed to enqueue processing job for message {message_id}")
                             })?;
-
                             debug!("Enqueued processing job for message {message_id}");
                         }
 
