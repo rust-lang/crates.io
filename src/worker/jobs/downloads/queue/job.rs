@@ -23,6 +23,8 @@ impl BackgroundJob for ProcessCdnLogQueue {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        info!("Processing messages from the CDN log queue…");
+
         let queue = Self::build_queue(&ctx.config.cdn_log_queue);
         self.run(queue, &ctx.connection_pool).await
     }
@@ -57,7 +59,6 @@ impl ProcessCdnLogQueue {
     ) -> anyhow::Result<()> {
         const MAX_BATCH_SIZE: usize = 10;
 
-        info!("Receiving messages from the CDN log queue…");
         let mut num_remaining = self.max_messages;
         while num_remaining > 0 {
             let batch_size = num_remaining.min(MAX_BATCH_SIZE);
@@ -101,7 +102,7 @@ impl ProcessCdnLogQueue {
                 let message = match serde_json::from_str::<super::message::Message>(body) {
                     Ok(message) => message,
                     Err(err) => {
-                        warn!("Failed to parse message {message_id}: {err}");
+                        warn!(%body, "Failed to parse message {message_id}: {err}");
                         continue;
                     }
                 };
