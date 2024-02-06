@@ -12,16 +12,14 @@ mod git;
 mod readmes;
 mod sync_admins;
 mod typosquat;
-mod update_downloads;
 
 pub use self::daily_db_maintenance::DailyDbMaintenance;
-pub use self::downloads::{ProcessCdnLog, ProcessCdnLogQueue};
+pub use self::downloads::{ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads};
 pub use self::dump_db::DumpDb;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::sync_admins::SyncAdmins;
 pub use self::typosquat::CheckTyposquat;
-pub use self::update_downloads::UpdateDownloads;
 
 /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
 /// already exist in the background job queue.
