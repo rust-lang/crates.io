@@ -146,6 +146,18 @@ pub(crate) trait Paginate: Sized {
             options,
         }
     }
+
+    fn pages_pagination_with_count_query<C>(
+        self,
+        options: PaginationOptions,
+        count_query: C,
+    ) -> PaginatedQueryWithCountSubq<Self, C> {
+        PaginatedQueryWithCountSubq {
+            query: self,
+            count_query,
+            options,
+        }
+    }
 }
 
 impl<T> Paginate for T {}
@@ -301,6 +313,63 @@ pub(crate) fn encode_seek<S: Serialize>(params: S) -> AppResult<String> {
 pub(crate) fn decode_seek<D: for<'a> Deserialize<'a>>(seek: &str) -> anyhow::Result<D> {
     let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
     Ok(decoded)
+}
+
+#[derive(Debug)]
+pub(crate) struct PaginatedQueryWithCountSubq<T, C> {
+    query: T,
+    count_query: C,
+    options: PaginationOptions,
+}
+
+impl<T, C> QueryId for PaginatedQueryWithCountSubq<T, C> {
+    const HAS_STATIC_QUERY_ID: bool = false;
+    type QueryId = ();
+}
+
+impl<
+        T: Query,
+        C: Query + QueryDsl + diesel::query_dsl::methods::SelectDsl<diesel::dsl::CountStar>,
+    > Query for PaginatedQueryWithCountSubq<T, C>
+{
+    type SqlType = (T::SqlType, BigInt);
+}
+
+impl<T, C, DB> RunQueryDsl<DB> for PaginatedQueryWithCountSubq<T, C> {}
+
+impl<T, C> QueryFragment<Pg> for PaginatedQueryWithCountSubq<T, C>
+where
+    T: QueryFragment<Pg>,
+    C: QueryFragment<Pg>,
+{
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
+        out.push_sql("SELECT *, (");
+        self.count_query.walk_ast(out.reborrow())?;
+        out.push_sql(") FROM (");
+        self.query.walk_ast(out.reborrow())?;
+        out.push_sql(") t LIMIT ");
+        out.push_bind_param::<BigInt, _>(&self.options.per_page)?;
+        if let Some(offset) = self.options.offset() {
+            // Injection safety: `offset()` returns `Option<i64>`, so this interpolation is constrained to known
+            // valid values and this is not vulnerable to user injection attacks.
+            out.push_sql(format!(" OFFSET {offset}").as_str());
+        }
+        Ok(())
+    }
+}
+
+impl<T, C> PaginatedQueryWithCountSubq<T, C> {
+    pub(crate) fn load<'a, U>(self, conn: &mut PgConnection) -> QueryResult<Paginated<U>>
+    where
+        Self: LoadQuery<'a, PgConnection, WithCount<U>>,
+    {
+        let options = self.options.clone();
+        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
+        Ok(Paginated {
+            records_and_total,
+            options,
+        })
+    }
 }
 
 #[cfg(test)]
