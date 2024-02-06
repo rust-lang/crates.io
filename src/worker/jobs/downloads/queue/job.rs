@@ -114,26 +114,7 @@ async fn run(
             let jobs = message
                 .records
                 .into_iter()
-                .filter_map(|record| {
-                    let region = record.aws_region;
-                    let bucket = record.s3.bucket.name;
-                    let path = record.s3.object.key;
-
-                    if is_ignored_path(&path) {
-                        debug!("Skipping ignored path: {path}");
-                        return None;
-                    }
-
-                    let path = match object_store::path::Path::from_url_path(&path) {
-                        Ok(path) => path,
-                        Err(err) => {
-                            warn!("Failed to parse path ({path}): {err}");
-                            return None;
-                        }
-                    };
-
-                    Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
-                })
+                .filter_map(job_from_record)
                 .collect::<Vec<_>>();
 
             let pool = connection_pool.clone();
@@ -148,6 +129,27 @@ async fn run(
     }
 
     Ok(())
+}
+
+fn job_from_record(record: super::message::Record) -> Option<ProcessCdnLog> {
+    let region = record.aws_region;
+    let bucket = record.s3.bucket.name;
+    let path = record.s3.object.key;
+
+    if is_ignored_path(&path) {
+        debug!("Skipping ignored path: {path}");
+        return None;
+    }
+
+    let path = match object_store::path::Path::from_url_path(&path) {
+        Ok(path) => path,
+        Err(err) => {
+            warn!("Failed to parse path ({path}): {err}");
+            return None;
+        }
+    };
+
+    Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
 }
 
 fn is_ignored_path(path: &str) -> bool {
