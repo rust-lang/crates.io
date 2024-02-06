@@ -25,150 +25,148 @@ impl BackgroundJob for ProcessCdnLogQueue {
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         info!("Processing messages from the CDN log queue…");
 
-        let queue = Self::build_queue(&ctx.config.cdn_log_queue);
-        self.run(queue, &ctx.connection_pool).await
+        let queue = build_queue(&ctx.config.cdn_log_queue);
+        run(queue, self.max_messages, &ctx.connection_pool).await
     }
 }
 
-impl ProcessCdnLogQueue {
-    fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
-        match config {
-            CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
-            CdnLogQueueConfig::SQS {
-                access_key,
-                secret_key,
-                region,
-                queue_url,
-            } => {
-                use secrecy::ExposeSecret;
+fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
+    match config {
+        CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
+        CdnLogQueueConfig::SQS {
+            access_key,
+            secret_key,
+            region,
+            queue_url,
+        } => {
+            use secrecy::ExposeSecret;
 
-                let secret_key = secret_key.expose_secret();
-                let credentials = Credentials::from_keys(access_key, secret_key, None);
+            let secret_key = secret_key.expose_secret();
+            let credentials = Credentials::from_keys(access_key, secret_key, None);
 
-                let region = Region::new(region.to_owned());
+            let region = Region::new(region.to_owned());
 
-                Box::new(SqsQueueImpl::new(queue_url, region, credentials))
-            }
+            Box::new(SqsQueueImpl::new(queue_url, region, credentials))
         }
     }
+}
 
-    async fn run(
-        &self,
-        queue: Box<dyn SqsQueue + Send + Sync>,
-        connection_pool: &DieselPool,
-    ) -> anyhow::Result<()> {
-        const MAX_BATCH_SIZE: usize = 10;
+async fn run(
+    queue: Box<dyn SqsQueue + Send + Sync>,
+    max_messages: usize,
+    connection_pool: &DieselPool,
+) -> anyhow::Result<()> {
+    const MAX_BATCH_SIZE: usize = 10;
 
-        let mut num_remaining = self.max_messages;
-        while num_remaining > 0 {
-            let batch_size = num_remaining.min(MAX_BATCH_SIZE);
-            num_remaining -= batch_size;
+    let mut num_remaining = max_messages;
+    while num_remaining > 0 {
+        let batch_size = num_remaining.min(MAX_BATCH_SIZE);
+        num_remaining -= batch_size;
 
-            debug!("Receiving next {batch_size} messages from the CDN log queue…");
-            let response = queue.receive_messages(batch_size as i32).await?;
+        debug!("Receiving next {batch_size} messages from the CDN log queue…");
+        let response = queue.receive_messages(batch_size as i32).await?;
 
-            let messages = response.messages();
-            debug!(
-                "Received {num_messages} messages from the CDN log queue",
-                num_messages = messages.len()
-            );
-            if messages.is_empty() {
-                info!("No more messages to receive from the CDN log queue");
-                break;
-            }
+        let messages = response.messages();
+        debug!(
+            "Received {num_messages} messages from the CDN log queue",
+            num_messages = messages.len()
+        );
+        if messages.is_empty() {
+            info!("No more messages to receive from the CDN log queue");
+            break;
+        }
 
-            for message in messages {
-                let message_id = message.message_id().unwrap_or("<unknown>");
-                debug!("Processing message: {message_id}");
+        for message in messages {
+            let message_id = message.message_id().unwrap_or("<unknown>");
+            debug!("Processing message: {message_id}");
 
-                let Some(receipt_handle) = message.receipt_handle() else {
-                    warn!("Message {message_id} has no receipt handle; skipping");
-                    continue;
-                };
+            let Some(receipt_handle) = message.receipt_handle() else {
+                warn!("Message {message_id} has no receipt handle; skipping");
+                continue;
+            };
 
-                debug!("Deleting message {message_id} from the CDN log queue…");
-                queue
-                    .delete_message(receipt_handle)
-                    .await
-                    .with_context(|| {
-                        format!("Failed to delete message {message_id} from the CDN log queue")
-                    })?;
+            debug!("Deleting message {message_id} from the CDN log queue…");
+            queue
+                .delete_message(receipt_handle)
+                .await
+                .with_context(|| {
+                    format!("Failed to delete message {message_id} from the CDN log queue")
+                })?;
 
-                let Some(body) = message.body() else {
-                    warn!("Message {message_id} has no body; skipping");
-                    continue;
-                };
+            let Some(body) = message.body() else {
+                warn!("Message {message_id} has no body; skipping");
+                continue;
+            };
 
-                let message = match serde_json::from_str::<super::message::Message>(body) {
-                    Ok(message) => message,
-                    Err(err) => {
-                        warn!(%body, "Failed to parse message {message_id}: {err}");
-                        continue;
-                    }
-                };
-
-                if message.records.is_empty() {
-                    warn!("Message {message_id} has no records; skipping");
+            let message = match serde_json::from_str::<super::message::Message>(body) {
+                Ok(message) => message,
+                Err(err) => {
+                    warn!(%body, "Failed to parse message {message_id}: {err}");
                     continue;
                 }
+            };
 
-                let jobs = message
-                    .records
-                    .into_iter()
-                    .filter_map(|record| {
-                        let region = record.aws_region;
-                        let bucket = record.s3.bucket.name;
-                        let path = record.s3.object.key;
+            if message.records.is_empty() {
+                warn!("Message {message_id} has no records; skipping");
+                continue;
+            }
 
-                        if Self::is_ignored_path(&path) {
-                            debug!("Skipping ignored path: {path}");
+            let jobs = message
+                .records
+                .into_iter()
+                .filter_map(|record| {
+                    let region = record.aws_region;
+                    let bucket = record.s3.bucket.name;
+                    let path = record.s3.object.key;
+
+                    if is_ignored_path(&path) {
+                        debug!("Skipping ignored path: {path}");
+                        return None;
+                    }
+
+                    let path = match object_store::path::Path::from_url_path(&path) {
+                        Ok(path) => path,
+                        Err(err) => {
+                            warn!("Failed to parse path ({path}): {err}");
                             return None;
                         }
+                    };
 
-                        let path = match object_store::path::Path::from_url_path(&path) {
-                            Ok(path) => path,
-                            Err(err) => {
-                                warn!("Failed to parse path ({path}): {err}");
-                                return None;
-                            }
-                        };
-
-                        Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
-                    })
-                    .collect::<Vec<_>>();
-
-                let pool = connection_pool.clone();
-                spawn_blocking({
-                    let message_id = message_id.to_owned();
-                    move || {
-                        let mut conn = pool
-                            .get()
-                            .context("Failed to acquire database connection")?;
-
-                        for job in jobs {
-                            let path = &job.path;
-                            info!("Enqueuing processing job for message {message_id}… ({path})");
-                            job.enqueue(&mut conn).with_context(|| {
-                                format!("Failed to enqueue processing job for message {message_id}")
-                            })?;
-                            debug!("Enqueued processing job for message {message_id}");
-                        }
-
-                        Ok::<_, anyhow::Error>(())
-                    }
+                    Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
                 })
-                .await?;
+                .collect::<Vec<_>>();
 
-                debug!("Processed message: {message_id}");
-            }
+            let pool = connection_pool.clone();
+            spawn_blocking({
+                let message_id = message_id.to_owned();
+                move || {
+                    let mut conn = pool
+                        .get()
+                        .context("Failed to acquire database connection")?;
+
+                    for job in jobs {
+                        let path = &job.path;
+                        info!("Enqueuing processing job for message {message_id}… ({path})");
+                        job.enqueue(&mut conn).with_context(|| {
+                            format!("Failed to enqueue processing job for message {message_id}")
+                        })?;
+                        debug!("Enqueued processing job for message {message_id}");
+                    }
+
+                    Ok::<_, anyhow::Error>(())
+                }
+            })
+            .await?;
+
+            debug!("Processed message: {message_id}");
         }
-
-        Ok(())
     }
 
-    fn is_ignored_path(path: &str) -> bool {
-        path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
-    }
+    Ok(())
+}
+
+fn is_ignored_path(path: &str) -> bool {
+    path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
 
 #[cfg(test)]
@@ -209,8 +207,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        let job = ProcessCdnLogQueue { max_messages: 100 };
-        assert_ok!(job.run(queue, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"123");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"us-west-1 | bucket | path");
@@ -258,8 +255,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        let job = ProcessCdnLogQueue { max_messages: 100 };
-        assert_ok!(job.run(queue, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @r###"
@@ -307,8 +303,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        let job = ProcessCdnLogQueue { max_messages: 100 };
-        assert_ok!(job.run(queue, &connection_pool).await);
+        assert_ok!(run(queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"");
@@ -316,8 +311,6 @@ mod tests {
 
     #[test]
     fn test_ignored_path() {
-        let is_ignored = ProcessCdnLogQueue::is_ignored_path;
-
         let valid_paths = vec![
             "cloudfront/static.crates.io/EJED5RT0WA7HA.2024-02-01-10.6a8be093.gz",
             "cloudfront/static.staging.crates.io/E6OCLKYH9FE8V.2024-02-01-10.5da9e90c.gz",
@@ -325,7 +318,7 @@ mod tests {
             "fastly-requests/static.staging.crates.io/2024-02-01T09:00:00.000-QPF3Ea8eICqLkzaoC_Wt.log.zst"
         ];
         for path in valid_paths {
-            assert!(!is_ignored(path));
+            assert!(!is_ignored_path(path));
         }
 
         let ignored_paths = vec![
@@ -333,7 +326,7 @@ mod tests {
             "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-02-01-10.900ddeaf.gz",
         ];
         for path in ignored_paths {
-            assert!(is_ignored(path));
+            assert!(is_ignored_path(path));
         }
     }
 
