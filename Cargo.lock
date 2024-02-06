@@ -715,7 +715,7 @@ checksum = "bf6ff49a028a52bf61913e19f5ba3b9bd34145cc97eb1649865576c8f06b408d"
 dependencies = [
  "serde",
  "thiserror",
- "toml 0.8.9",
+ "toml 0.8.10",
 ]
 
 [[package]]
@@ -1037,7 +1037,7 @@ dependencies = [
  "thiserror",
  "tikv-jemallocator",
  "tokio",
- "toml 0.8.9",
+ "toml 0.8.10",
  "tower",
  "tower-http",
  "tracing",
@@ -1156,7 +1156,7 @@ dependencies = [
  "serde_json",
  "tar",
  "thiserror",
- "toml 0.8.9",
+ "toml 0.8.10",
  "tracing",
  "tracing-subscriber",
  "walkdir",
@@ -4431,15 +4431,15 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.8.9"
+version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6a4b9e8023eb94392d3dca65d717c53abc5dad49c07cb65bb8fcd87115fa325"
+checksum = "9a9aad4a3066010876e8dcf5a8a06e70a558751117a145c6ce2b82c2e2054290"
 dependencies = [
  "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_edit 0.21.1",
+ "toml_edit 0.22.0",
 ]
 
 [[package]]
@@ -4466,9 +4466,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.21.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a8534fd7f78b5405e860340ad6575217ce99f38d4d5c8f2442cb5ecb50090e1"
+checksum = "d8dc77def39ce6079c2d0c866cc20848f591b1898f153c9fe7c4f29e1154510b"
 dependencies = [
  "indexmap",
  "serde",
