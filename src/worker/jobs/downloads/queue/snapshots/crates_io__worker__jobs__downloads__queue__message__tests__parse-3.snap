@@ -1,5 +1,5 @@
 ---
-source: src/worker/jobs/downloads/message.rs
+source: src/worker/jobs/downloads/queue/message.rs
 expression: event
 ---
 Message {
