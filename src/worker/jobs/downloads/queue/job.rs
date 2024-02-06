@@ -111,11 +111,7 @@ async fn run(
                 continue;
             }
 
-            let jobs = message
-                .records
-                .into_iter()
-                .filter_map(job_from_record)
-                .collect::<Vec<_>>();
+            let jobs = jobs_from_message(message);
 
             let pool = connection_pool.clone();
             spawn_blocking({
@@ -129,6 +125,14 @@ async fn run(
     }
 
     Ok(())
+}
+
+fn jobs_from_message(message: super::message::Message) -> Vec<ProcessCdnLog> {
+    message
+        .records
+        .into_iter()
+        .filter_map(job_from_record)
+        .collect()
 }
 
 fn job_from_record(record: super::message::Record) -> Option<ProcessCdnLog> {
