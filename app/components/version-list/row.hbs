@@ -20,7 +20,9 @@
         {{@version.releaseTrack}}
       {{/if}}
 
-      <EmberTooltip @text={{this.releaseTrackTitle}} @side="right" data-test-release-track-title/>
+      <EmberTooltip @side="right" data-test-release-track-title>
+        {{this.releaseTrackTitle}}
+      </EmberTooltip>
     </div>
 
     <LinkTo
