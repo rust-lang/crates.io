@@ -139,22 +139,7 @@ async fn run(
             let pool = connection_pool.clone();
             spawn_blocking({
                 let message_id = message_id.to_owned();
-                move || {
-                    let mut conn = pool
-                        .get()
-                        .context("Failed to acquire database connection")?;
-
-                    for job in jobs {
-                        let path = &job.path;
-                        info!("Enqueuing processing job for message {message_id}… ({path})");
-                        job.enqueue(&mut conn).with_context(|| {
-                            format!("Failed to enqueue processing job for message {message_id}")
-                        })?;
-                        debug!("Enqueued processing job for message {message_id}");
-                    }
-
-                    Ok::<_, anyhow::Error>(())
-                }
+                move || enqueue_jobs(jobs, &message_id, &pool)
             })
             .await?;
 
@@ -167,6 +152,27 @@ async fn run(
 
 fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
+}
+
+fn enqueue_jobs(
+    jobs: Vec<ProcessCdnLog>,
+    message_id: &str,
+    pool: &DieselPool,
+) -> anyhow::Result<()> {
+    let mut conn = pool
+        .get()
+        .context("Failed to acquire database connection")?;
+
+    for job in jobs {
+        let path = &job.path;
+        info!("Enqueuing processing job for message {message_id}… ({path})");
+        job.enqueue(&mut conn).with_context(|| {
+            format!("Failed to enqueue processing job for message {message_id}")
+        })?;
+        debug!("Enqueued processing job for message {message_id}");
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
