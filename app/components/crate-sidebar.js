@@ -21,7 +21,8 @@ export default class CrateSidebar extends Component {
   }
 
   get tomlSnippet() {
-    return `${this.args.crate.name} = "${this.args.version.num}"`;
+    let version = this.args.version.num.split('+')[0];
+    return `${this.args.crate.name} = "${version}"`;
   }
 
   get playgroundLink() {
