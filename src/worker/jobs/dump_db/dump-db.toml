@@ -142,6 +142,10 @@ created_at = "public"
 [metadata.columns]
 total_downloads = "public"
 
+[processed_log_files.columns]
+path = "private"
+time = "private"
+
 [publish_limit_buckets.columns]
 user_id = "private"
 action = "private"
