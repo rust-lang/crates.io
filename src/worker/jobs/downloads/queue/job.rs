@@ -86,6 +86,9 @@ async fn run(
                 continue;
             };
 
+            process_message(message, connection_pool).await?;
+            debug!("Processed message: {message_id}");
+
             debug!("Deleting message {message_id} from the CDN log queue…");
             queue
                 .delete_message(receipt_handle)
@@ -93,9 +96,6 @@ async fn run(
                 .with_context(|| {
                     format!("Failed to delete message {message_id} from the CDN log queue")
                 })?;
-
-            process_message(message, connection_pool).await?;
-            debug!("Processed message: {message_id}");
         }
     }
 
