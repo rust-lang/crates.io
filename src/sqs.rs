@@ -71,6 +71,17 @@ impl SqsQueue for SqsQueueImpl {
     }
 }
 
+#[async_trait]
+impl<T: SqsQueue + Send + Sync + ?Sized> SqsQueue for Box<T> {
+    async fn receive_messages(&self, max_messages: i32) -> anyhow::Result<ReceiveMessageOutput> {
+        (**self).receive_messages(max_messages).await
+    }
+
+    async fn delete_message(&self, receipt_handle: &str) -> anyhow::Result<()> {
+        (**self).delete_message(receipt_handle).await
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -33,7 +33,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
         info!("Processing messages from the CDN log queue…");
 
         let queue = build_queue(&ctx.config.cdn_log_queue);
-        run(queue, self.max_messages, &ctx.connection_pool).await
+        run(&queue, self.max_messages, &ctx.connection_pool).await
     }
 }
 
@@ -64,7 +64,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 /// This function is separate from the [BackgroundJob] implementation so that it
 /// can be tested without needing to construct a full [Environment] struct.
 async fn run(
-    queue: Box<dyn SqsQueue + Send + Sync>,
+    queue: &impl SqsQueue,
     max_messages: usize,
     connection_pool: &DieselPool,
 ) -> anyhow::Result<()> {
@@ -256,7 +256,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"123");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"us-west-1 | bucket | path");
@@ -304,7 +304,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @r###"
@@ -352,7 +352,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"");
