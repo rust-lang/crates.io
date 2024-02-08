@@ -17,8 +17,12 @@ impl DownloadsMap {
         *self.0.entry((name, version, date)).or_default() += 1;
     }
 
-    pub fn into_inner(self) -> HashMap<(String, Version, NaiveDate), u64> {
+    /// Converts the map into a vector of `(crate, version, date, downloads)` tuples.
+    pub fn into_vec(self) -> Vec<(String, Version, NaiveDate, u64)> {
         self.0
+            .into_iter()
+            .map(|((name, version, date), downloads)| (name, version, date, downloads))
+            .collect()
     }
 }
 

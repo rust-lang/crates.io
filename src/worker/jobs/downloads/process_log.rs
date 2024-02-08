@@ -111,13 +111,13 @@ impl ProcessCdnLog {
         info!("Total number of downloads: {total_downloads}");
         info!("Time to parse: {parse_duration:?}");
 
-        let mut downloads = downloads.into_inner().into_iter().collect::<Vec<_>>();
-        downloads.sort_by_key(|((_, _, _), downloads)| Reverse(*downloads));
+        let mut downloads = downloads.into_vec();
+        downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
 
         let top_downloads = downloads
             .into_iter()
             .take(30)
-            .map(|((krate, version, date), downloads)| {
+            .map(|(krate, version, date, downloads)| {
                 format!("{date}  {krate}@{version} .. {downloads}")
             })
             .collect::<Vec<_>>();
