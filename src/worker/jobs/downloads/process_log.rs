@@ -8,7 +8,6 @@ use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::BufReader;
@@ -92,12 +91,7 @@ impl ProcessCdnLog {
             return Ok(());
         }
 
-        let num_crates = downloads
-            .iter()
-            .map(|((_, krate, _), _)| krate)
-            .collect::<HashSet<_>>()
-            .len();
-
+        let num_crates = downloads.unique_crates().len();
         let total_inserts = downloads.len();
         let total_downloads = downloads.sum_downloads();
 

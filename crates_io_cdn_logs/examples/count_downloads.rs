@@ -1,7 +1,6 @@
 use anyhow::Context;
 use clap::Parser;
 use crates_io_cdn_logs::{count_downloads, Decompressor};
-use std::collections::HashSet;
 use std::path::PathBuf;
 use std::time::SystemTime;
 use tokio::fs::File;
@@ -46,12 +45,7 @@ async fn main() -> anyhow::Result<()> {
     println!("{downloads:?}");
     println!();
 
-    let num_crates = downloads
-        .iter()
-        .map(|((_, krate, _), _)| krate)
-        .collect::<HashSet<_>>()
-        .len();
-
+    let num_crates = downloads.unique_crates().len();
     let total_inserts = downloads.len();
     let total_downloads = downloads.sum_downloads();
 

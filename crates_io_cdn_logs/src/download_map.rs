@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use derive_deref::Deref;
 use semver::Version;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
 #[derive(Clone, Default, Deref)]
@@ -15,6 +15,11 @@ impl DownloadsMap {
     /// Increments the download count for the given crate version on the given date.
     pub fn add(&mut self, name: String, version: Version, date: NaiveDate) {
         *self.0.entry((name, version, date)).or_default() += 1;
+    }
+
+    /// Returns a [HashSet] of all crate names in the map.
+    pub fn unique_crates(&self) -> HashSet<&str> {
+        self.0.keys().map(|(krate, _, _)| krate.as_str()).collect()
     }
 
     /// Returns the total number of downloads across all crates and versions.
