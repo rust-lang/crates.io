@@ -7,6 +7,7 @@ use crate::worker::Environment;
 use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
+use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 
@@ -88,30 +89,39 @@ async fn run(
         }
 
         for message in messages {
-            let message_id = message.message_id().unwrap_or("<unknown>");
-            debug!("Processing message: {message_id}");
-
-            let Some(receipt_handle) = message.receipt_handle() else {
-                warn!("Message {message_id} has no receipt handle; skipping");
-                continue;
-            };
-
-            if let Some(body) = message.body() {
-                process_body(body, message_id, connection_pool).await?;
-                debug!("Processed message: {message_id}");
-            } else {
-                warn!("Message {message_id} has no body; skipping");
-            };
-
-            debug!("Deleting message {message_id} from the CDN log queue…");
-            queue
-                .delete_message(receipt_handle)
-                .await
-                .with_context(|| {
-                    format!("Failed to delete message {message_id} from the CDN log queue")
-                })?;
+            process_message(message, queue, connection_pool).await?;
         }
     }
+
+    Ok(())
+}
+
+/// Processes a single message from the CDN log queue.
+async fn process_message(
+    message: &Message,
+    queue: &impl SqsQueue,
+    connection_pool: &DieselPool,
+) -> anyhow::Result<()> {
+    let message_id = message.message_id().unwrap_or("<unknown>");
+    debug!("Processing message…");
+
+    let Some(receipt_handle) = message.receipt_handle() else {
+        warn!("Message {message_id} has no receipt handle; skipping");
+        return Ok(());
+    };
+
+    if let Some(body) = message.body() {
+        process_body(body, message_id, connection_pool).await?;
+        debug!("Processed message: {message_id}");
+    } else {
+        warn!("Message {message_id} has no body; skipping");
+    };
+
+    debug!("Deleting message {message_id} from the CDN log queue…");
+    queue
+        .delete_message(receipt_handle)
+        .await
+        .with_context(|| format!("Failed to delete message {message_id} from the CDN log queue"))?;
 
     Ok(())
 }
