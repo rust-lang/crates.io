@@ -124,6 +124,9 @@ async fn process_message(message: &Message, connection_pool: &DieselPool) -> any
     }
 
     let jobs = jobs_from_message(message);
+    if jobs.is_empty() {
+        return Ok(());
+    }
 
     let pool = connection_pool.clone();
     spawn_blocking({
