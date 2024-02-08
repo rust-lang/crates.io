@@ -159,8 +159,7 @@ mod tests {
 
         let path = "cloudfront/static.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
-        let config = CdnLogStorageConfig::memory();
-        let store = assert_ok!(build_store(&config, "us-west-1", "bucket"));
+        let store = Arc::new(InMemory::new());
 
         // Add dummy data into the store
         {
@@ -173,11 +172,24 @@ mod tests {
         assert_ok!(run(path, store).await);
     }
 
-    #[tokio::test]
-    async fn test_s3_builder() {
+    #[test]
+    fn test_build_store_s3() {
         let access_key = "access_key".into();
         let secret_key = "secret_key".to_string().into();
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
+    }
+
+    #[test]
+    fn test_build_store_local() {
+        let path = std::env::current_dir().unwrap();
+        let config = CdnLogStorageConfig::local(path);
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
+    }
+
+    #[test]
+    fn test_build_store_memory() {
+        let config = CdnLogStorageConfig::memory();
         assert_ok!(build_store(&config, "us-west-1", "bucket"));
     }
 }
