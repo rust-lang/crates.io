@@ -180,4 +180,17 @@ mod tests {
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
         assert_ok!(build_store(&config, "us-west-1", "bucket"));
     }
+
+    #[test]
+    fn test_build_store_local() {
+        let path = std::env::current_dir().unwrap();
+        let config = CdnLogStorageConfig::local(path);
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
+    }
+
+    #[test]
+    fn test_build_store_memory() {
+        let config = CdnLogStorageConfig::memory();
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
+    }
 }
