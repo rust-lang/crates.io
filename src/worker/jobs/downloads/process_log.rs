@@ -100,15 +100,8 @@ async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let num_crates = downloads.unique_crates().len();
-    let total_inserts = downloads.len();
-    let total_downloads = downloads.sum_downloads();
-
     info!("Log file: {path}");
-    info!("Number of crates: {num_crates}");
-    info!("Number of needed inserts: {total_inserts}");
-    info!("Total number of downloads: {total_downloads}");
-
+    log_stats(&downloads);
     log_top_downloads(downloads, 30);
 
     Ok(())
@@ -125,6 +118,19 @@ async fn load_and_count(path: &Path, store: Arc<dyn ObjectStore>) -> anyhow::Res
     let reader = BufReader::new(decompressor);
 
     count_downloads(reader).await
+}
+
+/// Prints the total number of downloads, the number of crates, and the number
+/// of needed inserts to the log.
+fn log_stats(downloads: &DownloadsMap) {
+    let total_downloads = downloads.sum_downloads();
+    info!("Total number of downloads: {total_downloads}");
+
+    let num_crates = downloads.unique_crates().len();
+    info!("Number of crates: {num_crates}");
+
+    let total_inserts = downloads.len();
+    info!("Number of needed inserts: {total_inserts}");
 }
 
 /// Prints the top `num` downloads from the given [`DownloadsMap`] map to the log.
