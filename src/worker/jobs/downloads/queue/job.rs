@@ -33,7 +33,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
         info!("Processing messages from the CDN log queue…");
 
         let queue = build_queue(&ctx.config.cdn_log_queue);
-        run(queue, self.max_messages, &ctx.connection_pool).await
+        run(&queue, self.max_messages, &ctx.connection_pool).await
     }
 }
 
@@ -64,7 +64,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 /// This function is separate from the [BackgroundJob] implementation so that it
 /// can be tested without needing to construct a full [Environment] struct.
 async fn run(
-    queue: Box<dyn SqsQueue + Send + Sync>,
+    queue: &impl SqsQueue,
     max_messages: usize,
     connection_pool: &DieselPool,
 ) -> anyhow::Result<()> {
@@ -89,24 +89,7 @@ async fn run(
         }
 
         for message in messages {
-            let message_id = message.message_id().unwrap_or("<unknown>");
-            debug!("Processing message: {message_id}");
-
-            let Some(receipt_handle) = message.receipt_handle() else {
-                warn!("Message {message_id} has no receipt handle; skipping");
-                continue;
-            };
-
-            process_message(message, connection_pool).await?;
-            debug!("Processed message: {message_id}");
-
-            debug!("Deleting message {message_id} from the CDN log queue…");
-            queue
-                .delete_message(receipt_handle)
-                .await
-                .with_context(|| {
-                    format!("Failed to delete message {message_id} from the CDN log queue")
-                })?;
+            process_message(message, queue, connection_pool).await?;
         }
     }
 
@@ -114,30 +97,53 @@ async fn run(
 }
 
 /// Processes a single message from the CDN log queue.
+#[instrument(skip_all, fields(cdn_log_queue.message.id = %message.message_id().unwrap_or("<unknown>")))]
+async fn process_message(
+    message: &Message,
+    queue: &impl SqsQueue,
+    connection_pool: &DieselPool,
+) -> anyhow::Result<()> {
+    debug!("Processing message…");
+
+    let Some(receipt_handle) = message.receipt_handle() else {
+        warn!("Message has no receipt handle; skipping");
+        return Ok(());
+    };
+
+    if let Some(body) = message.body() {
+        process_body(body, connection_pool).await?;
+        debug!("Processed message");
+    } else {
+        warn!("Message has no body; skipping");
+    };
+
+    debug!("Deleting message from the CDN log queue…");
+    queue
+        .delete_message(receipt_handle)
+        .await
+        .context("Failed to delete message from the CDN log queue")?;
+
+    Ok(())
+}
+
+/// Processes a single message body from the CDN log queue.
 ///
 /// This function only returns an `Err` if there was an error enqueueing the
 /// jobs. If the message is invalid or has no records, this function logs a
 /// warning and returns `Ok(())` instead. This is because we don't want to
 /// requeue the message in the case of a parsing error, as it would just be
 /// retried indefinitely.
-async fn process_message(message: &Message, connection_pool: &DieselPool) -> anyhow::Result<()> {
-    let message_id = message.message_id().unwrap_or("<unknown>");
-
-    let Some(body) = message.body() else {
-        warn!("Message {message_id} has no body; skipping");
-        return Ok(());
-    };
-
+async fn process_body(body: &str, connection_pool: &DieselPool) -> anyhow::Result<()> {
     let message = match serde_json::from_str::<super::message::Message>(body) {
         Ok(message) => message,
         Err(err) => {
-            warn!(%body, "Failed to parse message {message_id}: {err}");
+            warn!(%body, "Failed to parse message: {err}");
             return Ok(());
         }
     };
 
     if message.records.is_empty() {
-        warn!("Message {message_id} has no records; skipping");
+        warn!("Message has no records; skipping");
         return Ok(());
     }
 
@@ -147,11 +153,7 @@ async fn process_message(message: &Message, connection_pool: &DieselPool) -> any
     }
 
     let pool = connection_pool.clone();
-    spawn_blocking({
-        let message_id = message_id.to_owned();
-        move || enqueue_jobs(jobs, &message_id, &pool)
-    })
-    .await
+    spawn_blocking(move || enqueue_jobs(jobs, &pool)).await
 }
 
 /// Extracts a list of [`ProcessCdnLog`] jobs from a message.
@@ -197,22 +199,19 @@ fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
 
-fn enqueue_jobs(
-    jobs: Vec<ProcessCdnLog>,
-    message_id: &str,
-    pool: &DieselPool,
-) -> anyhow::Result<()> {
+fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, pool: &DieselPool) -> anyhow::Result<()> {
     let mut conn = pool
         .get()
         .context("Failed to acquire database connection")?;
 
     for job in jobs {
         let path = &job.path;
-        info!("Enqueuing processing job for message {message_id}… ({path})");
-        job.enqueue(&mut conn).with_context(|| {
-            format!("Failed to enqueue processing job for message {message_id}")
-        })?;
-        debug!("Enqueued processing job for message {message_id}");
+
+        info!("Enqueuing processing job… ({path})");
+        job.enqueue(&mut conn)
+            .context("Failed to enqueue processing job")?;
+
+        debug!("Enqueued processing job");
     }
 
     Ok(())
@@ -256,7 +255,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"123");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"us-west-1 | bucket | path");
@@ -304,7 +303,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @r###"
@@ -352,7 +351,7 @@ mod tests {
         let test_database = TestDatabase::new();
         let connection_pool = build_connection_pool(test_database.url());
 
-        assert_ok!(run(queue, 100, &connection_pool).await);
+        assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1");
         assert_snapshot!(open_jobs(&mut test_database.connect()), @"");
