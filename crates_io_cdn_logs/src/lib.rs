@@ -10,7 +10,9 @@ pub use crate::compression::Decompressor;
 pub use crate::download_map::DownloadsMap;
 use std::io::Cursor;
 use tokio::io::{AsyncBufRead, AsyncReadExt};
+use tracing::instrument;
 
+#[instrument(skip_all)]
 pub async fn count_downloads<R>(mut reader: R) -> anyhow::Result<DownloadsMap>
 where
     R: AsyncBufRead + Unpin,

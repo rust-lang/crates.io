@@ -2,7 +2,6 @@ use anyhow::Context;
 use clap::Parser;
 use crates_io_cdn_logs::{count_downloads, Decompressor};
 use std::path::PathBuf;
-use std::time::SystemTime;
 use tokio::fs::File;
 use tokio::io::BufReader;
 use tracing::level_filters::LevelFilter;
@@ -32,7 +31,6 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|ext| ext.to_str())
         .unwrap_or_default();
 
-    let start = SystemTime::now();
     let downloads = match extension {
         "gz" | "zst" => {
             let decompressor = Decompressor::from_extension(reader, Some(extension))?;
@@ -41,7 +39,6 @@ async fn main() -> anyhow::Result<()> {
         }
         _ => count_downloads(reader).await?,
     };
-    let duration = start.elapsed()?;
     println!("{downloads:?}");
     println!();
 
@@ -52,7 +49,6 @@ async fn main() -> anyhow::Result<()> {
     println!("Number of crates: {num_crates}");
     println!("Number of needed inserts: {total_inserts}");
     println!("Total number of downloads: {total_downloads}");
-    println!("Time to parse: {duration:?}");
 
     Ok(())
 }

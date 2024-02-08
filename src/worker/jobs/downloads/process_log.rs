@@ -9,7 +9,6 @@ use object_store::memory::InMemory;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
 use std::sync::Arc;
-use std::time::Instant;
 use tokio::io::BufReader;
 
 /// A background job that loads a CDN log file from an object store (aka. S3),
@@ -95,9 +94,7 @@ impl ProcessCdnLog {
         let decompressor = Decompressor::from_extension(reader, path.extension())?;
         let reader = BufReader::new(decompressor);
 
-        let parse_start = Instant::now();
         let downloads = count_downloads(reader).await?;
-        let parse_duration = parse_start.elapsed();
 
         // TODO: for now this background job just prints out the results, but
         // eventually it should insert them into the database instead.
@@ -115,7 +112,6 @@ impl ProcessCdnLog {
         info!("Number of crates: {num_crates}");
         info!("Number of needed inserts: {total_inserts}");
         info!("Total number of downloads: {total_downloads}");
-        info!("Time to parse: {parse_duration:?}");
 
         let mut downloads = downloads.into_vec();
         downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
