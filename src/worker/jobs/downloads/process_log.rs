@@ -109,18 +109,7 @@ async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
     info!("Number of needed inserts: {total_inserts}");
     info!("Total number of downloads: {total_downloads}");
 
-    let mut downloads = downloads.into_vec();
-    downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
-
-    let top_downloads = downloads
-        .into_iter()
-        .take(30)
-        .map(|(krate, version, date, downloads)| {
-            format!("{date}  {krate}@{version} .. {downloads}")
-        })
-        .collect::<Vec<_>>();
-
-    info!("Top 30 downloads: {top_downloads:?}");
+    log_top_downloads(downloads, 30);
 
     Ok(())
 }
@@ -136,6 +125,22 @@ async fn load_and_count(path: &Path, store: Arc<dyn ObjectStore>) -> anyhow::Res
     let reader = BufReader::new(decompressor);
 
     count_downloads(reader).await
+}
+
+/// Prints the top `num` downloads from the given [`DownloadsMap`] map to the log.
+fn log_top_downloads(downloads: DownloadsMap, num: usize) {
+    let mut downloads = downloads.into_vec();
+    downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
+
+    let top_downloads = downloads
+        .into_iter()
+        .take(num)
+        .map(|(krate, version, date, downloads)| {
+            format!("{date}  {krate}@{version} .. {downloads}")
+        })
+        .collect::<Vec<_>>();
+
+    info!("Top {num} downloads: {top_downloads:?}");
 }
 
 #[cfg(test)]
