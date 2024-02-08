@@ -159,8 +159,7 @@ mod tests {
 
         let path = "cloudfront/static.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
-        let config = CdnLogStorageConfig::memory();
-        let store = assert_ok!(build_store(&config, "us-west-1", "bucket"));
+        let store = Arc::new(InMemory::new());
 
         // Add dummy data into the store
         {
