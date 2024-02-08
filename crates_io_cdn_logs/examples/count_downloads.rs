@@ -47,16 +47,14 @@ async fn main() -> anyhow::Result<()> {
     println!();
 
     let num_crates = downloads
-        .as_inner()
         .iter()
         .map(|((_, krate, _), _)| krate)
         .collect::<HashSet<_>>()
         .len();
 
-    let total_inserts = downloads.as_inner().len();
+    let total_inserts = downloads.len();
 
     let total_downloads = downloads
-        .as_inner()
         .iter()
         .map(|(_, downloads)| downloads)
         .sum::<u64>();

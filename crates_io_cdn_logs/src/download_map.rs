@@ -1,9 +1,10 @@
 use chrono::NaiveDate;
+use derive_deref::Deref;
 use semver::Version;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Deref)]
 pub struct DownloadsMap(HashMap<(String, Version, NaiveDate), u64>);
 
 impl DownloadsMap {
@@ -14,10 +15,6 @@ impl DownloadsMap {
     /// Increments the download count for the given crate version on the given date.
     pub fn add(&mut self, name: String, version: Version, date: NaiveDate) {
         *self.0.entry((name, version, date)).or_default() += 1;
-    }
-
-    pub fn as_inner(&self) -> &HashMap<(String, Version, NaiveDate), u64> {
-        &self.0
     }
 
     pub fn into_inner(self) -> HashMap<(String, Version, NaiveDate), u64> {

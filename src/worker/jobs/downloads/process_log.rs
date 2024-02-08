@@ -87,22 +87,20 @@ impl ProcessCdnLog {
         // TODO: for now this background job just prints out the results, but
         // eventually it should insert them into the database instead.
 
-        if downloads.as_inner().is_empty() {
+        if downloads.is_empty() {
             info!("No downloads found in log file: {path}");
             return Ok(());
         }
 
         let num_crates = downloads
-            .as_inner()
             .iter()
             .map(|((_, krate, _), _)| krate)
             .collect::<HashSet<_>>()
             .len();
 
-        let total_inserts = downloads.as_inner().len();
+        let total_inserts = downloads.len();
 
         let total_downloads = downloads
-            .as_inner()
             .iter()
             .map(|(_, downloads)| downloads)
             .sum::<u64>();
