@@ -43,7 +43,7 @@ impl BackgroundJob for ProcessCdnLog {
         let store = build_store(&ctx.config.cdn_log_storage, &self.region, &self.bucket)
             .context("Failed to build object store")?;
 
-        self.run(store).await
+        run(&self.path, store).await
     }
 }
 
@@ -80,57 +80,56 @@ fn build_store(
     }
 }
 
-impl ProcessCdnLog {
-    /// Runs the background job with the given object store.
-    ///
-    /// This method is separate from the `BackgroundJob` trait method so that
-    /// it can be tested without having to construct a full[Environment]
-    /// struct.
-    async fn run(&self, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
-        let path = object_store::path::Path::parse(&self.path)
-            .with_context(|| format!("Failed to parse path: {:?}", self.path))?;
+/// Loads the given log file from the object store and counts the number of
+/// downloads for each crate and version. The results are printed to the log.
+///
+/// This function is separate from the [`BackgroundJob`] trait method so that
+/// it can be tested without having to construct a full [`Environment`]
+/// struct.
+async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
+    let path = object_store::path::Path::parse(path)
+        .with_context(|| format!("Failed to parse path: {path:?}"))?;
 
-        let meta = store.head(&path).await;
-        let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
+    let meta = store.head(&path).await;
+    let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
 
-        let reader = object_store::buffered::BufReader::new(store, &meta);
-        let decompressor = Decompressor::from_extension(reader, path.extension())?;
-        let reader = BufReader::new(decompressor);
+    let reader = object_store::buffered::BufReader::new(store, &meta);
+    let decompressor = Decompressor::from_extension(reader, path.extension())?;
+    let reader = BufReader::new(decompressor);
 
-        let downloads = count_downloads(reader).await?;
+    let downloads = count_downloads(reader).await?;
 
-        // TODO: for now this background job just prints out the results, but
-        // eventually it should insert them into the database instead.
+    // TODO: for now this background job just prints out the results, but
+    // eventually it should insert them into the database instead.
 
-        if downloads.is_empty() {
-            info!("No downloads found in log file: {path}");
-            return Ok(());
-        }
-
-        let num_crates = downloads.unique_crates().len();
-        let total_inserts = downloads.len();
-        let total_downloads = downloads.sum_downloads();
-
-        info!("Log file: {path}");
-        info!("Number of crates: {num_crates}");
-        info!("Number of needed inserts: {total_inserts}");
-        info!("Total number of downloads: {total_downloads}");
-
-        let mut downloads = downloads.into_vec();
-        downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
-
-        let top_downloads = downloads
-            .into_iter()
-            .take(30)
-            .map(|(krate, version, date, downloads)| {
-                format!("{date}  {krate}@{version} .. {downloads}")
-            })
-            .collect::<Vec<_>>();
-
-        info!("Top 30 downloads: {top_downloads:?}");
-
-        Ok(())
+    if downloads.is_empty() {
+        info!("No downloads found in log file: {path}");
+        return Ok(());
     }
+
+    let num_crates = downloads.unique_crates().len();
+    let total_inserts = downloads.len();
+    let total_downloads = downloads.sum_downloads();
+
+    info!("Log file: {path}");
+    info!("Number of crates: {num_crates}");
+    info!("Number of needed inserts: {total_inserts}");
+    info!("Total number of downloads: {total_downloads}");
+
+    let mut downloads = downloads.into_vec();
+    downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
+
+    let top_downloads = downloads
+        .into_iter()
+        .take(30)
+        .map(|(krate, version, date, downloads)| {
+            format!("{date}  {krate}@{version} .. {downloads}")
+        })
+        .collect::<Vec<_>>();
+
+    info!("Top 30 downloads: {top_downloads:?}");
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -143,12 +142,6 @@ mod tests {
 
         let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
-        let job = ProcessCdnLog::new(
-            "us-west-1".to_string(),
-            "bucket".to_string(),
-            path.to_string(),
-        );
-
         let config = CdnLogStorageConfig::memory();
         let store = assert_ok!(build_store(&config, "us-west-1", "bucket"));
 
@@ -160,7 +153,7 @@ mod tests {
             store.put(&path.into(), bytes[..].into()).await.unwrap();
         }
 
-        assert_ok!(job.run(store).await);
+        assert_ok!(run(path, store).await);
     }
 
     #[tokio::test]
