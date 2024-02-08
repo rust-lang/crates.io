@@ -160,15 +160,7 @@ mod tests {
 
         let path = "cloudfront/static.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
-        let store = Arc::new(InMemory::new());
-
-        // Add dummy data into the store
-        {
-            let bytes =
-                include_bytes!("../../../../crates_io_cdn_logs/test_data/cloudfront/basic.log.gz");
-
-            store.put(&path.into(), bytes[..].into()).await.unwrap();
-        }
+        let store = build_dummy_store().await;
 
         assert_ok!(run(path, store).await);
     }
@@ -192,5 +184,19 @@ mod tests {
     fn test_build_store_memory() {
         let config = CdnLogStorageConfig::memory();
         assert_ok!(build_store(&config, "us-west-1", "bucket"));
+    }
+
+    /// Builds a dummy object store with a log file in it.
+    async fn build_dummy_store() -> Arc<dyn ObjectStore> {
+        let store = InMemory::new();
+
+        // Add dummy data to the store
+        let path = CLOUDFRONT_PATH.into();
+        let bytes =
+            include_bytes!("../../../../crates_io_cdn_logs/test_data/cloudfront/basic.log.gz");
+
+        store.put(&path, bytes[..].into()).await.unwrap();
+
+        Arc::new(store)
     }
 }
