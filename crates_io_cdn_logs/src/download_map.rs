@@ -17,6 +17,11 @@ impl DownloadsMap {
         *self.0.entry((name, version, date)).or_default() += 1;
     }
 
+    /// Returns the total number of downloads across all crates and versions.
+    pub fn sum_downloads(&self) -> u64 {
+        self.0.values().sum()
+    }
+
     /// Converts the map into a vector of `(crate, version, date, downloads)` tuples.
     pub fn into_vec(self) -> Vec<(String, Version, NaiveDate, u64)> {
         self.0

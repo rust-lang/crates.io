@@ -99,11 +99,7 @@ impl ProcessCdnLog {
             .len();
 
         let total_inserts = downloads.len();
-
-        let total_downloads = downloads
-            .iter()
-            .map(|(_, downloads)| downloads)
-            .sum::<u64>();
+        let total_downloads = downloads.sum_downloads();
 
         info!("Log file: {path}");
         info!("Number of crates: {num_crates}");
