@@ -11,6 +11,12 @@ use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 
+/// A background job that processes messages from the CDN log queue.
+///
+/// Whenever a CDN uploads a new log file to S3, AWS automatically sends a
+/// message to an SQS queue. This job processes those messages, extracting the
+/// log file path from each message and enqueuing a `ProcessCdnLog` job for each
+/// path.
 #[derive(Debug, Serialize, Deserialize, clap::Parser)]
 pub struct ProcessCdnLogQueue {
     /// The maximum number of messages to receive from the queue and process.
@@ -31,6 +37,7 @@ impl BackgroundJob for ProcessCdnLogQueue {
     }
 }
 
+/// Builds an [SqsQueue] implementation based on the [CdnLogQueueConfig].
 fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
     match config {
         CdnLogQueueConfig::Mock => Box::new(MockSqsQueue::new()),
@@ -52,6 +59,10 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
     }
 }
 
+/// Processes messages from the CDN log queue.
+///
+/// This function is separate from the [BackgroundJob] implementation so that it
+/// can be tested without needing to construct a full [Environment] struct.
 async fn run(
     queue: Box<dyn SqsQueue + Send + Sync>,
     max_messages: usize,
@@ -102,6 +113,13 @@ async fn run(
     Ok(())
 }
 
+/// Processes a single message from the CDN log queue.
+///
+/// This function only returns an `Err` if there was an error enqueueing the
+/// jobs. If the message is invalid or has no records, this function logs a
+/// warning and returns `Ok(())` instead. This is because we don't want to
+/// requeue the message in the case of a parsing error, as it would just be
+/// retried indefinitely.
 async fn process_message(message: &Message, connection_pool: &DieselPool) -> anyhow::Result<()> {
     let message_id = message.message_id().unwrap_or("<unknown>");
 
@@ -133,6 +151,7 @@ async fn process_message(message: &Message, connection_pool: &DieselPool) -> any
     .await
 }
 
+/// Extracts a list of [`ProcessCdnLog`] jobs from a message.
 fn jobs_from_message(message: super::message::Message) -> Vec<ProcessCdnLog> {
     message
         .records
@@ -141,6 +160,12 @@ fn jobs_from_message(message: super::message::Message) -> Vec<ProcessCdnLog> {
         .collect()
 }
 
+/// Extracts a [`ProcessCdnLog`] job from a single record in a message.
+///
+/// If the record is for an ignored path, this function returns `None`.
+///
+/// If the record has an invalid path, this function logs a warning and returns
+/// `None` too.
 fn job_from_record(record: super::message::Record) -> Option<ProcessCdnLog> {
     let region = record.aws_region;
     let bucket = record.s3.bucket.name;
@@ -162,6 +187,9 @@ fn job_from_record(record: super::message::Record) -> Option<ProcessCdnLog> {
     Some(ProcessCdnLog::new(region, bucket, path.as_ref().to_owned()))
 }
 
+/// The CDN log files for the index domains are also stored in the same S3
+/// bucket, but we know that these don't contain any crate downloads, so we
+/// can ignore them.
 fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
