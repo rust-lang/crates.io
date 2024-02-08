@@ -1,11 +1,12 @@
 use crate::config::CdnLogStorageConfig;
 use crate::worker::Environment;
 use anyhow::Context;
-use crates_io_cdn_logs::{count_downloads, Decompressor};
+use crates_io_cdn_logs::{count_downloads, Decompressor, DownloadsMap};
 use crates_io_worker::BackgroundJob;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
+use object_store::path::Path;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
 use std::sync::Arc;
@@ -87,17 +88,9 @@ fn build_store(
 /// it can be tested without having to construct a full [`Environment`]
 /// struct.
 async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
-    let path = object_store::path::Path::parse(path)
-        .with_context(|| format!("Failed to parse path: {path:?}"))?;
+    let path = Path::parse(path).with_context(|| format!("Failed to parse path: {path:?}"))?;
 
-    let meta = store.head(&path).await;
-    let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
-
-    let reader = object_store::buffered::BufReader::new(store, &meta);
-    let decompressor = Decompressor::from_extension(reader, path.extension())?;
-    let reader = BufReader::new(decompressor);
-
-    let downloads = count_downloads(reader).await?;
+    let downloads = load_and_count(&path, store).await?;
 
     // TODO: for now this background job just prints out the results, but
     // eventually it should insert them into the database instead.
@@ -130,6 +123,19 @@ async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
     info!("Top 30 downloads: {top_downloads:?}");
 
     Ok(())
+}
+
+/// Loads the given log file from the object store and counts the number of
+/// downloads for each crate and version.
+async fn load_and_count(path: &Path, store: Arc<dyn ObjectStore>) -> anyhow::Result<DownloadsMap> {
+    let meta = store.head(path).await;
+    let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
+
+    let reader = object_store::buffered::BufReader::new(store, &meta);
+    let decompressor = Decompressor::from_extension(reader, path.extension())?;
+    let reader = BufReader::new(decompressor);
+
+    count_downloads(reader).await
 }
 
 #[cfg(test)]
