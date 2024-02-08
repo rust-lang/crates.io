@@ -8,7 +8,6 @@ use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::BufReader;
@@ -103,25 +102,14 @@ impl ProcessCdnLog {
         // TODO: for now this background job just prints out the results, but
         // eventually it should insert them into the database instead.
 
-        if downloads.as_inner().is_empty() {
+        if downloads.is_empty() {
             info!("No downloads found in log file: {path}");
             return Ok(());
         }
 
-        let num_crates = downloads
-            .as_inner()
-            .iter()
-            .map(|((_, krate, _), _)| krate)
-            .collect::<HashSet<_>>()
-            .len();
-
-        let total_inserts = downloads.as_inner().len();
-
-        let total_downloads = downloads
-            .as_inner()
-            .iter()
-            .map(|(_, downloads)| downloads)
-            .sum::<u64>();
+        let num_crates = downloads.unique_crates().len();
+        let total_inserts = downloads.len();
+        let total_downloads = downloads.sum_downloads();
 
         info!("Log file: {path}");
         info!("Number of crates: {num_crates}");
@@ -129,13 +117,13 @@ impl ProcessCdnLog {
         info!("Total number of downloads: {total_downloads}");
         info!("Time to parse: {parse_duration:?}");
 
-        let mut downloads = downloads.into_inner().into_iter().collect::<Vec<_>>();
-        downloads.sort_by_key(|((_, _, _), downloads)| Reverse(*downloads));
+        let mut downloads = downloads.into_vec();
+        downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
 
         let top_downloads = downloads
             .into_iter()
             .take(30)
-            .map(|((krate, version, date), downloads)| {
+            .map(|(krate, version, date, downloads)| {
                 format!("{date}  {krate}@{version} .. {downloads}")
             })
             .collect::<Vec<_>>();

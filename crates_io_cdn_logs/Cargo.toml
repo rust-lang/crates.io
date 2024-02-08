@@ -11,6 +11,7 @@ workspace = true
 anyhow = "=1.0.79"
 async-compression = { version = "=0.4.6", features = ["gzip", "tokio", "zstd"] }
 chrono = { version = "=0.4.33", features = ["serde"] }
+derive_deref = "=1.1.1"
 percent-encoding = "=2.3.1"
 semver = "=1.0.21"
 serde = { version = "=1.0.196", features = ["derive"] }

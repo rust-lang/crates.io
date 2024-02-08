@@ -1,9 +1,10 @@
 use chrono::NaiveDate;
+use derive_deref::Deref;
 use semver::Version;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Deref)]
 pub struct DownloadsMap(HashMap<(String, Version, NaiveDate), u64>);
 
 impl DownloadsMap {
@@ -16,12 +17,22 @@ impl DownloadsMap {
         *self.0.entry((name, version, date)).or_default() += 1;
     }
 
-    pub fn as_inner(&self) -> &HashMap<(String, Version, NaiveDate), u64> {
-        &self.0
+    /// Returns a [HashSet] of all crate names in the map.
+    pub fn unique_crates(&self) -> HashSet<&str> {
+        self.0.keys().map(|(krate, _, _)| krate.as_str()).collect()
     }
 
-    pub fn into_inner(self) -> HashMap<(String, Version, NaiveDate), u64> {
+    /// Returns the total number of downloads across all crates and versions.
+    pub fn sum_downloads(&self) -> u64 {
+        self.0.values().sum()
+    }
+
+    /// Converts the map into a vector of `(crate, version, date, downloads)` tuples.
+    pub fn into_vec(self) -> Vec<(String, Version, NaiveDate, u64)> {
         self.0
+            .into_iter()
+            .map(|((name, version, date), downloads)| (name, version, date, downloads))
+            .collect()
     }
 }
 
