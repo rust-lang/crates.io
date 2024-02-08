@@ -40,44 +40,47 @@ impl BackgroundJob for ProcessCdnLog {
         // The store is rebuilt for each run because we don't want to assume
         // that all log files live in the same AWS region or bucket, and those
         // two pieces are necessary for the store construction.
-        let store = self
-            .build_store(&ctx.config.cdn_log_storage)
+        let store = build_store(&ctx.config.cdn_log_storage, &self.region, &self.bucket)
             .context("Failed to build object store")?;
 
         self.run(store).await
     }
 }
 
-impl ProcessCdnLog {
-    /// Builds an object store based on the [CdnLogStorageConfig] and the
-    /// `region` and `bucket` fields of the [ProcessCdnLog] struct.
-    ///
-    /// If the passed in [CdnLogStorageConfig] is using local file or in-memory
-    /// storage the `region` and `bucket` fields are ignored.
-    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Arc<dyn ObjectStore>> {
-        match config {
-            CdnLogStorageConfig::S3 {
-                access_key,
-                secret_key,
-            } => {
-                use secrecy::ExposeSecret;
+/// Builds an object store based on the [CdnLogStorageConfig] and the
+/// `region` and `bucket` arguments.
+///
+/// If the passed in [CdnLogStorageConfig] is using local file or in-memory
+/// storage the `region` and `bucket` arguments are ignored.
+fn build_store(
+    config: &CdnLogStorageConfig,
+    region: impl Into<String>,
+    bucket: impl Into<String>,
+) -> anyhow::Result<Arc<dyn ObjectStore>> {
+    match config {
+        CdnLogStorageConfig::S3 {
+            access_key,
+            secret_key,
+        } => {
+            use secrecy::ExposeSecret;
 
-                let store = AmazonS3Builder::new()
-                    .with_region(&self.region)
-                    .with_bucket_name(&self.bucket)
-                    .with_access_key_id(access_key)
-                    .with_secret_access_key(secret_key.expose_secret())
-                    .build()?;
+            let store = AmazonS3Builder::new()
+                .with_region(region.into())
+                .with_bucket_name(bucket.into())
+                .with_access_key_id(access_key)
+                .with_secret_access_key(secret_key.expose_secret())
+                .build()?;
 
-                Ok(Arc::new(store))
-            }
-            CdnLogStorageConfig::Local { path } => {
-                Ok(Arc::new(LocalFileSystem::new_with_prefix(path)?))
-            }
-            CdnLogStorageConfig::Memory => Ok(Arc::new(InMemory::new())),
+            Ok(Arc::new(store))
         }
+        CdnLogStorageConfig::Local { path } => {
+            Ok(Arc::new(LocalFileSystem::new_with_prefix(path)?))
+        }
+        CdnLogStorageConfig::Memory => Ok(Arc::new(InMemory::new())),
     }
+}
 
+impl ProcessCdnLog {
     /// Runs the background job with the given object store.
     ///
     /// This method is separate from the `BackgroundJob` trait method so that
@@ -147,7 +150,7 @@ mod tests {
         );
 
         let config = CdnLogStorageConfig::memory();
-        let store = assert_ok!(job.build_store(&config));
+        let store = assert_ok!(build_store(&config, "us-west-1", "bucket"));
 
         // Add dummy data into the store
         {
@@ -162,17 +165,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_s3_builder() {
-        let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
-
-        let job = ProcessCdnLog::new(
-            "us-west-1".to_string(),
-            "bucket".to_string(),
-            path.to_string(),
-        );
-
         let access_key = "access_key".into();
         let secret_key = "secret_key".to_string().into();
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
-        assert_ok!(job.build_store(&config));
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
     }
 }
