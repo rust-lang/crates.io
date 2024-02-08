@@ -1,11 +1,12 @@
 use crate::config::CdnLogStorageConfig;
 use crate::worker::Environment;
 use anyhow::Context;
-use crates_io_cdn_logs::{count_downloads, Decompressor};
+use crates_io_cdn_logs::{count_downloads, Decompressor, DownloadsMap};
 use crates_io_worker::BackgroundJob;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
+use object_store::path::Path;
 use object_store::ObjectStore;
 use std::cmp::Reverse;
 use std::sync::Arc;
@@ -40,94 +41,112 @@ impl BackgroundJob for ProcessCdnLog {
         // The store is rebuilt for each run because we don't want to assume
         // that all log files live in the same AWS region or bucket, and those
         // two pieces are necessary for the store construction.
-        let store = self
-            .build_store(&ctx.config.cdn_log_storage)
+        let store = build_store(&ctx.config.cdn_log_storage, &self.region, &self.bucket)
             .context("Failed to build object store")?;
 
-        self.run(store).await
+        run(&self.path, store).await
     }
 }
 
-impl ProcessCdnLog {
-    /// Builds an object store based on the [CdnLogStorageConfig] and the
-    /// `region` and `bucket` fields of the [ProcessCdnLog] struct.
-    ///
-    /// If the passed in [CdnLogStorageConfig] is using local file or in-memory
-    /// storage the `region` and `bucket` fields are ignored.
-    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Arc<dyn ObjectStore>> {
-        match config {
-            CdnLogStorageConfig::S3 {
-                access_key,
-                secret_key,
-            } => {
-                use secrecy::ExposeSecret;
+/// Builds an object store based on the [CdnLogStorageConfig] and the
+/// `region` and `bucket` arguments.
+///
+/// If the passed in [CdnLogStorageConfig] is using local file or in-memory
+/// storage the `region` and `bucket` arguments are ignored.
+fn build_store(
+    config: &CdnLogStorageConfig,
+    region: impl Into<String>,
+    bucket: impl Into<String>,
+) -> anyhow::Result<Arc<dyn ObjectStore>> {
+    match config {
+        CdnLogStorageConfig::S3 {
+            access_key,
+            secret_key,
+        } => {
+            use secrecy::ExposeSecret;
 
-                let store = AmazonS3Builder::new()
-                    .with_region(&self.region)
-                    .with_bucket_name(&self.bucket)
-                    .with_access_key_id(access_key)
-                    .with_secret_access_key(secret_key.expose_secret())
-                    .build()?;
+            let store = AmazonS3Builder::new()
+                .with_region(region.into())
+                .with_bucket_name(bucket.into())
+                .with_access_key_id(access_key)
+                .with_secret_access_key(secret_key.expose_secret())
+                .build()?;
 
-                Ok(Arc::new(store))
-            }
-            CdnLogStorageConfig::Local { path } => {
-                Ok(Arc::new(LocalFileSystem::new_with_prefix(path)?))
-            }
-            CdnLogStorageConfig::Memory => Ok(Arc::new(InMemory::new())),
+            Ok(Arc::new(store))
         }
+        CdnLogStorageConfig::Local { path } => {
+            Ok(Arc::new(LocalFileSystem::new_with_prefix(path)?))
+        }
+        CdnLogStorageConfig::Memory => Ok(Arc::new(InMemory::new())),
+    }
+}
+
+/// Loads the given log file from the object store and counts the number of
+/// downloads for each crate and version. The results are printed to the log.
+///
+/// This function is separate from the [`BackgroundJob`] trait method so that
+/// it can be tested without having to construct a full [`Environment`]
+/// struct.
+async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
+    let path = Path::parse(path).with_context(|| format!("Failed to parse path: {path:?}"))?;
+
+    let downloads = load_and_count(&path, store).await?;
+
+    // TODO: for now this background job just prints out the results, but
+    // eventually it should insert them into the database instead.
+
+    if downloads.is_empty() {
+        info!("No downloads found in log file: {path}");
+        return Ok(());
     }
 
-    /// Runs the background job with the given object store.
-    ///
-    /// This method is separate from the `BackgroundJob` trait method so that
-    /// it can be tested without having to construct a full[Environment]
-    /// struct.
-    async fn run(&self, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
-        let path = object_store::path::Path::parse(&self.path)
-            .with_context(|| format!("Failed to parse path: {:?}", self.path))?;
+    info!("Log file: {path}");
+    log_stats(&downloads);
+    log_top_downloads(downloads, 30);
 
-        let meta = store.head(&path).await;
-        let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
+    Ok(())
+}
 
-        let reader = object_store::buffered::BufReader::new(store, &meta);
-        let decompressor = Decompressor::from_extension(reader, path.extension())?;
-        let reader = BufReader::new(decompressor);
+/// Loads the given log file from the object store and counts the number of
+/// downloads for each crate and version.
+async fn load_and_count(path: &Path, store: Arc<dyn ObjectStore>) -> anyhow::Result<DownloadsMap> {
+    let meta = store.head(path).await;
+    let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
 
-        let downloads = count_downloads(reader).await?;
+    let reader = object_store::buffered::BufReader::new(store, &meta);
+    let decompressor = Decompressor::from_extension(reader, path.extension())?;
+    let reader = BufReader::new(decompressor);
 
-        // TODO: for now this background job just prints out the results, but
-        // eventually it should insert them into the database instead.
+    count_downloads(reader).await
+}
 
-        if downloads.is_empty() {
-            info!("No downloads found in log file: {path}");
-            return Ok(());
-        }
+/// Prints the total number of downloads, the number of crates, and the number
+/// of needed inserts to the log.
+fn log_stats(downloads: &DownloadsMap) {
+    let total_downloads = downloads.sum_downloads();
+    info!("Total number of downloads: {total_downloads}");
 
-        let num_crates = downloads.unique_crates().len();
-        let total_inserts = downloads.len();
-        let total_downloads = downloads.sum_downloads();
+    let num_crates = downloads.unique_crates().len();
+    info!("Number of crates: {num_crates}");
 
-        info!("Log file: {path}");
-        info!("Number of crates: {num_crates}");
-        info!("Number of needed inserts: {total_inserts}");
-        info!("Total number of downloads: {total_downloads}");
+    let total_inserts = downloads.len();
+    info!("Number of needed inserts: {total_inserts}");
+}
 
-        let mut downloads = downloads.into_vec();
-        downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
+/// Prints the top `num` downloads from the given [`DownloadsMap`] map to the log.
+fn log_top_downloads(downloads: DownloadsMap, num: usize) {
+    let mut downloads = downloads.into_vec();
+    downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
 
-        let top_downloads = downloads
-            .into_iter()
-            .take(30)
-            .map(|(krate, version, date, downloads)| {
-                format!("{date}  {krate}@{version} .. {downloads}")
-            })
-            .collect::<Vec<_>>();
+    let top_downloads = downloads
+        .into_iter()
+        .take(num)
+        .map(|(krate, version, date, downloads)| {
+            format!("{date}  {krate}@{version} .. {downloads}")
+        })
+        .collect::<Vec<_>>();
 
-        info!("Top 30 downloads: {top_downloads:?}");
-
-        Ok(())
-    }
+    info!("Top {num} downloads: {top_downloads:?}");
 }
 
 #[cfg(test)]
@@ -140,14 +159,8 @@ mod tests {
 
         let path = "cloudfront/static.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
-        let job = ProcessCdnLog::new(
-            "us-west-1".to_string(),
-            "bucket".to_string(),
-            path.to_string(),
-        );
-
         let config = CdnLogStorageConfig::memory();
-        let store = assert_ok!(job.build_store(&config));
+        let store = assert_ok!(build_store(&config, "us-west-1", "bucket"));
 
         // Add dummy data into the store
         {
@@ -157,22 +170,14 @@ mod tests {
             store.put(&path.into(), bytes[..].into()).await.unwrap();
         }
 
-        assert_ok!(job.run(store).await);
+        assert_ok!(run(path, store).await);
     }
 
     #[tokio::test]
     async fn test_s3_builder() {
-        let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
-
-        let job = ProcessCdnLog::new(
-            "us-west-1".to_string(),
-            "bucket".to_string(),
-            path.to_string(),
-        );
-
         let access_key = "access_key".into();
         let secret_key = "secret_key".to_string().into();
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
-        assert_ok!(job.build_store(&config));
+        assert_ok!(build_store(&config, "us-west-1", "bucket"));
     }
 }
