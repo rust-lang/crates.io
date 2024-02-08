@@ -7,7 +7,6 @@ use crate::worker::Environment;
 use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
-use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 
@@ -97,8 +96,12 @@ async fn run(
                 continue;
             };
 
-            process_message(message, connection_pool).await?;
-            debug!("Processed message: {message_id}");
+            if let Some(body) = message.body() {
+                process_body(body, message_id, connection_pool).await?;
+                debug!("Processed message: {message_id}");
+            } else {
+                warn!("Message {message_id} has no body; skipping");
+            };
 
             debug!("Deleting message {message_id} from the CDN log queue…");
             queue
@@ -113,21 +116,18 @@ async fn run(
     Ok(())
 }
 
-/// Processes a single message from the CDN log queue.
+/// Processes a single message body from the CDN log queue.
 ///
 /// This function only returns an `Err` if there was an error enqueueing the
 /// jobs. If the message is invalid or has no records, this function logs a
 /// warning and returns `Ok(())` instead. This is because we don't want to
 /// requeue the message in the case of a parsing error, as it would just be
 /// retried indefinitely.
-async fn process_message(message: &Message, connection_pool: &DieselPool) -> anyhow::Result<()> {
-    let message_id = message.message_id().unwrap_or("<unknown>");
-
-    let Some(body) = message.body() else {
-        warn!("Message {message_id} has no body; skipping");
-        return Ok(());
-    };
-
+async fn process_body(
+    body: &str,
+    message_id: &str,
+    connection_pool: &DieselPool,
+) -> anyhow::Result<()> {
     let message = match serde_json::from_str::<super::message::Message>(body) {
         Ok(message) => message,
         Err(err) => {
