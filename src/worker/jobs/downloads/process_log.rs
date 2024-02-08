@@ -13,6 +13,9 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::io::BufReader;
 
+/// A background job that loads a CDN log file from an object store (aka. S3),
+/// counts the number of downloads for each crate and version, and then inserts
+/// the results into the database.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessCdnLog {
     pub region: String,
@@ -36,6 +39,9 @@ impl BackgroundJob for ProcessCdnLog {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        // The store is rebuilt for each run because we don't want to assume
+        // that all log files live in the same AWS region or bucket, and those
+        // two pieces are necessary for the store construction.
         let store = self
             .build_store(&ctx.config.cdn_log_storage)
             .context("Failed to build object store")?;
@@ -45,6 +51,11 @@ impl BackgroundJob for ProcessCdnLog {
 }
 
 impl ProcessCdnLog {
+    /// Builds an object store based on the [CdnLogStorageConfig] and the
+    /// `region` and `bucket` fields of the [ProcessCdnLog] struct.
+    ///
+    /// If the passed in [CdnLogStorageConfig] is using local file or in-memory
+    /// storage the `region` and `bucket` fields are ignored.
     fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Box<dyn ObjectStore>> {
         match config {
             CdnLogStorageConfig::S3 {
@@ -69,6 +80,11 @@ impl ProcessCdnLog {
         }
     }
 
+    /// Runs the background job with the given object store.
+    ///
+    /// This method is separate from the `BackgroundJob` trait method so that
+    /// it can be tested without having to construct a full[Environment]
+    /// struct.
     async fn run(&self, store: Box<dyn ObjectStore>) -> anyhow::Result<()> {
         let path = object_store::path::Path::parse(&self.path)
             .with_context(|| format!("Failed to parse path: {:?}", self.path))?;
