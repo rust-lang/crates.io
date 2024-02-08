@@ -33,9 +33,11 @@ pub async fn download(
     if let Some(version_id) = cache_result {
         app.instance_metrics.version_id_cache_hits.inc();
 
-        // The increment does not happen instantly, but it's deferred to be executed in a batch
-        // along with other downloads. See crate::downloads_counter for the implementation.
-        app.downloads_counter.increment(version_id);
+        if !app.config.cdn_log_counting_enabled {
+            // The increment does not happen instantly, but it's deferred to be executed in a batch
+            // along with other downloads. See crate::downloads_counter for the implementation.
+            app.downloads_counter.increment(version_id);
+        }
     } else {
         app.instance_metrics.version_id_cache_misses.inc();
 
@@ -67,9 +69,11 @@ pub async fn download(
                         get_version_id(&crate_name, &version, &mut conn)
                     })?;
 
-                    // The increment does not happen instantly, but it's deferred to be executed in a batch
-                    // along with other downloads. See crate::downloads_counter for the implementation.
-                    app.downloads_counter.increment(version_id);
+                    if !app.config.cdn_log_counting_enabled {
+                        // The increment does not happen instantly, but it's deferred to be executed in a batch
+                        // along with other downloads. See crate::downloads_counter for the implementation.
+                        app.downloads_counter.increment(version_id);
+                    }
 
                     Ok(Some(version_id))
                 } else {

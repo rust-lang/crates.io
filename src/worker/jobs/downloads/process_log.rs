@@ -94,7 +94,8 @@ async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
     let downloads = load_and_count(&path, store).await?;
 
     // TODO: for now this background job just prints out the results, but
-    // eventually it should insert them into the database instead.
+    // if `config.cdn_log_counting_enabled` is set it should insert them into
+    // the database instead.
 
     if downloads.is_empty() {
         info!("No downloads found in log file");
