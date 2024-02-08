@@ -54,7 +54,7 @@ impl ProcessCdnLog {
     ///
     /// If the passed in [CdnLogStorageConfig] is using local file or in-memory
     /// storage the `region` and `bucket` fields are ignored.
-    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Box<dyn ObjectStore>> {
+    fn build_store(&self, config: &CdnLogStorageConfig) -> anyhow::Result<Arc<dyn ObjectStore>> {
         match config {
             CdnLogStorageConfig::S3 {
                 access_key,
@@ -69,12 +69,12 @@ impl ProcessCdnLog {
                     .with_secret_access_key(secret_key.expose_secret())
                     .build()?;
 
-                Ok(Box::new(store))
+                Ok(Arc::new(store))
             }
             CdnLogStorageConfig::Local { path } => {
-                Ok(Box::new(LocalFileSystem::new_with_prefix(path)?))
+                Ok(Arc::new(LocalFileSystem::new_with_prefix(path)?))
             }
-            CdnLogStorageConfig::Memory => Ok(Box::new(InMemory::new())),
+            CdnLogStorageConfig::Memory => Ok(Arc::new(InMemory::new())),
         }
     }
 
@@ -83,14 +83,14 @@ impl ProcessCdnLog {
     /// This method is separate from the `BackgroundJob` trait method so that
     /// it can be tested without having to construct a full[Environment]
     /// struct.
-    async fn run(&self, store: Box<dyn ObjectStore>) -> anyhow::Result<()> {
+    async fn run(&self, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
         let path = object_store::path::Path::parse(&self.path)
             .with_context(|| format!("Failed to parse path: {:?}", self.path))?;
 
         let meta = store.head(&path).await;
         let meta = meta.with_context(|| format!("Failed to request metadata for {path:?}"))?;
 
-        let reader = object_store::buffered::BufReader::new(Arc::new(store), &meta);
+        let reader = object_store::buffered::BufReader::new(store, &meta);
         let decompressor = Decompressor::from_extension(reader, path.extension())?;
         let reader = BufReader::new(decompressor);
 
