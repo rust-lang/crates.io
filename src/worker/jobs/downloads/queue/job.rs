@@ -97,31 +97,31 @@ async fn run(
 }
 
 /// Processes a single message from the CDN log queue.
+#[instrument(skip_all, fields(cdn_log_queue.message.id = %message.message_id().unwrap_or("<unknown>")))]
 async fn process_message(
     message: &Message,
     queue: &impl SqsQueue,
     connection_pool: &DieselPool,
 ) -> anyhow::Result<()> {
-    let message_id = message.message_id().unwrap_or("<unknown>");
     debug!("Processing message…");
 
     let Some(receipt_handle) = message.receipt_handle() else {
-        warn!("Message {message_id} has no receipt handle; skipping");
+        warn!("Message has no receipt handle; skipping");
         return Ok(());
     };
 
     if let Some(body) = message.body() {
-        process_body(body, message_id, connection_pool).await?;
-        debug!("Processed message: {message_id}");
+        process_body(body, connection_pool).await?;
+        debug!("Processed message");
     } else {
-        warn!("Message {message_id} has no body; skipping");
+        warn!("Message has no body; skipping");
     };
 
-    debug!("Deleting message {message_id} from the CDN log queue…");
+    debug!("Deleting message from the CDN log queue…");
     queue
         .delete_message(receipt_handle)
         .await
-        .with_context(|| format!("Failed to delete message {message_id} from the CDN log queue"))?;
+        .context("Failed to delete message from the CDN log queue")?;
 
     Ok(())
 }
@@ -133,21 +133,17 @@ async fn process_message(
 /// warning and returns `Ok(())` instead. This is because we don't want to
 /// requeue the message in the case of a parsing error, as it would just be
 /// retried indefinitely.
-async fn process_body(
-    body: &str,
-    message_id: &str,
-    connection_pool: &DieselPool,
-) -> anyhow::Result<()> {
+async fn process_body(body: &str, connection_pool: &DieselPool) -> anyhow::Result<()> {
     let message = match serde_json::from_str::<super::message::Message>(body) {
         Ok(message) => message,
         Err(err) => {
-            warn!(%body, "Failed to parse message {message_id}: {err}");
+            warn!(%body, "Failed to parse message: {err}");
             return Ok(());
         }
     };
 
     if message.records.is_empty() {
-        warn!("Message {message_id} has no records; skipping");
+        warn!("Message has no records; skipping");
         return Ok(());
     }
 
@@ -157,11 +153,7 @@ async fn process_body(
     }
 
     let pool = connection_pool.clone();
-    spawn_blocking({
-        let message_id = message_id.to_owned();
-        move || enqueue_jobs(jobs, &message_id, &pool)
-    })
-    .await
+    spawn_blocking(move || enqueue_jobs(jobs, &pool)).await
 }
 
 /// Extracts a list of [`ProcessCdnLog`] jobs from a message.
@@ -207,22 +199,19 @@ fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
 
-fn enqueue_jobs(
-    jobs: Vec<ProcessCdnLog>,
-    message_id: &str,
-    pool: &DieselPool,
-) -> anyhow::Result<()> {
+fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, pool: &DieselPool) -> anyhow::Result<()> {
     let mut conn = pool
         .get()
         .context("Failed to acquire database connection")?;
 
     for job in jobs {
         let path = &job.path;
-        info!("Enqueuing processing job for message {message_id}… ({path})");
-        job.enqueue(&mut conn).with_context(|| {
-            format!("Failed to enqueue processing job for message {message_id}")
-        })?;
-        debug!("Enqueued processing job for message {message_id}");
+
+        info!("Enqueuing processing job… ({path})");
+        job.enqueue(&mut conn)
+            .context("Failed to enqueue processing job")?;
+
+        debug!("Enqueued processing job");
     }
 
     Ok(())
