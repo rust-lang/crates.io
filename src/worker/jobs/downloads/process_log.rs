@@ -87,6 +87,7 @@ fn build_store(
 /// This function is separate from the [`BackgroundJob`] trait method so that
 /// it can be tested without having to construct a full [`Environment`]
 /// struct.
+#[instrument(skip_all, fields(cdn_log_store.path = %path))]
 async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
     let path = Path::parse(path).with_context(|| format!("Failed to parse path: {path:?}"))?;
 
@@ -96,11 +97,10 @@ async fn run(path: &str, store: Arc<dyn ObjectStore>) -> anyhow::Result<()> {
     // eventually it should insert them into the database instead.
 
     if downloads.is_empty() {
-        info!("No downloads found in log file: {path}");
+        info!("No downloads found in log file");
         return Ok(());
     }
 
-    info!("Log file: {path}");
     log_stats(&downloads);
     log_top_downloads(downloads, 30);
 
