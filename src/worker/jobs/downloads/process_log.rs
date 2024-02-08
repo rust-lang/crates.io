@@ -173,8 +173,8 @@ mod tests {
         assert_ok!(run(path, store).await);
     }
 
-    #[tokio::test]
-    async fn test_build_store_s3() {
+    #[test]
+    fn test_build_store_s3() {
         let access_key = "access_key".into();
         let secret_key = "secret_key".to_string().into();
         let config = CdnLogStorageConfig::s3(access_key, secret_key);
