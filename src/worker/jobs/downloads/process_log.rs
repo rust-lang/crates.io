@@ -138,7 +138,7 @@ mod tests {
     async fn test_process_cdn_log() {
         let _guard = crate::util::tracing::init_for_test();
 
-        let path = "cloudfront/index.staging.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
+        let path = "cloudfront/static.crates.io/E35K556QRQDZXW.2024-01-16-16.d01d5f13.gz";
 
         let job = ProcessCdnLog::new(
             "us-west-1".to_string(),
