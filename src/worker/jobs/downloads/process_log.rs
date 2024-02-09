@@ -15,6 +15,7 @@ use object_store::path::Path;
 use object_store::ObjectStore;
 use semver::Version;
 use std::cmp::Reverse;
+use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::io::BufReader;
 
@@ -222,8 +223,14 @@ pub fn save_downloads(downloads: DownloadsMap, conn: &mut PgConnection) -> anyho
     fill_temp_downloads_table(downloads, conn).context("Failed to fill temp_downloads table")?;
 
     debug!("Saving temp_downloads to version_downloads table");
-    save_to_version_downloads(conn)
+    let failed_inserts = save_to_version_downloads(conn)
         .context("Failed to save temp_downloads to version_downloads table")?;
+
+    if !failed_inserts.is_empty() {
+        warn!(
+            "Failed to insert downloads for the following crates and versions: {failed_inserts:?}"
+        );
+    }
 
     Ok(())
 }
@@ -273,24 +280,62 @@ fn fill_temp_downloads_table(
 }
 
 /// Saves the downloads from the temporary `temp_downloads` table to the
-/// `version_downloads` table.
+/// `version_downloads` table and returns the name/version combinations that
+/// were not found in the database.
 #[instrument(
     "db.query",
     skip_all,
     fields(message = "INSERT INTO version_downloads ...")
 )]
-fn save_to_version_downloads(conn: &mut PgConnection) -> QueryResult<usize> {
+fn save_to_version_downloads(conn: &mut PgConnection) -> QueryResult<Vec<NameAndVersion>> {
     diesel::sql_query(
         r#"
-            INSERT INTO version_downloads (version_id, date, downloads)
-            SELECT versions.id, temp_downloads.date, temp_downloads.downloads FROM temp_downloads
-                INNER JOIN crates ON crates.name = temp_downloads.name
-                INNER JOIN versions ON versions.num = temp_downloads.version
-                       AND versions.crate_id = crates.id
-            ON CONFLICT (version_id, date) DO UPDATE SET downloads = version_downloads.downloads + EXCLUDED.downloads;
+            WITH joined_data AS (
+                SELECT versions.id, temp_downloads.*
+                FROM temp_downloads
+                LEFT JOIN crates ON crates.name = temp_downloads.name
+                LEFT JOIN versions ON versions.num = temp_downloads.version AND versions.crate_id = crates.id
+            ), inserted AS (
+                INSERT INTO version_downloads (version_id, date, downloads)
+                SELECT joined_data.id, joined_data.date, joined_data.downloads
+                FROM joined_data
+                WHERE joined_data.id IS NOT NULL
+                ON CONFLICT (version_id, date)
+                DO UPDATE SET downloads = version_downloads.downloads + EXCLUDED.downloads
+                RETURNING version_downloads.version_id
+            )
+            SELECT joined_data.name, joined_data.version
+            FROM joined_data
+            WHERE joined_data.id IS NULL;
         "#,
     )
-        .execute(conn)
+        .load(conn)
+}
+
+table! {
+    /// Imaginary table to make Diesel happy when using the `sql_query` macro in
+    /// the [`save_to_version_downloads()`] function.
+    name_and_versions (name, version) {
+        name -> Text,
+        version -> Text,
+    }
+}
+
+/// A helper struct for the result of the query in the
+/// [`save_to_version_downloads()`] function.
+///
+/// The result of `sql_query` can not be a tuple, so we have to define a
+/// proper struct for the result.
+#[derive(QueryableByName)]
+struct NameAndVersion {
+    name: String,
+    version: String,
+}
+
+impl Debug for NameAndVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}@{}", self.name, self.version)
+    }
 }
 
 #[cfg(test)]
