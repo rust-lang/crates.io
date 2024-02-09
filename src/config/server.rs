@@ -36,6 +36,13 @@ pub struct Server {
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub storage: StorageConfig,
+    /// If `true`, disables download counting on the download API endpoint, and
+    /// enables writing download counts from the CDN logs to the database.
+    ///
+    /// If `false`, downloads will be counted on the download API endpoint and
+    /// the download counts from the CDN logs will only be reported in the
+    /// logs.
+    pub cdn_log_counting_enabled: bool,
     pub cdn_log_storage: CdnLogStorageConfig,
     pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
@@ -176,6 +183,7 @@ impl Server {
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
+            cdn_log_counting_enabled: var("CDN_LOG_COUNTING_ENABLED")?.is_some(),
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
             base,

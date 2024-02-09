@@ -82,6 +82,28 @@ fn test_download() {
 }
 
 #[test]
+fn test_download_with_counting_via_cdn() {
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = true)
+        .with_user();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", user.as_model().id)
+            .version(VersionBuilder::new("1.0.0"))
+            .expect_build(conn);
+    });
+
+    download(&anon, "foo/1.0.0");
+
+    // Without this the downloads would not be counted, even if
+    // `cdn_log_counting_enabled` was false.
+    persist_downloads_count(&app);
+
+    assert_dl_count(&anon, "foo/1.0.0", None, 0);
+    assert_dl_count(&anon, "foo", None, 0);
+}
+
+#[test]
 fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
 

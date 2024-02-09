@@ -425,6 +425,7 @@ fn simple_config() -> config::Server {
         max_blocking_threads: None,
         db,
         storage,
+        cdn_log_counting_enabled: false,
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
