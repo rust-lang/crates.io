@@ -6,8 +6,9 @@ use anyhow::Context;
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{count_downloads, Decompressor, DownloadsMap};
 use crates_io_worker::BackgroundJob;
+use diesel::dsl::exists;
 use diesel::prelude::*;
-use diesel::{PgConnection, QueryResult};
+use diesel::{select, PgConnection, QueryResult};
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
@@ -103,9 +104,15 @@ async fn run(
     db_pool: DieselPool,
     writing_enabled: bool,
 ) -> anyhow::Result<()> {
-    let path = Path::parse(path).with_context(|| format!("Failed to parse path: {path:?}"))?;
+    if already_processed(path, db_pool.clone()).await? {
+        warn!("Skipping already processed log file");
+        return Ok(());
+    }
 
-    let downloads = load_and_count(&path, store).await?;
+    let parsed_path =
+        Path::parse(path).with_context(|| format!("Failed to parse path: {path:?}"))?;
+
+    let downloads = load_and_count(&parsed_path, store).await?;
     if downloads.is_empty() {
         info!("No downloads found in log file");
         return Ok(());
@@ -114,9 +121,24 @@ async fn run(
     log_stats(&downloads);
 
     if writing_enabled {
+        let path = path.to_string();
         spawn_blocking(move || {
             let mut conn = db_pool.get()?;
-            conn.transaction(|conn| save_downloads(downloads, conn))?;
+            conn.transaction(|conn| {
+                // Mark the log file as processed before saving the downloads to
+                // the database.
+                //
+                // If a second job is already processing the same log file, this
+                // call will block until the second job has finished its
+                // transaction and marked the log file as processed. Afterward
+                // this call will throw a uniqueness error and fail the job.
+                // When the job is retried the `already_processed()` call above
+                // will return `true` and the job will skip processing the log
+                // file again.
+                save_as_processed(&path, conn)?;
+
+                save_downloads(downloads, conn)
+            })?;
 
             Ok::<_, anyhow::Error>(())
         })
@@ -338,6 +360,47 @@ impl Debug for NameAndVersion {
     }
 }
 
+/// Checks if the given log file has already been processed.
+///
+/// Calls [`spawn_blocking()`] and acquires a connection from the pool before
+/// passing it to the [`already_processed_inner()`] function.
+async fn already_processed(path: impl Into<String>, db_pool: DieselPool) -> anyhow::Result<bool> {
+    let path = path.into();
+
+    let already_processed = spawn_blocking(move || {
+        let mut conn = db_pool.get()?;
+        Ok::<_, anyhow::Error>(already_processed_inner(path, &mut conn)?)
+    })
+    .await?;
+
+    Ok(already_processed)
+}
+
+/// Checks if the given log file has already been processed by querying the
+/// `processed_log_files` table for the given path.
+///
+/// Note that if a second job is already processing the same log file, this
+/// function will return `false` because the second job will not have inserted
+/// the path into the `processed_log_files` table yet.
+fn already_processed_inner(path: impl Into<String>, conn: &mut PgConnection) -> QueryResult<bool> {
+    use crate::schema::processed_log_files;
+
+    let query = processed_log_files::table.filter(processed_log_files::path.eq(path.into()));
+    select(exists(query)).get_result(conn)
+}
+
+/// Inserts the given path into the `processed_log_files` table to mark it as
+/// processed.
+fn save_as_processed(path: impl Into<String>, conn: &mut PgConnection) -> QueryResult<()> {
+    use crate::schema::processed_log_files;
+
+    diesel::insert_into(processed_log_files::table)
+        .values(processed_log_files::path.eq(path.into()))
+        .execute(conn)?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -360,6 +423,21 @@ mod tests {
         let store = build_dummy_store().await;
 
         let writing_enabled = true;
+        assert_ok!({
+            let store = store.clone();
+            run(store, CLOUDFRONT_PATH, db_pool.clone(), writing_enabled).await
+        });
+        assert_debug_snapshot!(all_version_downloads(db_pool.clone()).await, @r###"
+        [
+            "bindgen | 0.65.1 | 1 | 0 | 2024-01-16 | false",
+            "quick-error | 1.2.3 | 2 | 0 | 2024-01-16 | false",
+            "quick-error | 1.2.3 | 1 | 0 | 2024-01-17 | false",
+            "tracing-core | 0.1.32 | 1 | 0 | 2024-01-16 | false",
+        ]
+        "###);
+
+        // Check that processing the same log file again does not insert
+        // duplicate data.
         assert_ok!(run(store, CLOUDFRONT_PATH, db_pool.clone(), writing_enabled).await);
         assert_debug_snapshot!(all_version_downloads(db_pool).await, @r###"
         [
