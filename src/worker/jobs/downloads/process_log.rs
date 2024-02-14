@@ -287,19 +287,26 @@ fn create_temp_downloads_table(conn: &mut PgConnection) -> QueryResult<usize> {
     skip_all,
     fields(message = "INSERT INTO temp_downloads ...")
 )]
-fn fill_temp_downloads_table(
-    downloads: DownloadsMap,
-    conn: &mut PgConnection,
-) -> QueryResult<usize> {
+fn fill_temp_downloads_table(downloads: DownloadsMap, conn: &mut PgConnection) -> QueryResult<()> {
+    // Postgres has a limit of 65,535 parameters per query, so we have to
+    // insert the downloads in batches. Since we fill four columns per
+    // [NewDownload] we can only insert 16,383 rows at a time. To be safe we
+    // use a maximum batch size of 10,000.
+    const MAX_BATCH_SIZE: usize = 10_000;
+
     let map = downloads
         .into_vec()
         .into_iter()
         .map(NewDownload::from)
         .collect::<Vec<_>>();
 
-    diesel::insert_into(temp_downloads::table)
-        .values(map)
-        .execute(conn)
+    for chunk in map.chunks(MAX_BATCH_SIZE) {
+        diesel::insert_into(temp_downloads::table)
+            .values(chunk)
+            .execute(conn)?;
+    }
+
+    Ok(())
 }
 
 /// Saves the downloads from the temporary `temp_downloads` table to the
