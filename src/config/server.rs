@@ -84,6 +84,9 @@ pub struct Server {
     /// non-API requests?
     pub serve_html: bool,
 
+    /// Should the server serve the summary endpoint?
+    pub serve_summary: bool,
+
     pub content_security_policy: Option<HeaderValue>,
 }
 
@@ -119,6 +122,8 @@ impl Server {
     ///   endpoint even with a healthy database pool.
     /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
     ///   by an operator (e.g. `/crates/:crate_id/:version/download`).
+    /// - `DISABLE_SUMMARY`: Any non-empty string value will disable the `/api/v1/summary` endpoint
+    ///   gracefully. (Ish.)
     ///
     /// # Panics
     ///
@@ -227,6 +232,10 @@ impl Server {
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
             serve_html: true,
+            serve_summary: var("DISABLE_SUMMARY")?
+                .unwrap_or_default()
+                .trim()
+                .is_empty(),
             content_security_policy: Some(content_security_policy.parse()?),
         })
     }
