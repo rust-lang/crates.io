@@ -15,7 +15,7 @@ use crate::models::{
     TopVersions, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{crate_not_found, service_unavailable};
 use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
@@ -24,6 +24,10 @@ use crate::views::{
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
         let config = &state.config;
+
+        if !config.serve_summary {
+            return Err(service_unavailable());
+        }
 
         let conn = &mut *state.db_read()?;
         let num_crates: i64 = crates::table.count().get_result(conn)?;

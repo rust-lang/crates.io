@@ -76,6 +76,7 @@
 
 .error-message {
     line-height: 1.5;
+    padding: 0 var(--space-s);
 }
 
 .try-again-button {
