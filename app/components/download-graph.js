@@ -39,7 +39,7 @@ export default class DownloadGraph extends Component {
             time: { tooltipFormat: 'MMM d', unit: 'day' },
             ticks: { maxTicksLimit: 13 },
           },
-          y: { stacked: true, ticks: { min: 0, precision: 0 } },
+          y: { beginAtZero: true, stacked: true, ticks: { precision: 0 } },
         },
         interaction: {
           mode: 'index',
