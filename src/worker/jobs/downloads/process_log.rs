@@ -42,6 +42,7 @@ impl ProcessCdnLog {
 
 impl BackgroundJob for ProcessCdnLog {
     const JOB_NAME: &'static str = "process_cdn_log";
+    const QUEUE: &'static str = "downloads";
 
     type Context = Arc<Environment>;
 
