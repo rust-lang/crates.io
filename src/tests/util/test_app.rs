@@ -464,8 +464,6 @@ fn simple_config() -> config::Server {
         // The frontend code is not needed for the backend tests.
         serve_dist: false,
         serve_html: false,
-
-        serve_summary: true,
         content_security_policy: None,
     }
 }

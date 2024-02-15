@@ -36,31 +36,24 @@
 </div>
 
 {{#if this.dataTask.lastComplete.error}}
-  {{#if (eq this.dataTask.lastComplete.error.cause.response.status 503)}}
-    <p local-class='error-message'>
-      crates.io summary data is currently unavailable due to an outage.
-    </p>
-  {{else}}
+  <p local-class="error-message" data-test-error-message>
+    Unfortunately something went wrong while loading the crates.io summary data.
+    Feel free to try again, or let the <a href="mailto:help@crates.io">crates.io
+    team</a> know if the problem persists.
+  </p>
 
-    <p local-class="error-message" data-test-error-message>
-      Unfortunately something went wrong while loading the crates.io summary data. Feel free to try again, or let the
-      <a href="mailto:help@crates.io">crates.io team</a>
-      know if the problem persists.
-    </p>
-
-    <button
-      type="button"
-      disabled={{this.dataTask.isRunning}}
-      local-class="try-again-button"
-      data-test-try-again-button
-      {{on "click" this.fetchData}}
-    >
-      Try Again
-      {{#if this.dataTask.isRunning}}
-        <LoadingSpinner local-class="spinner" data-test-spinner />
-      {{/if}}
-    </button>
-  {{/if}}
+  <button
+    type="button"
+    disabled={{this.dataTask.isRunning}}
+    local-class="try-again-button"
+    data-test-try-again-button
+    {{on "click" this.fetchData}}
+  >
+    Try Again
+    {{#if this.dataTask.isRunning}}
+      <LoadingSpinner local-class="spinner" data-test-spinner />
+    {{/if}}
+  </button>
 {{else}}
   <div local-class='lists' data-test-lists>
     <section data-test-new-crates >
