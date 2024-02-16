@@ -1,1 +1,1 @@
-DROP INDEX index_follows_user_id;
+DROP INDEX CONCURRENTLY IF EXISTS index_follows_user_id;
