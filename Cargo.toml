@@ -68,7 +68,6 @@ crates_io_worker = { path = "crates_io_worker" }
 chrono = { version = "=0.4.34", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.0", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.0", features = ["secure"] }
-crossbeam-channel = "=0.5.11"
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
 derive_builder = "=0.13.1"
 derive_deref = "=1.1.1"
@@ -78,12 +77,10 @@ diesel_full_text_search = "=2.1.1"
 diesel_migrations = { version = "=2.1.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
 flate2 = "=1.0.28"
-futures-channel = { version = "=0.3.30", default-features = false }
 futures-util = "=0.3.30"
 github-meta = "=0.11.0"
 hex = "=0.4.3"
 http = "=1.0.0"
-http-body = "=1.0.0"
 http-body-util = "=0.1.0"
 hyper = { version = "=1.1.0", features = ["client", "http1"] }
 indexmap = { version = "=2.2.3", features = ["serde"] }

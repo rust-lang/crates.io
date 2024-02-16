@@ -19,7 +19,6 @@ testing = []
 anyhow = "=1.0.79"
 base64 = "=0.21.7"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
-dotenvy = "=0.15.7"
 git2 = "=0.18.2"
 secrecy = "=0.8.0"
 serde = { version = "=1.0.196", features = ["derive"] }
