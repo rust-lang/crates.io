@@ -428,6 +428,7 @@ fn simple_config() -> config::Server {
         cdn_log_counting_enabled: false,
         cdn_log_queue: CdnLogQueueConfig::Mock,
         cdn_log_storage: CdnLogStorageConfig::memory(),
+        batch_update_downloads: true,
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
