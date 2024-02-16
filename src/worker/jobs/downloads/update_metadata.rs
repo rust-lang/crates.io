@@ -4,6 +4,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel::sql_types::BigInt;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -100,7 +101,7 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
         count: i64,
     }
 
-    let query = format!(
+    let query = diesel::sql_query(
         r#"
             WITH downloads_batch AS (
                 -- Select a batch of downloads (incl. `crate_id`) that have not been
@@ -109,7 +110,7 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                 FROM version_downloads
                 INNER JOIN versions ON versions.id = version_id
                 WHERE NOT processed AND version_downloads.downloads != counted
-                LIMIT {batch_size}
+                LIMIT $1
             ), version_downloads_batch AS (
                 -- Group the downloads by `version_id` and sum them up for the
                 -- `updated_versions` CTE.
@@ -156,7 +157,10 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
         "#,
     );
 
-    let result = diesel::sql_query(query).get_result::<SqlQueryResult>(conn)?;
+    let result = query
+        .bind::<BigInt, _>(batch_size)
+        .get_result::<SqlQueryResult>(conn)?;
+
     Ok(result.count)
 }
 
