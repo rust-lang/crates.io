@@ -84,6 +84,7 @@ fn update(conn: &mut PgConnection, use_batch_update: bool) -> QueryResult<()> {
     Ok(())
 }
 
+#[instrument(skip_all)]
 fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
     table! {
         /// Imaginary table to make Diesel happy when using the `sql_query` function.
