@@ -112,7 +112,6 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                 INNER JOIN versions ON versions.id = version_id
                 WHERE NOT processed AND version_downloads.downloads != counted
                 LIMIT $1
-                FOR UPDATE
             ), version_downloads_batch AS (
                 -- Group the downloads by `version_id` and sum them up for the
                 -- `updated_versions` CTE.
