@@ -69,7 +69,7 @@ chrono = { version = "=0.4.34", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.1", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.0", features = ["secure"] }
 dashmap = { version = "=5.5.3", features = ["raw-api"] }
-derive_builder = "=0.13.1"
+derive_builder = "=0.20.0"
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
 diesel = { version = "=2.1.4", features = ["postgres", "serde_json", "chrono", "r2d2", "numeric"] }
