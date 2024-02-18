@@ -330,6 +330,7 @@ fn save_to_version_downloads(conn: &mut PgConnection) -> QueryResult<Vec<NameAnd
                 SELECT joined_data.id, joined_data.date, joined_data.downloads
                 FROM joined_data
                 WHERE joined_data.id IS NOT NULL
+                ORDER BY joined_data.id, joined_data.date
                 ON CONFLICT (version_id, date)
                 DO UPDATE SET downloads = version_downloads.downloads + EXCLUDED.downloads
                 RETURNING version_downloads.version_id
