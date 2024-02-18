@@ -149,8 +149,11 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                 -- Sort the `downloads_batch` CTE by `version_id` and `date` to
                 -- ensure that the `version_downloads` table is updated in a
                 -- consistent order to avoid deadlocks.
-                SELECT version_id, date, downloads FROM downloads_batch
+                SELECT downloads_batch.*
+                FROM version_downloads
+                JOIN downloads_batch using (version_id, date)
                 ORDER BY version_id, date
+                FOR UPDATE
             ), updated_version_downloads AS (
                 -- Update the `counted` value for each version in the batch.
                 UPDATE version_downloads
