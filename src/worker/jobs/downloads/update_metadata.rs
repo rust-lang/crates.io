@@ -145,12 +145,19 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                     FROM downloads_batch
                 ) sum
                 WHERE sum.downloads > 0
+            ), sorted_downloads_batch AS (
+                -- Sort the `downloads_batch` CTE by `version_id` and `date` to
+                -- ensure that the `version_downloads` table is updated in a
+                -- consistent order to avoid deadlocks.
+                SELECT version_id, date, downloads FROM downloads_batch
+                ORDER BY version_id, date
             ), updated_version_downloads AS (
                 -- Update the `counted` value for each version in the batch.
                 UPDATE version_downloads
-                SET counted = version_downloads.counted + downloads_batch.downloads
-                FROM downloads_batch
-                WHERE version_downloads.version_id = downloads_batch.version_id AND version_downloads.date = downloads_batch.date
+                SET counted = version_downloads.counted + sorted_downloads_batch.downloads
+                FROM sorted_downloads_batch
+                WHERE version_downloads.version_id = sorted_downloads_batch.version_id
+                    AND version_downloads.date = sorted_downloads_batch.date
             )
             -- Return the number of rows in the `downloads_batch` CTE to determine whether
             -- there are more rows to process.
