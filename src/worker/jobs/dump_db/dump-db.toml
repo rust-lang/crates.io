@@ -39,13 +39,6 @@ last_retry = "private"
 created_at = "private"
 priority = "private"
 
-[badges]
-dependencies = ["crates"]
-[badges.columns]
-crate_id = "public"
-badge_type = "public"
-attributes = "public"
-
 [categories.columns]
 id = "public"
 category = "public"
