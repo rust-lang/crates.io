@@ -17,9 +17,9 @@ This is a dump of the public information in the crates.io database.
 
 ## Less Obvious Database Fields
 
-* `crate_owners.owner_kind` - if `0`, the crate owner is a user; if `1`, the crate owner is a team. (If another value, you should probably contact the crates.io team.)
-* `crate_owners.owner_id` - if the owner is a user, this is their ID in `users.id`, otherwise it's the ID in `teams.id`.
-* `teams.login` - this will look something like `github:foo:bar`, referring to the `bar` team in the `foo` organisation. At present, as we only support GitHub, the first component will always be `github`.
+- `crate_owners.owner_kind` - if `0`, the crate owner is a user; if `1`, the crate owner is a team. (If another value, you should probably contact the crates.io team.)
+- `crate_owners.owner_id` - if the owner is a user, this is their ID in `users.id`, otherwise it's the ID in `teams.id`.
+- `teams.login` - this will look something like `github:foo:bar`, referring to the `bar` team in the `foo` organisation. At present, as we only support GitHub, the first component will always be `github`.
 
 ## Restoring to a Local crates.io Database
 

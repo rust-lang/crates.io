@@ -167,6 +167,7 @@ jobs:
       - run: pnpm lint:hbs
       - run: pnpm lint:js
       - run: pnpm lint:deps
+      - run: pnpm prettier:check
 
   frontend-test:
     name: Frontend / Test
