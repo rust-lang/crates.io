@@ -198,6 +198,31 @@ impl<T> Paginated<T> {
         Some(opts)
     }
 
+    pub(crate) fn next_seek_params<S, F>(&self, f: F) -> AppResult<Option<IndexMap<String, String>>>
+    where
+        F: Fn(&T) -> S,
+        S: Serialize,
+    {
+        if self.is_explicit_page() || self.records_and_total.len() < self.options.per_page as usize
+        {
+            return Ok(None);
+        }
+
+        let mut opts = IndexMap::new();
+        match self.options.page {
+            Page::Unspecified | Page::Seek(_) => {
+                let seek = f(&self.records_and_total.last().unwrap().record);
+                opts.insert("seek".into(), encode_seek(seek)?);
+            }
+            Page::Numeric(_) => unreachable!(),
+        };
+        Ok(Some(opts))
+    }
+
+    fn is_explicit_page(&self) -> bool {
+        matches!(&self.options.page, Page::Numeric(_))
+    }
+
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.records_and_total.iter().map(|row| &row.record)
     }
@@ -372,6 +397,73 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
     }
 }
 
+macro_rules! seek {
+    (
+        $vis:vis enum $name:ident {
+            $(
+                $variant:ident($($(#[$field_meta:meta])? $ty:ty),*)
+            )*
+        }
+    ) => {
+        paste::item! {
+            $(
+                #[derive(Debug, Default, Deserialize, Serialize, PartialEq)]
+                $vis struct $variant($($(#[$field_meta])? pub(super) $ty),*);
+            )*
+
+            #[derive(Debug, Deserialize, Serialize, PartialEq)]
+            #[serde(untagged)]
+            $vis enum [<$name Payload>] {
+                $(
+                    $variant($variant),
+                )*
+            }
+
+            #[derive(Debug, PartialEq)]
+            $vis enum $name {
+                $(
+                    $variant,
+                )*
+            }
+
+            $(
+                impl From<$variant> for [<$name Payload>] {
+                    fn from(value: $variant) -> Self {
+                        [<$name Payload>]::$variant(value)
+                    }
+                }
+            )*
+            impl From<[<$name Payload>]> for $name {
+                fn from(value: [<$name Payload>]) -> Self {
+                    match value {
+                        $(
+                            [<$name Payload>]::$variant(_) => $name::$variant,
+                        )*
+                    }
+                }
+            }
+
+            use crate::util::errors::AppResult;
+            use crate::controllers::helpers::pagination::Page;
+            impl $name {
+                pub fn after(&self, page: &Page) -> AppResult<Option<[<$name Payload>]>> {
+                    let Page::Seek(ref encoded) = *page else {
+                        return Ok(None);
+                    };
+
+                    Ok(Some(match self {
+                        $(
+                            $name::$variant => encoded.decode::<$variant>()?.into(),
+                        )*
+                    }))
+                }
+            }
+        }
+    };
+}
+
+pub(crate) use seek;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -473,6 +565,85 @@ mod tests {
         assert_ok_eq!(
             decode_seek::<(String, i32)>(&encode_seek(("foo", 42)).unwrap()),
             ("foo".into(), 42),
+        );
+    }
+
+    mod seek {
+        use chrono::naive::serde::ts_microseconds;
+        seek! {
+            pub(super) enum Seek {
+                Id(i32)
+                New(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
+                RecentDownloads(Option<i64>, i32)
+            }
+        }
+    }
+
+    #[test]
+    fn test_seek_macro_encode_and_decode() {
+        use chrono::{NaiveDate, NaiveDateTime};
+        use seek::*;
+
+        let assert_decode_after = |seek: Seek, query: &str, expect| {
+            let pagination = PaginationOptions::builder()
+                .enable_seek(true)
+                .gather(&mock(query))
+                .unwrap();
+            let decoded = seek.after(&pagination.page).unwrap();
+            assert_eq!(decoded, expect);
+        };
+
+        let seek = Seek::Id;
+        let payload = SeekPayload::Id(Id(1234));
+        let query = format!("seek={}", encode_seek(&payload).unwrap());
+        assert_decode_after(seek, &query, Some(payload));
+
+        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
+            .unwrap()
+            .and_hms_opt(9, 10, 11)
+            .unwrap();
+        let seek = Seek::New;
+        let payload = SeekPayload::New(New(dt, 1234));
+        let query = format!("seek={}", encode_seek(&payload).unwrap());
+        assert_decode_after(seek, &query, Some(payload));
+
+        let seek = Seek::RecentDownloads;
+        let payload = SeekPayload::RecentDownloads(RecentDownloads(Some(5678), 1234));
+        let query = format!("seek={}", encode_seek(&payload).unwrap());
+        assert_decode_after(seek, &query, Some(payload));
+
+        let seek = Seek::Id;
+        assert_decode_after(seek, "", None);
+
+        let seek = Seek::Id;
+        let payload = SeekPayload::RecentDownloads(RecentDownloads(Some(5678), 1234));
+        let query = format!("seek={}", encode_seek(payload).unwrap());
+        let pagination = PaginationOptions::builder()
+            .enable_seek(true)
+            .gather(&mock(&query))
+            .unwrap();
+        let error = seek.after(&pagination.page).unwrap_err();
+        assert_eq!(error.to_string(), "invalid seek parameter");
+        let response = error.response();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn test_seek_macro_conv() {
+        use chrono::{NaiveDate, NaiveDateTime};
+        use seek::*;
+
+        assert_eq!(Seek::from(SeekPayload::Id(Id(1234))), Seek::Id);
+
+        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
+            .unwrap()
+            .and_hms_opt(9, 10, 11)
+            .unwrap();
+        assert_eq!(Seek::from(SeekPayload::New(New(dt, 1234))), Seek::New);
+
+        assert_eq!(
+            Seek::from(SeekPayload::RecentDownloads(RecentDownloads(None, 1234))),
+            Seek::RecentDownloads
         );
     }
 

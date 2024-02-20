@@ -2,9 +2,8 @@
 
 use crate::auth::AuthCheck;
 use diesel::dsl::*;
-use diesel::sql_types::{Array, Text};
+use diesel::sql_types::{Array, Bool, Text};
 use diesel_full_text_search::*;
-use indexmap::IndexMap;
 use once_cell::sync::OnceCell;
 
 use crate::controllers::cargo_prelude::*;
@@ -41,7 +40,8 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     spawn_blocking(move || {
-        use diesel::sql_types::Bool;
+        use diesel::sql_types::Float;
+        use seek::*;
 
         let params = req.query();
         let option_param = |s| params.get(s).map(|v| v.as_str());
@@ -73,28 +73,20 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
             recent_crate_downloads::downloads.nullable(),
+            0_f32.into_sql::<Float>(),
         );
 
         let conn = &mut *app.db_read()?;
-        let mut supports_seek = filter_params.supports_seek();
+        let mut seek: Option<Seek> = None;
         let mut query = filter_params
             .make_query(&req, conn)?
             .left_join(recent_crate_downloads::table)
             .select(selection);
 
         if let Some(q_string) = &q_string {
-            // Searching with a query string always puts the exact match at the start of the results,
-            // so we can't support seek-based pagination with it.
-            supports_seek = false;
-
             if !q_string.is_empty() {
                 let sort = sort.unwrap_or("relevance");
 
-                query = query.select((
-                    ALL_COLUMNS,
-                    Crate::with_name(q_string),
-                    recent_crate_downloads::downloads.nullable(),
-                ));
                 query = query.order(Crate::with_name(q_string).desc());
 
                 if sort == "relevance" {
@@ -102,60 +94,70 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         .bind::<Text, _>(q_string)
                         .sql(")");
                     let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+                    query = query.select((
+                        ALL_COLUMNS,
+                        Crate::with_name(q_string),
+                        recent_crate_downloads::downloads.nullable(),
+                        rank.clone(),
+                    ));
+                    seek = Some(Seek::Relevance);
                     query = query.then_order_by(rank.desc())
+                } else {
+                    query = query.select((
+                        ALL_COLUMNS,
+                        Crate::with_name(q_string),
+                        recent_crate_downloads::downloads.nullable(),
+                        0_f32.into_sql::<Float>(),
+                    ));
+                    seek = Some(Seek::Query);
                 }
             }
         }
 
         // Any sort other than 'relevance' (default) would ignore exact crate name matches
+        // Seek-based pagination requires a unique ordering to avoid unexpected row skipping
+        // during pagination.
+        // Therefore, when the ordering isn't unique an auxiliary ordering column should be added
+        // to ensure predictable pagination behavior.
         if sort == Some("downloads") {
-            // Custom sorting is not supported yet with seek.
-            supports_seek = false;
-
-            query = query.order(crates::downloads.desc())
+            seek = Some(Seek::Downloads);
+            query = query.order((crates::downloads.desc(), crates::id.desc()))
         } else if sort == Some("recent-downloads") {
-            // Custom sorting is not supported yet with seek.
-            supports_seek = false;
-
-            query = query.order(recent_crate_downloads::downloads.desc().nulls_last())
+            seek = Some(Seek::RecentDownloads);
+            query = query.order((
+                recent_crate_downloads::downloads.desc().nulls_last(),
+                crates::id.desc(),
+            ))
         } else if sort == Some("recent-updates") {
-            // Custom sorting is not supported yet with seek.
-            supports_seek = false;
-
-            query = query.order(crates::updated_at.desc());
+            seek = Some(Seek::RecentUpdates);
+            query = query.order((crates::updated_at.desc(), crates::id.desc()));
         } else if sort == Some("new") {
-            // Custom sorting is not supported yet with seek.
-            supports_seek = false;
-
-            query = query.order(crates::created_at.desc());
+            seek = Some(Seek::New);
+            query = query.order((crates::created_at.desc(), crates::id.desc()));
         } else {
+            seek = seek.or(Some(Seek::Name));
+            // Since the name is unique value, the inherent ordering becomes naturally unique.
+            // Therefore, an additional auxiliary ordering column is unnecessary in this case.
             query = query.then_order_by(crates::name.asc())
         }
 
         let pagination: PaginationOptions = PaginationOptions::builder()
             .limit_page_numbers()
-            .enable_seek(supports_seek)
+            .enable_seek(true)
             .gather(&req)?;
 
-        let (explicit_page, seek) = match pagination.page {
-            Page::Numeric(_) => (true, None),
-            Page::Seek(ref s) => (false, Some(s.decode::<i32>()?)),
-            Page::Unspecified => (false, None),
-        };
+        let explicit_page = matches!(pagination.page, Page::Numeric(_));
 
         // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
         // not been provided. This way clients relying on meta.next_page will use the faster seek-based
         // paginations, while client hardcoding pages handling will use the slower offset-based code.
-        let (total, next_page, prev_page, data, conn) = if supports_seek && !explicit_page {
-            // Equivalent of:
-            // `WHERE name > (SELECT name FROM crates WHERE id = $1) LIMIT $2`
-            query = query.limit(pagination.per_page);
-            if let Some(seek) = seek {
-                let crate_name: String = crates::table
-                    .find(seek)
-                    .select(crates::name)
-                    .get_result(conn)?;
-                query = query.filter(crates::name.gt(crate_name));
+        let (total, next_page, prev_page, data, conn) = if !explicit_page && seek.is_some() {
+            let seek = seek.unwrap();
+            if let Some(condition) = seek
+                .after(&pagination.page)?
+                .map(|s| filter_params.seek_after(&s))
+            {
+                query = query.filter(condition);
             }
 
             // This does a full index-only scan over the crates table to gather how many crates were
@@ -164,32 +166,28 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             //
             // If this becomes a problem in the future the crates count could be denormalized, at least
             // for the filterless happy path.
-            let count_query = filter_params.make_query(&req, conn)?.count();
-            let total: i64 = info_span!("db.query", message = "SELECT COUNT(*) FROM crates")
-                .in_scope(|| count_query.get_result(conn))?;
-
-            let results: Vec<(Crate, bool, Option<i64>)> =
-                info_span!("db.query", message = "SELECT ... FROM crates")
+            let query = query.pages_pagination_with_count_query(
+                pagination,
+                filter_params.make_query(&req, conn)?.count(),
+            );
+            let data: Paginated<(Crate, bool, Option<i64>, f32)> =
+                info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
 
-            let next_page = if let Some(last) = results.last() {
-                let mut params = IndexMap::new();
-                params.insert(
-                    "seek".into(),
-                    crate::controllers::helpers::pagination::encode_seek(last.0.id)?,
-                );
-                Some(req.query_with_params(params))
-            } else {
-                None
-            };
-
-            (total, next_page, None, results, conn)
+            (
+                data.total(),
+                data.next_seek_params(|last| seek.to_payload(last))?
+                    .map(|p| req.query_with_params(p)),
+                None,
+                data.into_iter().collect::<Vec<_>>(),
+                conn,
+            )
         } else {
             let query = query.pages_pagination_with_count_query(
                 pagination,
                 filter_params.make_query(&req, conn)?.count(),
             );
-            let data: Paginated<(Crate, bool, Option<i64>)> =
+            let data: Paginated<(Crate, bool, Option<i64>, f32)> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
             (
@@ -201,12 +199,12 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             )
         };
 
-        let perfect_matches = data.iter().map(|&(_, b, _)| b).collect::<Vec<_>>();
+        let perfect_matches = data.iter().map(|&(_, b, _, _)| b).collect::<Vec<_>>();
         let recent_downloads = data
             .iter()
-            .map(|&(_, _, s)| s.unwrap_or(0))
+            .map(|&(_, _, s, _)| s.unwrap_or(0))
             .collect::<Vec<_>>();
-        let crates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
+        let crates = data.into_iter().map(|(c, _, _, _)| c).collect::<Vec<_>>();
 
         let versions: Vec<Version> = info_span!("db.query", message = "SELECT ... FROM versions")
             .in_scope(|| crates.versions().load(conn))?;
@@ -283,20 +281,6 @@ impl<'a> FilterParams<'a> {
             let user_id = AuthCheck::default().check(req, conn)?.user_id();
             Ok(user_id)
         })
-    }
-
-    fn supports_seek(&self) -> bool {
-        // Calculating the total number of results with filters is supported but paging is not supported yet.
-        !(self.q_string.is_some()
-            || self.category.is_some()
-            || self.all_keywords.is_some()
-            || self.keyword.is_some()
-            || self.letter.is_some()
-            || self.user_id.is_some()
-            || self.team_id.is_some()
-            || self.following
-            || self.has_ids
-            || !self.include_yanked)
     }
 
     fn make_query(
@@ -410,6 +394,199 @@ impl<'a> FilterParams<'a> {
 
         Ok(query)
     }
+
+    fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'a> {
+        use seek::*;
+
+        let crates_aliased = alias!(crates as crates_aliased);
+        let crate_name_by_id = |id: i32| {
+            crates_aliased
+                .find(id)
+                .select(crates_aliased.field(crates::name))
+                .single_value()
+        };
+        let conditions: Vec<BoxedCondition<'_>> = match *seek_payload {
+            SeekPayload::Name(Name(id)) => {
+                // Equivalent of:
+                // `WHERE name > name'`
+                vec![Box::new(crates::name.nullable().gt(crate_name_by_id(id)))]
+            }
+            SeekPayload::New(New(created_at, id)) => {
+                // Equivalent of:
+                // `WHERE (created_at = created_at' AND id < id') OR created_at < created_at'`
+                vec![
+                    Box::new(
+                        crates::created_at
+                            .eq(created_at)
+                            .and(crates::id.lt(id))
+                            .nullable(),
+                    ),
+                    Box::new(crates::created_at.lt(created_at).nullable()),
+                ]
+            }
+            SeekPayload::RecentUpdates(RecentUpdates(updated_at, id)) => {
+                // Equivalent of:
+                // `WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'`
+                vec![
+                    Box::new(
+                        crates::updated_at
+                            .eq(updated_at)
+                            .and(crates::id.lt(id))
+                            .nullable(),
+                    ),
+                    Box::new(crates::updated_at.lt(updated_at).nullable()),
+                ]
+            }
+            SeekPayload::RecentDownloads(RecentDownloads(recent_downloads, id)) => {
+                // Equivalent of:
+                // for recent_downloads is not None:
+                // `WHERE (recent_downloads = recent_downloads' AND id < id')
+                //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)`
+                // for recent_downloads is None:
+                // `WHERE (recent_downloads IS NULL AND id < id')`
+                match recent_downloads {
+                    Some(dl) => {
+                        vec![
+                            Box::new(
+                                recent_crate_downloads::downloads
+                                    .eq(dl)
+                                    .and(crates::id.lt(id))
+                                    .nullable(),
+                            ),
+                            Box::new(
+                                recent_crate_downloads::downloads
+                                    .lt(dl)
+                                    .or(recent_crate_downloads::downloads.is_null())
+                                    .nullable(),
+                            ),
+                        ]
+                    }
+                    None => {
+                        vec![Box::new(
+                            recent_crate_downloads::downloads
+                                .is_null()
+                                .and(crates::id.lt(id))
+                                .nullable(),
+                        )]
+                    }
+                }
+            }
+            SeekPayload::Downloads(Downloads(downloads, id)) => {
+                // Equivalent of:
+                // `WHERE (downloads = downloads' AND id < id') OR downloads < downloads'`
+                vec![
+                    Box::new(
+                        crates::downloads
+                            .eq(downloads)
+                            .and(crates::id.lt(id))
+                            .nullable(),
+                    ),
+                    Box::new(crates::downloads.lt(downloads).nullable()),
+                ]
+            }
+            SeekPayload::Query(Query(exact_match, id)) => {
+                // Equivalent of:
+                // `WHERE (exact_match = exact_match' AND name < name') OR exact_match <
+                // exact_match'`
+                let q_string = self.q_string.expect("q_string should not be None");
+                let name_exact_match = Crate::with_name(q_string);
+                vec![
+                    Box::new(
+                        name_exact_match
+                            .eq(exact_match)
+                            .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                            .nullable(),
+                    ),
+                    Box::new(name_exact_match.lt(exact_match).nullable()),
+                ]
+            }
+            SeekPayload::Relevance(Relevance(exact, rank_in, id)) => {
+                // Equivalent of:
+                // `WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
+                //      OR (exact_match = exact_match' AND rank < rank')
+                //      OR exact_match < exact_match'`
+                let q_string = self.q_string.expect("q_string should not be None");
+                let q = to_tsquery_with_search_config(
+                    configuration::TsConfigurationByName("english"),
+                    q_string,
+                );
+                let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+                let name_exact_match = Crate::with_name(q_string);
+                vec![
+                    Box::new(
+                        name_exact_match
+                            .eq(exact)
+                            .and(rank.eq(rank_in))
+                            .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                            .nullable(),
+                    ),
+                    Box::new(name_exact_match.eq(exact).and(rank.lt(rank_in)).nullable()),
+                    Box::new(name_exact_match.lt(exact).nullable()),
+                ]
+            }
+        };
+
+        conditions
+            .into_iter()
+            .fold(
+                None,
+                |merged_condition: Option<BoxedCondition<'_>>, condition| {
+                    Some(match merged_condition {
+                        Some(merged) => Box::new(merged.or(condition)),
+                        None => condition,
+                    })
+                },
+            )
+            .expect("should be a reduced BoxedCondition")
+    }
 }
+
+mod seek {
+    use crate::controllers::helpers::pagination::seek;
+    use crate::models::Crate;
+    use chrono::naive::serde::ts_microseconds;
+
+    seek! {
+        pub enum Seek {
+            Name(i32)
+            New(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
+            RecentUpdates(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
+            RecentDownloads(Option<i64>, i32)
+            Downloads(i32, i32)
+            Query(bool, i32)
+            Relevance(bool, f32, i32)
+        }
+    }
+
+    impl Seek {
+        pub(crate) fn to_payload(&self, record: &(Crate, bool, Option<i64>, f32)) -> SeekPayload {
+            match *self {
+                Seek::Name => SeekPayload::Name(Name(record.0.id)),
+                Seek::New => SeekPayload::New(New(record.0.created_at, record.0.id)),
+                Seek::RecentUpdates => {
+                    SeekPayload::RecentUpdates(RecentUpdates(record.0.updated_at, record.0.id))
+                }
+                Seek::RecentDownloads => {
+                    SeekPayload::RecentDownloads(RecentDownloads(record.2, record.0.id))
+                }
+                Seek::Downloads => {
+                    SeekPayload::Downloads(Downloads(record.0.downloads, record.0.id))
+                }
+                Seek::Query => SeekPayload::Query(Query(record.1, record.0.id)),
+                Seek::Relevance => {
+                    SeekPayload::Relevance(Relevance(record.1, record.3, record.0.id))
+                }
+            }
+        }
+    }
+}
+
+type BoxedCondition<'a> = Box<
+    dyn BoxableExpression<
+            LeftJoinQuerySource<crates::table, recent_crate_downloads::table>,
+            diesel::pg::Pg,
+            SqlType = diesel::sql_types::Nullable<Bool>,
+        > + 'a,
+>;
 
 diesel::infix_operator!(Contains, "@>");
