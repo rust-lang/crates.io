@@ -16,13 +16,14 @@ export default class CrateSidebar extends Component {
 
   get cargoAddCommand() {
     return this.args.requestedVersion
-      ? `cargo add ${this.args.crate.name}@${this.args.requestedVersion}`
+      ? `cargo add ${this.args.crate.name}@=${this.args.requestedVersion}`
       : `cargo add ${this.args.crate.name}`;
   }
 
   get tomlSnippet() {
     let version = this.args.version.num.split('+')[0];
-    return `${this.args.crate.name} = "${version}"`;
+    let exact = this.args.requestedVersion ? '=' : '';
+    return `${this.args.crate.name} = "${exact}${version}"`;
   }
 
   get playgroundLink() {
