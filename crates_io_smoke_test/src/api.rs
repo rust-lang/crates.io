@@ -42,13 +42,28 @@ impl ApiClient {
         response.json().await.map_err(Into::into)
     }
 
-    pub async fn download_crate_file<N: Display, V: Display>(
+    pub async fn download_crate_file_via_api<N: Display, V: Display>(
         &self,
         name: N,
         version: V,
     ) -> anyhow::Result<Bytes> {
         let url = format!(
             "https://staging.crates.io/api/v1/crates/{}/{}/download",
+            name, version
+        );
+
+        let response = self.http_client.get(url).send().await?;
+        let response = response.error_for_status()?;
+        response.bytes().await.map_err(Into::into)
+    }
+
+    pub async fn download_crate_file_via_cdn<N: Display, V: Display>(
+        &self,
+        name: N,
+        version: V,
+    ) -> anyhow::Result<Bytes> {
+        let url = format!(
+            "https://static.staging.crates.io/crates/{}/{}/download",
             name, version
         );
 

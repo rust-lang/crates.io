@@ -100,13 +100,26 @@ async fn main() -> anyhow::Result<()> {
     info!(%version, "Checking crate file download from staging.crates.io API…");
 
     let bytes = api_client
-        .download_crate_file(&options.crate_name, &version)
+        .download_crate_file_via_api(&options.crate_name, &version)
         .await
         .context("Failed to download crate file")?;
 
     if bytes.len() < 500 {
         return Err(anyhow!(
             "API returned an unexpectedly small crate file; size: {}",
+            bytes.len()
+        ));
+    }
+    info!(%version, "Checking crate file download from static.staging.crates.io CDN…");
+
+    let bytes = api_client
+        .download_crate_file_via_cdn(&options.crate_name, &version)
+        .await
+        .context("Failed to download crate file")?;
+
+    if bytes.len() < 500 {
+        return Err(anyhow!(
+            "CDN returned an unexpectedly small crate file; size: {}",
             bytes.len()
         ));
     }
