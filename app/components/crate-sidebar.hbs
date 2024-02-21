@@ -82,31 +82,33 @@
     </div>
   {{/unless}}
 
-  <div local-class="links">
-    {{#if this.showHomepage}}
-      <CrateSidebar::Link
-        @title="Homepage"
-        @url={{@crate.homepage}}
-        data-test-homepage-link
-      />
-    {{/if}}
+  {{#if (or this.showHomepage @version.documentationLink @crate.repository)}}
+    <div local-class="links">
+      {{#if this.showHomepage}}
+        <CrateSidebar::Link
+          @title="Homepage"
+          @url={{@crate.homepage}}
+          data-test-homepage-link
+        />
+      {{/if}}
 
-    {{#if @version.documentationLink}}
-      <CrateSidebar::Link
-        @title="Documentation"
-        @url={{@version.documentationLink}}
-        data-test-docs-link
-      />
-    {{/if}}
+      {{#if @version.documentationLink}}
+        <CrateSidebar::Link
+          @title="Documentation"
+          @url={{@version.documentationLink}}
+          data-test-docs-link
+        />
+      {{/if}}
 
-    {{#if @crate.repository}}
-      <CrateSidebar::Link
-        @title="Repository"
-        @url={{@crate.repository}}
-        data-test-repository-link
-      />
-    {{/if}}
-  </div>
+      {{#if @crate.repository}}
+        <CrateSidebar::Link
+          @title="Repository"
+          @url={{@crate.repository}}
+          data-test-repository-link
+        />
+      {{/if}}
+    </div>
+  {{/if}}
 
   <div>
     <h2 local-class="heading">Owners</h2>
@@ -119,7 +121,9 @@
         <h2 local-class="heading">Categories</h2>
         <ul local-class="categories">
           {{#each @crate.categories as |category|}}
-            <li><LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo></li>
+            <li>
+              <LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo>
+            </li>
           {{/each}}
         </ul>
       </div>
@@ -138,7 +142,8 @@
         Try on Rust Playground
 
         {{#if this.canHover}}
-          <EmberTooltip @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
+          <EmberTooltip
+            @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
         {{/if}}
       </a>
       {{#unless this.canHover}}
