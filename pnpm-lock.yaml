@@ -23,9 +23,6 @@ dependencies:
   chart.js:
     specifier: 4.4.1
     version: 4.4.1
-  copy-text-to-clipboard:
-    specifier: 3.2.0
-    version: 3.2.0
   date-fns:
     specifier: 3.3.1
     version: 3.3.1
@@ -6685,11 +6682,6 @@ packages:
     resolution: {integrity: sha512-XgZ0pFcakEUlbwQEVNg3+QAis1FyTL3Qel9FYy8pSkQqoG3PNoT0bOCQtOXcOkur21r2Eq2kI+IE+gsmAEVlYw==}
     engines: {node: '>=0.10.0'}
     dev: true
-
-  /copy-text-to-clipboard@3.2.0:
-    resolution: {integrity: sha512-RnJFp1XR/LOBDckxTib5Qjr/PMfkatD0MUCQgdpqS8MdKiNUzBjAQBEN6oUy+jW7LI93BBG3DtMB2KOOKpGs2Q==}
-    engines: {node: '>=12'}
-    dev: false
 
   /core-js-compat@3.36.0:
     resolution: {integrity: sha512-iV9Pd/PsgjNWBXeq8XRtWVSgz2tKAfhfvBs7qxYty+RlRd+OCksaWmOnc4JKrTc1cToXL1N0s3l/vwlxPtdElw==}

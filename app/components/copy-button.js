@@ -1,21 +1,18 @@
-import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 
-import copy from 'copy-text-to-clipboard';
+import { restartableTask } from 'ember-concurrency';
 
 export default class CrateTomlCopy extends Component {
   @service notifications;
 
-  @action
-  copy() {
+  copyTask = restartableTask(async () => {
     let { copyText } = this.args;
-
-    let success = copy(copyText);
-    if (success) {
+    try {
+      await navigator.clipboard.writeText(copyText);
       this.notifications.success('Copied to clipboard!');
-    } else {
+    } catch {
       this.notifications.error('Copy to clipboard failed!');
     }
-  }
+  });
 }
