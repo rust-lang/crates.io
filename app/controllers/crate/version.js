@@ -55,8 +55,7 @@ export default class CrateVersionController extends Controller {
 
     if (typeof document !== 'undefined') {
       setTimeout(() => {
-        let e = document.createEvent('CustomEvent');
-        e.initCustomEvent('hashchange', true, true);
+        let e = new CustomEvent('hashchange');
         window.dispatchEvent(e);
       });
     }
