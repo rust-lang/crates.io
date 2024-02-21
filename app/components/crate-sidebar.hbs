@@ -55,7 +55,7 @@
           title="Copy command to clipboard"
           local-class="copy-button"
         >
-          <span>{{this.cargoAddCommand}}</span>
+          <span local-class="selectable">{{this.cargoAddCommand}}</span>
           {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
         </CopyButton>
       {{else}}
@@ -71,7 +71,7 @@
           title="Copy Cargo.toml snippet to clipboard"
           local-class="copy-button"
         >
-          <span>{{this.tomlSnippet}}</span>
+          <span local-class="selectable">{{this.tomlSnippet}}</span>
           {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
         </CopyButton>
       {{else}}
