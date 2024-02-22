@@ -125,8 +125,8 @@ devDependencies:
     specifier: 1.0.0
     version: 1.0.0
   ember-cli-code-coverage:
-    specifier: 2.0.3
-    version: 2.0.3(@embroider/compat@3.4.4)(@embroider/core@3.4.4)
+    specifier: 2.1.0
+    version: 2.1.0(@embroider/compat@3.4.4)(@embroider/core@3.4.4)
   ember-cli-dependency-checker:
     specifier: 3.3.2
     version: 3.3.2(ember-cli@5.6.0)
@@ -7895,8 +7895,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-code-coverage@2.0.3(@embroider/compat@3.4.4)(@embroider/core@3.4.4):
-    resolution: {integrity: sha512-xBItw4kPffuy4QVCniBSwvyzFJiwU/+tqTyoyshug9LtiRDOaOepPVuQ8Ig+e5sYmxp3OXXcaR9iK5IY2J62Zg==}
+  /ember-cli-code-coverage@2.1.0(@embroider/compat@3.4.4)(@embroider/core@3.4.4):
+    resolution: {integrity: sha512-wQh+/CBG7NNOO08WiiCGV9HN/uFhyt+pUaxDseTu+8TwAlA2P5gPKpnR6o5CVVWaw4muGuYoL3hMLtEj5htbQQ==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       '@embroider/compat': ^0.47.0 || ^1.0.0 || ^2.0.0 || >=3.0.0
@@ -7916,6 +7916,7 @@ packages:
       fs-extra: 9.1.0
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
+      istanbul-lib-source-maps: 4.0.1
       istanbul-reports: 3.1.6
       node-dir: 0.1.17
       walk-sync: 2.2.0
