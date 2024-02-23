@@ -171,6 +171,4 @@ pub enum PoolError {
     R2D2(#[from] r2d2::PoolError),
     #[error("unhealthy database pool")]
     UnhealthyPool,
-    #[error("Failed to lock test database connection")]
-    TestConnectionUnavailable,
 }
