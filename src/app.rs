@@ -116,7 +116,7 @@ impl App {
         let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             let replica_db_connection_config = ConnectionConfig {
                 statement_timeout: config.db.statement_timeout,
-                read_only: true,
+                read_only: pool_config.read_only_mode,
             };
 
             let replica_db_config = r2d2::Pool::builder()
