@@ -178,13 +178,17 @@ impl App {
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
     pub fn db_read(&self) -> Result<DieselPooledConn, PoolError> {
-        let read_only_pool = self.read_only_replica_database.as_ref();
-        match read_only_pool.map(|pool| pool.get()) {
+        let Some(read_only_pool) = self.read_only_replica_database.as_ref() else {
+            // Replica is disabled, but primary might be available
+            return self.primary_database.get();
+        };
+
+        match read_only_pool.get() {
             // Replica is available
-            Some(Ok(connection)) => Ok(connection),
+            Ok(connection) => Ok(connection),
 
             // Replica is not available, but primary might be available
-            Some(Err(PoolError::UnhealthyPool)) => {
+            Err(PoolError::UnhealthyPool) => {
                 let _ = self
                     .instance_metrics
                     .database_fallback_used
@@ -195,10 +199,7 @@ impl App {
             }
 
             // Replica failed
-            Some(Err(error)) => Err(error),
-
-            // Replica is disabled, but primary might be available
-            None => self.primary_database.get(),
+            Err(error) => Err(error),
         }
     }
 
@@ -207,15 +208,16 @@ impl App {
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]
     pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn, PoolError> {
-        match (
-            self.primary_database.get(),
-            &self.read_only_replica_database,
-        ) {
+        let Some(read_only_pool) = self.read_only_replica_database.as_ref() else {
+            return self.primary_database.get();
+        };
+
+        match self.primary_database.get() {
             // Primary is available
-            (Ok(connection), _) => Ok(connection),
+            Ok(connection) => Ok(connection),
 
             // Primary is not available, but replica might be available
-            (Err(PoolError::UnhealthyPool), Some(read_only_pool)) => {
+            Err(PoolError::UnhealthyPool) => {
                 let _ = self
                     .instance_metrics
                     .database_fallback_used
@@ -225,11 +227,8 @@ impl App {
                 read_only_pool.get()
             }
 
-            // Primary failed and replica is disabled
-            (Err(error), None) => Err(error),
-
             // Primary failed
-            (Err(error), _) => Err(error),
+            Err(error) => Err(error),
         }
     }
 }
