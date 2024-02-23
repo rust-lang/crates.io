@@ -146,22 +146,25 @@ pub struct ConnectionConfig {
     pub read_only: bool,
 }
 
-impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
-    fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), r2d2::Error> {
-        use diesel::sql_query;
-
-        sql_query(format!(
+impl ConnectionConfig {
+    fn apply(&self, conn: &mut PgConnection) -> QueryResult<()> {
+        diesel::sql_query(format!(
             "SET statement_timeout = {}",
             self.statement_timeout.as_millis()
         ))
-        .execute(conn)
-        .map_err(r2d2::Error::QueryError)?;
+            .execute(conn)?;
+
         if self.read_only {
-            sql_query("SET default_transaction_read_only = 't'")
-                .execute(conn)
-                .map_err(r2d2::Error::QueryError)?;
+            diesel::sql_query("SET default_transaction_read_only = 't'").execute(conn)?;
         }
+
         Ok(())
+    }
+}
+
+impl CustomizeConnection<PgConnection, r2d2::Error> for ConnectionConfig {
+    fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), r2d2::Error> {
+        self.apply(conn).map_err(r2d2::Error::QueryError)
     }
 }
 
