@@ -148,11 +148,8 @@ pub struct ConnectionConfig {
 
 impl ConnectionConfig {
     fn apply(&self, conn: &mut PgConnection) -> QueryResult<()> {
-        diesel::sql_query(format!(
-            "SET statement_timeout = {}",
-            self.statement_timeout.as_millis()
-        ))
-            .execute(conn)?;
+        let statement_timeout = self.statement_timeout.as_millis();
+        diesel::sql_query(format!("SET statement_timeout = {statement_timeout}")).execute(conn)?;
 
         if self.read_only {
             diesel::sql_query("SET default_transaction_read_only = 't'").execute(conn)?;
