@@ -25,6 +25,8 @@ use crates_io::{db, ssh};
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use crates_io_worker::Runner;
+use deadpool::Runtime;
+use deadpool_diesel::postgres::{Manager, Pool};
 use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
 use reqwest::Client;
@@ -83,7 +85,10 @@ fn main() -> anyhow::Result<()> {
     let connection_pool = r2d2::Pool::builder()
         .max_size(10)
         .min_idle(Some(0))
-        .build_unchecked(ConnectionManager::new(db_url));
+        .build_unchecked(ConnectionManager::new(&db_url));
+
+    let manager = Manager::new(db_url, Runtime::Tokio1);
+    let deadpool = Pool::builder(manager).max_size(10).build().unwrap();
 
     let environment = Environment::builder()
         .config(Arc::new(config))
@@ -92,6 +97,7 @@ fn main() -> anyhow::Result<()> {
         .fastly(fastly)
         .storage(storage)
         .connection_pool(DieselPool::new_background_worker(connection_pool.clone()))
+        .deadpool(deadpool)
         .emails(emails)
         .team_repo(Box::new(team_repo))
         .build()?;

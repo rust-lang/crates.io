@@ -277,6 +277,7 @@ impl TestAppBuilder {
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
                 .connection_pool(app.primary_database.clone())
+                .deadpool(app.deadpool_primary.clone())
                 .emails(app.emails.clone())
                 .team_repo(Box::new(self.team_repo))
                 .build()
