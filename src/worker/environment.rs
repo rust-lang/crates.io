@@ -6,7 +6,7 @@ use crate::team_repo::TeamRepo;
 use crate::typosquat;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
-use deadpool_diesel::postgres::Pool;
+use deadpool_diesel::postgres::Pool as DeadpoolPool;
 use derive_builder::Builder;
 use diesel::PgConnection;
 use parking_lot::{Mutex, MutexGuard};
@@ -28,7 +28,7 @@ pub struct Environment {
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
     pub connection_pool: DieselPool,
-    pub deadpool: Pool,
+    pub deadpool: DeadpoolPool,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
 

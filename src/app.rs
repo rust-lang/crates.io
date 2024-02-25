@@ -13,7 +13,7 @@ use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
-use deadpool_diesel::postgres::{Manager, Pool};
+use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
 use deadpool_diesel::Runtime;
 use diesel::r2d2;
 use moka::future::{Cache, CacheBuilder};
@@ -30,14 +30,14 @@ pub struct App {
 
     /// Async database connection pool based on `deadpool` connected
     /// to the primary database
-    pub deadpool_primary: Pool,
+    pub deadpool_primary: DeadpoolPool,
 
     /// The read-only replica database connection pool
     pub read_only_replica_database: Option<DieselPool>,
 
     /// Async database connection pool based on `deadpool` connected
     /// to the read-only replica database
-    pub deadpool_replica: Option<Pool>,
+    pub deadpool_replica: Option<DeadpoolPool>,
 
     /// GitHub API client
     pub github: Box<dyn GitHubClient>,
@@ -134,9 +134,9 @@ impl App {
             };
 
             let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager = Manager::new(url, Runtime::Tokio1);
+            let manager = DeadpoolManager::new(url, Runtime::Tokio1);
 
-            Pool::builder(manager)
+            DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
                 .max_size(config.db.primary.async_pool_size)
                 .wait_timeout(Some(config.db.connection_timeout))
@@ -182,9 +182,9 @@ impl App {
             };
 
             let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager = Manager::new(url, Runtime::Tokio1);
+            let manager = DeadpoolManager::new(url, Runtime::Tokio1);
 
-            let pool = Pool::builder(manager)
+            let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
                 .max_size(pool_config.async_pool_size)
                 .wait_timeout(Some(config.db.connection_timeout))
