@@ -429,7 +429,8 @@ fn index_sorting() {
     }
 
     // Sort by relevance
-    for query in ["q=foo_sort", "q=sort"] {
+    // Add query containing a space to ensure tsquery works
+    for query in ["q=foo_sort", "q=sort", "q=foo%20sort"] {
         let (resp, calls) = page_with_seek(&anon, query);
         assert_eq!(calls, resp[0].meta.total + 1);
         let decoded_seeks = resp
