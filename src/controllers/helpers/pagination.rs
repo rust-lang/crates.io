@@ -133,6 +133,10 @@ impl PaginationOptionsBuilder {
             return Err(bad_request(format_args!(
                 "cannot request more than {MAX_PER_PAGE} items",
             )));
+        } else if per_page < 1 {
+            return Err(bad_request(format_args!(
+                "cannot request less than 1 item, per_page {per_page} is invalid",
+            )));
         }
 
         Ok(PaginationOptions { page, per_page })
@@ -501,6 +505,10 @@ mod tests {
         assert_error("per_page=not_a_number", "invalid digit found in string");
         assert_error("per_page=1.0", "invalid digit found in string");
         assert_error("per_page=101", "cannot request more than 100 items");
+        assert_error(
+            "per_page=0",
+            "cannot request less than 1 item, per_page 0 is invalid",
+        );
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("per_page=5"))
