@@ -146,8 +146,8 @@ devDependencies:
     specifier: 2.1.0
     version: 2.1.0
   ember-cli-mirage:
-    specifier: 3.0.2
-    version: 3.0.2(@ember/test-helpers@3.3.0)(@glint/template@1.3.0)(ember-data@4.12.5)(ember-qunit@8.0.2)(ember-source@5.6.0)(miragejs@0.1.48)(webpack@5.90.3)
+    specifier: 3.0.3
+    version: 3.0.3(@ember/test-helpers@3.3.0)(@glint/template@1.3.0)(ember-data@4.12.5)(ember-qunit@8.0.2)(ember-source@5.6.0)(miragejs@0.1.48)(webpack@5.90.3)
   ember-cli-notifications:
     specifier: 9.0.0
     version: 9.0.0
@@ -8040,8 +8040,8 @@ packages:
     engines: {node: ^4.5 || 6.* || >= 7.*}
     dev: true
 
-  /ember-cli-mirage@3.0.2(@ember/test-helpers@3.3.0)(@glint/template@1.3.0)(ember-data@4.12.5)(ember-qunit@8.0.2)(ember-source@5.6.0)(miragejs@0.1.48)(webpack@5.90.3):
-    resolution: {integrity: sha512-SthtL8i/tvo7F/XwkSa/XEE1h99p2o1wS2O3DzyEzPqySpSD8a8YKauvN/FgZQVwjcXJuprSrCiWne8+bb6rYA==}
+  /ember-cli-mirage@3.0.3(@ember/test-helpers@3.3.0)(@glint/template@1.3.0)(ember-data@4.12.5)(ember-qunit@8.0.2)(ember-source@5.6.0)(miragejs@0.1.48)(webpack@5.90.3):
+    resolution: {integrity: sha512-yrg8FpVwbMAH5KpqZn0br6Ka7M26qN3DCddsOJp2FNKk2cDoS5FKQvZUYrlD7oIfPeW4uQFigjfPuRSWRDC9Gw==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
       '@ember-data/model': '*'
