@@ -277,6 +277,7 @@ impl TestAppBuilder {
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
                 .connection_pool(app.primary_database.clone())
+                .deadpool(app.deadpool_primary.clone())
                 .emails(app.emails.clone())
                 .team_repo(Box::new(self.team_repo))
                 .build()
@@ -379,6 +380,7 @@ impl TestAppBuilder {
             url: primary.url.clone(),
             read_only_mode: true,
             pool_size: primary.pool_size,
+            async_pool_size: primary.async_pool_size,
             min_idle: primary.min_idle,
         });
 
@@ -397,6 +399,7 @@ fn simple_config() -> config::Server {
             url: String::from("invalid default url").into(),
             read_only_mode: false,
             pool_size: 5,
+            async_pool_size: 5,
             min_idle: None,
         },
         replica: None,

@@ -1,7 +1,7 @@
 use crate::models::VersionDownload;
 use crate::schema::{crates, metadata, version_downloads, versions};
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::BigInt;
@@ -17,12 +17,14 @@ impl BackgroundJob for UpdateDownloads {
     type Context = Arc<Environment>;
 
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        spawn_blocking(move || {
-            let mut conn = env.connection_pool.get()?;
-            update(&mut conn, env.config.batch_update_downloads)?;
-            Ok(())
-        })
-        .await
+        let batch_update = env.config.batch_update_downloads;
+
+        let conn = env.deadpool.get().await?;
+        conn.interact(move |conn| update(conn, batch_update))
+            .await
+            .map_err(|err| anyhow!(err.to_string()))??;
+
+        Ok(())
     }
 }
 

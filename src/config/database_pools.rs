@@ -48,6 +48,7 @@ pub struct DbPoolConfig {
     pub url: SecretString,
     pub read_only_mode: bool,
     pub pool_size: u32,
+    pub async_pool_size: usize,
     pub min_idle: Option<u32>,
 }
 
@@ -72,8 +73,12 @@ impl DatabasePools {
 
         let primary_pool_size =
             var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+        let primary_async_pool_size =
+            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE as usize);
         let replica_pool_size =
             var_parsed("DB_REPLICA_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+        let replica_async_pool_size =
+            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE as usize);
 
         let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
         let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
@@ -101,6 +106,7 @@ impl DatabasePools {
                     })?,
                     read_only_mode: true,
                     pool_size: primary_pool_size,
+                    async_pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: None,
@@ -116,6 +122,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
+                    async_pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: None,
@@ -130,6 +137,7 @@ impl DatabasePools {
                     url: leader_url,
                     read_only_mode,
                     pool_size: primary_pool_size,
+                    async_pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
@@ -139,6 +147,7 @@ impl DatabasePools {
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
                     pool_size: replica_pool_size,
+                    async_pool_size: replica_async_pool_size,
                     min_idle: replica_min_idle,
                 }),
                 tcp_timeout_ms,
