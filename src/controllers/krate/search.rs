@@ -506,17 +506,16 @@ impl<'a> FilterParams<'a> {
                 //      OR (exact_match = exact_match' AND rank < rank')
                 //      OR exact_match < exact_match'`
                 let q_string = self.q_string.expect("q_string should not be None");
-                let q = to_tsquery_with_search_config(
-                    configuration::TsConfigurationByName("english"),
-                    q_string,
-                );
+                let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                    .bind::<Text, _>(q_string)
+                    .sql(")");
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 let name_exact_match = Crate::with_name(q_string);
                 vec![
                     Box::new(
                         name_exact_match
                             .eq(exact)
-                            .and(rank.eq(rank_in))
+                            .and(rank.clone().eq(rank_in))
                             .and(crates::name.nullable().gt(crate_name_by_id(id)))
                             .nullable(),
                     ),
