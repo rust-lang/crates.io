@@ -1,5 +1,6 @@
 use crate::background_job::DEFAULT_QUEUE;
 use crate::job_registry::JobRegistry;
+use crate::util::spawn_blocking;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
@@ -102,14 +103,18 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     ///
     /// This function is intended for use in tests and will return an error if
     /// any jobs have failed.
-    pub fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
-        let mut conn = self.connection_pool.get()?;
-        let failed_jobs = storage::failed_job_count(&mut conn)?;
-        if failed_jobs == 0 {
-            Ok(())
-        } else {
-            Err(anyhow!("{failed_jobs} jobs failed"))
-        }
+    pub async fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
+        let pool = self.connection_pool.clone();
+        spawn_blocking(move || {
+            let mut conn = pool.get()?;
+            let failed_jobs = storage::failed_job_count(&mut conn)?;
+            if failed_jobs == 0 {
+                Ok(())
+            } else {
+                Err(anyhow!("{failed_jobs} jobs failed"))
+            }
+        })
+        .await
     }
 }
 

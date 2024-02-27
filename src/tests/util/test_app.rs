@@ -179,8 +179,8 @@ impl TestApp {
         let handle = runner.start();
         self.runtime().block_on(handle.wait_for_shutdown());
 
-        runner
-            .check_for_failed_jobs()
+        self.runtime()
+            .block_on(runner.check_for_failed_jobs())
             .expect("Could not determine if jobs failed");
     }
 
