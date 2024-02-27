@@ -1,5 +1,4 @@
 use crate::cloudfront::CloudFront;
-use crate::db::DieselPool;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::team_repo::TeamRepo;
@@ -27,7 +26,6 @@ pub struct Environment {
     #[builder(default)]
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
-    pub connection_pool: DieselPool,
     pub deadpool: DeadpoolPool,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,

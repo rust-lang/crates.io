@@ -15,7 +15,6 @@ extern crate tracing;
 
 use anyhow::Context;
 use crates_io::cloudfront::CloudFront;
-use crates_io::db::DieselPool;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::team_repo::TeamRepoImpl;
@@ -96,7 +95,6 @@ fn main() -> anyhow::Result<()> {
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
-        .connection_pool(DieselPool::new_background_worker(connection_pool.clone()))
         .deadpool(deadpool)
         .emails(emails)
         .team_repo(Box::new(team_repo))
