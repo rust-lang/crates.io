@@ -3,6 +3,7 @@
 use crate::models::Version;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use anyhow::anyhow;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
@@ -49,18 +50,22 @@ impl BackgroundJob for RenderAndUploadReadme {
         info!(version_id = ?self.version_id, "Rendering README");
 
         let job = self.clone();
-        spawn_blocking(move || {
-            let rendered = text_to_html(
+        let rendered = spawn_blocking(move || {
+            Ok::<_, anyhow::Error>(text_to_html(
                 &job.text,
                 &job.readme_path,
                 job.base_url.as_deref(),
                 job.pkg_path_in_vcs.as_ref(),
-            );
-            if rendered.is_empty() {
-                return Ok(());
-            }
+            ))
+        })
+        .await?;
 
-            let mut conn = env.connection_pool.get()?;
+        if rendered.is_empty() {
+            return Ok(());
+        }
+
+        let conn = env.deadpool.get().await?;
+        conn.interact(move |conn| {
             conn.transaction(|conn| {
                 Version::record_readme_rendering(job.version_id, conn)?;
                 let (crate_name, vers): (String, String) = versions::table
@@ -79,5 +84,6 @@ impl BackgroundJob for RenderAndUploadReadme {
             })
         })
         .await
+        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
