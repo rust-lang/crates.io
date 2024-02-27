@@ -45,9 +45,6 @@ pub struct Server {
     pub cdn_log_counting_enabled: bool,
     pub cdn_log_storage: CdnLogStorageConfig,
     pub cdn_log_queue: CdnLogQueueConfig,
-    /// If `true`, the `update_downloads` background job will use batch
-    /// processing with a static SQL query.
-    pub batch_update_downloads: bool,
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
@@ -189,7 +186,6 @@ impl Server {
             cdn_log_counting_enabled: var("CDN_LOG_COUNTING_ENABLED")?.is_some(),
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
-            batch_update_downloads: var("BATCH_UPDATE_DOWNLOADS")?.is_some(),
             base,
             ip,
             port,
