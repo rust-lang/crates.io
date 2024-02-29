@@ -1,7 +1,7 @@
 import Service, { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
-import { dropTask, race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
+import { dropTask, race, rawTimeout, restartableTask, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { alias } from 'macro-decorators';
 
@@ -45,7 +45,7 @@ export default class SessionService extends Service {
   }
 
   get isSudoEnabled() {
-    return this.currentUser?.is_admin === true && this.sudoEnabledUntil !== null && this.sudoEnabledUntil >= Date.now();
+    return this.currentUser?.is_admin === true && this.sudoTask.isRunning;
   }
 
   /**
@@ -58,14 +58,12 @@ export default class SessionService extends Service {
    *                             immediately.
    */
   setSudo(duration_ms) {
-    if (this.currentUser?.is_admin) {
+    if (this.isAdmin) {
       if (duration_ms) {
-        const expiry = Date.now() + duration_ms;
-        localStorage.setItem('sudo', expiry);
-        this.sudoEnabledUntil = expiry;
+        // eslint-disable-next-line ember-concurrency/no-perform-without-catch
+        this.sudoTask.perform(Date.now() + duration_ms);
       } else {
-        localStorage.removeItem('sudo');
-        this.sudoEnabledUntil = null;
+        this.sudoTask.cancelAll();
       }
     }
   }
@@ -204,7 +202,10 @@ export default class SessionService extends Service {
       const expiry = localStorage.getItem('sudo');
       if (expiry !== null) {
         try {
-          this.sudoEnabledUntil = +expiry;
+          // Trigger sudoTask, but without waiting for it to complete.
+          //
+          // eslint-disable-next-line ember-concurrency/no-perform-without-catch
+          this.sudoTask.perform(+expiry);
         } catch {
           // It doesn't really matter if this fails; any invalid value will just
           // be treated as the user not being in sudo mode.
@@ -213,5 +214,31 @@ export default class SessionService extends Service {
     }
 
     return { currentUser, ownedCrates };
+  });
+
+  sudoTask = restartableTask(async until => {
+    try {
+      const now = Date.now();
+
+      if (until > now) {
+        // Since this task will replace any running task, we should update local
+        // storage.
+        localStorage.setItem('sudo', until.toString());
+
+        // We'll also surface the expiry as a property on the session service,
+        // since that can be tracked and updated by other components.
+        this.sudoEnabledUntil = until;
+
+        // Now we sleep until sudo mode has expired.
+        await rawTimeout(until - now);
+      }
+    } finally {
+      // Clear the local storage, since we're no longer in sudo mode, regardless
+      // of whether the await finished or the task was cancelled.
+      localStorage.removeItem('sudo');
+
+      // Again, update the session service property.
+      this.sudoEnabledUntil = null;
+    }
   });
 }
