@@ -186,8 +186,8 @@
     }
 }
 
-.sudo > button {
-    flex-direction: column !important;
+.sudo-menu-item {
+    flex-direction: column;
 
     > .expires-in {
         font-size: 80%;
