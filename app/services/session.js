@@ -45,7 +45,7 @@ export default class SessionService extends Service {
   }
 
   get isSudoEnabled() {
-    return this.currentUser?.is_admin === true && this.sudoTask.isRunning;
+    return this.isAdmin && this.sudoTask.isRunning;
   }
 
   /**
