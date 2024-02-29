@@ -1,4 +1,5 @@
 import Service, { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
 import { dropTask, race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
@@ -15,6 +16,15 @@ export default class SessionService extends Service {
 
   savedTransition = null;
 
+  /**
+   * The timestamp (in milliseconds since the UNIX epoch, as returned by
+   * {@link Date.now()}) that the user has sudo enabled until.
+   *
+   * @type {number | null}
+   */
+  @tracked sudoEnabledUntil = null;
+
+  /** @type {import("../models/user").default | null} */
   @alias('loadUserTask.last.value.currentUser') currentUser;
   @alias('loadUserTask.last.value.ownedCrates') ownedCrates;
 
@@ -27,6 +37,36 @@ export default class SessionService extends Service {
       localStorage.setItem('isLoggedIn', '1');
     } else {
       localStorage.removeItem('isLoggedIn');
+    }
+  }
+
+  get isAdmin() {
+    return this.currentUser?.is_admin === true;
+  }
+
+  get isSudoEnabled() {
+    return this.currentUser?.is_admin === true && this.sudoEnabledUntil !== null && this.sudoEnabledUntil >= Date.now();
+  }
+
+  /**
+   * Enables or disables sudo mode based on the `duration_ms` parameter.
+   *
+   * If the user is not an admin, nothing happens, successfully.
+   *
+   * @param {number} duration_ms If non-zero, enables sudo mode for this
+   *                             length of time. If zero, disables sudo mode
+   *                             immediately.
+   */
+  setSudo(duration_ms) {
+    if (this.currentUser?.is_admin) {
+      if (duration_ms) {
+        const expiry = Date.now() + duration_ms;
+        localStorage.setItem('sudo', expiry);
+        this.sudoEnabledUntil = expiry;
+      } else {
+        localStorage.removeItem('sudo');
+        this.sudoEnabledUntil = null;
+      }
     }
   }
 
@@ -157,6 +197,20 @@ export default class SessionService extends Service {
 
     let { id } = currentUser;
     this.sentry.setUser({ id });
+
+    // If the user is an admin, we need to look up whether they have enabled
+    // sudo mode.
+    if (currentUser?.is_admin) {
+      const expiry = localStorage.getItem('sudo');
+      if (expiry !== null) {
+        try {
+          this.sudoEnabledUntil = +expiry;
+        } catch {
+          // It doesn't really matter if this fails; any invalid value will just
+          // be treated as the user not being in sudo mode.
+        }
+      }
+    }
 
     return { currentUser, ownedCrates };
   });
