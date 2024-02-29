@@ -154,6 +154,10 @@
     margin-right: var(--space-2xs);
 }
 
+.wizard-hat {
+    margin-right: var(--space-3xs);
+}
+
 .current-user-links {
     left: auto;
     right: 0;
