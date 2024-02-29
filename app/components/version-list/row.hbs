@@ -109,7 +109,7 @@
     {{/if}}
   </div>
 
-  {{#if this.canYank}}
+  <PrivilegedAction @userAuthorised={{this.isOwner}}>
     <YankButton @version={{@version}} local-class="yank-button" />
-  {{/if}}
+  </PrivilegedAction>
 </div>
