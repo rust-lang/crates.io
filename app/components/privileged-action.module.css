@@ -1,0 +1,5 @@
+.placeholder {
+    [disabled] {
+        cursor: not-allowed;
+    }
+}
