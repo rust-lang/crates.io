@@ -32,9 +32,4 @@ export default class UserAvatar extends Component {
   get src() {
     return `${this.args.user.avatar}&s=${this.size * 2}`;
   }
-
-  /** @return {boolean} */
-  get sudo() {
-    return this.args.sudo;
-  }
 }
