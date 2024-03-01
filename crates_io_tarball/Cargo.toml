@@ -26,4 +26,4 @@ clap = { version = "=4.5.1", features = ["derive", "unicode", "wrap_help"] }
 indicatif = { version = "=0.17.8", features = ["rayon"] }
 rayon = "=1.9.0"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
-walkdir = "=2.4.0"
+walkdir = "=2.5.0"
