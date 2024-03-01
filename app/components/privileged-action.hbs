@@ -8,8 +8,10 @@
       {{yield to='placeholder'}}
     </div>
   {{else}}
-    <div local-class='placeholder' {{did-insert this.disableComponents}}>
-      {{yield}}
+    <div local-class='placeholder'>
+      <fieldset disabled="disabled">
+        {{yield}}
+      </fieldset>
       <EmberTooltip>
         You must enable admin actions before you can perform this operation.
       </EmberTooltip>

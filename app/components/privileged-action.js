@@ -42,14 +42,4 @@ export default class PrivilegedAction extends Component {
   get canBePrivileged() {
     return !this.args.userAuthorised && this.session.currentUser?.is_admin && !this.session.isSudoEnabled;
   }
-
-  /**
-   * @param {Element} element
-   * @return {void}
-   */
-  disableComponents(element) {
-    [...element.querySelectorAll('input, select, textarea, button')].forEach(control => {
-      control.setAttribute('disabled', 'disabled');
-    });
-  }
 }

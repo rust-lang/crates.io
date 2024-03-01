@@ -111,16 +111,17 @@ module('Component | PrivilegedAction', hooks => {
     // We're trying to confirm that all the form controls are automatically
     // disabled.
     await render(hbs`
-      <PrivilegedAction @userAuthorised={{false}}>
-        <div data-test-content>
+      <div data-test-content>
+        <PrivilegedAction @userAuthorised={{false}}>
           <button data-test-control type="button">Click me maybe?</button>
           <label for="input">Input: </label><input data-test-control type="text" id="input" />
           <label for="select">Select: </label><select data-test-control id="select"><option>foo</option></select>
           <label for="textarea">Textarea: </label><textarea data-test-control id="textarea" />
-        </div>
-      </PrivilegedAction>
+        </PrivilegedAction>
+      </div>
     `);
-    assert.dom('[data-test-content] [data-test-control]').exists().isDisabled();
+    assert.dom('[data-test-content] fieldset').exists().isDisabled();
+    assert.dom('[data-test-content] fieldset [data-test-control]').exists();
   });
 
   test('automatic unprivileged block', async function (assert) {
