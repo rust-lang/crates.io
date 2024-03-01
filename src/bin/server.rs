@@ -26,6 +26,7 @@ fn main() -> anyhow::Result<()> {
     let _span = info_span!("server.run");
 
     let config = crates_io::config::Server::from_environment()?;
+    let cdn_log_counting_enabled = config.cdn_log_counting_enabled;
 
     let emails = Emails::from_environment(&config);
 
@@ -35,8 +36,10 @@ fn main() -> anyhow::Result<()> {
 
     let app = Arc::new(App::new(config, emails, github));
 
-    // Start the background thread periodically persisting download counts to the database.
-    downloads_counter_thread(app.clone());
+    if !cdn_log_counting_enabled {
+        // Start the background thread periodically persisting download counts to the database.
+        downloads_counter_thread(app.clone());
+    }
 
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(app.clone());
