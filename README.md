@@ -1,58 +1,73 @@
-# crates.io
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/readme-logo-dark.png">
+  <img alt="crates.io logo" src="./docs/readme-logo.png" width="200">
+</picture>
+</div>
 
-[![What's Deployed](https://img.shields.io/badge/whatsdeployed-prod-green.svg)](https://whatsdeployed.io/s-9IG)
+---
 
-Source code for the default [Cargo](https://doc.rust-lang.org/cargo/) registry.
-Viewable online at [crates.io](https://crates.io).
+<div align="center">
 
-## Status of crates.io
+[Homepage][crates.io]
+| [Usage Policy](https://crates.io/policies)
+| [Security](https://www.rust-lang.org/policies/security)
+| [Status](https://status.crates.io/)
+| [Contact](#contact)
+| [Contributing](#contributing)
 
-Any known issues currently affecting the registry running at https://crates.io
-will be posted to [@CratesIoStatus](https://twitter.com/cratesiostatus).
+</div>
 
-If you are experiencing an issue not addressed there, please contact us in one
-of the following ways:
+## Overview
 
-- [File a new issue](https://github.com/rust-lang/crates.io/issues/new)
-- Email [help@crates.io](mailto:help@crates.io)
-- Chat on the #t-crates-io Zulip stream on https://rust-lang.zulipchat.com/#narrow/stream/318791-t-crates-io/
+Welcome to the GitHub repository for [crates.io], the official package registry for the [Rust] programming language.
 
-A volunteer will get back to you as soon as possible.
+[crates.io] serves as a central registry for sharing "crates", which are packages or libraries written in [Rust] that you can use to enhance your projects. This repository contains the source code and infrastructure for the [crates.io] website, including both frontend and backend components.
+
+This service is maintained for you by the [crates.io team], with support from the [Rust Foundation](https://rustfoundation.org/). File hosting is donated by [Amazon Web Services](https://aws.amazon.com/), with CDN services donated by [Fastly](https://fastly.com/).
 
 ## Contributing
 
-Welcome! We love contributions! crates.io is an [Ember](https://emberjs.com/)
-frontend with a Rust backend, and there are many tasks appropriate for a
-variety of skill levels.
+We welcome contributions from the community! Whether you're fixing a bug, implementing a new feature, or improving documentation, your contributions help make [crates.io] better for everyone.
 
-Please see [docs/CONTRIBUTING.md](https://github.com/rust-lang/crates.io/blob/main/docs/CONTRIBUTING.md) for ideas about what to work on and how to set up a development
-environment.
+[crates.io] is built with [Rust] for the backend services. More specifically, the [axum] web framework and [diesel] for database access, with a [custom-built background worker system](./crates_io_worker). The frontend is an [Ember.js] application written in JavaScript.
 
-### Categories
+Please review our [contribution guidelines](./docs/CONTRIBUTING.md) before submitting your pull request. The same document also contains instructions on how to set up a local development environment.
 
-Adding or editing the categories and corresponding descriptions displayed on
-[crates.io/categories](https://crates.io/categories) does not require a full
-development environment set up.
+## Issue Tracker
 
-The list of categories available on crates.io is stored in
-[`src/boot/categories.toml`](https://github.com/rust-lang/crates.io/blob/main/src/boot/categories.toml).
-To propose adding, removing, or changing a category, send a pull request making
-the appropriate change to that file as noted in the comment at the top of the
-file. Please add a description that will help others to know what crates are in
-that category.
+If you encounter any bugs or have technical issues with [crates.io], please feel free to open an issue in our [issue tracker](https://github.com/rust-lang/crates.io/issues). Our team will review and address these as fast as we can.
 
-For new categories, it's helpful to note in your PR description examples of
-crates that would fit in that category, and describe what distinguishes the new
-category from existing categories.
+For feature suggestions, enhancements, or general discussions about [crates.io], we encourage you to utilize [GitHub Discussions] instead. Visit the [Discussions tab][GitHub Discussions] to engage with the community, share your ideas, and participate in ongoing conversations. Your input is valuable in shaping the future of [crates.io], and we look forward to hearing your thoughts!
 
-After your PR is accepted, the next time that crates.io is deployed the
-categories will be synced from this file.
+## Contact
+
+For any questions or inquiries about [crates.io], feel free to reach out to us via:
+
+- **Zulip:** [#t-crates-io](https://rust-lang.zulipchat.com/#narrow/stream/318791-t-crates-io/)
+- **Email:** [help@crates.io](mailto:help@crates.io)
+- **GitHub Discussions:** [rust-lang/crates.io][GitHub Discussions]
+
+We're here to help and eager to hear from you!
+
+## Code of Conduct
+
+Respect and inclusivity are core values of the [Rust] community. Our [Code of Conduct] outlines the standards of behavior expected from all participants. By adhering to these guidelines, we aim to create a welcoming space where individuals from diverse backgrounds can collaborate and learn from one another. We appreciate your commitment to upholding these principles and fostering a positive community atmosphere.
+
+If you have a Code of Conduct concern, please contact the moderators using the links in the [Code of Conduct].
 
 ## License
 
 Licensed under either of these:
 
-- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-  https://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or
-  https://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](./LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](./LICENSE-MIT) or https://opensource.org/licenses/MIT)
+
+[crates.io]: https://crates.io/
+[Rust]: https://www.rust-lang.org/
+[crates.io team]: https://www.rust-lang.org/governance/teams/crates-io
+[Code of Conduct]: https://www.rust-lang.org/policies/code-of-conduct
+[GitHub Discussions]: https://github.com/rust-lang/crates.io/discussions
+[axum]: https://crates.io/crates/axum
+[diesel]: https://crates.io/crates/diesel
+[Ember.js]: https://emberjs.com/
