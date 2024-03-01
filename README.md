@@ -13,12 +13,12 @@
 | [Usage Policy](https://crates.io/policies)
 | [Security](https://www.rust-lang.org/policies/security)
 | [Status](https://status.crates.io/)
-| [Contact](#contact)
-| [Contributing](#contributing)
+| [Contact](#️-contact)
+| [Contributing](#️-contributing)
 
 </div>
 
-## Overview
+## 🦀 Overview
 
 Welcome to the GitHub repository for [crates.io], the official package registry for the [Rust] programming language.
 
@@ -26,7 +26,7 @@ Welcome to the GitHub repository for [crates.io], the official package registry 
 
 This service is maintained for you by the [crates.io team], with support from the [Rust Foundation](https://rustfoundation.org/). File hosting is donated by [Amazon Web Services](https://aws.amazon.com/), with CDN services donated by [Fastly](https://fastly.com/).
 
-## Contributing
+## 🛠️ Contributing
 
 We welcome contributions from the community! Whether you're fixing a bug, implementing a new feature, or improving documentation, your contributions help make [crates.io] better for everyone.
 
@@ -34,13 +34,13 @@ We welcome contributions from the community! Whether you're fixing a bug, implem
 
 Please review our [contribution guidelines](./docs/CONTRIBUTING.md) before submitting your pull request. The same document also contains instructions on how to set up a local development environment.
 
-## Issue Tracker
+## 🪲 Issue Tracker
 
 If you encounter any bugs or have technical issues with [crates.io], please feel free to open an issue in our [issue tracker](https://github.com/rust-lang/crates.io/issues). Our team will review and address these as fast as we can.
 
 For feature suggestions, enhancements, or general discussions about [crates.io], we encourage you to utilize [GitHub Discussions] instead. Visit the [Discussions tab][GitHub Discussions] to engage with the community, share your ideas, and participate in ongoing conversations. Your input is valuable in shaping the future of [crates.io], and we look forward to hearing your thoughts!
 
-## Contact
+## ☎️ Contact
 
 For any questions or inquiries about [crates.io], feel free to reach out to us via:
 
@@ -50,13 +50,13 @@ For any questions or inquiries about [crates.io], feel free to reach out to us v
 
 We're here to help and eager to hear from you!
 
-## Code of Conduct
+## 🤗 Code of Conduct
 
 Respect and inclusivity are core values of the [Rust] community. Our [Code of Conduct] outlines the standards of behavior expected from all participants. By adhering to these guidelines, we aim to create a welcoming space where individuals from diverse backgrounds can collaborate and learn from one another. We appreciate your commitment to upholding these principles and fostering a positive community atmosphere.
 
 If you have a Code of Conduct concern, please contact the moderators using the links in the [Code of Conduct].
 
-## License
+## ⚖️ License
 
 Licensed under either of these:
 
