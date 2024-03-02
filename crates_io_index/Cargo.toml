@@ -17,7 +17,7 @@ testing = []
 
 [dependencies]
 anyhow = "=1.0.80"
-base64 = "=0.21.7"
+base64 = "=0.22.0"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
 git2 = "=0.18.2"
 secrecy = "=0.8.0"
