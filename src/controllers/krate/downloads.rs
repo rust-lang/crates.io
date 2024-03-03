@@ -7,8 +7,8 @@ use std::cmp;
 
 use crate::controllers::frontend_prelude::*;
 
-use crate::models::{Crate, CrateVersions, Version, VersionDownload};
-use crate::schema::version_downloads;
+use crate::models::{Crate, Version, VersionDownload};
+use crate::schema::{crates, version_downloads, versions};
 use crate::sql::to_char;
 use crate::util::errors::crate_not_found;
 use crate::views::EncodableVersionDownload;
@@ -20,12 +20,15 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         use diesel::sql_types::BigInt;
 
         let conn = &mut *state.db_read()?;
-        let krate: Crate = Crate::by_name(&crate_name)
+        let crate_id: i32 = Crate::by_name(&crate_name)
+            .select(crates::id)
             .first(conn)
             .optional()?
             .ok_or_else(|| crate_not_found(&crate_name))?;
 
-        let mut versions: Vec<Version> = krate.all_versions().load(conn)?;
+        let mut versions: Vec<Version> = versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .load(conn)?;
         versions
             .sort_by_cached_key(|version| cmp::Reverse(semver::Version::parse(&version.num).ok()));
         let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
