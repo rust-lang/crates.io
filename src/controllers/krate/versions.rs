@@ -8,8 +8,8 @@ use indexmap::IndexMap;
 use crate::controllers::frontend_prelude::*;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
 
-use crate::models::{Crate, CrateVersions, User, Version, VersionOwnerAction};
-use crate::schema::{users, versions};
+use crate::models::{Crate, User, Version, VersionOwnerAction};
+use crate::schema::{crates, users, versions};
 use crate::util::errors::crate_not_found;
 use crate::views::EncodableVersion;
 
@@ -22,7 +22,8 @@ pub async fn versions(
     spawn_blocking(move || {
         let conn = &mut *state.db_read()?;
 
-        let krate: Crate = Crate::by_name(&crate_name)
+        let crate_id: i32 = Crate::by_name(&crate_name)
+            .select(crates::id)
             .first(conn)
             .optional()?
             .ok_or_else(|| crate_not_found(&crate_name))?;
@@ -42,8 +43,8 @@ pub async fn versions(
         // Sort by semver by default
         let versions_and_publishers = match params.get("sort").map(|s| s.to_lowercase()).as_deref()
         {
-            Some("date") => list_by_date(&krate, pagination.as_ref(), &req, conn)?,
-            _ => list_by_semver(&krate, pagination.as_ref(), &req, conn)?,
+            Some("date") => list_by_date(crate_id, pagination.as_ref(), &req, conn)?,
+            _ => list_by_semver(crate_id, pagination.as_ref(), &req, conn)?,
         };
 
         let versions = versions_and_publishers
@@ -73,17 +74,18 @@ pub async fn versions(
 ///
 /// This function will panic if `option` is built with `enable_pages` set to true.
 fn list_by_date(
-    krate: &Crate,
+    crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
     conn: &mut PgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
-    let mut query = krate
-        .all_versions()
+    let mut query = versions::table
+        .filter(versions::crate_id.eq(crate_id))
         .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()));
+        .select((versions::all_columns, users::all_columns.nullable()))
+        .into_boxed();
 
     if let Some(options) = options {
         assert!(
@@ -113,7 +115,10 @@ fn list_by_date(
     // Since the total count is retrieved through an additional query, to maintain consistency
     // with other pagination methods, we only make a count query while data is not empty.
     let total = if !data.is_empty() {
-        krate.all_versions().count().get_result(conn)?
+        versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .count()
+            .get_result(conn)?
     } else {
         0
     };
@@ -133,7 +138,7 @@ fn list_by_date(
 // Unfortunately, Heroku Postgres has no support for the semver PG extension.
 // Therefore, we need to perform both sorting and pagination manually on the server.
 fn list_by_semver(
-    krate: &Crate,
+    crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
     conn: &mut PgConnection,
@@ -149,8 +154,8 @@ fn list_by_semver(
         // Sorting by semver but opted for id as the seek key because num can be quite lengthy,
         // while id values are significantly smaller.
         let mut sorted_versions = IndexMap::new();
-        for result in krate
-            .all_versions()
+        for result in versions::table
+            .filter(versions::crate_id.eq(crate_id))
             .select((versions::id, versions::num))
             .load_iter::<(i32, String), DefaultLoadingMode>(conn)?
         {
@@ -173,8 +178,8 @@ fn list_by_semver(
         if let Some(start) = idx {
             let end = (start + options.per_page as usize).min(sorted_versions.len());
             let ids = sorted_versions[start..end].keys().collect::<Vec<_>>();
-            for result in krate
-                .all_versions()
+            for result in versions::table
+                .filter(versions::crate_id.eq(crate_id))
                 .left_outer_join(users::table)
                 .select((versions::all_columns, users::all_columns.nullable()))
                 .filter(versions::id.eq_any(ids))
@@ -196,8 +201,8 @@ fn list_by_semver(
             (vec![], 0)
         }
     } else {
-        let mut data: Vec<(Version, Option<User>)> = krate
-            .all_versions()
+        let mut data: Vec<(Version, Option<User>)> = versions::table
+            .filter(versions::crate_id.eq(crate_id))
             .left_outer_join(users::table)
             .select((versions::all_columns, users::all_columns.nullable()))
             .load(conn)?;
