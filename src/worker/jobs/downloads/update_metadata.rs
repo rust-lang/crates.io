@@ -120,12 +120,6 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                 SELECT crate_id, SUM(downloads_batch.downloads) as downloads
                 FROM downloads_batch
                 GROUP BY crate_id
-            ), updated_crates AS (
-                -- Update the `downloads` count for each crate.
-                UPDATE crates
-                SET downloads = crates.downloads + crate_downloads_batch.downloads
-                FROM crate_downloads_batch
-                WHERE crates.id = crate_downloads_batch.crate_id
             ), updated_crate_downloads AS (
                 -- Update the `downloads` count for each crate in the `crate_downloads` table.
                 UPDATE crate_downloads
@@ -236,12 +230,6 @@ mod tests {
             .select(versions::downloads)
             .first(conn);
         assert_eq!(version_downloads, Ok(1));
-
-        let crate_downloads = crates::table
-            .find(krate.id)
-            .select(crates::downloads)
-            .first(conn);
-        assert_eq!(crate_downloads, Ok(1));
 
         let crate_downloads = crate_downloads::table
             .find(krate.id)
@@ -357,7 +345,6 @@ mod tests {
             .filter(crates::id.eq(krate.id))
             .first(conn)
             .unwrap();
-        assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
 
         let krate2_downloads: i64 = crate_downloads::table
