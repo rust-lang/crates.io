@@ -219,11 +219,13 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .zip(recent_downloads)
             .map(
                 |(((max_version, krate), perfect_match), recent_downloads)| {
+                    let downloads = krate.downloads as i64;
                     EncodableCrate::from_minimal(
                         krate,
                         Some(&max_version),
                         Some(vec![]),
                         perfect_match,
+                        downloads,
                         Some(recent_downloads),
                     )
                 },

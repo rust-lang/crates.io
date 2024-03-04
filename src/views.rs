@@ -313,9 +313,9 @@ impl EncodableCrate {
         top_versions: Option<&TopVersions>,
         badges: Option<Vec<()>>,
         exact_match: bool,
+        downloads: i64,
         recent_downloads: Option<i64>,
     ) -> Self {
-        let downloads = krate.downloads as i64;
         Self::from(
             krate,
             top_versions,
