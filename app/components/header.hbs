@@ -22,7 +22,7 @@
         <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger local-class="dropdown-button" data-test-toggle>
             {{#if this.session.isSudoEnabled}}
-              <div local-class="wizard-hat">🧙</div>
+              <div data-test-wizard-hat local-class="wizard-hat">🧙</div>
             {{/if}}
             <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
             {{ this.session.currentUser.name }}
@@ -35,12 +35,12 @@
             {{#if this.session.isAdmin}}
               <menu.Item local-class='sudo'>
                 {{#if this.session.isSudoEnabled}}
-                  <button local-class='sudo-menu-item' type='button' {{on 'click' this.disableSudo}}>
+                  <button data-test-disable-admin-actions local-class='sudo-menu-item' type='button' {{on 'click' this.disableSudo}}>
                     Disable admin actions
                     <div local-class='expires-in'>expires at {{date-format this.session.sudoEnabledUntil 'HH:mm'}}</div>
                   </button>
                 {{else}}
-                  <button local-class='sudo-menu-item' type='button' {{on 'click' this.enableSudo}}>
+                  <button data-test-enable-admin-actions local-class='sudo-menu-item' type='button' {{on 'click' this.enableSudo}}>
                     Enable admin actions
                   </button>
                 {{/if}}
