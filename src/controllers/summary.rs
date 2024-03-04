@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::controllers::cargo_prelude::AppResult;
 use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Version};
-use crate::schema::{crates, keywords, metadata, recent_crate_downloads};
+use crate::schema::{crate_downloads, crates, keywords, metadata, recent_crate_downloads};
 use crate::tasks::spawn_blocking;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
@@ -21,11 +21,14 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 
         fn encode_crates(
             conn: &mut PgConnection,
-            data: Vec<(Crate, Option<i64>)>,
+            data: Vec<(Crate, i64, Option<i64>)>,
         ) -> AppResult<Vec<EncodableCrate>> {
-            let recent_downloads = data.iter().map(|&(_, s)| s).collect::<Vec<_>>();
+            let downloads = data
+                .iter()
+                .map(|&(_, total, recent)| (total, recent))
+                .collect::<Vec<_>>();
 
-            let krates = data.into_iter().map(|(c, _)| c).collect::<Vec<_>>();
+            let krates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
 
             let versions: Vec<Version> = krates.versions().load(conn)?;
             versions
@@ -33,16 +36,15 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 .into_iter()
                 .map(TopVersions::from_versions)
                 .zip(krates)
-                .zip(recent_downloads)
-                .map(|((top_versions, krate), recent_downloads)| {
-                    let downloads = krate.downloads as i64;
+                .zip(downloads)
+                .map(|((top_versions, krate), (total, recent))| {
                     Ok(EncodableCrate::from_minimal(
                         krate,
                         Some(&top_versions),
                         None,
                         false,
-                        downloads,
-                        recent_downloads,
+                        total,
+                        recent,
                     ))
                 })
                 .collect()
@@ -50,16 +52,19 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 
         let selection = (
             Crate::as_select(),
+            crate_downloads::downloads,
             recent_crate_downloads::downloads.nullable(),
         );
 
         let new_crates = crates::table
+            .inner_join(crate_downloads::table)
             .left_join(recent_crate_downloads::table)
             .order(crates::created_at.desc())
             .select(selection)
             .limit(10)
             .load(conn)?;
         let just_updated = crates::table
+            .inner_join(crate_downloads::table)
             .left_join(recent_crate_downloads::table)
             .filter(crates::updated_at.ne(crates::created_at))
             .order(crates::updated_at.desc())
@@ -68,6 +73,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .load(conn)?;
 
         let mut most_downloaded_query = crates::table
+            .inner_join(crate_downloads::table)
             .left_join(recent_crate_downloads::table)
             .into_boxed();
         if !config.excluded_crate_names.is_empty() {
@@ -75,12 +81,13 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 most_downloaded_query.filter(crates::name.ne_all(&config.excluded_crate_names));
         }
         let most_downloaded = most_downloaded_query
-            .then_order_by(crates::downloads.desc())
+            .then_order_by(crate_downloads::downloads.desc())
             .select(selection)
             .limit(10)
             .load(conn)?;
 
         let mut most_recently_downloaded_query = crates::table
+            .inner_join(crate_downloads::table)
             .inner_join(recent_crate_downloads::table)
             .into_boxed();
         if !config.excluded_crate_names.is_empty() {
