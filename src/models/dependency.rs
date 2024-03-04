@@ -1,4 +1,4 @@
-use diesel::sql_types::{Integer, Text};
+use diesel::sql_types::{BigInt, Text};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
@@ -29,8 +29,8 @@ pub struct Dependency {
 pub struct ReverseDependency {
     #[diesel(embed)]
     pub dependency: Dependency,
-    #[diesel(sql_type = Integer)]
-    pub crate_downloads: i32,
+    #[diesel(sql_type = BigInt)]
+    pub crate_downloads: i64,
     #[diesel(sql_type = Text, column_name = crate_name)]
     pub name: String,
 }

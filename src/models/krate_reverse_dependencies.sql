@@ -4,7 +4,7 @@ FROM (
     -- Apply pagination to the crates
     SELECT *, COUNT(*) OVER () as total FROM (
         SELECT
-            crates.downloads AS crate_downloads,
+            crate_downloads.downloads AS crate_downloads,
             crates.name AS crate_name,
             versions.id AS version_id
         FROM
@@ -22,6 +22,8 @@ FROM (
         ) versions
         INNER JOIN crates
           ON crates.id = versions.crate_id
+        INNER JOIN crate_downloads
+          ON crate_downloads.crate_id = crates.id
         WHERE versions.id IN (SELECT version_id FROM dependencies WHERE crate_id = $1)
     ) c
     ORDER BY

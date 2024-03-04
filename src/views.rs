@@ -120,7 +120,7 @@ pub struct EncodableDependency {
     pub features: Vec<String>,
     pub target: Option<String>,
     pub kind: DependencyKind,
-    pub downloads: i32,
+    pub downloads: i64,
 }
 
 impl EncodableDependency {
@@ -134,7 +134,7 @@ impl EncodableDependency {
     }
 
     // `downloads` need only be specified when generating a reverse dependency
-    fn encode(dependency: Dependency, crate_name: &str, downloads: Option<i32>) -> Self {
+    fn encode(dependency: Dependency, crate_name: &str, downloads: Option<i64>) -> Self {
         Self {
             id: dependency.id,
             version_id: dependency.version_id,
