@@ -2,7 +2,7 @@ use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[test]
 fn invalid_dependency_name() {
@@ -330,7 +330,7 @@ fn test_dep_limit() {
 
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"###);
 
     let crate_to_publish =
         PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("dep-a"));

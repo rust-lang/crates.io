@@ -2,7 +2,7 @@ use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io::views::{EncodablePrivateUser, OwnedCrate};
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 impl crate::util::MockCookieUser {
     pub fn show_me(&self) -> UserShowPrivateResponse {
@@ -23,7 +23,7 @@ fn me() {
 
     let response = anon.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);

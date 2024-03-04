@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[test]
 fn reverse_dependencies() {
@@ -216,5 +216,5 @@ fn test_unknown_crate() {
 
     let response = anon.get::<()>("/api/v1/crates/unknown/reverse_dependencies");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }

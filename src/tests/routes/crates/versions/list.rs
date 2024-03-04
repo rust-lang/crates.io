@@ -5,7 +5,7 @@ use crates_io::views::EncodableVersion;
 use diesel::{prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[test]
 fn versions() {
@@ -41,7 +41,7 @@ fn test_unknown_crate() {
 
     let response = anon.get::<()>("/api/v1/crates/unknown/versions");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
 
 #[test]

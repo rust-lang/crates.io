@@ -3,7 +3,7 @@ use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use crates_io::views::EncodableVersionDownload;
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[derive(Deserialize)]
 struct Downloads {
@@ -131,7 +131,7 @@ fn test_crate_downloads() {
     // check different crate name
     let response = anon.get::<()>("/api/v1/crates/bar/downloads");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(
+    assert_snapshot!(
         response.text(),
         @r###"{"errors":[{"detail":"crate `bar` does not exist"}]}"###
     );
@@ -170,7 +170,7 @@ fn test_version_downloads() {
     // check different crate name
     let response = anon.get::<()>("/api/v1/crates/bar/1.0.0/downloads");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(
+    assert_snapshot!(
         response.text(),
         @r###"{"errors":[{"detail":"crate `bar` does not exist"}]}"###
     );
@@ -183,7 +183,7 @@ fn test_version_downloads() {
     // check missing version
     let response = anon.get::<()>("/api/v1/crates/foo/2.0.0/downloads");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(
+    assert_snapshot!(
         response.text(),
         @r###"{"errors":[{"detail":"crate `foo` does not have a version `2.0.0`"}]}"###
     );
@@ -191,7 +191,7 @@ fn test_version_downloads() {
     // check invalid version
     let response = anon.get::<()>("/api/v1/crates/foo/invalid-version/downloads");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(
+    assert_snapshot!(
         response.text(),
         @r###"{"errors":[{"detail":"crate `foo` does not have a version `invalid-version`"}]}"###
     );
