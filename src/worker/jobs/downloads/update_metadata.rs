@@ -126,6 +126,12 @@ fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
                 SET downloads = crates.downloads + crate_downloads_batch.downloads
                 FROM crate_downloads_batch
                 WHERE crates.id = crate_downloads_batch.crate_id
+            ), updated_crate_downloads AS (
+                -- Update the `downloads` count for each crate in the `crate_downloads` table.
+                UPDATE crate_downloads
+                SET downloads = crate_downloads.downloads + crate_downloads_batch.downloads
+                FROM crate_downloads_batch
+                WHERE crate_downloads.crate_id = crate_downloads_batch.crate_id
             ), updated_metadata AS (
                 -- Update the `total_downloads` count in the `metadata` table.
                 UPDATE metadata
@@ -170,7 +176,7 @@ mod tests {
     use super::*;
     use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
-    use crate::schema::{crates, versions};
+    use crate::schema::{crate_downloads, crates, versions};
     use crate::test_util::test_db_connection;
     use std::collections::BTreeMap;
 
@@ -224,17 +230,27 @@ mod tests {
             .unwrap();
 
         super::update(conn).unwrap();
+
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
             .first(conn);
         assert_eq!(version_downloads, Ok(1));
+
         let crate_downloads = crates::table
             .find(krate.id)
             .select(crates::downloads)
             .first(conn);
         assert_eq!(crate_downloads, Ok(1));
+
+        let crate_downloads = crate_downloads::table
+            .find(krate.id)
+            .select(crate_downloads::downloads)
+            .first(conn);
+        assert_eq!(crate_downloads, Ok(1));
+
         super::update(conn).unwrap();
+
         let version_downloads = versions::table
             .find(version.id)
             .select(versions::downloads)
@@ -330,17 +346,29 @@ mod tests {
             .filter(crates::id.eq(krate.id))
             .first(conn)
             .unwrap();
+
         super::update(conn).unwrap();
+
         let version2: Version = versions::table.find(version.id).first(conn).unwrap();
         assert_eq!(version2.downloads, 2);
         assert_eq!(version2.updated_at, version_before.updated_at);
+
         let krate2: Crate = Crate::all()
             .filter(crates::id.eq(krate.id))
             .first(conn)
             .unwrap();
         assert_eq!(krate2.downloads, 2);
         assert_eq!(krate2.updated_at, krate_before.updated_at);
+
+        let krate2_downloads: i64 = crate_downloads::table
+            .find(krate.id)
+            .select(crate_downloads::downloads)
+            .first(conn)
+            .unwrap();
+        assert_eq!(krate2_downloads, 2);
+
         super::update(conn).unwrap();
+
         let version3: Version = versions::table.find(version.id).first(conn).unwrap();
         assert_eq!(version3.downloads, 2);
     }
