@@ -1,7 +1,8 @@
 use crate::controllers::frontend_prelude::*;
+use bigdecimal::{BigDecimal, ToPrimitive};
 
 use crate::models::{CrateOwner, OwnerKind, User};
-use crate::schema::{crate_owners, crates, users};
+use crate::schema::{crate_downloads, crate_owners, crates, users};
 use crate::sql::lower;
 use crate::views::EncodablePublicUser;
 
@@ -29,11 +30,13 @@ pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<Json<
 
         let conn = &mut *state.db_read_prefer_primary()?;
 
-        let data: i64 = CrateOwner::by_owner_kind(OwnerKind::User)
+        let data = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(crates::table)
+            .inner_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
             .filter(crate_owners::owner_id.eq(user_id))
-            .select(sum(crates::downloads))
-            .first::<Option<i64>>(conn)?
+            .select(sum(crate_downloads::downloads))
+            .first::<Option<BigDecimal>>(conn)?
+            .map(|d| d.to_u64().unwrap_or(u64::MAX))
             .unwrap_or(0);
 
         Ok(Json(json!({ "total_downloads": data })))
