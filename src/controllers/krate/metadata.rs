@@ -36,7 +36,9 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .unwrap_or_default();
 
         let conn = &mut *app.db_read()?;
-        let krate: Crate = Crate::by_name(&name)
+        let (krate, downloads): (Crate, i64) = Crate::by_name(&name)
+            .inner_join(crate_downloads::table)
+            .select((Crate::as_select(), crate_downloads::downloads))
             .first(conn)
             .optional()?
             .ok_or_else(|| crate_not_found(&name))?;
@@ -115,7 +117,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             cats.as_deref(),
             badges,
             false,
-            krate.downloads as i64,
+            downloads,
             recent_downloads,
         );
         let encodable_versions = versions_publishers_and_audit_actions.map(|vpa| {
