@@ -154,6 +154,10 @@
     margin-right: var(--space-2xs);
 }
 
+.wizard-hat {
+    margin-right: var(--space-3xs);
+}
+
 .current-user-links {
     left: auto;
     right: 0;
@@ -172,7 +176,8 @@
 }
 
 .login-menu-item,
-.logout-menu-item {
+.logout-menu-item,
+.sudo-menu-item {
     composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
 
@@ -182,5 +187,15 @@
 
     .spinner {
         margin-right: var(--space-2xs);
+    }
+}
+
+.sudo-menu-item {
+    flex-direction: column;
+
+    > .expires-in {
+        font-size: 80%;
+        font-style: italic;
+        padding-top: var(--space-3xs);
     }
 }

@@ -1,0 +1,25 @@
+.placeholder {
+    fieldset {
+        border: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    fieldset[disabled] {
+        cursor: not-allowed;
+
+        [disabled] {
+            cursor: not-allowed;
+        }
+
+        button,
+        .yellow-button,
+        .tan-button {
+            /* This duplicates the styles in .button[disabled] as there's no
+             * obvious way to compose them, given the target selectors. */
+            background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+            color: var(--disabled-text-color);
+            cursor: not-allowed;
+        }
+    }
+}

@@ -1,6 +1,7 @@
 import Service, { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
-import { dropTask, race, rawTimeout, task, waitForEvent } from 'ember-concurrency';
+import { dropTask, race, rawTimeout, restartableTask, task, waitForEvent } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { alias } from 'macro-decorators';
 
@@ -15,6 +16,15 @@ export default class SessionService extends Service {
 
   savedTransition = null;
 
+  /**
+   * The timestamp (in milliseconds since the UNIX epoch, as returned by
+   * {@link Date.now()}) that the user has sudo enabled until.
+   *
+   * @type {number | null}
+   */
+  @tracked sudoEnabledUntil = null;
+
+  /** @type {import("../models/user").default | null} */
   @alias('loadUserTask.last.value.currentUser') currentUser;
   @alias('loadUserTask.last.value.ownedCrates') ownedCrates;
 
@@ -27,6 +37,34 @@ export default class SessionService extends Service {
       localStorage.setItem('isLoggedIn', '1');
     } else {
       localStorage.removeItem('isLoggedIn');
+    }
+  }
+
+  get isAdmin() {
+    return this.currentUser?.is_admin === true;
+  }
+
+  get isSudoEnabled() {
+    return this.isAdmin && this.sudoTask.isRunning;
+  }
+
+  /**
+   * Enables or disables sudo mode based on the `duration_ms` parameter.
+   *
+   * If the user is not an admin, nothing happens, successfully.
+   *
+   * @param {number} duration_ms If non-zero, enables sudo mode for this
+   *                             length of time. If zero, disables sudo mode
+   *                             immediately.
+   */
+  setSudo(duration_ms) {
+    if (this.isAdmin) {
+      if (duration_ms) {
+        // eslint-disable-next-line ember-concurrency/no-perform-without-catch
+        this.sudoTask.perform(Date.now() + duration_ms);
+      } else {
+        this.sudoTask.cancelAll();
+      }
     }
   }
 
@@ -158,6 +196,49 @@ export default class SessionService extends Service {
     let { id } = currentUser;
     this.sentry.setUser({ id });
 
+    // If the user is an admin, we need to look up whether they have enabled
+    // sudo mode.
+    if (currentUser?.is_admin) {
+      const expiry = localStorage.getItem('sudo');
+      if (expiry !== null) {
+        try {
+          // Trigger sudoTask, but without waiting for it to complete.
+          //
+          // eslint-disable-next-line ember-concurrency/no-perform-without-catch
+          this.sudoTask.perform(+expiry);
+        } catch {
+          // It doesn't really matter if this fails; any invalid value will just
+          // be treated as the user not being in sudo mode.
+        }
+      }
+    }
+
     return { currentUser, ownedCrates };
+  });
+
+  sudoTask = restartableTask(async until => {
+    try {
+      const now = Date.now();
+
+      if (until > now) {
+        // Since this task will replace any running task, we should update local
+        // storage.
+        localStorage.setItem('sudo', until.toString());
+
+        // We'll also surface the expiry as a property on the session service,
+        // since that can be tracked and updated by other components.
+        this.sudoEnabledUntil = until;
+
+        // Now we sleep until sudo mode has expired.
+        await rawTimeout(until - now);
+      }
+    } finally {
+      // Clear the local storage, since we're no longer in sudo mode, regardless
+      // of whether the await finished or the task was cancelled.
+      localStorage.removeItem('sudo');
+
+      // Again, update the session service property.
+      this.sudoEnabledUntil = null;
+    }
   });
 }

@@ -21,15 +21,32 @@
       {{#if this.session.currentUser}}
         <Dropdown data-test-user-menu as |dd|>
           <dd.Trigger local-class="dropdown-button" data-test-toggle>
+            {{#if this.session.isSudoEnabled}}
+              <div local-class="wizard-hat">🧙</div>
+            {{/if}}
             <UserAvatar @user={{this.session.currentUser}} @size="small" local-class="avatar" data-test-avatar />
             {{ this.session.currentUser.name }}
           </dd.Trigger>
 
-          <dd.Menu local-class="current-user-links" as |menu|>
-            <menu.Item><LinkTo @route="dashboard">Dashboard</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="settings" data-test-settings>Account Settings</LinkTo></menu.Item>
-            <menu.Item><LinkTo @route="me.pending-invites">Owner Invites</LinkTo></menu.Item>
-            <menu.Item local-class="menu-item-with-separator">
+          <dd.Menu local-class='current-user-links' as |menu|>
+            <menu.Item><LinkTo @route='dashboard'>Dashboard</LinkTo></menu.Item>
+            <menu.Item><LinkTo @route='settings' data-test-settings>Account Settings</LinkTo></menu.Item>
+            <menu.Item><LinkTo @route='me.pending-invites'>Owner Invites</LinkTo></menu.Item>
+            {{#if this.session.isAdmin}}
+              <menu.Item local-class='sudo'>
+                {{#if this.session.isSudoEnabled}}
+                  <button local-class='sudo-menu-item' type='button' {{on 'click' this.disableSudo}}>
+                    Disable admin actions
+                    <div local-class='expires-in'>expires at {{date-format this.session.sudoEnabledUntil 'HH:mm'}}</div>
+                  </button>
+                {{else}}
+                  <button local-class='sudo-menu-item' type='button' {{on 'click' this.enableSudo}}>
+                    Enable admin actions
+                  </button>
+                {{/if}}
+              </menu.Item>
+            {{/if}}
+            <menu.Item local-class='menu-item-with-separator'>
               <button
                 type="button"
                 disabled={{this.session.logoutTask.isRunning}}

@@ -1,0 +1,26 @@
+{{#if this.isPrivileged}}
+  <div>
+    {{yield}}
+  </div>
+{{else if this.canBePrivileged}}
+  {{#if (has-block 'placeholder')}}
+    <div>
+      {{yield to='placeholder'}}
+    </div>
+  {{else}}
+    <div local-class='placeholder'>
+      <fieldset disabled="disabled">
+        {{yield}}
+      </fieldset>
+      <EmberTooltip>
+        You must enable admin actions before you can perform this operation.
+      </EmberTooltip>
+    </div>
+  {{/if}}
+{{else}}
+  <div>
+    {{#if (has-block 'unprivileged')}}
+      {{yield to='unprivileged'}}
+    {{/if}}
+  </div>
+{{/if}}
