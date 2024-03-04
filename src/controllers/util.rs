@@ -34,7 +34,6 @@ pub trait RequestPartsExt {
     fn version(&self) -> Version;
     fn headers(&self) -> &HeaderMap<HeaderValue>;
     fn extensions(&self) -> &Extensions;
-    fn extensions_mut(&mut self) -> &mut Extensions;
 }
 
 impl RequestPartsExt for Parts {
@@ -52,9 +51,6 @@ impl RequestPartsExt for Parts {
     }
     fn extensions(&self) -> &Extensions {
         &self.extensions
-    }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        &mut self.extensions
     }
 }
 
@@ -74,9 +70,6 @@ impl<B> RequestPartsExt for Request<B> {
     fn extensions(&self) -> &Extensions {
         self.extensions()
     }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        self.extensions_mut()
-    }
 }
 
 impl RequestPartsExt for BytesRequest {
@@ -94,8 +87,5 @@ impl RequestPartsExt for BytesRequest {
     }
     fn extensions(&self) -> &Extensions {
         self.0.extensions()
-    }
-    fn extensions_mut(&mut self) -> &mut Extensions {
-        self.0.extensions_mut()
     }
 }
