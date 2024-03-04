@@ -2,7 +2,7 @@ use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_display_snapshot;
+use insta::assert_snapshot;
 
 fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
     let response = user.get::<()>(&format!("/api/v1/crates/{crate_name}/following"));
@@ -34,15 +34,15 @@ fn test_unauthenticated_requests() {
 
     let response = anon.get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"));
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 
     let response = anon.put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8]);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 
     let response = anon.delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"));
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
 }
 
 #[test]
@@ -84,15 +84,15 @@ fn test_unknown_crate() {
 
     let response = user.get::<()>("/api/v1/crates/unknown-crate/following");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user.put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8]);
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user.delete::<()>("/api/v1/crates/unknown-crate/follow");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 }
 
 #[test]

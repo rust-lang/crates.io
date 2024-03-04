@@ -125,7 +125,7 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use claims::{assert_err, assert_ok};
-    use insta::{assert_debug_snapshot, assert_display_snapshot};
+    use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Cursor;
 
     #[tokio::test]
@@ -217,6 +217,6 @@ mod tests {
         ));
         let error = assert_err!(count_downloads(&mut cursor).await);
 
-        assert_display_snapshot!(error, @"Unsupported version: 2.0");
+        assert_snapshot!(error, @"Unsupported version: 2.0");
     }
 }

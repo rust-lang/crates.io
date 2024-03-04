@@ -48,7 +48,7 @@ mod tests {
     use crate::compression::Decompressor;
     use crate::test_utils::*;
     use claims::{assert_err, assert_ok};
-    use insta::{assert_debug_snapshot, assert_display_snapshot};
+    use insta::{assert_debug_snapshot, assert_snapshot};
     use std::io::Cursor;
 
     #[tokio::test]
@@ -199,6 +199,6 @@ mod tests {
 
         let mut cursor = Cursor::new(b"foo");
         let error = assert_err!(count_downloads(&mut cursor).await);
-        assert_display_snapshot!(error, @"Failed to determine log file format. Unrecognized first byte: 102.");
+        assert_snapshot!(error, @"Failed to determine log file format. Unrecognized first byte: 102.");
     }
 }

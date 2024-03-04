@@ -2,7 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
-use insta::{assert_display_snapshot, assert_json_snapshot};
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[test]
 fn show() {
@@ -81,7 +81,7 @@ fn test_missing() {
 
     let response = anon.get::<()>("/api/v1/crates/missing");
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_display_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `missing` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `missing` does not exist"}]}"###);
 }
 
 #[test]
