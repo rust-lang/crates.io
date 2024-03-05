@@ -71,6 +71,7 @@ pub mod keyword;
 pub mod krate;
 pub mod metrics;
 pub mod site_metadata;
+pub mod summary;
 pub mod team;
 pub mod token;
 pub mod user;
