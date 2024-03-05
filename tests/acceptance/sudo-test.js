@@ -10,13 +10,13 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | sudo', function (hooks) {
   setupApplicationTest(hooks);
 
-  const prepare = context => {
+  function prepare(context, isAdmin) {
     const user = context.server.create('user', {
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-      isAdmin: true,
+      isAdmin,
     });
 
     const crate = context.server.create('crate', {
@@ -31,10 +31,24 @@ module('Acceptance | sudo', function (hooks) {
 
     context.authenticateAs(user);
     return { user, crate, version };
-  };
+  }
+
+  test('non-admin users do not see any controls', async function (assert) {
+    prepare(this, false);
+
+    await visit('/crates/foo/versions');
+
+    // Test the various header elements.
+    assert.dom('[data-test-wizard-hat]').doesNotExist();
+    assert.dom('[data-test-disable-admin-actions]').doesNotExist();
+    assert.dom('[data-test-enable-admin-actions]').doesNotExist();
+
+    // Assert that there's no yank button, disabled, enabled, or in any state.
+    assert.dom('[data-test-version-yank-button="0.1.0"]').doesNotExist();
+  });
 
   test('admin user is not initially in sudo mode', async function (assert) {
-    prepare(this);
+    prepare(this, true);
 
     await visit('/crates/foo/versions');
 
@@ -52,7 +66,7 @@ module('Acceptance | sudo', function (hooks) {
   });
 
   test('admin user can enter sudo mode', async function (assert) {
-    prepare(this);
+    prepare(this, true);
 
     await visit('/crates/foo/versions');
 
@@ -82,8 +96,7 @@ module('Acceptance | sudo', function (hooks) {
   });
 
   test('admin can yank a crate in sudo mode', async function (assert) {
-    this.server.loadFixtures();
-    prepare(this);
+    prepare(this, true);
 
     await visit('/crates/foo/versions');
     await click('[data-test-enable-admin-actions]');
