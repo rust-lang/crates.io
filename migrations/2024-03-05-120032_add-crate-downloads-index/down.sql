@@ -1,0 +1,1 @@
+drop index concurrently crate_downloads_downloads_crate_id_index;
