@@ -103,11 +103,12 @@ impl Email for PossibleTyposquatEmail<'_> {
             .join("");
 
         format!(
-            "New crate {crate_name} may be typosquatting one or more other crates.\n
-Visit https://{domain}/crates/{crate_name} to see the offending crate.\n
-\n
-Specific squat checks that triggered:\n
-\n
+            "New crate {crate_name} may be typosquatting one or more other crates.
+
+Visit https://{domain}/crates/{crate_name} to see the offending crate.
+
+Specific squat checks that triggered:
+
 {squats}",
             domain = self.domain,
             crate_name = self.crate_name,
