@@ -48,6 +48,10 @@ crates_cnt = "public"
 created_at = "public"
 path = "public"
 
+[crate_downloads.columns]
+crate_id = "public"
+downloads = "public"
+
 [crate_owner_invitations.columns]
 invited_user_id = "private"
 invited_by_user_id = "private"

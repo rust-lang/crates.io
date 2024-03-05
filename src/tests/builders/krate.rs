@@ -5,6 +5,7 @@ use crates_io::{
 };
 
 use chrono::NaiveDateTime;
+use crates_io::schema::crate_downloads;
 use diesel::prelude::*;
 
 use super::VersionBuilder;
@@ -125,6 +126,10 @@ impl<'a> CrateBuilder<'a> {
         // crate properties in a single DB call.
 
         if let Some(downloads) = self.downloads {
+            update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
+                .set(crate_downloads::downloads.eq(downloads as i64))
+                .execute(connection)?;
+
             krate = update(&krate)
                 .set(crates::downloads.eq(downloads))
                 .returning(Crate::as_returning())
