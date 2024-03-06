@@ -6,7 +6,7 @@ use crate::{
     models::{
         Crate, CrateOwner, NewCrate, NewTeam, NewUser, NewVersion, Owner, OwnerKind, User, Version,
     },
-    schema::{crate_owners, crates},
+    schema::{crate_downloads, crate_owners},
     Emails,
 };
 
@@ -60,9 +60,9 @@ impl Faker {
         }
         .create(conn, user.id)?;
 
-        diesel::update(crates::table)
-            .filter(crates::id.eq(krate.id))
-            .set(crates::downloads.eq(downloads))
+        diesel::update(crate_downloads::table)
+            .filter(crate_downloads::crate_id.eq(krate.id))
+            .set(crate_downloads::downloads.eq(downloads as i64))
             .execute(conn)?;
 
         let version = NewVersion::new(

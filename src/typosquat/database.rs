@@ -20,7 +20,7 @@ impl TopCrates {
     pub fn new(conn: &mut PgConnection, num: i64) -> QueryResult<Self> {
         use crate::{
             models,
-            schema::{crate_owners, crates},
+            schema::{crate_downloads, crate_owners},
         };
         use diesel::prelude::*;
 
@@ -43,7 +43,8 @@ impl TopCrates {
 
         let mut crates: BTreeMap<i32, (String, Crate)> = BTreeMap::new();
         for result in models::Crate::all()
-            .order(crates::downloads.desc())
+            .inner_join(crate_downloads::table)
+            .order(crate_downloads::downloads.desc())
             .limit(num)
             .load_iter::<models::Crate, DefaultLoadingMode>(conn)?
         {
