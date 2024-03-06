@@ -401,13 +401,7 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
     }
 }
 
-#[allow(unused_macro_rules)]
 macro_rules! seek {
-    // Tuple struct
-    (@variant_struct $vis:vis $variant:ident($($(#[$field_meta:meta])? $ty:ty),*)) => {
-        #[derive(Debug, Default, Deserialize, Serialize, PartialEq)]
-        $vis struct $variant($($(#[$field_meta])? pub(super) $ty),*);
-    };
     // Field struct
     (@variant_struct $vis:vis $variant:ident {
         $($(#[$field_meta:meta])? $field:ident: $ty:ty),*
@@ -616,12 +610,9 @@ mod tests {
         use chrono::naive::serde::ts_microseconds;
         seek! {
             pub(super) enum Seek {
-                Id(i32)
-                New(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
-                RecentDownloads(Option<i64>, i32)
-                NamedId{id: i32}
-                NamedNew{#[serde(with="ts_microseconds")] dt: chrono::NaiveDateTime, id: i32}
-                NamedRecentDownloads{ downloads: Option<i64>, id: i32 }
+                Id{id: i32}
+                New{#[serde(with="ts_microseconds")] dt: chrono::NaiveDateTime, id: i32}
+                RecentDownloads{ downloads: Option<i64>, id: i32 }
             }
         }
     }
@@ -641,9 +632,9 @@ mod tests {
             assert_eq!(decoded, expect);
         };
 
-        // Tuple struct
+        let id = 1234;
         let seek = Seek::Id;
-        let payload = SeekPayload::Id(Id(1234));
+        let payload = SeekPayload::Id(Id { id });
         let query = format!("seek={}", encode_seek(&payload).unwrap());
         assert_decode_after(seek, &query, Some(payload));
 
@@ -652,57 +643,21 @@ mod tests {
             .and_hms_opt(9, 10, 11)
             .unwrap();
         let seek = Seek::New;
-        let payload = SeekPayload::New(New(dt, 1234));
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
-
-        let seek = Seek::RecentDownloads;
-        let payload = SeekPayload::RecentDownloads(RecentDownloads(Some(5678), 1234));
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
-
-        let seek = Seek::Id;
-        assert_decode_after(seek, "", None);
-
-        let seek = Seek::Id;
-        let payload = SeekPayload::RecentDownloads(RecentDownloads(Some(5678), 1234));
-        let query = format!("seek={}", encode_seek(payload).unwrap());
-        let pagination = PaginationOptions::builder()
-            .enable_seek(true)
-            .gather(&mock(&query))
-            .unwrap();
-        let error = seek.after(&pagination.page).unwrap_err();
-        assert_eq!(error.to_string(), "invalid seek parameter");
-        let response = error.response();
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-
-        // Field struct
-        let id = 1234;
-        let seek = Seek::NamedId;
-        let payload = SeekPayload::NamedId(NamedId { id });
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
-
-        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
-            .unwrap()
-            .and_hms_opt(9, 10, 11)
-            .unwrap();
-        let seek = Seek::NamedNew;
-        let payload = SeekPayload::NamedNew(NamedNew { dt, id });
+        let payload = SeekPayload::New(New { dt, id });
         let query = format!("seek={}", encode_seek(&payload).unwrap());
         assert_decode_after(seek, &query, Some(payload));
 
         let downloads = Some(5678);
-        let seek = Seek::NamedRecentDownloads;
-        let payload = SeekPayload::NamedRecentDownloads(NamedRecentDownloads { downloads, id });
+        let seek = Seek::RecentDownloads;
+        let payload = SeekPayload::RecentDownloads(RecentDownloads { downloads, id });
         let query = format!("seek={}", encode_seek(&payload).unwrap());
         assert_decode_after(seek, &query, Some(payload));
 
-        let seek = Seek::NamedId;
+        let seek = Seek::Id;
         assert_decode_after(seek, "", None);
 
-        let seek = Seek::NamedId;
-        let payload = SeekPayload::NamedRecentDownloads(NamedRecentDownloads { downloads, id });
+        let seek = Seek::Id;
+        let payload = SeekPayload::RecentDownloads(RecentDownloads { downloads, id });
         let query = format!("seek={}", encode_seek(payload).unwrap());
         let pagination = PaginationOptions::builder()
             .enable_seek(true)
@@ -721,7 +676,7 @@ mod tests {
         );
         assert_eq!(
             encode_seek(NewTuple(dt, id)).unwrap(),
-            encode_seek(SeekPayload::NamedNew(NamedNew { dt, id })).unwrap()
+            encode_seek(SeekPayload::New(New { dt, id })).unwrap()
         );
     }
 
@@ -729,44 +684,22 @@ mod tests {
     fn test_seek_macro_conv() {
         use chrono::{NaiveDate, NaiveDateTime};
         use seek::*;
-
-        // Tuple struct
-        assert_eq!(Seek::from(SeekPayload::Id(Id(1234))), Seek::Id);
-
-        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
-            .unwrap()
-            .and_hms_opt(9, 10, 11)
-            .unwrap();
-        assert_eq!(Seek::from(SeekPayload::New(New(dt, 1234))), Seek::New);
-
-        assert_eq!(
-            Seek::from(SeekPayload::RecentDownloads(RecentDownloads(None, 1234))),
-            Seek::RecentDownloads
-        );
-
-        // Field struct
         let id = 1234;
-        assert_eq!(
-            Seek::from(SeekPayload::NamedId(NamedId { id })),
-            Seek::NamedId
-        );
+        assert_eq!(Seek::from(SeekPayload::Id(Id { id })), Seek::Id);
 
         let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
             .unwrap()
             .and_hms_opt(9, 10, 11)
             .unwrap();
-        assert_eq!(
-            Seek::from(SeekPayload::NamedNew(NamedNew { dt, id })),
-            Seek::NamedNew
-        );
+        assert_eq!(Seek::from(SeekPayload::New(New { dt, id })), Seek::New);
 
         let downloads = None;
         assert_eq!(
-            Seek::from(SeekPayload::NamedRecentDownloads(NamedRecentDownloads {
+            Seek::from(SeekPayload::RecentDownloads(RecentDownloads {
                 downloads,
                 id
             })),
-            Seek::NamedRecentDownloads
+            Seek::RecentDownloads
         );
     }
 
