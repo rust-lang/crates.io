@@ -369,6 +369,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             let top_versions = krate.top_versions(conn)?;
 
+            let downloads: i64 = crate_downloads::table.select(crate_downloads::downloads)
+                .filter(crate_downloads::crate_id.eq(krate.id))
+                .first(conn)?;
+
             let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
             if let Some(readme) = metadata.readme {
@@ -411,7 +415,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 other: vec![],
             };
 
-            let downloads = krate.downloads as i64;
             Ok(Json(GoodCrate {
                 krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, downloads, None),
                 warnings,
