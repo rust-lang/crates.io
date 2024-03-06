@@ -9,7 +9,9 @@ struct UserStats {
 fn user_total_downloads() {
     use crate::builders::CrateBuilder;
     use crate::util::{RequestHelper, TestApp};
-    use diesel::{update, RunQueryDsl};
+    use crates_io::schema::crate_downloads;
+    use diesel::prelude::*;
+    use diesel::{update, QueryDsl, RunQueryDsl};
 
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
@@ -17,25 +19,27 @@ fn user_total_downloads() {
     let another_user = another_user.as_model();
 
     app.db(|conn| {
-        let mut krate = CrateBuilder::new("foo_krate1", user.id).expect_build(conn);
-        krate.downloads = 10;
-        update(&krate).set(&krate).execute(conn).unwrap();
-
-        let mut krate2 = CrateBuilder::new("foo_krate2", user.id).expect_build(conn);
-        krate2.downloads = 20;
-        update(&krate2).set(&krate2).execute(conn).unwrap();
-
-        let mut another_krate = CrateBuilder::new("bar_krate1", another_user.id).expect_build(conn);
-        another_krate.downloads = 2;
-        update(&another_krate)
-            .set(&another_krate)
+        let krate = CrateBuilder::new("foo_krate1", user.id).expect_build(conn);
+        update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
+            .set(crate_downloads::downloads.eq(10))
             .execute(conn)
             .unwrap();
 
-        let mut no_longer_my_krate = CrateBuilder::new("nacho", user.id).expect_build(conn);
-        no_longer_my_krate.downloads = 5;
-        update(&no_longer_my_krate)
-            .set(&no_longer_my_krate)
+        let krate2 = CrateBuilder::new("foo_krate2", user.id).expect_build(conn);
+        update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate2.id)))
+            .set(crate_downloads::downloads.eq(20))
+            .execute(conn)
+            .unwrap();
+
+        let another_krate = CrateBuilder::new("bar_krate1", another_user.id).expect_build(conn);
+        update(crate_downloads::table.filter(crate_downloads::crate_id.eq(another_krate.id)))
+            .set(crate_downloads::downloads.eq(2))
+            .execute(conn)
+            .unwrap();
+
+        let no_longer_my_krate = CrateBuilder::new("nacho", user.id).expect_build(conn);
+        update(crate_downloads::table.filter(crate_downloads::crate_id.eq(no_longer_my_krate.id)))
+            .set(crate_downloads::downloads.eq(5))
             .execute(conn)
             .unwrap();
         no_longer_my_krate
