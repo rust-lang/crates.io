@@ -29,6 +29,7 @@ revoked = "private"
 crate_scopes = "private"
 endpoint_scopes = "private"
 expired_at = "private"
+expiry_notification_at = "private"
 
 [background_jobs.columns]
 id = "private"
