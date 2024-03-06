@@ -35,11 +35,13 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 .zip(krates)
                 .zip(recent_downloads)
                 .map(|((top_versions, krate), recent_downloads)| {
+                    let downloads = krate.downloads as i64;
                     Ok(EncodableCrate::from_minimal(
                         krate,
                         Some(&top_versions),
                         None,
                         false,
+                        downloads,
                         recent_downloads,
                     ))
                 })

@@ -72,6 +72,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let selection = (
             ALL_COLUMNS,
             false.into_sql::<Bool>(),
+            crate_downloads::downloads,
             recent_crate_downloads::downloads.nullable(),
             0_f32.into_sql::<Float>(),
         );
@@ -80,6 +81,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let mut seek: Option<Seek> = None;
         let mut query = filter_params
             .make_query(&req, conn)?
+            .inner_join(crate_downloads::table)
             .left_join(recent_crate_downloads::table)
             .select(selection);
 
@@ -97,6 +99,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                     query = query.select((
                         ALL_COLUMNS,
                         Crate::with_name(q_string),
+                        crate_downloads::downloads,
                         recent_crate_downloads::downloads.nullable(),
                         rank.clone(),
                     ));
@@ -106,6 +109,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                     query = query.select((
                         ALL_COLUMNS,
                         Crate::with_name(q_string),
+                        crate_downloads::downloads,
                         recent_crate_downloads::downloads.nullable(),
                         0_f32.into_sql::<Float>(),
                     ));
@@ -121,7 +125,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         // to ensure predictable pagination behavior.
         if sort == Some("downloads") {
             seek = Some(Seek::Downloads);
-            query = query.order((crates::downloads.desc(), crates::id.desc()))
+            query = query.order((crate_downloads::downloads.desc(), crates::id.desc()))
         } else if sort == Some("recent-downloads") {
             seek = Some(Seek::RecentDownloads);
             query = query.order((
@@ -170,7 +174,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 pagination,
                 filter_params.make_query(&req, conn)?.count(),
             );
-            let data: Paginated<(Crate, bool, Option<i64>, f32)> =
+            let data: Paginated<(Crate, bool, i64, Option<i64>, f32)> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
 
@@ -187,7 +191,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 pagination,
                 filter_params.make_query(&req, conn)?.count(),
             );
-            let data: Paginated<(Crate, bool, Option<i64>, f32)> =
+            let data: Paginated<(Crate, bool, i64, Option<i64>, f32)> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
             (
@@ -199,12 +203,15 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             )
         };
 
-        let perfect_matches = data.iter().map(|&(_, b, _, _)| b).collect::<Vec<_>>();
-        let recent_downloads = data
+        let perfect_matches = data.iter().map(|&(_, b, _, _, _)| b).collect::<Vec<_>>();
+        let downloads = data
             .iter()
-            .map(|&(_, _, s, _)| s.unwrap_or(0))
+            .map(|&(_, _, total, recent, _)| (total, recent.unwrap_or(0)))
             .collect::<Vec<_>>();
-        let crates = data.into_iter().map(|(c, _, _, _)| c).collect::<Vec<_>>();
+        let crates = data
+            .into_iter()
+            .map(|(c, _, _, _, _)| c)
+            .collect::<Vec<_>>();
 
         let versions: Vec<Version> = info_span!("db.query", message = "SELECT ... FROM versions")
             .in_scope(|| crates.versions().load(conn))?;
@@ -216,18 +223,17 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let crates = versions
             .zip(crates)
             .zip(perfect_matches)
-            .zip(recent_downloads)
-            .map(
-                |(((max_version, krate), perfect_match), recent_downloads)| {
-                    EncodableCrate::from_minimal(
-                        krate,
-                        Some(&max_version),
-                        Some(vec![]),
-                        perfect_match,
-                        Some(recent_downloads),
-                    )
-                },
-            )
+            .zip(downloads)
+            .map(|(((max_version, krate), perfect_match), (total, recent))| {
+                EncodableCrate::from_minimal(
+                    krate,
+                    Some(&max_version),
+                    Some(vec![]),
+                    perfect_match,
+                    total,
+                    Some(recent),
+                )
+            })
             .collect::<Vec<_>>();
 
         Ok(Json(json!({
@@ -476,12 +482,12 @@ impl<'a> FilterParams<'a> {
                 // `WHERE (downloads = downloads' AND id < id') OR downloads < downloads'`
                 vec![
                     Box::new(
-                        crates::downloads
+                        crate_downloads::downloads
                             .eq(downloads)
                             .and(crates::id.lt(id))
                             .nullable(),
                     ),
-                    Box::new(crates::downloads.lt(downloads).nullable()),
+                    Box::new(crate_downloads::downloads.lt(downloads).nullable()),
                 ]
             }
             SeekPayload::Query(Query(exact_match, id)) => {
@@ -551,14 +557,17 @@ mod seek {
             New(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
             RecentUpdates(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
             RecentDownloads(Option<i64>, i32)
-            Downloads(i32, i32)
+            Downloads(i64, i32)
             Query(bool, i32)
             Relevance(bool, f32, i32)
         }
     }
 
     impl Seek {
-        pub(crate) fn to_payload(&self, record: &(Crate, bool, Option<i64>, f32)) -> SeekPayload {
+        pub(crate) fn to_payload(
+            &self,
+            record: &(Crate, bool, i64, Option<i64>, f32),
+        ) -> SeekPayload {
             match *self {
                 Seek::Name => SeekPayload::Name(Name(record.0.id)),
                 Seek::New => SeekPayload::New(New(record.0.created_at, record.0.id)),
@@ -566,14 +575,12 @@ mod seek {
                     SeekPayload::RecentUpdates(RecentUpdates(record.0.updated_at, record.0.id))
                 }
                 Seek::RecentDownloads => {
-                    SeekPayload::RecentDownloads(RecentDownloads(record.2, record.0.id))
+                    SeekPayload::RecentDownloads(RecentDownloads(record.3, record.0.id))
                 }
-                Seek::Downloads => {
-                    SeekPayload::Downloads(Downloads(record.0.downloads, record.0.id))
-                }
+                Seek::Downloads => SeekPayload::Downloads(Downloads(record.2, record.0.id)),
                 Seek::Query => SeekPayload::Query(Query(record.1, record.0.id)),
                 Seek::Relevance => {
-                    SeekPayload::Relevance(Relevance(record.1, record.3, record.0.id))
+                    SeekPayload::Relevance(Relevance(record.1, record.4, record.0.id))
                 }
             }
         }
@@ -582,7 +589,10 @@ mod seek {
 
 type BoxedCondition<'a> = Box<
     dyn BoxableExpression<
-            LeftJoinQuerySource<crates::table, recent_crate_downloads::table>,
+            LeftJoinQuerySource<
+                InnerJoinQuerySource<crates::table, crate_downloads::table>,
+                recent_crate_downloads::table,
+            >,
             diesel::pg::Pg,
             SqlType = diesel::sql_types::Nullable<Bool>,
         > + 'a,

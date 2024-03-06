@@ -115,6 +115,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             cats.as_deref(),
             badges,
             false,
+            krate.downloads as i64,
             recent_downloads,
         );
         let encodable_versions = versions_publishers_and_audit_actions.map(|vpa| {

@@ -411,8 +411,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 other: vec![],
             };
 
+            let downloads = krate.downloads as i64;
             Ok(Json(GoodCrate {
-                krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, None),
+                krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, downloads, None),
                 warnings,
             }))
         })

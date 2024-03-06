@@ -230,13 +230,13 @@ impl EncodableCrate {
         categories: Option<&[Category]>,
         badges: Option<Vec<()>>,
         exact_match: bool,
+        downloads: i64,
         recent_downloads: Option<i64>,
     ) -> Self {
         let Crate {
             name,
             created_at,
             updated_at,
-            downloads,
             description,
             homepage,
             documentation,
@@ -272,7 +272,6 @@ impl EncodableCrate {
         // behind the number of "recent downloads". to hide this inconsistency
         // we will use the "recent downloads" as "total downloads" in case it is
         // higher.
-        let downloads = downloads as i64;
         let downloads = if matches!(recent_downloads, Some(x) if x > downloads) {
             recent_downloads.unwrap()
         } else {
@@ -314,6 +313,7 @@ impl EncodableCrate {
         top_versions: Option<&TopVersions>,
         badges: Option<Vec<()>>,
         exact_match: bool,
+        downloads: i64,
         recent_downloads: Option<i64>,
     ) -> Self {
         Self::from(
@@ -324,6 +324,7 @@ impl EncodableCrate {
             None,
             badges,
             exact_match,
+            downloads,
             recent_downloads,
         )
     }
