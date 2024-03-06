@@ -412,12 +412,12 @@ impl<'a> FilterParams<'a> {
                 .single_value()
         };
         let conditions: Vec<BoxedCondition<'_>> = match *seek_payload {
-            SeekPayload::Name(Name(id)) => {
+            SeekPayload::Name(Name { id }) => {
                 // Equivalent of:
                 // `WHERE name > name'`
                 vec![Box::new(crates::name.nullable().gt(crate_name_by_id(id)))]
             }
-            SeekPayload::New(New(created_at, id)) => {
+            SeekPayload::New(New { created_at, id }) => {
                 // Equivalent of:
                 // `WHERE (created_at = created_at' AND id < id') OR created_at < created_at'`
                 vec![
@@ -430,7 +430,7 @@ impl<'a> FilterParams<'a> {
                     Box::new(crates::created_at.lt(created_at).nullable()),
                 ]
             }
-            SeekPayload::RecentUpdates(RecentUpdates(updated_at, id)) => {
+            SeekPayload::RecentUpdates(RecentUpdates { updated_at, id }) => {
                 // Equivalent of:
                 // `WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'`
                 vec![
@@ -443,7 +443,10 @@ impl<'a> FilterParams<'a> {
                     Box::new(crates::updated_at.lt(updated_at).nullable()),
                 ]
             }
-            SeekPayload::RecentDownloads(RecentDownloads(recent_downloads, id)) => {
+            SeekPayload::RecentDownloads(RecentDownloads {
+                recent_downloads,
+                id,
+            }) => {
                 // Equivalent of:
                 // for recent_downloads is not None:
                 // `WHERE (recent_downloads = recent_downloads' AND id < id')
@@ -477,7 +480,7 @@ impl<'a> FilterParams<'a> {
                     }
                 }
             }
-            SeekPayload::Downloads(Downloads(downloads, id)) => {
+            SeekPayload::Downloads(Downloads { downloads, id }) => {
                 // Equivalent of:
                 // `WHERE (downloads = downloads' AND id < id') OR downloads < downloads'`
                 vec![
@@ -490,7 +493,7 @@ impl<'a> FilterParams<'a> {
                     Box::new(crate_downloads::downloads.lt(downloads).nullable()),
                 ]
             }
-            SeekPayload::Query(Query(exact_match, id)) => {
+            SeekPayload::Query(Query { exact_match, id }) => {
                 // Equivalent of:
                 // `WHERE (exact_match = exact_match' AND name < name') OR exact_match <
                 // exact_match'`
@@ -506,7 +509,11 @@ impl<'a> FilterParams<'a> {
                     Box::new(name_exact_match.lt(exact_match).nullable()),
                 ]
             }
-            SeekPayload::Relevance(Relevance(exact, rank_in, id)) => {
+            SeekPayload::Relevance(Relevance {
+                exact_match: exact,
+                rank: rank_in,
+                id,
+            }) => {
                 // Equivalent of:
                 // `WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
                 //      OR (exact_match = exact_match' AND rank < rank')
@@ -553,13 +560,13 @@ mod seek {
 
     seek! {
         pub enum Seek {
-            Name(i32)
-            New(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
-            RecentUpdates(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
-            RecentDownloads(Option<i64>, i32)
-            Downloads(i64, i32)
-            Query(bool, i32)
-            Relevance(bool, f32, i32)
+            Name{ id: i32 }
+            New{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32}
+            RecentUpdates{#[serde(with="ts_microseconds")] updated_at: chrono::NaiveDateTime, id: i32}
+            RecentDownloads{recent_downloads: Option<i64>, id: i32}
+            Downloads{downloads: i64, id: i32}
+            Query{exact_match: bool, id: i32}
+            Relevance{exact_match: bool, rank: f32, id: i32}
         }
     }
 
@@ -568,20 +575,34 @@ mod seek {
             &self,
             record: &(Crate, bool, i64, Option<i64>, f32),
         ) -> SeekPayload {
+            let (
+                Crate {
+                    id,
+                    updated_at,
+                    created_at,
+                    ..
+                },
+                exact_match,
+                downloads,
+                recent_downloads,
+                rank,
+            ) = *record;
+
             match *self {
-                Seek::Name => SeekPayload::Name(Name(record.0.id)),
-                Seek::New => SeekPayload::New(New(record.0.created_at, record.0.id)),
-                Seek::RecentUpdates => {
-                    SeekPayload::RecentUpdates(RecentUpdates(record.0.updated_at, record.0.id))
-                }
-                Seek::RecentDownloads => {
-                    SeekPayload::RecentDownloads(RecentDownloads(record.3, record.0.id))
-                }
-                Seek::Downloads => SeekPayload::Downloads(Downloads(record.2, record.0.id)),
-                Seek::Query => SeekPayload::Query(Query(record.1, record.0.id)),
-                Seek::Relevance => {
-                    SeekPayload::Relevance(Relevance(record.1, record.4, record.0.id))
-                }
+                Seek::Name => SeekPayload::Name(Name { id }),
+                Seek::New => SeekPayload::New(New { created_at, id }),
+                Seek::RecentUpdates => SeekPayload::RecentUpdates(RecentUpdates { updated_at, id }),
+                Seek::RecentDownloads => SeekPayload::RecentDownloads(RecentDownloads {
+                    recent_downloads,
+                    id,
+                }),
+                Seek::Downloads => SeekPayload::Downloads(Downloads { downloads, id }),
+                Seek::Query => SeekPayload::Query(Query { exact_match, id }),
+                Seek::Relevance => SeekPayload::Relevance(Relevance {
+                    exact_match,
+                    rank,
+                    id,
+                }),
             }
         }
     }
