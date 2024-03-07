@@ -404,7 +404,7 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
 macro_rules! seek {
     // Field struct
     (@variant_struct $vis:vis $variant:ident {
-        $($(#[$field_meta:meta])? $field:ident: $ty:ty),*
+        $($(#[$field_meta:meta])? $field:ident: $ty:ty),* $(,)?
     }) => {
         paste::item! {
             #[derive(Debug, Default, Deserialize, PartialEq)]
