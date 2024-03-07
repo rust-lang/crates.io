@@ -608,13 +608,22 @@ mod tests {
 
     mod seek {
         use chrono::naive::serde::ts_microseconds;
-        seek! {
+        seek!(
             pub(super) enum Seek {
-                Id{id: i32},
-                New{#[serde(with="ts_microseconds")] dt: chrono::NaiveDateTime, id: i32},
-                RecentDownloads{ downloads: Option<i64>, id: i32 },
+                Id {
+                    id: i32,
+                },
+                New {
+                    #[serde(with = "ts_microseconds")]
+                    dt: chrono::NaiveDateTime,
+                    id: i32,
+                },
+                RecentDownloads {
+                    downloads: Option<i64>,
+                    id: i32,
+                },
             }
-        }
+        );
     }
 
     #[test]

@@ -234,12 +234,18 @@ mod seek {
     // We might consider refactoring this to use named fields, which would be clearer and more
     // flexible. It's also worth noting that we currently encode seek compactly as a Vec, which
     // doesn't include field names.
-    seek! {
+    seek!(
         pub enum Seek {
-            Semver{id: i32},
-            Date{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32},
+            Semver {
+                id: i32,
+            },
+            Date {
+                #[serde(with = "ts_microseconds")]
+                created_at: chrono::NaiveDateTime,
+                id: i32,
+            },
         }
-    }
+    );
 
     impl Seek {
         pub(crate) fn to_payload(&self, record: &(Version, Option<User>)) -> SeekPayload {
