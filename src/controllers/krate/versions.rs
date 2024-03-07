@@ -236,8 +236,8 @@ mod seek {
     // doesn't include field names.
     seek! {
         pub enum Seek {
-            Semver{id: i32}
-            Date{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32}
+            Semver{id: i32},
+            Date{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32},
         }
     }
 

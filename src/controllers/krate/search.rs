@@ -560,13 +560,13 @@ mod seek {
 
     seek! {
         pub enum Seek {
-            Name{ id: i32 }
-            New{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32}
-            RecentUpdates{#[serde(with="ts_microseconds")] updated_at: chrono::NaiveDateTime, id: i32}
-            RecentDownloads{recent_downloads: Option<i64>, id: i32}
-            Downloads{downloads: i64, id: i32}
-            Query{exact_match: bool, id: i32}
-            Relevance{exact_match: bool, rank: f32, id: i32}
+            Name{ id: i32 },
+            New{#[serde(with="ts_microseconds")] created_at: chrono::NaiveDateTime, id: i32},
+            RecentUpdates{#[serde(with="ts_microseconds")] updated_at: chrono::NaiveDateTime, id: i32},
+            RecentDownloads{recent_downloads: Option<i64>, id: i32},
+            Downloads{downloads: i64, id: i32},
+            Query{exact_match: bool, id: i32},
+            Relevance{exact_match: bool, rank: f32, id: i32},
         }
     }
 

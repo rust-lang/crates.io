@@ -437,7 +437,7 @@ macro_rules! seek {
     (
         $vis:vis enum $name:ident {
             $(
-                $variant:ident $fields:tt
+                $variant:ident $fields:tt,
             )*
         }
     ) => {
@@ -610,9 +610,9 @@ mod tests {
         use chrono::naive::serde::ts_microseconds;
         seek! {
             pub(super) enum Seek {
-                Id{id: i32}
-                New{#[serde(with="ts_microseconds")] dt: chrono::NaiveDateTime, id: i32}
-                RecentDownloads{ downloads: Option<i64>, id: i32 }
+                Id{id: i32},
+                New{#[serde(with="ts_microseconds")] dt: chrono::NaiveDateTime, id: i32},
+                RecentDownloads{ downloads: Option<i64>, id: i32 },
             }
         }
     }
