@@ -499,8 +499,9 @@ mod tests {
 
         // Add dummy data to the store
         let path = CLOUDFRONT_PATH.into();
-        let bytes =
-            include_bytes!("../../../../crates_io_cdn_logs/test_data/cloudfront/basic.log.gz");
+        let bytes = include_bytes!(
+            "../../../../crates/crates_io_cdn_logs/test_data/cloudfront/basic.log.gz"
+        );
 
         store.put(&path, bytes[..].into()).await.unwrap();
 
