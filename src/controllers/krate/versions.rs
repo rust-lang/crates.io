@@ -92,7 +92,7 @@ fn list_by_date(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
-        if let Some(SeekPayload::Date(Date(created_at, id))) = Seek::Date.after(&options.page)? {
+        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.after(&options.page)? {
             query = query.filter(
                 versions::created_at
                     .eq(created_at)
@@ -169,7 +169,7 @@ fn list_by_semver(
             "?page= is not supported"
         );
         let mut idx = Some(0);
-        if let Some(SeekPayload::Semver(Semver(id))) = Seek::Semver.after(&options.page)? {
+        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
             idx = sorted_versions
                 .get_index_of(&id)
                 .filter(|i| i + 1 < sorted_versions.len())
@@ -234,18 +234,25 @@ mod seek {
     // We might consider refactoring this to use named fields, which would be clearer and more
     // flexible. It's also worth noting that we currently encode seek compactly as a Vec, which
     // doesn't include field names.
-    seek! {
+    seek!(
         pub enum Seek {
-            Semver(i32)
-            Date(#[serde(with="ts_microseconds")] chrono::NaiveDateTime, i32)
+            Semver {
+                id: i32,
+            },
+            Date {
+                #[serde(with = "ts_microseconds")]
+                created_at: chrono::NaiveDateTime,
+                id: i32,
+            },
         }
-    }
+    );
 
     impl Seek {
         pub(crate) fn to_payload(&self, record: &(Version, Option<User>)) -> SeekPayload {
+            let (Version { id, created_at, .. }, _) = *record;
             match *self {
-                Seek::Semver => SeekPayload::Semver(Semver(record.0.id)),
-                Seek::Date => SeekPayload::Date(Date(record.0.created_at, record.0.id)),
+                Seek::Semver => SeekPayload::Semver(Semver { id }),
+                Seek::Date => SeekPayload::Date(Date { created_at, id }),
             }
         }
     }
