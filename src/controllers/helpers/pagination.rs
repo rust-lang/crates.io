@@ -84,43 +84,43 @@ impl PaginationOptionsBuilder {
         }
 
         let page = if let Some(s) = page_param {
-            if self.enable_pages {
-                let numeric_page = s.parse().map_err(bad_request)?;
-                if numeric_page < 1 {
-                    return Err(bad_request(format_args!(
-                        "page indexing starts from 1, page {numeric_page} is invalid",
-                    )));
-                }
-
-                if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
-                    req.request_log().add("bot", "suspected");
-                }
-
-                // Block large offsets for known violators of the crawler policy
-                if self.limit_page_numbers {
-                    let config = &req.app().config;
-                    if numeric_page > config.max_allowed_page_offset
-                        && is_useragent_or_ip_blocked(config, req)
-                    {
-                        req.request_log().add("cause", "large page offset");
-
-                        let error =
-                            format!("Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.");
-
-                        return Err(bad_request(error));
-                    }
-                }
-
-                Page::Numeric(numeric_page)
-            } else {
+            if !self.enable_pages {
                 return Err(bad_request("?page= is not supported for this request"));
             }
+
+            let numeric_page = s.parse().map_err(bad_request)?;
+            if numeric_page < 1 {
+                return Err(bad_request(format_args!(
+                    "page indexing starts from 1, page {numeric_page} is invalid",
+                )));
+            }
+
+            if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
+                req.request_log().add("bot", "suspected");
+            }
+
+            // Block large offsets for known violators of the crawler policy
+            if self.limit_page_numbers {
+                let config = &req.app().config;
+                if numeric_page > config.max_allowed_page_offset
+                    && is_useragent_or_ip_blocked(config, req)
+                {
+                    req.request_log().add("cause", "large page offset");
+
+                    let error =
+                            format!("Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.");
+
+                    return Err(bad_request(error));
+                }
+            }
+
+            Page::Numeric(numeric_page)
         } else if let Some(s) = seek_param {
-            if self.enable_seek {
-                Page::Seek(RawSeekPayload(s.clone()))
-            } else {
+            if !self.enable_seek {
                 return Err(bad_request("?seek= is not supported for this request"));
             }
+
+            Page::Seek(RawSeekPayload(s.clone()))
         } else {
             Page::Unspecified
         };
