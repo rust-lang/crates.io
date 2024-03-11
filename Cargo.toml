@@ -83,7 +83,7 @@ futures-util = "=0.3.30"
 github-meta = "=0.11.0"
 hex = "=0.4.3"
 http = "=1.1.0"
-http-body-util = "=0.1.0"
+http-body-util = "=0.1.1"
 hyper = { version = "=1.2.0", features = ["client", "http1"] }
 indexmap = { version = "=2.2.5", features = ["serde"] }
 indicatif = "=0.17.8"
