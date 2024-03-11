@@ -15,6 +15,7 @@ use secrecy::{ExposeSecret, SecretString};
 )]
 pub enum Command {
     UpdateDownloads,
+    CleanProcessedLogFiles,
     DumpDb {
         #[arg(env = "READ_ONLY_REPLICA_URL")]
         database_url: SecretString,
@@ -58,6 +59,9 @@ pub fn run(command: Command) -> Result<()> {
             } else {
                 jobs::UpdateDownloads.enqueue(conn)?;
             }
+        }
+        Command::CleanProcessedLogFiles => {
+            jobs::CleanProcessedLogFiles.enqueue(conn)?;
         }
         Command::DumpDb {
             database_url,
