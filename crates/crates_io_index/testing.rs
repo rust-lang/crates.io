@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use git2::{ErrorCode, Repository, Sort};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::thread;
 use tempfile::{Builder, TempDir};
@@ -121,6 +121,21 @@ impl UpstreamIndex {
         repo.commit(Some("HEAD"), &sig, &sig, "empty commit", &tree, &[&parent])?;
 
         Ok(())
+    }
+
+    pub fn read_file(&self, path: &str) -> anyhow::Result<String> {
+        let repo = self.repository.lock().unwrap();
+
+        let head = repo.head()?;
+        let tree = head.peel_to_tree()?;
+
+        let path = PathBuf::from(path);
+        let blob = tree.get_path(&path)?.to_object(&repo)?.peel_to_blob()?;
+
+        let content = blob.content().to_vec();
+        let content = String::from_utf8(content)?;
+
+        Ok(content)
     }
 }
 
