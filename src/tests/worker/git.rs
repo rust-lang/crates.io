@@ -66,3 +66,42 @@ fn index_smoke_test() {
     );
     assert_ok_eq!(upstream.crate_exists("serde"), false);
 }
+
+/// This test checks that changes to the `config.json` file on the git index
+/// are preserved when the background worker updates the index.
+#[test]
+fn test_config_changes() {
+    const ORIGINAL_CONFIG: &str = r#"{
+        "dl": "https://crates.io/api/v1/crates",
+        "api": "https://crates.io"
+    }"#;
+
+    const UPDATED_CONFIG: &str = r#"{
+        "dl": "https://static.crates.io/crates",
+        "api": "https://crates.io"
+    }"#;
+
+    let (app, _, _, token) = TestApp::full().with_token();
+    let upstream = app.upstream_index();
+
+    // Initialize upstream index with a `config.json` file
+    upstream.write_file("config.json", ORIGINAL_CONFIG).unwrap();
+    assert_ok_eq!(upstream.read_file("config.json"), ORIGINAL_CONFIG);
+
+    // Add a new crate
+    let body = PublishBuilder::new("serde", "1.0.0").body();
+    let response = token.publish_crate(body);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Adjust the `config.json` file on the upstream index
+    upstream.write_file("config.json", UPDATED_CONFIG).unwrap();
+    assert_ok_eq!(upstream.read_file("config.json"), UPDATED_CONFIG);
+
+    // Update the crate
+    let body = PublishBuilder::new("serde", "1.1.0").body();
+    let response = token.publish_crate(body);
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // Check that the `config.json` changes on the upstream index are preserved
+    assert_ok_eq!(upstream.read_file("config.json"), UPDATED_CONFIG);
+}
