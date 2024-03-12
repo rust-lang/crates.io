@@ -9,6 +9,7 @@ mod archive_version_downloads;
 mod daily_db_maintenance;
 mod downloads;
 pub mod dump_db;
+mod expiry_notification;
 mod git;
 mod readmes;
 mod sync_admins;
