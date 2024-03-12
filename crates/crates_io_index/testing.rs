@@ -1,5 +1,6 @@
 use anyhow::anyhow;
-use git2::{ErrorCode, Repository, Sort};
+use git2::build::TreeUpdateBuilder;
+use git2::{ErrorCode, FileMode, Repository, Sort};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::thread;
@@ -136,6 +137,33 @@ impl UpstreamIndex {
         let content = String::from_utf8(content)?;
 
         Ok(content)
+    }
+
+    pub fn write_file(&self, path: &str, content: &str) -> anyhow::Result<()> {
+        let repo = self.repository.lock().unwrap();
+
+        let head = repo.head()?;
+        let head_oid = head
+            .target()
+            .ok_or_else(|| anyhow!("Missing target for HEAD"))?;
+
+        let parent = repo.find_commit(head_oid)?;
+        let tree = repo.find_tree(parent.tree_id())?;
+
+        let message = format!("Write `{path}`");
+
+        let path = PathBuf::from(path);
+        let blob_oid = repo.blob(content.as_bytes())?;
+        let tree_oid = TreeUpdateBuilder::new()
+            .upsert(path, blob_oid, FileMode::Blob)
+            .create_updated(&repo, &tree)?;
+
+        let new_tree = repo.find_tree(tree_oid)?;
+
+        let sig = repo.signature()?;
+        repo.commit(Some("HEAD"), &sig, &sig, &message, &new_tree, &[&parent])?;
+
+        Ok(())
     }
 }
 
