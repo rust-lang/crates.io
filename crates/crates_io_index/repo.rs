@@ -287,6 +287,9 @@ impl Repository {
 
         let head = self.head_oid()?;
         if head != original_head {
+            // Ensure that the internal state of `self.repository` is updated correctly
+            self.repository.checkout_head(None)?;
+
             info!("Index reset from {original_head} to {head}");
         }
 
