@@ -171,9 +171,7 @@ fn test_crate_downloads() {
 
 #[test]
 fn test_version_downloads() {
-    let (app, anon, cookie) = TestApp::init()
-        .with_config(|config| config.cdn_log_counting_enabled = false)
-        .with_user();
+    let (app, anon, cookie) = TestApp::init().with_user();
 
     app.db(|conn| {
         let user_id = cookie.as_model().id;
@@ -187,7 +185,11 @@ fn test_version_downloads() {
     download(&anon, "foo/1.0.0");
     download(&anon, "foo/1.0.0");
     download(&anon, "foo/1.1.0");
-    persist_downloads_count(&app);
+
+    app.db(|conn| {
+        save_version_downloads("foo", "1.0.0", 3, conn);
+        save_version_downloads("foo", "1.1.0", 1, conn);
+    });
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads");
     assert_eq!(response.status(), StatusCode::OK);
