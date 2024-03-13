@@ -15,7 +15,6 @@ use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::ObjectStore;
 use semver::Version;
-use std::cmp::Reverse;
 use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::io::BufReader;
@@ -54,8 +53,7 @@ impl BackgroundJob for ProcessCdnLog {
             .context("Failed to build object store")?;
 
         let db_pool = ctx.connection_pool.clone();
-        let writing_enabled = ctx.config.cdn_log_counting_enabled;
-        run(store, &self.path, db_pool, writing_enabled).await
+        run(store, &self.path, db_pool).await
     }
 }
 
@@ -99,12 +97,7 @@ fn build_store(
 /// it can be tested without having to construct a full [`Environment`]
 /// struct.
 #[instrument(skip_all, fields(cdn_log_store.path = %path))]
-async fn run(
-    store: Arc<dyn ObjectStore>,
-    path: &str,
-    db_pool: DieselPool,
-    writing_enabled: bool,
-) -> anyhow::Result<()> {
+async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: DieselPool) -> anyhow::Result<()> {
     if already_processed(path, db_pool.clone()).await? {
         warn!("Skipping already processed log file");
         return Ok(());
@@ -121,32 +114,28 @@ async fn run(
 
     log_stats(&downloads);
 
-    if writing_enabled {
-        let path = path.to_string();
-        spawn_blocking(move || {
-            let mut conn = db_pool.get()?;
-            conn.transaction(|conn| {
-                // Mark the log file as processed before saving the downloads to
-                // the database.
-                //
-                // If a second job is already processing the same log file, this
-                // call will block until the second job has finished its
-                // transaction and marked the log file as processed. Afterward
-                // this call will throw a uniqueness error and fail the job.
-                // When the job is retried the `already_processed()` call above
-                // will return `true` and the job will skip processing the log
-                // file again.
-                save_as_processed(&path, conn)?;
+    let path = path.to_string();
+    spawn_blocking(move || {
+        let mut conn = db_pool.get()?;
+        conn.transaction(|conn| {
+            // Mark the log file as processed before saving the downloads to
+            // the database.
+            //
+            // If a second job is already processing the same log file, this
+            // call will block until the second job has finished its
+            // transaction and marked the log file as processed. Afterward
+            // this call will throw a uniqueness error and fail the job.
+            // When the job is retried the `already_processed()` call above
+            // will return `true` and the job will skip processing the log
+            // file again.
+            save_as_processed(&path, conn)?;
 
-                save_downloads(downloads, conn)
-            })?;
+            save_downloads(downloads, conn)
+        })?;
 
-            Ok::<_, anyhow::Error>(())
-        })
-        .await?;
-    } else {
-        log_top_downloads(downloads, 30);
-    }
+        Ok::<_, anyhow::Error>(())
+    })
+    .await?;
 
     Ok(())
 }
@@ -175,22 +164,6 @@ fn log_stats(downloads: &DownloadsMap) {
 
     let total_inserts = downloads.len();
     info!("Number of needed inserts: {total_inserts}");
-}
-
-/// Prints the top `num` downloads from the given [`DownloadsMap`] map to the log.
-fn log_top_downloads(downloads: DownloadsMap, num: usize) {
-    let mut downloads = downloads.into_vec();
-    downloads.sort_by_key(|(_, _, _, downloads)| Reverse(*downloads));
-
-    let top_downloads = downloads
-        .into_iter()
-        .take(num)
-        .map(|(krate, version, date, downloads)| {
-            format!("{date}  {krate}@{version} .. {downloads}")
-        })
-        .collect::<Vec<_>>();
-
-    info!("Top {num} downloads: {top_downloads:?}");
 }
 
 table! {
@@ -430,10 +403,9 @@ mod tests {
 
         let store = build_dummy_store().await;
 
-        let writing_enabled = true;
         assert_ok!({
             let store = store.clone();
-            run(store, CLOUDFRONT_PATH, db_pool.clone(), writing_enabled).await
+            run(store, CLOUDFRONT_PATH, db_pool.clone()).await
         });
         assert_debug_snapshot!(all_version_downloads(db_pool.clone()).await, @r###"
         [
@@ -446,7 +418,7 @@ mod tests {
 
         // Check that processing the same log file again does not insert
         // duplicate data.
-        assert_ok!(run(store, CLOUDFRONT_PATH, db_pool.clone(), writing_enabled).await);
+        assert_ok!(run(store, CLOUDFRONT_PATH, db_pool.clone()).await);
         assert_debug_snapshot!(all_version_downloads(db_pool).await, @r###"
         [
             "bindgen | 0.65.1 | 1 | 0 | 2024-01-16 | false",
@@ -455,21 +427,6 @@ mod tests {
             "tracing-core | 0.1.32 | 1 | 0 | 2024-01-16 | false",
         ]
         "###);
-    }
-
-    #[tokio::test]
-    async fn test_process_cdn_log_report_only() {
-        let _guard = crate::util::tracing::init_for_test();
-
-        let test_database = TestDatabase::new();
-        let db_pool = build_connection_pool(test_database.url());
-        create_dummy_crates_and_versions(db_pool.clone()).await;
-
-        let store = build_dummy_store().await;
-
-        let writing_enabled = false;
-        assert_ok!(run(store, CLOUDFRONT_PATH, db_pool.clone(), writing_enabled).await);
-        assert_debug_snapshot!(all_version_downloads(db_pool).await, @"[]");
     }
 
     #[test]

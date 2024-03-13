@@ -38,7 +38,6 @@ pub mod cloudfront;
 pub mod config;
 pub mod controllers;
 pub mod db;
-mod downloads_counter;
 pub mod email;
 pub mod external_urls;
 pub mod fastly;

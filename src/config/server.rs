@@ -36,13 +36,6 @@ pub struct Server {
     pub max_blocking_threads: Option<usize>,
     pub db: DatabasePools,
     pub storage: StorageConfig,
-    /// If `true`, disables download counting on the download API endpoint, and
-    /// enables writing download counts from the CDN logs to the database.
-    ///
-    /// If `false`, downloads will be counted on the download API endpoint and
-    /// the download counts from the CDN logs will only be reported in the
-    /// logs.
-    pub cdn_log_counting_enabled: bool,
     pub cdn_log_storage: CdnLogStorageConfig,
     pub cdn_log_queue: CdnLogQueueConfig,
     pub session_key: cookie::Key,
@@ -66,7 +59,6 @@ pub struct Server {
     pub ownership_invitations_expiration_days: u64,
     pub metrics_authorization_token: Option<String>,
     pub instance_metrics_log_every_seconds: Option<u64>,
-    pub force_unconditional_redirects: bool,
     pub blocked_routes: HashSet<String>,
     pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
@@ -183,7 +175,6 @@ impl Server {
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
-            cdn_log_counting_enabled: var("CDN_LOG_COUNTING_ENABLED")?.is_some(),
             cdn_log_storage: CdnLogStorageConfig::from_env()?,
             cdn_log_queue: CdnLogQueueConfig::from_env()?,
             base,
@@ -213,7 +204,6 @@ impl Server {
             ownership_invitations_expiration_days: 30,
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
-            force_unconditional_redirects: var("FORCE_UNCONDITIONAL_REDIRECTS")?.is_some(),
             blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),
             version_id_cache_size: var_parsed("VERSION_ID_CACHE_SIZE")?
                 .unwrap_or(DEFAULT_VERSION_ID_CACHE_SIZE),
