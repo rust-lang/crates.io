@@ -4,7 +4,9 @@ use http::StatusCode;
 
 #[test]
 fn download_nonexistent_version_of_existing_crate_404s() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -17,7 +19,9 @@ fn download_nonexistent_version_of_existing_crate_404s() {
 
 #[test]
 fn rejected_non_canonical_download() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
 
     app.db(|conn| {
         let user = user.as_model();
@@ -69,7 +73,9 @@ fn download_caches_version_id() {
     use crates_io::schema::crates;
     use diesel::prelude::*;
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
     let user = user.as_model();
 
     app.db(|conn| {

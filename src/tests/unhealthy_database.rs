@@ -9,7 +9,10 @@ const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
 
 #[test]
 fn download_crate_with_broken_networking_primary_database() {
-    let (app, anon, _, owner) = TestApp::init().with_chaos_proxy().with_token();
+    let (app, anon, _, owner) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_chaos_proxy()
+        .with_token();
 
     app.db(|conn| {
         CrateBuilder::new("crate_name", owner.as_model().user_id)

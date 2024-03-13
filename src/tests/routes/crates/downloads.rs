@@ -47,7 +47,9 @@ pub fn download(client: &impl RequestHelper, name_and_version: &str) {
 
 #[test]
 fn test_download() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -83,9 +85,7 @@ fn test_download() {
 
 #[test]
 fn test_download_with_counting_via_cdn() {
-    let (app, anon, user) = TestApp::init()
-        .with_config(|config| config.cdn_log_counting_enabled = true)
-        .with_user();
+    let (app, anon, user) = TestApp::init().with_user();
 
     app.db(|conn| {
         CrateBuilder::new("foo", user.as_model().id)
@@ -105,7 +105,9 @@ fn test_download_with_counting_via_cdn() {
 
 #[test]
 fn test_crate_downloads() {
-    let (app, anon, cookie) = TestApp::init().with_user();
+    let (app, anon, cookie) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
 
     app.db(|conn| {
         let user_id = cookie.as_model().id;
@@ -144,7 +146,9 @@ fn test_crate_downloads() {
 
 #[test]
 fn test_version_downloads() {
-    let (app, anon, cookie) = TestApp::init().with_user();
+    let (app, anon, cookie) = TestApp::init()
+        .with_config(|config| config.cdn_log_counting_enabled = false)
+        .with_user();
 
     app.db(|conn| {
         let user_id = cookie.as_model().id;
