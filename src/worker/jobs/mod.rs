@@ -14,7 +14,9 @@ mod sync_admins;
 mod typosquat;
 
 pub use self::daily_db_maintenance::DailyDbMaintenance;
-pub use self::downloads::{ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads};
+pub use self::downloads::{
+    CleanProcessedLogFiles, ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads,
+};
 pub use self::dump_db::DumpDb;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::readmes::RenderAndUploadReadme;
