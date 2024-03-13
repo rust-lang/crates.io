@@ -284,9 +284,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sqs"
-version = "1.15.0"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5aef8bff2d0020c6423eeb529ca0af9463ea21f09a031929b3b2a6ad0058678"
+checksum = "4725014d875878835c4ca9e50135a0876ee068fc6bfbe61ab80a52179cc7556b"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
