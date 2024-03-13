@@ -26,7 +26,6 @@ fn main() -> anyhow::Result<()> {
     let _span = info_span!("server.run");
 
     let config = crates_io::config::Server::from_environment()?;
-    let cdn_log_counting_enabled = config.cdn_log_counting_enabled;
 
     let emails = Emails::from_environment(&config);
 
@@ -35,11 +34,6 @@ fn main() -> anyhow::Result<()> {
     let github = Box::new(github);
 
     let app = Arc::new(App::new(config, emails, github));
-
-    if !cdn_log_counting_enabled {
-        // Start the background thread periodically persisting download counts to the database.
-        downloads_counter_thread(app.clone());
-    }
 
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(app.clone());
@@ -80,12 +74,6 @@ fn main() -> anyhow::Result<()> {
             .await
     })?;
 
-    info!("Persisting remaining downloads counters");
-    match app.downloads_counter.persist_all_shards(&app) {
-        Ok(stats) => stats.log(),
-        Err(err) => error!(?err, "downloads_counter error"),
-    }
-
     info!("Server has gracefully shutdown!");
     Ok(())
 }
@@ -109,20 +97,6 @@ async fn shutdown_signal() {
         _ = interrupt => {},
         _ = terminate => {},
     }
-}
-
-fn downloads_counter_thread(app: Arc<App>) {
-    let interval =
-        app.config.downloads_persist_interval / app.downloads_counter.shards_count() as u32;
-
-    std::thread::spawn(move || loop {
-        std::thread::sleep(interval);
-
-        match app.downloads_counter.persist_next_shard(&app) {
-            Ok(stats) => stats.log(),
-            Err(err) => error!(?err, "downloads_counter error"),
-        }
-    });
 }
 
 fn log_instance_metrics_thread(app: Arc<App>) {

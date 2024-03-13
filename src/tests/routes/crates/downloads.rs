@@ -12,14 +12,6 @@ struct Downloads {
     version_downloads: Vec<EncodableVersionDownload>,
 }
 
-pub fn persist_downloads_count(app: &TestApp) {
-    app.as_inner()
-        .downloads_counter
-        .persist_all_shards(app.as_inner())
-        .expect("failed to persist downloads count")
-        .log();
-}
-
 fn save_version_downloads(
     crate_name: &str,
     version: &str,
@@ -117,10 +109,6 @@ fn test_download_with_counting_via_cdn() {
     });
 
     download(&anon, "foo/1.0.0");
-
-    // Without this the downloads would not be counted, even if
-    // `cdn_log_counting_enabled` was false.
-    persist_downloads_count(&app);
 
     assert_dl_count(&anon, "foo/1.0.0", None, 0);
     assert_dl_count(&anon, "foo", None, 0);

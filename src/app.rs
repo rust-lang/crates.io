@@ -6,7 +6,6 @@ use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
-use crate::downloads_counter::DownloadsCounter;
 use crate::email::Emails;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use crate::rate_limiter::RateLimiter;
@@ -16,7 +15,6 @@ use crates_io_github::GitHubClient;
 use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
 use deadpool_diesel::Runtime;
 use diesel::r2d2;
-use moka::future::{Cache, CacheBuilder};
 use oauth2::basic::BasicClient;
 use scheduled_thread_pool::ScheduledThreadPool;
 
@@ -47,15 +45,6 @@ pub struct App {
 
     /// The server configuration
     pub config: Arc<config::Server>,
-
-    /// Cache the `version_id` of a `canonical_crate_name:semver` pair
-    ///
-    /// This is used by the download endpoint to reduce the number of database queries. The
-    /// `version_id` is only cached under the canonical spelling of the crate name.
-    pub(crate) version_id_cacher: Cache<(String, String), i32>,
-
-    /// Count downloads and periodically persist them in the database
-    pub downloads_counter: DownloadsCounter,
 
     /// Backend used to send emails
     pub emails: Emails,
@@ -197,10 +186,6 @@ impl App {
             None
         };
 
-        let version_id_cacher = CacheBuilder::new(config.version_id_cache_size)
-            .time_to_live(config.version_id_cache_ttl)
-            .build();
-
         App {
             primary_database,
             deadpool_primary: primary_database_async,
@@ -208,8 +193,6 @@ impl App {
             deadpool_replica: replica_database_async,
             github,
             github_oauth,
-            version_id_cacher,
-            downloads_counter: DownloadsCounter::new(),
             emails,
             storage: Arc::new(Storage::from_config(&config.storage)),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
