@@ -1,7 +1,9 @@
 use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use chrono::{Duration, Utc};
+use crates_io::schema::{crates, version_downloads, versions};
 use crates_io::views::EncodableVersionDownload;
+use diesel::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
@@ -16,6 +18,29 @@ pub fn persist_downloads_count(app: &TestApp) {
         .persist_all_shards(app.as_inner())
         .expect("failed to persist downloads count")
         .log();
+}
+
+fn save_version_downloads(
+    crate_name: &str,
+    version: &str,
+    num_downloads: i32,
+    conn: &mut PgConnection,
+) {
+    let version_id = versions::table
+        .select(versions::id)
+        .left_join(crates::table)
+        .filter(crates::name.eq(crate_name))
+        .filter(versions::num.eq(version))
+        .first::<i32>(conn)
+        .unwrap();
+
+    diesel::insert_into(version_downloads::table)
+        .values((
+            version_downloads::version_id.eq(version_id),
+            version_downloads::downloads.eq(num_downloads),
+        ))
+        .execute(conn)
+        .unwrap();
 }
 
 #[track_caller]
@@ -47,9 +72,7 @@ pub fn download(client: &impl RequestHelper, name_and_version: &str) {
 
 #[test]
 fn test_download() {
-    let (app, anon, user) = TestApp::init()
-        .with_config(|config| config.cdn_log_counting_enabled = false)
-        .with_user();
+    let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
     app.db(|conn| {
@@ -60,16 +83,16 @@ fn test_download() {
 
     // TODO: test the with_json code path
     download(&anon, "foo_download/1.0.0");
-    // No downloads are counted until the counters are persisted
+
+    // No downloads are counted until the corresponding log files are processed.
     assert_dl_count(&anon, "foo_download/1.0.0", None, 0);
     assert_dl_count(&anon, "foo_download", None, 0);
-    persist_downloads_count(&app);
+
+    app.db(|conn| save_version_downloads("foo_download", "1.0.0", 1, conn));
+
     // Now that the counters are persisted the download counts show up.
     assert_dl_count(&anon, "foo_download/1.0.0", None, 1);
     assert_dl_count(&anon, "foo_download", None, 1);
-
-    let response = anon.get::<()>("/api/v1/crates/FOO_DOWNLOAD/1.0.0/download");
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     let yesterday = (Utc::now().date_naive() + Duration::days(-1)).format("%F");
     let query = format!("before_date={yesterday}");
