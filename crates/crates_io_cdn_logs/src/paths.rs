@@ -2,6 +2,11 @@ use semver::Version;
 use tracing::instrument;
 
 /// Parse crate name and version from a download URL or URL path.
+///
+/// This function supports both URL formats:
+///
+/// - `https://static.crates.io/crates/foo/foo-1.2.3.crate`
+/// - `https://static.crates.io/crates/foo/1.2.3/download`
 #[instrument(level = "debug")]
 pub fn parse_path(mut path: &str) -> Option<(String, Version)> {
     // This would ideally use a regular expression to simplify the code, but
@@ -17,11 +22,15 @@ pub fn parse_path(mut path: &str) -> Option<(String, Version)> {
     let pos = path.find("/crates/")?;
     let path = &path[pos + 8..];
 
-    let (folder, filename) = path.split_once('/')?;
-    let filename = filename.strip_suffix(".crate")?;
+    // The following code supports both `foo/1.2.3/download`
+    // and `foo/foo-1.2.3.crate`
+    let (folder, rest) = path.split_once('/')?;
+    let version = rest.strip_suffix("/download").or_else(|| {
+        rest.strip_suffix(".crate")
+            .and_then(|rest| rest.strip_prefix(folder))
+            .and_then(|rest| rest.strip_prefix('-'))
+    })?;
 
-    let version = filename.strip_prefix(folder)?;
-    let version = version.strip_prefix('-')?;
     let version = Version::parse(version).ok()?;
 
     Some((folder.to_owned(), version))
@@ -41,11 +50,17 @@ mod tests {
     fn test_parse_path_valid() {
         let result = assert_some!(parse_path("/crates/foo/foo-1.2.3.crate"));
         assert_eq!(format(&result), "foo@1.2.3");
+
+        let result = assert_some!(parse_path("/crates/foo/1.2.3/download"));
+        assert_eq!(format(&result), "foo@1.2.3");
     }
 
     #[test]
     fn test_parse_path_with_query_params() {
         let result = assert_some!(parse_path("/crates/foo/foo-1.2.3.crate?param=value"));
+        assert_eq!(format(&result), "foo@1.2.3");
+
+        let result = assert_some!(parse_path("/crates/foo/1.2.3/download"));
         assert_eq!(format(&result), "foo@1.2.3");
     }
 
@@ -54,11 +69,19 @@ mod tests {
         let path = "https://static.crates.io/crates/foo/foo-1.2.3.crate";
         let result = assert_some!(parse_path(path));
         assert_eq!(format(&result), "foo@1.2.3");
+
+        let path = "https://static.crates.io/crates/foo/1.2.3/download";
+        let result = assert_some!(parse_path(path));
+        assert_eq!(format(&result), "foo@1.2.3");
     }
 
     #[test]
     fn test_parse_path_with_dashes() {
         let path = "/crates/foo-bar/foo-bar-1.0.0-rc.1.crate";
+        let result = assert_some!(parse_path(path));
+        assert_eq!(format(&result), "foo-bar@1.0.0-rc.1");
+
+        let path = "/crates/foo-bar/1.0.0-rc.1/download";
         let result = assert_some!(parse_path(path));
         assert_eq!(format(&result), "foo-bar@1.0.0-rc.1");
     }
