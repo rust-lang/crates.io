@@ -1,9 +1,12 @@
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
-use diesel::{Connection as _, PgConnection};
+use diesel::{
+    dsl::now, Connection, ExpressionMethods, NullableExpressionMethods, PgConnection, RunQueryDsl,
+};
 
-use crate::{worker::Environment, Emails};
+use crate::{email::Email, models::User, worker::Environment, Emails};
 
 /// The threshold in days for the expiry notification.
 const EXPIRY_THRESHOLD: i64 = 3;
@@ -39,10 +42,40 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
         conn.transaction(|conn| {
             for token in chunk {
                 // Send notification.
+                let user = User::find(conn, token.user_id)?;
+                let Some(recipient) = user.email(conn)? else {
+                    return Err(anyhow!("No address found"));
+                };
+                let email = ExpiryNotificationEmail {
+                    token_name: token.name.clone(),
+                    expiry_date: token.expired_at.unwrap().date().to_string(),
+                };
+                emails.send(&recipient, email)?;
+                // Also update the token to prevent duplicate notifications.
+                diesel::update(token)
+                    .set(crate::schema::api_tokens::expiry_notification_at.eq(now.nullable()))
+                    .execute(conn)?;
             }
             Ok::<_, anyhow::Error>(())
         })?;
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct ExpiryNotificationEmail {
+    token_name: String,
+    expiry_date: String,
+}
+
+impl Email for ExpiryNotificationEmail {
+    const SUBJECT: &'static str = "Token Expiry Notification";
+
+    fn body(&self) -> String {
+        format!(
+            "The token {} is about to expire on {}. Please take action.",
+            self.token_name, self.expiry_date
+        )
+    }
 }

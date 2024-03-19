@@ -30,6 +30,8 @@ pub struct ApiToken {
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
     #[serde(with = "rfc3339::option")]
     pub expired_at: Option<NaiveDateTime>,
+    #[serde(with = "rfc3339::option")]
+    pub expiry_notification_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
@@ -110,6 +112,7 @@ impl ApiToken {
                     .is_not_null()
                     .and(api_tokens::expired_at.lt(now.nullable() - days_until_expiry.days())),
             )
+            .filter(api_tokens::expiry_notification_at.is_null())
             .select(ApiToken::as_select())
             .get_results(conn)
     }
@@ -143,6 +146,7 @@ mod tests {
             crate_scopes: None,
             endpoint_scopes: None,
             expired_at: None,
+            expiry_notification_at: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json
