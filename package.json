@@ -88,7 +88,7 @@
     "ember-cli-mirage": "3.0.3",
     "ember-cli-notifications": "9.0.0",
     "ember-click-outside": "6.1.0",
-    "ember-concurrency": "4.0.1",
+    "ember-concurrency": "4.0.2",
     "ember-css-modules": "2.0.1",
     "ember-data": "4.12.5",
     "ember-disable-prototype-extensions": "1.1.3",
