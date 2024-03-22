@@ -260,7 +260,7 @@ postgres`). Generally, the problem is that by default the postgres server is
 >
 > For other platforms, try searching for the error message and following
 > suggestions from Stack Overflow. Open an issue on this repo if you get stuck,
-> we'll help fix the problem and and will add the solution to these
+> we'll help fix the problem and will add the solution to these
 > instructions!
 
 ##### OpenSSL

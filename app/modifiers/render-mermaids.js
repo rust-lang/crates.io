@@ -8,7 +8,7 @@ export default class ScrollPositionModifier extends Modifier {
   @service mermaid;
 
   modify(element) {
-    // If the `mermaid` library is loaded (which should have happend in the controller)
+    // If the `mermaid` library is loaded (which should have happened in the controller)
     let mermaid = this.mermaid.loadTask.lastSuccessful?.value;
     if (mermaid) {
       // ... find any relevant code snippets

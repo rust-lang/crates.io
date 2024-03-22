@@ -180,7 +180,7 @@ fn test_seek_based_pagination_semver_sorting() {
     assert!(json.meta.next_page.is_some());
     assert_eq!(json.meta.total as usize, expects.len());
 
-    // A decodable seek value, MTAwCg (100), but doesn't actaully exist
+    // A decodable seek value, MTAwCg (100), but doesn't actually exist
     let json: VersionList = anon
         .get_with_query(url, "per_page=10&sort=semver&seek=MTAwCg")
         .good();
