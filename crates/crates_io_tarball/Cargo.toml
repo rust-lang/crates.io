@@ -22,7 +22,7 @@ tracing = "=0.1.40"
 [dev-dependencies]
 anyhow = "=1.0.81"
 claims = "=0.7.1"
-clap = { version = "=4.5.3", features = ["derive", "unicode", "wrap_help"] }
+clap = { version = "=4.5.4", features = ["derive", "unicode", "wrap_help"] }
 indicatif = { version = "=0.17.8", features = ["rayon"] }
 rayon = "=1.9.0"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
