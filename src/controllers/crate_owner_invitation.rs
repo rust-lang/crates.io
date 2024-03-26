@@ -125,7 +125,9 @@ fn prepare_list(
         };
 
     // Load all the non-expired invitations matching the filter.
-    let expire_cutoff = Duration::days(config.ownership_invitations_expiration_days as i64);
+    let expire_cutoff =
+        Duration::try_days(config.ownership_invitations_expiration_days as i64).unwrap();
+
     let query = crate_owner_invitations::table
         .filter(sql_filter)
         .filter(crate_owner_invitations::created_at.gt((Utc::now() - expire_cutoff).naive_utc()))

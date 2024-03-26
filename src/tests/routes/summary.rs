@@ -31,7 +31,7 @@ fn summary_new_crates() {
     app.db(|conn| {
         let _: anyhow::Result<()> = conn.transaction(|conn| {
             let now_ = Utc::now().naive_utc();
-            let now_plus_two = now_ + chrono::Duration::seconds(2);
+            let now_plus_two = now_ + chrono::Duration::try_seconds(2).unwrap();
 
             new_category("Category 1", "cat1", "Category 1 crates")
                 .create_or_update(conn)

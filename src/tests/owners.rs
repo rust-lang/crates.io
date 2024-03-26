@@ -517,7 +517,7 @@ pub fn expire_invitation(app: &TestApp, crate_id: i32) {
 
     app.db(|conn| {
         let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
-        let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
+        let created_at = (Utc::now() - Duration::try_days(expiration).unwrap()).naive_utc();
 
         diesel::update(crate_owner_invitations::table)
             .set(crate_owner_invitations::created_at.eq(created_at))
