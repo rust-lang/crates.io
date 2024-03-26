@@ -187,7 +187,7 @@ fn is_media_url(url: &str) -> MediaUrl {
         )
 }
 
-impl UrlRelativeEvaluate for SanitizeUrl {
+impl UrlRelativeEvaluate<'_> for SanitizeUrl {
     fn evaluate<'a>(&self, url: &'a str) -> Option<Cow<'a, str>> {
         if let Some(clean) = url.strip_prefix('#') {
             // Handle auto-generated footnote links
