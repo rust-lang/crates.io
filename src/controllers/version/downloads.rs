@@ -55,7 +55,7 @@ pub async fn downloads(
             .get("before_date")
             .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
             .unwrap_or_else(|| Utc::now().date_naive());
-        let cutoff_start_date = cutoff_end_date - Duration::days(89);
+        let cutoff_start_date = cutoff_end_date - Duration::try_days(89).unwrap();
 
         let downloads = VersionDownload::belonging_to(&version)
             .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
