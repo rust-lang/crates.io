@@ -129,5 +129,5 @@ crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.7.1"
 googletest = "=0.11.0"
 insta = { version = "=1.36.1", features = ["json", "redactions"] }
-regex = "=1.10.3"
+regex = "=1.10.4"
 tokio = "=1.36.0"
