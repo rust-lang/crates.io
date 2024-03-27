@@ -47,8 +47,8 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
                     return Err(anyhow!("No address found"));
                 };
                 let email = ExpiryNotificationEmail {
+                    name: user.gh_login.clone(),
                     token_name: token.name.clone(),
-                    expiry_date: token.expired_at.unwrap().date().to_string(),
                 };
                 emails.send(&recipient, email)?;
                 // Also update the token to prevent duplicate notifications.
@@ -65,17 +65,25 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
 
 #[derive(Debug, Clone)]
 struct ExpiryNotificationEmail {
+    name: String,
     token_name: String,
-    expiry_date: String,
 }
 
 impl Email for ExpiryNotificationEmail {
-    const SUBJECT: &'static str = "Token Expiry Notification";
+    const SUBJECT: &'static str = "Your token is about to expire";
 
     fn body(&self) -> String {
         format!(
-            "The token {} is about to expire on {}. Please take action.",
-            self.token_name, self.expiry_date
+            r#"Hi @{name},
+
+    We noticed your token "{token_name}" will expire in about {EXPIRY_THRESHOLD} days.
+
+    If this token is still needed, visit https://crates.io/settings/tokens/new to generate a new one.
+
+    Thanks,
+    The crates.io team"#,
+            name = self.name,
+            token_name = self.token_name,
         )
     }
 }
