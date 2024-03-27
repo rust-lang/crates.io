@@ -92,3 +92,57 @@ The crates.io team"#,
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::NewUser;
+    use crate::{
+        models::token::ApiToken, schema::api_tokens, test_util::test_db_connection,
+        util::token::PlainToken,
+    };
+    use diesel::{QueryDsl, SelectableHelper};
+    use lettre::Address;
+
+    #[tokio::test]
+    async fn test_expiry_notification() -> anyhow::Result<()> {
+        let emails = Emails::new_in_memory();
+        let (_test_db, mut conn) = test_db_connection();
+
+        // Set up a user and a token that is about to expire.
+        let user = NewUser::new(0, "a", None, None, "token").create_or_update(
+            Some("testuser@test.com"),
+            &Emails::new_in_memory(),
+            &mut conn,
+        )?;
+        let token = PlainToken::generate();
+        let expired_at = diesel::dsl::now;
+
+        let token: ApiToken = diesel::insert_into(api_tokens::table)
+            .values((
+                api_tokens::user_id.eq(user.id),
+                api_tokens::name.eq("test_token"),
+                api_tokens::token.eq(token.hashed()),
+                api_tokens::expired_at.eq(expired_at),
+            ))
+            .returning(ApiToken::as_returning())
+            .get_result(&mut conn)?;
+
+        // Check that the token is about to expire.
+        check(&emails, &mut conn)?;
+
+        // Check that an email was sent.
+        let sent_mail = emails.mails_in_memory().unwrap();
+        assert_eq!(sent_mail.len(), 1);
+        let sent = &sent_mail[0];
+        assert_eq!(&sent.0.to(), &["testuser@test.com".parse::<Address>()?]);
+        assert!(sent.1.contains("Your token is about to expire"));
+        let update_token = api_tokens::table
+            .filter(api_tokens::id.eq(token.id))
+            .select(ApiToken::as_select())
+            .first::<ApiToken>(&mut conn)?;
+        assert!(update_token.expiry_notification_at.is_some());
+
+        Ok(())
+    }
+}
