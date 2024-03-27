@@ -1,6 +1,7 @@
 use crate::models::ApiToken;
 use crate::{email::Email, models::User, worker::Environment, Emails};
 use anyhow::anyhow;
+use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::{
     dsl::now, Connection, ExpressionMethods, NullableExpressionMethods, PgConnection, RunQueryDsl,
@@ -48,8 +49,9 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
                     return Err(anyhow!("No address found"));
                 };
                 let email = ExpiryNotificationEmail {
-                    token_name: token.name.clone(),
-                    expiry_date: token.expired_at.unwrap().date().to_string(),
+                    name: &user.gh_login,
+                    token_name: &token.name,
+                    expiry_date: token.expired_at.unwrap().and_utc(),
                 };
                 emails.send(&recipient, email)?;
                 // Also update the token to prevent duplicate notifications.
@@ -65,18 +67,28 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
 }
 
 #[derive(Debug, Clone)]
-struct ExpiryNotificationEmail {
-    token_name: String,
-    expiry_date: String,
+struct ExpiryNotificationEmail<'a> {
+    name: &'a str,
+    token_name: &'a str,
+    expiry_date: chrono::DateTime<chrono::Utc>,
 }
 
-impl Email for ExpiryNotificationEmail {
-    const SUBJECT: &'static str = "Token Expiry Notification";
+impl<'a> Email for ExpiryNotificationEmail<'a> {
+    const SUBJECT: &'static str = "Your token is about to expire";
 
     fn body(&self) -> String {
         format!(
-            "The token {} is about to expire on {}. Please take action.",
-            self.token_name, self.expiry_date
+            r#"Hi {},
+
+We noticed your token "{}" will expire on {}.
+
+If this token is still needed, visit https://crates.io/settings/tokens/new to generate a new one.
+
+Thanks,
+The crates.io team"#,
+            self.name,
+            self.token_name,
+            self.expiry_date.to_rfc3339_opts(SecondsFormat::Secs, true)
         )
     }
 }
