@@ -110,7 +110,7 @@ impl ApiToken {
             .filter(
                 api_tokens::expired_at
                     .is_not_null()
-                    .and(api_tokens::expired_at.lt(now.nullable() - days_until_expiry.days())),
+                    .and(api_tokens::expired_at.lt(now.nullable() + days_until_expiry.days())),
             )
             .filter(api_tokens::expiry_notification_at.is_null())
             .select(ApiToken::as_select())
