@@ -1,6 +1,6 @@
 ---
 source: src/tests/routes/me/tokens/create.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "api_token": {
@@ -8,6 +8,7 @@ expression: response.into_json()
     "created_at": "[datetime]",
     "endpoint_scopes": null,
     "expired_at": "2024-12-24T07:34:56+00:00",
+    "expiry_notification_at": null,
     "id": "[id]",
     "last_used_at": "[datetime]",
     "name": "bar",
