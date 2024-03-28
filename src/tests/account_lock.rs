@@ -38,7 +38,7 @@ fn account_locked_indefinitely() {
 
 #[test]
 fn account_locked_with_future_expiry() {
-    let until = Utc::now().naive_utc() + Duration::try_days(1).unwrap();
+    let until = Utc::now().naive_utc() + Duration::days(1);
 
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));
@@ -56,7 +56,7 @@ fn account_locked_with_future_expiry() {
 
 #[test]
 fn expired_account_lock() {
-    let until = Utc::now().naive_utc() - Duration::try_days(1).unwrap();
+    let until = Utc::now().naive_utc() - Duration::days(1);
 
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));

@@ -65,7 +65,7 @@ crates_io_index = { path = "crates/crates_io_index" }
 crates_io_markdown = { path = "crates/crates_io_markdown" }
 crates_io_tarball = { path = "crates/crates_io_tarball" }
 crates_io_worker = { path = "crates/crates_io_worker" }
-chrono = { version = "=0.4.35", default-features = false, features = ["serde"] }
+chrono = { version = "=0.4.37", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.4", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool = "=0.10.0"

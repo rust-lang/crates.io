@@ -51,7 +51,7 @@ fn list_tokens() {
                 "qux",
                 None,
                 None,
-                Some((Utc::now() - Duration::try_days(1).unwrap()).naive_utc()),
+                Some((Utc::now() - Duration::days(1)).naive_utc()),
             )),
         ]
     });
@@ -86,7 +86,7 @@ fn list_recently_expired_tokens() {
                     CrateScope::try_from("serde-*").unwrap()
                 ]),
                 Some(vec![EndpointScope::PublishUpdate]),
-                Some((Utc::now() - Duration::try_days(31).unwrap()).naive_utc()),
+                Some((Utc::now() - Duration::days(31)).naive_utc()),
             )),
             assert_ok!(ApiToken::insert_with_scopes(
                 conn,
@@ -94,7 +94,7 @@ fn list_recently_expired_tokens() {
                 "recent",
                 None,
                 None,
-                Some((Utc::now() - Duration::try_days(1).unwrap()).naive_utc()),
+                Some((Utc::now() - Duration::days(1)).naive_utc()),
             )),
         ]
     });

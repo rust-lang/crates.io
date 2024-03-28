@@ -86,13 +86,13 @@ fn test_download() {
     assert_dl_count(&anon, "foo_download/1.0.0", None, 1);
     assert_dl_count(&anon, "foo_download", None, 1);
 
-    let yesterday = (Utc::now().date_naive() + Duration::try_days(-1).unwrap()).format("%F");
+    let yesterday = (Utc::now().date_naive() + Duration::days(-1)).format("%F");
     let query = format!("before_date={yesterday}");
     assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 0);
     // crate/downloads always returns the last 90 days and ignores date params
     assert_dl_count(&anon, "foo_download", Some(&query), 1);
 
-    let tomorrow = (Utc::now().date_naive() + Duration::try_days(1).unwrap()).format("%F");
+    let tomorrow = (Utc::now().date_naive() + Duration::days(1)).format("%F");
     let query = format!("before_date={tomorrow}");
     assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 1);
     assert_dl_count(&anon, "foo_download", Some(&query), 1);

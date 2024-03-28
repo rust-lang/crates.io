@@ -145,8 +145,7 @@ impl CrateOwnerInvitation {
     }
 
     pub fn expires_at(&self, config: &config::Server) -> NaiveDateTime {
-        let days = chrono::Duration::try_days(config.ownership_invitations_expiration_days as i64)
-            .unwrap();
+        let days = chrono::Duration::days(config.ownership_invitations_expiration_days as i64);
         self.created_at + days
     }
 }
