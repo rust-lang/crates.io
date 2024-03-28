@@ -208,7 +208,7 @@ mod tests {
         let mut last_refill_times = vec![];
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=10 {
-            let publish_time = now + chrono::Duration::try_minutes(10 * publish_num).unwrap();
+            let publish_time = now + chrono::Duration::minutes(10 * publish_num);
             let bucket = rate.take_token(user_id, action, publish_time, conn)?;
 
             last_refill_times.push(bucket.last_refill);
@@ -223,7 +223,7 @@ mod tests {
         let mut last_refill_times = vec![];
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=35 {
-            let publish_time = now + chrono::Duration::try_minutes(publish_num).unwrap();
+            let publish_time = now + chrono::Duration::minutes(publish_num);
             let bucket = rate.take_token(user_id, action, publish_time, conn)?;
 
             last_refill_times.push(bucket.last_refill);
@@ -238,7 +238,7 @@ mod tests {
         let mut last_refill_times = vec![];
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=110 {
-            let publish_time = now + chrono::Duration::try_minutes(publish_num).unwrap();
+            let publish_time = now + chrono::Duration::minutes(publish_num);
             let bucket = rate.take_token(user_id, action, publish_time, conn)?;
 
             last_refill_times.push(bucket.last_refill);
@@ -331,7 +331,7 @@ mod tests {
         }
         .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let refill_time = now + chrono::Duration::try_seconds(2).unwrap();
+        let refill_time = now + chrono::Duration::seconds(2);
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
@@ -359,7 +359,7 @@ mod tests {
         }
         .create();
         let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let refill_time = now + chrono::Duration::try_milliseconds(300).unwrap();
+        let refill_time = now + chrono::Duration::milliseconds(300);
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
@@ -386,10 +386,10 @@ mod tests {
         let bucket = rate.take_token(
             user_id,
             LimitedAction::PublishNew,
-            now + chrono::Duration::try_milliseconds(250).unwrap(),
+            now + chrono::Duration::milliseconds(250),
             conn,
         )?;
-        let expected_refill_time = now + chrono::Duration::try_milliseconds(200).unwrap();
+        let expected_refill_time = now + chrono::Duration::milliseconds(200);
         let expected = Bucket {
             user_id,
             tokens: 6,
@@ -438,7 +438,7 @@ mod tests {
         }
         .create();
         let user_id = new_user_bucket(conn, 0, now)?.user_id;
-        let refill_time = now + chrono::Duration::try_seconds(1).unwrap();
+        let refill_time = now + chrono::Duration::seconds(1);
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
@@ -463,7 +463,7 @@ mod tests {
         }
         .create();
         let user_id = new_user_bucket(conn, 8, now)?.user_id;
-        let refill_time = now + chrono::Duration::try_seconds(4).unwrap();
+        let refill_time = now + chrono::Duration::seconds(4);
         let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
         let expected = Bucket {
             user_id,
@@ -568,8 +568,7 @@ mod tests {
                 publish_rate_overrides::user_id.eq(user_id),
                 publish_rate_overrides::action.eq(LimitedAction::PublishNew),
                 publish_rate_overrides::burst.eq(20),
-                publish_rate_overrides::expires_at
-                    .eq(now + chrono::Duration::try_days(30).unwrap()),
+                publish_rate_overrides::expires_at.eq(now + chrono::Duration::days(30)),
             ))
             .execute(conn)?;
 
@@ -581,10 +580,7 @@ mod tests {
 
         // Manually expire the rate limit
         diesel::update(publish_rate_overrides::table)
-            .set(
-                publish_rate_overrides::expires_at
-                    .eq(now - chrono::Duration::try_days(30).unwrap()),
-            )
+            .set(publish_rate_overrides::expires_at.eq(now - chrono::Duration::days(30)))
             .filter(publish_rate_overrides::user_id.eq(user_id))
             .execute(conn)?;
 

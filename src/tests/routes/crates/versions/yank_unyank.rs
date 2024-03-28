@@ -178,7 +178,7 @@ mod auth {
 
     #[test]
     fn token_user_not_expired() {
-        let expired_at = Utc::now() + Duration::try_days(7).unwrap();
+        let expired_at = Utc::now() + Duration::days(7);
 
         let (app, _, client) = prepare();
         let client =
@@ -197,7 +197,7 @@ mod auth {
 
     #[test]
     fn token_user_expired() {
-        let expired_at = Utc::now() - Duration::try_days(7).unwrap();
+        let expired_at = Utc::now() - Duration::days(7);
 
         let (app, _, client) = prepare();
         let client =
