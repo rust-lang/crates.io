@@ -111,7 +111,7 @@ spdx = "=0.10.4"
 tar = "=0.4.40"
 tempfile = "=3.10.1"
 thiserror = "=1.0.58"
-tokio = { version = "=1.36.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
+tokio = { version = "=1.37.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros"]}
 toml = "=0.8.12"
 tower = "=0.4.13"
 tower-http = { version = "=0.5.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
@@ -130,4 +130,4 @@ claims = "=0.7.1"
 googletest = "=0.11.0"
 insta = { version = "=1.38.0", features = ["json", "redactions"] }
 regex = "=1.10.4"
-tokio = "=1.36.0"
+tokio = "=1.37.0"
