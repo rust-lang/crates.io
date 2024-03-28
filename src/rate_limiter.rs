@@ -687,8 +687,8 @@ mod tests {
     /// precision, meaning that round tripping through the database would
     /// change the value.
     fn now() -> NaiveDateTime {
-        let now = Utc::now().naive_utc();
+        let now = Utc::now();
         let nanos = now.timestamp_subsec_nanos();
-        now - chrono::Duration::nanoseconds(nanos.into())
+        now.naive_utc() - chrono::Duration::nanoseconds(nanos.into())
     }
 }
