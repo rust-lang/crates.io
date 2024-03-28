@@ -174,8 +174,8 @@ mod tests {
         let mut faker = Faker::new();
 
         // Set up two users.
-        let user_a = faker.user(&mut conn, "a")?;
-        let user_b = faker.user(&mut conn, "b")?;
+        let user_a = faker.user(&mut conn, "a", None)?;
+        let user_b = faker.user(&mut conn, "b", None)?;
 
         // Set up three crates with various ownership schemes.
         let _top_a = faker.crate_and_version(&mut conn, "a", "Hello", &user_a, 2)?;

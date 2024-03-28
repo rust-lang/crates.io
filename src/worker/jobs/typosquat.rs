@@ -130,14 +130,14 @@ mod tests {
         let mut faker = Faker::new();
 
         // Set up a user and a popular crate to match against.
-        let user = faker.user(&mut conn, "a")?;
+        let user = faker.user(&mut conn, "a", None)?;
         faker.crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100)?;
 
         // Prime the cache so it only includes the crate we just created.
         let cache = Cache::new(vec!["admin@example.com".to_string()], &mut conn)?;
 
         // Now we'll create new crates: one problematic, one not so.
-        let other_user = faker.user(&mut conn, "b")?;
+        let other_user = faker.user(&mut conn, "b", None)?;
         let (angel, _version) = faker.crate_and_version(
             &mut conn,
             "innocent-crate",

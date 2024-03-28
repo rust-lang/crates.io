@@ -101,10 +101,15 @@ impl Faker {
         ))
     }
 
-    pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> anyhow::Result<User> {
+    pub fn user(
+        &mut self,
+        conn: &mut PgConnection,
+        login: &str,
+        email: Option<String>,
+    ) -> anyhow::Result<User> {
         Ok(
             NewUser::new(self.next_id(), login, None, None, "token").create_or_update(
-                None,
+                email.as_deref(),
                 &self.emails,
                 conn,
             )?,
