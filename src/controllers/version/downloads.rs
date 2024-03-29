@@ -26,16 +26,6 @@ pub async fn download(
     }
 }
 
-#[instrument("db.query", skip(conn), fields(message = "SELECT ... FROM versions"))]
-fn get_version_id(krate: &str, version: &str, conn: &mut PgConnection) -> QueryResult<i32> {
-    versions::table
-        .inner_join(crates::table)
-        .select(versions::id)
-        .filter(crates::name.eq(&krate))
-        .filter(versions::num.eq(&version))
-        .first::<i32>(conn)
-}
-
 /// Handles the `GET /crates/:crate_id/:version/downloads` route.
 pub async fn downloads(
     app: AppState,
