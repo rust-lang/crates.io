@@ -23,12 +23,8 @@ use oauth2::{ClientId, ClientSecret};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
-use tracing::subscriber::DefaultGuard;
 
 struct TestAppInner {
-    #[allow(dead_code)]
-    tracing_guard: DefaultGuard,
-
     pub runtime: Runtime,
 
     app: Arc<App>,
@@ -81,10 +77,9 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        let tracing_guard = crates_io::util::tracing::init_for_test();
+        crates_io::util::tracing::init_for_test();
 
         TestAppBuilder {
-            tracing_guard,
             config: simple_config(),
             index: None,
             build_job_runner: false,
@@ -210,7 +205,6 @@ impl TestApp {
 }
 
 pub struct TestAppBuilder {
-    tracing_guard: DefaultGuard,
     config: config::Server,
     index: Option<UpstreamIndex>,
     build_job_runner: bool,
@@ -297,7 +291,6 @@ impl TestAppBuilder {
         };
 
         let test_app_inner = TestAppInner {
-            tracing_guard: self.tracing_guard,
             runtime,
             app,
             test_database,

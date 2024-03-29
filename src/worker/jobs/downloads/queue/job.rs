@@ -233,7 +233,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_process_cdn_log_queue() {
-        let _guard = crate::util::tracing::init_for_test();
+        crate::util::tracing::init_for_test();
 
         let mut queue = Box::new(MockSqsQueue::new());
         queue
@@ -263,7 +263,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_process_cdn_log_queue_multi_page() {
-        let _guard = crate::util::tracing::init_for_test();
+        crate::util::tracing::init_for_test();
 
         let mut queue = Box::new(MockSqsQueue::new());
         queue
@@ -323,7 +323,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_process_cdn_log_queue_parse_error() {
-        let _guard = crate::util::tracing::init_for_test();
+        crate::util::tracing::init_for_test();
 
         let mut queue = Box::new(MockSqsQueue::new());
         queue
