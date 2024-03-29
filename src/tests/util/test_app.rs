@@ -391,8 +391,8 @@ fn simple_config() -> config::Server {
             // something is broken.
             url: String::from("invalid default url").into(),
             read_only_mode: false,
-            pool_size: 5,
-            async_pool_size: 5,
+            pool_size: 3,
+            async_pool_size: 2,
             min_idle: None,
         },
         replica: None,
