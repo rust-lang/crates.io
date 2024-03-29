@@ -1,5 +1,4 @@
 use sentry::integrations::tracing::EventFilter;
-use tracing::subscriber::DefaultGuard;
 use tracing::Level;
 use tracing::Metadata;
 use tracing_subscriber::filter::LevelFilter;
@@ -47,17 +46,15 @@ pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
 }
 
 /// Initializes the `tracing` logging framework for usage in tests.
-pub fn init_for_test() -> DefaultGuard {
+pub fn init_for_test() {
     let env_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
 
-    let subscriber = tracing_subscriber::fmt()
+    let _ = tracing_subscriber::fmt()
         .compact()
         .with_env_filter(env_filter)
         .without_time()
         .with_test_writer()
-        .finish();
-
-    tracing::subscriber::set_default(subscriber)
+        .try_init();
 }

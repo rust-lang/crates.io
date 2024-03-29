@@ -395,7 +395,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_process_cdn_log() {
-        let _guard = crate::util::tracing::init_for_test();
+        crate::util::tracing::init_for_test();
 
         let test_database = TestDatabase::new();
         let db_pool = build_connection_pool(test_database.url());
