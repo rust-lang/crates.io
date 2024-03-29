@@ -67,6 +67,16 @@ impl Drop for TestAppInner {
         );
 
         // TODO: If a runner was started, obtain the clone from it and ensure its HEAD matches the upstream index HEAD
+
+        // We manually close the connection pools here to prevent their `Drop`
+        // implementation from failing because no tokio runtime is running.
+        {
+            let _rt_guard = self.runtime.enter();
+            self.app.deadpool_primary.close();
+            if let Some(pool) = &self.app.deadpool_replica {
+                pool.close();
+            }
+        }
     }
 }
 
