@@ -848,9 +848,9 @@ checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
 name = "comrak"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6751998a48e2327773c95f6f8e03c6e77c0156ce539d74c17d2199ff3d05e197"
+checksum = "d0436149c9f6a1935b13306206c739b1ba84fa81f551b5eb87fc2ca7a13700af"
 dependencies = [
  "derive_builder 0.12.0",
  "entities",
