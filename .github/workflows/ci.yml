@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: tj-actions/changed-files@20576b4b9ed46d41e2d45a2256e5e2316dde6834 # v43.0.1
+      - uses: tj-actions/changed-files@2d756ea4c53f7f6b397767d8723b3a10a9f35bf2 # v44.0.0
         id: changed-files-non-js
         with:
           files_ignore: |
@@ -44,7 +44,7 @@ jobs:
             pnpm-lock.yaml
             testem.js
 
-      - uses: tj-actions/changed-files@20576b4b9ed46d41e2d45a2256e5e2316dde6834 # v43.0.1
+      - uses: tj-actions/changed-files@2d756ea4c53f7f6b397767d8723b3a10a9f35bf2 # v44.0.0
         id: changed-files-non-rust
         with:
           files_ignore: |
@@ -56,7 +56,7 @@ jobs:
             Cargo.toml
             rust-toolchain.toml
 
-      - uses: tj-actions/changed-files@20576b4b9ed46d41e2d45a2256e5e2316dde6834 # v43.0.1
+      - uses: tj-actions/changed-files@2d756ea4c53f7f6b397767d8723b3a10a9f35bf2 # v44.0.0
         id: changed-files-rust-lockfile
         with:
           files: Cargo.lock
