@@ -22,6 +22,7 @@ pub use self::downloads::{
     CleanProcessedLogFiles, ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads,
 };
 pub use self::dump_db::DumpDb;
+pub use self::expiry_notification::CheckAboutToExpireToken;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::sync_admins::SyncAdmins;
