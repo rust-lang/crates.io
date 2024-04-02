@@ -158,8 +158,8 @@ devDependencies:
     specifier: 4.0.2
     version: 4.0.2(@babel/core@7.24.3)(@glimmer/tracking@1.1.2)(ember-source@5.7.0)
   ember-css-modules:
-    specifier: 2.0.1
-    version: 2.0.1
+    specifier: 2.1.0
+    version: 2.1.0
   ember-data:
     specifier: 4.12.7
     version: 4.12.7(@babel/core@7.24.3)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.7.0)(webpack@5.91.0)
@@ -8477,8 +8477,8 @@ packages:
       - supports-color
     dev: true
 
-  /ember-css-modules@2.0.1:
-    resolution: {integrity: sha512-SsWrVqmzymljS/yzpbJHAMPZaoh6xMyy2N26GWA3vnwgPE6S+jbErv+9RaSeqPlUZR1YE1LkhHleFcTSM9FOUA==}
+  /ember-css-modules@2.1.0:
+    resolution: {integrity: sha512-xD4RJNaVX8QqqCRpKSE/JFB4CMVLqSFJIf0ijPkEDFbtj2N7M1nuMq+FjYpkLkymn5fWkJpTqvkF75RJKxwTtw==}
     engines: {node: 12.* || 14.* || >= 16}
     dependencies:
       broccoli-bridge: 1.0.0
@@ -13035,6 +13035,7 @@ packages:
   /normalize-path@2.1.1:
     resolution: {integrity: sha512-3pKJwH184Xo/lnH6oyP1q2pMd7HcypqqmRs91/6/i2CGtWwIKGCkOOMTm/zXbgTEWHw1uNpNi/igc3ePOYHb6w==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       remove-trailing-separator: 1.1.0
     dev: true
@@ -14231,6 +14232,7 @@ packages:
 
   /remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
+    requiresBuild: true
     dev: true
 
   /remove-types@1.0.0:
