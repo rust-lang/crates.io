@@ -19,7 +19,7 @@ env:
   # renovate: datasource=crate depName=grcov versioning=semver
   GRCOV_VERSION: 0.8.19
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 8.15.5
+  PNPM_VERSION: 8.15.6
 
 jobs:
   changed-files:
