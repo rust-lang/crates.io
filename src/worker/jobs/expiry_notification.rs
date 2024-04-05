@@ -1,9 +1,11 @@
-use std::sync::Arc;
-use diesel::{Connection, PgConnection};
-
+use crate::models::ApiToken;
+use crate::{email::Email, models::User, worker::Environment, Emails};
+use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
-use crate::Emails;
-use crate::worker::Environment;
+use diesel::{
+    dsl::now, Connection, ExpressionMethods, NullableExpressionMethods, PgConnection, RunQueryDsl,
+};
+use std::sync::Arc;
 
 /// The threshold in days for the expiry notification.
 const EXPIRY_THRESHOLD: i64 = 3;
@@ -34,18 +36,47 @@ impl BackgroundJob for CheckAboutToExpireToken {
 // Check if the token is about to expire and send a notification if it is.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     info!("Checking if tokens are about to expire");
-    let expired_tokens =
-        crate::models::token::ApiToken::find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
+    let expired_tokens = ApiToken::find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
     // Batch send notifications in transactions.
     const BATCH_SIZE: usize = 100;
     for chunk in expired_tokens.chunks(BATCH_SIZE) {
         conn.transaction(|conn| {
             for token in chunk {
                 // Send notification.
+                let user = User::find(conn, token.user_id)?;
+                let Some(recipient) = user.email(conn)? else {
+                    return Err(anyhow!("No address found"));
+                };
+                let email = ExpiryNotificationEmail {
+                    token_name: token.name.clone(),
+                    expiry_date: token.expired_at.unwrap().date().to_string(),
+                };
+                emails.send(&recipient, email)?;
+                // Also update the token to prevent duplicate notifications.
+                diesel::update(token)
+                    .set(crate::schema::api_tokens::expiry_notification_at.eq(now.nullable()))
+                    .execute(conn)?;
             }
             Ok::<_, anyhow::Error>(())
         })?;
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct ExpiryNotificationEmail {
+    token_name: String,
+    expiry_date: String,
+}
+
+impl Email for ExpiryNotificationEmail {
+    const SUBJECT: &'static str = "Token Expiry Notification";
+
+    fn body(&self) -> String {
+        format!(
+            "The token {} is about to expire on {}. Please take action.",
+            self.token_name, self.expiry_date
+        )
+    }
 }
