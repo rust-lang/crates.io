@@ -30,6 +30,8 @@ pub struct ApiToken {
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
     #[serde(with = "rfc3339::option")]
     pub expired_at: Option<NaiveDateTime>,
+    #[serde(with = "rfc3339::option")]
+    pub expiry_notification_at: Option<NaiveDateTime>,
 }
 
 impl ApiToken {
@@ -95,6 +97,25 @@ impl ApiToken {
         .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
         .map_err(Into::into)
     }
+
+    /// Find all tokens that are not revoked and will expire within the specified number of days.
+    pub fn find_tokens_expiring_within_days(
+        conn: &mut PgConnection,
+        days_until_expiry: i64,
+    ) -> QueryResult<Vec<ApiToken>> {
+        use diesel::dsl::{now, IntervalDsl};
+
+        api_tokens::table
+            .filter(api_tokens::revoked.eq(false))
+            .filter(
+                api_tokens::expired_at
+                    .is_not_null()
+                    .and(api_tokens::expired_at.lt(now.nullable() + days_until_expiry.days())),
+            )
+            .filter(api_tokens::expiry_notification_at.is_null())
+            .select(ApiToken::as_select())
+            .get_results(conn)
+    }
 }
 
 #[derive(Debug)]
@@ -125,6 +146,7 @@ mod tests {
             crate_scopes: None,
             endpoint_scopes: None,
             expired_at: None,
+            expiry_notification_at: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json

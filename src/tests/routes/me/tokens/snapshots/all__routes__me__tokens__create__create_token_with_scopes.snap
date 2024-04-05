@@ -1,6 +1,6 @@
 ---
 source: src/tests/routes/me/tokens/create.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "api_token": {
@@ -13,6 +13,7 @@ expression: response.into_json()
       "publish-update"
     ],
     "expired_at": null,
+    "expiry_notification_at": null,
     "id": "[id]",
     "last_used_at": "[datetime]",
     "name": "bar",
