@@ -1,4 +1,5 @@
 use crate::models::ApiToken;
+use crate::schema::api_tokens;
 use crate::{email::Email, models::User, worker::Environment, Emails};
 use anyhow::anyhow;
 use chrono::SecondsFormat;
@@ -57,10 +58,7 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
                     Ok(_) => {
                         // Update the token to prevent duplicate notifications.
                         diesel::update(token)
-                            .set(
-                                crate::schema::api_tokens::expiry_notification_at
-                                    .eq(now.nullable()),
-                            )
+                            .set(api_tokens::expiry_notification_at.eq(now.nullable()))
                             .execute(conn)?;
                     }
                     Err(e) => {
@@ -110,6 +108,7 @@ mod tests {
         models::token::ApiToken, schema::api_tokens, test_util::test_db_connection,
         util::token::PlainToken,
     };
+    use diesel::dsl::IntervalDsl;
     use diesel::{QueryDsl, SelectableHelper};
     use lettre::Address;
 
@@ -125,14 +124,13 @@ mod tests {
             &mut conn,
         )?;
         let token = PlainToken::generate();
-        let expired_at = diesel::dsl::now;
 
         let token: ApiToken = diesel::insert_into(api_tokens::table)
             .values((
                 api_tokens::user_id.eq(user.id),
                 api_tokens::name.eq("test_token"),
                 api_tokens::token.eq(token.hashed()),
-                api_tokens::expired_at.eq(expired_at),
+                api_tokens::expired_at.eq(now.nullable() + (EXPIRY_THRESHOLD - 1).day()),
             ))
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)?;
@@ -151,6 +149,25 @@ mod tests {
             .select(ApiToken::as_select())
             .first::<ApiToken>(&mut conn)?;
         assert!(update_token.expiry_notification_at.is_some());
+
+        // Insert a already expired token.
+        let token = PlainToken::generate();
+        diesel::insert_into(api_tokens::table)
+            .values((
+                api_tokens::user_id.eq(user.id),
+                api_tokens::name.eq("expired_token"),
+                api_tokens::token.eq(token.hashed()),
+                api_tokens::expired_at.eq(diesel::dsl::now.nullable() - 1.day()),
+            ))
+            .returning(ApiToken::as_returning())
+            .get_result(&mut conn)?;
+
+        // Check that the token is not about to expire.
+        check(&emails, &mut conn)?;
+
+        // Check that no email was sent.
+        let sent_mail = emails.mails_in_memory().unwrap();
+        assert_eq!(sent_mail.len(), 1);
 
         Ok(())
     }
