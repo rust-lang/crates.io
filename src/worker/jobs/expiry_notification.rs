@@ -53,11 +53,20 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
                     token_name: &token.name,
                     expiry_date: token.expired_at.unwrap().and_utc(),
                 };
-                emails.send(&recipient, email)?;
-                // Also update the token to prevent duplicate notifications.
-                diesel::update(token)
-                    .set(crate::schema::api_tokens::expiry_notification_at.eq(now.nullable()))
-                    .execute(conn)?;
+                match emails.send(&recipient, email) {
+                    Ok(_) => {
+                        // Update the token to prevent duplicate notifications.
+                        diesel::update(token)
+                            .set(
+                                crate::schema::api_tokens::expiry_notification_at
+                                    .eq(now.nullable()),
+                            )
+                            .execute(conn)?;
+                    }
+                    Err(e) => {
+                        error!("Failed to send email: {:?} to {}", e, recipient);
+                    }
+                }
             }
             Ok::<_, anyhow::Error>(())
         })?;
