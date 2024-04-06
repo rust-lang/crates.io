@@ -172,8 +172,8 @@ impl From<ConnectionConfig> for Hook {
             Box::pin(async move {
                 conn.interact(move |conn| config.apply(conn))
                     .await
-                    .map_err(|err| HookError::Message(err.to_string()))?
-                    .map_err(|err| HookError::Message(err.to_string()))
+                    .map_err(|err| HookError::message(err.to_string()))?
+                    .map_err(|err| HookError::message(err.to_string()))
             })
         })
     }
