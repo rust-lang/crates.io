@@ -44,6 +44,8 @@ module.exports = {
     // disabled because of false positives related to ember-concurrency usage
     'unicorn/consistent-function-scoping': 'off',
     'unicorn/explicit-length-check': ['error', { 'non-zero': 'not-equal' }],
+    // disabled because it conflicts with Ember.js conventions
+    'unicorn/no-anonymous-default-export': 'off',
     // disabled because of false positives related to `EmberArray`
     'unicorn/no-array-for-each': 'off',
     // disabled because it is annoying in some cases...
