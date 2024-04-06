@@ -952,7 +952,7 @@ dependencies = [
  "crates_io_tarball",
  "crates_io_test_db",
  "crates_io_worker",
- "deadpool",
+ "deadpool 0.10.0",
  "deadpool-diesel",
  "derive_builder 0.20.0",
  "derive_deref",
@@ -1343,12 +1343,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "deadpool-diesel"
-version = "0.5.0"
+name = "deadpool"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa8404d25ddc6cb0676d4a863bbd007613ee3fffb54db23e0e6341e1fe61c3e"
+checksum = "8c380a837cb8cb747898b1be7fa5ba5b871eb1210f8881d6512946c132617f80"
 dependencies = [
- "deadpool",
+ "console",
+ "deadpool-runtime",
+ "num_cpus",
+ "tokio",
+]
+
+[[package]]
+name = "deadpool-diesel"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5f6aabacbd1bd72373e598db0e7454b56d94b130484e93677dbfb52fe0e63df"
+dependencies = [
+ "deadpool 0.11.0",
  "deadpool-sync",
  "diesel",
 ]
