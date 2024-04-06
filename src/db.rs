@@ -1,5 +1,4 @@
-use deadpool::managed::HookError;
-use deadpool_diesel::postgres::Hook;
+use deadpool_diesel::postgres::{Hook, HookError};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
@@ -173,8 +172,8 @@ impl From<ConnectionConfig> for Hook {
             Box::pin(async move {
                 conn.interact(move |conn| config.apply(conn))
                     .await
-                    .map_err(|err| HookError::Message(err.to_string()))?
-                    .map_err(|err| HookError::Message(err.to_string()))
+                    .map_err(|err| HookError::message(err.to_string()))?
+                    .map_err(|err| HookError::message(err.to_string()))
             })
         })
     }
