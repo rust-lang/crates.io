@@ -1,5 +1,4 @@
-use deadpool::managed::HookError;
-use deadpool_diesel::postgres::Hook;
+use deadpool_diesel::postgres::{Hook, HookError};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, State};
 use prometheus::Histogram;
