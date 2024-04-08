@@ -135,6 +135,21 @@ mod tests {
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)?;
 
+        // Insert a few tokens that are not set to expire.
+        let not_expired_offset = EXPIRY_THRESHOLD + 1;
+        for i in 0..3 {
+            let token = PlainToken::generate();
+            diesel::insert_into(api_tokens::table)
+                .values((
+                    api_tokens::user_id.eq(user.id),
+                    api_tokens::name.eq(format!("test_token{i}")),
+                    api_tokens::token.eq(token.hashed()),
+                    api_tokens::expired_at.eq(now.nullable() + (not_expired_offset).day()),
+                ))
+                .returning(ApiToken::as_returning())
+                .get_result(&mut conn)?;
+        }
+
         // Check that the token is about to expire.
         check(&emails, &mut conn)?;
 
@@ -149,6 +164,14 @@ mod tests {
             .select(ApiToken::as_select())
             .first::<ApiToken>(&mut conn)?;
         assert!(update_token.expiry_notification_at.is_some());
+
+        // Check that the token is not about to expire.
+        let tokens = api_tokens::table
+            .filter(api_tokens::revoked.eq(false))
+            .filter(api_tokens::expiry_notification_at.is_null())
+            .select(ApiToken::as_select())
+            .load::<ApiToken>(&mut conn)?;
+        assert_eq!(tokens.len(), 3);
 
         // Insert a already expired token.
         let token = PlainToken::generate();
