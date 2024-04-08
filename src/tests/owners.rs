@@ -636,7 +636,12 @@ fn inactive_users_dont_get_invitations() {
             gh_avatar: None,
             gh_access_token: "some random token",
         }
-        .create_or_update(None, &app.as_inner().emails, conn)
+        .create_or_update(
+            None,
+            &app.as_inner().emails,
+            &app.as_inner().rate_limiter,
+            conn,
+        )
         .unwrap();
         CrateBuilder::new(krate_name, owner.id).expect_build(conn);
     });

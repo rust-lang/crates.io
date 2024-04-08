@@ -20,7 +20,12 @@ fn index() {
 
     let krate = app.db(|conn| {
         let u = new_user("foo")
-            .create_or_update(None, &app.as_inner().emails, conn)
+            .create_or_update(
+                None,
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         CrateBuilder::new("fooindex", u.id).expect_build(conn)
     });

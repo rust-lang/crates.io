@@ -127,7 +127,7 @@ impl TestApp {
             let email = "something@example.com";
 
             let user = crate::new_user(username)
-                .create_or_update(None, &self.0.app.emails, conn)
+                .create_or_update(None, &self.0.app.emails, &self.0.app.rate_limiter, conn)
                 .unwrap();
             diesel::insert_into(emails::table)
                 .values((

@@ -6,6 +6,7 @@ use crate::{
     models::{
         Crate, CrateOwner, NewCrate, NewTeam, NewUser, NewVersion, Owner, OwnerKind, User, Version,
     },
+    rate_limiter::RateLimiter,
     schema::{crate_downloads, crate_owners},
     Emails,
 };
@@ -13,6 +14,7 @@ use crate::{
 pub struct Faker {
     emails: Emails,
     id: i32,
+    rate_limiter: RateLimiter,
 }
 
 impl Faker {
@@ -20,6 +22,7 @@ impl Faker {
         Self {
             emails: Emails::new_in_memory(),
             id: Default::default(),
+            rate_limiter: RateLimiter::new(Default::default()),
         }
     }
 
@@ -102,13 +105,9 @@ impl Faker {
     }
 
     pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> anyhow::Result<User> {
-        Ok(
-            NewUser::new(self.next_id(), login, None, None, "token").create_or_update(
-                None,
-                &self.emails,
-                conn,
-            )?,
-        )
+        NewUser::new(self.next_id(), login, None, None, "token")
+            .create_or_update(None, &self.emails, &self.rate_limiter, conn)
+            .map_err(|e| anyhow::anyhow!("{e:?}"))
     }
 
     fn next_id(&mut self) -> i32 {

@@ -29,6 +29,7 @@ fn updating_existing_user_doesnt_change_api_token() {
             NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(
                 None,
                 &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
                 conn
             )
         );
@@ -60,7 +61,12 @@ fn github_without_email_does_not_overwrite_email() {
     let user_without_github_email = app.db(|conn| {
         let u = new_user("arbitrary_username");
         let u = u
-            .create_or_update(None, &app.as_inner().emails, conn)
+            .create_or_update(
+                None,
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         MockCookieUser::new(&app, u)
     });
@@ -82,7 +88,12 @@ fn github_without_email_does_not_overwrite_email() {
             ..new_user("arbitrary_username")
         };
         let u = u
-            .create_or_update(None, &app.as_inner().emails, conn)
+            .create_or_update(
+                None,
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         MockCookieUser::new(&app, u)
     });
@@ -117,7 +128,12 @@ fn github_with_email_does_not_overwrite_email() {
             ..new_user("arbitrary_username")
         };
         let u = u
-            .create_or_update(Some(new_github_email), &app.as_inner().emails, conn)
+            .create_or_update(
+                Some(new_github_email),
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         MockCookieUser::new(&app, u)
     });
@@ -164,7 +180,12 @@ fn test_confirm_user_email() {
             ..new_user("arbitrary_username")
         };
         let u = u
-            .create_or_update(Some(email), &app.as_inner().emails, conn)
+            .create_or_update(
+                Some(email),
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         MockCookieUser::new(&app, u)
     });
@@ -204,7 +225,12 @@ fn test_existing_user_email() {
             ..new_user("arbitrary_username")
         };
         let u = u
-            .create_or_update(Some(email), &app.as_inner().emails, conn)
+            .create_or_update(
+                Some(email),
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         update(Email::belonging_to(&u))
             // Users created before we added verification will have

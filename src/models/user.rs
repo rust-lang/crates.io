@@ -5,6 +5,7 @@ use secrecy::SecretString;
 use crate::app::App;
 use crate::controllers::user::me::UserConfirmEmail;
 use crate::email::Emails;
+use crate::rate_limiter::RateLimiter;
 use crate::util::errors::AppResult;
 
 use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
@@ -58,8 +59,9 @@ impl<'a> NewUser<'a> {
         &self,
         email: Option<&'a str>,
         emails: &Emails,
+        rate_limiter: &RateLimiter,
         conn: &mut PgConnection,
-    ) -> QueryResult<User> {
+    ) -> AppResult<User> {
         use diesel::dsl::sql;
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
@@ -102,12 +104,10 @@ impl<'a> NewUser<'a> {
                     .map(SecretString::new);
 
                 if let Some(token) = token {
+                    let email =
+                        UserConfirmEmail::new(rate_limiter, conn, &user, &emails.domain, token)?;
+
                     // Swallows any error. Some users might insert an invalid email address here.
-                    let email = UserConfirmEmail {
-                        user_name: &user.gh_login,
-                        domain: &emails.domain,
-                        token,
-                    };
                     let _ = emails.send(user_email, email);
                 }
             }

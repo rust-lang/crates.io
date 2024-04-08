@@ -170,13 +170,19 @@ mod tests {
     use super::*;
     use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
+    use crate::rate_limiter::RateLimiter;
     use crate::schema::{crate_downloads, crates, versions};
     use crate::test_util::test_db_connection;
     use std::collections::BTreeMap;
 
     fn user(conn: &mut PgConnection) -> User {
         NewUser::new(2, "login", None, None, "access_token")
-            .create_or_update(None, &Emails::new_in_memory(), conn)
+            .create_or_update(
+                None,
+                &Emails::new_in_memory(),
+                &RateLimiter::new(Default::default()),
+                conn,
+            )
             .unwrap()
     }
 
