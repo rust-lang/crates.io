@@ -1,11 +1,10 @@
 use crate::config::CdnLogStorageConfig;
-use crate::db::DieselPool;
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{count_downloads, Decompressor, DownloadsMap};
 use crates_io_worker::BackgroundJob;
+use deadpool_diesel::postgres::Pool;
 use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel::{select, PgConnection, QueryResult};
@@ -52,7 +51,7 @@ impl BackgroundJob for ProcessCdnLog {
         let store = build_store(&ctx.config.cdn_log_storage, &self.region, &self.bucket)
             .context("Failed to build object store")?;
 
-        let db_pool = ctx.connection_pool.clone();
+        let db_pool = ctx.deadpool.clone();
         run(store, &self.path, db_pool).await
     }
 }
@@ -97,7 +96,7 @@ fn build_store(
 /// it can be tested without having to construct a full [`Environment`]
 /// struct.
 #[instrument(skip_all, fields(cdn_log_store.path = %path))]
-async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: DieselPool) -> anyhow::Result<()> {
+async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: Pool) -> anyhow::Result<()> {
     if already_processed(path, db_pool.clone()).await? {
         warn!("Skipping already processed log file");
         return Ok(());
@@ -115,8 +114,8 @@ async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: DieselPool) -> an
     log_stats(&downloads);
 
     let path = path.to_string();
-    spawn_blocking(move || {
-        let mut conn = db_pool.get()?;
+    let conn = db_pool.get().await?;
+    conn.interact(|conn| {
         conn.transaction(|conn| {
             // Mark the log file as processed before saving the downloads to
             // the database.
@@ -128,14 +127,15 @@ async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: DieselPool) -> an
             // When the job is retried the `already_processed()` call above
             // will return `true` and the job will skip processing the log
             // file again.
-            save_as_processed(&path, conn)?;
+            save_as_processed(path, conn)?;
 
             save_downloads(downloads, conn)
         })?;
 
         Ok::<_, anyhow::Error>(())
     })
-    .await?;
+    .await
+    .map_err(|err| anyhow!(err.to_string()))??;
 
     Ok(())
 }
@@ -343,16 +343,16 @@ impl Debug for NameAndVersion {
 
 /// Checks if the given log file has already been processed.
 ///
-/// Calls [`spawn_blocking()`] and acquires a connection from the pool before
-/// passing it to the [`already_processed_inner()`] function.
-async fn already_processed(path: impl Into<String>, db_pool: DieselPool) -> anyhow::Result<bool> {
+/// Acquires a connection from the pool before passing it to the
+/// [`already_processed_inner()`] function.
+async fn already_processed(path: impl Into<String>, db_pool: Pool) -> anyhow::Result<bool> {
     let path = path.into();
 
-    let already_processed = spawn_blocking(move || {
-        let mut conn = db_pool.get()?;
-        Ok::<_, anyhow::Error>(already_processed_inner(path, &mut conn)?)
-    })
-    .await?;
+    let conn = db_pool.get().await?;
+    let already_processed = conn
+        .interact(move |conn| already_processed_inner(path, conn))
+        .await
+        .map_err(|err| anyhow!(err.to_string()))??;
 
     Ok(already_processed)
 }
@@ -387,7 +387,8 @@ mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
-    use diesel::r2d2::{ConnectionManager, Pool};
+    use deadpool_diesel::postgres::Manager;
+    use deadpool_diesel::Runtime;
     use insta::assert_debug_snapshot;
 
     const CLOUDFRONT_PATH: &str =
@@ -466,23 +467,23 @@ mod tests {
     }
 
     /// Builds a connection pool to the test database.
-    fn build_connection_pool(url: &str) -> DieselPool {
-        let pool = Pool::builder().build(ConnectionManager::new(url)).unwrap();
-        DieselPool::new_background_worker(pool)
+    fn build_connection_pool(url: &str) -> Pool {
+        let manager = Manager::new(url, Runtime::Tokio1);
+        Pool::builder(manager).build().unwrap()
     }
 
     /// Inserts some dummy crates and versions into the database.
-    async fn create_dummy_crates_and_versions(db_pool: DieselPool) {
-        spawn_blocking(move || {
-            let mut conn = db_pool.get().unwrap();
-
-            create_crate_and_version("bindgen", "0.65.1", &mut conn);
-            create_crate_and_version("tracing-core", "0.1.32", &mut conn);
-            create_crate_and_version("quick-error", "1.2.3", &mut conn);
+    async fn create_dummy_crates_and_versions(db_pool: Pool) {
+        let conn = db_pool.get().await.unwrap();
+        conn.interact(move |conn| {
+            create_crate_and_version("bindgen", "0.65.1", conn);
+            create_crate_and_version("tracing-core", "0.1.32", conn);
+            create_crate_and_version("quick-error", "1.2.3", conn);
 
             Ok::<_, anyhow::Error>(())
         })
         .await
+        .unwrap()
         .unwrap();
     }
 
@@ -506,13 +507,9 @@ mod tests {
 
     /// Queries all version downloads from the database and returns them as a
     /// [`Vec`] of strings for use with [`assert_debug_snapshot!()`].
-    async fn all_version_downloads(db_pool: DieselPool) -> Vec<String> {
-        let downloads = spawn_blocking(move || {
-            let mut conn = db_pool.get().unwrap();
-            Ok::<_, anyhow::Error>(query_all_version_downloads(&mut conn))
-        })
-        .await
-        .unwrap();
+    async fn all_version_downloads(db_pool: Pool) -> Vec<String> {
+        let conn = db_pool.get().await.unwrap();
+        let downloads = conn.interact(query_all_version_downloads).await.unwrap();
 
         downloads
             .into_iter()

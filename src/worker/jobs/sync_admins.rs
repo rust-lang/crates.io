@@ -1,7 +1,7 @@
 use crate::email::Email;
 use crate::schema::{emails, users};
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::RunQueryDsl;
@@ -29,7 +29,8 @@ impl BackgroundJob for SyncAdmins {
             .map(|m| m.github_id)
             .collect::<HashSet<_>>();
 
-        spawn_blocking::<_, _, anyhow::Error>(move || {
+        let conn = ctx.deadpool.get().await?;
+        conn.interact::<_, anyhow::Result<_>>(move |conn| {
             let format_repo_admins = |github_ids: &HashSet<i32>| {
                 repo_admins
                     .iter()
@@ -40,13 +41,11 @@ impl BackgroundJob for SyncAdmins {
 
             // Existing admins from the database.
 
-            let mut conn = ctx.connection_pool.get()?;
-
             let database_admins = users::table
                 .left_join(emails::table)
                 .select((users::gh_id, users::gh_login, emails::email.nullable()))
                 .filter(users::is_admin.eq(true))
-                .get_results::<(i32, String, Option<String>)>(&mut conn)?;
+                .get_results::<(i32, String, Option<String>)>(conn)?;
 
             let database_admin_ids = database_admins
                 .iter()
@@ -78,7 +77,7 @@ impl BackgroundJob for SyncAdmins {
                     .filter(users::gh_id.eq_any(&new_admin_ids))
                     .set(users::is_admin.eq(true))
                     .returning(users::gh_id)
-                    .get_results::<i32>(&mut conn)?
+                    .get_results::<i32>(conn)?
             };
 
             // New admins from the team repo that have been granted admin
@@ -121,7 +120,7 @@ impl BackgroundJob for SyncAdmins {
                     .filter(users::gh_id.eq_any(&obsolete_admin_ids))
                     .set(users::is_admin.eq(false))
                     .returning(users::gh_id)
-                    .get_results::<i32>(&mut conn)?
+                    .get_results::<i32>(conn)?
             };
 
             let removed_admin_ids = HashSet::from_iter(removed_admin_ids);
@@ -158,7 +157,8 @@ impl BackgroundJob for SyncAdmins {
 
             Ok(())
         })
-        .await?;
+        .await
+        .map_err(|err| anyhow!(err.to_string()))??;
 
         Ok(())
     }

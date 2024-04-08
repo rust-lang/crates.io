@@ -1,7 +1,7 @@
 use crate::models;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use chrono::Utc;
 use crates_io_env_vars::var_parsed;
 use crates_io_index::{Crate, Repository};
@@ -39,9 +39,9 @@ impl BackgroundJob for SyncToGitIndex {
         info!("Syncing to git index");
 
         let crate_name = self.krate.clone();
-        spawn_blocking(move || {
-            let mut conn = env.connection_pool.get()?;
-            let new = get_index_data(&crate_name, &mut conn).context("Failed to get index data")?;
+        let conn = env.deadpool.get().await?;
+        conn.interact(move |conn| {
+            let new = get_index_data(&crate_name, conn).context("Failed to get index data")?;
 
             let repo = env.lock_index()?;
             let dst = repo.index_file(&crate_name);
@@ -75,6 +75,7 @@ impl BackgroundJob for SyncToGitIndex {
             Ok(())
         })
         .await
+        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 
@@ -102,12 +103,12 @@ impl BackgroundJob for SyncToSparseIndex {
         info!("Syncing to sparse index");
 
         let crate_name = self.krate.clone();
-        let pool = env.connection_pool.clone();
-        let content = spawn_blocking(move || {
-            let mut conn = pool.get()?;
-            get_index_data(&crate_name, &mut conn).context("Failed to get index data")
-        })
-        .await?;
+        let conn = env.deadpool.get().await?;
+        let content = conn
+            .interact(move |conn| get_index_data(&crate_name, conn))
+            .await
+            .map_err(|err| anyhow!(err.to_string()))?
+            .context("Failed to get index data")?;
 
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;
