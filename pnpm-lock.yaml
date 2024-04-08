@@ -287,8 +287,8 @@ devDependencies:
     specifier: 0.3.0
     version: 0.3.0
   qunit-dom:
-    specifier: 3.0.0
-    version: 3.0.0
+    specifier: 3.1.0
+    version: 3.1.0
   tracked-built-ins:
     specifier: 3.3.0
     version: 3.3.0
@@ -14008,8 +14008,8 @@ packages:
       - supports-color
     dev: true
 
-  /qunit-dom@3.0.0:
-    resolution: {integrity: sha512-rqGZ9ZgOvtOY+Ph2ElCJ4pRIHouMZmI3DWK35Xr3x3c17/gIwOHHyKAQk6XetqhqepS6p+oXvK6Bx1uZu5jJuw==}
+  /qunit-dom@3.1.0:
+    resolution: {integrity: sha512-gpek3SkGM4uCX7tV466fbkrtCXkxGyHNeBPqwXO2QvcAr36TbmbvfpVW77KNbw1N5xm2KNNzVOQHItxH/3pLVA==}
     dev: true
 
   /qunit@2.20.1:
