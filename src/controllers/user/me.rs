@@ -15,8 +15,8 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_read_prefer_primary()?;
+    let conn = app.db_read_prefer_primary_async().await?;
+    conn.interact(move |conn| {
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
 
         let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
@@ -52,13 +52,13 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
             owned_crates,
         }))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut app.db_read_prefer_primary()?;
+    let conn = app.db_read_prefer_primary_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
@@ -94,7 +94,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             "meta": { "more": more },
         })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /users/:user_id` route.
@@ -103,11 +103,10 @@ pub async fn update_user(
     Path(param_user_id): Path<i32>,
     req: BytesRequest,
 ) -> AppResult<Response> {
-    spawn_blocking(move || {
+    let conn = state.db_write_async().await?;
+    conn.interact(move |conn| {
         use self::emails::user_id;
         use diesel::insert_into;
-
-        let conn = &mut state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
@@ -172,15 +171,14 @@ pub async fn update_user(
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
-    spawn_blocking(move || {
+    let conn = state.db_write_async().await?;
+    conn.interact(move |conn| {
         use diesel::update;
-
-        let conn = &mut *state.db_write()?;
 
         let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
             .set(emails::verified.eq(true))
@@ -192,7 +190,7 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 /// Handles `PUT /user/:user_id/resend` route
@@ -201,11 +199,10 @@ pub async fn regenerate_token_and_send(
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<Response> {
-    spawn_blocking(move || {
+    let conn = state.db_write_async().await?;
+    conn.interact(move |conn| {
         use diesel::dsl::sql;
         use diesel::update;
-
-        let conn = &mut state.db_write()?;
 
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
@@ -233,28 +230,28 @@ pub async fn regenerate_token_and_send(
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
-    spawn_blocking(move || {
+    #[derive(Deserialize)]
+    struct CrateEmailNotifications {
+        id: i32,
+        email_notifications: bool,
+    }
+
+    let updates: HashMap<i32, bool> =
+        serde_json::from_slice::<Vec<CrateEmailNotifications>>(req.body())
+            .map_err(|_| bad_request("invalid json request"))?
+            .iter()
+            .map(|c| (c.id, c.email_notifications))
+            .collect();
+
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
         use diesel::pg::upsert::excluded;
 
-        #[derive(Deserialize)]
-        struct CrateEmailNotifications {
-            id: i32,
-            email_notifications: bool,
-        }
-
-        let updates: HashMap<i32, bool> =
-            serde_json::from_slice::<Vec<CrateEmailNotifications>>(req.body())
-                .map_err(|_| bad_request("invalid json request"))?
-                .iter()
-                .map(|c| (c.id, c.email_notifications))
-                .collect();
-
-        let conn = &mut *app.db_write()?;
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
 
         // Build inserts from existing crates belonging to the current user
@@ -296,7 +293,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 pub struct UserConfirmEmail<'a> {
