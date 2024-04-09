@@ -129,11 +129,6 @@ impl<'a> CrateBuilder<'a> {
             update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
                 .set(crate_downloads::downloads.eq(downloads as i64))
                 .execute(connection)?;
-
-            krate = update(&krate)
-                .set(crates::downloads.eq(downloads))
-                .returning(Crate::as_returning())
-                .get_result(connection)?;
         }
 
         if self.versions.is_empty() {
