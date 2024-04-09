@@ -21,12 +21,16 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
         return Err(custom(StatusCode::NOT_FOUND, detail));
     }
 
-    let metrics = spawn_blocking(move || match kind.as_str() {
-        "service" => Ok(app.service_metrics.gather(&mut *app.db_read()?)?),
-        "instance" => Ok(app.instance_metrics.gather(&app)?),
-        _ => Err(not_found()),
-    })
-    .await?;
+    let metrics = match kind.as_str() {
+        "service" => {
+            spawn_blocking(move || app.service_metrics.gather(&mut *app.db_read()?)).await?
+        }
+        "instance" => {
+            spawn_blocking(move || Ok::<_, BoxedAppError>(app.instance_metrics.gather(&app)?))
+                .await?
+        }
+        _ => return Err(not_found()),
+    };
 
     Ok(TextEncoder::new().encode_to_string(&metrics)?)
 }
