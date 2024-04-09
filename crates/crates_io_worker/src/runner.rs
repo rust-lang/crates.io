@@ -1,11 +1,9 @@
 use crate::background_job::DEFAULT_QUEUE;
 use crate::job_registry::JobRegistry;
-use crate::util::spawn_blocking;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
-use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
+use deadpool_diesel::postgres::Pool;
 use futures_util::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -16,19 +14,17 @@ use tracing::{info, info_span, warn, Instrument};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
-
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
     rt_handle: Handle,
-    connection_pool: ConnectionPool,
+    connection_pool: Pool,
     queues: HashMap<String, Queue<Context>>,
     context: Context,
     shutdown_when_queue_empty: bool,
 }
 
 impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
-    pub fn new(rt_handle: &Handle, connection_pool: ConnectionPool, context: Context) -> Self {
+    pub fn new(rt_handle: &Handle, connection_pool: Pool, context: Context) -> Self {
         Self {
             rt_handle: rt_handle.clone(),
             connection_pool,
@@ -104,10 +100,9 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     /// This function is intended for use in tests and will return an error if
     /// any jobs have failed.
     pub async fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
-        let pool = self.connection_pool.clone();
-        spawn_blocking(move || {
-            let mut conn = pool.get()?;
-            let failed_jobs = storage::failed_job_count(&mut conn)?;
+        let conn = self.connection_pool.get().await?;
+        conn.interact(move |conn| {
+            let failed_jobs = storage::failed_job_count(conn)?;
             if failed_jobs == 0 {
                 Ok(())
             } else {
@@ -115,6 +110,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
             }
         })
         .await
+        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 

@@ -283,7 +283,7 @@ impl TestAppBuilder {
 
             let runner = Runner::new(
                 runtime.handle(),
-                (*app.primary_database).clone(),
+                app.deadpool_primary.clone(),
                 Arc::new(environment),
             )
             .shutdown_when_queue_empty()

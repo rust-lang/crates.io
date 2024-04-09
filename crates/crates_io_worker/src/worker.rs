@@ -1,8 +1,8 @@
 use crate::job_registry::JobRegistry;
-use crate::runner::ConnectionPool;
 use crate::storage;
-use crate::util::{spawn_blocking, try_to_extract_panic_info, with_sentry_transaction};
+use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
 use anyhow::anyhow;
+use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 use futures_util::FutureExt;
 use sentry_core::{Hub, SentryFutureExt};
@@ -14,7 +14,7 @@ use tokio::time::sleep;
 use tracing::{debug, error, info_span, warn};
 
 pub struct Worker<Context> {
-    pub(crate) connection_pool: ConnectionPool,
+    pub(crate) connection_pool: Pool,
     pub(crate) context: Context,
     pub(crate) job_registry: Arc<JobRegistry<Context>>,
     pub(crate) shutdown_when_queue_empty: bool,
@@ -56,11 +56,10 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
     async fn run_next_job(&self) -> anyhow::Result<Option<i64>> {
         let context = self.context.clone();
         let job_registry = self.job_registry.clone();
-        let pool = self.connection_pool.clone();
+        let conn = self.connection_pool.get().await?;
 
-        spawn_blocking(move || {
+        conn.interact(move |conn| {
             let job_types = job_registry.job_types();
-            let conn = &mut *pool.get()?;
             conn.transaction(|conn| {
                 debug!("Looking for next background worker job…");
                 let Some(job) = storage::find_next_unlocked_job(conn, &job_types).optional()?
@@ -105,5 +104,6 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
             })
         })
         .await
+        .map_err(|err| anyhow!(err.to_string()))?
     }
 }

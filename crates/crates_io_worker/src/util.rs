@@ -3,23 +3,6 @@ use sentry_core::Hub;
 use std::any::Any;
 use std::future::Future;
 use std::panic::PanicInfo;
-use tokio::task::JoinError;
-
-pub async fn spawn_blocking<F, R, E>(f: F) -> Result<R, E>
-where
-    F: FnOnce() -> Result<R, E> + Send + 'static,
-    R: Send + 'static,
-    E: Send + From<JoinError> + 'static,
-{
-    let current_span = tracing::Span::current();
-    let hub = Hub::current();
-    tokio::task::spawn_blocking(move || current_span.in_scope(|| Hub::run(hub, f)))
-        .await
-        // Convert `JoinError` to `E`
-        .map_err(Into::into)
-        // Flatten `Result<Result<_, E>, E>` to `Result<_, E>`
-        .and_then(std::convert::identity)
-}
 
 pub async fn with_sentry_transaction<F, R, E, Fut>(
     transaction_name: &str,
