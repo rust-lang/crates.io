@@ -19,6 +19,7 @@
 
 use crate::metrics::macros::metrics;
 use crate::{app::App, db::DieselPool};
+use deadpool_diesel::postgres::Pool;
 use prometheus::{
     proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
 };
@@ -57,6 +58,11 @@ impl InstanceMetrics {
             self.refresh_pool_stats("follower", follower)?;
         }
 
+        self.refresh_async_pool_stats("async_primary", &app.deadpool_primary)?;
+        if let Some(follower) = &app.deadpool_replica {
+            self.refresh_async_pool_stats("async_follower", follower)?;
+        }
+
         Ok(self.registry.gather())
     }
 
@@ -69,6 +75,19 @@ impl InstanceMetrics {
         self.database_used_conns
             .get_metric_with_label_values(&[name])?
             .set((state.connections - state.idle_connections) as i64);
+
+        Ok(())
+    }
+
+    fn refresh_async_pool_stats(&self, name: &str, pool: &Pool) -> prometheus::Result<()> {
+        let status = pool.status();
+
+        self.database_idle_conns
+            .get_metric_with_label_values(&[name])?
+            .set(status.available as i64);
+        self.database_used_conns
+            .get_metric_with_label_values(&[name])?
+            .set((status.size - status.available) as i64);
 
         Ok(())
     }
