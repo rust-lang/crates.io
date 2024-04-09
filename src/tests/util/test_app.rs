@@ -53,8 +53,6 @@ impl Drop for TestAppInner {
         if let Some(runner) = &self.runner {
             let handle = runner.start();
             self.runtime.block_on(handle.wait_for_shutdown());
-
-            runner.check_for_failed_jobs().expect("Failed jobs remain");
         }
 
         // Manually verify that all jobs have completed successfully
