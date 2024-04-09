@@ -1143,6 +1143,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "crates_io_test_db",
+ "deadpool-diesel",
  "diesel",
  "futures-util",
  "sentry-core",

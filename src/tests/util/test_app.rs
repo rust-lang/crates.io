@@ -179,8 +179,8 @@ impl TestApp {
         let handle = runner.start();
         self.runtime().block_on(handle.wait_for_shutdown());
 
-        runner
-            .check_for_failed_jobs()
+        self.runtime()
+            .block_on(runner.check_for_failed_jobs())
             .expect("Could not determine if jobs failed");
     }
 
@@ -283,7 +283,7 @@ impl TestAppBuilder {
 
             let runner = Runner::new(
                 runtime.handle(),
-                (*app.primary_database).clone(),
+                app.deadpool_primary.clone(),
                 Arc::new(environment),
             )
             .shutdown_when_queue_empty()
@@ -396,7 +396,7 @@ fn simple_config() -> config::Server {
             url: String::from("invalid default url").into(),
             read_only_mode: false,
             pool_size: 3,
-            async_pool_size: 2,
+            async_pool_size: 3,
             min_idle: None,
         },
         replica: None,

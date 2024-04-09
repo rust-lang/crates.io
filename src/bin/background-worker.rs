@@ -26,8 +26,6 @@ use crates_io_index::RepositoryConfig;
 use crates_io_worker::Runner;
 use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
 use deadpool_diesel::Runtime;
-use diesel::r2d2;
-use diesel::r2d2::ConnectionManager;
 use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
@@ -81,11 +79,6 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let connection_pool = r2d2::Pool::builder()
-        .max_size(10)
-        .min_idle(Some(0))
-        .build_unchecked(ConnectionManager::new(&db_url));
-
     let manager = DeadpoolManager::new(db_url, Runtime::Tokio1);
     let deadpool = DeadpoolPool::builder(manager).max_size(10).build().unwrap();
 
@@ -95,7 +88,7 @@ fn main() -> anyhow::Result<()> {
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
-        .deadpool(deadpool)
+        .deadpool(deadpool.clone())
         .emails(emails)
         .team_repo(Box::new(team_repo))
         .build()?;
@@ -111,7 +104,7 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    let runner = Runner::new(runtime.handle(), connection_pool, environment.clone())
+    let runner = Runner::new(runtime.handle(), deadpool, environment.clone())
         .configure_default_queue(|queue| queue.num_workers(5))
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
