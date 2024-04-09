@@ -11,8 +11,7 @@ use axum::extract::Query;
 use axum::response::IntoResponse;
 use chrono::NaiveDateTime;
 use diesel::data_types::PgInterval;
-use diesel::dsl::{now, sql, IntervalDsl};
-use diesel::sql_types::{Interval, Timestamp};
+use diesel::dsl::{now, IntervalDsl};
 use serde_json as json;
 
 #[derive(Deserialize)]
@@ -45,16 +44,9 @@ pub async fn list(
             .select(ApiToken::as_select())
             .filter(api_tokens::revoked.eq(false))
             .filter(
-                api_tokens::expired_at
-                    .is_null()
-                    // now - PgInterval can't be used as a Nullable<Timestamp>: while now has
-                    // an impl of AsExpression that allows that, the combination does not.
-                    // Instead, we'll just build this with a little bit of raw SQL.
-                    .or(api_tokens::expired_at.gt(sql("(")
-                        .bind::<Timestamp, _>(now)
-                        .sql(" - ")
-                        .bind::<Interval, _>(params.expired_days_interval())
-                        .sql(")"))),
+                api_tokens::expired_at.is_null().or(api_tokens::expired_at
+                    .assume_not_null()
+                    .gt(now - params.expired_days_interval())),
             )
             .order(api_tokens::id.desc())
             .load(conn)?;
