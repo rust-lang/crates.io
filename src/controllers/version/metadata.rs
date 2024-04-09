@@ -23,12 +23,12 @@ pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        if semver::Version::parse(&version).is_err() {
-            return Err(version_not_found(&crate_name, &version));
-        }
+    if semver::Version::parse(&version).is_err() {
+        return Err(version_not_found(&crate_name, &version));
+    }
 
-        let conn = &mut state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
         let deps = version.dependencies(conn)?;
         let deps = deps
@@ -38,7 +38,7 @@ pub async fn dependencies(
 
         Ok(Json(json!({ "dependencies": deps })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -60,12 +60,12 @@ pub async fn show(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        if semver::Version::parse(&version).is_err() {
-            return Err(version_not_found(&crate_name, &version));
-        }
+    if semver::Version::parse(&version).is_err() {
+        return Err(version_not_found(&crate_name, &version));
+    }
 
-        let conn = &mut state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
         let published_by = version.published_by(conn);
         let actions = VersionOwnerAction::by_version(conn, &version)?;
@@ -73,5 +73,5 @@ pub async fn show(
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
         Ok(Json(json!({ "version": version })))
     })
-    .await
+    .await?
 }
