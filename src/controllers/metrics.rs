@@ -23,7 +23,9 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
 
     let metrics = match kind.as_str() {
         "service" => {
-            spawn_blocking(move || app.service_metrics.gather(&mut *app.db_read()?)).await?
+            let conn = app.db_read_async().await?;
+            conn.interact(move |conn| app.service_metrics.gather(conn))
+                .await??
         }
         "instance" => {
             spawn_blocking(move || Ok::<_, BoxedAppError>(app.instance_metrics.gather(&app)?))
