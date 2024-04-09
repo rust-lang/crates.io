@@ -179,8 +179,8 @@ impl From<PoolError> for BoxedAppError {
 }
 
 impl From<deadpool_diesel::PoolError> for BoxedAppError {
-    fn from(err: deadpool_diesel::PoolError) -> BoxedAppError {
-        Box::new(err)
+    fn from(_err: deadpool_diesel::PoolError) -> BoxedAppError {
+        service_unavailable()
     }
 }
 
