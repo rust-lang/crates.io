@@ -24,8 +24,8 @@ pub async fn follow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         diesel::insert_into(follows::table)
@@ -35,7 +35,7 @@ pub async fn follow(
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 /// Handles the `DELETE /crates/:crate_id/follow` route.
@@ -44,15 +44,15 @@ pub async fn unfollow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         diesel::delete(&follow).execute(conn)?;
 
         ok_true()
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /crates/:crate_id/following` route.
@@ -61,10 +61,10 @@ pub async fn following(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = app.db_read_prefer_primary_async().await?;
+    conn.interact(move |conn| {
         use diesel::dsl::exists;
 
-        let conn = &mut *app.db_read_prefer_primary()?;
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         let following =
@@ -72,5 +72,5 @@ pub async fn following(
 
         Ok(Json(json!({ "following": following })))
     })
-    .await
+    .await?
 }
