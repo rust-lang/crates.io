@@ -20,7 +20,7 @@ use std::fmt;
 
 use axum::Extension;
 use chrono::NaiveDateTime;
-use diesel::result::Error as DieselError;
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use http::StatusCode;
 use tokio::task::JoinError;
 
@@ -150,6 +150,9 @@ impl From<DieselError> for BoxedAppError {
                 if info.message().ends_with("read-only transaction") =>
             {
                 Box::new(ReadOnlyMode)
+            }
+            DieselError::DatabaseError(DatabaseErrorKind::ClosedConnection, _) => {
+                service_unavailable()
             }
             _ => Box::new(err),
         }
