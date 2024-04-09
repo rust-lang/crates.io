@@ -53,9 +53,8 @@ async fn modify_yank(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    spawn_blocking(move || {
-        let conn = &mut *state.db_write()?;
-
+    let conn = state.db_write_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::default()
             .with_endpoint_scope(EndpointScope::Yank)
             .for_crate(&crate_name)
@@ -106,5 +105,5 @@ async fn modify_yank(
 
         ok_true()
     })
-    .await
+    .await?
 }
