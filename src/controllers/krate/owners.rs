@@ -73,7 +73,7 @@ pub async fn add_owners(
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || modify_owners(&app, &crate_name, parts, body, true)).await
+    modify_owners(app, crate_name, parts, body, true).await
 }
 
 /// Handles the `DELETE /crates/:crate_id/owners` route.
@@ -83,7 +83,7 @@ pub async fn remove_owners(
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || modify_owners(&app, &crate_name, parts, body, false)).await
+    modify_owners(app, crate_name, parts, body, false).await
 }
 
 #[derive(Deserialize)]
@@ -92,74 +92,77 @@ pub struct ChangeOwnersRequest {
     owners: Vec<String>,
 }
 
-fn modify_owners(
-    app: &AppState,
-    crate_name: &str,
+async fn modify_owners(
+    app: AppState,
+    crate_name: String,
     parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
 ) -> AppResult<Json<Value>> {
     let logins = body.owners;
 
-    let conn = &mut *app.db_write()?;
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(crate_name)
-        .check(&parts, conn)?;
+    spawn_blocking(move || {
+        let conn = &mut *app.db_write()?;
+        let auth = AuthCheck::default()
+            .with_endpoint_scope(EndpointScope::ChangeOwners)
+            .for_crate(&crate_name)
+            .check(&parts, conn)?;
 
-    let user = auth.user();
+        let user = auth.user();
 
-    conn.transaction(|conn| {
-        let krate: Crate = Crate::by_name(crate_name)
-            .first(conn)
-            .optional()?
-            .ok_or_else(|| crate_not_found(crate_name))?;
+        conn.transaction(|conn| {
+            let krate: Crate = Crate::by_name(&crate_name)
+                .first(conn)
+                .optional()?
+                .ok_or_else(|| crate_not_found(&crate_name))?;
 
-        let owners = krate.owners(conn)?;
+            let owners = krate.owners(conn)?;
 
-        match Handle::current().block_on(user.rights(app, &owners))? {
-            Rights::Full => {}
-            // Yes!
-            Rights::Publish => {
-                return Err(custom(
-                    StatusCode::FORBIDDEN,
-                    "team members don't have permission to modify owners",
-                ));
-            }
-            Rights::None => {
-                return Err(custom(
-                    StatusCode::FORBIDDEN,
-                    "only owners have permission to modify owners",
-                ));
-            }
-        }
-
-        let comma_sep_msg = if add {
-            let mut msgs = Vec::with_capacity(logins.len());
-            for login in &logins {
-                let login_test =
-                    |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
-                if owners.iter().any(login_test) {
-                    return Err(bad_request(format_args!("`{login}` is already an owner")));
+            match Handle::current().block_on(user.rights(&app, &owners))? {
+                Rights::Full => {}
+                // Yes!
+                Rights::Publish => {
+                    return Err(custom(
+                        StatusCode::FORBIDDEN,
+                        "team members don't have permission to modify owners",
+                    ));
                 }
-                let msg = krate.owner_add(app, conn, user, login)?;
-                msgs.push(msg);
+                Rights::None => {
+                    return Err(custom(
+                        StatusCode::FORBIDDEN,
+                        "only owners have permission to modify owners",
+                    ));
+                }
             }
-            msgs.join(",")
-        } else {
-            for login in &logins {
-                krate.owner_remove(conn, login)?;
-            }
-            if User::owning(&krate, conn)?.is_empty() {
-                return Err(bad_request(
-                    "cannot remove all individual owners of a crate. \
+
+            let comma_sep_msg = if add {
+                let mut msgs = Vec::with_capacity(logins.len());
+                for login in &logins {
+                    let login_test =
+                        |owner: &Owner| owner.login().to_lowercase() == *login.to_lowercase();
+                    if owners.iter().any(login_test) {
+                        return Err(bad_request(format_args!("`{login}` is already an owner")));
+                    }
+                    let msg = krate.owner_add(&app, conn, user, login)?;
+                    msgs.push(msg);
+                }
+                msgs.join(",")
+            } else {
+                for login in &logins {
+                    krate.owner_remove(conn, login)?;
+                }
+                if User::owning(&krate, conn)?.is_empty() {
+                    return Err(bad_request(
+                        "cannot remove all individual owners of a crate. \
                      Team member don't have permission to modify owners, so \
                      at least one individual owner is required.",
-                ));
-            }
-            "owners successfully removed".to_owned()
-        };
+                    ));
+                }
+                "owners successfully removed".to_owned()
+            };
 
-        Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
+            Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
+        })
     })
+    .await
 }
