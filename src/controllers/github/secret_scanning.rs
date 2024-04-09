@@ -255,9 +255,8 @@ pub async fn verify(
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
-    spawn_blocking(move || {
-        let conn = &mut *state.db_write()?;
-
+    let conn = state.db_write_async().await?;
+    conn.interact(move |conn| {
         let feedback = alerts
             .into_iter()
             .map(|alert| {
@@ -272,7 +271,7 @@ pub async fn verify(
 
         Ok(Json(feedback))
     })
-    .await
+    .await?
 }
 
 #[cfg(test)]

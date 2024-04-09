@@ -35,8 +35,8 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_read_prefer_primary()?;
+    let conn = &mut *app.db_read_prefer_primary_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
@@ -53,12 +53,13 @@ pub async fn list(
 
         Ok(Json(json!({ "api_tokens": tokens })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /me/tokens` route.
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = &mut *app.db_write_async().await?;
+    conn.interact(move |conn| {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize)]
         struct NewApiToken {
@@ -82,8 +83,6 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         if name.is_empty() {
             return Err(bad_request("name must have a value"));
         }
-
-        let conn = &mut *app.db_write()?;
 
         let auth = AuthCheck::default().check(&req, conn)?;
         if auth.api_token_id().is_some() {
@@ -138,13 +137,13 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
 
         Ok(Json(json!({ "api_token": api_token })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = &mut *app.db_write_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
         diesel::update(ApiToken::belonging_to(user).find(id))
@@ -153,13 +152,13 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
         Ok(Json(json!({})))
     })
-    .await
+    .await?
 }
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = &mut *app.db_write_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::default().check(&req, conn)?;
         let api_token_id = auth
             .api_token_id()
@@ -171,5 +170,5 @@ pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
 
         Ok(StatusCode::NO_CONTENT.into_response())
     })
-    .await
+    .await?
 }

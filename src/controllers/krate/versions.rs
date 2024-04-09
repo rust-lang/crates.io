@@ -19,9 +19,8 @@ pub async fn versions(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
-
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let crate_id: i32 = Crate::by_name(&crate_name)
             .select(crates::id)
             .first(conn)
@@ -65,7 +64,7 @@ pub async fn versions(
             None => json!({ "versions": versions }),
         }))
     })
-    .await
+    .await?
 }
 
 /// Seek-based pagination of versions by date

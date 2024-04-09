@@ -32,12 +32,12 @@ pub async fn downloads(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        if semver::Version::parse(&version).is_err() {
-            return Err(version_not_found(&crate_name, &version));
-        }
+    if semver::Version::parse(&version).is_err() {
+        return Err(version_not_found(&crate_name, &version));
+    }
 
-        let conn = &mut *app.db_read()?;
+    let conn = app.db_read_async().await?;
+    conn.interact(move |conn| {
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
@@ -57,5 +57,5 @@ pub async fn downloads(
 
         Ok(Json(json!({ "version_downloads": downloads })))
     })
-    .await
+    .await?
 }

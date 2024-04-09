@@ -71,8 +71,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &version_string);
 
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
@@ -421,7 +421,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }))
         })
     })
-    .await
+    .await?
 }
 
 /// Counts the number of versions for `crate_id` that were published within
