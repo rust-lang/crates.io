@@ -7,16 +7,18 @@ use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 
 /// Handles the `GET /categories` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    // FIXME: There are 69 categories, 47 top level. This isn't going to
+    // grow by an OoM. We need a limit for /summary, but we don't need
+    // to paginate this.
+    let options = PaginationOptions::builder().gather(&req)?;
+
+    let conn = app.db_read_async().await?;
+    conn.interact(move |conn| {
         let query = req.query();
-        // FIXME: There are 69 categories, 47 top level. This isn't going to
-        // grow by an OoM. We need a limit for /summary, but we don't need
-        // to paginate this.
-        let options = PaginationOptions::builder().gather(&req)?;
-        let offset = options.offset().unwrap_or_default();
         let sort = query.get("sort").map_or("alpha", String::as_str);
 
-        let conn = &mut app.db_read()?;
+        let offset = options.offset().unwrap_or_default();
+
         let categories = Category::toplevel(conn, sort, options.per_page, offset)?;
         let categories = categories
             .into_iter()
@@ -31,13 +33,13 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             "meta": { "total": total },
         })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /categories/:category_id` route.
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let cat: Category = Category::by_slug(&slug).first(conn)?;
         let subcats = cat
             .subcategories(conn)?
@@ -64,13 +66,13 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<V
 
         Ok(Json(json!({ "category": cat_with_subcats })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let slugs: Vec<Slug> = categories::table
             .select((categories::slug, categories::slug, categories::description))
             .order(categories::slug)
@@ -85,5 +87,5 @@ pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
 
         Ok(Json(json!({ "category_slugs": slugs })))
     })
-    .await
+    .await?
 }
