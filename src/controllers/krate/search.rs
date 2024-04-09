@@ -39,7 +39,8 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = app.db_read_async().await?;
+    conn.interact(move |conn| {
         use diesel::sql_types::Float;
         use seek::*;
 
@@ -77,7 +78,6 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             0_f32.into_sql::<Float>(),
         );
 
-        let conn = &mut *app.db_read()?;
         let mut seek: Option<Seek> = None;
         let mut query = filter_params
             .make_query(&req, conn)?
@@ -245,7 +245,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             },
         })))
     })
-    .await
+    .await?
 }
 
 #[derive(Default)]
