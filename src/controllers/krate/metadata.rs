@@ -27,7 +27,8 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = app.db_read_async().await?;
+    conn.interact(move |conn| {
         let include = req
             .query()
             .get("include")
@@ -35,7 +36,6 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .transpose()?
             .unwrap_or_default();
 
-        let conn = &mut *app.db_read()?;
         let (krate, downloads): (Crate, i64) = Crate::by_name(&name)
             .inner_join(crate_downloads::table)
             .select((Crate::as_select(), crate_downloads::downloads))
@@ -142,7 +142,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             "categories": encodable_cats,
         })))
     })
-    .await
+    .await?
 }
 
 #[derive(Debug)]
@@ -227,9 +227,9 @@ pub async fn reverse_dependencies(
     Path(name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = app.db_read_async().await?;
+    conn.interact(move |conn| {
         let pagination_options = PaginationOptions::builder().gather(&req)?;
-        let conn = &mut *app.db_read()?;
 
         let krate: Crate = Crate::by_name(&name)
             .first(conn)
@@ -273,5 +273,5 @@ pub async fn reverse_dependencies(
             "meta": { "total": total },
         })))
     })
-    .await
+    .await?
 }
