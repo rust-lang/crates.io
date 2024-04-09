@@ -2,7 +2,6 @@ use crate::app::AppState;
 use crate::controllers::cargo_prelude::AppResult;
 use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Version};
 use crate::schema::{crate_downloads, crates, keywords, metadata, recent_crate_downloads};
-use crate::tasks::spawn_blocking;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
 use diesel::prelude::*;
@@ -10,10 +9,10 @@ use serde_json::Value;
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let config = &state.config;
 
-        let conn = &mut *state.db_read()?;
         let num_crates: i64 = crates::table.count().get_result(conn)?;
         let num_downloads: i64 = metadata::table
             .select(metadata::total_downloads)
@@ -124,5 +123,5 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             "popular_categories": popular_categories,
         })))
     })
-    .await
+    .await?
 }
