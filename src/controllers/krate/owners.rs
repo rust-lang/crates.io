@@ -10,8 +10,8 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
             .optional()?
@@ -25,13 +25,13 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 
         Ok(Json(json!({ "users": owners })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
             .optional()?
@@ -44,13 +44,13 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 
         Ok(Json(json!({ "teams": owners })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    spawn_blocking(move || {
-        let conn = &mut *state.db_read()?;
+    let conn = state.db_read_async().await?;
+    conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
             .optional()?
@@ -63,7 +63,7 @@ pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppR
 
         Ok(Json(json!({ "users": owners })))
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
@@ -101,8 +101,8 @@ async fn modify_owners(
 ) -> AppResult<Json<Value>> {
     let logins = body.owners;
 
-    spawn_blocking(move || {
-        let conn = &mut *app.db_write()?;
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
         let auth = AuthCheck::default()
             .with_endpoint_scope(EndpointScope::ChangeOwners)
             .for_crate(&crate_name)
@@ -164,5 +164,5 @@ async fn modify_owners(
             Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
         })
     })
-    .await
+    .await?
 }
