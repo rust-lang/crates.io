@@ -20,7 +20,7 @@
     "build": "ember build --environment=production && node ./script/precompress-assets.mjs",
     "lint:deps": "ember dependency-lint",
     "lint:hbs": "ember-template-lint app",
-    "lint:js": "eslint . --cache",
+    "lint:js": "ESLINT_USE_FLAT_CONFIG=false eslint . --cache",
     "precompress": "node ./script/precompress-assets.mjs",
     "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.md'",
     "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.md'",
