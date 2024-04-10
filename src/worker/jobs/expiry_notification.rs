@@ -183,11 +183,12 @@ mod tests {
         let sent = &sent_mail[0];
         assert_eq!(&sent.0.to(), &["testuser@test.com".parse::<Address>()?]);
         assert!(sent.1.contains("Your token is about to expire"));
-        let update_token = api_tokens::table
+        let updated_token = api_tokens::table
             .filter(api_tokens::id.eq(token.id))
+            .filter(api_tokens::expiry_notification_at.is_not_null())
             .select(ApiToken::as_select())
             .first::<ApiToken>(&mut conn)?;
-        assert!(update_token.expiry_notification_at.is_some());
+        assert_eq!(updated_token.name, "test_token".to_owned());
 
         // Check that the token is not about to expire.
         let tokens = api_tokens::table
