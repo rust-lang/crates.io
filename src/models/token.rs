@@ -97,30 +97,6 @@ impl ApiToken {
         .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
         .map_err(Into::into)
     }
-
-    /// Find all tokens that are not revoked and will expire within the specified number of days.
-    pub fn find_tokens_expiring_within_days(
-        conn: &mut PgConnection,
-        days_until_expiry: i64,
-    ) -> QueryResult<Vec<ApiToken>> {
-        use diesel::dsl::{now, IntervalDsl};
-
-        api_tokens::table
-            .filter(api_tokens::revoked.eq(false))
-            .filter(
-                api_tokens::expired_at
-                    .is_not_null()
-                    .and(api_tokens::expired_at.assume_not_null().gt(now)) // Ignore already expired tokens
-                    .and(
-                        api_tokens::expired_at
-                            .assume_not_null()
-                            .lt(now + days_until_expiry.days()),
-                    ),
-            )
-            .filter(api_tokens::expiry_notification_at.is_null())
-            .select(ApiToken::as_select())
-            .get_results(conn)
-    }
 }
 
 #[derive(Debug)]

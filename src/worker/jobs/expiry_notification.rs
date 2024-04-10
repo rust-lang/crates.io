@@ -4,13 +4,15 @@ use crate::{email::Email, models::User, worker::Environment, Emails};
 use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
+use diesel::dsl::IntervalDsl;
 use diesel::{
-    dsl::now, Connection, ExpressionMethods, NullableExpressionMethods, PgConnection, RunQueryDsl,
+    dsl::now, BoolExpressionMethods, Connection, ExpressionMethods, NullableExpressionMethods,
+    PgConnection, QueryDsl, QueryResult, RunQueryDsl, SelectableHelper,
 };
 use std::sync::Arc;
 
 /// The threshold in days for the expiry notification.
-const EXPIRY_THRESHOLD: i64 = 3;
+const EXPIRY_THRESHOLD: chrono::TimeDelta = chrono::TimeDelta::days(3);
 
 /// A job responsible for monitoring the status of a token.
 /// It checks if the token is about to reach its expiry date.
@@ -38,7 +40,7 @@ impl BackgroundJob for CheckAboutToExpireToken {
 // Check if the token is about to expire and send a notification if it is.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     info!("Checking if tokens are about to expire");
-    let expired_tokens = ApiToken::find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
+    let expired_tokens = find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
     // Batch send notifications in transactions.
     const BATCH_SIZE: usize = 100;
     for chunk in expired_tokens.chunks(BATCH_SIZE) {
@@ -71,6 +73,28 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Find all tokens that are not revoked and will expire within the specified number of days.
+pub fn find_tokens_expiring_within_days(
+    conn: &mut PgConnection,
+    days_until_expiry: chrono::TimeDelta,
+) -> QueryResult<Vec<ApiToken>> {
+    api_tokens::table
+        .filter(api_tokens::revoked.eq(false))
+        .filter(
+            api_tokens::expired_at
+                .is_not_null()
+                .and(api_tokens::expired_at.assume_not_null().gt(now)) // Ignore already expired tokens
+                .and(
+                    api_tokens::expired_at
+                        .assume_not_null()
+                        .lt(now + days_until_expiry.num_days().day()),
+                ),
+        )
+        .filter(api_tokens::expiry_notification_at.is_null())
+        .select(ApiToken::as_select())
+        .get_results(conn)
 }
 
 #[derive(Debug, Clone)]
@@ -130,13 +154,13 @@ mod tests {
                 api_tokens::user_id.eq(user.id),
                 api_tokens::name.eq("test_token"),
                 api_tokens::token.eq(token.hashed()),
-                api_tokens::expired_at.eq(now.nullable() + (EXPIRY_THRESHOLD - 1).day()),
+                api_tokens::expired_at.eq(now.nullable() + (EXPIRY_THRESHOLD.num_days() - 1).day()),
             ))
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)?;
 
         // Insert a few tokens that are not set to expire.
-        let not_expired_offset = EXPIRY_THRESHOLD + 1;
+        let not_expired_offset = EXPIRY_THRESHOLD.num_days() + 1;
         for i in 0..3 {
             let token = PlainToken::generate();
             diesel::insert_into(api_tokens::table)
