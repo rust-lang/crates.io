@@ -24,7 +24,6 @@ use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use http::StatusCode;
 use tokio::task::JoinError;
 
-use crate::db::PoolError;
 use crate::middleware::log_request::ErrorField;
 
 mod json;
@@ -168,15 +167,6 @@ impl From<EmailError> for BoxedAppError {
                 error!(?error, "Failed to send email");
                 server_error("Failed to send the email")
             }
-        }
-    }
-}
-
-impl From<PoolError> for BoxedAppError {
-    fn from(err: PoolError) -> BoxedAppError {
-        match err {
-            PoolError::UnhealthyPool => service_unavailable(),
-            _ => Box::new(err),
         }
     }
 }
