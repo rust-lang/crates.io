@@ -17,8 +17,8 @@
 //! As a rule of thumb, if the metric requires a database query to be updated it's probably a
 //! service-level metric, and you should add it to `src/metrics/service.rs` instead.
 
+use crate::app::App;
 use crate::metrics::macros::metrics;
-use crate::{app::App, db::DieselPool};
 use deadpool_diesel::postgres::Pool;
 use prometheus::{
     proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
@@ -53,30 +53,12 @@ metrics! {
 impl InstanceMetrics {
     pub fn gather(&self, app: &App) -> prometheus::Result<Vec<MetricFamily>> {
         // Database pool stats
-        self.refresh_pool_stats("primary", &app.primary_database)?;
-        if let Some(follower) = &app.read_only_replica_database {
-            self.refresh_pool_stats("follower", follower)?;
-        }
-
         self.refresh_async_pool_stats("async_primary", &app.deadpool_primary)?;
         if let Some(follower) = &app.deadpool_replica {
             self.refresh_async_pool_stats("async_follower", follower)?;
         }
 
         Ok(self.registry.gather())
-    }
-
-    fn refresh_pool_stats(&self, name: &str, pool: &DieselPool) -> prometheus::Result<()> {
-        let state = pool.state();
-
-        self.database_idle_conns
-            .get_metric_with_label_values(&[name])?
-            .set(state.idle_connections as i64);
-        self.database_used_conns
-            .get_metric_with_label_values(&[name])?
-            .set((state.connections - state.idle_connections) as i64);
-
-        Ok(())
     }
 
     fn refresh_async_pool_stats(&self, name: &str, pool: &Pool) -> prometheus::Result<()> {
