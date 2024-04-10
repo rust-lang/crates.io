@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::config;
-use crate::db::{connection_url, ConnectionConfig, DieselPool, DieselPooledConn, PoolError};
+use crate::db::{connection_url, ConnectionConfig, DieselPool};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
@@ -208,46 +208,10 @@ impl App {
         &self.config.session_key
     }
 
-    /// Obtain a read/write database connection from the primary pool
-    #[instrument(skip_all)]
-    pub fn db_write(&self) -> Result<DieselPooledConn, PoolError> {
-        self.primary_database.get()
-    }
-
     /// Obtain a read/write database connection from the async primary pool
     #[instrument(skip_all)]
     pub async fn db_write_async(&self) -> DeadpoolResult {
         self.deadpool_primary.get().await
-    }
-
-    /// Obtain a readonly database connection from the replica pool
-    ///
-    /// If the replica pool is disabled or unavailable, the primary pool is used instead.
-    #[instrument(skip_all)]
-    pub fn db_read(&self) -> Result<DieselPooledConn, PoolError> {
-        let Some(read_only_pool) = self.read_only_replica_database.as_ref() else {
-            // Replica is disabled, but primary might be available
-            return self.primary_database.get();
-        };
-
-        match read_only_pool.get() {
-            // Replica is available
-            Ok(connection) => Ok(connection),
-
-            // Replica is not available, but primary might be available
-            Err(PoolError::UnhealthyPool) => {
-                let _ = self
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["follower"])
-                    .map(|metric| metric.inc());
-
-                self.primary_database.get()
-            }
-
-            // Replica failed
-            Err(error) => Err(error),
-        }
     }
 
     /// Obtain a readonly database connection from the replica pool
@@ -277,35 +241,6 @@ impl App {
             }
 
             // Replica failed
-            Err(error) => Err(error),
-        }
-    }
-
-    /// Obtain a readonly database connection from the primary pool
-    ///
-    /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
-    #[instrument(skip_all)]
-    pub fn db_read_prefer_primary(&self) -> Result<DieselPooledConn, PoolError> {
-        let Some(read_only_pool) = self.read_only_replica_database.as_ref() else {
-            return self.primary_database.get();
-        };
-
-        match self.primary_database.get() {
-            // Primary is available
-            Ok(connection) => Ok(connection),
-
-            // Primary is not available, but replica might be available
-            Err(PoolError::UnhealthyPool) => {
-                let _ = self
-                    .instance_metrics
-                    .database_fallback_used
-                    .get_metric_with_label_values(&["primary"])
-                    .map(|metric| metric.inc());
-
-                read_only_pool.get()
-            }
-
-            // Primary failed
             Err(error) => Err(error),
         }
     }
