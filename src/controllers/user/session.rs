@@ -86,7 +86,8 @@ pub async fn authorize(
     let app_clone = app.clone();
     let request_log = req.request_log().clone();
 
-    spawn_blocking(move || {
+    let conn = app.db_write_async().await?;
+    conn.interact(move |conn| {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
@@ -108,15 +109,14 @@ pub async fn authorize(
 
         // Fetch the user info from GitHub using the access token we just got and create a user record
         let ghuser = Handle::current().block_on(app.github.current_user(token))?;
-        let user =
-            save_user_to_database(&ghuser, token.secret(), &app.emails, &mut *app.db_write()?)?;
+        let user = save_user_to_database(&ghuser, token.secret(), &app.emails, conn)?;
 
         // Log in by setting a cookie and the middleware authentication
         session.insert("user_id".to_string(), user.id.to_string());
 
         Ok(())
     })
-    .await?;
+    .await??;
 
     super::me::me(app_clone, req).await
 }
