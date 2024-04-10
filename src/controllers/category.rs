@@ -12,7 +12,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     // to paginate this.
     let options = PaginationOptions::builder().gather(&req)?;
 
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let query = req.query();
         let sort = query.get("sort").map_or("alpha", String::as_str);
@@ -38,7 +38,7 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let cat: Category = Category::by_slug(&slug).first(conn)?;
         let subcats = cat
@@ -71,7 +71,7 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<V
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let slugs: Vec<Slug> = categories::table
             .select((categories::slug, categories::slug, categories::description))

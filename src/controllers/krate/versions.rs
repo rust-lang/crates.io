@@ -19,7 +19,7 @@ pub async fn versions(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let crate_id: i32 = Crate::by_name(&crate_name)
             .select(crates::id)

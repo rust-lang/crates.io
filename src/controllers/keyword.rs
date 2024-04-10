@@ -26,7 +26,7 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 
     let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
 
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let data: Paginated<Keyword> = query.load(conn)?;
         let total = data.total();
@@ -45,7 +45,7 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 
 /// Handles the `GET /keywords/:keyword_id` route.
 pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
-    let conn = &mut state.db_read_async().await?;
+    let conn = &mut state.db_read().await?;
     conn.interact(move |conn| {
         let kw = Keyword::find_by_keyword(conn, &name)?;
 

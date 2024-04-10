@@ -41,7 +41,7 @@ fn http_error_with_unhealthy_database() {
 
     app.primary_db_chaosproxy().restore_networking().unwrap();
     app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
+        .block_on(wait_until_healthy(&app.as_inner().primary_database));
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
@@ -65,7 +65,7 @@ fn fallback_to_replica_returns_user_info() {
     // restore primary database connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
     app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
+        .block_on(wait_until_healthy(&app.as_inner().primary_database));
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn restored_replica_returns_user_info() {
     app.replica_db_chaosproxy().restore_networking().unwrap();
     let replica = app
         .as_inner()
-        .deadpool_replica
+        .replica_database
         .as_ref()
         .expect("no replica database configured");
     app.runtime().block_on(wait_until_healthy(replica));
@@ -99,7 +99,7 @@ fn restored_replica_returns_user_info() {
     // restore connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
     app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
+        .block_on(wait_until_healthy(&app.as_inner().primary_database));
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn restored_primary_returns_user_info() {
     // Once the replica database is restored, it should serve as a fallback again
     app.primary_db_chaosproxy().restore_networking().unwrap();
     app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
+        .block_on(wait_until_healthy(&app.as_inner().primary_database));
 
     let response = owner.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::OK);

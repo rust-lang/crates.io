@@ -86,7 +86,7 @@ pub async fn authorize(
     let app_clone = app.clone();
     let request_log = req.request_log().clone();
 
-    let conn = app.db_write_async().await?;
+    let conn = app.db_write().await?;
     conn.interact(move |conn| {
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.

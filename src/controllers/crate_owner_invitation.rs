@@ -18,7 +18,7 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user_id = auth.user_id();
@@ -58,7 +58,7 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
 
@@ -265,7 +265,7 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
 
     let crate_invite = crate_invite.crate_owner_invite;
 
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::default().check(&req, conn)?;
         let user_id = auth.user_id();
@@ -289,7 +289,7 @@ pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         let config = &state.config;
 

@@ -23,7 +23,7 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
 
     let metrics = match kind.as_str() {
         "service" => {
-            let conn = app.db_read_async().await?;
+            let conn = app.db_read().await?;
             conn.interact(move |conn| app.service_metrics.gather(conn))
                 .await??
         }

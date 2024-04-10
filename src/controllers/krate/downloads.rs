@@ -15,7 +15,7 @@ use crate::views::EncodableVersionDownload;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         use diesel::dsl::*;
         use diesel::sql_types::BigInt;
