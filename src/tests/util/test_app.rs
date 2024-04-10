@@ -57,8 +57,11 @@ impl Drop for TestAppInner {
 
         // Manually verify that all jobs have completed successfully
         // This will catch any tests that enqueued a job but forgot to initialize the runner
-        let conn = &mut *self.app.db_write().unwrap();
-        let job_count: i64 = background_jobs::table.count().get_result(conn).unwrap();
+        let mut conn = self.test_database.connect();
+        let job_count: i64 = background_jobs::table
+            .count()
+            .get_result(&mut conn)
+            .unwrap();
         assert_eq!(
             0, job_count,
             "Unprocessed or failed jobs remain in the queue"
