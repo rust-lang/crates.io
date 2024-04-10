@@ -111,7 +111,12 @@ fn test_update_email_notifications_not_owned() {
 
     let not_my_crate = app.db(|conn| {
         let u = new_user("arbitrary_username")
-            .create_or_update(None, &app.as_inner().emails, conn)
+            .create_or_update(
+                None,
+                &app.as_inner().emails,
+                &app.as_inner().rate_limiter,
+                conn,
+            )
             .unwrap();
         CrateBuilder::new("test_package", u.id).expect_build(conn)
     });

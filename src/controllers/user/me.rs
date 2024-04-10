@@ -1,4 +1,6 @@
 use crate::auth::AuthCheck;
+use crate::rate_limiter::LimitedAction;
+use crate::rate_limiter::RateLimiter;
 use secrecy::{ExposeSecret, SecretString};
 use std::collections::HashMap;
 
@@ -158,11 +160,13 @@ pub async fn update_user(
             // an invalid email set in their GitHub profile, and we should let them sign in even though
             // we're trying to silently use their invalid address during signup and can't send them an
             // email. They'll then have to provide a valid email address.
-            let email = UserConfirmEmail {
-                user_name: &user.gh_login,
-                domain: &state.emails.domain,
+            let email = UserConfirmEmail::new(
+                &state.rate_limiter,
+                conn,
+                user,
+                &state.emails.domain,
                 token,
-            };
+            )?;
 
             let _ = state.emails.send(user_email, email);
 
@@ -219,11 +223,13 @@ pub async fn regenerate_token_and_send(
                 .optional()?
                 .ok_or_else(|| bad_request("Email could not be found"))?;
 
-            let email1 = UserConfirmEmail {
-                user_name: &user.gh_login,
-                domain: &state.emails.domain,
-                token: email.token,
-            };
+            let email1 = UserConfirmEmail::new(
+                &state.rate_limiter,
+                conn,
+                user,
+                &state.emails.domain,
+                email.token,
+            )?;
 
             state.emails.send(&email.email, email1).map_err(Into::into)
         })?;
@@ -297,9 +303,26 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 }
 
 pub struct UserConfirmEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-    pub token: SecretString,
+    user_name: &'a str,
+    domain: &'a str,
+    token: SecretString,
+}
+
+impl<'a> UserConfirmEmail<'a> {
+    pub fn new(
+        rate_limiter: &RateLimiter,
+        conn: &mut PgConnection,
+        user: &'a User,
+        domain: &'a str,
+        token: SecretString,
+    ) -> AppResult<Self> {
+        rate_limiter.check_rate_limit(user.id, LimitedAction::VerifyEmail, conn)?;
+        Ok(Self {
+            user_name: &user.gh_login,
+            domain,
+            token,
+        })
+    }
 }
 
 impl crate::email::Email for UserConfirmEmail<'_> {

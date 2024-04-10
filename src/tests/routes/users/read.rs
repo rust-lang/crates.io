@@ -39,7 +39,12 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(None, &app.as_inner().emails, conn));
+        .create_or_update(
+            None,
+            &app.as_inner().emails,
+            &app.as_inner().rate_limiter,
+            conn
+        ));
         assert_ok!(NewUser::new(
             2,
             "FOOBAR",
@@ -47,7 +52,12 @@ fn show_latest_user_case_insensitively() {
             None,
             "bar"
         )
-        .create_or_update(None, &app.as_inner().emails, conn));
+        .create_or_update(
+            None,
+            &app.as_inner().emails,
+            &app.as_inner().rate_limiter,
+            conn
+        ));
     });
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").good();

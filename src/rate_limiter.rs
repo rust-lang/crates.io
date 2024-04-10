@@ -14,15 +14,17 @@ pg_enum! {
         PublishNew = 0,
         PublishUpdate = 1,
         YankUnyank = 2,
+        VerifyEmail = 3,
     }
 }
 
 impl LimitedAction {
     pub fn default_rate_seconds(&self) -> u64 {
         match self {
-            LimitedAction::PublishNew => 10 * 60, // 10 minutes
-            LimitedAction::PublishUpdate => 60,   // 1 minute
-            LimitedAction::YankUnyank => 60,      // 1 minute
+            LimitedAction::PublishNew => 10 * 60,  // 10 minutes
+            LimitedAction::PublishUpdate => 60,    // 1 minute
+            LimitedAction::YankUnyank => 60,       // 1 minute
+            LimitedAction::VerifyEmail => 30 * 60, // 30 minutes
         }
     }
 
@@ -31,6 +33,7 @@ impl LimitedAction {
             LimitedAction::PublishNew => 5,
             LimitedAction::PublishUpdate => 30,
             LimitedAction::YankUnyank => 100,
+            LimitedAction::VerifyEmail => 3,
         }
     }
 
@@ -39,6 +42,7 @@ impl LimitedAction {
             LimitedAction::PublishNew => "PUBLISH_NEW",
             LimitedAction::PublishUpdate => "PUBLISH_UPDATE",
             LimitedAction::YankUnyank => "YANK_UNYANK",
+            LimitedAction::VerifyEmail => "VERIFY_EMAIL",
         }
     }
 
@@ -52,6 +56,9 @@ impl LimitedAction {
             }
             LimitedAction::YankUnyank => {
                 "You have yanked or unyanked too many versions in a short period of time"
+            }
+            LimitedAction::VerifyEmail => {
+                "You have attempted to verify too many e-mail addresses in a short period of time"
             }
         }
     }
@@ -182,7 +189,7 @@ mod tests {
     use crate::test_util::*;
 
     #[test]
-    fn default_rate_limits() -> QueryResult<()> {
+    fn default_rate_limits() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -246,11 +253,26 @@ mod tests {
         }
         assert_eq!(expected_last_refill_times, last_refill_times);
 
+        // E-mail verification has a burst of 3 and a refill time of 30 minutes, which means we
+        // should be able to verify an e-mail address every 30 minutes, always have tokens
+        // remaining, and set the last_refill based on the refill time.
+        let action = LimitedAction::VerifyEmail;
+        let mut last_refill_times = vec![];
+        let mut expected_last_refill_times = vec![];
+        for publish_num in 1..=3 {
+            let publish_time = now + chrono::Duration::minutes(30 * publish_num);
+            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+
+            last_refill_times.push(bucket.last_refill);
+            expected_last_refill_times.push(publish_time);
+        }
+        assert_eq!(expected_last_refill_times, last_refill_times);
+
         Ok(())
     }
 
     #[test]
-    fn take_token_with_no_bucket_creates_new_one() -> QueryResult<()> {
+    fn take_token_with_no_bucket_creates_new_one() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -297,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn take_token_with_existing_bucket_modifies_existing_bucket() -> QueryResult<()> {
+    fn take_token_with_existing_bucket_modifies_existing_bucket() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -320,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn take_token_after_delay_refills() -> QueryResult<()> {
+    fn take_token_after_delay_refills() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -344,7 +366,7 @@ mod tests {
     }
 
     #[test]
-    fn refill_subsecond_rate() -> QueryResult<()> {
+    fn refill_subsecond_rate() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
@@ -372,7 +394,7 @@ mod tests {
     }
 
     #[test]
-    fn last_refill_always_advanced_by_multiple_of_rate() -> QueryResult<()> {
+    fn last_refill_always_advanced_by_multiple_of_rate() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -401,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_tokens_returned_when_user_has_no_tokens_left() -> QueryResult<()> {
+    fn zero_tokens_returned_when_user_has_no_tokens_left() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -427,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> QueryResult<()> {
+    fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -452,7 +474,7 @@ mod tests {
     }
 
     #[test]
-    fn tokens_never_refill_past_burst() -> QueryResult<()> {
+    fn tokens_never_refill_past_burst() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -477,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
+    fn two_actions_dont_interfere_with_each_other() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -520,7 +542,7 @@ mod tests {
     }
 
     #[test]
-    fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
+    fn override_is_used_instead_of_global_burst_if_present() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -550,7 +572,7 @@ mod tests {
     }
 
     #[test]
-    fn overrides_can_expire() -> QueryResult<()> {
+    fn overrides_can_expire() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -597,7 +619,7 @@ mod tests {
     }
 
     #[test]
-    fn override_is_different_for_each_action() -> QueryResult<()> {
+    fn override_is_different_for_each_action() -> AppResult<()> {
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
         let user_id = new_user(conn, "user")?;
@@ -636,14 +658,19 @@ mod tests {
         Ok(())
     }
 
-    fn new_user(conn: &mut PgConnection, gh_login: &str) -> QueryResult<i32> {
+    fn new_user(conn: &mut PgConnection, gh_login: &str) -> AppResult<i32> {
         use crate::models::NewUser;
 
         let user = NewUser {
             gh_login,
             ..NewUser::default()
         }
-        .create_or_update(None, &Emails::new_in_memory(), conn)?;
+        .create_or_update(
+            None,
+            &Emails::new_in_memory(),
+            &RateLimiter::new(Default::default()),
+            conn,
+        )?;
         Ok(user.id)
     }
 
@@ -651,15 +678,15 @@ mod tests {
         conn: &mut PgConnection,
         tokens: i32,
         now: NaiveDateTime,
-    ) -> QueryResult<Bucket> {
-        diesel::insert_into(publish_limit_buckets::table)
+    ) -> AppResult<Bucket> {
+        Ok(diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
                 user_id: new_user(conn, "new_user")?,
                 tokens,
                 last_refill: now,
                 action: LimitedAction::PublishNew,
             })
-            .get_result(conn)
+            .get_result(conn)?)
     }
 
     struct SampleRateLimiter {
