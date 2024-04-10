@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::config;
-use crate::db::{connection_url, ConnectionConfig, DieselPool};
+use crate::db::{connection_url, ConnectionConfig};
 use std::ops::Deref;
 use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
@@ -14,24 +14,16 @@ use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
 use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
 use deadpool_diesel::Runtime;
-use diesel::r2d2;
 use oauth2::basic::BasicClient;
-use scheduled_thread_pool::ScheduledThreadPool;
 
 type DeadpoolResult = Result<deadpool_diesel::postgres::Connection, deadpool_diesel::PoolError>;
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
 pub struct App {
-    /// The primary database connection pool
-    pub primary_database: DieselPool,
-
     /// Async database connection pool based on `deadpool` connected
     /// to the primary database
     pub deadpool_primary: DeadpoolPool,
-
-    /// The read-only replica database connection pool
-    pub read_only_replica_database: Option<DieselPool>,
 
     /// Async database connection pool based on `deadpool` connected
     /// to the read-only replica database
@@ -88,32 +80,6 @@ impl App {
             ),
         );
 
-        let thread_pool = Arc::new(ScheduledThreadPool::new(config.db.helper_threads));
-
-        let primary_database = {
-            let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
-                read_only: config.db.primary.read_only_mode,
-            };
-
-            let primary_db_config = r2d2::Pool::builder()
-                .max_size(config.db.primary.pool_size)
-                .min_idle(config.db.primary.min_idle)
-                .connection_timeout(config.db.connection_timeout)
-                .connection_customizer(Box::new(primary_db_connection_config))
-                .thread_pool(thread_pool.clone());
-
-            DieselPool::new(
-                &config.db.primary.url,
-                &config.db,
-                primary_db_config,
-                instance_metrics
-                    .database_time_to_obtain_connection
-                    .with_label_values(&["primary"]),
-            )
-            .unwrap()
-        };
-
         let primary_database_async = {
             use secrecy::ExposeSecret;
 
@@ -132,34 +98,6 @@ impl App {
                 .post_create(primary_db_connection_config)
                 .build()
                 .unwrap()
-        };
-
-        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
-            let replica_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
-                read_only: pool_config.read_only_mode,
-            };
-
-            let replica_db_config = r2d2::Pool::builder()
-                .max_size(pool_config.pool_size)
-                .min_idle(pool_config.min_idle)
-                .connection_timeout(config.db.connection_timeout)
-                .connection_customizer(Box::new(replica_db_connection_config))
-                .thread_pool(thread_pool);
-
-            Some(
-                DieselPool::new(
-                    &pool_config.url,
-                    &config.db,
-                    replica_db_config,
-                    instance_metrics
-                        .database_time_to_obtain_connection
-                        .with_label_values(&["follower"]),
-                )
-                .unwrap(),
-            )
-        } else {
-            None
         };
 
         let replica_database_async = if let Some(pool_config) = config.db.replica.as_ref() {
@@ -187,9 +125,7 @@ impl App {
         };
 
         App {
-            primary_database,
             deadpool_primary: primary_database_async,
-            read_only_replica_database: replica_database,
             deadpool_replica: replica_database_async,
             github,
             github_oauth,
