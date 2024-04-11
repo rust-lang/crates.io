@@ -53,15 +53,15 @@ metrics! {
 impl InstanceMetrics {
     pub fn gather(&self, app: &App) -> prometheus::Result<Vec<MetricFamily>> {
         // Database pool stats
-        self.refresh_async_pool_stats("async_primary", &app.deadpool_primary)?;
-        if let Some(follower) = &app.deadpool_replica {
-            self.refresh_async_pool_stats("async_follower", follower)?;
+        self.refresh_pool_stats("async_primary", &app.primary_database)?;
+        if let Some(follower) = &app.replica_database {
+            self.refresh_pool_stats("async_follower", follower)?;
         }
 
         Ok(self.registry.gather())
     }
 
-    fn refresh_async_pool_stats(&self, name: &str, pool: &Pool) -> prometheus::Result<()> {
+    fn refresh_pool_stats(&self, name: &str, pool: &Pool) -> prometheus::Result<()> {
         let status = pool.status();
 
         self.database_idle_conns

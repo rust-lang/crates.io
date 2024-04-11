@@ -15,7 +15,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
-    let conn = app.db_read_prefer_primary_async().await?;
+    let conn = app.db_read_prefer_primary().await?;
     conn.interact(move |conn| {
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
 
@@ -57,7 +57,7 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_read_prefer_primary_async().await?;
+    let conn = app.db_read_prefer_primary().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
@@ -103,7 +103,7 @@ pub async fn update_user(
     Path(param_user_id): Path<i32>,
     req: BytesRequest,
 ) -> AppResult<Response> {
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         use self::emails::user_id;
         use diesel::insert_into;
@@ -176,7 +176,7 @@ pub async fn update_user(
 
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         use diesel::update;
 
@@ -199,7 +199,7 @@ pub async fn regenerate_token_and_send(
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         use diesel::dsl::sql;
         use diesel::update;
@@ -248,7 +248,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
             .map(|c| (c.id, c.email_notifications))
             .collect();
 
-    let conn = app.db_write_async().await?;
+    let conn = app.db_write().await?;
     conn.interact(move |conn| {
         use diesel::pg::upsert::excluded;
 

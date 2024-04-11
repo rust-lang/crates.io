@@ -10,7 +10,7 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
@@ -30,7 +30,7 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
@@ -49,7 +49,7 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let krate: Crate = Crate::by_name(&crate_name)
             .first(conn)
@@ -101,7 +101,7 @@ async fn modify_owners(
 ) -> AppResult<Json<Value>> {
     let logins = body.owners;
 
-    let conn = app.db_write_async().await?;
+    let conn = app.db_write().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::default()
             .with_endpoint_scope(EndpointScope::ChangeOwners)

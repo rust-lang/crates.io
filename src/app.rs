@@ -21,13 +21,11 @@ type DeadpoolResult = Result<deadpool_diesel::postgres::Connection, deadpool_die
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
 pub struct App {
-    /// Async database connection pool based on `deadpool` connected
-    /// to the primary database
-    pub deadpool_primary: DeadpoolPool,
+    /// Database connection pool connected to the primary database
+    pub primary_database: DeadpoolPool,
 
-    /// Async database connection pool based on `deadpool` connected
-    /// to the read-only replica database
-    pub deadpool_replica: Option<DeadpoolPool>,
+    /// Database connection pool connected to the read-only replica database
+    pub replica_database: Option<DeadpoolPool>,
 
     /// GitHub API client
     pub github: Box<dyn GitHubClient>,
@@ -80,7 +78,7 @@ impl App {
             ),
         );
 
-        let primary_database_async = {
+        let primary_database = {
             use secrecy::ExposeSecret;
 
             let primary_db_connection_config = ConnectionConfig {
@@ -100,7 +98,7 @@ impl App {
                 .unwrap()
         };
 
-        let replica_database_async = if let Some(pool_config) = config.db.replica.as_ref() {
+        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
             use secrecy::ExposeSecret;
 
             let replica_db_connection_config = ConnectionConfig {
@@ -125,8 +123,8 @@ impl App {
         };
 
         App {
-            deadpool_primary: primary_database_async,
-            deadpool_replica: replica_database_async,
+            primary_database,
+            replica_database,
             github,
             github_oauth,
             emails,
@@ -146,18 +144,18 @@ impl App {
 
     /// Obtain a read/write database connection from the async primary pool
     #[instrument(skip_all)]
-    pub async fn db_write_async(&self) -> DeadpoolResult {
-        self.deadpool_primary.get().await
+    pub async fn db_write(&self) -> DeadpoolResult {
+        self.primary_database.get().await
     }
 
     /// Obtain a readonly database connection from the replica pool
     ///
     /// If the replica pool is disabled or unavailable, the primary pool is used instead.
     #[instrument(skip_all)]
-    pub async fn db_read_async(&self) -> DeadpoolResult {
-        let Some(read_only_pool) = self.deadpool_replica.as_ref() else {
+    pub async fn db_read(&self) -> DeadpoolResult {
+        let Some(read_only_pool) = self.replica_database.as_ref() else {
             // Replica is disabled, but primary might be available
-            return self.deadpool_primary.get().await;
+            return self.primary_database.get().await;
         };
 
         match read_only_pool.get().await {
@@ -173,7 +171,7 @@ impl App {
                     .map(|metric| metric.inc());
 
                 warn!("Replica is unavailable, falling back to primary ({error})");
-                self.deadpool_primary.get().await
+                self.primary_database.get().await
             }
 
             // Replica failed
@@ -185,12 +183,12 @@ impl App {
     ///
     /// If the primary pool is unavailable, the replica pool is used instead, if not disabled.
     #[instrument(skip_all)]
-    pub async fn db_read_prefer_primary_async(&self) -> DeadpoolResult {
-        let Some(read_only_pool) = self.deadpool_replica.as_ref() else {
-            return self.deadpool_primary.get().await;
+    pub async fn db_read_prefer_primary(&self) -> DeadpoolResult {
+        let Some(read_only_pool) = self.replica_database.as_ref() else {
+            return self.primary_database.get().await;
         };
 
-        match self.deadpool_primary.get().await {
+        match self.primary_database.get().await {
             // Primary is available
             Ok(connection) => Ok(connection),
 

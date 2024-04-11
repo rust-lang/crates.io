@@ -36,7 +36,7 @@ pub async fn downloads(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
 

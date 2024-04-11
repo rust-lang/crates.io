@@ -53,7 +53,7 @@ async fn modify_yank(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_write_async().await?;
+    let conn = state.db_write().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::default()
             .with_endpoint_scope(EndpointScope::Yank)

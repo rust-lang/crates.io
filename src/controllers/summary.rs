@@ -9,7 +9,7 @@ use serde_json::Value;
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let config = &state.config;
 

@@ -8,7 +8,7 @@ use crate::views::EncodableTeam;
 pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<Json<Value>> {
     use self::teams::dsl::{login, teams};
 
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     let team: Team = conn
         .interact(move |conn| teams.filter(login.eq(&name)).first(conn))
         .await??;

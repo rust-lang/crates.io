@@ -73,8 +73,8 @@ impl Drop for TestAppInner {
         // implementation from failing because no tokio runtime is running.
         {
             let _rt_guard = self.runtime.enter();
-            self.app.deadpool_primary.close();
-            if let Some(pool) = &self.app.deadpool_replica {
+            self.app.primary_database.close();
+            if let Some(pool) = &self.app.replica_database {
                 pool.close();
             }
         }
@@ -278,7 +278,7 @@ impl TestAppBuilder {
                 .config(app.config.clone())
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
-                .deadpool(app.deadpool_primary.clone())
+                .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
                 .team_repo(Box::new(self.team_repo))
                 .build()
@@ -286,7 +286,7 @@ impl TestAppBuilder {
 
             let runner = Runner::new(
                 runtime.handle(),
-                app.deadpool_primary.clone(),
+                app.primary_database.clone(),
                 Arc::new(environment),
             )
             .shutdown_when_queue_empty()

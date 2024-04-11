@@ -35,7 +35,7 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_read_prefer_primary_async().await?;
+    let conn = &mut *app.db_read_prefer_primary().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
@@ -58,7 +58,7 @@ pub async fn list(
 
 /// Handles the `PUT /me/tokens` route.
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_write_async().await?;
+    let conn = &mut *app.db_write().await?;
     conn.interact(move |conn| {
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize)]
@@ -142,7 +142,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_write_async().await?;
+    let conn = &mut *app.db_write().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
@@ -157,7 +157,7 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    let conn = &mut *app.db_write_async().await?;
+    let conn = &mut *app.db_write().await?;
     conn.interact(move |conn| {
         let auth = AuthCheck::default().check(&req, conn)?;
         let api_token_id = auth

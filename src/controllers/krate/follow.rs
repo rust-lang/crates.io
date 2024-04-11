@@ -24,7 +24,7 @@ pub async fn follow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = app.db_write_async().await?;
+    let conn = app.db_write().await?;
     conn.interact(move |conn| {
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
@@ -44,7 +44,7 @@ pub async fn unfollow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = app.db_write_async().await?;
+    let conn = app.db_write().await?;
     conn.interact(move |conn| {
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
@@ -61,7 +61,7 @@ pub async fn following(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = app.db_read_prefer_primary_async().await?;
+    let conn = app.db_read_prefer_primary().await?;
     conn.interact(move |conn| {
         use diesel::dsl::exists;
 

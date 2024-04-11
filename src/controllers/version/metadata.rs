@@ -27,7 +27,7 @@ pub async fn dependencies(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
         let deps = version.dependencies(conn)?;
@@ -64,7 +64,7 @@ pub async fn show(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_read_async().await?;
+    let conn = state.db_read().await?;
     conn.interact(move |conn| {
         let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
         let published_by = version.published_by(conn);

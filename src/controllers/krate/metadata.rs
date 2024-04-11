@@ -27,7 +27,7 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let include = req
             .query()
@@ -227,7 +227,7 @@ pub async fn reverse_dependencies(
     Path(name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = app.db_read_async().await?;
+    let conn = app.db_read().await?;
     conn.interact(move |conn| {
         let pagination_options = PaginationOptions::builder().gather(&req)?;
 
