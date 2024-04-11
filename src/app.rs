@@ -91,7 +91,7 @@ impl App {
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
-                .max_size(config.db.primary.async_pool_size)
+                .max_size(config.db.primary.pool_size)
                 .wait_timeout(Some(config.db.connection_timeout))
                 .post_create(primary_db_connection_config)
                 .build()
@@ -111,7 +111,7 @@ impl App {
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
-                .max_size(pool_config.async_pool_size)
+                .max_size(pool_config.pool_size)
                 .wait_timeout(Some(config.db.connection_timeout))
                 .post_create(replica_db_connection_config)
                 .build()

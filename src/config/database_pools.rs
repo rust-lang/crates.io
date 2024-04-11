@@ -2,8 +2,8 @@
 //!
 //! - `DATABASE_URL`: The URL of the postgres database to use.
 //! - `READ_ONLY_REPLICA_URL`: The URL of an optional postgres read-only replica database.
-//! - `DB_PRIMARY_POOL_SIZE`: The number of connections of the primary database.
-//! - `DB_REPLICA_POOL_SIZE`: The number of connections of the read-only / replica database.
+//! - `DB_PRIMARY_ASYNC_POOL_SIZE`: The number of connections of the primary database.
+//! - `DB_REPLICA_ASYNC_POOL_SIZE`: The number of connections of the read-only / replica database.
 //! - `DB_PRIMARY_MIN_IDLE`: The primary pool will maintain at least this number of connections.
 //! - `DB_REPLICA_MIN_IDLE`: The replica pool will maintain at least this number of connections.
 //! - `DB_OFFLINE`: If set to `leader` then use the read-only follower as if it was the leader.
@@ -47,8 +47,7 @@ pub struct DatabasePools {
 pub struct DbPoolConfig {
     pub url: SecretString,
     pub read_only_mode: bool,
-    pub pool_size: u32,
-    pub async_pool_size: usize,
+    pub pool_size: usize,
     pub min_idle: Option<u32>,
 }
 
@@ -59,7 +58,7 @@ impl DatabasePools {
 }
 
 impl DatabasePools {
-    const DEFAULT_POOL_SIZE: u32 = 3;
+    const DEFAULT_POOL_SIZE: usize = 3;
 
     /// Load settings for one or more database pools from the environment
     ///
@@ -71,14 +70,10 @@ impl DatabasePools {
         let follower_url = var("READ_ONLY_REPLICA_URL")?.map(Into::into);
         let read_only_mode = var("READ_ONLY_MODE")?.is_some();
 
-        let primary_pool_size =
-            var_parsed("DB_PRIMARY_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
         let primary_async_pool_size =
-            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE as usize);
-        let replica_pool_size =
-            var_parsed("DB_REPLICA_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
         let replica_async_pool_size =
-            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE as usize);
+            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
 
         let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
         let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
@@ -105,8 +100,7 @@ impl DatabasePools {
                         anyhow!("Must set `READ_ONLY_REPLICA_URL` when using `DB_OFFLINE=leader`.")
                     })?,
                     read_only_mode: true,
-                    pool_size: primary_pool_size,
-                    async_pool_size: primary_async_pool_size,
+                    pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: None,
@@ -121,8 +115,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
-                    pool_size: primary_pool_size,
-                    async_pool_size: primary_async_pool_size,
+                    pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: None,
@@ -136,8 +129,7 @@ impl DatabasePools {
                 primary: DbPoolConfig {
                     url: leader_url,
                     read_only_mode,
-                    pool_size: primary_pool_size,
-                    async_pool_size: primary_async_pool_size,
+                    pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
@@ -146,8 +138,7 @@ impl DatabasePools {
                     // same leader database to both environment variables and this ensures the
                     // connection is opened read-only even when attached to a writeable database.
                     read_only_mode: true,
-                    pool_size: replica_pool_size,
-                    async_pool_size: replica_async_pool_size,
+                    pool_size: replica_async_pool_size,
                     min_idle: replica_min_idle,
                 }),
                 tcp_timeout_ms,

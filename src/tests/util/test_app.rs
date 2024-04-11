@@ -380,7 +380,6 @@ impl TestAppBuilder {
             url: primary.url.clone(),
             read_only_mode: true,
             pool_size: primary.pool_size,
-            async_pool_size: primary.async_pool_size,
             min_idle: primary.min_idle,
         });
 
@@ -399,7 +398,6 @@ fn simple_config() -> config::Server {
             url: String::from("invalid default url").into(),
             read_only_mode: false,
             pool_size: 3,
-            async_pool_size: 3,
             min_idle: None,
         },
         replica: None,
