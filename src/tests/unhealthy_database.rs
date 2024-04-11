@@ -1,20 +1,30 @@
 use crate::util::{RequestHelper, TestApp};
 use deadpool_diesel::postgres::Pool;
-use deadpool_diesel::Timeouts;
 use http::StatusCode;
-use std::time::Duration;
+use std::time::{Duration, Instant};
+use tracing::info;
 
 const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
 
-fn default_timeouts() -> Timeouts {
-    Timeouts::wait_millis(DB_HEALTHY_TIMEOUT.as_millis() as u64)
-}
+async fn wait_until_healthy(pool: &Pool) {
+    info!("Waiting for the database to become healthy…");
 
-fn wait_until_healthy(pool: &Pool, app: &TestApp) {
-    let _ = app
-        .runtime()
-        .block_on(pool.timeout_get(&default_timeouts()))
-        .expect("the database did not return healthy");
+    let start_time = Instant::now();
+    loop {
+        let result = pool.get().await;
+        if result.is_ok() {
+            info!("Database is healthy now");
+            return;
+        }
+
+        if start_time.elapsed() < DB_HEALTHY_TIMEOUT {
+            info!("Database is not healthy yet, retrying…");
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        } else {
+            info!("Database did not become healthy within the timeout");
+            let _ = result.expect("the database did not return healthy");
+        }
+    }
 }
 
 #[test]
@@ -30,7 +40,8 @@ fn http_error_with_unhealthy_database() {
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    wait_until_healthy(&app.as_inner().deadpool_primary, &app);
+    app.runtime()
+        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
 
     let response = anon.get::<()>("/api/v1/summary");
     assert_eq!(response.status(), StatusCode::OK);
@@ -53,7 +64,8 @@ fn fallback_to_replica_returns_user_info() {
 
     // restore primary database connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    wait_until_healthy(&app.as_inner().deadpool_primary, &app);
+    app.runtime()
+        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
 }
 
 #[test]
@@ -79,14 +91,15 @@ fn restored_replica_returns_user_info() {
         .deadpool_replica
         .as_ref()
         .expect("no replica database configured");
-    wait_until_healthy(replica, &app);
+    app.runtime().block_on(wait_until_healthy(replica));
 
     let response = owner.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::OK);
 
     // restore connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    wait_until_healthy(&app.as_inner().deadpool_primary, &app);
+    app.runtime()
+        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
 }
 
 #[test]
@@ -107,7 +120,8 @@ fn restored_primary_returns_user_info() {
 
     // Once the replica database is restored, it should serve as a fallback again
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    wait_until_healthy(&app.as_inner().deadpool_primary, &app);
+    app.runtime()
+        .block_on(wait_until_healthy(&app.as_inner().deadpool_primary));
 
     let response = owner.get::<()>(URL);
     assert_eq!(response.status(), StatusCode::OK);
