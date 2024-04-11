@@ -54,7 +54,6 @@ pub fn init_for_test() {
     let _ = tracing_subscriber::fmt()
         .compact()
         .with_env_filter(env_filter)
-        .without_time()
         .with_test_writer()
         .try_init();
 }
