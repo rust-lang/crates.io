@@ -64,7 +64,7 @@ pub async fn balance_capacity(app_state: AppState, request: Request, next: Next)
 
     // The _drop_on_exit ensures the counter is decremented for all exit paths (including panics)
     let (_drop_on_exit2, count) = RequestCounter::add_one(&state.in_flight_non_dl_requests);
-    let load = 100 * count / (db_capacity as usize);
+    let load = 100 * count / db_capacity;
 
     // Begin logging non-download request count so early stages of non-download load increase can be located
     if load >= config.log_at_percentage {
