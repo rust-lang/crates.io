@@ -51,17 +51,7 @@ impl Display for Metadata<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut line = LogLine::new(f);
 
-        // The download endpoint is our most requested endpoint by 1-2 orders of
-        // magnitude. Since we pay per logged GB we try to reduce the amount of
-        // bytes per log line for this endpoint.
-
-        let is_download_endpoint = self.request.uri.path().ends_with("/download");
-        let is_download_redirect = is_download_endpoint && self.status.is_redirection();
-
-        let method = &self.request.method;
-        if !is_download_redirect || method != Method::GET {
-            line.add_field("method", method)?;
-        }
+        line.add_field("method", &self.request.method)?;
 
         if let Some(original_path) = &self.request.original_path {
             line.add_quoted_field("path", &original_path.deref().0)?;
@@ -69,23 +59,19 @@ impl Display for Metadata<'_> {
             line.add_quoted_field("path", &self.request.uri)?;
         }
 
-        if !is_download_redirect {
-            match &self.request.request_id {
-                Some(header) => line.add_field("request_id", header.as_str())?,
-                None => line.add_field("request_id", "")?,
-            };
-        }
+        match &self.request.request_id {
+            Some(header) => line.add_field("request_id", header.as_str())?,
+            None => line.add_field("request_id", "")?,
+        };
 
         line.add_quoted_field("ip", **self.request.real_ip)?;
 
         let response_time_in_ms = self.duration.as_millis();
-        if !is_download_redirect || response_time_in_ms > 0 {
+        if response_time_in_ms > 0 {
             line.add_field("service", format!("{response_time_in_ms}ms"))?;
         }
 
-        if !is_download_redirect {
-            line.add_field("status", self.status.as_str())?;
-        }
+        line.add_field("status", self.status.as_str())?;
 
         let user_agent = self.request.user_agent.as_ref();
         let user_agent = user_agent.map(|ua| ua.as_str()).unwrap_or_default();
