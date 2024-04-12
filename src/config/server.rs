@@ -7,7 +7,6 @@ use crate::Env;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
-use crate::config::balance_capacity::BalanceCapacityConfig;
 use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::CdnLogQueueConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
@@ -63,7 +62,6 @@ pub struct Server {
     pub version_id_cache_size: u64,
     pub version_id_cache_ttl: Duration,
     pub cdn_user_agent: String,
-    pub balance_capacity: BalanceCapacityConfig,
 
     /// Instructs the `cargo_compat` middleware whether to adjust response
     /// status codes to `200 OK` for all endpoints that are relevant for cargo.
@@ -212,7 +210,6 @@ impl Server {
             ),
             cdn_user_agent: var("WEB_CDN_USER_AGENT")?
                 .unwrap_or_else(|| "Amazon CloudFront".into()),
-            balance_capacity: BalanceCapacityConfig::from_environment()?,
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,

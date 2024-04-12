@@ -3,8 +3,7 @@ use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
 use anyhow::Context;
 use crates_io::config::{
-    self, BalanceCapacityConfig, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools,
-    DbPoolConfig,
+    self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
 use crates_io::middleware::cargo_compat::StatusCodeConfig;
 use crates_io::models::token::{CrateScope, EndpointScope};
@@ -408,14 +407,6 @@ fn simple_config() -> config::Server {
         enforce_tls: false,
     };
 
-    let balance_capacity = BalanceCapacityConfig {
-        report_only: false,
-        log_total_at_count: 50,
-        log_at_percentage: 50,
-        throttle_at_percentage: 70,
-        dl_only_at_percentage: 80,
-    };
-
     let mut storage = StorageConfig::in_memory();
     storage.cdn_prefix = Some("static.crates.io".to_string());
 
@@ -453,7 +444,6 @@ fn simple_config() -> config::Server {
         version_id_cache_size: 10000,
         version_id_cache_ttl: Duration::from_secs(5 * 60),
         cdn_user_agent: "Amazon CloudFront".to_string(),
-        balance_capacity,
 
         // The middleware has its own unit tests to verify its functionality.
         // Here, we can test what would happen if we toggled the status code

@@ -1,5 +1,4 @@
 pub mod app;
-mod balance_capacity;
 mod block_traffic;
 pub mod cargo_compat;
 mod common_headers;
@@ -31,13 +30,6 @@ use crate::Env;
 pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
     let config = &state.config;
     let env = config.env();
-
-    let capacity = config.db.primary.pool_size;
-    if capacity >= 10 {
-        info!(?capacity, "Enabling BalanceCapacity middleware");
-    } else {
-        info!("BalanceCapacity middleware not enabled. DB_PRIMARY_POOL_SIZE is too low.");
-    }
 
     // The middleware stacks here have been split for compile performance
     // reasons. The type signatures of the `ServiceBuilder` were approaching
@@ -86,17 +78,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         .layer(conditional_layer(config.serve_html, || {
             from_fn_with_state(state.clone(), ember_html::serve_html)
         }))
-        .layer(AddExtensionLayer::new(state.clone()))
-        // This is currently the final middleware to run. If a middleware layer requires a database
-        // connection, it should be run after this middleware so that the potential pool usage can be
-        // tracked here.
-        //
-        // In production we currently have 2 equally sized pools (primary and a read-only replica).
-        // Because such a large portion of production traffic is for download requests (which update
-        // download counts), we consider only the primary pool here.
-        .layer(conditional_layer(capacity >= 10, || {
-            from_fn_with_state(state, balance_capacity::balance_capacity)
-        }));
+        .layer(AddExtensionLayer::new(state.clone()));
 
     router
         .layer(middlewares_2)

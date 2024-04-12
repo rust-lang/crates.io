@@ -3,7 +3,6 @@
 use crate::config;
 use crate::db::{connection_url, ConnectionConfig};
 use std::ops::Deref;
-use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
 use crate::email::Emails;
@@ -47,9 +46,6 @@ pub struct App {
 
     /// Metrics related to this specific instance of the service
     pub instance_metrics: InstanceMetrics,
-
-    /// In-flight request counters for the `balance_capacity` middleware.
-    pub balance_capacity: BalanceCapacityState,
 
     /// Rate limit select actions.
     pub rate_limiter: RateLimiter,
@@ -131,7 +127,6 @@ impl App {
             storage: Arc::new(Storage::from_config(&config.storage)),
             service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
             instance_metrics,
-            balance_capacity: Default::default(),
             rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
             config: Arc::new(config),
         }
@@ -208,12 +203,6 @@ impl App {
             Err(error) => Err(error),
         }
     }
-}
-
-#[derive(Debug, Default)]
-pub struct BalanceCapacityState {
-    pub in_flight_total: AtomicUsize,
-    pub in_flight_non_dl_requests: AtomicUsize,
 }
 
 #[derive(Clone, FromRequestParts)]
