@@ -113,8 +113,8 @@ devDependencies:
     specifier: 2.7.2
     version: 2.7.2(webpack@5.91.0)
   ember-cli:
-    specifier: 5.7.0
-    version: 5.7.0
+    specifier: 5.8.0
+    version: 5.8.0
   ember-cli-app-version:
     specifier: 6.0.1
     version: 6.0.1(ember-source@5.8.0)
@@ -129,7 +129,7 @@ devDependencies:
     version: 3.0.0(@embroider/compat@3.4.7)(@embroider/core@3.4.7)
   ember-cli-dependency-checker:
     specifier: 3.3.2
-    version: 3.3.2(ember-cli@5.7.0)
+    version: 3.3.2(ember-cli@5.8.0)
   ember-cli-dependency-lint:
     specifier: 2.0.1
     version: 2.0.1
@@ -375,16 +375,6 @@ packages:
       eslint: 8.57.0
       eslint-visitor-keys: 2.1.0
       semver: 6.3.1
-    dev: true
-
-  /@babel/generator@7.23.6:
-    resolution: {integrity: sha512-qrSfCYxYQB5owCmGLbl8XRpX1ytXlpueOb0N0UmQwA073KZxejgQTzAmJezxvpwQD9uGtK2shHdi55QT+MbjIw==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/types': 7.24.0
-      '@jridgewell/gen-mapping': 0.3.5
-      '@jridgewell/trace-mapping': 0.3.25
-      jsesc: 2.5.2
     dev: true
 
   /@babel/generator@7.24.4:
@@ -1789,24 +1779,6 @@ packages:
       '@babel/parser': 7.24.4
       '@babel/types': 7.24.0
 
-  /@babel/traverse@7.23.9:
-    resolution: {integrity: sha512-I/4UJ9vs90OkBtY6iiiTORVMyIhJ4kAVmsKo9KFc8UOxMeUfi2hvtIBsET5u9GizXE6/GFSuKCTNfgCswuEjRg==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/code-frame': 7.24.2
-      '@babel/generator': 7.23.6
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-function-name': 7.23.0
-      '@babel/helper-hoist-variables': 7.22.5
-      '@babel/helper-split-export-declaration': 7.22.6
-      '@babel/parser': 7.24.4
-      '@babel/types': 7.24.0
-      debug: 4.3.4(supports-color@8.1.1)
-      globals: 11.12.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@babel/traverse@7.24.1(supports-color@8.1.1):
     resolution: {integrity: sha512-xuU6o9m68KeqZbQuDt2TcKSxUw/mrsvavlEqQ1leZ/B+C9tk6E4sRWy97WaXgvq5E+nU3cXMxv3WKOCanVMCmQ==}
     engines: {node: '>=6.9.0'}
@@ -1823,15 +1795,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-
-  /@babel/types@7.23.0:
-    resolution: {integrity: sha512-0oIyUfKoI3mSqMvsxBdclDwxXKXAUA8v/apZbc+iSyARYou1o8ZGDxbUYyLFoW2arqS2jDGqJuZvv1d/io1axg==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-string-parser': 7.24.1
-      '@babel/helper-validator-identifier': 7.22.20
-      to-fast-properties: 2.0.0
-    dev: true
 
   /@babel/types@7.24.0:
     resolution: {integrity: sha512-+j7a5c253RfKh8iABBhywc8NSfP5LURe7Uh4qpsh6jc+aLJguvmIUBdjSdEMQv2bENrCR5MfRdjGo7vzS/ob7w==}
@@ -7975,14 +7938,14 @@ packages:
       - supports-color
     dev: true
 
-  /ember-cli-dependency-checker@3.3.2(ember-cli@5.7.0):
+  /ember-cli-dependency-checker@3.3.2(ember-cli@5.8.0):
     resolution: {integrity: sha512-PwkrW5oYsdPWwt+0Tojufmv/hxVETTjkrEdK7ANQB2VSnqpA5UcYubwpQM9ONuR2J8wyNDMwEHlqIrk/FYtBsQ==}
     engines: {node: '>= 6'}
     peerDependencies:
       ember-cli: ^3.2.0 || >=4.0.0
     dependencies:
       chalk: 2.4.2
-      ember-cli: 5.7.0
+      ember-cli: 5.8.0
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.8
@@ -8294,8 +8257,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ember-cli@5.7.0:
-    resolution: {integrity: sha512-MKHVcRpDk1ENUCCRGGqZ8yfkCsszvSUbwO09h14vqcfaqcJkOWI+p0oynmdZQMM8OkZp484oLe3+CZCsXO9LfA==}
+  /ember-cli@5.8.0:
+    resolution: {integrity: sha512-9hRDyG9WfS6NbbFGVU+eaoHxn4paZFaBmKc/eOrUXyj3BYVtTnZgtEPYPxP5rQkPvVn2BM9NXvdbVN3dnzmbLA==}
     engines: {node: '>= 18'}
     hasBin: true
     dependencies:
@@ -8321,6 +8284,7 @@ packages:
       compression: 1.7.4
       configstore: 5.0.1
       console-ui: 3.1.2
+      content-tag: 1.2.2
       core-object: 3.1.5
       dag-map: 2.0.2
       diff: 5.2.0
@@ -8329,7 +8293,6 @@ packages:
       ember-cli-normalize-entity-name: 1.0.0
       ember-cli-preprocess-registry: 5.0.1
       ember-cli-string-utils: 1.1.0
-      ember-template-tag: 2.3.16
       ensure-posix-path: 1.1.1
       execa: 5.1.1
       exit: 0.1.2
@@ -8991,17 +8954,6 @@ packages:
       slash: 3.0.0
       tmp: 0.2.3
       workerpool: 6.5.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /ember-template-tag@2.3.16:
-    resolution: {integrity: sha512-G6bIBcT4VnLlBUogkXxEXIzVvdYXhmLe+Io2yJzRYYZeHrdxKa6u2ZHXF4qII298grgqnqGo6tNqqgtD4AAS5g==}
-    dependencies:
-      '@babel/generator': 7.23.6
-      '@babel/traverse': 7.23.9
-      '@babel/types': 7.23.0
-      '@glimmer/syntax': 0.88.1
     transitivePeerDependencies:
       - supports-color
     dev: true
