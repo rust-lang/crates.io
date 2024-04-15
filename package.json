@@ -74,7 +74,7 @@
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "6.1.1",
     "ember-auto-import": "2.7.2",
-    "ember-cli": "5.7.0",
+    "ember-cli": "5.8.0",
     "ember-cli-app-version": "6.0.1",
     "ember-cli-babel": "8.2.0",
     "ember-cli-bundle-analyzer": "1.0.0",
