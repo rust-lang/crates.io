@@ -23,7 +23,7 @@ fn me() {
 
     let response = anon.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     let response = user.get::<()>("/api/v1/me");
     assert_eq!(response.status(), StatusCode::OK);

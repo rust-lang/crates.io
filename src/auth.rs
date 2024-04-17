@@ -68,19 +68,28 @@ impl AuthCheck {
                 let error_message =
                     "API Token authentication was explicitly disallowed for this API";
                 request.request_log().add("cause", error_message);
-                return Err(forbidden());
+
+                return Err(forbidden(
+                    "this action can only be performed on the crates.io website",
+                ));
             }
 
             if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
                 let error_message = "Endpoint scope mismatch";
                 request.request_log().add("cause", error_message);
-                return Err(forbidden());
+
+                return Err(forbidden(
+                    "this token does not have the required permissions to perform this action",
+                ));
             }
 
             if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
                 let error_message = "Crate scope mismatch";
                 request.request_log().add("cause", error_message);
-                return Err(forbidden());
+
+                return Err(forbidden(
+                    "this token does not have the required permissions to perform this action",
+                ));
             }
         }
 
@@ -207,7 +216,7 @@ fn authenticate_via_token<T: RequestPartsExt>(
             let cause = format!("invalid token caused by {e}");
             req.request_log().add("cause", cause);
 
-            forbidden()
+            forbidden("authentication failed")
         }
     })?;
 
@@ -244,7 +253,7 @@ fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResu
     let cause = "no cookie session or auth header found";
     req.request_log().add("cause", cause);
 
-    return Err(forbidden());
+    return Err(forbidden("this action requires authentication"));
 }
 
 fn ensure_not_locked(user: &User) -> AppResult<()> {

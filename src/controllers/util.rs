@@ -23,7 +23,8 @@ pub fn verify_origin<T: RequestPartsExt>(req: &T) -> AppResult<()> {
             format!("only same-origin requests can be authenticated. got {bad_origin:?}");
 
         req.request_log().add("cause", error_message);
-        return Err(forbidden());
+
+        return Err(forbidden("invalid origin header"));
     }
     Ok(())
 }

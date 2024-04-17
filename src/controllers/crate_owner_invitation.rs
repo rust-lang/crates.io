@@ -108,7 +108,8 @@ fn prepare_list(
                 let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
                 let owners = krate.owners(conn)?;
                 if Handle::current().block_on(user.rights(state, &owners))? != Rights::Full {
-                    return Err(forbidden());
+                    let detail = "only crate owners can query pending invitations for their crate";
+                    return Err(forbidden(detail));
                 }
 
                 // Cache the crate name to avoid querying it from the database again
@@ -118,7 +119,8 @@ fn prepare_list(
             }
             ListFilter::InviteeId(invitee_id) => {
                 if invitee_id != user.id {
-                    return Err(forbidden());
+                    let detail = "only the invitee can query their pending invitations";
+                    return Err(forbidden(detail));
                 }
                 Box::new(crate_owner_invitations::invited_user_id.eq(invitee_id))
             }

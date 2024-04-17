@@ -151,10 +151,7 @@ fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
 
 #[test]
@@ -173,10 +170,7 @@ fn owner_change_via_publish_token() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
 
 #[test]
@@ -194,10 +188,7 @@ fn owner_change_without_auth() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = anon.put::<()>(&url, body);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
 #[test]
