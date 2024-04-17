@@ -1,0 +1,1 @@
+drop function set_updated_at_ignore_downloads;
