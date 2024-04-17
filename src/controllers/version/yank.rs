@@ -10,6 +10,8 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::util::errors::{custom, version_not_found};
 use crate::worker::jobs;
+use crate::worker::jobs::UpdateDefaultVersion;
+use crates_io_worker::BackgroundJob;
 use tokio::runtime::Handle;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -102,6 +104,8 @@ async fn modify_yank(
         insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
         jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+        UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
 
         ok_true()
     })
