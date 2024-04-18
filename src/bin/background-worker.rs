@@ -104,15 +104,18 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    let runner = Runner::new(runtime.handle(), deadpool, environment.clone())
+    let runner = Runner::new(deadpool, environment.clone())
         .configure_default_queue(|queue| queue.num_workers(5))
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
-        .register_crates_io_job_types()
-        .start();
+        .register_crates_io_job_types();
 
-    info!("Runner booted, running jobs");
-    runtime.block_on(runner.wait_for_shutdown());
+    runtime.block_on(async {
+        let handle = runner.start();
+
+        info!("Runner booted, running jobs");
+        handle.wait_for_shutdown().await
+    });
 
     Ok(())
 }

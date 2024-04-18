@@ -6,7 +6,6 @@ use deadpool_diesel::Runtime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::runtime::Handle;
 use tokio::sync::Barrier;
 
 fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
@@ -214,7 +213,7 @@ fn runner<Context: Clone + Send + Sync + 'static>(
     let manager = Manager::new(database_url, Runtime::Tokio1);
     let deadpool = Pool::builder(manager).max_size(4).build().unwrap();
 
-    Runner::new(&Handle::current(), deadpool, context)
+    Runner::new(deadpool, context)
         .configure_default_queue(|queue| queue.num_workers(2))
         .shutdown_when_queue_empty()
 }
