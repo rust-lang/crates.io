@@ -50,8 +50,10 @@ impl Drop for TestAppInner {
 
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
-            let handle = runner.start();
-            self.runtime.block_on(handle.wait_for_shutdown());
+            self.runtime.block_on(async {
+                let handle = runner.start();
+                handle.wait_for_shutdown().await;
+            });
         }
 
         // Manually verify that all jobs have completed successfully
@@ -178,12 +180,13 @@ impl TestApp {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
 
-        let handle = runner.start();
-        self.runtime().block_on(handle.wait_for_shutdown());
+        self.runtime().block_on(async {
+            let handle = runner.start();
+            handle.wait_for_shutdown().await;
 
-        self.runtime()
-            .block_on(runner.check_for_failed_jobs())
-            .expect("Could not determine if jobs failed");
+            let result = runner.check_for_failed_jobs().await;
+            result.expect("Could not determine if jobs failed");
+        });
     }
 
     /// Obtain a reference to the inner `App` value
@@ -283,13 +286,9 @@ impl TestAppBuilder {
                 .build()
                 .unwrap();
 
-            let runner = Runner::new(
-                runtime.handle(),
-                app.primary_database.clone(),
-                Arc::new(environment),
-            )
-            .shutdown_when_queue_empty()
-            .register_crates_io_job_types();
+            let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
+                .shutdown_when_queue_empty()
+                .register_crates_io_job_types();
 
             Some(runner)
         } else {

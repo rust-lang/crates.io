@@ -8,7 +8,6 @@ use futures_util::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::runtime::Handle;
 use tokio::task::JoinHandle;
 use tracing::{info, info_span, warn, Instrument};
 
@@ -16,7 +15,6 @@ const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
-    rt_handle: Handle,
     connection_pool: Pool,
     queues: HashMap<String, Queue<Context>>,
     context: Context,
@@ -24,9 +22,8 @@ pub struct Runner<Context> {
 }
 
 impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
-    pub fn new(rt_handle: &Handle, connection_pool: Pool, context: Context) -> Self {
+    pub fn new(connection_pool: Pool, context: Context) -> Self {
         Self {
-            rt_handle: rt_handle.clone(),
             connection_pool,
             queues: HashMap::new(),
             context,
@@ -84,9 +81,7 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
                 };
 
                 let span = info_span!("worker", worker.name = %name);
-                let handle = self
-                    .rt_handle
-                    .spawn(async move { worker.run().instrument(span).await });
+                let handle = tokio::spawn(async move { worker.run().instrument(span).await });
 
                 handles.push(handle);
             }
