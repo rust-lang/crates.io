@@ -167,14 +167,14 @@ impl TestApp {
     }
 
     pub fn stored_files(&self) -> Vec<String> {
+        self.runtime().block_on(self.async_stored_files())
+    }
+
+    pub async fn async_stored_files(&self) -> Vec<String> {
         let store = self.as_inner().storage.as_inner();
 
-        let rt = self.runtime();
-
-        let list = rt.block_on(async {
-            let stream = store.list(None);
-            stream.try_collect::<Vec<_>>().await.unwrap()
-        });
+        let stream = store.list(None);
+        let list = stream.try_collect::<Vec<_>>().await.unwrap();
 
         list.into_iter()
             .map(|meta| meta.location.to_string())
