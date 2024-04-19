@@ -21,12 +21,12 @@ fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
     });
 }
 
-#[test]
-fn account_locked_indefinitely() {
+#[tokio::test(flavor = "multi_thread")]
+async fn account_locked_indefinitely() {
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, None);
 
-    let response = user.get::<()>(URL);
+    let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!("This account is indefinitely locked. Reason: {LOCK_REASON}");
@@ -36,15 +36,15 @@ fn account_locked_indefinitely() {
     );
 }
 
-#[test]
-fn account_locked_with_future_expiry() {
+#[tokio::test(flavor = "multi_thread")]
+async fn account_locked_with_future_expiry() {
     let until = Utc::now().naive_utc() + Duration::days(1);
 
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));
 
     let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
-    let response = user.get::<()>(URL);
+    let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!("This account is locked until {until}. Reason: {LOCK_REASON}");
@@ -54,12 +54,12 @@ fn account_locked_with_future_expiry() {
     );
 }
 
-#[test]
-fn expired_account_lock() {
+#[tokio::test(flavor = "multi_thread")]
+async fn expired_account_lock() {
     let until = Utc::now().naive_utc() - Duration::days(1);
 
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));
 
-    user.get::<serde_json::Value>(URL).good();
+    user.get::<serde_json::Value>(URL).await.good();
 }

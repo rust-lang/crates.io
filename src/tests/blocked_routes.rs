@@ -2,8 +2,8 @@ use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
 
-#[test]
-fn test_non_blocked_download_route() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_non_blocked_download_route() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.blocked_routes.clear();
@@ -16,12 +16,15 @@ fn test_non_blocked_download_route() {
             .expect_build(conn);
     });
 
-    let status = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").status();
+    let status = anon
+        .get::<()>("/api/v1/crates/foo/1.0.0/download")
+        .await
+        .status();
     assert_eq!(status, StatusCode::FOUND);
 }
 
-#[test]
-fn test_blocked_download_route() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_blocked_download_route() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.blocked_routes.clear();
@@ -37,6 +40,9 @@ fn test_blocked_download_route() {
             .expect_build(conn);
     });
 
-    let status = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").status();
+    let status = anon
+        .get::<()>("/api/v1/crates/foo/1.0.0/download")
+        .await
+        .status();
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
 }

@@ -7,21 +7,21 @@ pub struct UserShowPublicResponse {
     pub user: EncodablePublicUser,
 }
 
-#[test]
-fn show() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show() {
     let (app, anon, _) = TestApp::init().with_user();
     app.db_new_user("Bar");
 
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
 
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
     assert_eq!(json.user.login, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
 }
 
-#[test]
-fn show_latest_user_case_insensitively() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show_latest_user_case_insensitively() {
     let (app, anon) = TestApp::init().empty();
 
     app.db(|conn| {
@@ -50,7 +50,7 @@ fn show_latest_user_case_insensitively() {
         .create_or_update(None, &app.as_inner().emails, conn));
     });
 
-    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()

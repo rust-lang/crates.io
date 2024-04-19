@@ -8,8 +8,8 @@ use diesel::{PgConnection, QueryResult, RunQueryDsl};
 use insta::assert_debug_snapshot;
 use regex::Regex;
 
-#[test]
-fn test_sync_admins_job() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_sync_admins_job() {
     let mock_response = mock_permission(vec![
         mock_person("existing-admin", 1),
         mock_person("new-admin", 3),
@@ -34,7 +34,7 @@ fn test_sync_admins_job() {
     assert_eq!(admins, expected_admins);
 
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
-    app.run_pending_background_jobs();
+    app.run_pending_background_jobs().await;
 
     let admins = app.db(|conn| get_admins(conn).unwrap());
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
@@ -52,7 +52,7 @@ fn test_sync_admins_job() {
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
-    app.run_pending_background_jobs();
+    app.run_pending_background_jobs().await;
 
     let emails = app.as_inner().emails.mails_in_memory().unwrap();
     assert_eq!(emails.len(), 2);

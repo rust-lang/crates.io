@@ -5,12 +5,12 @@ use std::collections::HashSet;
 use ::insta::assert_json_snapshot;
 use http::{header, Request, StatusCode};
 
-#[test]
-fn user_agent_is_required() {
+#[tokio::test(flavor = "multi_thread")]
+async fn user_agent_is_required() {
     let (_app, anon) = TestApp::init().empty();
 
     let req = Request::get("/api/v1/crates").body("").unwrap();
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 
@@ -18,13 +18,13 @@ fn user_agent_is_required() {
         .header(header::USER_AGENT, "")
         .body("")
         .unwrap();
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 }
 
-#[test]
-fn user_agent_is_not_required_for_download() {
+#[tokio::test(flavor = "multi_thread")]
+async fn user_agent_is_not_required_for_download() {
     let (app, anon, user) = TestApp::init().with_user();
 
     app.db(|conn| {
@@ -33,12 +33,12 @@ fn user_agent_is_not_required_for_download() {
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
-#[test]
-fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
+#[tokio::test(flavor = "multi_thread")]
+async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.blocked_traffic = vec![("Never-Given".into(), vec!["1".into()])];
@@ -51,12 +51,12 @@ fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
-#[test]
-fn block_traffic_via_arbitrary_header_and_value() {
+#[tokio::test(flavor = "multi_thread")]
+async fn block_traffic_via_arbitrary_header_and_value() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.blocked_traffic = vec![("User-Agent".into(), vec!["1".into(), "2".into()])];
@@ -74,7 +74,7 @@ fn block_traffic_via_arbitrary_header_and_value() {
         .body("")
         .unwrap();
 
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 
@@ -88,19 +88,19 @@ fn block_traffic_via_arbitrary_header_and_value() {
         .body("")
         .unwrap();
 
-    let resp = anon.run::<()>(req);
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
-#[test]
-fn block_traffic_via_ip() {
+#[tokio::test(flavor = "multi_thread")]
+async fn block_traffic_via_ip() {
     let (_app, anon) = TestApp::init()
         .with_config(|config| {
             config.blocked_ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
         })
         .empty();
 
-    let resp = anon.get::<()>("/api/v1/crates");
+    let resp = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 }

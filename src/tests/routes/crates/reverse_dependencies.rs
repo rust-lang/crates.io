@@ -3,8 +3,8 @@ use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
-#[test]
-fn reverse_dependencies() {
+#[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -20,7 +20,9 @@ fn reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -28,7 +30,9 @@ fn reverse_dependencies() {
     });
 
     // c1 has no dependent crates.
-    let response = anon.get::<()>("/api/v1/crates/c2/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c2/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -36,8 +40,8 @@ fn reverse_dependencies() {
     });
 }
 
-#[test]
-fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
+#[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -51,7 +55,9 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -59,8 +65,8 @@ fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     });
 }
 
-#[test]
-fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
+#[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -74,7 +80,9 @@ fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -82,8 +90,8 @@ fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     });
 }
 
-#[test]
-fn prerelease_versions_not_included_in_reverse_dependencies() {
+#[tokio::test(flavor = "multi_thread")]
+async fn prerelease_versions_not_included_in_reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -100,7 +108,9 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -108,8 +118,8 @@ fn prerelease_versions_not_included_in_reverse_dependencies() {
     });
 }
 
-#[test]
-fn yanked_versions_not_included_in_reverse_dependencies() {
+#[tokio::test(flavor = "multi_thread")]
+async fn yanked_versions_not_included_in_reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -123,7 +133,9 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -140,7 +152,9 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
             .unwrap();
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -148,8 +162,8 @@ fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 }
 
-#[test]
-fn reverse_dependencies_includes_published_by_user_when_present() {
+#[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies_includes_published_by_user_when_present() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -178,7 +192,9 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -186,8 +202,8 @@ fn reverse_dependencies_includes_published_by_user_when_present() {
     });
 }
 
-#[test]
-fn reverse_dependencies_query_supports_u64_version_number_parts() {
+#[tokio::test(flavor = "multi_thread")]
+async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -202,7 +218,9 @@ fn reverse_dependencies_query_supports_u64_version_number_parts() {
             .expect_build(conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/c1/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -210,11 +228,13 @@ fn reverse_dependencies_query_supports_u64_version_number_parts() {
     });
 }
 
-#[test]
-fn test_unknown_crate() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unknown_crate() {
     let (_, anon) = TestApp::init().empty();
 
-    let response = anon.get::<()>("/api/v1/crates/unknown/reverse_dependencies");
+    let response = anon
+        .get::<()>("/api/v1/crates/unknown/reverse_dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }

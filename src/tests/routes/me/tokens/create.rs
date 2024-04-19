@@ -9,17 +9,19 @@ use serde_json::Value;
 
 static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 
-#[test]
-fn create_token_logged_out() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_logged_out() {
     let (_, anon) = TestApp::init().empty();
-    anon.put("/api/v1/me/tokens", NEW_BAR).assert_forbidden();
+    anon.put("/api/v1/me/tokens", NEW_BAR)
+        .await
+        .assert_forbidden();
 }
 
-#[test]
-fn create_token_invalid_request() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_invalid_request() {
     let (_, _, user) = TestApp::init().with_user();
     let invalid: &[u8] = br#"{ "name": "" }"#;
-    let response = user.put::<()>("/api/v1/me/tokens", invalid);
+    let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -27,11 +29,11 @@ fn create_token_invalid_request() {
     );
 }
 
-#[test]
-fn create_token_no_name() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_no_name() {
     let (_, _, user) = TestApp::init().with_user();
     let empty_name: &[u8] = br#"{ "api_token": { "name": "" } }"#;
-    let response = user.put::<()>("/api/v1/me/tokens", empty_name);
+    let response = user.put::<()>("/api/v1/me/tokens", empty_name).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -39,8 +41,8 @@ fn create_token_no_name() {
     );
 }
 
-#[test]
-fn create_token_exceeded_tokens_per_user() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_exceeded_tokens_per_user() {
     let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
     app.db(|conn| {
@@ -48,7 +50,7 @@ fn create_token_exceeded_tokens_per_user() {
             assert_ok!(ApiToken::insert(conn, id, &format!("token {i}")));
         }
     });
-    let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR);
+    let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -56,11 +58,11 @@ fn create_token_exceeded_tokens_per_user() {
     );
 }
 
-#[test]
-fn create_token_success() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_success() {
     let (app, _, user) = TestApp::init().with_user();
 
-    let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR);
+    let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
@@ -82,34 +84,36 @@ fn create_token_success() {
     assert_eq!(tokens[0].endpoint_scopes, None);
 }
 
-#[test]
-fn create_token_multiple_have_different_values() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_multiple_have_different_values() {
     let (_, _, user) = TestApp::init().with_user();
-    let first: Value = user.put("/api/v1/me/tokens", NEW_BAR).good();
-    let second: Value = user.put("/api/v1/me/tokens", NEW_BAR).good();
+    let first: Value = user.put("/api/v1/me/tokens", NEW_BAR).await.good();
+    let second: Value = user.put("/api/v1/me/tokens", NEW_BAR).await.good();
 
     assert_eq!(first["api_token"]["name"], second["api_token"]["name"]);
     assert_ne!(first["api_token"]["token"], second["api_token"]["token"]);
 }
 
-#[test]
-fn create_token_multiple_users_have_different_values() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_multiple_users_have_different_values() {
     let (app, _, user1) = TestApp::init().with_user();
-    let first: Value = user1.put("/api/v1/me/tokens", NEW_BAR).good();
+    let first: Value = user1.put("/api/v1/me/tokens", NEW_BAR).await.good();
 
     let user2 = app.db_new_user("bar");
-    let second: Value = user2.put("/api/v1/me/tokens", NEW_BAR).good();
+    let second: Value = user2.put("/api/v1/me/tokens", NEW_BAR).await.good();
 
     assert_ne!(first["api_token"]["token"], second["api_token"]["token"]);
 }
 
-#[test]
-fn cannot_create_token_with_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn cannot_create_token_with_token() {
     let (_, _, _, token) = TestApp::init().with_token();
-    let response = token.put::<()>(
-        "/api/v1/me/tokens",
-        br#"{ "api_token": { "name": "baz" } }"# as &[u8],
-    );
+    let response = token
+        .put::<()>(
+            "/api/v1/me/tokens",
+            br#"{ "api_token": { "name": "baz" } }"# as &[u8],
+        )
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -117,8 +121,8 @@ fn cannot_create_token_with_token() {
     );
 }
 
-#[test]
-fn create_token_with_scopes() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_scopes() {
     let (app, _, user) = TestApp::init().with_user();
 
     let json = json!({
@@ -129,7 +133,9 @@ fn create_token_with_scopes() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
@@ -160,8 +166,8 @@ fn create_token_with_scopes() {
     );
 }
 
-#[test]
-fn create_token_with_null_scopes() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_null_scopes() {
     let (app, _, user) = TestApp::init().with_user();
 
     let json = json!({
@@ -172,7 +178,9 @@ fn create_token_with_null_scopes() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
@@ -194,8 +202,8 @@ fn create_token_with_null_scopes() {
     assert_eq!(tokens[0].endpoint_scopes, None);
 }
 
-#[test]
-fn create_token_with_empty_crate_scope() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_empty_crate_scope() {
     let (_, _, user) = TestApp::init().with_user();
 
     let json = json!({
@@ -206,7 +214,9 @@ fn create_token_with_empty_crate_scope() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -214,8 +224,8 @@ fn create_token_with_empty_crate_scope() {
     );
 }
 
-#[test]
-fn create_token_with_invalid_endpoint_scope() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_invalid_endpoint_scope() {
     let (_, _, user) = TestApp::init().with_user();
 
     let json = json!({
@@ -226,7 +236,9 @@ fn create_token_with_invalid_endpoint_scope() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -234,8 +246,8 @@ fn create_token_with_invalid_endpoint_scope() {
     );
 }
 
-#[test]
-fn create_token_with_expiry_date() {
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_expiry_date() {
     let (_app, _, user) = TestApp::init().with_user();
 
     let json = json!({
@@ -247,7 +259,9 @@ fn create_token_with_expiry_date() {
         }
     });
 
-    let response = user.put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap());
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),

@@ -1,7 +1,6 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
 use crate::util::chaosproxy::ChaosProxy;
 use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
-use anyhow::Context;
 use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
@@ -21,11 +20,10 @@ use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
+use tokio::task::block_in_place;
 
 struct TestAppInner {
-    pub runtime: Runtime,
-
     app: Arc<App>,
     router: axum::Router,
     index: Option<UpstreamIndex>,
@@ -50,9 +48,11 @@ impl Drop for TestAppInner {
 
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
-            self.runtime.block_on(async {
-                let handle = runner.start();
-                handle.wait_for_shutdown().await;
+            block_in_place(move || {
+                Handle::current().block_on(async {
+                    let handle = runner.start();
+                    handle.wait_for_shutdown().await;
+                })
             });
         }
 
@@ -73,7 +73,6 @@ impl Drop for TestAppInner {
         // We manually close the connection pools here to prevent their `Drop`
         // implementation from failing because no tokio runtime is running.
         {
-            let _rt_guard = self.runtime.enter();
             self.app.primary_database.close();
             if let Some(pool) = &self.app.replica_database {
                 pool.close();
@@ -144,10 +143,6 @@ impl TestApp {
         }
     }
 
-    pub fn runtime(&self) -> &Runtime {
-        &self.0.runtime
-    }
-
     /// Obtain a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
@@ -160,33 +155,26 @@ impl TestApp {
             .unwrap()
     }
 
-    pub fn stored_files(&self) -> Vec<String> {
+    pub async fn stored_files(&self) -> Vec<String> {
         let store = self.as_inner().storage.as_inner();
 
-        let rt = self.runtime();
-
-        let list = rt.block_on(async {
-            let stream = store.list(None);
-            stream.try_collect::<Vec<_>>().await.unwrap()
-        });
+        let stream = store.list(None);
+        let list = stream.try_collect::<Vec<_>>().await.unwrap();
 
         list.into_iter()
             .map(|meta| meta.location.to_string())
             .collect()
     }
 
-    #[track_caller]
-    pub fn run_pending_background_jobs(&self) {
+    pub async fn run_pending_background_jobs(&self) {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
 
-        self.runtime().block_on(async {
-            let handle = runner.start();
-            handle.wait_for_shutdown().await;
+        let handle = runner.start();
+        handle.wait_for_shutdown().await;
 
-            let result = runner.check_for_failed_jobs().await;
-            result.expect("Could not determine if jobs failed");
-        });
+        let result = runner.check_for_failed_jobs().await;
+        result.expect("Could not determine if jobs failed");
     }
 
     /// Obtain a reference to the inner `App` value
@@ -225,37 +213,38 @@ pub struct TestAppBuilder {
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
-        let runtime = Runtime::new()
-            .context("Failed to initialize tokio runtime")
-            .unwrap();
-
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let test_database = TestDatabase::new();
+        let db_url = test_database.url();
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
-                let (primary_proxy, url) = runtime
-                    .block_on(ChaosProxy::proxy_database_url(test_database.url()))
-                    .unwrap();
+                let (primary_proxy, url) = block_in_place(move || {
+                    Handle::current()
+                        .block_on(ChaosProxy::proxy_database_url(db_url))
+                        .unwrap()
+                });
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
             } else {
-                self.config.db.primary.url = test_database.url().to_string().into();
+                self.config.db.primary.url = db_url.to_string().into();
                 None
             };
 
             let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
                 if self.use_chaos_proxy {
-                    let (primary_proxy, url) = runtime
-                        .block_on(ChaosProxy::proxy_database_url(test_database.url()))
-                        .unwrap();
+                    let (primary_proxy, url) = block_in_place(move || {
+                        Handle::current()
+                            .block_on(ChaosProxy::proxy_database_url(db_url))
+                            .unwrap()
+                    });
 
                     replica.url = url.into();
                     Some(primary_proxy)
                 } else {
-                    replica.url = test_database.url().to_string().into();
+                    replica.url = db_url.to_string().into();
                     None
                 }
             });
@@ -296,7 +285,6 @@ impl TestAppBuilder {
         };
 
         let test_app_inner = TestAppInner {
-            runtime,
             app,
             test_database,
             router,

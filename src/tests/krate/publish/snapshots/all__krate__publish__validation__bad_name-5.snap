@@ -1,6 +1,6 @@
 ---
 source: src/tests/krate/publish/validation.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "errors": [

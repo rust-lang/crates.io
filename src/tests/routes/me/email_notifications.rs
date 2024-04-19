@@ -12,8 +12,10 @@ struct EmailNotificationsUpdate {
 }
 
 impl crate::util::MockCookieUser {
-    fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) {
-        let response = self.put::<()>("/api/v1/me/email_notifications", json!(updates).to_string());
+    async fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) {
+        let response = self
+            .put::<()>("/api/v1/me/email_notifications", json!(updates).to_string())
+            .await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
     }
@@ -21,8 +23,8 @@ impl crate::util::MockCookieUser {
 
 /// A user should be able to update the email notifications for crates they own. Only the crates that
 /// were sent in the request should be updated to the corresponding `email_notifications` value.
-#[test]
-fn test_update_email_notifications() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_update_email_notifications() {
     let (app, _, user) = TestApp::init().with_user();
 
     let my_crates = app.db(|conn| {
@@ -40,8 +42,9 @@ fn test_update_email_notifications() {
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: a_id,
         email_notifications: false,
-    }]);
-    let json = user.show_me();
+    }])
+    .await;
+    let json = user.show_me().await;
 
     assert!(
         !json
@@ -64,8 +67,9 @@ fn test_update_email_notifications() {
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: b_id,
         email_notifications: false,
-    }]);
-    let json = user.show_me();
+    }])
+    .await;
+    let json = user.show_me().await;
 
     assert!(
         !json
@@ -95,8 +99,9 @@ fn test_update_email_notifications() {
             id: b_id,
             email_notifications: true,
         },
-    ]);
-    let json = user.show_me();
+    ])
+    .await;
+    let json = user.show_me().await;
 
     json.owned_crates.iter().for_each(|c| {
         assert!(c.email_notifications);
@@ -105,8 +110,8 @@ fn test_update_email_notifications() {
 
 /// A user should not be able to update the `email_notifications` value for a crate that is not
 /// owned by them.
-#[test]
-fn test_update_email_notifications_not_owned() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user();
 
     let not_my_crate = app.db(|conn| {
@@ -119,7 +124,8 @@ fn test_update_email_notifications_not_owned() {
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: not_my_crate.id,
         email_notifications: false,
-    }]);
+    }])
+    .await;
 
     let email_notifications: bool = app
         .db(|conn| {

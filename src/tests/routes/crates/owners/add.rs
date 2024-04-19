@@ -8,8 +8,8 @@ use insta::assert_snapshot;
 // This is testing Cargo functionality! ! !
 // specifically functions modify_owners and add_owners
 // which call the `PUT /crates/:crate_id/owners` route
-#[test]
-fn test_cargo_invite_owners() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_cargo_invite_owners() {
     let (app, _, owner) = TestApp::init().with_user();
 
     let new_user = app.db_new_user("cilantro");
@@ -33,6 +33,7 @@ fn test_cargo_invite_owners() {
     });
     let json: OwnerResp = owner
         .put("/api/v1/crates/guacamole/owners", body.unwrap())
+        .await
         .good();
 
     // this ok:true field is what old versions of Cargo
@@ -47,8 +48,8 @@ fn test_cargo_invite_owners() {
     )
 }
 
-#[test]
-fn owner_change_via_cookie() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_cookie() {
     let (app, _, cookie) = TestApp::full().with_user();
 
     let user2 = app.db_new_user("user-2");
@@ -60,7 +61,7 @@ fn owner_change_via_cookie() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = cookie.put::<()>(&url, body);
+    let response = cookie.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -68,8 +69,8 @@ fn owner_change_via_cookie() {
     );
 }
 
-#[test]
-fn owner_change_via_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_token() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let user2 = app.db_new_user("user-2");
@@ -81,7 +82,7 @@ fn owner_change_via_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, body);
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -89,8 +90,8 @@ fn owner_change_via_token() {
     );
 }
 
-#[test]
-fn owner_change_via_change_owner_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_change_owner_token() {
     let (app, _, _, token) =
         TestApp::full().with_scoped_token(None, Some(vec![EndpointScope::ChangeOwners]));
 
@@ -103,7 +104,7 @@ fn owner_change_via_change_owner_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, body);
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -111,8 +112,8 @@ fn owner_change_via_change_owner_token() {
     );
 }
 
-#[test]
-fn owner_change_via_change_owner_token_with_matching_crate_scope() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let crate_scopes = Some(vec![CrateScope::try_from("foo_crate").unwrap()]);
     let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
     let (app, _, _, token) = TestApp::full().with_scoped_token(crate_scopes, endpoint_scopes);
@@ -126,7 +127,7 @@ fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, body);
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -134,8 +135,8 @@ fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     );
 }
 
-#[test]
-fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let crate_scopes = Some(vec![CrateScope::try_from("bar").unwrap()]);
     let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
     let (app, _, _, token) = TestApp::full().with_scoped_token(crate_scopes, endpoint_scopes);
@@ -149,13 +150,13 @@ fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, body);
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
 
-#[test]
-fn owner_change_via_publish_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_via_publish_token() {
     let (app, _, _, token) =
         TestApp::full().with_scoped_token(None, Some(vec![EndpointScope::PublishUpdate]));
 
@@ -168,13 +169,13 @@ fn owner_change_via_publish_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.put::<()>(&url, body);
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
 
-#[test]
-fn owner_change_without_auth() {
+#[tokio::test(flavor = "multi_thread")]
+async fn owner_change_without_auth() {
     let (app, anon, cookie) = TestApp::full().with_user();
 
     let user2 = app.db_new_user("user-2");
@@ -186,50 +187,58 @@ fn owner_change_without_auth() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = anon.put::<()>(&url, body);
+    let response = anon.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
-#[test]
-fn test_owner_change_with_legacy_field() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_owner_change_with_legacy_field() {
     let (app, _, user1) = TestApp::full().with_user();
     app.db(|conn| CrateBuilder::new("foo", user1.as_model().id).expect_build(conn));
     app.db_new_user("user2");
 
     let input = r#"{"users": ["user2"]}"#;
-    let response = user1.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    let response = user1
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r###"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"###);
 }
 
-#[test]
-fn test_owner_change_with_invalid_json() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_owner_change_with_invalid_json() {
     let (app, _, user) = TestApp::full().with_user();
     app.db_new_user("bar");
     app.db(|conn| CrateBuilder::new("foo", user.as_model().id).expect_build(conn));
 
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
-    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    let response = user
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
 
     // `owners` is not an array
     let input = r#"{"owners": "foo"}"#;
-    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    let response = user
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
 
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
-    let response = user.put::<()>("/api/v1/crates/foo/owners", input.as_bytes());
+    let response = user
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
 }
 
-#[test]
-fn invite_already_invited_user() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invite_already_invited_user() {
     let (app, _, _, owner) = TestApp::init().with_token();
     app.db_new_user("invited_user");
     app.db(|conn| CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(conn));
@@ -238,7 +247,7 @@ fn invite_already_invited_user() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
-    let response = owner.add_named_owner("crate_name", "invited_user");
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -252,7 +261,7 @@ fn invite_already_invited_user() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 
     // Then invite the user a second time, the message should point out the user is already invited
-    let response = owner.add_named_owner("crate_name", "invited_user");
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -266,8 +275,8 @@ fn invite_already_invited_user() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
-#[test]
-fn invite_with_existing_expired_invite() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invite_with_existing_expired_invite() {
     let (app, _, _, owner) = TestApp::init().with_token();
     app.db_new_user("invited_user");
     let krate =
@@ -277,7 +286,7 @@ fn invite_with_existing_expired_invite() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
-    let response = owner.add_named_owner("crate_name", "invited_user");
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -294,7 +303,7 @@ fn invite_with_existing_expired_invite() {
     expire_invitation(&app, krate.id);
 
     // Then invite the user a second time, a new invite is created as the old one expired
-    let response = owner.add_named_owner("crate_name", "invited_user");
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -308,39 +317,39 @@ fn invite_with_existing_expired_invite() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 2);
 }
 
-#[test]
-fn test_unknown_crate() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unknown_crate() {
     let (app, _, user) = TestApp::full().with_user();
     app.db_new_user("bar");
 
     let body = json!({ "owners": ["bar"] });
     let body = serde_json::to_vec(&body).unwrap();
 
-    let response = user.put::<()>("/api/v1/crates/unknown/owners", body);
+    let response = user.put::<()>("/api/v1/crates/unknown/owners", body).await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
 
-#[test]
-fn test_unknown_user() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unknown_user() {
     let (app, _, cookie) = TestApp::full().with_user();
 
     app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
 
     let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
-    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body);
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
 }
 
-#[test]
-fn test_unknown_team() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unknown_team() {
     let (app, _, cookie) = TestApp::full().with_user();
 
     app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
 
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
-    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body);
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown"}]}"###);
 }

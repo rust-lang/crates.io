@@ -7,21 +7,21 @@ use insta::assert_snapshot;
 
 static URL: &str = "/api/v1/me/updates";
 
-#[test]
-fn anonymous_user_unauthorized() {
+#[tokio::test(flavor = "multi_thread")]
+async fn anonymous_user_unauthorized() {
     let (_, anon) = TestApp::init().empty();
-    let response: Response<()> = anon.get(URL);
+    let response: Response<()> = anon.get(URL).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
-#[test]
-fn token_auth_cannot_find_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn token_auth_cannot_find_token() {
     let (_, anon) = TestApp::init().empty();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
-    let response: Response<()> = anon.run(request);
+    let response: Response<()> = anon.run(request).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
@@ -30,8 +30,8 @@ fn token_auth_cannot_find_token() {
 // Ensure that an unexpected authentication error is available for logging.  The user would see
 // status 500 instead of 403 as in other authentication tests.  Due to foreign-key constraints in
 // the database, it is not possible to implement this same test for a token.
-#[test]
-fn cookie_auth_cannot_find_user() {
+#[tokio::test(flavor = "multi_thread")]
+async fn cookie_auth_cannot_find_user() {
     let (app, anon) = TestApp::init().empty();
 
     let session_key = app.as_inner().session_key();
@@ -40,6 +40,6 @@ fn cookie_auth_cannot_find_user() {
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
 
-    let error = anon.run::<()>(request);
+    let error = anon.run::<()>(request).await;
     assert_eq!(error.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }

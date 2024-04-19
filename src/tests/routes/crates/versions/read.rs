@@ -4,8 +4,8 @@ use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use serde_json::Value;
 
-#[test]
-fn show_by_crate_name_and_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -19,7 +19,7 @@ fn show_by_crate_name_and_version() {
     });
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
-    let json: Value = anon.get(url).good();
+    let json: Value = anon.get(url).await.good();
     assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
@@ -28,8 +28,8 @@ fn show_by_crate_name_and_version() {
     });
 }
 
-#[test]
-fn show_by_crate_name_and_semver_no_published_by() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show_by_crate_name_and_semver_no_published_by() {
     use crates_io::schema::versions;
     use diesel::{update, RunQueryDsl};
 
@@ -51,7 +51,7 @@ fn show_by_crate_name_and_semver_no_published_by() {
     });
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
-    let json: Value = anon.get(url).good();
+    let json: Value = anon.get(url).await.good();
     assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",

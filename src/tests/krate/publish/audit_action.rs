@@ -1,7 +1,7 @@
 use googletest::prelude::*;
 
-#[test]
-fn publish_records_an_audit_action() {
+#[tokio::test(flavor = "multi_thread")]
+async fn publish_records_an_audit_action() {
     use crate::builders::PublishBuilder;
     use crate::util::{RequestHelper, TestApp};
     use crates_io::models::VersionOwnerAction;
@@ -12,10 +12,10 @@ fn publish_records_an_audit_action() {
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.publish_crate(crate_to_publish).await.good();
 
     // Make sure it has one publish audit action
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.show_version("fyk", "1.0.0").await;
     let actions = json.version.audit_actions;
 
     assert_that!(actions, len(eq(1)));

@@ -2,8 +2,8 @@ use crate::builders::{CrateBuilder, VersionBuilder};
 use crate::TestApp;
 use crates_io::models::Version;
 
-#[test]
-fn record_rerendered_readme_time() {
+#[tokio::test(flavor = "multi_thread")]
+async fn record_rerendered_readme_time() {
     let (app, _, user) = TestApp::init().with_user();
     let user = user.as_model();
 

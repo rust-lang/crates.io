@@ -5,26 +5,26 @@ use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
-#[test]
-fn new_krate_wrong_files() {
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_wrong_files() {
     let (app, _, user) = TestApp::full().with_user();
 
     let builder = PublishBuilder::new("foo", "1.0.0")
         .add_file("foo-1.0.0/a", "")
         .add_file("bar-1.0.0/a", "");
 
-    let response = user.publish_crate(builder);
+    let response = user.publish_crate(builder).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid path found: bar-1.0.0/a" }] })
     );
 
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn new_krate_tarball_with_hard_links() {
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_tarball_with_hard_links() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let tarball = {
@@ -44,58 +44,62 @@ fn new_krate_tarball_with_hard_links() {
     let (json, _tarball) = PublishBuilder::new("foo", "1.1.0").build();
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
-    let response = token.publish_crate(body);
+    let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn empty_body() {
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_body() {
     let (app, _, user) = TestApp::full().with_user();
 
-    let response = user.publish_crate(&[] as &[u8]);
+    let response = user.publish_crate(&[] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn json_len_truncated() {
+#[tokio::test(flavor = "multi_thread")]
+async fn json_len_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(&[0u8, 0] as &[u8]);
+    let response = token.publish_crate(&[0u8, 0] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn json_bytes_truncated() {
+#[tokio::test(flavor = "multi_thread")]
+async fn json_bytes_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(&[100u8, 0, 0, 0, 0] as &[u8]);
+    let response = token.publish_crate(&[100u8, 0, 0, 0, 0] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn tarball_len_truncated() {
+#[tokio::test(flavor = "multi_thread")]
+async fn tarball_len_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8]);
+    let response = token
+        .publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8])
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
-#[test]
-fn tarball_bytes_truncated() {
+#[tokio::test(flavor = "multi_thread")]
+async fn tarball_bytes_truncated() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8]);
+    let response = token
+        .publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8])
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.stored_files().await, empty());
 }
