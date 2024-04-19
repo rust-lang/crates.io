@@ -10,7 +10,7 @@ use tokio::{
     runtime::Runtime,
     sync::broadcast::Sender,
 };
-use tracing::error;
+use tracing::{debug, error};
 use url::Url;
 
 pub(crate) struct ChaosProxy {
@@ -25,14 +25,17 @@ pub(crate) struct ChaosProxy {
 
 impl ChaosProxy {
     pub(crate) fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
-        let runtime = Runtime::new().expect("failed to create Tokio runtime");
+        debug!("Creating ChaosProxy for {backend_address}");
+
         let listener = runtime.block_on(TcpListener::bind("127.0.0.1:0"))?;
+        let address = listener.local_addr()?;
+        debug!("ChaosProxy listening on {address}");
 
         let (break_networking_send, _) = tokio::sync::broadcast::channel(16);
         let (restore_networking_send, _) = tokio::sync::broadcast::channel(16);
 
         let instance = Arc::new(ChaosProxy {
-            address: listener.local_addr()?,
+            address,
             backend_address,
 
             runtime,
@@ -41,6 +44,7 @@ impl ChaosProxy {
             restore_networking_send,
         });
 
+        debug!("Spawning ChaosProxy server loop");
         let instance_clone = instance.clone();
         instance.runtime.spawn(async move {
             if let Err(error) = instance_clone.server_loop(listener).await {
@@ -70,6 +74,8 @@ impl ChaosProxy {
             .set_port(Some(instance.address.port()))
             .map_err(|_| anyhow!("Failed to set post on the URL"))?;
 
+        debug!("ChaosProxy database URL: {db_url}");
+
         Ok((instance, db_url.into()))
     }
 
@@ -93,12 +99,17 @@ impl ChaosProxy {
 
         loop {
             if let Some(l) = &listener {
+                debug!("ChaosProxy waiting for connections");
                 tokio::select! {
                     accepted = l.accept() => {
-                        self.accept_connection(accepted?.0).await?;
+                        let (stream, address ) = accepted?;
+                        debug!("ChaosProxy accepted connection from {address}");
+                        self.accept_connection(stream).await?;
                     },
 
                     _ = break_networking_recv.recv() => {
+                        debug!("ChaosProxy breaking networking");
+
                         // Setting the listener to `None` results in the listener being dropped,
                         // which closes the network port. A new listener will be established when
                         // networking is restored.
@@ -106,7 +117,9 @@ impl ChaosProxy {
                     },
                 };
             } else {
+                debug!("ChaosProxy networking is broken, waiting for restore signal");
                 let _ = restore_networking_recv.recv().await;
+                debug!("ChaosProxy restoring networking");
                 listener = Some(TcpListener::bind(self.address).await?);
             }
         }
