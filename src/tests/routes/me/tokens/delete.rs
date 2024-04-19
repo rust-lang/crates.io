@@ -6,14 +6,14 @@ use diesel::prelude::*;
 #[derive(Deserialize)]
 pub struct RevokedResponse {}
 
-#[test]
-fn revoke_token_non_existing() {
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_token_non_existing() {
     let (_, _, user) = TestApp::init().with_user();
-    let _json: RevokedResponse = user.delete("/api/v1/me/tokens/5").good();
+    let _json: RevokedResponse = user.async_delete("/api/v1/me/tokens/5").await.good();
 }
 
-#[test]
-fn revoke_token_doesnt_revoke_other_users_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_token_doesnt_revoke_other_users_token() {
     let (app, _, user1, token) = TestApp::init().with_token();
     let user1 = user1.as_model();
     let token = token.as_model();
@@ -30,7 +30,8 @@ fn revoke_token_doesnt_revoke_other_users_token() {
 
     // Try revoke the token as second user
     let _json: RevokedResponse = user2
-        .delete(&format!("/api/v1/me/tokens/{}", token.id))
+        .async_delete(&format!("/api/v1/me/tokens/{}", token.id))
+        .await
         .good();
 
     // List tokens for first user still contains the token
@@ -43,8 +44,8 @@ fn revoke_token_doesnt_revoke_other_users_token() {
     });
 }
 
-#[test]
-fn revoke_token_success() {
+#[tokio::test(flavor = "multi_thread")]
+async fn revoke_token_success() {
     let (app, _, user, token) = TestApp::init().with_token();
 
     // List tokens contains the token
@@ -58,7 +59,8 @@ fn revoke_token_success() {
 
     // Revoke the token
     let _json: RevokedResponse = user
-        .delete(&format!("/api/v1/me/tokens/{}", token.as_model().id))
+        .async_delete(&format!("/api/v1/me/tokens/{}", token.as_model().id))
+        .await
         .good();
 
     // List tokens no longer contains the token
