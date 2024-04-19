@@ -5,10 +5,6 @@ use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 impl crate::util::MockCookieUser {
-    pub fn show_me(&self) -> UserShowPrivateResponse {
-        self.app().runtime().block_on(self.async_show_me())
-    }
-
     pub async fn async_show_me(&self) -> UserShowPrivateResponse {
         let url = "/api/v1/me";
         self.async_get(url).await.good()

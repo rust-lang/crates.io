@@ -27,12 +27,9 @@ impl MockEmailHelper for crate::util::MockCookieUser {}
 impl MockEmailHelper for crate::util::MockAnonymousUser {}
 
 impl crate::util::MockCookieUser {
-    pub fn update_email(&self, email: &str) {
+    pub async fn update_email(&self, email: &str) {
         let model = self.as_model();
-        let response = self
-            .app()
-            .runtime()
-            .block_on(self.update_email_more_control(model.id, Some(email)));
+        let response = self.update_email_more_control(model.id, Some(email)).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
     }
