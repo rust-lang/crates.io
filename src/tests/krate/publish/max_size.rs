@@ -5,8 +5,6 @@ use flate2::Compression;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
-use std::io;
-use std::io::Read;
 
 #[test]
 fn tarball_between_default_axum_limit_and_max_upload_size() {
@@ -30,13 +28,13 @@ fn tarball_between_default_axum_limit_and_max_upload_size() {
         assert_ok!(builder.as_mut().append(&header, data));
 
         // `data` is smaller than `max_upload_size`, but bigger than the regular request body limit
-        let data = &[b'a'; 3 * 1024 * 1024] as &[_];
+        let data = vec![b'a'; 3 * 1024 * 1024];
 
         let mut header = tar::Header::new_gnu();
         assert_ok!(header.set_path("foo-1.1.0/big-file.txt"));
         header.set_size(data.len() as u64);
         header.set_cksum();
-        assert_ok!(builder.as_mut().append(&header, data));
+        assert_ok!(builder.as_mut().append(&header, data.as_slice()));
 
         // We explicitly disable compression to be able to influence the final tarball size
         builder.build_with_compression(Compression::none())
@@ -66,7 +64,7 @@ fn tarball_bigger_than_max_upload_size() {
 
     let tarball = {
         // `data` is bigger than `max_upload_size`
-        let data = &[b'a'; 6 * 1024 * 1024] as &[_];
+        let data = vec![b'a'; 6 * 1024 * 1024];
 
         let mut builder = TarballBuilder::new();
 
@@ -74,7 +72,7 @@ fn tarball_bigger_than_max_upload_size() {
         assert_ok!(header.set_path("foo-1.1.0/Cargo.toml"));
         header.set_size(data.len() as u64);
         header.set_cksum();
-        assert_ok!(builder.as_mut().append(&header, data));
+        assert_ok!(builder.as_mut().append(&header, data.as_slice()));
 
         // We explicitly disable compression to be able to influence the final tarball size
         builder.build_with_compression(Compression::none())
@@ -98,10 +96,7 @@ fn new_krate_gzip_bomb() {
         })
         .with_token();
 
-    let len = 512 * 1024;
-    let mut body = Vec::new();
-    io::repeat(0).take(len).read_to_end(&mut body).unwrap();
-
+    let body = vec![0; 512 * 1024];
     let crate_to_publish = PublishBuilder::new("foo", "1.1.0").add_file("foo-1.1.0/a", body);
 
     let response = token.publish_crate(crate_to_publish);
@@ -120,8 +115,8 @@ fn new_krate_too_big() {
         })
         .with_user();
 
-    let builder = PublishBuilder::new("foo_big", "1.0.0")
-        .add_file("foo_big-1.0.0/big", &[b'a'; 2000] as &[_]);
+    let builder =
+        PublishBuilder::new("foo_big", "1.0.0").add_file("foo_big-1.0.0/big", vec![b'a'; 2000]);
 
     let response = user.publish_crate(builder);
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -141,7 +136,7 @@ fn new_krate_too_big_but_whitelisted() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0")
-        .add_file("foo_whitelist-1.1.0/big", &[b'a'; 2000] as &[_]);
+        .add_file("foo_whitelist-1.1.0/big", vec![b'a'; 2000]);
 
     token.publish_crate(crate_to_publish).good();
 
