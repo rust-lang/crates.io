@@ -3,6 +3,7 @@ use crates_io::models::ApiToken;
 use crates_io::schema::api_tokens;
 use diesel::prelude::*;
 use http::StatusCode;
+use insta::assert_snapshot;
 
 #[test]
 fn revoke_current_token_success() {
@@ -38,10 +39,7 @@ fn revoke_current_token_without_auth() {
 
     let response = anon.delete::<()>("/api/v1/tokens/current");
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
 #[test]

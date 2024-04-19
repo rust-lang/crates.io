@@ -3,9 +3,9 @@ use crate::TestApp;
 
 use crate::util::encode_session_header;
 use http::{header, Method, StatusCode};
+use insta::assert_snapshot;
 
 static URL: &str = "/api/v1/me/updates";
-static MUST_LOGIN: &[u8] = br#"{"errors":[{"detail":"must be logged in to perform that action"}]}"#;
 
 #[test]
 fn anonymous_user_unauthorized() {
@@ -13,7 +13,7 @@ fn anonymous_user_unauthorized() {
     let response: Response<()> = anon.get(URL);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn token_auth_cannot_find_token() {
     let response: Response<()> = anon.run(request);
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(response.json().to_string().as_bytes(), MUST_LOGIN);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
 }
 
 // Ensure that an unexpected authentication error is available for logging.  The user would see

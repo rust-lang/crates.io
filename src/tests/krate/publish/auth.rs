@@ -4,7 +4,7 @@ use crates_io::schema::api_tokens;
 use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[test]
 fn new_wrong_token() {
@@ -14,10 +14,7 @@ fn new_wrong_token() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = anon.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     // Try to publish with the wrong token (by changing the token in the database)
     app.db(|conn| {
@@ -30,10 +27,7 @@ fn new_wrong_token() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = token.publish_crate(crate_to_publish);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
     assert_that!(app.stored_files(), empty());
 }
 

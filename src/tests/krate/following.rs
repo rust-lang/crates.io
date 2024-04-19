@@ -34,15 +34,15 @@ fn test_unauthenticated_requests() {
 
     let response = anon.get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"));
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     let response = anon.put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8]);
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     let response = anon.delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"));
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"must be logged in to perform that action"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
 
 #[test]

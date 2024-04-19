@@ -1,5 +1,6 @@
 use crate::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
+use insta::assert_snapshot;
 
 pub trait MockEmailHelper: RequestHelper {
     // TODO: I don't like the name of this method or `update_email` on the `MockCookieUser` impl;
@@ -89,8 +90,5 @@ fn test_other_users_cannot_change_my_email() {
         Some("pineapple@pineapples.pineapple"),
     );
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-    );
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }

@@ -99,6 +99,7 @@ mod auth {
     use crates_io::models::token::{CrateScope, EndpointScope};
     use crates_io::schema::{crates, users, versions};
     use diesel::prelude::*;
+    use insta::assert_snapshot;
 
     const CRATE_NAME: &str = "fyk";
     const CRATE_VERSION: &str = "1.0.0";
@@ -130,18 +131,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
         assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
         assert!(!is_yanked(&app));
     }
 
@@ -205,18 +200,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
         assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
         assert!(!is_yanked(&app));
     }
 
@@ -249,18 +238,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
     }
 
@@ -319,18 +302,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
     }
 
@@ -346,18 +323,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION);
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_eq!(
-            response.json(),
-            json!({ "errors": [{ "detail": "must be logged in to perform that action" }] })
-        );
+        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
     }
 

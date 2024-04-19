@@ -15,6 +15,7 @@
 
 use axum::response::IntoResponse;
 use std::any::{Any, TypeId};
+use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
 
@@ -54,8 +55,7 @@ pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppErr
     custom(StatusCode::FORBIDDEN, detail)
 }
 
-pub fn forbidden() -> BoxedAppError {
-    let detail = "must be logged in to perform that action";
+pub fn forbidden(detail: impl Into<Cow<'static, str>>) -> BoxedAppError {
     custom(StatusCode::FORBIDDEN, detail)
 }
 
@@ -289,7 +289,7 @@ mod tests {
 
         // Types for handling common error status codes
         assert_eq!(bad_request("").response().status(), StatusCode::BAD_REQUEST);
-        assert_eq!(forbidden().response().status(), StatusCode::FORBIDDEN);
+        assert_eq!(forbidden("").response().status(), StatusCode::FORBIDDEN);
         assert_eq!(
             BoxedAppError::from(DieselError::NotFound)
                 .response()

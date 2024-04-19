@@ -12,7 +12,7 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
             .and_then(|value| value.strip_prefix("Bearer "));
 
         if provided_token != Some(expected_token.as_str()) {
-            return Err(forbidden());
+            return Err(forbidden("invalid or missing authorization token"));
         }
     } else {
         // To avoid accidentally leaking metrics if the environment variable is not set, prevent
