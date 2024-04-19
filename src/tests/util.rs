@@ -423,25 +423,61 @@ impl MockTokenUser {
 
     /// Add to the specified crate the specified owners.
     pub fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
+        self.app()
+            .runtime()
+            .block_on(self.async_add_named_owners(krate_name, owners))
+    }
+
+    pub async fn async_add_named_owners(
+        &self,
+        krate_name: &str,
+        owners: &[&str],
+    ) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.put(&url, body)
+        self.async_put(&url, body).await
     }
 
     /// Add a single owner to the specified crate.
     pub fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        self.add_named_owners(krate_name, &[owner])
+        self.app()
+            .runtime()
+            .block_on(self.async_add_named_owner(krate_name, owner))
+    }
+
+    pub async fn async_add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        self.async_add_named_owners(krate_name, &[owner]).await
     }
 
     /// Remove from the specified crate the specified owners.
     pub fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
+        self.app()
+            .runtime()
+            .block_on(self.async_remove_named_owners(krate_name, owners))
+    }
+
+    pub async fn async_remove_named_owners(
+        &self,
+        krate_name: &str,
+        owners: &[&str],
+    ) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.delete_with_body(&url, body)
+        self.async_delete_with_body(&url, body).await
     }
 
     /// Remove a single owner to the specified crate.
     pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        self.remove_named_owners(krate_name, &[owner])
+        self.app()
+            .runtime()
+            .block_on(self.async_remove_named_owner(krate_name, owner))
+    }
+
+    pub async fn async_remove_named_owner(
+        &self,
+        krate_name: &str,
+        owner: &str,
+    ) -> Response<OkBool> {
+        self.async_remove_named_owners(krate_name, &[owner]).await
     }
 }
