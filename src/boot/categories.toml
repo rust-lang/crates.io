@@ -517,6 +517,30 @@ description = """
 Crates for research tools and processing of data related to the brain and nervous system.\
 """
 
+[science.categories.bioinformatics]
+name = "Bioinformatics"
+description = """
+Crates for processing large-scale biological data.\
+"""
+
+[bioinformatics.categories.genomics]
+name = "Genomics"
+description = """
+Crates for processing genetic data, including sequences, abdundance, variants and analysis.\
+"""
+
+[bioinformatics.categories.proteomics]
+name = "Proteomics"
+description = """
+Crates for processing protein data including sequences, abdundance and analysis.\
+"""
+
+[bioinformatics.categories.sequence-analysis]
+name = "Sequence analysis"
+description = """
+Crates for processing biological sequences, including alignment, assembly, and annotation.\
+"""
+
 [simulation]
 name = "Simulation"
 description = """
@@ -593,28 +617,3 @@ name = "WebSocket"
 description = """
 Crates to communicate over the WebSocket protocol.\
 """
-
-[bioinformatics]
-name = "Bioinformatics"
-description = """
-Crates for processing large-scale biological data.\
-"""
-
-[bioinformatics.categories.genomics]
-name = "Genomics"
-description = """
-Crates for processing genetic data, including sequences, abdundance, variants and analysis.\
-"""
-
-[bioinformatics.categories.proteomics]
-name = "Proteomics"
-description = """
-Crates for processing protein data including sequences, abdundance and analysis.\
-"""
-
-[bioinformatics.categories.sequence-analysis]
-name = "Sequence analysis"
-description = """
-Crates for processing biological sequences, including alignment, assembly, and annotation.\
-"""
-
