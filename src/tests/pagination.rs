@@ -4,8 +4,8 @@ use http::status::StatusCode;
 use ipnetwork::IpNetwork;
 use serde_json::json;
 
-#[test]
-fn pagination_blocks_ip_from_cidr_block_list() {
+#[tokio::test(flavor = "multi_thread")]
+async fn pagination_blocks_ip_from_cidr_block_list() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.max_allowed_page_offset = 1;
@@ -20,7 +20,9 @@ fn pagination_blocks_ip_from_cidr_block_list() {
         CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
-    let response = anon.get_with_query::<()>("/api/v1/crates", "page=2&per_page=1");
+    let response = anon
+        .async_get_with_query::<()>("/api/v1/crates", "page=2&per_page=1")
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
