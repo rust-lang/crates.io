@@ -4,17 +4,17 @@ use crates_io::{models::ApiToken, util::errors::TOKEN_FORMAT_ERROR, views::Encod
 use diesel::prelude::*;
 use http::{header, StatusCode};
 
-#[test]
-fn using_token_updates_last_used_at() {
+#[tokio::test(flavor = "multi_thread")]
+async fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token();
 
-    anon.get(url).assert_forbidden();
-    user.get::<EncodableMe>(url).good();
+    anon.async_get(url).await.assert_forbidden();
+    user.async_get::<EncodableMe>(url).await.good();
     assert_none!(token.as_model().last_used_at);
 
     // Use the token once
-    token.search("following=1");
+    token.async_search("following=1").await;
 
     let token: ApiToken = app.db(|conn| {
         assert_ok!(ApiToken::belonging_to(user.as_model())
@@ -28,14 +28,14 @@ fn using_token_updates_last_used_at() {
     // this test framework.
 }
 
-#[test]
-fn old_tokens_give_specific_error_message() {
+#[tokio::test(flavor = "multi_thread")]
+async fn old_tokens_give_specific_error_message() {
     let url = "/api/v1/me";
     let (_, anon) = TestApp::init().empty();
 
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     assert_eq!(
         response.json(),
