@@ -21,10 +21,11 @@ use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use std::collections::HashSet;
 use std::{rc::Rc, sync::Arc, time::Duration};
-use tokio::runtime::Runtime;
+use tokio::runtime::{Handle, Runtime};
+use tokio::task::block_in_place;
 
 struct TestAppInner {
-    pub runtime: Runtime,
+    pub runtime: Option<Runtime>,
 
     app: Arc<App>,
     router: axum::Router,
@@ -50,9 +51,12 @@ impl Drop for TestAppInner {
 
         // Lazily run any remaining jobs
         if let Some(runner) = &self.runner {
-            self.runtime.block_on(async {
-                let handle = runner.start();
-                handle.wait_for_shutdown().await;
+            let _rt_guard = self.runtime.as_ref().map(|rt| rt.enter());
+            block_in_place(move || {
+                Handle::current().block_on(async {
+                    let handle = runner.start();
+                    handle.wait_for_shutdown().await;
+                })
             });
         }
 
@@ -73,7 +77,7 @@ impl Drop for TestAppInner {
         // We manually close the connection pools here to prevent their `Drop`
         // implementation from failing because no tokio runtime is running.
         {
-            let _rt_guard = self.runtime.enter();
+            let _rt_guard = self.runtime.as_ref().map(|rt| rt.enter());
             self.app.primary_database.close();
             if let Some(pool) = &self.app.replica_database {
                 pool.close();
@@ -144,8 +148,10 @@ impl TestApp {
         }
     }
 
+    #[track_caller]
     pub fn runtime(&self) -> &Runtime {
-        &self.0.runtime
+        let runtime = self.0.runtime.as_ref();
+        runtime.expect("TestApp was created without a runtime")
     }
 
     /// Obtain a reference to the upstream repository ("the index")
@@ -225,9 +231,14 @@ pub struct TestAppBuilder {
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
-        let runtime = Runtime::new()
-            .context("Failed to initialize tokio runtime")
-            .unwrap();
+        let runtime = match Handle::try_current() {
+            Ok(_) => None,
+            Err(_) => Some(
+                Runtime::new()
+                    .context("Failed to initialize tokio runtime")
+                    .unwrap(),
+            ),
+        };
 
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
@@ -236,9 +247,11 @@ impl TestAppBuilder {
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
-                let (primary_proxy, url) = runtime
-                    .block_on(ChaosProxy::proxy_database_url(db_url))
-                    .unwrap();
+                let (primary_proxy, url) = block_in_place(move || {
+                    Handle::current()
+                        .block_on(ChaosProxy::proxy_database_url(db_url))
+                        .unwrap()
+                });
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
@@ -249,9 +262,11 @@ impl TestAppBuilder {
 
             let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
                 if self.use_chaos_proxy {
-                    let (primary_proxy, url) = runtime
-                        .block_on(ChaosProxy::proxy_database_url(db_url))
-                        .unwrap();
+                    let (primary_proxy, url) = block_in_place(move || {
+                        Handle::current()
+                            .block_on(ChaosProxy::proxy_database_url(db_url))
+                            .unwrap()
+                    });
 
                     replica.url = url.into();
                     Some(primary_proxy)
