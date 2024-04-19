@@ -177,12 +177,6 @@ impl TestApp {
             .collect()
     }
 
-    #[track_caller]
-    pub fn run_pending_background_jobs(&self) {
-        self.runtime()
-            .block_on(self.async_run_pending_background_jobs());
-    }
-
     pub async fn async_run_pending_background_jobs(&self) {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
