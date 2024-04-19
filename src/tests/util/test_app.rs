@@ -232,30 +232,31 @@ impl TestAppBuilder {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let test_database = TestDatabase::new();
+        let db_url = test_database.url();
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
                 let (primary_proxy, url) = runtime
-                    .block_on(ChaosProxy::proxy_database_url(test_database.url()))
+                    .block_on(ChaosProxy::proxy_database_url(db_url))
                     .unwrap();
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
             } else {
-                self.config.db.primary.url = test_database.url().to_string().into();
+                self.config.db.primary.url = db_url.to_string().into();
                 None
             };
 
             let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
                 if self.use_chaos_proxy {
                     let (primary_proxy, url) = runtime
-                        .block_on(ChaosProxy::proxy_database_url(test_database.url()))
+                        .block_on(ChaosProxy::proxy_database_url(db_url))
                         .unwrap();
 
                     replica.url = url.into();
                     Some(primary_proxy)
                 } else {
-                    replica.url = test_database.url().to_string().into();
+                    replica.url = db_url.to_string().into();
                     None
                 }
             });
