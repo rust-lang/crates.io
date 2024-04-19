@@ -16,17 +16,17 @@ struct CrateOwnerInvitationsMeta {
     next_page: Option<String>,
 }
 
-#[track_caller]
-fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvitationsResponse {
-    user.get_with_query::<CrateOwnerInvitationsResponse>(
+async fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvitationsResponse {
+    user.async_get_with_query::<CrateOwnerInvitationsResponse>(
         "/api/private/crate_owner_invitations",
         query,
     )
+    .await
     .good()
 }
 
-#[test]
-fn invitation_list() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitation_list() {
     let (app, _, owner, token) = TestApp::init().with_token();
 
     let (crate1, crate2) = app.db(|conn| {
@@ -37,12 +37,21 @@ fn invitation_list() {
     });
     let user1 = app.db_new_user("user_1");
     let user2 = app.db_new_user("user_2");
-    token.add_named_owner("crate_1", "user_1").good();
-    token.add_named_owner("crate_1", "user_2").good();
-    token.add_named_owner("crate_2", "user_1").good();
+    token
+        .async_add_named_owner("crate_1", "user_1")
+        .await
+        .good();
+    token
+        .async_add_named_owner("crate_1", "user_2")
+        .await
+        .good();
+    token
+        .async_add_named_owner("crate_2", "user_1")
+        .await
+        .good();
 
     // user1 has invites for both crates
-    let invitations = get_invitations(&user1, &format!("invitee_id={}", user1.as_model().id));
+    let invitations = get_invitations(&user1, &format!("invitee_id={}", user1.as_model().id)).await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -75,7 +84,7 @@ fn invitation_list() {
     );
 
     // user2 is only invited to a single crate
-    let invitations = get_invitations(&user2, &format!("invitee_id={}", user2.as_model().id));
+    let invitations = get_invitations(&user2, &format!("invitee_id={}", user2.as_model().id)).await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -97,7 +106,7 @@ fn invitation_list() {
     );
 
     // owner has no invites
-    let invitations = get_invitations(&owner, &format!("invitee_id={}", owner.as_model().id));
+    let invitations = get_invitations(&owner, &format!("invitee_id={}", owner.as_model().id)).await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -108,7 +117,7 @@ fn invitation_list() {
     );
 
     // crate1 has two available invitations
-    let invitations = get_invitations(&owner, "crate_name=crate_1");
+    let invitations = get_invitations(&owner, "crate_name=crate_1").await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -142,7 +151,7 @@ fn invitation_list() {
     );
 
     // crate2 has one available invitation
-    let invitations = get_invitations(&owner, "crate_name=crate_2");
+    let invitations = get_invitations(&owner, "crate_name=crate_2").await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -164,8 +173,8 @@ fn invitation_list() {
     );
 }
 
-#[test]
-fn invitations_list_does_not_include_expired_invites() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitations_list_does_not_include_expired_invites() {
     let (app, _, owner, token) = TestApp::init().with_token();
     let user = app.db_new_user("invited_user");
 
@@ -175,14 +184,20 @@ fn invitations_list_does_not_include_expired_invites() {
             CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
         )
     });
-    token.add_named_owner("crate_1", "invited_user").good();
-    token.add_named_owner("crate_2", "invited_user").good();
+    token
+        .async_add_named_owner("crate_1", "invited_user")
+        .await
+        .good();
+    token
+        .async_add_named_owner("crate_2", "invited_user")
+        .await
+        .good();
 
     // Simulate one of the invitations expiring
     crate::owners::expire_invitation(&app, crate1.id);
 
     // user1 has an invite just for crate 2
-    let invitations = get_invitations(&user, &format!("invitee_id={}", user.as_model().id));
+    let invitations = get_invitations(&user, &format!("invitee_id={}", user.as_model().id)).await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -204,8 +219,8 @@ fn invitations_list_does_not_include_expired_invites() {
     );
 }
 
-#[test]
-fn invitations_list_paginated() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitations_list_paginated() {
     let (app, _, owner, token) = TestApp::init().with_token();
     let user = app.db_new_user("invited_user");
 
@@ -215,14 +230,21 @@ fn invitations_list_paginated() {
             CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
         )
     });
-    token.add_named_owner("crate_1", "invited_user").good();
-    token.add_named_owner("crate_2", "invited_user").good();
+    token
+        .async_add_named_owner("crate_1", "invited_user")
+        .await
+        .good();
+    token
+        .async_add_named_owner("crate_2", "invited_user")
+        .await
+        .good();
 
     // Fetch the first page of results
     let invitations = get_invitations(
         &user,
         &format!("per_page=1&invitee_id={}", user.as_model().id),
-    );
+    )
+    .await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -250,7 +272,8 @@ fn invitations_list_paginated() {
     let invitations = get_invitations(
         &user,
         invitations.meta.next_page.unwrap().trim_start_matches('?'),
-    );
+    )
+    .await;
     assert_eq!(
         invitations,
         CrateOwnerInvitationsResponse {
@@ -272,11 +295,13 @@ fn invitations_list_paginated() {
     );
 }
 
-#[test]
-fn invitation_list_with_no_filter() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitation_list_with_no_filter() {
     let (_, _, owner, _) = TestApp::init().with_token();
 
-    let resp = owner.get::<()>("/api/private/crate_owner_invitations");
+    let resp = owner
+        .async_get::<()>("/api/private/crate_owner_invitations")
+        .await;
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         resp.json(),
@@ -288,28 +313,32 @@ fn invitation_list_with_no_filter() {
     );
 }
 
-#[test]
-fn invitation_list_other_users() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitation_list_other_users() {
     let (app, _, owner, _) = TestApp::init().with_token();
     let other_user = app.db_new_user("other");
 
     // Retrieving our own invitations work.
-    let resp = owner.get_with_query::<()>(
-        "/api/private/crate_owner_invitations",
-        &format!("invitee_id={}", owner.as_model().id),
-    );
+    let resp = owner
+        .async_get_with_query::<()>(
+            "/api/private/crate_owner_invitations",
+            &format!("invitee_id={}", owner.as_model().id),
+        )
+        .await;
     assert_eq!(resp.status(), StatusCode::OK);
 
     // Retrieving other users' invitations doesn't work.
-    let resp = owner.get_with_query::<()>(
-        "/api/private/crate_owner_invitations",
-        &format!("invitee_id={}", other_user.as_model().id),
-    );
+    let resp = owner
+        .async_get_with_query::<()>(
+            "/api/private/crate_owner_invitations",
+            &format!("invitee_id={}", other_user.as_model().id),
+        )
+        .await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
 
-#[test]
-fn invitation_list_other_crates() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invitation_list_other_crates() {
     let (app, _, owner, _) = TestApp::init().with_token();
     let other_user = app.db_new_user("other");
     app.db(|conn| {
@@ -318,12 +347,14 @@ fn invitation_list_other_crates() {
     });
 
     // Retrieving our own invitations work.
-    let resp =
-        owner.get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_1");
+    let resp = owner
+        .async_get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_1")
+        .await;
     assert_eq!(resp.status(), StatusCode::OK);
 
     // Retrieving other users' invitations doesn't work.
-    let resp =
-        owner.get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_2");
+    let resp = owner
+        .async_get_with_query::<()>("/api/private/crate_owner_invitations", "crate_name=crate_2")
+        .await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
