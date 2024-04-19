@@ -18,14 +18,16 @@ struct SummaryResponse {
     popular_categories: Vec<EncodableCategory>,
 }
 
-#[test]
-fn summary_doesnt_die() {
+#[tokio::test(flavor = "multi_thread")]
+async fn summary_doesnt_die() {
     let (_, anon) = TestApp::init().empty();
-    anon.get::<SummaryResponse>("/api/v1/summary").good();
+    anon.async_get::<SummaryResponse>("/api/v1/summary")
+        .await
+        .good();
 }
 
-#[test]
-fn summary_new_crates() {
+#[tokio::test(flavor = "multi_thread")]
+async fn summary_new_crates() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
@@ -85,7 +87,7 @@ fn summary_new_crates() {
         });
     });
 
-    let json: SummaryResponse = anon.get("/api/v1/summary").good();
+    let json: SummaryResponse = anon.async_get("/api/v1/summary").await.good();
 
     assert_eq!(json.num_crates, 5);
     assert_eq!(json.num_downloads, 6000);
@@ -112,8 +114,8 @@ fn summary_new_crates() {
     assert_eq!(json.new_crates.len(), 5);
 }
 
-#[test]
-fn excluded_crate_id() {
+#[tokio::test(flavor = "multi_thread")]
+async fn excluded_crate_id() {
     let (app, anon, user) = TestApp::init()
         .with_config(|config| {
             config.excluded_crate_names = vec![
@@ -144,7 +146,7 @@ fn excluded_crate_id() {
             .expect_build(conn);
     });
 
-    let json: SummaryResponse = anon.get("/api/v1/summary").good();
+    let json: SummaryResponse = anon.async_get("/api/v1/summary").await.good();
 
     assert_eq!(json.most_downloaded.len(), 1);
     assert_eq!(json.most_downloaded[0].name, "some_downloads");
