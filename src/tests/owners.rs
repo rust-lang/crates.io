@@ -136,7 +136,7 @@ fn new_crate_owner() {
     user2.accept_ownership_invitation("foo_owner", krate.id);
 
     // Make sure this shows up as one of their crates.
-    let crates = user2.search_by_user_id(user2.as_model().id);
+    let crates = user2.search(&format!("user_id={}", user2.as_model().id));
     assert_eq!(crates.crates.len(), 1);
 
     // And upload a new version as the second user
@@ -275,7 +275,7 @@ fn check_ownership_two_crates() {
     let krate_not_owned_by_team =
         app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(conn));
 
-    let json = anon.search_by_user_id(user2.id);
+    let json = anon.search(&format!("user_id={}", user2.id));
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
     assert_eq!(json.crates.len(), 1);
 

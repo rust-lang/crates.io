@@ -178,11 +178,6 @@ pub trait RequestHelper {
         self.get_with_query("/api/v1/crates", query).good()
     }
 
-    /// Search for crates owned by the specified user.
-    fn search_by_user_id(&self, id: i32) -> CrateList {
-        self.search(&format!("user_id={id}"))
-    }
-
     /// Publish the crate and run background jobs to completion
     ///
     /// Background jobs will publish to the git index and sync to the HTTP index.
