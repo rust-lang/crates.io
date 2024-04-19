@@ -8,61 +8,61 @@ use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use std::time::Duration;
 
-#[test]
+#[tokio::test(flavor = "multi_thread")]
 #[allow(unknown_lints, clippy::bool_assert_comparison)] // for claim::assert_some_eq! with bool
-fn yank_works_as_intended() {
+async fn yank_works_as_intended() {
     let (app, anon, cookie, token) = TestApp::full().with_token();
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.async_publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
     // make sure it's not yanked
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.async_show_version("fyk", "1.0.0").await;
     assert!(!json.version.yanked);
 
     // yank it
-    token.yank("fyk", "1.0.0").good();
+    token.async_yank("fyk", "1.0.0").await.good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, true);
 
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.async_show_version("fyk", "1.0.0").await;
     assert!(json.version.yanked);
 
     // un-yank it
-    token.unyank("fyk", "1.0.0").good();
+    token.async_unyank("fyk", "1.0.0").await.good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.async_show_version("fyk", "1.0.0").await;
     assert!(!json.version.yanked);
 
     // yank it
-    cookie.yank("fyk", "1.0.0").good();
+    cookie.async_yank("fyk", "1.0.0").await.good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, true);
 
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.async_show_version("fyk", "1.0.0").await;
     assert!(json.version.yanked);
 
     // un-yank it
-    cookie.unyank("fyk", "1.0.0").good();
+    cookie.async_unyank("fyk", "1.0.0").await.good();
 
     let crates = app.crates_from_index_head("fyk");
     assert_that!(crates, len(eq(1)));
     assert_some_eq!(crates[0].yanked, false);
 
-    let json = anon.show_version("fyk", "1.0.0");
+    let json = anon.async_show_version("fyk", "1.0.0").await;
     assert!(!json.version.yanked);
 }
 
@@ -73,8 +73,8 @@ fn check_yanked(app: &TestApp, is_yanked: bool) {
     assert_some_eq!(crates[0].yanked, is_yanked);
 }
 
-#[test]
-fn yank_ratelimit_hit() {
+#[tokio::test(flavor = "multi_thread")]
+async fn yank_ratelimit_hit() {
     let (app, _, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
@@ -96,18 +96,19 @@ fn yank_ratelimit_hit() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("yankable", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.async_publish_crate(crate_to_publish).await.good();
     check_yanked(&app, false);
 
     // Yank it and wait for the ratelimit to hit.
     token
-        .yank("yankable", "1.0.0")
+        .async_yank("yankable", "1.0.0")
+        .await
         .assert_rate_limited(LimitedAction::YankUnyank);
     check_yanked(&app, false);
 }
 
-#[test]
-fn yank_ratelimit_expires() {
+#[tokio::test(flavor = "multi_thread")]
+async fn yank_ratelimit_expires() {
     let (app, _, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
@@ -129,93 +130,93 @@ fn yank_ratelimit_expires() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("yankable", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.async_publish_crate(crate_to_publish).await.good();
     check_yanked(&app, false);
 
-    token.yank("yankable", "1.0.0").good();
+    token.async_yank("yankable", "1.0.0").await.good();
     check_yanked(&app, true);
 }
 
-#[test]
-fn yank_max_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn yank_max_version() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.async_publish_crate(crate_to_publish).await.good();
 
     // double check the max version
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max", "2.0.0");
-    let json = token.publish_crate(crate_to_publish).good();
+    let json = token.async_publish_crate(crate_to_publish).await.good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 1.0.0
-    token.yank("fyk_max", "1.0.0").good();
+    token.async_yank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    token.unyank("fyk_max", "1.0.0").good();
+    token.async_unyank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // yank version 2.0.0
-    token.yank("fyk_max", "2.0.0").good();
+    token.async_yank("fyk_max", "2.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // yank version 1.0.0
-    token.yank("fyk_max", "1.0.0").good();
+    token.async_yank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "0.0.0");
 
     // unyank version 2.0.0
-    token.unyank("fyk_max", "2.0.0").good();
+    token.async_unyank("fyk_max", "2.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    token.unyank("fyk_max", "1.0.0").good();
+    token.async_unyank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "2.0.0");
 }
 
-#[test]
-fn publish_after_yank_max_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn publish_after_yank_max_version() {
     let (_, anon, _, token) = TestApp::full().with_token();
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
-    token.publish_crate(crate_to_publish).good();
+    token.async_publish_crate(crate_to_publish).await.good();
 
     // double check the max version
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     // yank version 1.0.0
-    token.yank("fyk_max", "1.0.0").good();
+    token.async_yank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "0.0.0");
 
     // add version 2.0.0
     let crate_to_publish = PublishBuilder::new("fyk_max", "2.0.0");
-    let json = token.publish_crate(crate_to_publish).good();
+    let json = token.async_publish_crate(crate_to_publish).await.good();
     assert_eq!(json.krate.max_version, "2.0.0");
 
     // unyank version 1.0.0
-    token.unyank("fyk_max", "1.0.0").good();
+    token.async_unyank("fyk_max", "1.0.0").await.good();
 
-    let json = anon.show_crate("fyk_max");
+    let json = anon.async_show_crate("fyk_max").await;
     assert_eq!(json.krate.max_version, "2.0.0");
 }

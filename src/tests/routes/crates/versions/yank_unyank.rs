@@ -7,22 +7,40 @@ pub trait YankRequestHelper {
     /// Yank the specified version of the specified crate and run all pending background jobs
     fn yank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 
+    /// Yank the specified version of the specified crate and run all pending background jobs
+    async fn async_yank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
+
     /// Unyank the specified version of the specified crate and run all pending background jobs
     fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
+
+    /// Unyank the specified version of the specified crate and run all pending background jobs
+    async fn async_unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 }
 
 impl<T: RequestHelper> YankRequestHelper for T {
     fn yank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
+        self.app()
+            .runtime()
+            .block_on(self.async_yank(krate_name, version))
+    }
+
+    async fn async_yank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/yank");
-        let response = self.delete(&url);
-        self.app().run_pending_background_jobs();
+        let response = self.async_delete(&url).await;
+        self.app().async_run_pending_background_jobs().await;
         response
     }
 
     fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
+        self.app()
+            .runtime()
+            .block_on(self.async_unyank(krate_name, version))
+    }
+
+    async fn async_unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
-        let response = self.put(&url, &[] as &[u8]);
-        self.app().run_pending_background_jobs();
+        let response = self.async_put(&url, &[] as &[u8]).await;
+        self.app().async_run_pending_background_jobs().await;
         response
     }
 }
