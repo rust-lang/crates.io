@@ -7,8 +7,8 @@ use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
-#[test]
-fn versions() {
+#[tokio::test(flavor = "multi_thread")]
+async fn versions() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
@@ -27,7 +27,9 @@ fn versions() {
             .unwrap();
     });
 
-    let response = anon.get::<()>("/api/v1/crates/foo_versions/versions");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo_versions/versions")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".versions[].created_at" => "[datetime]",
@@ -35,17 +37,19 @@ fn versions() {
     });
 }
 
-#[test]
-fn test_unknown_crate() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unknown_crate() {
     let (_, anon) = TestApp::init().empty();
 
-    let response = anon.get::<()>("/api/v1/crates/unknown/versions");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/unknown/versions")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
 
-#[test]
-fn test_sorting() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     let versions = [
@@ -88,7 +92,7 @@ fn test_sorting() {
 
     // Sort by semver
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
-    let json: AllVersions = anon.get(url).good();
+    let json: AllVersions = anon.async_get(url).await.good();
     let expects = [
         "2.0.0-alpha",
         "1.0.0",
@@ -103,7 +107,7 @@ fn test_sorting() {
     for (num, expect) in nums(&json.versions).iter().zip(expects) {
         assert_eq!(num, expect);
     }
-    let (resp, calls) = page_with_seek(&anon, url);
+    let (resp, calls) = page_with_seek(&anon, url).await;
     for (json, expect) in resp.iter().zip(expects) {
         assert_eq!(json.versions[0].num, expect);
         assert_eq!(json.meta.total as usize, expects.len());
@@ -112,12 +116,12 @@ fn test_sorting() {
 
     // Sort by date
     let url = "/api/v1/crates/foo_versions/versions?sort=date";
-    let json: AllVersions = anon.get(url).good();
+    let json: AllVersions = anon.async_get(url).await.good();
     let expects = versions.iter().cloned().rev().collect::<Vec<_>>();
     for (num, expect) in nums(&json.versions).iter().zip(&expects) {
         assert_eq!(num, *expect);
     }
-    let (resp, calls) = page_with_seek(&anon, url);
+    let (resp, calls) = page_with_seek(&anon, url).await;
     for (json, expect) in resp.iter().zip(&expects) {
         assert_eq!(json.versions[0].num, *expect);
         assert_eq!(json.meta.total as usize, expects.len());
@@ -125,8 +129,8 @@ fn test_sorting() {
     assert_eq!(calls as usize, expects.len() + 1);
 }
 
-#[test]
-fn test_seek_based_pagination_semver_sorting() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_seek_based_pagination_semver_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
@@ -149,11 +153,17 @@ fn test_seek_based_pagination_semver_sorting() {
     let expects = ["1.0.0", "0.5.1", "0.5.0"];
 
     // per_page larger than the number of versions
-    let json: VersionList = anon.get_with_query(url, "per_page=10&sort=semver").good();
+    let json: VersionList = anon
+        .async_get_with_query(url, "per_page=10&sort=semver")
+        .await
+        .good();
     assert_eq!(nums(&json.versions), expects);
     assert_eq!(json.meta.total as usize, expects.len());
 
-    let json: VersionList = anon.get_with_query(url, "per_page=1&sort=semver").good();
+    let json: VersionList = anon
+        .async_get_with_query(url, "per_page=1&sort=semver")
+        .await
+        .good();
     assert_eq!(nums(&json.versions), expects[0..1]);
     assert_eq!(json.meta.total as usize, expects.len());
 
@@ -166,7 +176,8 @@ fn test_seek_based_pagination_semver_sorting() {
 
     // per_page larger than the number of remain versions
     let json: VersionList = anon
-        .get_with_query(url, &format!("per_page=5&sort=semver&seek={seek}"))
+        .async_get_with_query(url, &format!("per_page=5&sort=semver&seek={seek}"))
+        .await
         .good();
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_none());
@@ -174,7 +185,8 @@ fn test_seek_based_pagination_semver_sorting() {
 
     // per_page euqal to the number of remain versions
     let json: VersionList = anon
-        .get_with_query(url, &format!("per_page=2&sort=semver&seek={seek}"))
+        .async_get_with_query(url, &format!("per_page=2&sort=semver&seek={seek}"))
+        .await
         .good();
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_some());
@@ -182,15 +194,16 @@ fn test_seek_based_pagination_semver_sorting() {
 
     // A decodable seek value, MTAwCg (100), but doesn't actually exist
     let json: VersionList = anon
-        .get_with_query(url, "per_page=10&sort=semver&seek=MTAwCg")
+        .async_get_with_query(url, "per_page=10&sort=semver&seek=MTAwCg")
+        .await
         .good();
     assert_eq!(json.versions.len(), 0);
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total, 0);
 }
 
-#[test]
-fn invalid_seek_parameter() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_seek_parameter() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
@@ -199,18 +212,22 @@ fn invalid_seek_parameter() {
 
     let url = "/api/v1/crates/foo_versions/versions";
     // Sort by semver
-    let response = anon.get_with_query::<()>(url, "per_page=1&sort=semver&seek=broken");
+    let response = anon
+        .async_get_with_query::<()>(url, "per_page=1&sort=semver&seek=broken")
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     // Sort by date
-    let response = anon.get_with_query::<()>(url, "per_page=1&sort=date&seek=broken");
+    let response = anon
+        .async_get_with_query::<()>(url, "per_page=1&sort=date&seek=broken")
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     // borken seek but without per_page parameter should be ok
     // since it's not consider as seek-based pagination
-    let response = anon.get_with_query::<()>(url, "seek=broken");
+    let response = anon.async_get_with_query::<()>(url, "seek=broken").await;
     assert_eq!(response.status(), StatusCode::OK);
 }
 
@@ -235,13 +252,13 @@ fn nums(versions: &[EncodableVersion]) -> Vec<String> {
     versions.iter().map(|v| v.num.to_owned()).collect()
 }
 
-fn page_with_seek<U: RequestHelper>(anon: &U, url: &str) -> (Vec<VersionList>, i32) {
+async fn page_with_seek<U: RequestHelper>(anon: &U, url: &str) -> (Vec<VersionList>, i32) {
     let (url_without_query, query) = url.split_once('?').unwrap_or((url, ""));
     let mut url = Some(format!("{url_without_query}?per_page=1&{query}"));
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
-        let resp: VersionList = anon.get(&current_url).good();
+        let resp: VersionList = anon.async_get(&current_url).await.good();
         calls += 1;
         if calls > 200 {
             panic!("potential infinite loop detected!");

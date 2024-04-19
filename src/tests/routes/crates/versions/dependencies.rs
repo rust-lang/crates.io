@@ -8,8 +8,8 @@ pub struct Deps {
     pub dependencies: Vec<EncodableDependency>,
 }
 
-#[test]
-fn dependencies() {
+#[tokio::test(flavor = "multi_thread")]
+async fn dependencies() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -22,18 +22,23 @@ fn dependencies() {
     });
 
     let deps: Deps = anon
-        .get("/api/v1/crates/foo_deps/1.0.0/dependencies")
+        .async_get("/api/v1/crates/foo_deps/1.0.0/dependencies")
+        .await
         .good();
     assert_eq!(deps.dependencies[0].crate_id, "bar_deps");
 
-    let response = anon.get::<()>("/api/v1/crates/missing-crate/1.0.0/dependencies");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/missing-crate/1.0.0/dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "crate `missing-crate` does not exist" }] })
     );
 
-    let response = anon.get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_eq!(
         response.json(),
