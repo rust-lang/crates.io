@@ -35,8 +35,7 @@ fn save_version_downloads(
         .unwrap();
 }
 
-#[track_caller]
-pub fn assert_dl_count(
+pub async fn assert_dl_count(
     anon: &MockAnonymousUser,
     name_and_version: &str,
     query: Option<&str>,
@@ -44,9 +43,9 @@ pub fn assert_dl_count(
 ) {
     let url = format!("/api/v1/crates/{name_and_version}/downloads");
     let downloads: Downloads = if let Some(query) = query {
-        anon.get_with_query(&url, query).good()
+        anon.async_get_with_query(&url, query).await.good()
     } else {
-        anon.get(&url).good()
+        anon.async_get(&url).await.good()
     };
     let total_downloads = downloads
         .version_downloads
@@ -56,14 +55,14 @@ pub fn assert_dl_count(
     assert_eq!(total_downloads, count);
 }
 
-pub fn download(client: &impl RequestHelper, name_and_version: &str) {
+pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
     let url = format!("/api/v1/crates/{name_and_version}/download");
-    let response = client.get::<()>(&url);
+    let response = client.async_get::<()>(&url).await;
     assert_eq!(response.status(), StatusCode::FOUND);
 }
 
-#[test]
-fn test_download() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_download() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -74,32 +73,32 @@ fn test_download() {
     });
 
     // TODO: test the with_json code path
-    download(&anon, "foo_download/1.0.0");
+    download(&anon, "foo_download/1.0.0").await;
 
     // No downloads are counted until the corresponding log files are processed.
-    assert_dl_count(&anon, "foo_download/1.0.0", None, 0);
-    assert_dl_count(&anon, "foo_download", None, 0);
+    assert_dl_count(&anon, "foo_download/1.0.0", None, 0).await;
+    assert_dl_count(&anon, "foo_download", None, 0).await;
 
     app.db(|conn| save_version_downloads("foo_download", "1.0.0", 1, conn));
 
     // Now that the counters are persisted the download counts show up.
-    assert_dl_count(&anon, "foo_download/1.0.0", None, 1);
-    assert_dl_count(&anon, "foo_download", None, 1);
+    assert_dl_count(&anon, "foo_download/1.0.0", None, 1).await;
+    assert_dl_count(&anon, "foo_download", None, 1).await;
 
     let yesterday = (Utc::now().date_naive() + Duration::days(-1)).format("%F");
     let query = format!("before_date={yesterday}");
-    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 0);
+    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 0).await;
     // crate/downloads always returns the last 90 days and ignores date params
-    assert_dl_count(&anon, "foo_download", Some(&query), 1);
+    assert_dl_count(&anon, "foo_download", Some(&query), 1).await;
 
     let tomorrow = (Utc::now().date_naive() + Duration::days(1)).format("%F");
     let query = format!("before_date={tomorrow}");
-    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 1);
-    assert_dl_count(&anon, "foo_download", Some(&query), 1);
+    assert_dl_count(&anon, "foo_download/1.0.0", Some(&query), 1).await;
+    assert_dl_count(&anon, "foo_download", Some(&query), 1).await;
 }
 
-#[test]
-fn test_download_with_counting_via_cdn() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_download_with_counting_via_cdn() {
     let (app, anon, user) = TestApp::init().with_user();
 
     app.db(|conn| {
@@ -108,14 +107,14 @@ fn test_download_with_counting_via_cdn() {
             .expect_build(conn);
     });
 
-    download(&anon, "foo/1.0.0");
+    download(&anon, "foo/1.0.0").await;
 
-    assert_dl_count(&anon, "foo/1.0.0", None, 0);
-    assert_dl_count(&anon, "foo", None, 0);
+    assert_dl_count(&anon, "foo/1.0.0", None, 0).await;
+    assert_dl_count(&anon, "foo", None, 0).await;
 }
 
-#[test]
-fn test_crate_downloads() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
 
     app.db(|conn| {
@@ -126,17 +125,17 @@ fn test_crate_downloads() {
             .expect_build(conn);
     });
 
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.1.0");
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.1.0").await;
 
     app.db(|conn| {
         save_version_downloads("foo", "1.0.0", 3, conn);
         save_version_downloads("foo", "1.1.0", 1, conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/foo/downloads");
+    let response = anon.async_get::<()>("/api/v1/crates/foo/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     let json = response.json();
     assert_json_snapshot!(json, {
@@ -144,7 +143,7 @@ fn test_crate_downloads() {
     });
 
     // check different crate name
-    let response = anon.get::<()>("/api/v1/crates/bar/downloads");
+    let response = anon.async_get::<()>("/api/v1/crates/bar/downloads").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -152,13 +151,13 @@ fn test_crate_downloads() {
     );
 
     // check non-canonical crate name
-    let response = anon.get::<()>("/api/v1/crates/FOO/downloads");
+    let response = anon.async_get::<()>("/api/v1/crates/FOO/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json);
 }
 
-#[test]
-fn test_version_downloads() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_version_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
 
     app.db(|conn| {
@@ -169,17 +168,19 @@ fn test_version_downloads() {
             .expect_build(conn);
     });
 
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.0.0");
-    download(&anon, "foo/1.1.0");
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.0.0").await;
+    download(&anon, "foo/1.1.0").await;
 
     app.db(|conn| {
         save_version_downloads("foo", "1.0.0", 3, conn);
         save_version_downloads("foo", "1.1.0", 1, conn);
     });
 
-    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo/1.0.0/downloads")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     let json = response.json();
     assert_json_snapshot!(json, {
@@ -187,7 +188,9 @@ fn test_version_downloads() {
     });
 
     // check different crate name
-    let response = anon.get::<()>("/api/v1/crates/bar/1.0.0/downloads");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/bar/1.0.0/downloads")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -195,12 +198,16 @@ fn test_version_downloads() {
     );
 
     // check non-canonical crate name
-    let response = anon.get::<()>("/api/v1/crates/FOO/1.0.0/downloads");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/FOO/1.0.0/downloads")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json);
 
     // check missing version
-    let response = anon.get::<()>("/api/v1/crates/foo/2.0.0/downloads");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo/2.0.0/downloads")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -208,7 +215,9 @@ fn test_version_downloads() {
     );
 
     // check invalid version
-    let response = anon.get::<()>("/api/v1/crates/foo/invalid-version/downloads");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo/invalid-version/downloads")
+        .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),

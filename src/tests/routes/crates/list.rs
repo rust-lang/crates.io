@@ -10,10 +10,10 @@ use insta::assert_json_snapshot;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-#[test]
-fn index() {
+#[tokio::test(flavor = "multi_thread")]
+async fn index() {
     let (app, anon) = TestApp::init().empty();
-    for json in search_both(&anon, "") {
+    for json in search_both(&anon, "").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
@@ -25,7 +25,7 @@ fn index() {
         CrateBuilder::new("fooindex", u.id).expect_build(conn)
     });
 
-    for json in search_both(&anon, "") {
+    for json in search_both(&anon, "").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].name, krate.name);
@@ -33,9 +33,9 @@ fn index() {
     }
 }
 
-#[test]
+#[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-fn index_queries() {
+async fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -61,94 +61,94 @@ fn index_queries() {
         (krate, krate2)
     });
 
-    for json in search_both(&anon, "q=baz") {
+    for json in search_both(&anon, "q=baz").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
 
     // All of these fields should be indexed/searched by the queries
-    for json in search_both(&anon, "q=foo") {
+    for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.crates.len(), 2);
         assert_eq!(json.meta.total, 2);
     }
 
-    for json in search_both(&anon, "q=kw1") {
+    for json in search_both(&anon, "q=kw1").await {
         assert_eq!(json.crates.len(), 3);
         assert_eq!(json.meta.total, 3);
     }
 
-    for json in search_both(&anon, "q=readme") {
+    for json in search_both(&anon, "q=readme").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both(&anon, "q=description") {
+    for json in search_both(&anon, "q=description").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
     // Query containing a space
-    for json in search_both(&anon, "q=foo%20kw3") {
+    for json in search_both(&anon, "q=foo%20kw3").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both_by_user_id(&anon, user.id) {
+    for json in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(json.crates.len(), 4);
         assert_eq!(json.meta.total, 4);
     }
 
-    for json in search_both_by_user_id(&anon, 0) {
+    for json in search_both_by_user_id(&anon, 0).await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
 
-    for json in search_both(&anon, "letter=F") {
+    for json in search_both(&anon, "letter=F").await {
         assert_eq!(json.crates.len(), 2);
         assert_eq!(json.meta.total, 2);
     }
 
-    for json in search_both(&anon, "letter=B") {
+    for json in search_both(&anon, "letter=B").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both(&anon, "letter=b") {
+    for json in search_both(&anon, "letter=b").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both(&anon, "letter=c") {
+    for json in search_both(&anon, "letter=c").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
 
-    for json in search_both(&anon, "keyword=kw1") {
+    for json in search_both(&anon, "keyword=kw1").await {
         assert_eq!(json.crates.len(), 3);
         assert_eq!(json.meta.total, 3);
     }
 
-    for json in search_both(&anon, "keyword=KW1") {
+    for json in search_both(&anon, "keyword=KW1").await {
         assert_eq!(json.crates.len(), 3);
         assert_eq!(json.meta.total, 3);
     }
 
-    for json in search_both(&anon, "keyword=kw2") {
+    for json in search_both(&anon, "keyword=kw2").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
 
-    for json in search_both(&anon, "all_keywords=kw1%20kw3") {
+    for json in search_both(&anon, "all_keywords=kw1%20kw3").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both(&anon, "q=foo&keyword=kw1") {
+    for json in search_both(&anon, "q=foo&keyword=kw1").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 
-    for json in search_both(&anon, "q=foo2&keyword=kw1") {
+    for json in search_both(&anon, "q=foo2&keyword=kw1").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
@@ -164,44 +164,44 @@ fn index_queries() {
         Category::update_crate(conn, &krate2, &["cat1::bar"]).unwrap();
     });
 
-    for cl in search_both(&anon, "category=cat1") {
+    for cl in search_both(&anon, "category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
         assert_eq!(cl.meta.total, 2);
     }
 
-    for cl in search_both(&anon, "category=cat1::bar") {
+    for cl in search_both(&anon, "category=cat1::bar").await {
         assert_eq!(cl.crates.len(), 1);
         assert_eq!(cl.meta.total, 1);
     }
 
-    for cl in search_both(&anon, "keyword=cat2") {
+    for cl in search_both(&anon, "keyword=cat2").await {
         assert_eq!(cl.crates.len(), 0);
         assert_eq!(cl.meta.total, 0);
     }
 
-    for cl in search_both(&anon, "q=readme&category=cat1") {
+    for cl in search_both(&anon, "q=readme&category=cat1").await {
         assert_eq!(cl.crates.len(), 1);
         assert_eq!(cl.meta.total, 1);
     }
 
-    for cl in search_both(&anon, "keyword=kw1&category=cat1") {
+    for cl in search_both(&anon, "keyword=kw1&category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
         assert_eq!(cl.meta.total, 2);
     }
 
-    for cl in search_both(&anon, "keyword=kw3&category=cat1") {
+    for cl in search_both(&anon, "keyword=kw3&category=cat1").await {
         assert_eq!(cl.crates.len(), 0);
         assert_eq!(cl.meta.total, 0);
     }
 
     // ignores 0x00 characters that Postgres does not support
-    for cl in search_both(&anon, "q=k%00w1") {
+    for cl in search_both(&anon, "q=k%00w1").await {
         assert_eq!(cl.meta.total, 3);
     }
 }
 
-#[test]
-fn search_includes_crates_where_name_is_stopword() {
+#[tokio::test(flavor = "multi_thread")]
+async fn search_includes_crates_where_name_is_stopword() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     app.db(|conn| {
@@ -210,14 +210,14 @@ fn search_includes_crates_where_name_is_stopword() {
             .readme("crate which does things")
             .expect_build(conn);
     });
-    for json in search_both(&anon, "q=which") {
+    for json in search_both(&anon, "q=which").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
 }
 
-#[test]
-fn exact_match_first_on_queries() {
+#[tokio::test(flavor = "multi_thread")]
+async fn exact_match_first_on_queries() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -239,21 +239,21 @@ fn exact_match_first_on_queries() {
             .expect_build(conn);
     });
 
-    for json in search_both(&anon, "q=foo-exact") {
+    for json in search_both(&anon, "q=foo-exact").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "foo_exact");
         assert_eq!(json.crates[1].name, "baz_exact");
         assert_eq!(json.crates[2].name, "bar-exact");
     }
 
-    for json in search_both(&anon, "q=bar_exact") {
+    for json in search_both(&anon, "q=bar_exact").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "bar-exact");
         assert_eq!(json.crates[1].name, "baz_exact");
         assert_eq!(json.crates[2].name, "foo_exact");
     }
 
-    for json in search_both(&anon, "q=baz_exact") {
+    for json in search_both(&anon, "q=baz_exact").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "baz_exact");
         assert_eq!(json.crates[1].name, "bar-exact");
@@ -261,9 +261,9 @@ fn exact_match_first_on_queries() {
     }
 }
 
-#[test]
+#[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-fn index_sorting() {
+async fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -323,14 +323,14 @@ fn index_sorting() {
     });
 
     // Sort by downloads
-    for json in search_both(&anon, "sort=downloads") {
+    for json in search_both(&anon, "sort=downloads").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "other_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=downloads");
+    let (resp, calls) = page_with_seek(&anon, "sort=downloads").await;
     assert_eq!(resp[0].crates[0].name, "other_sort");
     assert_eq!(resp[1].crates[0].name, "baz_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
@@ -339,14 +339,14 @@ fn index_sorting() {
     assert_eq!(calls, 5);
 
     // Sort by recent-downloads
-    for json in search_both(&anon, "sort=recent-downloads") {
+    for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "foo_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads");
+    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads").await;
     assert_eq!(resp[0].crates[0].name, "baz_sort");
     assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
@@ -355,14 +355,14 @@ fn index_sorting() {
     assert_eq!(calls, 5);
 
     // Sort by recent-updates
-    for json in search_both(&anon, "sort=recent-updates") {
+    for json in search_both(&anon, "sort=recent-updates").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "other_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-updates");
+    let (resp, calls) = page_with_seek(&anon, "sort=recent-updates").await;
     assert_eq!(resp[0].crates[0].name, "other_sort");
     assert_eq!(resp[1].crates[0].name, "baz_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
@@ -371,14 +371,14 @@ fn index_sorting() {
     assert_eq!(calls, 5);
 
     // Sort by new
-    for json in search_both(&anon, "sort=new") {
+    for json in search_both(&anon, "sort=new").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "bar_sort");
         assert_eq!(json.crates[1].name, "other_sort");
         assert_eq!(json.crates[2].name, "baz_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=new");
+    let (resp, calls) = page_with_seek(&anon, "sort=new").await;
     assert_eq!(resp[0].crates[0].name, "bar_sort");
     assert_eq!(resp[1].crates[0].name, "other_sort");
     assert_eq!(resp[2].crates[0].name, "baz_sort");
@@ -396,7 +396,7 @@ fn index_sorting() {
 
     // Sort by alpha with query
     for query in ["sort=alpha&q=bar_sort", "sort=alpha&q=sort"] {
-        let (resp, calls) = page_with_seek(&anon, query);
+        let (resp, calls) = page_with_seek(&anon, query).await;
         assert_eq!(calls, resp[0].meta.total + 1);
         let decoded_seeks = resp
             .iter()
@@ -420,7 +420,7 @@ fn index_sorting() {
         let mut sorted = decoded_seeks.to_vec();
         sorted.sort_by_key(|k| (Reverse(k.0), k.1.to_owned()));
         assert_eq!(sorted, decoded_seeks);
-        for json in search_both(&anon, query) {
+        for json in search_both(&anon, query).await {
             assert_eq!(json.meta.total, resp[0].meta.total);
             for (c, r) in json.crates.iter().zip(&resp) {
                 assert_eq!(c.name, r.crates[0].name);
@@ -431,7 +431,7 @@ fn index_sorting() {
     // Sort by relevance
     // Add query containing a space to ensure tsquery works
     for query in ["q=foo_sort", "q=sort", "q=foo%20sort"] {
-        let (resp, calls) = page_with_seek(&anon, query);
+        let (resp, calls) = page_with_seek(&anon, query).await;
         assert_eq!(calls, resp[0].meta.total + 1);
         let decoded_seeks = resp
             .iter()
@@ -455,7 +455,7 @@ fn index_sorting() {
         let mut sorted = decoded_seeks.clone();
         sorted.sort_by_key(|k| (Reverse(k.0), Reverse(k.1), k.2.to_owned()));
         assert_eq!(sorted, decoded_seeks);
-        for json in search_both(&anon, query) {
+        for json in search_both(&anon, query).await {
             assert_eq!(json.meta.total, resp[0].meta.total);
             for (c, r) in json.crates.iter().zip(&resp) {
                 assert_eq!(c.name, r.crates[0].name);
@@ -465,14 +465,14 @@ fn index_sorting() {
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
-    for json in search_both(&anon, "sort=recent-downloads") {
+    for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "foo_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads");
+    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads").await;
     assert_eq!(resp[0].crates[0].name, "baz_sort");
     assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
@@ -481,9 +481,9 @@ fn index_sorting() {
     assert_eq!(calls, 5);
 }
 
-#[test]
+#[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-fn ignore_exact_match_on_queries_with_sort() {
+async fn ignore_exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -549,28 +549,28 @@ fn ignore_exact_match_on_queries_with_sort() {
     });
 
     // Sort by downloads, order always the same no matter the crate name query
-    for json in search_both(&anon, "q=foo_sort&sort=downloads") {
+    for json in search_both(&anon, "q=foo_sort&sort=downloads").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "bar_sort");
         assert_eq!(json.crates[2].name, "foo_sort");
     }
 
-    for json in search_both(&anon, "q=bar_sort&sort=downloads") {
+    for json in search_both(&anon, "q=bar_sort&sort=downloads").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "bar_sort");
         assert_eq!(json.crates[2].name, "foo_sort");
     }
 
-    for json in search_both(&anon, "q=baz_sort&sort=downloads") {
+    for json in search_both(&anon, "q=baz_sort&sort=downloads").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "bar_sort");
         assert_eq!(json.crates[2].name, "foo_sort");
     }
 
-    for json in search_both(&anon, "q=const&sort=downloads") {
+    for json in search_both(&anon, "q=const&sort=downloads").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "other_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
@@ -579,7 +579,7 @@ fn ignore_exact_match_on_queries_with_sort() {
     }
 
     // Sort by recent-downloads, order always the same no matter the crate name query
-    for json in search_both(&anon, "q=bar_sort&sort=recent-downloads") {
+    for json in search_both(&anon, "q=bar_sort&sort=recent-downloads").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "foo_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
@@ -588,7 +588,7 @@ fn ignore_exact_match_on_queries_with_sort() {
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
-    for json in search_both(&anon, "sort=recent-downloads") {
+    for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "foo_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
@@ -597,7 +597,7 @@ fn ignore_exact_match_on_queries_with_sort() {
     }
 
     // Sort by recent-updates
-    for json in search_both(&anon, "q=bar_sort&sort=recent-updates") {
+    for json in search_both(&anon, "q=bar_sort&sort=recent-updates").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "bar_sort");
@@ -605,7 +605,7 @@ fn ignore_exact_match_on_queries_with_sort() {
     }
 
     // Sort by new
-    for json in search_both(&anon, "q=bar_sort&sort=new") {
+    for json in search_both(&anon, "q=bar_sort&sort=new").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "bar_sort");
         assert_eq!(json.crates[1].name, "baz_sort");
@@ -613,8 +613,8 @@ fn ignore_exact_match_on_queries_with_sort() {
     }
 }
 
-#[test]
-fn multiple_ids() {
+#[tokio::test(flavor = "multi_thread")]
+async fn multiple_ids() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -628,7 +628,9 @@ fn multiple_ids() {
     for json in search_both(
         &anon,
         "ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown",
-    ) {
+    )
+    .await
+    {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "bar");
         assert_eq!(json.crates[1].name, "baz");
@@ -636,8 +638,8 @@ fn multiple_ids() {
     }
 }
 
-#[test]
-fn loose_search_order() {
+#[tokio::test(flavor = "multi_thread")]
+async fn loose_search_order() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -668,7 +670,7 @@ fn loose_search_order() {
             .expect_build(conn);
         vec![one, two, three, four]
     });
-    for search_temp in search_both(&anon, "q=temp") {
+    for search_temp in search_both(&anon, "q=temp").await {
         assert_eq!(search_temp.meta.total, 4);
         assert_eq!(search_temp.crates.len(), 4);
         for (lhs, rhs) in search_temp.crates.iter().zip(&ordered) {
@@ -676,14 +678,14 @@ fn loose_search_order() {
         }
     }
 
-    for search_temp in search_both(&anon, "q=te") {
+    for search_temp in search_both(&anon, "q=te").await {
         assert_eq!(search_temp.meta.total, 3);
         assert_eq!(search_temp.crates.len(), 3);
     }
 }
 
-#[test]
-fn index_include_yanked() {
+#[tokio::test(flavor = "multi_thread")]
+async fn index_include_yanked() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -710,7 +712,7 @@ fn index_include_yanked() {
     });
 
     // Include fully yanked (all versions were yanked) crates
-    for json in search_both(&anon, "include_yanked=yes&sort=alphabetical") {
+    for json in search_both(&anon, "include_yanked=yes&sort=alphabetical").await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "all_yanked");
         assert_eq!(json.crates[1].name, "newest_yanked");
@@ -719,7 +721,7 @@ fn index_include_yanked() {
     }
 
     // Do not include fully yanked (all versions were yanked) crates
-    for json in search_both(&anon, "include_yanked=no&sort=alphabetical") {
+    for json in search_both(&anon, "include_yanked=no&sort=alphabetical").await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "newest_yanked");
         assert_eq!(json.crates[1].name, "oldest_yanked");
@@ -727,8 +729,8 @@ fn index_include_yanked() {
     }
 }
 
-#[test]
-fn yanked_versions_are_not_considered_for_max_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn yanked_versions_are_not_considered_for_max_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -740,14 +742,14 @@ fn yanked_versions_are_not_considered_for_max_version() {
             .expect_build(conn);
     });
 
-    for json in search_both(&anon, "q=foo") {
+    for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].max_version, "1.0.0");
     }
 }
 
-#[test]
-fn max_stable_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn max_stable_version() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -762,7 +764,7 @@ fn max_stable_version() {
             .expect_build(conn);
     });
 
-    for json in search_both(&anon, "q=foo") {
+    for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
     }
@@ -774,8 +776,8 @@ fn max_stable_version() {
 /// also that recent download counts are returned in recent_downloads,
 /// and total downloads counts are returned in downloads, and that
 /// these numbers do not overlap.
-#[test]
-fn test_recent_download_count() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_recent_download_count() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -794,7 +796,7 @@ fn test_recent_download_count() {
             .expect_build(conn);
     });
 
-    for json in search_both(&anon, "sort=recent-downloads") {
+    for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 2);
 
         assert_eq!(json.crates[0].name, "sweet_potato_snack");
@@ -811,8 +813,8 @@ fn test_recent_download_count() {
 /// Given one crate with zero downloads, check that the crate
 /// still shows up in index results, but that it displays 0
 /// for both recent downloads and downloads.
-#[test]
-fn test_zero_downloads() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_zero_downloads() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -825,7 +827,7 @@ fn test_zero_downloads() {
             .expect_build(conn);
     });
 
-    for json in search_both(&anon, "sort=recent-downloads") {
+    for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].name, "green_ball");
         assert_eq!(json.crates[0].recent_downloads, Some(0));
@@ -836,8 +838,8 @@ fn test_zero_downloads() {
 /// Given two crates, one with more all-time downloads, the other with
 /// more downloads in the past 90 days, check that the index page for
 /// categories and keywords is sorted by recent downloads by default.
-#[test]
-fn test_default_sort_recent() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -862,7 +864,7 @@ fn test_default_sort_recent() {
 
     // test that index for keywords is sorted by recent_downloads
     // by default
-    for json in search_both(&anon, "keyword=dog") {
+    for json in search_both(&anon, "keyword=dog").await {
         assert_eq!(json.meta.total, 2);
 
         assert_eq!(json.crates[0].name, "green_ball");
@@ -885,7 +887,7 @@ fn test_default_sort_recent() {
 
     // test that index for categories is sorted by recent_downloads
     // by default
-    for json in search_both(&anon, "category=animal") {
+    for json in search_both(&anon, "category=animal").await {
         assert_eq!(json.meta.total, 2);
 
         assert_eq!(json.crates[0].name, "green_ball");
@@ -899,8 +901,8 @@ fn test_default_sort_recent() {
     }
 }
 
-#[test]
-fn pagination_links_included_if_applicable() {
+#[tokio::test(flavor = "multi_thread")]
+async fn pagination_links_included_if_applicable() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -913,10 +915,10 @@ fn pagination_links_included_if_applicable() {
     // This uses a filter (`page=n`) to disable seek-based pagination, as seek-based pagination
     // does not return page numbers.
 
-    let page1 = anon.search("letter=p&page=1&per_page=1");
-    let page2 = anon.search("letter=p&page=2&per_page=1");
-    let page3 = anon.search("letter=p&page=3&per_page=1");
-    let page4 = anon.search("letter=p&page=4&per_page=1");
+    let page1 = anon.async_search("letter=p&page=1&per_page=1").await;
+    let page2 = anon.async_search("letter=p&page=2&per_page=1").await;
+    let page3 = anon.async_search("letter=p&page=3&per_page=1").await;
+    let page4 = anon.async_search("letter=p&page=4&per_page=1").await;
 
     assert_eq!(
         Some("?letter=p&page=2&per_page=1".to_string()),
@@ -942,8 +944,8 @@ fn pagination_links_included_if_applicable() {
     assert_eq!(page4.meta.total, 0);
 }
 
-#[test]
-fn seek_based_pagination() {
+#[tokio::test(flavor = "multi_thread")]
+async fn seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -957,7 +959,7 @@ fn seek_based_pagination() {
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
-        let resp = anon.search(current_url.trim_start_matches('?'));
+        let resp = anon.async_search(current_url.trim_start_matches('?')).await;
         calls += 1;
 
         results.append(
@@ -991,8 +993,8 @@ fn seek_based_pagination() {
     );
 }
 
-#[test]
-fn test_pages_work_even_with_seek_based_pagination() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pages_work_even_with_seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -1003,27 +1005,27 @@ fn test_pages_work_even_with_seek_based_pagination() {
     });
 
     // The next_page returned by the request is seek-based
-    let first = anon.search("per_page=1");
+    let first = anon.async_search("per_page=1").await;
     assert!(first.meta.next_page.unwrap().contains("seek="));
     assert_eq!(first.meta.total, 3);
 
     // Calling with page=2 will revert to offset-based pagination
-    let second = anon.search("page=2&per_page=1");
+    let second = anon.async_search("page=2&per_page=1").await;
     assert!(second.meta.next_page.unwrap().contains("page=3"));
     assert_eq!(second.meta.total, 3);
 }
 
-#[test]
-fn invalid_seek_parameter() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_seek_parameter() {
     let (_app, anon, _cookie) = TestApp::init().with_user();
 
-    let response = anon.get::<()>("/api/v1/crates?seek=broken");
+    let response = anon.async_get::<()>("/api/v1/crates?seek=broken").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
 
-#[test]
-fn pagination_parameters_only_accept_integers() {
+#[tokio::test(flavor = "multi_thread")]
+async fn pagination_parameters_only_accept_integers() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -1033,16 +1035,18 @@ fn pagination_parameters_only_accept_integers() {
         CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
     });
 
-    let response =
-        anon.get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception");
+    let response = anon
+        .async_get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
         json!({ "errors": [{ "detail": "invalid digit found in string" }] })
     );
 
-    let response =
-        anon.get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1");
+    let response = anon
+        .async_get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -1050,22 +1054,22 @@ fn pagination_parameters_only_accept_integers() {
     );
 }
 
-#[test]
-fn crates_by_user_id() {
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_by_user_id() {
     let (app, _, user) = TestApp::init().with_user();
     let id = user.as_model().id;
     app.db(|conn| {
         CrateBuilder::new("foo_my_packages", id).expect_build(conn);
     });
 
-    for response in search_both_by_user_id(&user, id) {
+    for response in search_both_by_user_id(&user, id).await {
         assert_eq!(response.crates.len(), 1);
         assert_eq!(response.meta.total, 1);
     }
 }
 
-#[test]
-fn crates_by_user_id_not_including_deleted_owners() {
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_by_user_id_not_including_deleted_owners() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -1074,7 +1078,7 @@ fn crates_by_user_id_not_including_deleted_owners() {
         krate.owner_remove(conn, "foo").unwrap();
     });
 
-    for response in search_both_by_user_id(&anon, user.id) {
+    for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);
         assert_eq!(response.meta.total, 0);
     }
@@ -1083,11 +1087,14 @@ fn crates_by_user_id_not_including_deleted_owners() {
 static PAGE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
 
 // search with both offset-based (prepend with `page=1` query) and seek-based pagination
-fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2] {
+async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2] {
     if PAGE_RE.is_match(query) {
         panic!("url already contains page param");
     }
-    let (offset, seek) = (anon.search(&format!("page=1&{query}")), anon.search(query));
+    let (offset, seek) = (
+        anon.async_search(&format!("page=1&{query}")).await,
+        anon.async_search(query).await,
+    );
     assert!(offset
         .meta
         .next_page
@@ -1103,17 +1110,17 @@ fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2]
     [offset, seek]
 }
 
-fn search_both_by_user_id<U: RequestHelper>(anon: &U, id: i32) -> [crate::CrateList; 2] {
+async fn search_both_by_user_id<U: RequestHelper>(anon: &U, id: i32) -> [crate::CrateList; 2] {
     let url = format!("user_id={id}");
-    search_both(anon, &url)
+    search_both(anon, &url).await
 }
 
-fn page_with_seek<U: RequestHelper>(anon: &U, query: &str) -> (Vec<crate::CrateList>, i32) {
+async fn page_with_seek<U: RequestHelper>(anon: &U, query: &str) -> (Vec<crate::CrateList>, i32) {
     let mut url = Some(format!("?per_page=1&{query}"));
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
-        let resp = anon.search(current_url.trim_start_matches('?'));
+        let resp = anon.async_search(current_url.trim_start_matches('?')).await;
         calls += 1;
         if calls > 200 {
             panic!("potential infinite loop detected!")

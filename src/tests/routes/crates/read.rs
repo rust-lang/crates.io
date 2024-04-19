@@ -4,8 +4,8 @@ use diesel::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
-#[test]
-fn show() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -37,7 +37,7 @@ fn show() {
         krate
     });
 
-    let response = anon.get::<()>("/api/v1/crates/foo_show");
+    let response = anon.async_get::<()>("/api/v1/crates/foo_show").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -48,8 +48,8 @@ fn show() {
     });
 }
 
-#[test]
-fn show_minimal() {
+#[tokio::test(flavor = "multi_thread")]
+async fn show_minimal() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -67,7 +67,9 @@ fn show_minimal() {
             .expect_build(conn)
     });
 
-    let response = anon.get::<()>("/api/v1/crates/foo_show_minimal?include=");
+    let response = anon
+        .async_get::<()>("/api/v1/crates/foo_show_minimal?include=")
+        .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -75,28 +77,28 @@ fn show_minimal() {
     });
 }
 
-#[test]
-fn test_missing() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_missing() {
     let (_, anon) = TestApp::init().empty();
 
-    let response = anon.get::<()>("/api/v1/crates/missing");
+    let response = anon.async_get::<()>("/api/v1/crates/missing").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `missing` does not exist"}]}"###);
 }
 
-#[test]
-fn version_size() {
+#[tokio::test(flavor = "multi_thread")]
+async fn version_size() {
     let (_, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_version_size", "1.0.0");
-    user.publish_crate(crate_to_publish).good();
+    user.async_publish_crate(crate_to_publish).await.good();
 
     // Add a file to version 2 so that it's a different size than version 1
     let crate_to_publish = PublishBuilder::new("foo_version_size", "2.0.0")
         .add_file("foo_version_size-2.0.0/big", "a");
-    user.publish_crate(crate_to_publish).good();
+    user.async_publish_crate(crate_to_publish).await.good();
 
-    let crate_json = user.show_crate("foo_version_size");
+    let crate_json = user.async_show_crate("foo_version_size").await;
 
     let version1 = crate_json
         .versions
@@ -117,8 +119,8 @@ fn version_size() {
     assert_eq!(version2.crate_size, Some(184));
 }
 
-#[test]
-fn block_bad_documentation_url() {
+#[tokio::test(flavor = "multi_thread")]
+async fn block_bad_documentation_url() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
@@ -128,16 +130,16 @@ fn block_bad_documentation_url() {
             .expect_build(conn)
     });
 
-    let json = anon.show_crate("foo_bad_doc_url");
+    let json = anon.async_show_crate("foo_bad_doc_url").await;
     assert_eq!(json.krate.documentation, None);
 }
 
-#[test]
-fn test_new_name() {
+#[tokio::test(flavor = "multi_thread")]
+async fn test_new_name() {
     let (app, anon, user) = TestApp::init().with_user();
     app.db(|conn| CrateBuilder::new("new", user.as_model().id).expect_build(conn));
 
-    let response = anon.get::<()>("/api/v1/crates/new?include=");
+    let response = anon.async_get::<()>("/api/v1/crates/new?include=").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
