@@ -16,8 +16,8 @@ static GITHUB_PUBLIC_KEY_IDENTIFIER: &str =
     "f9525bf080f75b3506ca1ead061add62b8633a346606dc5fe544e29231c6ee0d";
 static GITHUB_PUBLIC_KEY_SIGNATURE: &str = "MEUCIFLZzeK++IhS+y276SRk2Pe5LfDrfvTXu6iwKKcFGCrvAiEAhHN2kDOhy2I6eGkOFmxNkOJ+L2y8oQ9A2T9GGJo6WJY=";
 
-#[test]
-fn github_secret_alert_revokes_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_revokes_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
@@ -46,7 +46,7 @@ fn github_secret_alert_revokes_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json());
 
@@ -68,8 +68,8 @@ fn github_secret_alert_revokes_token() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
-#[test]
-fn github_secret_alert_for_revoked_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_for_revoked_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
@@ -101,7 +101,7 @@ fn github_secret_alert_for_revoked_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json());
 
@@ -123,8 +123,8 @@ fn github_secret_alert_for_revoked_token() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 }
 
-#[test]
-fn github_secret_alert_for_unknown_token() {
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_for_unknown_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
@@ -144,7 +144,7 @@ fn github_secret_alert_for_unknown_token() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json());
 
@@ -162,33 +162,33 @@ fn github_secret_alert_for_unknown_token() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 }
 
-#[test]
-fn github_secret_alert_invalid_signature_fails() {
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_invalid_signature_fails() {
     let (_, anon) = TestApp::init().empty();
 
     // No headers or request body
     let request = anon.post_request(URL);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Request body but no headers
     let mut request = anon.post_request(URL);
     *request.body_mut() = GITHUB_ALERT.into();
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Headers but no request body
     let mut request = anon.post_request(URL);
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Request body but only key identifier header
     let mut request = anon.post_request(URL);
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Invalid signature
@@ -196,7 +196,7 @@ fn github_secret_alert_invalid_signature_fails() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "bad signature");
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     // Invalid signature that is valid base64
@@ -204,6 +204,6 @@ fn github_secret_alert_invalid_signature_fails() {
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "YmFkIHNpZ25hdHVyZQ==");
-    let response = anon.run::<()>(request);
+    let response = anon.async_run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
