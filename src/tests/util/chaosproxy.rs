@@ -17,14 +17,12 @@ pub(crate) struct ChaosProxy {
     address: SocketAddr,
     backend_address: SocketAddr,
 
-    runtime: Runtime,
-
     break_networking_send: Sender<()>,
     restore_networking_send: Sender<()>,
 }
 
 impl ChaosProxy {
-    pub(crate) fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
+    pub(crate) fn new(backend_address: SocketAddr, runtime: &Runtime) -> anyhow::Result<Arc<Self>> {
         debug!("Creating ChaosProxy for {backend_address}");
 
         let listener = runtime.block_on(TcpListener::bind("127.0.0.1:0"))?;
@@ -38,15 +36,13 @@ impl ChaosProxy {
             address,
             backend_address,
 
-            runtime,
-
             break_networking_send,
             restore_networking_send,
         });
 
         debug!("Spawning ChaosProxy server loop");
         let instance_clone = instance.clone();
-        instance.runtime.spawn(async move {
+        runtime.spawn(async move {
             if let Err(error) = instance_clone.server_loop(listener).await {
                 error!(%error, "ChaosProxy server error");
             }
@@ -55,7 +51,10 @@ impl ChaosProxy {
         Ok(instance)
     }
 
-    pub(crate) fn proxy_database_url(url: &str) -> anyhow::Result<(Arc<Self>, String)> {
+    pub(crate) fn proxy_database_url(
+        url: &str,
+        runtime: &Runtime,
+    ) -> anyhow::Result<(Arc<Self>, String)> {
         let mut db_url = Url::parse(url).context("failed to parse database url")?;
         let backend_addr = db_url
             .socket_addrs(|| Some(5432))
@@ -64,7 +63,7 @@ impl ChaosProxy {
             .copied()
             .ok_or_else(|| anyhow!("the database url does not point to any IP"))?;
 
-        let instance = ChaosProxy::new(backend_addr)?;
+        let instance = ChaosProxy::new(backend_addr, runtime)?;
 
         db_url
             .set_ip_host(instance.address.ip())
