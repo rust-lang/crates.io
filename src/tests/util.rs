@@ -93,8 +93,12 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     #[track_caller]
     fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
+        self.app().runtime().block_on(self.async_run(request))
+    }
+
+    /// Run a request that is expected to succeed
+    async fn async_run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
         let app = self.app();
-        let rt = app.runtime();
         let router = app.router().clone();
 
         // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
@@ -103,10 +107,10 @@ pub trait RequestHelper {
         let router = router.layer(MockConnectInfo(mocket_addr));
 
         let request = request.map(Into::into);
-        let axum_response = rt.block_on(router.oneshot(request)).unwrap();
+        let axum_response = router.oneshot(request).await.unwrap();
 
         let (parts, body) = axum_response.into_parts();
-        let bytes = rt.block_on(axum::body::to_bytes(body, usize::MAX)).unwrap();
+        let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
         let bytes_response = axum::response::Response::from_parts(parts, bytes);
 
         Response::new(bytes_response)
@@ -125,20 +129,34 @@ pub trait RequestHelper {
     /// Issue a GET request
     #[track_caller]
     fn get<T>(&self, path: &str) -> Response<T> {
-        self.run(self.get_request(path))
+        self.app().runtime().block_on(self.async_get(path))
+    }
+
+    async fn async_get<T>(&self, path: &str) -> Response<T> {
+        self.async_run(self.get_request(path)).await
     }
 
     /// Issue a GET request that includes query parameters
     #[track_caller]
     fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
+        self.app()
+            .runtime()
+            .block_on(self.async_get_with_query(path, query))
+    }
+
+    async fn async_get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
         let path_and_query = format!("{path}?{query}");
         let request = self.request_builder(Method::GET, &path_and_query);
-        self.run(request)
+        self.async_run(request).await
     }
 
     /// Issue a PUT request
     #[track_caller]
     fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        self.app().runtime().block_on(self.async_put(path, body))
+    }
+
+    async fn async_put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
         let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
@@ -148,19 +166,29 @@ pub trait RequestHelper {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
-        self.run(request)
+        self.async_run(request).await
     }
 
     /// Issue a DELETE request
     #[track_caller]
     fn delete<T>(&self, path: &str) -> Response<T> {
+        self.app().runtime().block_on(self.async_delete(path))
+    }
+
+    async fn async_delete<T>(&self, path: &str) -> Response<T> {
         let request = self.request_builder(Method::DELETE, path);
-        self.run(request)
+        self.async_run(request).await
     }
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
     #[track_caller]
     fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        self.app()
+            .runtime()
+            .block_on(self.async_delete_with_body(path, body))
+    }
+
+    async fn async_delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
         let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
@@ -170,12 +198,18 @@ pub trait RequestHelper {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
-        self.run(request)
+        self.async_run(request).await
     }
 
     /// Search for crates matching a query string
     fn search(&self, query: &str) -> CrateList {
-        self.get_with_query("/api/v1/crates", query).good()
+        self.app().runtime().block_on(self.async_search(query))
+    }
+
+    async fn async_search(&self, query: &str) -> CrateList {
+        self.async_get_with_query("/api/v1/crates", query)
+            .await
+            .good()
     }
 
     /// Publish the crate and run background jobs to completion
@@ -183,43 +217,85 @@ pub trait RequestHelper {
     /// Background jobs will publish to the git index and sync to the HTTP index.
     #[track_caller]
     fn publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
-        let response = self.put("/api/v1/crates/new", body);
-        self.app().run_pending_background_jobs();
+        self.app()
+            .runtime()
+            .block_on(self.async_publish_crate(body))
+    }
+
+    async fn async_publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
+        let response = self.async_put("/api/v1/crates/new", body).await;
+        self.app().async_run_pending_background_jobs().await;
         response
     }
 
     /// Request the JSON used for a crate's page
     fn show_crate(&self, krate_name: &str) -> CrateResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_crate(krate_name))
+    }
+
+    async fn async_show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
-        self.get(&url).good()
+        self.async_get(&url).await.good()
     }
 
     /// Request the JSON used for a crate's minimal page
     fn show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_crate_minimal(krate_name))
+    }
+
+    async fn async_show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
-        self.get_with_query(&url, "include=").good()
+        self.async_get_with_query(&url, "include=").await.good()
     }
 
     /// Request the JSON used to list a crate's owners
     fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_crate_owners(krate_name))
+    }
+
+    async fn async_show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
         let url = format!("/api/v1/crates/{krate_name}/owners");
-        self.get(&url).good()
+        self.async_get(&url).await.good()
     }
 
     /// Request the JSON used for a crate version's page
     fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_version(krate_name, version))
+    }
+
+    async fn async_show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{krate_name}/{version}");
-        self.get(&url).good()
+        self.async_get(&url).await.good()
     }
 
     fn show_category(&self, category_name: &str) -> CategoryResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_category(category_name))
+    }
+
+    async fn async_show_category(&self, category_name: &str) -> CategoryResponse {
         let url = format!("/api/v1/categories/{category_name}");
-        self.get(&url).good()
+        self.async_get(&url).await.good()
     }
 
     fn show_category_list(&self) -> CategoryListResponse {
+        self.app()
+            .runtime()
+            .block_on(self.async_show_category_list())
+    }
+
+    async fn async_show_category_list(&self) -> CategoryListResponse {
         let url = "/api/v1/categories";
-        self.get(url).good()
+        self.async_get(url).await.good()
     }
 }
 
