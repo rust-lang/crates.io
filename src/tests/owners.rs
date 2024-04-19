@@ -129,7 +129,7 @@ fn new_crate_owner() {
 
     // Add the second user as an owner (with a different case to make sure that works)
     let user2 = app.db_new_user("Bar");
-    token.add_user_owner("foo_owner", "BAR");
+    token.add_named_owner("foo_owner", "BAR").good();
 
     // accept invitation for user to be added as owner
     let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
@@ -154,7 +154,7 @@ fn create_and_add_owner(
     krate: &Crate,
 ) -> MockCookieUser {
     let user = app.db_new_user(username);
-    token.add_user_owner(&krate.name, username);
+    token.add_named_owner(&krate.name, username).good();
     user.accept_ownership_invitation(&krate.name, krate.id);
     user
 }
@@ -372,7 +372,9 @@ fn invitations_list_v1() {
     let krate = app.db(|conn| CrateBuilder::new("invited_crate", owner.id).expect_build(conn));
 
     let user = app.db_new_user("invited_user");
-    token.add_user_owner("invited_crate", "invited_user");
+    token
+        .add_named_owner("invited_crate", "invited_user")
+        .good();
 
     let response = user.get::<()>("/api/v1/me/crate_owner_invitations");
     assert_eq!(response.status(), StatusCode::OK);
@@ -406,8 +408,12 @@ fn invitations_list_does_not_include_expired_invites_v1() {
 
     let krate1 = app.db(|conn| CrateBuilder::new("invited_crate_1", owner.id).expect_build(conn));
     let krate2 = app.db(|conn| CrateBuilder::new("invited_crate_2", owner.id).expect_build(conn));
-    token.add_user_owner("invited_crate_1", "invited_user");
-    token.add_user_owner("invited_crate_2", "invited_user");
+    token
+        .add_named_owner("invited_crate_1", "invited_user")
+        .good();
+    token
+        .add_named_owner("invited_crate_2", "invited_user")
+        .good();
 
     // Simulate one of the invitations expiring
     expire_invitation(&app, krate1.id);
@@ -445,7 +451,9 @@ fn test_accept_invitation() {
     let krate = app.db(|conn| CrateBuilder::new("accept_invitation", owner.id).expect_build(conn));
 
     // Invite a new owner
-    owner_token.add_user_owner("accept_invitation", "user_bar");
+    owner_token
+        .add_named_owner("accept_invitation", "user_bar")
+        .good();
 
     // New owner accepts the invitation
     invited_user.accept_ownership_invitation(&krate.name, krate.id);
@@ -471,7 +479,9 @@ fn test_decline_invitation() {
     let krate = app.db(|conn| CrateBuilder::new("decline_invitation", owner.id).expect_build(conn));
 
     // Invite a new owner
-    owner_token.add_user_owner("decline_invitation", "user_bar");
+    owner_token
+        .add_named_owner("decline_invitation", "user_bar")
+        .good();
 
     // Invited user declines the invitation
     invited_user.decline_ownership_invitation(&krate.name, krate.id);
@@ -493,7 +503,9 @@ fn test_accept_invitation_by_mail() {
     let _krate = app.db(|conn| CrateBuilder::new("accept_invitation", owner.id).expect_build(conn));
 
     // Invite a new owner
-    owner_token.add_user_owner("accept_invitation", "user_bar");
+    owner_token
+        .add_named_owner("accept_invitation", "user_bar")
+        .good();
 
     // Retrieve the ownership invitation
     let invite_token = extract_token_from_invite_email(&app.as_inner().emails);
@@ -535,7 +547,9 @@ fn test_accept_expired_invitation() {
     let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
 
     // Invite a new user
-    owner_token.add_user_owner("demo_crate", "demo_user");
+    owner_token
+        .add_named_owner("demo_crate", "demo_user")
+        .good();
 
     // Manually update the creation time to simulate the invite expiring
     expire_invitation(&app, krate.id);
@@ -568,7 +582,9 @@ fn test_decline_expired_invitation() {
     let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
 
     // Invite a new user
-    owner_token.add_user_owner("demo_crate", "demo_user");
+    owner_token
+        .add_named_owner("demo_crate", "demo_user")
+        .good();
 
     // Manually update the creation time to simulate the invite expiring
     expire_invitation(&app, krate.id);
@@ -589,7 +605,9 @@ fn test_accept_expired_invitation_by_mail() {
     let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
 
     // Invite a new owner
-    owner_token.add_user_owner("demo_crate", "demo_user");
+    owner_token
+        .add_named_owner("demo_crate", "demo_user")
+        .good();
 
     // Manually update the creation time to simulate the invite expiring
     expire_invitation(&app, krate.id);
@@ -643,7 +661,7 @@ fn inactive_users_dont_get_invitations() {
 
     let invited_user = app.db_new_user(invited_gh_login);
 
-    owner_token.add_user_owner(krate_name, "user_bar");
+    owner_token.add_named_owner(krate_name, "user_bar").good();
 
     let json = invited_user.list_invitations();
     assert_eq!(json.crate_owner_invitations.len(), 1);
@@ -667,7 +685,7 @@ fn highest_gh_id_is_most_recent_account_we_know_of() {
         CrateBuilder::new(krate_name, owner.id).expect_build(conn);
     });
 
-    owner_token.add_user_owner(krate_name, "user_bar");
+    owner_token.add_named_owner(krate_name, "user_bar").good();
 
     let json = invited_user.list_invitations();
     assert_eq!(json.crate_owner_invitations.len(), 1);

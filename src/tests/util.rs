@@ -444,9 +444,4 @@ impl MockTokenUser {
     pub fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
         self.remove_named_owners(krate_name, &[owner])
     }
-
-    /// Add a user as an owner for a crate.
-    pub fn add_user_owner(&self, krate_name: &str, username: &str) {
-        self.add_named_owner(krate_name, username).good();
-    }
 }

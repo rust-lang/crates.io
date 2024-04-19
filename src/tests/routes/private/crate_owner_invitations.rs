@@ -37,9 +37,9 @@ fn invitation_list() {
     });
     let user1 = app.db_new_user("user_1");
     let user2 = app.db_new_user("user_2");
-    token.add_user_owner("crate_1", "user_1");
-    token.add_user_owner("crate_1", "user_2");
-    token.add_user_owner("crate_2", "user_1");
+    token.add_named_owner("crate_1", "user_1").good();
+    token.add_named_owner("crate_1", "user_2").good();
+    token.add_named_owner("crate_2", "user_1").good();
 
     // user1 has invites for both crates
     let invitations = get_invitations(&user1, &format!("invitee_id={}", user1.as_model().id));
@@ -175,8 +175,8 @@ fn invitations_list_does_not_include_expired_invites() {
             CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
         )
     });
-    token.add_user_owner("crate_1", "invited_user");
-    token.add_user_owner("crate_2", "invited_user");
+    token.add_named_owner("crate_1", "invited_user").good();
+    token.add_named_owner("crate_2", "invited_user").good();
 
     // Simulate one of the invitations expiring
     crate::owners::expire_invitation(&app, crate1.id);
@@ -215,8 +215,8 @@ fn invitations_list_paginated() {
             CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
         )
     });
-    token.add_user_owner("crate_1", "invited_user");
-    token.add_user_owner("crate_2", "invited_user");
+    token.add_named_owner("crate_1", "invited_user").good();
+    token.add_named_owner("crate_2", "invited_user").good();
 
     // Fetch the first page of results
     let invitations = get_invitations(
