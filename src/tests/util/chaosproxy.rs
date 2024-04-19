@@ -7,42 +7,41 @@ use tokio::{
         tcp::{OwnedReadHalf, OwnedWriteHalf},
         TcpListener, TcpStream,
     },
-    runtime::Runtime,
     sync::broadcast::Sender,
 };
-use tracing::error;
+use tracing::{debug, error};
 use url::Url;
 
 pub(crate) struct ChaosProxy {
     address: SocketAddr,
     backend_address: SocketAddr,
 
-    runtime: Runtime,
-
     break_networking_send: Sender<()>,
     restore_networking_send: Sender<()>,
 }
 
 impl ChaosProxy {
-    pub(crate) fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
-        let runtime = Runtime::new().expect("failed to create Tokio runtime");
-        let listener = runtime.block_on(TcpListener::bind("127.0.0.1:0"))?;
+    pub(crate) async fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
+        debug!("Creating ChaosProxy for {backend_address}");
+
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        debug!("ChaosProxy listening on {address}");
 
         let (break_networking_send, _) = tokio::sync::broadcast::channel(16);
         let (restore_networking_send, _) = tokio::sync::broadcast::channel(16);
 
         let instance = Arc::new(ChaosProxy {
-            address: listener.local_addr()?,
+            address,
             backend_address,
-
-            runtime,
 
             break_networking_send,
             restore_networking_send,
         });
 
+        debug!("Spawning ChaosProxy server loop");
         let instance_clone = instance.clone();
-        instance.runtime.spawn(async move {
+        tokio::spawn(async move {
             if let Err(error) = instance_clone.server_loop(listener).await {
                 error!(%error, "ChaosProxy server error");
             }
@@ -51,7 +50,7 @@ impl ChaosProxy {
         Ok(instance)
     }
 
-    pub(crate) fn proxy_database_url(url: &str) -> anyhow::Result<(Arc<Self>, String)> {
+    pub(crate) async fn proxy_database_url(url: &str) -> anyhow::Result<(Arc<Self>, String)> {
         let mut db_url = Url::parse(url).context("failed to parse database url")?;
         let backend_addr = db_url
             .socket_addrs(|| Some(5432))
@@ -60,7 +59,7 @@ impl ChaosProxy {
             .copied()
             .ok_or_else(|| anyhow!("the database url does not point to any IP"))?;
 
-        let instance = ChaosProxy::new(backend_addr)?;
+        let instance = ChaosProxy::new(backend_addr).await?;
 
         db_url
             .set_ip_host(instance.address.ip())
@@ -69,6 +68,8 @@ impl ChaosProxy {
         db_url
             .set_port(Some(instance.address.port()))
             .map_err(|_| anyhow!("Failed to set post on the URL"))?;
+
+        debug!("ChaosProxy database URL: {db_url}");
 
         Ok((instance, db_url.into()))
     }
@@ -93,12 +94,17 @@ impl ChaosProxy {
 
         loop {
             if let Some(l) = &listener {
+                debug!("ChaosProxy waiting for connections");
                 tokio::select! {
                     accepted = l.accept() => {
-                        self.accept_connection(accepted?.0).await?;
+                        let (stream, address ) = accepted?;
+                        debug!("ChaosProxy accepted connection from {address}");
+                        self.accept_connection(stream).await?;
                     },
 
                     _ = break_networking_recv.recv() => {
+                        debug!("ChaosProxy breaking networking");
+
                         // Setting the listener to `None` results in the listener being dropped,
                         // which closes the network port. A new listener will be established when
                         // networking is restored.
@@ -106,7 +112,9 @@ impl ChaosProxy {
                     },
                 };
             } else {
+                debug!("ChaosProxy networking is broken, waiting for restore signal");
                 let _ = restore_networking_recv.recv().await;
+                debug!("ChaosProxy restoring networking");
                 listener = Some(TcpListener::bind(self.address).await?);
             }
         }

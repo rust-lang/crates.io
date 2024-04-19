@@ -225,9 +225,7 @@ pub struct TestAppBuilder {
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
     pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
+        let runtime = Runtime::new()
             .context("Failed to initialize tokio runtime")
             .unwrap();
 
@@ -237,8 +235,9 @@ impl TestAppBuilder {
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
-                let (primary_proxy, url) =
-                    ChaosProxy::proxy_database_url(test_database.url()).unwrap();
+                let (primary_proxy, url) = runtime
+                    .block_on(ChaosProxy::proxy_database_url(test_database.url()))
+                    .unwrap();
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
@@ -249,8 +248,9 @@ impl TestAppBuilder {
 
             let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
                 if self.use_chaos_proxy {
-                    let (primary_proxy, url) =
-                        ChaosProxy::proxy_database_url(test_database.url()).unwrap();
+                    let (primary_proxy, url) = runtime
+                        .block_on(ChaosProxy::proxy_database_url(test_database.url()))
+                        .unwrap();
 
                     replica.url = url.into();
                     Some(primary_proxy)

@@ -13,6 +13,7 @@ use std::process::{Child, Command, Stdio};
 use std::result::Result;
 use std::sync::{mpsc::Sender, Arc};
 use std::time::Duration;
+use tokio::runtime::Runtime;
 use url::Url;
 
 const SERVER_BOOT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -78,6 +79,7 @@ fn initialize_dummy_crate(conn: &mut PgConnection) {
 }
 
 struct ServerBin {
+    _runtime: Runtime,
     chaosproxy: Arc<ChaosProxy>,
     db_url: String,
     env: HashMap<String, String>,
@@ -86,6 +88,8 @@ struct ServerBin {
 
 impl ServerBin {
     fn prepare() -> Result<Self, Error> {
+        let runtime = Runtime::new().expect("failed to create Tokio runtime");
+
         let mut env = dotenvy::vars().collect::<HashMap<_, _>>();
         // Bind a random port every time the server is started.
         env.insert("PORT".into(), "0".into());
@@ -101,12 +105,14 @@ impl ServerBin {
 
         // Use a proxied fresh schema as the database url.
         let test_database = TestDatabase::new();
-        let (chaosproxy, db_url) = ChaosProxy::proxy_database_url(test_database.url())?;
+        let (chaosproxy, db_url) =
+            runtime.block_on(ChaosProxy::proxy_database_url(test_database.url()))?;
         env.remove("TEST_DATABASE_URL");
         env.insert("DATABASE_URL".into(), db_url.clone());
         env.insert("READ_ONLY_REPLICA_URL".into(), db_url.clone());
 
         Ok(ServerBin {
+            _runtime: runtime,
             chaosproxy,
             db_url,
             env,
