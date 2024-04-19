@@ -422,12 +422,6 @@ impl MockTokenUser {
     }
 
     /// Add to the specified crate the specified owners.
-    pub fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
-        self.app()
-            .runtime()
-            .block_on(self.async_add_named_owners(krate_name, owners))
-    }
-
     pub async fn async_add_named_owners(
         &self,
         krate_name: &str,
@@ -450,12 +444,6 @@ impl MockTokenUser {
     }
 
     /// Remove from the specified crate the specified owners.
-    pub fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
-        self.app()
-            .runtime()
-            .block_on(self.async_remove_named_owners(krate_name, owners))
-    }
-
     pub async fn async_remove_named_owners(
         &self,
         krate_name: &str,
