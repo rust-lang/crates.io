@@ -19,7 +19,7 @@ async fn show_by_crate_name_and_version() {
     });
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
-    let json: Value = anon.async_get(url).await.good();
+    let json: Value = anon.get(url).await.good();
     assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",
@@ -51,7 +51,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
     });
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";
-    let json: Value = anon.async_get(url).await.good();
+    let json: Value = anon.get(url).await.good();
     assert_json_snapshot!(json, {
         ".version.id" => insta::id_redaction(v.id),
         ".version.created_at" => "[datetime]",

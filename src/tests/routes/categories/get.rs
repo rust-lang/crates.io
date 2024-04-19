@@ -11,7 +11,7 @@ async fn show() {
     let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
-    anon.async_get(url).await.assert_not_found();
+    anon.get(url).await.assert_not_found();
 
     // Create a category and a subcategory
     app.db(|conn| {
@@ -22,7 +22,7 @@ async fn show() {
     });
 
     // The category and its subcategories should be in the json
-    let json: Value = anon.async_get(url).await.good();
+    let json: Value = anon.get(url).await.good();
     assert_json_snapshot!(json, {
         ".**.created_at" => "[datetime]",
     });
@@ -33,7 +33,7 @@ async fn show() {
 async fn update_crate() {
     // Convenience function to get the number of crates in a category
     async fn count(anon: &MockAnonymousUser, category: &str) -> usize {
-        let json = anon.async_show_category(category).await;
+        let json = anon.show_category(category).await;
         json.category.crates_cnt as usize
     }
 
@@ -90,7 +90,7 @@ async fn update_crate() {
 
     // Does not add the invalid category to the category list
     // (unlike the behavior of keywords)
-    let json = anon.async_show_category_list().await;
+    let json = anon.show_category_list().await;
     assert_eq!(json.categories.len(), 2);
     assert_eq!(json.meta.total, 2);
 

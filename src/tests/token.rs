@@ -9,12 +9,12 @@ async fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token();
 
-    anon.async_get(url).await.assert_forbidden();
-    user.async_get::<EncodableMe>(url).await.good();
+    anon.get(url).await.assert_forbidden();
+    user.get::<EncodableMe>(url).await.good();
     assert_none!(token.as_model().last_used_at);
 
     // Use the token once
-    token.async_search("following=1").await;
+    token.search("following=1").await;
 
     let token: ApiToken = app.db(|conn| {
         assert_ok!(ApiToken::belonging_to(user.as_model())
@@ -35,7 +35,7 @@ async fn old_tokens_give_specific_error_message() {
 
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");
-    let response = anon.async_run::<()>(request).await;
+    let response = anon.run::<()>(request).await;
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     assert_eq!(
         response.json(),

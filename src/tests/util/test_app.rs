@@ -155,7 +155,7 @@ impl TestApp {
             .unwrap()
     }
 
-    pub async fn async_stored_files(&self) -> Vec<String> {
+    pub async fn stored_files(&self) -> Vec<String> {
         let store = self.as_inner().storage.as_inner();
 
         let stream = store.list(None);
@@ -166,7 +166,7 @@ impl TestApp {
             .collect()
     }
 
-    pub async fn async_run_pending_background_jobs(&self) {
+    pub async fn run_pending_background_jobs(&self) {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
 

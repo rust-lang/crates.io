@@ -21,9 +21,7 @@ struct SummaryResponse {
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_doesnt_die() {
     let (_, anon) = TestApp::init().empty();
-    anon.async_get::<SummaryResponse>("/api/v1/summary")
-        .await
-        .good();
+    anon.get::<SummaryResponse>("/api/v1/summary").await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -87,7 +85,7 @@ async fn summary_new_crates() {
         });
     });
 
-    let json: SummaryResponse = anon.async_get("/api/v1/summary").await.good();
+    let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
 
     assert_eq!(json.num_crates, 5);
     assert_eq!(json.num_downloads, 6000);
@@ -146,7 +144,7 @@ async fn excluded_crate_id() {
             .expect_build(conn);
     });
 
-    let json: SummaryResponse = anon.async_get("/api/v1/summary").await.good();
+    let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
 
     assert_eq!(json.most_downloaded.len(), 1);
     assert_eq!(json.most_downloaded[0].name, "some_downloads");

@@ -48,7 +48,7 @@ async fn user_total_downloads() {
     });
 
     let url = format!("/api/v1/users/{}/stats", user.id);
-    let stats: UserStats = anon.async_get(&url).await.good();
+    let stats: UserStats = anon.get(&url).await.good();
     // does not include crates user never owned (2) or no longer owns (5)
     assert_eq!(stats.total_downloads, 30);
 }
@@ -59,6 +59,6 @@ async fn user_total_downloads_no_crates() {
     let user = user.as_model();
     let url = format!("/api/v1/users/{}/stats", user.id);
 
-    let stats: UserStats = anon.async_get(&url).await.good();
+    let stats: UserStats = anon.get(&url).await.good();
     assert_eq!(stats.total_downloads, 0);
 }

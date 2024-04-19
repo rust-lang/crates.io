@@ -13,14 +13,14 @@ async fn index_smoke_test() {
     // Add a new crate
 
     let body = PublishBuilder::new("serde", "1.0.0").body();
-    let response = token.async_put::<()>("/api/v1/crates/new", body).await;
+    let response = token.put::<()>("/api/v1/crates/new", body).await;
     assert_eq!(response.status(), StatusCode::OK);
 
     // Check that the git index is updated asynchronously
     assert_ok_eq!(upstream.list_commits(), vec!["Initial Commit"]);
     assert_ok_eq!(upstream.crate_exists("serde"), false);
 
-    app.async_run_pending_background_jobs().await;
+    app.run_pending_background_jobs().await;
     assert_ok_eq!(
         upstream.list_commits(),
         vec!["Initial Commit", "Create crate `serde`"]
@@ -29,12 +29,10 @@ async fn index_smoke_test() {
 
     // Yank the crate
 
-    let response = token
-        .async_delete::<()>("/api/v1/crates/serde/1.0.0/yank")
-        .await;
+    let response = token.delete::<()>("/api/v1/crates/serde/1.0.0/yank").await;
     assert_eq!(response.status(), StatusCode::OK);
 
-    app.async_run_pending_background_jobs().await;
+    app.run_pending_background_jobs().await;
     assert_ok_eq!(
         upstream.list_commits(),
         vec![
@@ -56,7 +54,7 @@ async fn index_smoke_test() {
         assert_ok!(jobs::enqueue_sync_to_index("serde", conn));
     });
 
-    app.async_run_pending_background_jobs().await;
+    app.run_pending_background_jobs().await;
     assert_ok_eq!(
         upstream.list_commits(),
         vec![
@@ -92,7 +90,7 @@ async fn test_config_changes() {
 
     // Add a new crate
     let body = PublishBuilder::new("serde", "1.0.0").body();
-    let response = token.async_publish_crate(body).await;
+    let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::OK);
 
     // Adjust the `config.json` file on the upstream index
@@ -101,7 +99,7 @@ async fn test_config_changes() {
 
     // Update the crate
     let body = PublishBuilder::new("serde", "1.1.0").body();
-    let response = token.async_publish_crate(body).await;
+    let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::OK);
 
     // Check that the `config.json` changes on the upstream index are preserved

@@ -31,13 +31,13 @@ async fn publish_new_crate_ratelimit_hit() {
 
     let crate_to_publish = PublishBuilder::new("rate_limited", "1.0.0");
     token
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .assert_rate_limited(LimitedAction::PublishNew);
 
-    assert_eq!(app.async_stored_files().await.len(), 0);
+    assert_eq!(app.stored_files().await.len(), 0);
 
-    let response = anon.async_get::<()>("/api/v1/crates/rate_limited").await;
+    let response = anon.get::<()>("/api/v1/crates/rate_limited").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
@@ -63,11 +63,11 @@ async fn publish_new_crate_ratelimit_expires() {
     });
 
     let crate_to_publish = PublishBuilder::new("rate_limited", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    assert_eq!(app.async_stored_files().await.len(), 2);
+    assert_eq!(app.stored_files().await.len(), 2);
 
-    let json = anon.async_show_crate("rate_limited").await;
+    let json = anon.show_crate("rate_limited").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 }
 
@@ -96,30 +96,30 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     });
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    assert_eq!(app.async_stored_files().await.len(), 2);
+    assert_eq!(app.stored_files().await.len(), 2);
 
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    assert_eq!(app.async_stored_files().await.len(), 4);
+    assert_eq!(app.stored_files().await.len(), 4);
 
-    let json = anon.async_show_crate("rate_limited2").await;
+    let json = anon.show_crate("rate_limited2").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     let crate_to_publish = PublishBuilder::new("rate_limited3", "1.0.0");
     token
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .assert_rate_limited(LimitedAction::PublishNew);
 
-    assert_eq!(app.async_stored_files().await.len(), 4);
+    assert_eq!(app.stored_files().await.len(), 4);
 
-    let response = anon.async_get::<()>("/api/v1/crates/rate_limited3").await;
+    let response = anon.get::<()>("/api/v1/crates/rate_limited3").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
@@ -149,22 +149,22 @@ async fn publish_new_crate_expired_override_ignored() {
     });
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    assert_eq!(app.async_stored_files().await.len(), 2);
+    assert_eq!(app.stored_files().await.len(), 2);
 
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.0");
 
     let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
     token
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .assert_rate_limited(LimitedAction::PublishNew);
 
-    assert_eq!(app.async_stored_files().await.len(), 2);
+    assert_eq!(app.stored_files().await.len(), 2);
 
-    let response = anon.async_get::<()>("/api/v1/crates/rate_limited2").await;
+    let response = anon.get::<()>("/api/v1/crates/rate_limited2").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
@@ -176,10 +176,10 @@ async fn publish_new_crate_rate_limit_doesnt_affect_existing_crates() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let new_version = PublishBuilder::new("rate_limited1", "1.0.1");
-    token.async_publish_crate(new_version).await.good();
+    token.publish_crate(new_version).await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -190,41 +190,41 @@ async fn publish_existing_crate_rate_limited() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.0");
-    assert_eq!(app.async_stored_files().await.len(), 2);
+    assert_eq!(app.stored_files().await.len(), 2);
 
     // Uploading the first update to the crate works
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.1");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.1");
-    assert_eq!(app.async_stored_files().await.len(), 3);
+    assert_eq!(app.stored_files().await.len(), 3);
 
     // Uploading the second update to the crate is rate limited
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
     token
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .assert_rate_limited(LimitedAction::PublishUpdate);
 
     // Check that  version 1.0.2 was not published
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.1");
-    assert_eq!(app.async_stored_files().await.len(), 3);
+    assert_eq!(app.stored_files().await.len(), 3);
 
     // Wait for the limit to be up
     thread::sleep(Duration::from_millis(500));
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
-    let json = anon.async_show_crate("rate_limited1").await;
+    let json = anon.show_crate("rate_limited1").await;
     assert_eq!(json.krate.max_version, "1.0.2");
-    assert_eq!(app.async_stored_files().await.len(), 4);
+    assert_eq!(app.stored_files().await.len(), 4);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -239,9 +239,9 @@ async fn publish_existing_crate_rate_limit_doesnt_affect_new_crates() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     // Upload a second new crate
     let crate_to_publish = PublishBuilder::new("rate_limited2", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 }

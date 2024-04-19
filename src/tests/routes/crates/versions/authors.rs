@@ -15,7 +15,7 @@ async fn authors() {
     });
 
     let json: Value = anon
-        .async_get("/api/v1/crates/foo_authors/1.0.0/authors")
+        .get("/api/v1/crates/foo_authors/1.0.0/authors")
         .await
         .good();
     let json = json.as_object().unwrap();

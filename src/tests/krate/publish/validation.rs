@@ -12,10 +12,10 @@ async fn empty_json() {
     let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
     let body = PublishBuilder::create_publish_body("{}", &tarball);
 
-    let response = token.async_publish_crate(body).await;
+    let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -24,7 +24,7 @@ async fn invalid_names() {
 
     async fn bad_name(name: &str, client: &impl RequestHelper) {
         let crate_to_publish = PublishBuilder::new(name, "1.0.0");
-        let response = client.async_publish_crate(crate_to_publish).await;
+        let response = client.publish_crate(crate_to_publish).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_json_snapshot!(response.json());
     }
@@ -41,7 +41,7 @@ async fn invalid_names() {
     bad_name("compiler_rt", &token).await;
     bad_name("coMpiLer_Rt", &token).await;
 
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -53,10 +53,10 @@ async fn invalid_version() {
     assert_ne!(json, new_json);
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
-    let response = token.async_publish_crate(body).await;
+    let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -67,13 +67,13 @@ async fn license_and_description_required() {
         .unset_license()
         .unset_description();
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
@@ -82,11 +82,11 @@ async fn license_and_description_required() {
         .license_file("foo")
         .unset_description();
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -94,11 +94,11 @@ async fn invalid_license() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -106,12 +106,12 @@ async fn invalid_urls() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0").documentation("javascript:alert('boom')"),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

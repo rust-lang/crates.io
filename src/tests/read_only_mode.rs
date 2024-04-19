@@ -13,7 +13,7 @@ async fn can_hit_read_only_endpoints_in_read_only_mode() {
         })
         .empty();
 
-    let response = anon.async_get::<()>("/api/v1/crates").await;
+    let response = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(response.status(), StatusCode::OK);
 }
 
@@ -32,7 +32,7 @@ async fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     });
 
     let response = token
-        .async_delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
+        .delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
         .await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     assert_json_snapshot!(response.json());
@@ -53,7 +53,7 @@ async fn can_download_crate_in_read_only_mode() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/foo_download_read_only/1.0.0/download")
+        .get::<()>("/api/v1/crates/foo_download_read_only/1.0.0/download")
         .await;
     assert_eq!(response.status(), StatusCode::FOUND);
 

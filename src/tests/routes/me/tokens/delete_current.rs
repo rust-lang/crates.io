@@ -20,7 +20,7 @@ async fn revoke_current_token_success() {
     });
 
     // Revoke the token
-    let response = token.async_delete::<()>("/api/v1/tokens/current").await;
+    let response = token.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
     // Ensure that the token was removed from the database
@@ -37,7 +37,7 @@ async fn revoke_current_token_success() {
 async fn revoke_current_token_without_auth() {
     let (_, anon) = TestApp::init().empty();
 
-    let response = anon.async_delete::<()>("/api/v1/tokens/current").await;
+    let response = anon.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
@@ -57,7 +57,7 @@ async fn revoke_current_token_with_cookie_user() {
     });
 
     // Revoke the token
-    let response = user.async_delete::<()>("/api/v1/tokens/current").await;
+    let response = user.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),

@@ -12,22 +12,22 @@ async fn test_redirects() {
     });
 
     // Any redirect to an existing crate and version works correctly.
-    anon.async_get::<()>("/api/v1/crates/foo-download/1.0.0/download")
+    anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download")
         .await
         .assert_redirect_ends_with("/crates/foo-download/foo-download-1.0.0.crate");
 
     // Redirects to crates with wrong capitalization are performed unconditionally.
-    anon.async_get::<()>("/api/v1/crates/Foo_downloaD/1.0.0/download")
+    anon.get::<()>("/api/v1/crates/Foo_downloaD/1.0.0/download")
         .await
         .assert_redirect_ends_with("/crates/Foo_downloaD/Foo_downloaD-1.0.0.crate");
 
     // Redirects to missing versions are performed unconditionally.
-    anon.async_get::<()>("/api/v1/crates/foo-download/2.0.0/download")
+    anon.get::<()>("/api/v1/crates/foo-download/2.0.0/download")
         .await
         .assert_redirect_ends_with("/crates/foo-download/foo-download-2.0.0.crate");
 
     // Redirects to missing crates are performed unconditionally.
-    anon.async_get::<()>("/api/v1/crates/bar-download/1.0.0/download")
+    anon.get::<()>("/api/v1/crates/bar-download/1.0.0/download")
         .await
         .assert_redirect_ends_with("/crates/bar-download/bar-download-1.0.0.crate");
 }
@@ -43,11 +43,11 @@ async fn download_with_build_metadata() {
             .expect_build(conn);
     });
 
-    anon.async_get::<()>("/api/v1/crates/foo/1.0.0+bar/download")
+    anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/download")
         .await
         .assert_redirect_ends_with("/crates/foo/foo-1.0.0%2Bbar.crate");
 
-    anon.async_get::<()>("/api/v1/crates/foo/1.0.0+bar/readme")
+    anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/readme")
         .await
         .assert_redirect_ends_with("/readmes/foo/foo-1.0.0%2Bbar.html");
 }

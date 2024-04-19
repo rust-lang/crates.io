@@ -15,6 +15,6 @@ async fn category_slugs_returns_all_slugs_in_alphabetical_order() {
             .unwrap();
     });
 
-    let response: Value = anon.async_get("/api/v1/category_slugs").await.good();
+    let response: Value = anon.get("/api/v1/category_slugs").await.good();
     assert_json_snapshot!(response);
 }

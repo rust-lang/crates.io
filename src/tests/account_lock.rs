@@ -26,7 +26,7 @@ async fn account_locked_indefinitely() {
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, None);
 
-    let response = user.async_get::<()>(URL).await;
+    let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!("This account is indefinitely locked. Reason: {LOCK_REASON}");
@@ -44,7 +44,7 @@ async fn account_locked_with_future_expiry() {
     lock_account(&app, user.as_model().id, Some(until));
 
     let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
-    let response = user.async_get::<()>(URL).await;
+    let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
 
     let error_message = format!("This account is locked until {until}. Reason: {LOCK_REASON}");
@@ -61,5 +61,5 @@ async fn expired_account_lock() {
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));
 
-    user.async_get::<serde_json::Value>(URL).await.good();
+    user.get::<serde_json::Value>(URL).await.good();
 }

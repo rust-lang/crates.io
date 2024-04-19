@@ -6,7 +6,7 @@ use insta::assert_snapshot;
 
 async fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
     let response = user
-        .async_get::<()>(&format!("/api/v1/crates/{crate_name}/following"))
+        .get::<()>(&format!("/api/v1/crates/{crate_name}/following"))
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json!({ "following": expected }));
@@ -14,7 +14,7 @@ async fn assert_is_following(crate_name: &str, expected: bool, user: &impl Reque
 
 async fn follow(crate_name: &str, user: &impl RequestHelper) {
     let response = user
-        .async_put::<()>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8])
+        .put::<()>(&format!("/api/v1/crates/{crate_name}/follow"), b"" as &[u8])
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json!({ "ok": true }));
@@ -22,7 +22,7 @@ async fn follow(crate_name: &str, user: &impl RequestHelper) {
 
 async fn unfollow(crate_name: &str, user: &impl RequestHelper) {
     let response = user
-        .async_delete::<()>(&format!("/api/v1/crates/{crate_name}/follow"))
+        .delete::<()>(&format!("/api/v1/crates/{crate_name}/follow"))
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json!({ "ok": true }));
@@ -39,19 +39,19 @@ async fn test_unauthenticated_requests() {
     });
 
     let response = anon
-        .async_get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"))
+        .get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"))
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     let response = anon
-        .async_put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8])
+        .put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8])
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     let response = anon
-        .async_delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"))
+        .delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"))
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
@@ -73,7 +73,7 @@ async fn test_following() {
     // Follow the crate and check that we are now following it.
     follow(CRATE_NAME, &user).await;
     assert_is_following(CRATE_NAME, true, &user).await;
-    assert_that!(user.async_search("following=1").await.crates, len(eq(1)));
+    assert_that!(user.search("following=1").await.crates, len(eq(1)));
 
     // Follow the crate again and check that we are still following it
     // (aka. the request is idempotent).
@@ -83,7 +83,7 @@ async fn test_following() {
     // Unfollow the crate and check that we are not following it anymore.
     unfollow(CRATE_NAME, &user).await;
     assert_is_following(CRATE_NAME, false, &user).await;
-    assert_that!(user.async_search("following=1").await.crates, empty());
+    assert_that!(user.search("following=1").await.crates, empty());
 
     // Unfollow the crate again and check that this call is also idempotent.
     unfollow(CRATE_NAME, &user).await;
@@ -95,19 +95,19 @@ async fn test_unknown_crate() {
     let (_, _, user) = TestApp::init().with_user();
 
     let response = user
-        .async_get::<()>("/api/v1/crates/unknown-crate/following")
+        .get::<()>("/api/v1/crates/unknown-crate/following")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user
-        .async_put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8])
+        .put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8])
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
 
     let response = user
-        .async_delete::<()>("/api/v1/crates/unknown-crate/follow")
+        .delete::<()>("/api/v1/crates/unknown-crate/follow")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
@@ -132,6 +132,6 @@ async fn test_api_token_auth() {
     assert_is_following(CRATE_TO_FOLLOW, true, &user).await;
     assert_is_following(CRATE_NOT_TO_FOLLOW, false, &user).await;
 
-    let json = token.async_search("following=1").await;
+    let json = token.search("following=1").await;
     assert_that!(json.crates, len(eq(1)));
 }

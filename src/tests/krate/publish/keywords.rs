@@ -11,7 +11,7 @@ async fn good_keywords() {
         .keyword("c++")
         .keyword("crates-io_index")
         .keyword("1password");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -24,17 +24,17 @@ async fn bad_keywords() {
     let (_, _, _, token) = TestApp::full().with_token();
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key", "1.0.0").keyword("super-long-keyword-name-oh-no");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("?@?%");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_bad_key", "1.0.0").keyword("áccênts");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
@@ -43,7 +43,7 @@ async fn bad_keywords() {
 async fn too_many_keywords() {
     let (app, _, _, token) = TestApp::full().with_token();
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0")
                 .keyword("one")
                 .keyword("two")
@@ -55,5 +55,5 @@ async fn too_many_keywords() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

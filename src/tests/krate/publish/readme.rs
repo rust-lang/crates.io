@@ -8,7 +8,7 @@ async fn new_krate_with_readme() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("hello world");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -20,7 +20,7 @@ async fn new_krate_with_readme() {
         "index/fo/o_/foo_readme",
         "readmes/foo_readme/foo_readme-1.0.0.html",
     ];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -28,7 +28,7 @@ async fn new_krate_with_empty_readme() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -39,7 +39,7 @@ async fn new_krate_with_empty_readme() {
         "crates/foo_readme/foo_readme-1.0.0.crate",
         "index/fo/o_/foo_readme",
     ];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -47,7 +47,7 @@ async fn new_krate_with_readme_and_plus_version() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0+foo").readme("hello world");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -59,7 +59,7 @@ async fn new_krate_with_readme_and_plus_version() {
         "index/fo/o_/foo_readme",
         "readmes/foo_readme/foo_readme-1.0.0+foo.html",
     ];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -76,24 +76,24 @@ async fn publish_after_removing_documentation() {
 
     // Verify that crates start without any documentation so the next assertion can *prove*
     // that it was the one that added the documentation
-    let json = anon.async_show_crate("docscrate").await;
+    let json = anon.show_crate("docscrate").await;
     assert_eq!(json.krate.documentation, None);
 
     // 2. Add documentation
     let crate_to_publish = PublishBuilder::new("docscrate", "0.2.1").documentation("http://foo.rs");
-    let json = token.async_publish_crate(crate_to_publish).await.good();
+    let json = token.publish_crate(crate_to_publish).await.good();
     assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
 
     // Ensure latest version also has the same documentation
-    let json = anon.async_show_crate("docscrate").await;
+    let json = anon.show_crate("docscrate").await;
     assert_eq!(json.krate.documentation, Some("http://foo.rs".to_owned()));
 
     // 3. Remove the documentation
     let crate_to_publish = PublishBuilder::new("docscrate", "0.2.2");
-    let json = token.async_publish_crate(crate_to_publish).await.good();
+    let json = token.publish_crate(crate_to_publish).await.good();
     assert_eq!(json.krate.documentation, None);
 
     // Ensure latest version no longer has documentation
-    let json = anon.async_show_crate("docscrate").await;
+    let json = anon.show_crate("docscrate").await;
     assert_eq!(json.krate.documentation, None);
 }

@@ -12,7 +12,7 @@ async fn test_owner_change_with_invalid_json() {
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
     let response = user
-        .async_delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
@@ -20,7 +20,7 @@ async fn test_owner_change_with_invalid_json() {
     // `owners` is not an array
     let input = r#"{"owners": "foo"}"#;
     let response = user
-        .async_delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
@@ -28,7 +28,7 @@ async fn test_owner_change_with_invalid_json() {
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
     let response = user
-        .async_delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
@@ -43,7 +43,7 @@ async fn test_unknown_crate() {
     let body = serde_json::to_vec(&body).unwrap();
 
     let response = user
-        .async_delete_with_body::<()>("/api/v1/crates/unknown/owners", body)
+        .delete_with_body::<()>("/api/v1/crates/unknown/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
@@ -57,7 +57,7 @@ async fn test_unknown_user() {
 
     let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
     let response = cookie
-        .async_delete_with_body::<()>("/api/v1/crates/foo/owners", body)
+        .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
@@ -71,7 +71,7 @@ async fn test_unknown_team() {
 
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
     let response = cookie
-        .async_delete_with_body::<()>("/api/v1/crates/foo/owners", body)
+        .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find team with login `github:unknown:unknown`"}]}"###);

@@ -915,10 +915,10 @@ async fn pagination_links_included_if_applicable() {
     // This uses a filter (`page=n`) to disable seek-based pagination, as seek-based pagination
     // does not return page numbers.
 
-    let page1 = anon.async_search("letter=p&page=1&per_page=1").await;
-    let page2 = anon.async_search("letter=p&page=2&per_page=1").await;
-    let page3 = anon.async_search("letter=p&page=3&per_page=1").await;
-    let page4 = anon.async_search("letter=p&page=4&per_page=1").await;
+    let page1 = anon.search("letter=p&page=1&per_page=1").await;
+    let page2 = anon.search("letter=p&page=2&per_page=1").await;
+    let page3 = anon.search("letter=p&page=3&per_page=1").await;
+    let page4 = anon.search("letter=p&page=4&per_page=1").await;
 
     assert_eq!(
         Some("?letter=p&page=2&per_page=1".to_string()),
@@ -959,7 +959,7 @@ async fn seek_based_pagination() {
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
-        let resp = anon.async_search(current_url.trim_start_matches('?')).await;
+        let resp = anon.search(current_url.trim_start_matches('?')).await;
         calls += 1;
 
         results.append(
@@ -1005,12 +1005,12 @@ async fn test_pages_work_even_with_seek_based_pagination() {
     });
 
     // The next_page returned by the request is seek-based
-    let first = anon.async_search("per_page=1").await;
+    let first = anon.search("per_page=1").await;
     assert!(first.meta.next_page.unwrap().contains("seek="));
     assert_eq!(first.meta.total, 3);
 
     // Calling with page=2 will revert to offset-based pagination
-    let second = anon.async_search("page=2&per_page=1").await;
+    let second = anon.search("page=2&per_page=1").await;
     assert!(second.meta.next_page.unwrap().contains("page=3"));
     assert_eq!(second.meta.total, 3);
 }
@@ -1019,7 +1019,7 @@ async fn test_pages_work_even_with_seek_based_pagination() {
 async fn invalid_seek_parameter() {
     let (_app, anon, _cookie) = TestApp::init().with_user();
 
-    let response = anon.async_get::<()>("/api/v1/crates?seek=broken").await;
+    let response = anon.get::<()>("/api/v1/crates?seek=broken").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
@@ -1036,7 +1036,7 @@ async fn pagination_parameters_only_accept_integers() {
     });
 
     let response = anon
-        .async_get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
+        .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -1045,7 +1045,7 @@ async fn pagination_parameters_only_accept_integers() {
     );
 
     let response = anon
-        .async_get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
+        .get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -1092,8 +1092,8 @@ async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateLi
         panic!("url already contains page param");
     }
     let (offset, seek) = (
-        anon.async_search(&format!("page=1&{query}")).await,
-        anon.async_search(query).await,
+        anon.search(&format!("page=1&{query}")).await,
+        anon.search(query).await,
     );
     assert!(offset
         .meta
@@ -1120,7 +1120,7 @@ async fn page_with_seek<U: RequestHelper>(anon: &U, query: &str) -> (Vec<crate::
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
-        let resp = anon.async_search(current_url.trim_start_matches('?')).await;
+        let resp = anon.search(current_url.trim_start_matches('?')).await;
         calls += 1;
         if calls > 200 {
             panic!("potential infinite loop detected!")

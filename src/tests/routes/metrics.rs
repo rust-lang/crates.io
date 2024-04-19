@@ -85,5 +85,5 @@ async fn request_metrics(
     if let Some(token) = token {
         req.header("Authorization", &format!("Bearer {token}"));
     }
-    anon.async_run(req).await
+    anon.run(req).await
 }

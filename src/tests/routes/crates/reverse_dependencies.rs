@@ -21,7 +21,7 @@ async fn reverse_dependencies() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -31,7 +31,7 @@ async fn reverse_dependencies() {
 
     // c1 has no dependent crates.
     let response = anon
-        .async_get::<()>("/api/v1/crates/c2/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c2/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -56,7 +56,7 @@ async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -81,7 +81,7 @@ async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -109,7 +109,7 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -134,7 +134,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -153,7 +153,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -193,7 +193,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -219,7 +219,7 @@ async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/c1/reverse_dependencies")
+        .get::<()>("/api/v1/crates/c1/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -233,7 +233,7 @@ async fn test_unknown_crate() {
     let (_, anon) = TestApp::init().empty();
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/unknown/reverse_dependencies")
+        .get::<()>("/api/v1/crates/unknown/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);

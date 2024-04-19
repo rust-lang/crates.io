@@ -18,7 +18,7 @@ impl crate::util::MockAnonymousUser {
         krate_name: &str,
     ) -> crate::util::Response<OwnerTeamsResponse> {
         let url = format!("/api/v1/crates/{krate_name}/owner_team");
-        self.async_get(&url).await
+        self.get(&url).await
     }
 }
 
@@ -32,7 +32,7 @@ async fn not_github() {
     });
 
     let response = token
-        .async_add_named_owner("foo_not_github", "dropbox:foo:foo")
+        .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -50,7 +50,7 @@ async fn weird_name() {
     });
 
     let response = token
-        .async_add_named_owner("foo_weird_name", "github:foo/../bar:wut")
+        .add_named_owner("foo_weird_name", "github:foo/../bar:wut")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -68,9 +68,7 @@ async fn one_colon() {
         CrateBuilder::new("foo_one_colon", user.as_model().id).expect_build(conn);
     });
 
-    let response = token
-        .async_add_named_owner("foo_one_colon", "github:foo")
-        .await;
+    let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
@@ -87,7 +85,7 @@ async fn add_nonexistent_team() {
     });
 
     let response = token
-        .async_add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist")
+        .add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -125,7 +123,7 @@ async fn add_renamed_team() {
     });
 
     token
-        .async_add_named_owner("foo_renamed_team", "github:test-org:core")
+        .add_named_owner("foo_renamed_team", "github:test-org:core")
         .await
         .good();
 
@@ -146,7 +144,7 @@ async fn add_team_mixed_case() {
     });
 
     token
-        .async_add_named_owner("foo_mixed_case", "github:Test-Org:Core")
+        .add_named_owner("foo_mixed_case", "github:Test-Org:Core")
         .await
         .good();
 
@@ -174,7 +172,7 @@ async fn add_team_as_org_owner() {
     });
 
     token
-        .async_add_named_owner("foo_org_owner", "github:test-org:core")
+        .add_named_owner("foo_org_owner", "github:test-org:core")
         .await
         .good();
 
@@ -203,7 +201,7 @@ async fn add_team_as_non_member() {
     });
 
     let response = token
-        .async_add_named_owner("foo_team_non_member", "github:test-org:core")
+        .add_named_owner("foo_team_non_member", "github:test-org:core")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -224,14 +222,14 @@ async fn remove_team_as_named_owner() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_remove_team", "github:test-org:core")
+        .add_named_owner("foo_remove_team", "github:test-org:core")
         .await
         .good();
 
     // Removing the individual owner is not allowed, since team members don't
     // have permission to manage ownership
     let response = token_on_both_teams
-        .async_remove_named_owner("foo_remove_team", username)
+        .remove_named_owner("foo_remove_team", username)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -240,13 +238,13 @@ async fn remove_team_as_named_owner() {
     );
 
     token_on_both_teams
-        .async_remove_named_owner("foo_remove_team", "github:test-org:core")
+        .remove_named_owner("foo_remove_team", "github:test-org:core")
         .await
         .good();
 
     let user_on_one_team = app.db_new_user("user-one-team");
     let crate_to_publish = PublishBuilder::new("foo_remove_team", "2.0.0");
-    let response = user_on_one_team.async_publish_crate(crate_to_publish).await;
+    let response = user_on_one_team.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
@@ -266,7 +264,7 @@ async fn remove_team_as_team_owner() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_remove_team_owner", "github:test-org:all")
+        .add_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await
         .good();
 
@@ -274,7 +272,7 @@ async fn remove_team_as_team_owner() {
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let response = token_on_one_team
-        .async_remove_named_owner("foo_remove_team_owner", "github:test-org:all")
+        .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -285,7 +283,7 @@ async fn remove_team_as_team_owner() {
     let user_org_owner = app.db_new_user("user-org-owner");
     let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
     let response = token_org_owner
-        .async_remove_named_owner("foo_remove_team_owner", "github:test-org:all")
+        .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -310,7 +308,7 @@ async fn remove_nonexistent_team() {
     });
 
     token
-        .async_remove_named_owner(
+        .remove_named_owner(
             "foo_remove_nonexistent",
             "github:test-org:this-does-not-exist",
         )
@@ -330,14 +328,14 @@ async fn publish_not_owned() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_not_owned", "github:test-org:core")
+        .add_named_owner("foo_not_owned", "github:test-org:core")
         .await
         .good();
 
     let user_on_one_team = app.db_new_user("user-one-team");
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
-    let response = user_on_one_team.async_publish_crate(crate_to_publish).await;
+    let response = user_on_one_team.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
@@ -356,14 +354,14 @@ async fn publish_org_owner_owned() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_not_owned", "github:test-org:core")
+        .add_named_owner("foo_not_owned", "github:test-org:core")
         .await
         .good();
 
     let user_org_owner = app.db_new_user("user-org-owner");
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
-    let response = user_org_owner.async_publish_crate(crate_to_publish).await;
+    let response = user_org_owner.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
@@ -383,7 +381,7 @@ async fn publish_owned() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_team_owned", "github:test-org:all")
+        .add_named_owner("foo_team_owned", "github:test-org:all")
         .await
         .good();
 
@@ -391,7 +389,7 @@ async fn publish_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_team_owned", "2.0.0");
     user_on_one_team
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .good();
 }
@@ -408,7 +406,7 @@ async fn add_owners_as_org_owner() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_add_owner", "github:test-org:all")
+        .add_named_owner("foo_add_owner", "github:test-org:all")
         .await
         .good();
 
@@ -416,7 +414,7 @@ async fn add_owners_as_org_owner() {
     let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
 
     let response = token_org_owner
-        .async_add_named_owner("foo_add_owner", "arbitrary_username")
+        .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -436,7 +434,7 @@ async fn add_owners_as_team_owner() {
     });
 
     token_on_both_teams
-        .async_add_named_owner("foo_add_owner", "github:test-org:all")
+        .add_named_owner("foo_add_owner", "github:test-org:all")
         .await
         .good();
 
@@ -444,7 +442,7 @@ async fn add_owners_as_team_owner() {
     let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
 
     let response = token_on_one_team
-        .async_add_named_owner("foo_add_owner", "arbitrary_username")
+        .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -467,7 +465,7 @@ async fn crates_by_team_id() {
         t
     });
 
-    let json = anon.async_search(&format!("team_id={}", team.id)).await;
+    let json = anon.search(&format!("team_id={}", team.id)).await;
     assert_eq!(json.crates.len(), 1);
 }
 
@@ -488,6 +486,6 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         t
     });
 
-    let json = anon.async_search(&format!("team_id={}", team.id)).await;
+    let json = anon.search(&format!("team_id={}", team.id)).await;
     assert_eq!(json.crates.len(), 0);
 }

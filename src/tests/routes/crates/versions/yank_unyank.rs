@@ -5,24 +5,24 @@ use http::StatusCode;
 
 pub trait YankRequestHelper {
     /// Yank the specified version of the specified crate and run all pending background jobs
-    async fn async_yank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
+    async fn yank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 
     /// Unyank the specified version of the specified crate and run all pending background jobs
-    async fn async_unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
+    async fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
 }
 
 impl<T: RequestHelper> YankRequestHelper for T {
-    async fn async_yank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
+    async fn yank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/yank");
-        let response = self.async_delete(&url).await;
-        self.app().async_run_pending_background_jobs().await;
+        let response = self.delete(&url).await;
+        self.app().run_pending_background_jobs().await;
         response
     }
 
-    async fn async_unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
+    async fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
-        let response = self.async_put(&url, &[] as &[u8]).await;
-        self.app().async_run_pending_background_jobs().await;
+        let response = self.put(&url, &[] as &[u8]).await;
+        self.app().run_pending_background_jobs().await;
         response
     }
 }
@@ -39,7 +39,7 @@ async fn yank_by_a_non_owner_fails() {
             .expect_build(conn);
     });
 
-    let response = token.async_yank("foo_not", "1.0.0").await;
+    let response = token.yank("foo_not", "1.0.0").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
         response.json(),
@@ -53,13 +53,13 @@ async fn yank_records_an_audit_action() {
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     // Yank it
-    token.async_yank("fyk", "1.0.0").await.good();
+    token.yank("fyk", "1.0.0").await.good();
 
     // Make sure it has one publish and one yank audit action
-    let json = anon.async_show_version("fyk", "1.0.0").await;
+    let json = anon.show_version("fyk", "1.0.0").await;
     let actions = json.version.audit_actions;
 
     assert_eq!(actions.len(), 2);
@@ -74,16 +74,16 @@ async fn unyank_records_an_audit_action() {
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     // Yank version 1.0.0
-    token.async_yank("fyk", "1.0.0").await.good();
+    token.yank("fyk", "1.0.0").await.good();
 
     // Unyank version 1.0.0
-    token.async_unyank("fyk", "1.0.0").await.good();
+    token.unyank("fyk", "1.0.0").await.good();
 
     // Make sure it has one publish, one yank, and one unyank audit action
-    let json = anon.async_show_version("fyk", "1.0.0").await;
+    let json = anon.show_version("fyk", "1.0.0").await;
     let actions = json.version.audit_actions;
 
     assert_eq!(actions.len(), 3);
@@ -108,7 +108,7 @@ mod auth {
         let (app, anon, cookie) = TestApp::full().with_user();
 
         let pb = PublishBuilder::new(CRATE_NAME, CRATE_VERSION);
-        cookie.async_publish_crate(pb).await.good();
+        cookie.publish_crate(pb).await.good();
 
         (app, anon, cookie)
     }
@@ -129,12 +129,12 @@ mod auth {
     async fn unauthenticated() {
         let (app, client, _) = prepare().await;
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
         assert!(!is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
         assert!(!is_yanked(&app));
@@ -144,12 +144,12 @@ mod auth {
     async fn cookie_user() {
         let (app, _, client) = prepare().await;
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -160,12 +160,12 @@ mod auth {
         let (app, _, client) = prepare().await;
         let client = client.db_new_token("test-token");
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -179,12 +179,12 @@ mod auth {
         let client =
             client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -198,12 +198,12 @@ mod auth {
         let client =
             client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
         assert!(!is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
         assert!(!is_yanked(&app));
@@ -215,12 +215,12 @@ mod auth {
         let client =
             client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None);
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -236,12 +236,12 @@ mod auth {
             None,
         );
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
@@ -257,12 +257,12 @@ mod auth {
             None,
         );
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -279,12 +279,12 @@ mod auth {
             None,
         );
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));
@@ -300,12 +300,12 @@ mod auth {
             None,
         );
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
@@ -321,12 +321,12 @@ mod auth {
             None,
         );
 
-        let response = client.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
 
-        let response = client.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
         assert!(!is_yanked(&app));
@@ -345,12 +345,12 @@ mod auth {
                 .unwrap();
         });
 
-        let response = admin.async_yank(CRATE_NAME, CRATE_VERSION).await;
+        let response = admin.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(is_yanked(&app));
 
-        let response = admin.async_unyank(CRATE_NAME, CRATE_VERSION).await;
+        let response = admin.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
         assert!(!is_yanked(&app));

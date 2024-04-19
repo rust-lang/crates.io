@@ -21,7 +21,7 @@ async fn pagination_blocks_ip_from_cidr_block_list() {
     });
 
     let response = anon
-        .async_get_with_query::<()>("/api/v1/crates", "page=2&per_page=1")
+        .get_with_query::<()>("/api/v1/crates", "page=2&per_page=1")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(

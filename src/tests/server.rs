@@ -10,7 +10,7 @@ async fn user_agent_is_required() {
     let (_app, anon) = TestApp::init().empty();
 
     let req = Request::get("/api/v1/crates").body("").unwrap();
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 
@@ -18,7 +18,7 @@ async fn user_agent_is_required() {
         .header(header::USER_AGENT, "")
         .body("")
         .unwrap();
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 }
@@ -33,7 +33,7 @@ async fn user_agent_is_not_required_for_download() {
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
@@ -51,7 +51,7 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
@@ -74,7 +74,7 @@ async fn block_traffic_via_arbitrary_header_and_value() {
         .body("")
         .unwrap();
 
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 
@@ -88,7 +88,7 @@ async fn block_traffic_via_arbitrary_header_and_value() {
         .body("")
         .unwrap();
 
-    let resp = anon.async_run::<()>(req).await;
+    let resp = anon.run::<()>(req).await;
     assert_eq!(resp.status(), StatusCode::FOUND);
 }
 
@@ -100,7 +100,7 @@ async fn block_traffic_via_ip() {
         })
         .empty();
 
-    let resp = anon.async_get::<()>("/api/v1/crates").await;
+    let resp = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(resp.json());
 }

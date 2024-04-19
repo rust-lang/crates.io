@@ -19,7 +19,7 @@ pub trait MockEmailHelper: RequestHelper {
             "kind": null
         }});
         let url = format!("/api/v1/users/{user_id}");
-        self.async_put(&url, body.to_string()).await
+        self.put(&url, body.to_string()).await
     }
 }
 

@@ -34,7 +34,7 @@ async fn test_sync_admins_job() {
     assert_eq!(admins, expected_admins);
 
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
-    app.async_run_pending_background_jobs().await;
+    app.run_pending_background_jobs().await;
 
     let admins = app.db(|conn| get_admins(conn).unwrap());
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
@@ -52,7 +52,7 @@ async fn test_sync_admins_job() {
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
-    app.async_run_pending_background_jobs().await;
+    app.run_pending_background_jobs().await;
 
     let emails = app.as_inner().emails.mails_in_memory().unwrap();
     assert_eq!(emails.len(), 2);

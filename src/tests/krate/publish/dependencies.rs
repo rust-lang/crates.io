@@ -9,13 +9,11 @@ async fn invalid_dependency_name() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
-            PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")),
-        )
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -30,7 +28,7 @@ async fn new_with_renamed_dependency() {
     let dependency = DependencyBuilder::new("package-name").rename("my-name");
 
     let crate_to_publish = PublishBuilder::new("new-krate", "1.0.0").dependency(dependency);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("new-krate");
     assert_json_snapshot!(crates);
@@ -46,14 +44,14 @@ async fn invalid_dependency_rename() {
     });
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("new-krate", "1.0.0")
                 .dependency(DependencyBuilder::new("package-name").rename("💩")),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -66,14 +64,14 @@ async fn invalid_dependency_name_starts_with_digit() {
     });
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("new-krate", "1.0.0")
                 .dependency(DependencyBuilder::new("package-name").rename("1-foo")),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -86,14 +84,14 @@ async fn invalid_dependency_name_contains_unicode_chars() {
     });
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("new-krate", "1.0.0")
                 .dependency(DependencyBuilder::new("package-name").rename("foo-🦀-bar")),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -106,14 +104,14 @@ async fn invalid_too_long_dependency_name() {
     });
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("new-krate", "1.0.0")
                 .dependency(DependencyBuilder::new("package-name").rename("f".repeat(65).as_str())),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -125,14 +123,14 @@ async fn empty_dependency_name() {
         CrateBuilder::new("package-name", user.as_model().id).expect_build(conn);
     });
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("new-krate", "1.0.0")
                 .dependency(DependencyBuilder::new("package-name").rename("")),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -147,7 +145,7 @@ async fn new_with_underscore_renamed_dependency() {
     let dependency = DependencyBuilder::new("package-name").rename("_my-name");
 
     let crate_to_publish = PublishBuilder::new("new-krate", "1.0.0").dependency(dependency);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("new-krate");
     assert_json_snapshot!(crates);
@@ -171,10 +169,10 @@ async fn new_krate_with_dependency() {
 
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
 
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let dependencies = anon
-        .async_get::<Deps>("/api/v1/crates/new_dep/1.0.0/dependencies")
+        .get::<Deps>("/api/v1/crates/new_dep/1.0.0/dependencies")
         .await
         .good()
         .dependencies;
@@ -202,10 +200,10 @@ async fn new_krate_with_broken_dependency_requirement() {
     let dependency = DependencyBuilder::new("foo-dep").version_req("broken");
 
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -221,10 +219,10 @@ async fn reject_new_krate_with_non_exact_dependency() {
 
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -237,7 +235,7 @@ async fn new_crate_allow_empty_alternative_registry_dependency() {
 
     let dependency = DependencyBuilder::new("foo-dep").registry("");
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").dependency(dependency);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -249,10 +247,10 @@ async fn reject_new_crate_with_alternative_registry_dependency() {
 
     let crate_to_publish =
         PublishBuilder::new("depends-on-alt-registry", "1.0.0").dependency(dependency);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -268,10 +266,10 @@ async fn new_krate_with_wildcard_dependency() {
 
     let crate_to_publish = PublishBuilder::new("new_wild", "1.0.0").dependency(dependency);
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -283,10 +281,10 @@ async fn new_krate_dependency_missing() {
     let dependency = DependencyBuilder::new("bar_missing");
     let crate_to_publish = PublishBuilder::new("foo_missing", "1.0.0").dependency(dependency);
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -306,7 +304,7 @@ async fn new_krate_sorts_deps() {
     let crate_to_publish = PublishBuilder::new("two-deps", "1.0.0")
         .dependency(dep_b)
         .dependency(dep_a);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("two-deps");
     assert_json_snapshot!(crates);
@@ -317,14 +315,14 @@ async fn invalid_feature_name() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0")
                 .dependency(DependencyBuilder::new("bar").add_feature("🍺")),
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -342,14 +340,14 @@ async fn test_dep_limit() {
         .dependency(DependencyBuilder::new("dep-a"))
         .dependency(DependencyBuilder::new("dep-b"));
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"###);
 
     let crate_to_publish =
         PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("dep-a"));
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",

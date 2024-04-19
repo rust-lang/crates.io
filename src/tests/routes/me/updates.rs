@@ -11,10 +11,7 @@ use http::StatusCode;
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {
     let (_, _, _, token) = TestApp::init().with_token();
-    token
-        .async_get("/api/v1/me/updates")
-        .await
-        .assert_forbidden();
+    token.get("/api/v1/me/updates").await.assert_forbidden();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -50,18 +47,18 @@ async fn following() {
             .expect_build(conn);
     });
 
-    let r: R = user.async_get("/api/v1/me/updates").await.good();
+    let r: R = user.get("/api/v1/me/updates").await.good();
     assert_that!(r.versions, empty());
     assert!(!r.meta.more);
 
-    user.async_put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
+    user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
         .await
         .good();
-    user.async_put::<OkBool>("/api/v1/crates/bar_fighters/follow", b"" as &[u8])
+    user.put::<OkBool>("/api/v1/crates/bar_fighters/follow", b"" as &[u8])
         .await
         .good();
 
-    let r: R = user.async_get("/api/v1/me/updates").await.good();
+    let r: R = user.get("/api/v1/me/updates").await.good();
     assert_that!(r.versions, len(eq(2)));
     assert!(!r.meta.more);
     let foo_version = r
@@ -81,24 +78,24 @@ async fn following() {
     );
 
     let r: R = user
-        .async_get_with_query("/api/v1/me/updates", "per_page=1")
+        .get_with_query("/api/v1/me/updates", "per_page=1")
         .await
         .good();
     assert_that!(r.versions, len(eq(1)));
     assert!(r.meta.more);
 
-    user.async_delete::<OkBool>("/api/v1/crates/bar_fighters/follow")
+    user.delete::<OkBool>("/api/v1/crates/bar_fighters/follow")
         .await
         .good();
     let r: R = user
-        .async_get_with_query("/api/v1/me/updates", "page=2&per_page=1")
+        .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
         .await
         .good();
     assert_that!(r.versions, empty());
     assert!(!r.meta.more);
 
     let response = user
-        .async_get_with_query::<()>("/api/v1/me/updates", "page=0")
+        .get_with_query::<()>("/api/v1/me/updates", "page=0")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(

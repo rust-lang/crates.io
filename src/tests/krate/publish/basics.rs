@@ -11,7 +11,7 @@ async fn new_krate() {
     let (app, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
-    let response = user.async_publish_crate(crate_to_publish).await;
+    let response = user.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -22,7 +22,7 @@ async fn new_krate() {
     assert_json_snapshot!(crates);
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 
     app.db(|conn| {
         let email: String = versions_published_by::table
@@ -38,7 +38,7 @@ async fn new_krate_with_token() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -46,7 +46,7 @@ async fn new_krate_with_token() {
     });
 
     let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -54,7 +54,7 @@ async fn new_krate_weird_version() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_weird", "0.0.0-pre");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -65,7 +65,7 @@ async fn new_krate_weird_version() {
         "crates/foo_weird/foo_weird-0.0.0-pre.crate",
         "index/fo/o_/foo_weird",
     ];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -73,11 +73,11 @@ async fn new_krate_twice() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -92,7 +92,7 @@ async fn new_krate_twice() {
         "crates/foo_twice/foo_twice-2.0.0.crate",
         "index/fo/o_/foo_twice",
     ];
-    assert_eq!(app.async_stored_files().await, expected_files);
+    assert_eq!(app.stored_files().await, expected_files);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -107,9 +107,9 @@ async fn new_krate_duplicate_version() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

@@ -37,7 +37,7 @@ async fn show() {
         krate
     });
 
-    let response = anon.async_get::<()>("/api/v1/crates/foo_show").await;
+    let response = anon.get::<()>("/api/v1/crates/foo_show").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -68,7 +68,7 @@ async fn show_minimal() {
     });
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/foo_show_minimal?include=")
+        .get::<()>("/api/v1/crates/foo_show_minimal?include=")
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -81,7 +81,7 @@ async fn show_minimal() {
 async fn test_missing() {
     let (_, anon) = TestApp::init().empty();
 
-    let response = anon.async_get::<()>("/api/v1/crates/missing").await;
+    let response = anon.get::<()>("/api/v1/crates/missing").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `missing` does not exist"}]}"###);
 }
@@ -91,14 +91,14 @@ async fn version_size() {
     let (_, _, user) = TestApp::full().with_user();
 
     let crate_to_publish = PublishBuilder::new("foo_version_size", "1.0.0");
-    user.async_publish_crate(crate_to_publish).await.good();
+    user.publish_crate(crate_to_publish).await.good();
 
     // Add a file to version 2 so that it's a different size than version 1
     let crate_to_publish = PublishBuilder::new("foo_version_size", "2.0.0")
         .add_file("foo_version_size-2.0.0/big", "a");
-    user.async_publish_crate(crate_to_publish).await.good();
+    user.publish_crate(crate_to_publish).await.good();
 
-    let crate_json = user.async_show_crate("foo_version_size").await;
+    let crate_json = user.show_crate("foo_version_size").await;
 
     let version1 = crate_json
         .versions
@@ -130,7 +130,7 @@ async fn block_bad_documentation_url() {
             .expect_build(conn)
     });
 
-    let json = anon.async_show_crate("foo_bad_doc_url").await;
+    let json = anon.show_crate("foo_bad_doc_url").await;
     assert_eq!(json.krate.documentation, None);
 }
 
@@ -139,7 +139,7 @@ async fn test_new_name() {
     let (app, anon, user) = TestApp::init().with_user();
     app.db(|conn| CrateBuilder::new("new", user.as_model().id).expect_build(conn));
 
-    let response = anon.async_get::<()>("/api/v1/crates/new?include=").await;
+    let response = anon.get::<()>("/api/v1/crates/new?include=").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",

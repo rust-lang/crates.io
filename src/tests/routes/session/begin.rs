@@ -9,6 +9,6 @@ struct AuthResponse {
 #[tokio::test(flavor = "multi_thread")]
 async fn auth_gives_a_token() {
     let (_, anon) = TestApp::init().empty();
-    let json: AuthResponse = anon.async_get("/api/private/session/begin").await.good();
+    let json: AuthResponse = anon.get("/api/private/session/begin").await.good();
     assert!(json.url.contains(&json.state));
 }

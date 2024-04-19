@@ -16,7 +16,7 @@ async fn good_categories() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_good_cat", "1.0.0").category("cat1");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -29,7 +29,7 @@ async fn ignored_categories() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_ignored_cat", "1.0.0").category("bar");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -42,7 +42,7 @@ async fn too_many_categories() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0")
                 .category("one")
                 .category("two")
@@ -54,5 +54,5 @@ async fn too_many_categories() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

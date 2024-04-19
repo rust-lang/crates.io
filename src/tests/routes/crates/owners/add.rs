@@ -32,7 +32,7 @@ async fn test_cargo_invite_owners() {
         owners: Some(vec![new_user.as_model().gh_login.clone()]),
     });
     let json: OwnerResp = owner
-        .async_put("/api/v1/crates/guacamole/owners", body.unwrap())
+        .put("/api/v1/crates/guacamole/owners", body.unwrap())
         .await
         .good();
 
@@ -61,7 +61,7 @@ async fn owner_change_via_cookie() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = cookie.async_put::<()>(&url, body).await;
+    let response = cookie.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -82,7 +82,7 @@ async fn owner_change_via_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.async_put::<()>(&url, body).await;
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -104,7 +104,7 @@ async fn owner_change_via_change_owner_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.async_put::<()>(&url, body).await;
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -127,7 +127,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.async_put::<()>(&url, body).await;
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -150,7 +150,7 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.async_put::<()>(&url, body).await;
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
@@ -169,7 +169,7 @@ async fn owner_change_via_publish_token() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = token.async_put::<()>(&url, body).await;
+    let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
 }
@@ -187,7 +187,7 @@ async fn owner_change_without_auth() {
     let url = format!("/api/v1/crates/{}/owners", krate.name);
     let body = json!({ "owners": [user2.gh_login] });
     let body = serde_json::to_vec(&body).unwrap();
-    let response = anon.async_put::<()>(&url, body).await;
+    let response = anon.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
@@ -200,7 +200,7 @@ async fn test_owner_change_with_legacy_field() {
 
     let input = r#"{"users": ["user2"]}"#;
     let response = user1
-        .async_put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r###"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"###);
@@ -215,7 +215,7 @@ async fn test_owner_change_with_invalid_json() {
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
     let response = user
-        .async_put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
@@ -223,7 +223,7 @@ async fn test_owner_change_with_invalid_json() {
     // `owners` is not an array
     let input = r#"{"owners": "foo"}"#;
     let response = user
-        .async_put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
@@ -231,7 +231,7 @@ async fn test_owner_change_with_invalid_json() {
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
     let response = user
-        .async_put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
+        .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
@@ -247,9 +247,7 @@ async fn invite_already_invited_user() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
-    let response = owner
-        .async_add_named_owner("crate_name", "invited_user")
-        .await;
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -263,9 +261,7 @@ async fn invite_already_invited_user() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 
     // Then invite the user a second time, the message should point out the user is already invited
-    let response = owner
-        .async_add_named_owner("crate_name", "invited_user")
-        .await;
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -290,9 +286,7 @@ async fn invite_with_existing_expired_invite() {
     assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
 
     // Invite the user the first time
-    let response = owner
-        .async_add_named_owner("crate_name", "invited_user")
-        .await;
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -309,9 +303,7 @@ async fn invite_with_existing_expired_invite() {
     expire_invitation(&app, krate.id);
 
     // Then invite the user a second time, a new invite is created as the old one expired
-    let response = owner
-        .async_add_named_owner("crate_name", "invited_user")
-        .await;
+    let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response.json(),
@@ -333,9 +325,7 @@ async fn test_unknown_crate() {
     let body = json!({ "owners": ["bar"] });
     let body = serde_json::to_vec(&body).unwrap();
 
-    let response = user
-        .async_put::<()>("/api/v1/crates/unknown/owners", body)
-        .await;
+    let response = user.put::<()>("/api/v1/crates/unknown/owners", body).await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
@@ -347,9 +337,7 @@ async fn test_unknown_user() {
     app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
 
     let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
-    let response = cookie
-        .async_put::<()>("/api/v1/crates/foo/owners", body)
-        .await;
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
 }
@@ -361,9 +349,7 @@ async fn test_unknown_team() {
     app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
 
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
-    let response = cookie
-        .async_put::<()>("/api/v1/crates/foo/owners", body)
-        .await;
+    let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown"}]}"###);
 }

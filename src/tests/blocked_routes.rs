@@ -17,7 +17,7 @@ async fn test_non_blocked_download_route() {
     });
 
     let status = anon
-        .async_get::<()>("/api/v1/crates/foo/1.0.0/download")
+        .get::<()>("/api/v1/crates/foo/1.0.0/download")
         .await
         .status();
     assert_eq!(status, StatusCode::FOUND);
@@ -41,7 +41,7 @@ async fn test_blocked_download_route() {
     });
 
     let status = anon
-        .async_get::<()>("/api/v1/crates/foo/1.0.0/download")
+        .get::<()>("/api/v1/crates/foo/1.0.0/download")
         .await
         .status();
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);

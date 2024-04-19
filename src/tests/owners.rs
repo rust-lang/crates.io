@@ -50,7 +50,7 @@ impl MockCookieUser {
         });
 
         let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
-        self.async_put(&url, body.to_string()).await
+        self.put(&url, body.to_string()).await
     }
 
     /// As the currently logged in user, accept an invitation to become an owner of the named
@@ -90,16 +90,14 @@ impl MockCookieUser {
 
         let url = format!("/api/v1/me/crate_owner_invitations/{krate_id}");
         let crate_owner_invite: CrateOwnerInvitation =
-            self.async_put(&url, body.to_string()).await.good();
+            self.put(&url, body.to_string()).await.good();
         assert!(!crate_owner_invite.crate_owner_invitation.accepted);
         assert_eq!(crate_owner_invite.crate_owner_invitation.crate_id, krate_id);
     }
 
     /// As the currently logged in user, list my pending invitations.
     async fn list_invitations(&self) -> InvitationListResponse {
-        self.async_get("/api/v1/me/crate_owner_invitations")
-            .await
-            .good()
+        self.get("/api/v1/me/crate_owner_invitations").await.good()
     }
 }
 
@@ -122,7 +120,7 @@ impl MockAnonymousUser {
         token: &str,
     ) -> Response<T> {
         let url = format!("/api/v1/me/crate_owner_invitations/accept/{token}");
-        self.async_put(&url, &[] as &[u8]).await
+        self.put(&url, &[] as &[u8]).await
     }
 }
 
@@ -132,11 +130,11 @@ async fn new_crate_owner() {
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner", "1.0.0");
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     // Add the second user as an owner (with a different case to make sure that works)
     let user2 = app.db_new_user("Bar");
-    token.async_add_named_owner("foo_owner", "BAR").await.good();
+    token.add_named_owner("foo_owner", "BAR").await.good();
 
     // accept invitation for user to be added as owner
     let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
@@ -146,7 +144,7 @@ async fn new_crate_owner() {
 
     // Make sure this shows up as one of their crates.
     let crates = user2
-        .async_search(&format!("user_id={}", user2.as_model().id))
+        .search(&format!("user_id={}", user2.as_model().id))
         .await;
     assert_eq!(crates.crates.len(), 1);
 
@@ -154,7 +152,7 @@ async fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner", "2.0.0");
     user2
         .db_new_token("bar_token")
-        .async_publish_crate(crate_to_publish)
+        .publish_crate(crate_to_publish)
         .await
         .good();
 }
@@ -166,10 +164,7 @@ async fn create_and_add_owner(
     krate: &Crate,
 ) -> MockCookieUser {
     let user = app.db_new_user(username);
-    token
-        .async_add_named_owner(&krate.name, username)
-        .await
-        .good();
+    token.add_named_owner(&krate.name, username).await.good();
     user.accept_ownership_invitation(&krate.name, krate.id)
         .await;
     user
@@ -187,7 +182,7 @@ async fn owners_can_remove_self() {
 
     // Deleting yourself when you're the only owner isn't allowed.
     let response = token
-        .async_remove_named_owner("owners_selfremove", username)
+        .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -199,7 +194,7 @@ async fn owners_can_remove_self() {
 
     // Deleting yourself when there are other owners is allowed.
     let response = token
-        .async_remove_named_owner("owners_selfremove", username)
+        .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -209,7 +204,7 @@ async fn owners_can_remove_self() {
 
     // After you delete yourself, you no longer have permissions to manage the crate.
     let response = token
-        .async_remove_named_owner("owners_selfremove", username)
+        .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_eq!(
@@ -232,7 +227,7 @@ async fn modify_multiple_owners() {
 
     // Deleting all owners is not allowed.
     let response = token
-        .async_remove_named_owners("owners_multiple", &[username, "user2", "user3"])
+        .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -243,7 +238,7 @@ async fn modify_multiple_owners() {
 
     // Deleting two owners at once is allowed.
     let response = token
-        .async_remove_named_owners("owners_multiple", &["user2", "user3"])
+        .remove_named_owners("owners_multiple", &["user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -254,7 +249,7 @@ async fn modify_multiple_owners() {
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token
-        .async_add_named_owners("owners_multiple", &["user2", username])
+        .add_named_owners("owners_multiple", &["user2", username])
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
@@ -265,7 +260,7 @@ async fn modify_multiple_owners() {
 
     // Adding multiple users at once succeeds.
     let response = token
-        .async_add_named_owners("owners_multiple", &["user2", "user3"])
+        .add_named_owners("owners_multiple", &["user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
@@ -309,12 +304,12 @@ async fn check_ownership_two_crates() {
     let krate_not_owned_by_team =
         app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(conn));
 
-    let json = anon.async_search(&format!("user_id={}", user2.id)).await;
+    let json = anon.search(&format!("user_id={}", user2.id)).await;
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
     assert_eq!(json.crates.len(), 1);
 
     let query = format!("team_id={}", team.id);
-    let json = anon.async_search(&query).await;
+    let json = anon.search(&query).await;
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.crates[0].name, krate_owned_by_team.name);
 }
@@ -341,14 +336,14 @@ async fn check_ownership_one_crate() {
     });
 
     let json: TeamResponse = anon
-        .async_get("/api/v1/crates/best_crate/owner_team")
+        .get("/api/v1/crates/best_crate/owner_team")
         .await
         .good();
     assert_eq!(json.teams[0].kind, "team");
     assert_eq!(json.teams[0].name, team.name);
 
     let json: UserResponse = anon
-        .async_get("/api/v1/crates/best_crate/owner_user")
+        .get("/api/v1/crates/best_crate/owner_user")
         .await
         .good();
     assert_eq!(json.users[0].kind, "user");
@@ -366,7 +361,7 @@ async fn deleted_ownership_isnt_in_owner_user() {
     });
 
     let json: UserResponse = anon
-        .async_get("/api/v1/crates/foo_my_packages/owner_user")
+        .get("/api/v1/crates/foo_my_packages/owner_user")
         .await
         .good();
     assert_eq!(json.users.len(), 0);
@@ -377,19 +372,15 @@ async fn test_unknown_crate() {
     let (app, _, user) = TestApp::full().with_user();
     app.db_new_user("bar");
 
-    let response = user.async_get::<()>("/api/v1/crates/unknown/owners").await;
+    let response = user.get::<()>("/api/v1/crates/unknown/owners").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 
-    let response = user
-        .async_get::<()>("/api/v1/crates/unknown/owner_team")
-        .await;
+    let response = user.get::<()>("/api/v1/crates/unknown/owner_team").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 
-    let response = user
-        .async_get::<()>("/api/v1/crates/unknown/owner_user")
-        .await;
+    let response = user.get::<()>("/api/v1/crates/unknown/owner_user").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
 }
@@ -407,7 +398,7 @@ async fn api_token_cannot_list_invitations_v1() {
     let (_, _, _, token) = TestApp::init().with_token();
 
     token
-        .async_get("/api/v1/me/crate_owner_invitations")
+        .get("/api/v1/me/crate_owner_invitations")
         .await
         .assert_forbidden();
 }
@@ -421,13 +412,11 @@ async fn invitations_list_v1() {
 
     let user = app.db_new_user("invited_user");
     token
-        .async_add_named_owner("invited_crate", "invited_user")
+        .add_named_owner("invited_crate", "invited_user")
         .await
         .good();
 
-    let response = user
-        .async_get::<()>("/api/v1/me/crate_owner_invitations")
-        .await;
+    let response = user.get::<()>("/api/v1/me/crate_owner_invitations").await;
     assert_eq!(response.status(), StatusCode::OK);
 
     let invitations = user.list_invitations().await;
@@ -460,11 +449,11 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     let krate1 = app.db(|conn| CrateBuilder::new("invited_crate_1", owner.id).expect_build(conn));
     let krate2 = app.db(|conn| CrateBuilder::new("invited_crate_2", owner.id).expect_build(conn));
     token
-        .async_add_named_owner("invited_crate_1", "invited_user")
+        .add_named_owner("invited_crate_1", "invited_user")
         .await
         .good();
     token
-        .async_add_named_owner("invited_crate_2", "invited_user")
+        .add_named_owner("invited_crate_2", "invited_user")
         .await
         .good();
 
@@ -505,7 +494,7 @@ async fn test_accept_invitation() {
 
     // Invite a new owner
     owner_token
-        .async_add_named_owner("accept_invitation", "user_bar")
+        .add_named_owner("accept_invitation", "user_bar")
         .await
         .good();
 
@@ -519,7 +508,7 @@ async fn test_accept_invitation() {
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // New owner is now listed as an owner, so the crate has two owners
-    let json = anon.async_show_crate_owners("accept_invitation").await;
+    let json = anon.show_crate_owners("accept_invitation").await;
     assert_eq!(json.users.len(), 2);
 }
 
@@ -536,7 +525,7 @@ async fn test_decline_invitation() {
 
     // Invite a new owner
     owner_token
-        .async_add_named_owner("decline_invitation", "user_bar")
+        .add_named_owner("decline_invitation", "user_bar")
         .await
         .good();
 
@@ -550,7 +539,7 @@ async fn test_decline_invitation() {
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
-    let json = anon.async_show_crate_owners("decline_invitation").await;
+    let json = anon.show_crate_owners("decline_invitation").await;
     assert_eq!(json.users.len(), 1);
 }
 
@@ -563,7 +552,7 @@ async fn test_accept_invitation_by_mail() {
 
     // Invite a new owner
     owner_token
-        .async_add_named_owner("accept_invitation", "user_bar")
+        .add_named_owner("accept_invitation", "user_bar")
         .await
         .good();
 
@@ -579,7 +568,7 @@ async fn test_accept_invitation_by_mail() {
     assert_eq!(json.crate_owner_invitations.len(), 0);
 
     // New owner is now listed as an owner, so the crate has two owners
-    let json = anon.async_show_crate_owners("accept_invitation").await;
+    let json = anon.show_crate_owners("accept_invitation").await;
     assert_eq!(json.users.len(), 2);
 }
 
@@ -609,7 +598,7 @@ async fn test_accept_expired_invitation() {
 
     // Invite a new user
     owner_token
-        .async_add_named_owner("demo_crate", "demo_user")
+        .add_named_owner("demo_crate", "demo_user")
         .await
         .good();
 
@@ -634,7 +623,7 @@ async fn test_accept_expired_invitation() {
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
-    let json = anon.async_show_crate_owners("demo_crate").await;
+    let json = anon.show_crate_owners("demo_crate").await;
     assert_eq!(json.users.len(), 1);
 }
 
@@ -647,7 +636,7 @@ async fn test_decline_expired_invitation() {
 
     // Invite a new user
     owner_token
-        .async_add_named_owner("demo_crate", "demo_user")
+        .add_named_owner("demo_crate", "demo_user")
         .await
         .good();
 
@@ -660,7 +649,7 @@ async fn test_decline_expired_invitation() {
         .await;
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
-    let json = anon.async_show_crate_owners("demo_crate").await;
+    let json = anon.show_crate_owners("demo_crate").await;
     assert_eq!(json.users.len(), 1);
 }
 
@@ -673,7 +662,7 @@ async fn test_accept_expired_invitation_by_mail() {
 
     // Invite a new owner
     owner_token
-        .async_add_named_owner("demo_crate", "demo_user")
+        .add_named_owner("demo_crate", "demo_user")
         .await
         .good();
 
@@ -701,7 +690,7 @@ async fn test_accept_expired_invitation_by_mail() {
     );
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
-    let json = anon.async_show_crate_owners("demo_crate").await;
+    let json = anon.show_crate_owners("demo_crate").await;
     assert_eq!(json.users.len(), 1);
 }
 
@@ -732,7 +721,7 @@ async fn inactive_users_dont_get_invitations() {
     let invited_user = app.db_new_user(invited_gh_login);
 
     owner_token
-        .async_add_named_owner(krate_name, "user_bar")
+        .add_named_owner(krate_name, "user_bar")
         .await
         .good();
 
@@ -759,7 +748,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     });
 
     owner_token
-        .async_add_named_owner(krate_name, "user_bar")
+        .add_named_owner(krate_name, "user_bar")
         .await
         .good();
 

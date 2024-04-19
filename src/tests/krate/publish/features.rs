@@ -19,7 +19,7 @@ async fn features_version_2() {
         .dependency(dependency)
         .feature("new_feat", &["dep:bar", "bar?/feat"])
         .feature("old_feat", &[]);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
 
     let crates = app.crates_from_index_head("foo");
     assert_json_snapshot!(crates);
@@ -29,7 +29,7 @@ async fn features_version_2() {
 async fn feature_name_with_dot() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
     assert_json_snapshot!(crates);
 }
@@ -40,7 +40,7 @@ async fn feature_name_start_with_number_and_underscore() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
         .feature("0foo1.bar", &[])
         .feature("_foo2.bar", &[]);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
     assert_json_snapshot!(crates);
 }
@@ -49,7 +49,7 @@ async fn feature_name_start_with_number_and_underscore() {
 async fn feature_name_with_unicode_chars() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
-    token.async_publish_crate(crate_to_publish).await.good();
+    token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
     assert_json_snapshot!(crates);
 }
@@ -58,10 +58,10 @@ async fn feature_name_with_unicode_chars() {
 async fn empty_feature_name() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert!(app.async_stored_files().await.is_empty());
+    assert!(app.stored_files().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -69,10 +69,10 @@ async fn invalid_feature_name1() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -80,20 +80,20 @@ async fn invalid_feature_name2() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_feature_name_start_with_hyphen() {
     let (app, _, _, token) = TestApp::full().with_token();
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("-foo1.bar", &[]);
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert!(app.async_stored_files().await.is_empty());
+    assert!(app.stored_files().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -110,10 +110,10 @@ async fn too_many_features() {
         .feature("three", &[])
         .feature("four", &[])
         .feature("five", &[]);
-    let response = token.async_publish_crate(publish_builder).await;
+    let response = token.publish_crate(publish_builder).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -136,17 +136,17 @@ async fn too_many_features_with_custom_limit() {
         .feature("three", &[])
         .feature("four", &[])
         .feature("five", &[]);
-    let response = token.async_publish_crate(publish_builder).await;
+    let response = token.publish_crate(publish_builder).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("one", &[])
         .feature("two", &[])
         .feature("three", &[])
         .feature("four", &[]);
-    token.async_publish_crate(publish_builder).await.good();
+    token.publish_crate(publish_builder).await.good();
 
     // see https://github.com/rust-lang/crates.io/issues/7632
     let publish_builder = PublishBuilder::new("foo", "1.0.1")
@@ -154,7 +154,7 @@ async fn too_many_features_with_custom_limit() {
         .feature("two", &[])
         .feature("three", &[])
         .feature("four", &[]);
-    token.async_publish_crate(publish_builder).await.good();
+    token.publish_crate(publish_builder).await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -167,10 +167,10 @@ async fn too_many_enabled_features() {
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);
-    let response = token.async_publish_crate(publish_builder).await;
+    let response = token.publish_crate(publish_builder).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -189,12 +189,12 @@ async fn too_many_enabled_features_with_custom_limit() {
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);
-    let response = token.async_publish_crate(publish_builder).await;
+    let response = token.publish_crate(publish_builder).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 
     let publish_builder =
         PublishBuilder::new("foo", "1.0.0").feature("default", &["one", "two", "three", "four"]);
-    token.async_publish_crate(publish_builder).await.good();
+    token.publish_crate(publish_builder).await.good();
 }

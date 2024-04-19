@@ -16,10 +16,10 @@ async fn new_krate_without_any_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_no_email", "1.0.0");
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -35,8 +35,8 @@ async fn new_krate_with_unverified_email_fails() {
 
     let crate_to_publish = PublishBuilder::new("foo_unverified_email", "1.0.0");
 
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

@@ -11,7 +11,7 @@ async fn boolean_readme() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             r#"[package]
             name = "foo"
             version = "1.0.0"
@@ -27,7 +27,7 @@ async fn boolean_readme() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let response = token.async_get::<()>("/api/v1/crates/foo/1.0.0").await;
+    let response = token.get::<()>("/api/v1/crates/foo/1.0.0").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".version.id" => any_id_redaction(),
@@ -44,7 +44,7 @@ async fn missing_manifest() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest())
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
@@ -55,7 +55,7 @@ async fn manifest_casing() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0")
                 .add_file(
                     "foo-1.0.0/CARGO.TOML",
@@ -73,7 +73,7 @@ async fn multiple_manifests() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0")
                 .add_file(
                     "foo-1.0.0/Cargo.toml",
@@ -95,7 +95,7 @@ async fn invalid_manifest() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""))
+        .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
@@ -106,7 +106,7 @@ async fn invalid_manifest_missing_name() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nversion = \"1.0.0\""),
         )
         .await;
@@ -119,7 +119,7 @@ async fn invalid_manifest_missing_version() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response = token
-        .async_publish_crate(
+        .publish_crate(
             PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nname = \"foo\""),
         )
         .await;
@@ -132,13 +132,13 @@ async fn invalid_rust_version() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
     let response =
-        token.async_publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+        token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"\"\n",
         )).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    let response = token.async_publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+    let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"1.0.0-beta.2\"\n",
     )).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);

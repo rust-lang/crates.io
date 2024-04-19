@@ -10,7 +10,7 @@ static URL: &str = "/api/v1/me/updates";
 #[tokio::test(flavor = "multi_thread")]
 async fn anonymous_user_unauthorized() {
     let (_, anon) = TestApp::init().empty();
-    let response: Response<()> = anon.async_get(URL).await;
+    let response: Response<()> = anon.get(URL).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
@@ -21,7 +21,7 @@ async fn token_auth_cannot_find_token() {
     let (_, anon) = TestApp::init().empty();
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
-    let response: Response<()> = anon.async_run(request).await;
+    let response: Response<()> = anon.run(request).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
@@ -40,6 +40,6 @@ async fn cookie_auth_cannot_find_user() {
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::COOKIE, &cookie);
 
-    let error = anon.async_run::<()>(request).await;
+    let error = anon.run::<()>(request).await;
     assert_eq!(error.status(), StatusCode::INTERNAL_SERVER_ERROR);
 }

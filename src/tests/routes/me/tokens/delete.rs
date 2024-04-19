@@ -9,7 +9,7 @@ pub struct RevokedResponse {}
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_non_existing() {
     let (_, _, user) = TestApp::init().with_user();
-    let _json: RevokedResponse = user.async_delete("/api/v1/me/tokens/5").await.good();
+    let _json: RevokedResponse = user.delete("/api/v1/me/tokens/5").await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -30,7 +30,7 @@ async fn revoke_token_doesnt_revoke_other_users_token() {
 
     // Try revoke the token as second user
     let _json: RevokedResponse = user2
-        .async_delete(&format!("/api/v1/me/tokens/{}", token.id))
+        .delete(&format!("/api/v1/me/tokens/{}", token.id))
         .await
         .good();
 
@@ -59,7 +59,7 @@ async fn revoke_token_success() {
 
     // Revoke the token
     let _json: RevokedResponse = user
-        .async_delete(&format!("/api/v1/me/tokens/{}", token.as_model().id))
+        .delete(&format!("/api/v1/me/tokens/{}", token.as_model().id))
         .await
         .good();
 

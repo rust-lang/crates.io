@@ -22,13 +22,13 @@ async fn dependencies() {
     });
 
     let deps: Deps = anon
-        .async_get("/api/v1/crates/foo_deps/1.0.0/dependencies")
+        .get("/api/v1/crates/foo_deps/1.0.0/dependencies")
         .await
         .good();
     assert_eq!(deps.dependencies[0].crate_id, "bar_deps");
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/missing-crate/1.0.0/dependencies")
+        .get::<()>("/api/v1/crates/missing-crate/1.0.0/dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_eq!(
@@ -37,7 +37,7 @@ async fn dependencies() {
     );
 
     let response = anon
-        .async_get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
+        .get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_eq!(

@@ -43,9 +43,9 @@ pub async fn assert_dl_count(
 ) {
     let url = format!("/api/v1/crates/{name_and_version}/downloads");
     let downloads: Downloads = if let Some(query) = query {
-        anon.async_get_with_query(&url, query).await.good()
+        anon.get_with_query(&url, query).await.good()
     } else {
-        anon.async_get(&url).await.good()
+        anon.get(&url).await.good()
     };
     let total_downloads = downloads
         .version_downloads
@@ -57,7 +57,7 @@ pub async fn assert_dl_count(
 
 pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
     let url = format!("/api/v1/crates/{name_and_version}/download");
-    let response = client.async_get::<()>(&url).await;
+    let response = client.get::<()>(&url).await;
     assert_eq!(response.status(), StatusCode::FOUND);
 }
 
@@ -135,7 +135,7 @@ async fn test_crate_downloads() {
         save_version_downloads("foo", "1.1.0", 1, conn);
     });
 
-    let response = anon.async_get::<()>("/api/v1/crates/foo/downloads").await;
+    let response = anon.get::<()>("/api/v1/crates/foo/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     let json = response.json();
     assert_json_snapshot!(json, {
@@ -143,7 +143,7 @@ async fn test_crate_downloads() {
     });
 
     // check different crate name
-    let response = anon.async_get::<()>("/api/v1/crates/bar/downloads").await;
+    let response = anon.get::<()>("/api/v1/crates/bar/downloads").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -151,7 +151,7 @@ async fn test_crate_downloads() {
     );
 
     // check non-canonical crate name
-    let response = anon.async_get::<()>("/api/v1/crates/FOO/downloads").await;
+    let response = anon.get::<()>("/api/v1/crates/FOO/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json);
 }
@@ -178,9 +178,7 @@ async fn test_version_downloads() {
         save_version_downloads("foo", "1.1.0", 1, conn);
     });
 
-    let response = anon
-        .async_get::<()>("/api/v1/crates/foo/1.0.0/downloads")
-        .await;
+    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     let json = response.json();
     assert_json_snapshot!(json, {
@@ -188,9 +186,7 @@ async fn test_version_downloads() {
     });
 
     // check different crate name
-    let response = anon
-        .async_get::<()>("/api/v1/crates/bar/1.0.0/downloads")
-        .await;
+    let response = anon.get::<()>("/api/v1/crates/bar/1.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -198,16 +194,12 @@ async fn test_version_downloads() {
     );
 
     // check non-canonical crate name
-    let response = anon
-        .async_get::<()>("/api/v1/crates/FOO/1.0.0/downloads")
-        .await;
+    let response = anon.get::<()>("/api/v1/crates/FOO/1.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.json(), json);
 
     // check missing version
-    let response = anon
-        .async_get::<()>("/api/v1/crates/foo/2.0.0/downloads")
-        .await;
+    let response = anon.get::<()>("/api/v1/crates/foo/2.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
@@ -216,7 +208,7 @@ async fn test_version_downloads() {
 
     // check invalid version
     let response = anon
-        .async_get::<()>("/api/v1/crates/foo/invalid-version/downloads")
+        .get::<()>("/api/v1/crates/foo/invalid-version/downloads")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(

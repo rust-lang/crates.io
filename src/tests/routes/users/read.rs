@@ -12,10 +12,10 @@ async fn show() {
     let (app, anon, _) = TestApp::init().with_user();
     app.db_new_user("Bar");
 
-    let json: UserShowPublicResponse = anon.async_get("/api/v1/users/foo").await.good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
 
-    let json: UserShowPublicResponse = anon.async_get("/api/v1/users/bAr").await.good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
     assert_eq!(json.user.login, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
 }
@@ -50,7 +50,7 @@ async fn show_latest_user_case_insensitively() {
         .create_or_update(None, &app.as_inner().emails, conn));
     });
 
-    let json: UserShowPublicResponse = anon.async_get("/api/v1/users/fOObAr").await.good();
+    let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
         "I was second, I took the foobar username on github",
         json.user.name.unwrap()

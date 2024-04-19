@@ -12,7 +12,7 @@ async fn new_wrong_token() {
 
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
-    let response = anon.async_publish_crate(crate_to_publish).await;
+    let response = anon.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
@@ -25,10 +25,10 @@ async fn new_wrong_token() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
-    let response = token.async_publish_crate(crate_to_publish).await;
+    let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -44,9 +44,9 @@ async fn new_krate_wrong_user() {
     let another_user = app.db_new_user("another").db_new_token("bar");
     let crate_to_publish = PublishBuilder::new("foo_wrong", "2.0.0");
 
-    let response = another_user.async_publish_crate(crate_to_publish).await;
+    let response = another_user.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.async_stored_files().await, empty());
+    assert_that!(app.stored_files().await, empty());
 }

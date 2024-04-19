@@ -5,9 +5,9 @@ use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 impl crate::util::MockCookieUser {
-    pub async fn async_show_me(&self) -> UserShowPrivateResponse {
+    pub async fn show_me(&self) -> UserShowPrivateResponse {
         let url = "/api/v1/me";
-        self.async_get(url).await.good()
+        self.get(url).await.good()
     }
 }
 
@@ -21,11 +21,11 @@ pub struct UserShowPrivateResponse {
 async fn me() {
     let (app, anon, user) = TestApp::init().with_user();
 
-    let response = anon.async_get::<()>("/api/v1/me").await;
+    let response = anon.get::<()>("/api/v1/me").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
-    let response = user.async_get::<()>("/api/v1/me").await;
+    let response = user.get::<()>("/api/v1/me").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json());
 
@@ -33,7 +33,7 @@ async fn me() {
         CrateBuilder::new("foo_my_packages", user.as_model().id).expect_build(conn);
     });
 
-    let response = user.async_get::<()>("/api/v1/me").await;
+    let response = user.get::<()>("/api/v1/me").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json());
 }
@@ -48,6 +48,6 @@ async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
         krate.owner_remove(conn, &user_model.gh_login).unwrap();
     });
 
-    let json = user.async_show_me().await;
+    let json = user.show_me().await;
     assert_eq!(json.owned_crates.len(), 0);
 }

@@ -91,7 +91,7 @@ pub trait RequestHelper {
     fn app(&self) -> &TestApp;
 
     /// Run a request that is expected to succeed
-    async fn async_run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
+    async fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
         let app = self.app();
         let router = app.router().clone();
 
@@ -121,19 +121,19 @@ pub trait RequestHelper {
     }
 
     /// Issue a GET request
-    async fn async_get<T>(&self, path: &str) -> Response<T> {
-        self.async_run(self.get_request(path)).await
+    async fn get<T>(&self, path: &str) -> Response<T> {
+        self.run(self.get_request(path)).await
     }
 
     /// Issue a GET request that includes query parameters
-    async fn async_get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
+    async fn get_with_query<T>(&self, path: &str, query: &str) -> Response<T> {
         let path_and_query = format!("{path}?{query}");
         let request = self.request_builder(Method::GET, &path_and_query);
-        self.async_run(request).await
+        self.run(request).await
     }
 
     /// Issue a PUT request
-    async fn async_put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+    async fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
         let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
@@ -143,17 +143,17 @@ pub trait RequestHelper {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
-        self.async_run(request).await
+        self.run(request).await
     }
 
     /// Issue a DELETE request
-    async fn async_delete<T>(&self, path: &str) -> Response<T> {
+    async fn delete<T>(&self, path: &str) -> Response<T> {
         let request = self.request_builder(Method::DELETE, path);
-        self.async_run(request).await
+        self.run(request).await
     }
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
-    async fn async_delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+    async fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
         let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
@@ -163,57 +163,55 @@ pub trait RequestHelper {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
-        self.async_run(request).await
+        self.run(request).await
     }
 
     /// Search for crates matching a query string
-    async fn async_search(&self, query: &str) -> CrateList {
-        self.async_get_with_query("/api/v1/crates", query)
-            .await
-            .good()
+    async fn search(&self, query: &str) -> CrateList {
+        self.get_with_query("/api/v1/crates", query).await.good()
     }
 
     /// Publish the crate and run background jobs to completion
     ///
     /// Background jobs will publish to the git index and sync to the HTTP index.
-    async fn async_publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
-        let response = self.async_put("/api/v1/crates/new", body).await;
-        self.app().async_run_pending_background_jobs().await;
+    async fn publish_crate(&self, body: impl Into<Bytes>) -> Response<GoodCrate> {
+        let response = self.put("/api/v1/crates/new", body).await;
+        self.app().run_pending_background_jobs().await;
         response
     }
 
     /// Request the JSON used for a crate's page
-    async fn async_show_crate(&self, krate_name: &str) -> CrateResponse {
+    async fn show_crate(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
-        self.async_get(&url).await.good()
+        self.get(&url).await.good()
     }
 
     /// Request the JSON used for a crate's minimal page
-    async fn async_show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
+    async fn show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
         let url = format!("/api/v1/crates/{krate_name}");
-        self.async_get_with_query(&url, "include=").await.good()
+        self.get_with_query(&url, "include=").await.good()
     }
 
     /// Request the JSON used to list a crate's owners
-    async fn async_show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
+    async fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
         let url = format!("/api/v1/crates/{krate_name}/owners");
-        self.async_get(&url).await.good()
+        self.get(&url).await.good()
     }
 
     /// Request the JSON used for a crate version's page
-    async fn async_show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
+    async fn show_version(&self, krate_name: &str, version: &str) -> VersionResponse {
         let url = format!("/api/v1/crates/{krate_name}/{version}");
-        self.async_get(&url).await.good()
+        self.get(&url).await.good()
     }
 
-    async fn async_show_category(&self, category_name: &str) -> CategoryResponse {
+    async fn show_category(&self, category_name: &str) -> CategoryResponse {
         let url = format!("/api/v1/categories/{category_name}");
-        self.async_get(&url).await.good()
+        self.get(&url).await.good()
     }
 
-    async fn async_show_category_list(&self) -> CategoryListResponse {
+    async fn show_category_list(&self) -> CategoryListResponse {
         let url = "/api/v1/categories";
-        self.async_get(url).await.good()
+        self.get(url).await.good()
     }
 }
 
@@ -340,38 +338,26 @@ impl MockTokenUser {
     }
 
     /// Add to the specified crate the specified owners.
-    pub async fn async_add_named_owners(
-        &self,
-        krate_name: &str,
-        owners: &[&str],
-    ) -> Response<OkBool> {
+    pub async fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.async_put(&url, body).await
+        self.put(&url, body).await
     }
 
     /// Add a single owner to the specified crate.
-    pub async fn async_add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        self.async_add_named_owners(krate_name, &[owner]).await
+    pub async fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        self.add_named_owners(krate_name, &[owner]).await
     }
 
     /// Remove from the specified crate the specified owners.
-    pub async fn async_remove_named_owners(
-        &self,
-        krate_name: &str,
-        owners: &[&str],
-    ) -> Response<OkBool> {
+    pub async fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
-        self.async_delete_with_body(&url, body).await
+        self.delete_with_body(&url, body).await
     }
 
     /// Remove a single owner to the specified crate.
-    pub async fn async_remove_named_owner(
-        &self,
-        krate_name: &str,
-        owner: &str,
-    ) -> Response<OkBool> {
-        self.async_remove_named_owners(krate_name, &[owner]).await
+    pub async fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
+        self.remove_named_owners(krate_name, &[owner]).await
     }
 }

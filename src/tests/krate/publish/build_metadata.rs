@@ -6,18 +6,14 @@ use insta::assert_json_snapshot;
 async fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token();
 
-    let response = token
-        .async_publish_crate(PublishBuilder::new("foo", v1))
-        .await;
+    let response = token.publish_crate(PublishBuilder::new("foo", v1)).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
 
-    let response = token
-        .async_publish_crate(PublishBuilder::new("foo", v2))
-        .await;
+    let response = token.publish_crate(PublishBuilder::new("foo", v2)).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),

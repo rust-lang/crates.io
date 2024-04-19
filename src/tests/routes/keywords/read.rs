@@ -12,12 +12,12 @@ struct GoodKeyword {
 async fn show() {
     let url = "/api/v1/keywords/foo";
     let (app, anon) = TestApp::init().empty();
-    anon.async_get(url).await.assert_not_found();
+    anon.get(url).await.assert_not_found();
 
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["foo"]).unwrap();
     });
-    let json: GoodKeyword = anon.async_get(url).await.good();
+    let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "foo");
 }
 
@@ -25,12 +25,12 @@ async fn show() {
 async fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
     let (app, anon) = TestApp::init().empty();
-    anon.async_get(url).await.assert_not_found();
+    anon.get(url).await.assert_not_found();
 
     app.db(|conn| {
         Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
     });
-    let json: GoodKeyword = anon.async_get(url).await.good();
+    let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "upper");
 }
 
@@ -40,10 +40,7 @@ async fn update_crate() {
     let user = user.as_model();
 
     async fn cnt(kw: &str, client: &impl RequestHelper) -> usize {
-        let json: GoodKeyword = client
-            .async_get(&format!("/api/v1/keywords/{kw}"))
-            .await
-            .good();
+        let json: GoodKeyword = client.get(&format!("/api/v1/keywords/{kw}")).await.good();
         json.keyword.crates_cnt as usize
     }
 
