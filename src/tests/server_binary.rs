@@ -105,7 +105,8 @@ impl ServerBin {
 
         // Use a proxied fresh schema as the database url.
         let test_database = TestDatabase::new();
-        let (chaosproxy, db_url) = ChaosProxy::proxy_database_url(test_database.url(), &runtime)?;
+        let (chaosproxy, db_url) =
+            runtime.block_on(ChaosProxy::proxy_database_url(test_database.url()))?;
         env.remove("TEST_DATABASE_URL");
         env.insert("DATABASE_URL".into(), db_url.clone());
         env.insert("READ_ONLY_REPLICA_URL".into(), db_url.clone());
