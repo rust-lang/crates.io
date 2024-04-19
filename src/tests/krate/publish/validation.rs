@@ -5,47 +5,47 @@ use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
-#[test]
-fn empty_json() {
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_json() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
     let body = PublishBuilder::create_publish_body("{}", &tarball);
 
-    let response = token.publish_crate(body);
+    let response = token.async_publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
 
-#[test]
-fn invalid_names() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_names() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let bad_name = |name: &str| {
+    async fn bad_name(name: &str, client: &impl RequestHelper) {
         let crate_to_publish = PublishBuilder::new(name, "1.0.0");
-        let response = token.publish_crate(crate_to_publish);
+        let response = client.async_publish_crate(crate_to_publish).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_json_snapshot!(response.json());
-    };
+    }
 
-    bad_name("");
-    bad_name("foo bar");
-    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1));
-    bad_name("snow☃");
-    bad_name("áccênts");
+    bad_name("", &token).await;
+    bad_name("foo bar", &token).await;
+    bad_name(&"a".repeat(MAX_NAME_LENGTH + 1), &token).await;
+    bad_name("snow☃", &token).await;
+    bad_name("áccênts", &token).await;
 
-    bad_name("std");
-    bad_name("STD");
-    bad_name("compiler-rt");
-    bad_name("compiler_rt");
-    bad_name("coMpiLer_Rt");
+    bad_name("std", &token).await;
+    bad_name("STD", &token).await;
+    bad_name("compiler-rt", &token).await;
+    bad_name("compiler_rt", &token).await;
+    bad_name("coMpiLer_Rt", &token).await;
 
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
 
-#[test]
-fn invalid_version() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_version() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let (json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
@@ -53,27 +53,27 @@ fn invalid_version() {
     assert_ne!(json, new_json);
     let body = PublishBuilder::create_publish_body(&new_json, &tarball);
 
-    let response = token.publish_crate(body);
+    let response = token.async_publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
 
-#[test]
-fn license_and_description_required() {
+#[tokio::test(flavor = "multi_thread")]
+async fn license_and_description_required() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
         .unset_license()
         .unset_description();
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.async_publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.async_publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
@@ -82,33 +82,36 @@ fn license_and_description_required() {
         .license_file("foo")
         .unset_description();
 
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.async_publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
 
-#[test]
-fn invalid_license() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_license() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response =
-        token.publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"));
+    let response = token
+        .async_publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
 
-#[test]
-fn invalid_urls() {
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_urls() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(
-        PublishBuilder::new("foo", "1.0.0").documentation("javascript:alert('boom')"),
-    );
+    let response = token
+        .async_publish_crate(
+            PublishBuilder::new("foo", "1.0.0").documentation("javascript:alert('boom')"),
+        )
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }

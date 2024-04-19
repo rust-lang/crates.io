@@ -166,10 +166,6 @@ impl TestApp {
             .unwrap()
     }
 
-    pub fn stored_files(&self) -> Vec<String> {
-        self.runtime().block_on(self.async_stored_files())
-    }
-
     pub async fn async_stored_files(&self) -> Vec<String> {
         let store = self.as_inner().storage.as_inner();
 

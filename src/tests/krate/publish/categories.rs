@@ -5,8 +5,8 @@ use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
-#[test]
-fn good_categories() {
+#[tokio::test(flavor = "multi_thread")]
+async fn good_categories() {
     let (app, _, _, token) = TestApp::full().with_token();
 
     app.db(|conn| {
@@ -16,7 +16,7 @@ fn good_categories() {
     });
 
     let crate_to_publish = PublishBuilder::new("foo_good_cat", "1.0.0").category("cat1");
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.async_publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -24,12 +24,12 @@ fn good_categories() {
     });
 }
 
-#[test]
-fn ignored_categories() {
+#[tokio::test(flavor = "multi_thread")]
+async fn ignored_categories() {
     let (_, _, _, token) = TestApp::full().with_token();
 
     let crate_to_publish = PublishBuilder::new("foo_ignored_cat", "1.0.0").category("bar");
-    let response = token.publish_crate(crate_to_publish);
+    let response = token.async_publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
@@ -37,20 +37,22 @@ fn ignored_categories() {
     });
 }
 
-#[test]
-fn too_many_categories() {
+#[tokio::test(flavor = "multi_thread")]
+async fn too_many_categories() {
     let (app, _, _, token) = TestApp::full().with_token();
 
-    let response = token.publish_crate(
-        PublishBuilder::new("foo", "1.0.0")
-            .category("one")
-            .category("two")
-            .category("three")
-            .category("four")
-            .category("five")
-            .category("six"),
-    );
+    let response = token
+        .async_publish_crate(
+            PublishBuilder::new("foo", "1.0.0")
+                .category("one")
+                .category("two")
+                .category("three")
+                .category("four")
+                .category("five")
+                .category("six"),
+        )
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
-    assert_that!(app.stored_files(), empty());
+    assert_that!(app.async_stored_files().await, empty());
 }
