@@ -5,8 +5,8 @@ struct UserStats {
     total_downloads: i64,
 }
 
-#[test]
-fn user_total_downloads() {
+#[tokio::test(flavor = "multi_thread")]
+async fn user_total_downloads() {
     use crate::builders::CrateBuilder;
     use crate::util::{RequestHelper, TestApp};
     use crates_io::schema::crate_downloads;
@@ -48,17 +48,17 @@ fn user_total_downloads() {
     });
 
     let url = format!("/api/v1/users/{}/stats", user.id);
-    let stats: UserStats = anon.get(&url).good();
+    let stats: UserStats = anon.async_get(&url).await.good();
     // does not include crates user never owned (2) or no longer owns (5)
     assert_eq!(stats.total_downloads, 30);
 }
 
-#[test]
-fn user_total_downloads_no_crates() {
+#[tokio::test(flavor = "multi_thread")]
+async fn user_total_downloads_no_crates() {
     let (_, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
     let url = format!("/api/v1/users/{}/stats", user.id);
 
-    let stats: UserStats = anon.get(&url).good();
+    let stats: UserStats = anon.async_get(&url).await.good();
     assert_eq!(stats.total_downloads, 0);
 }
