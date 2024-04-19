@@ -27,28 +27,27 @@ async fn wait_until_healthy(pool: &Pool) {
     }
 }
 
-#[test]
-fn http_error_with_unhealthy_database() {
+#[tokio::test(flavor = "multi_thread")]
+async fn http_error_with_unhealthy_database() {
     let (app, anon) = TestApp::init().with_chaos_proxy().empty();
 
-    let response = anon.get::<()>("/api/v1/summary");
+    let response = anon.async_get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
 
     app.primary_db_chaosproxy().break_networking().unwrap();
 
-    let response = anon.get::<()>("/api/v1/summary");
+    let response = anon.async_get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().primary_database));
+    wait_until_healthy(&app.as_inner().primary_database).await;
 
-    let response = anon.get::<()>("/api/v1/summary");
+    let response = anon.async_get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-#[test]
-fn fallback_to_replica_returns_user_info() {
+#[tokio::test(flavor = "multi_thread")]
+async fn fallback_to_replica_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -59,17 +58,16 @@ fn fallback_to_replica_returns_user_info() {
     app.primary_db_chaosproxy().break_networking().unwrap();
 
     // When the primary database is down, requests are forwarded to the replica database
-    let response = owner.get::<()>(URL);
+    let response = owner.async_get::<()>(URL).await;
     assert_eq!(response.status(), 200);
 
     // restore primary database connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().primary_database));
+    wait_until_healthy(&app.as_inner().primary_database).await;
 }
 
-#[test]
-fn restored_replica_returns_user_info() {
+#[tokio::test(flavor = "multi_thread")]
+async fn restored_replica_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -81,7 +79,7 @@ fn restored_replica_returns_user_info() {
     app.replica_db_chaosproxy().break_networking().unwrap();
 
     // When both primary and replica database are down, the request returns an error
-    let response = owner.get::<()>(URL);
+    let response = owner.async_get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     // Once the replica database is restored, it should serve as a fallback again
@@ -91,19 +89,18 @@ fn restored_replica_returns_user_info() {
         .replica_database
         .as_ref()
         .expect("no replica database configured");
-    app.runtime().block_on(wait_until_healthy(replica));
+    wait_until_healthy(replica).await;
 
-    let response = owner.get::<()>(URL);
+    let response = owner.async_get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::OK);
 
     // restore connection
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().primary_database));
+    wait_until_healthy(&app.as_inner().primary_database).await;
 }
 
-#[test]
-fn restored_primary_returns_user_info() {
+#[tokio::test(flavor = "multi_thread")]
+async fn restored_primary_returns_user_info() {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -115,14 +112,13 @@ fn restored_primary_returns_user_info() {
     app.replica_db_chaosproxy().break_networking().unwrap();
 
     // When both primary and replica database are down, the request returns an error
-    let response = owner.get::<()>(URL);
+    let response = owner.async_get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     // Once the replica database is restored, it should serve as a fallback again
     app.primary_db_chaosproxy().restore_networking().unwrap();
-    app.runtime()
-        .block_on(wait_until_healthy(&app.as_inner().primary_database));
+    wait_until_healthy(&app.as_inner().primary_database).await;
 
-    let response = owner.get::<()>(URL);
+    let response = owner.async_get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::OK);
 }
