@@ -970,7 +970,6 @@ dependencies = [
  "github-meta",
  "googletest",
  "hex",
- "http 0.2.12",
  "http 1.1.0",
  "http-body-util",
  "hyper 1.3.1",

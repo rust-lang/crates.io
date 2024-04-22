@@ -8,8 +8,8 @@ use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::prefix::PrefixStore;
 use object_store::{ClientOptions, ObjectStore, Result};
-use object_store_http::header::CACHE_CONTROL;
-use object_store_http::header::{HeaderMap, HeaderValue};
+use reqwest::header::CACHE_CONTROL;
+use reqwest::header::{HeaderMap, HeaderValue};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
 use std::path::PathBuf;
@@ -114,7 +114,7 @@ pub struct Storage {
     store: Box<dyn ObjectStore>,
     crate_upload_store: Box<dyn ObjectStore>,
     readme_upload_store: Box<dyn ObjectStore>,
-    db_dump_upload_store: Box<dyn ObjectStore>,
+    db_dump_upload_store: Arc<dyn ObjectStore>,
 
     index_store: Box<dyn ObjectStore>,
     index_upload_store: Box<dyn ObjectStore>,
@@ -157,7 +157,7 @@ impl Storage {
                     store: Box::new(store),
                     crate_upload_store: Box::new(crate_upload_store),
                     readme_upload_store: Box::new(readme_upload_store),
-                    db_dump_upload_store: Box::new(db_dump_upload_store),
+                    db_dump_upload_store: Arc::new(db_dump_upload_store),
                     cdn_prefix,
                     index_store: Box::new(index_store),
                     index_upload_store: Box::new(index_upload_store),
@@ -188,7 +188,7 @@ impl Storage {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
-                    db_dump_upload_store: Box::new(store),
+                    db_dump_upload_store: store,
                     cdn_prefix,
                     index_store: Box::new(index_store.clone()),
                     index_upload_store: Box::new(index_store),
@@ -203,7 +203,7 @@ impl Storage {
                     store: Box::new(store.clone()),
                     crate_upload_store: Box::new(store.clone()),
                     readme_upload_store: Box::new(store.clone()),
-                    db_dump_upload_store: Box::new(store.clone()),
+                    db_dump_upload_store: store.clone(),
                     cdn_prefix,
                     index_store: Box::new(PrefixStore::new(store.clone(), "index")),
                     index_upload_store: Box::new(PrefixStore::new(store, "index")),
@@ -253,14 +253,14 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
-        self.crate_upload_store.put(&path, bytes).await?;
+        self.crate_upload_store.put(&path, bytes.into()).await?;
         Ok(())
     }
 
     #[instrument(skip(self, bytes))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = readme_path(name, version);
-        self.readme_upload_store.put(&path, bytes).await?;
+        self.readme_upload_store.put(&path, bytes.into()).await?;
         Ok(())
     }
 
@@ -278,19 +278,19 @@ impl Storage {
 
     #[instrument(skip(self))]
     pub async fn upload_db_dump(&self, target: &str, local_path: &StdPath) -> anyhow::Result<()> {
-        let store = &self.db_dump_upload_store;
+        let store = self.db_dump_upload_store.clone();
 
         // Open the local tarball file
         let mut local_file = File::open(local_path).await?;
 
         // Set up a multipart upload
         let path = target.into();
-        let (id, mut writer) = store.put_multipart(&path).await?;
+        let mut writer = object_store::buffered::BufWriter::new(store, path);
 
         // Upload file contents
         if let Err(error) = tokio::io::copy(&mut local_file, &mut writer).await {
             // Abort the upload if something failed
-            store.abort_multipart(&path, &id).await?;
+            writer.abort().await?;
             return Err(error.into());
         }
 
@@ -375,7 +375,8 @@ mod tests {
             "readmes/foo/foo-1.2.3.html",
         ];
         for path in files_to_create {
-            storage.store.put(&path.into(), Bytes::new()).await.unwrap();
+            let payload = Bytes::new().into();
+            storage.store.put(&path.into(), payload).await.unwrap();
         }
 
         storage
