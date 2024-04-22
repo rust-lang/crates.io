@@ -25,6 +25,11 @@ export function init() {
     beforeSend(event, hint) {
       let error = hint?.originalException;
 
+      // Expose errors only in non-production environments for testing with Playwright
+      if (config.environment !== 'production' && window) {
+        window.__SENTRY_EVENTS = (window.__SENTRY_EVENTS ?? []).concat(error);
+      }
+
       // Ignoring these errors due to https://github.com/emberjs/ember.js/issues/12505
       // and https://github.com/emberjs/ember.js/issues/18416
       if (error && error.name === 'TransitionAborted') {
