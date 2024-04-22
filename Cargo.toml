@@ -92,7 +92,7 @@ minijinja = "=1.0.20"
 mockall = "=0.12.1"
 oauth2 = { version = "=4.4.2", default-features = false, features = ["reqwest"] }
 object_store = { version = "=0.9.1", features = ["aws"] }
-object_store_http = { package = "http", version = "=0.2.12" }
+object_store_http = { package = "http", version = "=1.1.0" }
 once_cell = "=1.19.0"
 p256 = "=0.13.2"
 parking_lot = "=0.12.1"
