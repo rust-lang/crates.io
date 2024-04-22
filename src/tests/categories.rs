@@ -79,3 +79,14 @@ fn sync_adds_and_removes() {
     let categories = select_slugs(&mut conn);
     assert_eq!(categories, vec!["algorithms", "another"]);
 }
+
+#[test]
+fn test_real_categories() {
+    let test_db = TestDatabase::new();
+    let mut conn = test_db.connect();
+
+    const TOML: &str = include_str!("../boot/categories.toml");
+    assert_ok!(crates_io::boot::categories::sync_with_connection(
+        TOML, &mut conn
+    ));
+}
