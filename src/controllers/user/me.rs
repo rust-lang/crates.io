@@ -279,7 +279,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
             )
             .collect::<Vec<_>>();
 
-        // Upsert crate owners; this should only actually exectute updates
+        // Upsert crate owners; this should only actually execute updates
         diesel::insert_into(crate_owners::table)
             .values(&to_insert)
             .on_conflict((
