@@ -221,7 +221,7 @@ async fn invalid_seek_parameter() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 
-    // borken seek but without per_page parameter should be ok
+    // broken seek but without per_page parameter should be ok
     // since it's not consider as seek-based pagination
     let response = anon.get_with_query::<()>(url, "seek=broken").await;
     assert_eq!(response.status(), StatusCode::OK);
