@@ -102,6 +102,7 @@ allow = [
     "BSD-3-Clause",
     "ISC",
     "MIT",
+    "MPL-2.0",
     "OpenSSL",
     "Unicode-DFS-2016",
 ]
