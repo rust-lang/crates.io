@@ -90,7 +90,7 @@ tikv-jemallocator = { version = "=0.5.4", features = ['unprefixed_malloc_on_supp
 lettre = { version = "=0.11.7", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=1.0.21"
 mockall = "=0.12.1"
-oauth2 = { version = "=4.4.2", default-features = false, features = ["reqwest"] }
+oauth2 = "=4.4.2"
 object_store = { version = "=0.10.0", features = ["aws"] }
 once_cell = "=1.19.0"
 p256 = "=0.13.2"
