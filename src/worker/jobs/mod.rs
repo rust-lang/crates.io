@@ -12,6 +12,7 @@ mod git;
 mod readmes;
 mod sync_admins;
 mod typosquat;
+mod update_default_version;
 
 pub use self::daily_db_maintenance::DailyDbMaintenance;
 pub use self::downloads::{
@@ -22,6 +23,7 @@ pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseInd
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::sync_admins::SyncAdmins;
 pub use self::typosquat::CheckTyposquat;
+pub use self::update_default_version::UpdateDefaultVersion;
 
 /// Enqueue both index sync jobs (git and sparse) for a crate, unless they
 /// already exist in the background job queue.

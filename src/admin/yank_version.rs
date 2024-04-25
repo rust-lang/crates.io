@@ -3,6 +3,8 @@ use crate::db;
 use crate::models::{Crate, Version};
 use crate::schema::versions;
 use crate::worker::jobs;
+use crate::worker::jobs::UpdateDefaultVersion;
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
@@ -58,6 +60,8 @@ fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         .execute(conn)?;
 
     jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+    UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
 
     Ok(())
 }

@@ -1,5 +1,9 @@
 use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Timestamp};
 
+mod semver;
+
+pub use semver::SemverVersion;
+
 sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 sql_function!(fn canon_crate_name(x: Text) -> Text);
 sql_function!(fn to_char(a: Date, b: Text) -> Text);

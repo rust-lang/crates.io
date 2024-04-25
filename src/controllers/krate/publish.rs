@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::auth::AuthCheck;
-use crate::worker::jobs::{self, CheckTyposquat};
+use crate::worker::jobs::{self, CheckTyposquat, UpdateDefaultVersion};
 use axum::body::Bytes;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{process_tarball, TarballError};
@@ -360,6 +360,18 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Link this new version to all dependencies
             add_dependencies(conn, &deps, version.id)?;
 
+            // Insert the default version if it doesn't already exist. Compared
+            // to only using a background job, this prevents us from getting
+            // into a situation where a crate exists in the `crates` table but
+            // doesn't have a default version in the `default_versions` table.
+            let inserted_default_versions = diesel::insert_into(default_versions::table)
+                .values((
+                    default_versions::crate_id.eq(krate.id),
+                    default_versions::version_id.eq(version.id),
+                ))
+                .on_conflict_do_nothing()
+                .execute(conn)?;
+
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
 
@@ -400,6 +412,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
             jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+            // If this is a new version for an existing crate it is sufficient
+            // to update the default version asynchronously in a background job.
+            if inserted_default_versions == 0 {
+                UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+            }
 
             // Experiment: check new crates for potential typosquatting.
             if existing_crate.is_none() {
