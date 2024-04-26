@@ -1,4 +1,5 @@
-import { test, expect, Page, Route } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { prepareMirage } from '@/e2e/helper';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ context }) => {
@@ -7,41 +8,44 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   });
 
   test('notification is not shown for read-write mode', async ({ page }) => {
-    await landingPageWithRoute(page, { status: 200, json: {} });
+    await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
   });
 
   test('notification is shown for read-only mode', async ({ page }) => {
-    await landingPageWithRoute(page, { status: 200, json: { read_only: true } });
+    await prepareMirage(page, server => {
+      // @ts-expect-error
+      server.get('/api/v1/site_metadata', { read_only: true });
+    });
+    await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toContainText('read-only mode');
   });
 
   test('server errors are handled gracefully', async ({ page }) => {
-    await landingPageWithRoute(page, { status: 500, json: {} });
+    await prepareMirage(page, server => {
+      // @ts-expect-error
+      server.get('/api/v1/site_metadata', {}, 500);
+    });
+    await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
     await checkSentryEventsNumber(page, 0);
   });
 
   test('client errors are reported on sentry', async ({ page }) => {
-    await landingPageWithRoute(page, { status: 400, json: {} });
+    await prepareMirage(page, server => {
+      // @ts-expect-error
+      server.get('/api/v1/site_metadata', {}, 404);
+    });
+    await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
     await checkSentryEventsNumber(page, 1);
     await checkSentryEventsHasName(page, 'AjaxError');
   });
 });
-
-async function landingPageWithRoute(page: Page, fulfill: Parameters<Route['fulfill']>[0]) {
-  await page.route('**/*/api/v1/**/*', async route => {
-    await route.fulfill(fulfill);
-  });
-  const apiResponse = page.waitForResponse('/api/v1/site_metadata');
-  await page.goto('/');
-  await apiResponse;
-}
 
 async function checkSentryEventsNumber(page: Page, expected: number) {
   return await page.waitForFunction(e => {

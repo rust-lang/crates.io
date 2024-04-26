@@ -12,10 +12,12 @@ import * as Summary from './route-handlers/summary';
 import * as Teams from './route-handlers/teams';
 import * as Users from './route-handlers/users';
 
-export default function makeServer(config) {
-  return createServer({
-    ...config,
+export const CONFIG_KEY = '__mirage_config';
+export const HOOK_KEY = '__mirage_hook';
 
+export default function makeServer(config) {
+  let server = createServer({
+    ...config,
     routes() {
       Categories.register(this);
       Crates.register(this);
@@ -32,5 +34,14 @@ export default function makeServer(config) {
       // Used by ember-cli-code-coverage
       this.passthrough('/write-coverage');
     },
+    // Make config overrideable which is useful for testing with Playwright
+    ...window[CONFIG_KEY],
   });
+
+  // A Hook that is useful for testing with Playwright
+  let hook = window[HOOK_KEY];
+  if (hook && typeof hook === 'function') {
+    hook(server);
+  }
+  return server;
 }
