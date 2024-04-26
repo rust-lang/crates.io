@@ -115,8 +115,8 @@ importers:
         specifier: 2.7.2
         version: 2.7.2(webpack@5.91.0)
       ember-cli:
-        specifier: 5.8.0
-        version: 5.8.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(underscore@1.13.6)
+        specifier: 5.8.1
+        version: 5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6)
       ember-cli-app-version:
         specifier: 6.0.1
         version: 6.0.1(ember-source@5.8.0(@babel/core@7.24.4)(@glimmer/component@1.1.2(@babel/core@7.24.4))(rsvp@4.8.5)(webpack@5.91.0))
@@ -131,7 +131,7 @@ importers:
         version: 3.0.0(@embroider/compat@3.4.8(@embroider/core@3.4.8))(@embroider/core@3.4.8)
       ember-cli-dependency-checker:
         specifier: 3.3.2
-        version: 3.3.2(ember-cli@5.8.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(underscore@1.13.6))
+        version: 3.3.2(ember-cli@5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -3809,8 +3809,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@5.8.0:
-    resolution: {integrity: sha512-9hRDyG9WfS6NbbFGVU+eaoHxn4paZFaBmKc/eOrUXyj3BYVtTnZgtEPYPxP5rQkPvVn2BM9NXvdbVN3dnzmbLA==}
+  ember-cli@5.8.1:
+    resolution: {integrity: sha512-rW7NFCaC02Bj52ZaI22UM43YT7gaRNLkQzBfhZYVpWW1+SMrdQXCxuPs6kqKRxqk4xauUpfCzCDFH92icq+mKg==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -13385,10 +13385,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.2(ember-cli@5.8.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(underscore@1.13.6)):
+  ember-cli-dependency-checker@3.3.2(ember-cli@5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 5.8.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(underscore@1.13.6)
+      ember-cli: 5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6)
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.8
@@ -13625,7 +13625,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@5.8.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(underscore@1.13.6):
+  ember-cli@5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6):
     dependencies:
       '@pnpm/find-workspace-dir': 6.0.3
       broccoli: 3.5.2
@@ -13681,7 +13681,7 @@ snapshots:
       is-git-url: 1.0.0
       is-language-code: 3.1.0
       isbinaryfile: 5.0.2
-      lodash.template: 4.5.0
+      lodash: 4.17.21
       markdown-it: 13.0.2
       markdown-it-terminal: 0.4.0(markdown-it@13.0.2)
       minimatch: 7.4.6
@@ -13738,7 +13738,6 @@ snapshots:
       - just
       - liquid-node
       - liquor
-      - lodash
       - marko
       - mote
       - nunjucks
