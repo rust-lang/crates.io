@@ -16,9 +16,9 @@
 }
 
 .list {
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
-    box-shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
     margin-bottom: var(--space-s);
 
     > * {
@@ -26,7 +26,7 @@
     }
 
     > * + * {
-        border-top: 1px solid hsla(51, 90%, 42%, .25);
+        border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #424242);
     }
 }
 

@@ -6,11 +6,11 @@
 }
 
 .docs {
-    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, .35), #232321);
 
     margin-bottom: var(--space-l);
     padding: var(--space-m) var(--space-l);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
 

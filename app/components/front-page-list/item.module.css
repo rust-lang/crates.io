@@ -1,13 +1,13 @@
 .link {
-    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
+    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, .35), #232321);
 
     display: flex;
     align-items: center;
     width: 100%;
     height: var(--space-2xl);
     padding: 0 var(--space-s);
-    background-color: white;
-    color: #525252;
+    background-color: light-dark(white, #141413);
+    color: light-dark(#525252, #f9f7ec);
     text-decoration: none;
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
@@ -19,8 +19,8 @@
     }
 
     &:hover, &:focus-visible {
-        color: #525252;
-        background-color: hsl(58deg 72% 97%);
+        color: light-dark(#525252, #f9f7ec);
+        background-color: light-dark(hsl(58deg 72% 97%), hsl(204, 3%, 11%));
         transition: background-color var(--transition-instant);
     }
 
@@ -48,7 +48,7 @@
 .subtitle {
     margin-top: var(--space-3xs);
     font-size: 13px;
-    color: rgb(118, 131, 138);
+    color: light-dark(rgb(118, 131, 138), #cccac2);
 }
 
 .right {
@@ -56,5 +56,5 @@
     height: var(--space-s);
     width: auto;
     margin-left: var(--space-xs);
-    color: rgb(118, 131, 138);
+    color: light-dark(rgb(118, 131, 138), #cccac2);
 }

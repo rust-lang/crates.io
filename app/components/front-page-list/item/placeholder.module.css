@@ -1,17 +1,17 @@
 .link {
-    --shadow: 0 2px 3px hsla(51, 50%, 44%, .35);
-    --placeholder-bg: hsla(59, 19%, 50%, 1.0);
-    --placeholder-bg2: hsla(59, 19%, 50%, 0.7);
+    --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, .35), #232321);
+    --placeholder-bg: light-dark(hsla(59, 19%, 50%, 1.0), hsl(60, 14%, 85%));
+    --placeholder-bg2: light-dark(hsla(59, 19%, 50%, 0.7), hsla(59, 5%, 50%, 0.7));
 
     display: flex;
     align-items: center;
     width: 100%;
-    height: 60px;
+    height: var(--space-2xl);
     margin: 8px 0;
-    padding: 0 15px;
-    background-color: white;
-    color: #525252;
-    border-radius: 5px;
+    padding: 0 var(--space-s);
+    background-color: light-dark(white, #141413);
+    color: light-dark(#525252, #f9f7ec);
+    border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     cursor: wait;
 }
@@ -31,15 +31,15 @@
 .subtitle {
     height: 13px;
     width: 90px;
-    margin-top: 4px;
+    margin-top: var(--space-3xs);
     border-radius: 6.5px;
     opacity: 0.2;
 }
 
 .right {
     flex-shrink: 0;
-    height: 16px;
+    height: var(--space-s);
     width: auto;
-    margin-left: 10px;
-    color: rgb(118, 131, 138);
+    margin-left: var(--space-xs);
+    color: light-dark(rgb(118, 131, 138), #cccac2);
 }

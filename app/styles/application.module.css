@@ -21,7 +21,7 @@
     --yellow500: hsl(44, 100%, 60%);
     --yellow700: hsl(44, 67%, 50%);
 
-    --header-bg-color: hsl(115, 31%, 20%);
+    --header-bg-color: light-dark(hsl(115, 31%, 20%), #141413);
 
     --transition-x-slow: 1000ms;
     --transition-slow: 500ms;
@@ -35,12 +35,12 @@
     --font-monospace: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
         "Courier New", monospace;
 
-    --main-color: #383838;
-    --main-color-light: #858585;
-    --main-shadow-color: var(--green900);
-    --main-bg: #f9f7ec;
-    --main-bg-dark: #edebdd;
-    --gray-border: #d5d3cb;
+    --main-color: light-dark(#383838, #f9f7ec);
+    --main-color-light: light-dark(#858585, #a6a6a6);
+    --main-shadow-color: light-dark(var(--green900), hsl(111, 10%, 8%));
+    --main-bg: light-dark(#f9f7ec, hsl(0, 1%, 19%));
+    --main-bg-dark: light-dark(#edebdd, #141413);
+    --gray-border: light-dark(#d5d3cb, #666561);
     --link-color: rgb(0, 172, 91);
     --link-hover-color: #007940;
 
@@ -73,6 +73,8 @@
 
     /* Custom pairs */
     --space-s-l: clamp(0.88rem, calc(0.34rem + 2.68vw), 2.25rem);
+
+    color-scheme: light dark;
 }
 
 [data-theme="new-design"] {

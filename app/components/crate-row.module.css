@@ -1,10 +1,10 @@
 .crate-row {
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
     display: flex;
     flex-wrap: wrap;
     padding: var(--space-s-m) var(--space-m-l);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
 }
@@ -77,6 +77,10 @@
             width: calc(1em + 20px);
             margin: -10px;
             margin-right: calc(var(--space-xs) - 10px);
+
+            circle {
+                fill: none;
+            }
         }
     }
 }

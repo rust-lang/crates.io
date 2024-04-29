@@ -23,6 +23,23 @@
 
     img, svg { vertical-align: middle; }
 
+
+    .prev, .next {
+        circle {
+            fill: none;
+        }
+
+        path {
+            fill: currentColor;
+        }
+
+        &:hover {
+            circle {
+                fill: var(--main-bg-dark);
+            }
+        }
+    }
+
     .next:global(.active),
     .prev:global(.active),
     .next:hover,

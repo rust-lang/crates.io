@@ -17,6 +17,6 @@
     color: var(--main-color);
 
     &:hover {
-        background-color: #e5e1cd;
+        background-color: light-dark(#e5e1cd, #262522);
     }
 }
