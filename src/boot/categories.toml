@@ -414,6 +414,12 @@ description = """
 Bindings to operating system-specific APIs.\
 """
 
+[os.categories.android-apis]
+name = "Android APIs"
+description = """
+Bindings to Android-specific APIs.\
+"""
+
 [os.categories.linux-apis]
 name = "Linux APIs"
 description = """
