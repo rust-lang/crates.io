@@ -1,9 +1,9 @@
 import { AxeBuilder } from '@axe-core/playwright';
-import { percySnapshot, test, expect } from '@/e2e/helper';
+import { test, expect } from '@/e2e/helper';
 import axeConfig from '@/tests/axe-config';
 
 test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
-  test('listing categories', async ({ page, mirage }, testInfo) => {
+  test('listing categories', async ({ page, mirage, percy }) => {
     await mirage.addHook(server => {
       server.create('category', { category: 'API bindings' });
       server.create('category', { category: 'Algorithms' });
@@ -20,12 +20,12 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-category="asynchronous"] [data-test-crate-count]')).toHaveText('15 crates');
     await expect(page.locator('[data-test-category="everything"] [data-test-crate-count]')).toHaveText('1,234 crates');
 
-    await percySnapshot(page, testInfo);
+    await percy.snapshot();
     const a11yAuditResult = await new AxeBuilder({ page }).options(axeConfig).analyze();
     expect(a11yAuditResult.violations).toEqual([]);
   });
 
-  test('category/:category_id index default sort is recent-downloads', async ({ page, mirage }, testInfo) => {
+  test('category/:category_id index default sort is recent-downloads', async ({ page, mirage, percy }) => {
     await mirage.addHook(server => {
       server.create('category', { category: 'Algorithms' });
     });
@@ -33,7 +33,7 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
 
     await expect(page.locator('[data-test-category-sort] [data-test-current-order]')).toHaveText('Recent Downloads');
 
-    await percySnapshot(page, testInfo);
+    await percy.snapshot();
     const a11yAuditResult = await new AxeBuilder({ page }).options(axeConfig).analyze();
     expect(a11yAuditResult.violations).toEqual([]);
   });
