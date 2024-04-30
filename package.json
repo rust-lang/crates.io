@@ -53,8 +53,8 @@
     "tracked-toolbox": "2.0.0"
   },
   "devDependencies": {
-    "@babel/core": "7.24.4",
-    "@babel/eslint-parser": "7.24.1",
+    "@babel/core": "7.24.5",
+    "@babel/eslint-parser": "7.24.5",
     "@babel/plugin-proposal-decorators": "7.24.1",
     "@ember/optional-features": "2.1.0",
     "@ember/render-modifiers": "2.1.0",
