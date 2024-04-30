@@ -28,7 +28,11 @@ export async function prepareMirage(
     },
     { key: CONFIG_KEY, options },
   );
-  await page.addInitScript(`window['${HOOK_KEY}'] = ${hook.toString()};`);
+  let fn = String((k: string, h: prepareDataFn) => {
+    let key = Symbol.for(`${k}`);
+    window[key] = (window[key] || []).concat(h);
+  });
+  await page.addInitScript(`(${fn})('${HOOK_KEY}', ${hook.toString()});`);
 }
 
 import { default as ApiTokenModel } from '@/mirage/models/api-token';

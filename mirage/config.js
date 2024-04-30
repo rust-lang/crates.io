@@ -12,9 +12,6 @@ import * as Summary from './route-handlers/summary';
 import * as Teams from './route-handlers/teams';
 import * as Users from './route-handlers/users';
 
-export const CONFIG_KEY = '__mirage_config';
-export const HOOK_KEY = '__mirage_hook';
-
 export default function makeServer(config) {
   let server = createServer({
     ...config,
@@ -34,14 +31,29 @@ export default function makeServer(config) {
       // Used by ember-cli-code-coverage
       this.passthrough('/write-coverage');
     },
-    // Make config overrideable which is useful for testing with Playwright
-    ...window[CONFIG_KEY],
+    ...getHookConfig(),
   });
+  server = processHooks(server);
+  return server;
+}
 
-  // A Hook that is useful for testing with Playwright
-  let hook = window[HOOK_KEY];
-  if (hook && typeof hook === 'function') {
-    hook(server);
+export const CONFIG_KEY = 'hook:mirage:config';
+export const HOOK_KEY = 'hook:mirage:hook';
+
+// Get injected config for testing with Playwright
+function getHookConfig() {
+  return window[Symbol.for(CONFIG_KEY)];
+}
+
+// Process injected hooks for testing with Playwright
+function processHooks(server) {
+  let hooks = window[Symbol.for(HOOK_KEY)];
+  if (hooks && Array.isArray(hooks)) {
+    hooks.forEach(hook => {
+      if (hook && typeof hook === 'function') {
+        hook(server);
+      }
+    });
   }
   return server;
 }
