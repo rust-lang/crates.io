@@ -6,6 +6,8 @@ module.exports = function (defaults) {
   let env = EmberApp.env();
   let isProd = env === 'production';
 
+  let browsers = require('./config/targets').browsers;
+
   let app = new EmberApp(defaults, {
     '@embroider/macros': {
       setConfig: {
@@ -44,6 +46,7 @@ module.exports = function (defaults) {
       extension: 'module.css',
       plugins: {
         before: [require('postcss-nested')],
+        postprocess: [require('postcss-preset-env')({ browsers, preserve: false })],
       },
     },
     fingerprint: {
