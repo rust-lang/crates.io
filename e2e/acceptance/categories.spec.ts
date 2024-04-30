@@ -1,11 +1,10 @@
-import { test, expect } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
-import { percySnapshot, prepareMirage } from '@/e2e/helper';
+import { percySnapshot, test, expect } from '@/e2e/helper';
 import axeConfig from '@/tests/axe-config';
 
 test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
-  test('listing categories', async ({ page }, testInfo) => {
-    await prepareMirage(page, server => {
+  test('listing categories', async ({ page, mirage }, testInfo) => {
+    await mirage.addHook(server => {
       server.create('category', { category: 'API bindings' });
       server.create('category', { category: 'Algorithms' });
       server.createList('crate', 1, { categoryIds: ['algorithms'] });
@@ -26,8 +25,8 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
     expect(a11yAuditResult.violations).toEqual([]);
   });
 
-  test('category/:category_id index default sort is recent-downloads', async ({ page }, testInfo) => {
-    await prepareMirage(page, server => {
+  test('category/:category_id index default sort is recent-downloads', async ({ page, mirage }, testInfo) => {
+    await mirage.addHook(server => {
       server.create('category', { category: 'Algorithms' });
     });
     await page.goto('/categories/algorithms');
@@ -39,8 +38,8 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
     expect(a11yAuditResult.violations).toEqual([]);
   });
 
-  test('listing category slugs', async ({ page }) => {
-    await prepareMirage(page, server => {
+  test('listing category slugs', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
       server.create('category', { category: 'Algorithms', description: 'Crates for algorithms' });
       server.create('category', { category: 'Asynchronous', description: 'Async crates' });
     });
@@ -55,8 +54,8 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
 
 test.describe('Acceptance | categories (locale: de)', { tag: '@acceptance' }, () => {
   test.use({ locale: 'de' });
-  test('listing categories', async ({ page }) => {
-    await prepareMirage(page, server => {
+  test('listing categories', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
       server.create('category', { category: 'Everything', crates_cnt: 1234 });
     });
     await page.goto('categories');

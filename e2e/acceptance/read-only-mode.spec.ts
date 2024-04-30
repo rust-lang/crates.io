@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { prepareMirage } from '@/e2e/helper';
+import { test, expect } from '@/e2e/helper';
+import { Page } from '@playwright/test';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ context }) => {
@@ -13,8 +13,8 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
   });
 
-  test('notification is shown for read-only mode', async ({ page }) => {
-    await prepareMirage(page, server => {
+  test('notification is shown for read-only mode', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
       // @ts-expect-error
       server.get('/api/v1/site_metadata', { read_only: true });
     });
@@ -23,8 +23,8 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toContainText('read-only mode');
   });
 
-  test('server errors are handled gracefully', async ({ page }) => {
-    await prepareMirage(page, server => {
+  test('server errors are handled gracefully', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
       // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 500);
     });
@@ -34,8 +34,8 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await checkSentryEventsNumber(page, 0);
   });
 
-  test('client errors are reported on sentry', async ({ page }) => {
-    await prepareMirage(page, server => {
+  test('client errors are reported on sentry', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
       // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 404);
     });
