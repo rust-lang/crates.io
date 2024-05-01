@@ -1,5 +1,4 @@
-import { test, expect } from '@/e2e/helper';
-import { Page } from '@playwright/test';
+import { test, expect, AppFixtures } from '@/e2e/helper';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ context }) => {
@@ -23,7 +22,7 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toContainText('read-only mode');
   });
 
-  test('server errors are handled gracefully', async ({ page, mirage }) => {
+  test('server errors are handled gracefully', async ({ page, mirage, ember }) => {
     await mirage.addHook(server => {
       // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 500);
@@ -31,10 +30,10 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-    await checkSentryEventsNumber(page, 0);
+    await checkSentryEventsNumber(ember, 0);
   });
 
-  test('client errors are reported on sentry', async ({ page, mirage }) => {
+  test('client errors are reported on sentry', async ({ page, mirage, ember }) => {
     await mirage.addHook(server => {
       // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 404);
@@ -42,19 +41,19 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
-    await checkSentryEventsNumber(page, 1);
-    await checkSentryEventsHasName(page, 'AjaxError');
+    await checkSentryEventsNumber(ember, 1);
+    await checkSentryEventsHasName(ember, ['AjaxError']);
   });
 });
 
-async function checkSentryEventsNumber(page: Page, expected: number) {
-  return await page.waitForFunction(e => {
-    return window['__SENTRY_EVENTS']?.length ?? 0 === e;
-  }, expected);
+async function checkSentryEventsNumber(ember: AppFixtures['ember'], expected: number) {
+  let len = await ember.evaluate(owner => owner.lookup('service:sentry').events.length);
+  expect(len).toBe(expected);
 }
 
-async function checkSentryEventsHasName(page: Page, expected: string) {
-  return await page.waitForFunction(e => {
-    return window['__SENTRY_EVENTS']?.map((e: Error) => e.name).includes(e);
-  }, expected);
+async function checkSentryEventsHasName(ember: AppFixtures['ember'], expected: string[]) {
+  let events = await ember.evaluate(owner =>
+    owner.lookup('service:sentry').events.map((e: { error: Error }) => e.error.name),
+  );
+  expect(events).toEqual(expected);
 }
