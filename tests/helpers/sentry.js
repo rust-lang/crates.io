@@ -1,6 +1,6 @@
 import Service from '@ember/service';
 
-class MockSentryService extends Service {
+export class MockSentryService extends Service {
   events = [];
   scope = new MockScope();
 
