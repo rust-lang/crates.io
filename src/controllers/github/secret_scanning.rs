@@ -56,7 +56,7 @@ async fn get_public_keys(state: &AppState) -> Result<Vec<GitHubPublicKey>, Boxed
     let keys = state.github.public_keys(client_id, client_secret).await?;
 
     // Populate cache
-    cache.keys = keys.clone();
+    cache.keys.clone_from(&keys);
     cache.timestamp = Some(chrono::Utc::now());
 
     Ok(keys)

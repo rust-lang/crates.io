@@ -186,12 +186,6 @@ pub trait RequestHelper {
         self.get(&url).await.good()
     }
 
-    /// Request the JSON used for a crate's minimal page
-    async fn show_crate_minimal(&self, krate_name: &str) -> CrateResponse {
-        let url = format!("/api/v1/crates/{krate_name}");
-        self.get_with_query(&url, "include=").await.good()
-    }
-
     /// Request the JSON used to list a crate's owners
     async fn show_crate_owners(&self, krate_name: &str) -> OwnersResponse {
         let url = format!("/api/v1/crates/{krate_name}/owners");
