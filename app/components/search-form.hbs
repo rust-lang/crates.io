@@ -23,7 +23,7 @@
     local-class="input-lg"
     name="q"
     id="cargo-desktop-search"
-    placeholder="Press 'S' to focus this searchbox..."
+    placeholder="Type 'S' or '/' to search"
     value={{this.header.searchValue}}
     oninput={{this.updateSearchValue}}
     autofocus="autofocus"
@@ -53,4 +53,5 @@
   {{on-key 's' (focus '#cargo-desktop-search')}}
   {{on-key 'S' (focus '#cargo-desktop-search')}}
   {{on-key 'shift+s' (focus '#cargo-desktop-search')}}
+  {{on-key '/' (focus '#cargo-desktop-search')}}
 </form>
