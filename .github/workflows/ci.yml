@@ -116,26 +116,14 @@ jobs:
       RUSTFLAGS: "-D warnings -Cinstrument-coverage"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
-    services:
-      postgres:
-        image: postgres:13@sha256:eee22204934b36935237e7c92355e3178cfdf3c5377dec9c19c848115cc4637b
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
 
       # Update `pg_dump` to the same version as the running PostgreSQL server
       - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${{ env.POSTGRES_VERSION }} -i -p
+      - run: sudo systemctl start postgresql.service
+      - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
       - run: cargo build --tests --workspace
       - run: cargo test --workspace
