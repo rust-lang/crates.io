@@ -20,6 +20,8 @@ env:
   GRCOV_VERSION: 0.8.19
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 9.0.6
+  # renovate: datasource=docker depName=postgres
+  POSTGRES_VERSION: 13
 
 jobs:
   changed-files:
@@ -131,6 +133,10 @@ jobs:
     steps:
       - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+
+      # Update `pg_dump` to the same version as the running PostgreSQL server
+      - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${{ env.POSTGRES_VERSION }} -i -p
+
       - run: cargo build --tests --workspace
       - run: cargo test --workspace
 
