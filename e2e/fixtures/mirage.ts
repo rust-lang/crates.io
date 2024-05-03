@@ -37,15 +37,31 @@ export class MiragePage {
     await this.page.addInitScript(`(${fn})('${HOOK_MAPPING.hook}', ${hook.toString()});`);
   }
 
-  async setup() {
+  private async addHelpers() {
+    await this.page.addInitScript(() => {
+      globalThis.authenticateAs = function (user) {
+        globalThis.server.create('mirage-session', { user });
+        globalThis.localStorage.setItem('isLoggedIn', '1');
+      };
+    });
     // Use default options only if no other options are explicitly provided
     await this._config({ force: false });
+  }
+
+  async setup() {
+    await this.addHelpers();
   }
 }
 
 interface Server extends BaseServer<Registry<Models, Factories>> {}
 type HookFn = (server: Server) => void;
 type HookScript = Exclude<Parameters<Page['addInitScript']>[0], Function>;
+
+declare global {
+  var server: Server;
+  // TODO: Improve typing
+  function authenticateAs(user): void;
+}
 
 import { default as ApiTokenModel } from '@/mirage/models/api-token';
 import { default as CategorySlugModel } from '@/mirage/models/category-slug';

@@ -31,9 +31,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
         lastUsedAt: '2017-11-02T01:45:14',
       });
 
-      // TODO: refactor the following to globalThis.authenticateAs(user);
-      server.create('mirage-session', { user });
-      window.localStorage.setItem('isLoggedIn', '1');
+      globalThis.authenticateAs(user);
     });
   });
 
