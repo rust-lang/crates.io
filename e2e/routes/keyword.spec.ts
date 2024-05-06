@@ -1,7 +1,7 @@
 import { test, expect } from '@/e2e/helper';
 
 test.describe('Route | keyword', { tag: '@routes' }, () => {
-  test('shows an empty list if the keyword does not exist on the server', async ({ page, mirage: _ }) => {
+  test('shows an empty list if the keyword does not exist on the server', async ({ page }) => {
     await page.goto('/keywords/foo');
     await expect(page).toHaveURL('/keywords/foo');
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(0);
