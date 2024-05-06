@@ -29,14 +29,14 @@ export const test = base.extend<AppOptions & AppFixtures>({
     },
     { auto: true, scope: 'test' },
   ],
-  mirage: async ({ page }, use) => {
-    let mirage = new MiragePage(page);
-    await mirage.setup();
-    await use(mirage);
-  },
-  ember: async ({ page }, use) => {
-    let ember = new EmberPage(page);
-    await ember.setup();
+  mirage: [
+    async ({ page }, use) => {
+      let mirage = new MiragePage(page);
+      await mirage.setup();
+      await use(mirage);
+    },
+    { auto: true, scope: 'test' },
+  ],
     await use(ember);
   },
   percy: async ({ page }, use, testInfo) => {
