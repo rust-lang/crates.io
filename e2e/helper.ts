@@ -3,11 +3,12 @@ import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
 import { MiragePage } from './fixtures/mirage';
 import { PercyPage } from './fixtures/percy';
 import { A11yPage } from './fixtures/a11y';
-import { EmberPage } from './fixtures/ember';
+import { EmberPage, EmberPageOptions } from './fixtures/ember';
 import axeConfig from '@/tests/axe-config';
 
 export type AppOptions = {
   clockOptions: FakeTimersOptions;
+  emberOptions: EmberPageOptions;
 };
 export interface AppFixtures {
   clock: FakeTimers;
@@ -19,6 +20,7 @@ export interface AppFixtures {
 
 export const test = base.extend<AppOptions & AppFixtures>({
   clockOptions: [{ now: '2017-11-20T12:00:00', shouldAdvanceTime: true }, { option: true }],
+  emberOptions: [{ setTesting: true, mockSentry: true }, { option: true }],
   clock: [
     async ({ page, clockOptions }, use) => {
       let clock = new FakeTimers(page);
@@ -37,8 +39,14 @@ export const test = base.extend<AppOptions & AppFixtures>({
     },
     { auto: true, scope: 'test' },
   ],
-    await use(ember);
-  },
+  ember: [
+    async ({ page, emberOptions }, use) => {
+      let ember = new EmberPage(page);
+      await ember.setup(emberOptions);
+      await use(ember);
+    },
+    { auto: true, scope: 'test' },
+  ],
   percy: async ({ page }, use, testInfo) => {
     let percy = new PercyPage(page, testInfo);
     await use(percy);
