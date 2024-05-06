@@ -18,6 +18,7 @@ use crates_io::cloudfront::CloudFront;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::team_repo::TeamRepoImpl;
+use crates_io::worker::jobs::ArchiveVersionDownloads;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{config, Emails};
 use crates_io::{db, ssh};
@@ -69,6 +70,7 @@ fn main() -> anyhow::Result<()> {
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
+    let downloads_archive_store = ArchiveVersionDownloads::store_from_environment()?;
 
     let client = Client::builder()
         .timeout(Duration::from_secs(45))
@@ -88,6 +90,7 @@ fn main() -> anyhow::Result<()> {
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
+        .downloads_archive_store(downloads_archive_store)
         .deadpool(deadpool.clone())
         .emails(emails)
         .team_repo(Box::new(team_repo))

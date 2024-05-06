@@ -8,6 +8,7 @@ use crates_io_index::{Repository, RepositoryConfig};
 use deadpool_diesel::postgres::Pool as DeadpoolPool;
 use derive_builder::Builder;
 use diesel::PgConnection;
+use object_store::ObjectStore;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, OnceLock};
@@ -26,6 +27,8 @@ pub struct Environment {
     #[builder(default)]
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
+    #[builder(default)]
+    pub downloads_archive_store: Option<Box<dyn ObjectStore>>,
     pub deadpool: DeadpoolPool,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
