@@ -152,7 +152,9 @@ impl Team {
             .block_on(app.github.team_by_name(org_name, team_name, &token))
             .map_err(|_| {
                 bad_request(format_args!(
-                    "could not find the github team {org_name}/{team_name}"
+                    "could not find the github team {org_name}/{team_name}. \
+                    Make sure that you have the right permissions in GitHub. \
+                    See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
                 ))
             })?;
 

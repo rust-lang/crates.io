@@ -90,7 +90,14 @@ async fn add_nonexistent_team() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_eq!(
         response.json(),
-        json!({ "errors": [{ "detail": "could not find the github team test-org/this-does-not-exist" }] })
+        json!({
+            "errors": [{
+                "detail":
+                "could not find the github team test-org/this-does-not-exist. \
+                Make sure that you have the right permissions in GitHub. \
+                See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
+            }]
+        })
     );
 }
 

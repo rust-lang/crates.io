@@ -351,5 +351,5 @@ async fn test_unknown_team() {
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
     let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"###);
 }
