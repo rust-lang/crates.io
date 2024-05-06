@@ -14,6 +14,11 @@ use std::sync::Arc;
 /// The threshold in days for the expiry notification.
 const EXPIRY_THRESHOLD: chrono::TimeDelta = chrono::TimeDelta::days(3);
 
+/// The maximum number of tokens to check.
+/// To avoid sending too many emails and submitting to many transactions, we limit the number of
+/// tokens to check.
+const MAX_ROWS: i64 = 10000;
+
 /// A job responsible for monitoring the status of a token.
 /// It checks if the token is about to reach its expiry date.
 /// If the token is about to expire, the job triggers a notification.
@@ -37,35 +42,36 @@ impl BackgroundJob for CheckAboutToExpireToken {
         .map_err(|err| anyhow!(err.to_string()))?
     }
 }
+
 // Check if the token is about to expire and send a notification if it is.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     info!("Checking if tokens are about to expire");
     let expired_tokens = find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
-    // Batch send notifications in transactions.
-    const BATCH_SIZE: usize = 100;
-    for chunk in expired_tokens.chunks(BATCH_SIZE) {
+    if expired_tokens.len() == MAX_ROWS as usize {
+        warn!("The maximum number of API tokens per query has been reached. More API tokens might be processed on the next run.");
+    }
+    for token in &expired_tokens {
         conn.transaction(|conn| {
-            for token in chunk {
-                // Send notification.
-                let user = User::find(conn, token.user_id)?;
-                let Some(recipient) = user.email(conn)? else {
-                    return Err(anyhow!("No address found"));
-                };
-                let email = ExpiryNotificationEmail {
-                    name: &user.gh_login,
-                    token_name: &token.name,
-                    expiry_date: token.expired_at.unwrap().and_utc(),
-                };
-                match emails.send(&recipient, email) {
-                    Ok(_) => {
-                        // Update the token to prevent duplicate notifications.
-                        diesel::update(token)
-                            .set(api_tokens::expiry_notification_at.eq(now.nullable()))
-                            .execute(conn)?;
-                    }
-                    Err(e) => {
-                        error!("Failed to send email: {:?} to {}", e, recipient);
-                    }
+            // Send notification.
+            let user = User::find(conn, token.user_id)?;
+            let Some(recipient) = user.email(conn)? else {
+                return Err(anyhow!("No address found"));
+            };
+            let email = ExpiryNotificationEmail {
+                name: &user.gh_login,
+                token_name: &token.name,
+                expiry_date: token.expired_at.unwrap().and_utc(),
+            };
+            match emails.send(&recipient, email) {
+                Ok(_) => {
+                    // Update the token to prevent duplicate notifications.
+                    diesel::update(token)
+                        .set(api_tokens::expiry_notification_at.eq(now.nullable()))
+                        .execute(conn)?;
+                }
+                Err(e) => {
+                    error!(?e, ?recipient, "Failed to send notification");
+                    return Err(anyhow!("Failed to send notification: {}", e));
                 }
             }
             Ok::<_, anyhow::Error>(())
@@ -74,7 +80,6 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
 
     Ok(())
 }
-
 /// Find all tokens that are not revoked and will expire within the specified number of days.
 pub fn find_tokens_expiring_within_days(
     conn: &mut PgConnection,
@@ -94,6 +99,8 @@ pub fn find_tokens_expiring_within_days(
         )
         .filter(api_tokens::expiry_notification_at.is_null())
         .select(ApiToken::as_select())
+        .order_by(api_tokens::expired_at.asc()) // The most urgent tokens first
+        .limit(MAX_ROWS)
         .get_results(conn)
 }
 
