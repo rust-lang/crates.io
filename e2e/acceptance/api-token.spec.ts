@@ -79,7 +79,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
 
     await page.click('[data-test-api-token="1"] [data-test-revoke-token-button]');
     expect(
-      await page.evaluate(() => globalThis.server.schema.apiTokens.all().length),
+      await page.evaluate(() => server.schema['apiTokens'].all().length),
       'API token has been deleted from the backend database',
     ).toBe(2);
 
@@ -120,7 +120,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
 
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => globalThis.server.schema.apiTokens.findBy({ name: 'the new token' })?.token);
+    let token = await page.evaluate(() => server.schema['apiTokens'].findBy({ name: 'the new token' })?.token);
     expect(token, 'API token has been created in the backend database').toBeTruthy();
 
     await expect(page.locator('[data-test-api-token="4"] [data-test-name]')).toHaveText('the new token');
@@ -138,7 +138,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => globalThis.server.schema.apiTokens.findBy({ name: 'the new token' })?.token);
+    let token = await page.evaluate(() => server.schema['apiTokens'].findBy({ name: 'the new token' })?.token);
     await expect(page.locator('[data-test-token]')).toHaveText(token);
 
     // leave the API tokens page

@@ -229,7 +229,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await mirage.addHook(server => {
       server.loadFixtures();
 
-      let user = server.schema.users.findBy({ login: 'thehydroimpulse' });
+      let user = server.schema['users'].findBy({ login: 'thehydroimpulse' });
       authenticateAs(user);
     });
 
@@ -261,7 +261,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await mirage.addHook(server => {
       server.loadFixtures();
 
-      let user = server.schema.users.findBy({ login: 'iain8' });
+      let user = server.schema['users'].findBy({ login: 'iain8' });
       authenticateAs(user);
     });
 
@@ -274,7 +274,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await mirage.addHook(server => {
       server.loadFixtures();
 
-      let user = server.schema.users.findBy({ login: 'thehydroimpulse' });
+      let user = server.schema['users'].findBy({ login: 'thehydroimpulse' });
       authenticateAs(user);
     });
 

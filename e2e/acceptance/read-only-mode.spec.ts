@@ -14,7 +14,6 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
 
   test('notification is shown for read-only mode', async ({ page, mirage }) => {
     await mirage.addHook(server => {
-      // @ts-expect-error
       server.get('/api/v1/site_metadata', { read_only: true });
     });
     await page.goto('/');
@@ -24,7 +23,6 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
 
   test('server errors are handled gracefully', async ({ page, mirage, ember }) => {
     await mirage.addHook(server => {
-      // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 500);
     });
     await page.goto('/');
@@ -35,7 +33,6 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
 
   test('client errors are reported on sentry', async ({ page, mirage, ember }) => {
     await mirage.addHook(server => {
-      // @ts-expect-error
       server.get('/api/v1/site_metadata', {}, 404);
     });
     await page.goto('/');

@@ -39,7 +39,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.click('[data-test-generate]');
 
     let token = await page.evaluate(() => {
-      let token = server.schema.apiTokens.findBy({ name: 'token-name' });
+      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
       return JSON.parse(JSON.stringify(token));
     });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
@@ -128,7 +128,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.click('[data-test-generate]');
 
     let token = await page.evaluate(() => {
-      let token = server.schema.apiTokens.findBy({ name: 'token-name' });
+      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
       return JSON.parse(JSON.stringify(token));
     });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
@@ -165,7 +165,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.click('[data-test-generate]');
 
     let token = await page.evaluate(() => {
-      let token = server.schema.apiTokens.findBy({ name: 'token-name' });
+      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
       return JSON.parse(JSON.stringify(token));
     });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
@@ -205,7 +205,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.click('[data-test-generate]');
 
     let token = await page.evaluate(() => {
-      let token = server.schema.apiTokens.findBy({ name: 'token-name' });
+      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
       return JSON.parse(JSON.stringify(token));
     });
     expect(token, 'API token has been created in the backend database').toBeTruthy();

@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import { Registry, Server as BaseServer } from 'miragejs';
-import { ServerConfig } from 'miragejs/server';
+import { Registry, Server as BaseServer, Request } from 'miragejs';
+import { HandlerOptions, RouteHandler, ServerConfig } from 'miragejs/server';
 import { CONFIG_KEY, HOOK_KEY } from '@/mirage/config';
 
 const HOOK_MAPPING = {
@@ -53,9 +53,48 @@ export class MiragePage {
   }
 }
 
-interface Server extends BaseServer<Registry<Models, Factories>> {}
+interface Server extends BaseServer<Registry<Models, Factories>> {
+  get<Response extends AnyResponse>(path: string, response: Response, status?: number): void;
+  get<Response extends AnyResponse>(
+    path: string,
+    handler?: RouteHandler<Registry<Models, Factories>, Response>,
+    options?: HandlerOptions,
+  ): void;
+  put<Response extends AnyResponse>(path: string, response: Response, status?: number): void;
+  put<Response extends AnyResponse>(
+    path: string,
+    handler?: RouteHandler<Registry<Models, Factories>, Response>,
+    options?: HandlerOptions,
+  ): void;
+  patch<Response extends AnyResponse>(path: string, response: Response, status?: number): void;
+  patch<Response extends AnyResponse>(
+    path: string,
+    handler?: RouteHandler<Registry<Models, Factories>, Response>,
+    options?: HandlerOptions,
+  ): void;
+  delete<Response extends AnyResponse>(path: string, response: Response, status?: number): void;
+  delete<Response extends AnyResponse>(
+    path: string,
+    handler?: RouteHandler<Registry<Models, Factories>, Response>,
+    options?: HandlerOptions,
+  ): void;
+  del<Response extends AnyResponse>(path: string, response: Response, status?: number): void;
+  del<Response extends AnyResponse>(
+    path: string,
+    handler?: RouteHandler<Registry<Models, Factories>, Response>,
+    options?: HandlerOptions,
+  ): void;
+  _config: ServerConfig<Models, Factories>;
+  pretender: PretenderSever;
+}
+
+interface PretenderSever extends BasePretenderServer {
+  handledRequests: Request[];
+}
+
 type HookFn = (server: Server) => void;
 type HookScript = Exclude<Parameters<Page['addInitScript']>[0], Function>;
+type BasePretenderServer = BaseServer['pretender'];
 
 declare global {
   var server: Server;
@@ -90,6 +129,7 @@ import { default as TeamFactory } from '@/mirage/factories/team';
 import { default as UserFactory } from '@/mirage/factories/user';
 import { default as VersionDownloadFactory } from '@/mirage/factories/version-download';
 import { default as VersionFactory } from '@/mirage/factories/version';
+import { AnyResponse } from 'miragejs/-types';
 
 const ModelsCamel = {
   apiToken: ApiTokenModel,
