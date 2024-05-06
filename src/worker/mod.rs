@@ -34,6 +34,6 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::SyncToSparseIndex>()
             .register_job_type::<jobs::UpdateDownloads>()
             .register_job_type::<jobs::UpdateDefaultVersion>()
-            .register_job_type::<jobs::CheckAboutToExpireToken>()
+            .register_job_type::<jobs::SendTokenExpiryNotifications>()
     }
 }

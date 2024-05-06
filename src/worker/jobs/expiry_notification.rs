@@ -23,9 +23,9 @@ const MAX_ROWS: i64 = 10000;
 /// It checks if the token is about to reach its expiry date.
 /// If the token is about to expire, the job triggers a notification.
 #[derive(Default, Serialize, Deserialize, Debug)]
-pub struct CheckAboutToExpireToken;
+pub struct SendTokenExpiryNotifications;
 
-impl BackgroundJob for CheckAboutToExpireToken {
+impl BackgroundJob for SendTokenExpiryNotifications {
     const JOB_NAME: &'static str = "expiry_notification";
 
     type Context = Arc<Environment>;
