@@ -90,7 +90,7 @@
     "ember-click-outside": "6.1.0",
     "ember-concurrency": "4.0.2",
     "ember-css-modules": "2.1.0",
-    "ember-data": "4.12.7",
+    "ember-data": "4.12.8",
     "ember-disable-prototype-extensions": "1.1.3",
     "ember-error-route": "0.2.0",
     "ember-event-helpers": "0.1.1",
