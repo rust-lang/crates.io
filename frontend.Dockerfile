@@ -1,5 +1,5 @@
 # renovate: datasource=node depName=node
-ARG NODE_VERSION=20.12.2
+ARG NODE_VERSION=20.13.1
 
 FROM node:${NODE_VERSION}-alpine
 
