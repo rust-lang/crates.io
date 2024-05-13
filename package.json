@@ -67,7 +67,7 @@
     "@glimmer/component": "1.1.2",
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.6.0",
-    "@percy/cli": "1.28.5",
+    "@percy/cli": "1.28.6",
     "@percy/ember": "4.2.0",
     "@sinonjs/fake-timers": "11.2.2",
     "@zestia/ember-auto-focus": "5.1.0",
