@@ -64,6 +64,8 @@ module.exports = {
     'unicorn/prefer-reflect-apply': 'off',
     // disabled because of false positives related to `EmberArray`
     'unicorn/prefer-spread': 'off',
+    // disabled because it seems unnecessary
+    'unicorn/prefer-string-raw': 'off',
     // disabled because of Sentry issues
     'unicorn/prefer-string-replace-all': 'off',
     // disabled because switch statements in JS are quite error-prone
