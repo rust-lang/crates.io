@@ -76,8 +76,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       '@embroider/compat':
-        specifier: 3.4.9
-        version: 3.4.9(@embroider/core@3.4.9)
+        specifier: 3.5.0
+        version: 3.5.0(@embroider/core@3.4.9)
       '@embroider/core':
         specifier: 3.4.9
         version: 3.4.9
@@ -128,7 +128,7 @@ importers:
         version: 1.0.0
       ember-cli-code-coverage:
         specifier: 3.0.0
-        version: 3.0.0(@embroider/compat@3.4.9(@embroider/core@3.4.9))(@embroider/core@3.4.9)
+        version: 3.0.0(@embroider/compat@3.5.0(@embroider/core@3.4.9))(@embroider/core@3.4.9)
       ember-cli-dependency-checker:
         specifier: 3.3.2
         version: 3.3.2(ember-cli@5.8.1(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6))
@@ -1357,8 +1357,8 @@ packages:
     peerDependencies:
       '@embroider/core': ^3.4.0
 
-  '@embroider/compat@3.4.9':
-    resolution: {integrity: sha512-1KuKlCx4wGxxo+GsTeS8AX6S4Ka2Ht6EKYlFsm0Ln38mQyPolIefVUeEURe9FKKaQsOdj8bdPdjJlGU1ZVF8Aw==}
+  '@embroider/compat@3.5.0':
+    resolution: {integrity: sha512-KFv4CGXiNZA9D+T89bQgmHRyJBIMq6NLzNHTTpD8lKWL0egZpaw2irzIH/1SqdktRf86Ee8pkWfqEi0W+UWXxA==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
@@ -10424,7 +10424,7 @@ snapshots:
       - supports-color
       - webpack
 
-  '@embroider/compat@3.4.9(@embroider/core@3.4.9)':
+  '@embroider/compat@3.5.0(@embroider/core@3.4.9)':
     dependencies:
       '@babel/code-frame': 7.24.2
       '@babel/core': 7.24.5
@@ -14054,7 +14054,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-code-coverage@3.0.0(@embroider/compat@3.4.9(@embroider/core@3.4.9))(@embroider/core@3.4.9):
+  ember-cli-code-coverage@3.0.0(@embroider/compat@3.5.0(@embroider/core@3.4.9))(@embroider/core@3.4.9):
     dependencies:
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.2
@@ -14068,7 +14068,7 @@ snapshots:
       node-dir: 0.1.17
       walk-sync: 2.2.0
     optionalDependencies:
-      '@embroider/compat': 3.4.9(@embroider/core@3.4.9)
+      '@embroider/compat': 3.5.0(@embroider/core@3.4.9)
       '@embroider/core': 3.4.9
     transitivePeerDependencies:
       - supports-color
