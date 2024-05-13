@@ -13,7 +13,7 @@ builder = []
 [dependencies]
 cargo-manifest = "=0.13.0"
 flate2 = "=1.0.30"
-serde = { version = "=1.0.200", features = ["derive"] }
+serde = { version = "=1.0.201", features = ["derive"] }
 serde_json = "=1.0.117"
 tar = "=0.4.40"
 thiserror = "=1.0.60"
