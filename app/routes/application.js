@@ -77,7 +77,7 @@ export default class ApplicationRoute extends Route {
   setSentryTransaction(transition) {
     let name = transition.to?.name;
     if (name) {
-      this.sentry.configureScope(scope => scope.setTransactionName(name));
+      this.sentry.getCurrentScope().setTransactionName(name);
     }
   }
 }

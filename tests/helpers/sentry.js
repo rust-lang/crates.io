@@ -11,8 +11,8 @@ class MockSentryService extends Service {
     this.events.push(event);
   }
 
-  configureScope(callback) {
-    callback(this.scope);
+  getCurrentScope() {
+    return this.scope;
   }
 
   setUser(user) {
