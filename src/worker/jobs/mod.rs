@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel::sql_types::{Int2, Jsonb, Text};
 use std::fmt::Display;
 
+mod archive_version_downloads;
 mod daily_db_maintenance;
 mod downloads;
 pub mod dump_db;
@@ -14,6 +15,7 @@ mod sync_admins;
 mod typosquat;
 mod update_default_version;
 
+pub use self::archive_version_downloads::ArchiveVersionDownloads;
 pub use self::daily_db_maintenance::DailyDbMaintenance;
 pub use self::downloads::{
     CleanProcessedLogFiles, ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads,

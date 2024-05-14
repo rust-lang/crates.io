@@ -2,6 +2,7 @@ use crate::db;
 use crate::schema::{background_jobs, crates};
 use crate::worker::jobs;
 use anyhow::Result;
+use chrono::NaiveDate;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
 use diesel::prelude::*;
@@ -14,6 +15,11 @@ use secrecy::{ExposeSecret, SecretString};
     rename_all = "snake_case"
 )]
 pub enum Command {
+    ArchiveVersionDownloads {
+        #[arg(long)]
+        /// The date before which to archive version downloads (default: 90 days ago)
+        before: Option<NaiveDate>,
+    },
     UpdateDownloads,
     CleanProcessedLogFiles,
     DumpDb {
@@ -45,6 +51,12 @@ pub fn run(command: Command) -> Result<()> {
     println!("Enqueueing background job: {command:?}");
 
     match command {
+        Command::ArchiveVersionDownloads { before } => {
+            before
+                .map(jobs::ArchiveVersionDownloads::before)
+                .unwrap_or_default()
+                .enqueue(conn)?;
+        }
         Command::UpdateDownloads => {
             let count: i64 = background_jobs::table
                 .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
