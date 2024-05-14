@@ -7,8 +7,8 @@ export default class SentryService extends Service {
     Sentry.captureException(error, captureContext);
   }
 
-  configureScope(callback) {
-    Sentry.configureScope(callback);
+  getCurrentScope() {
+    return Sentry.getCurrentScope();
   }
 
   setUser(user) {
