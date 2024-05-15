@@ -129,6 +129,6 @@ crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.7.1"
 diesel = { version = "=2.1.6", features = ["r2d2"] }
 googletest = "=0.11.0"
-insta = { version = "=1.38.0", features = ["json", "redactions"] }
+insta = { version = "=1.39.0", features = ["json", "redactions"] }
 regex = "=1.10.4"
 tokio = "=1.37.0"
