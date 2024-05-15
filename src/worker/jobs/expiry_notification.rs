@@ -175,7 +175,7 @@ mod tests {
                     api_tokens::user_id.eq(user.id),
                     api_tokens::name.eq(format!("test_token{i}")),
                     api_tokens::token.eq(token.hashed()),
-                    api_tokens::expired_at.eq(now.nullable() + (not_expired_offset).day()),
+                    api_tokens::expired_at.eq(now.nullable() + not_expired_offset.day()),
                 ))
                 .returning(ApiToken::as_returning())
                 .get_result(&mut conn)?;
