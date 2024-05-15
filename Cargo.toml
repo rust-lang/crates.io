@@ -112,7 +112,7 @@ tar = "=0.4.40"
 tempfile = "=3.10.1"
 thiserror = "=1.0.60"
 tokio = { version = "=1.37.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
-toml = "=0.8.12"
+toml = "=0.8.13"
 tower = "=0.4.13"
 tower-http = { version = "=0.5.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.40"
