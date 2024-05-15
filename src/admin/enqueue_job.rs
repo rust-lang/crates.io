@@ -44,6 +44,7 @@ pub enum Command {
         #[arg(long)]
         force: bool,
     },
+    SendTokenExpiryNotifications,
 }
 
 pub fn run(command: Command) -> Result<()> {
@@ -129,6 +130,9 @@ pub fn run(command: Command) -> Result<()> {
             }
 
             jobs::CheckTyposquat::new(&name).enqueue(conn)?;
+        }
+        Command::SendTokenExpiryNotifications => {
+            jobs::SendTokenExpiryNotifications.enqueue(conn)?;
         }
     };
 
