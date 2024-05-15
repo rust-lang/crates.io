@@ -8,8 +8,8 @@
         ":semanticCommitsDisabled",
         ":automergeLinters",
         ":automergeTesters",
-        "regexManagers:dockerfileVersions",
-        "regexManagers:githubActionsVersions",
+        "customManagers:dockerfileVersions",
+        "customManagers:githubActionsVersions",
         "github>Turbo87/renovate-config//rust/updateToolchain",
     ],
     packageRules: [
@@ -62,8 +62,8 @@
             groupName: "diesel packages",
         },
         {
-            "matchPackageNames": ["aws-ip-ranges", "github-meta"],
-            "automerge": true,
+            matchPackageNames: ["aws-ip-ranges", "github-meta"],
+            automerge: true,
         },
         {
             matchUpdateTypes: ["digest"],
