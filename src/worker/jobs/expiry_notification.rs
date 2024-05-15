@@ -5,10 +5,7 @@ use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::{now, IntervalDsl};
-use diesel::{
-    ExpressionMethods, NullableExpressionMethods, PgConnection, QueryDsl, QueryResult, RunQueryDsl,
-    SelectableHelper,
-};
+use diesel::prelude::*;
 use std::sync::Arc;
 
 /// The threshold in days for the expiry notification.
@@ -140,7 +137,6 @@ mod tests {
         util::token::PlainToken,
     };
     use diesel::dsl::IntervalDsl;
-    use diesel::{QueryDsl, SelectableHelper};
     use lettre::Address;
 
     #[tokio::test]
