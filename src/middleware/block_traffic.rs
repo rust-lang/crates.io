@@ -72,11 +72,9 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> Response {
 
     let body = format!(
         "We are unable to process your request at this time. \
-                 This usually means that you are in violation of our crawler \
-                 policy (https://{domain_name}/policies#crawlers). \
-                 Please open an issue at https://github.com/rust-lang/crates.io \
-                 or email help@crates.io \
-                 and provide the request id {request_id}"
+         This usually means that you are in violation of our API data access \
+         policy (https://{domain_name}/data-access). \
+         Please email help@crates.io and provide the request id {request_id}"
     );
 
     (StatusCode::FORBIDDEN, body).into_response()
