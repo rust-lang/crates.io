@@ -6,8 +6,8 @@ use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::IntervalDsl;
 use diesel::{
-    dsl::now, BoolExpressionMethods, ExpressionMethods, NullableExpressionMethods, PgConnection,
-    QueryDsl, QueryResult, RunQueryDsl, SelectableHelper,
+    dsl::now, ExpressionMethods, NullableExpressionMethods, PgConnection, QueryDsl, QueryResult,
+    RunQueryDsl, SelectableHelper,
 };
 use std::sync::Arc;
 
@@ -89,15 +89,13 @@ pub fn find_tokens_expiring_within_days(
 ) -> QueryResult<Vec<ApiToken>> {
     api_tokens::table
         .filter(api_tokens::revoked.eq(false))
+        .filter(api_tokens::expired_at.is_not_null())
+        // Ignore already expired tokens
+        .filter(api_tokens::expired_at.assume_not_null().gt(now))
         .filter(
             api_tokens::expired_at
-                .is_not_null()
-                .and(api_tokens::expired_at.assume_not_null().gt(now)) // Ignore already expired tokens
-                .and(
-                    api_tokens::expired_at
-                        .assume_not_null()
-                        .lt(now + days_until_expiry.num_days().day()),
-                ),
+                .assume_not_null()
+                .lt(now + days_until_expiry.num_days().day()),
         )
         .filter(api_tokens::expiry_notification_at.is_null())
         .select(ApiToken::as_select())
