@@ -8,17 +8,12 @@ use diesel::dsl::now;
 use diesel::prelude::*;
 use std::sync::Arc;
 
-/// The threshold in days for the expiry notification.
+/// The threshold for the expiry notification.
 const EXPIRY_THRESHOLD: chrono::TimeDelta = chrono::TimeDelta::days(3);
 
-/// The maximum number of tokens to check.
-/// To avoid sending too many emails and submitting to many transactions, we limit the number of
-/// tokens to check.
+/// The maximum number of tokens to check per run.
 const MAX_ROWS: i64 = 10000;
 
-/// A job responsible for monitoring the status of a token.
-/// It checks if the token is about to reach its expiry date.
-/// If the token is about to expire, the job triggers a notification.
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct SendTokenExpiryNotifications;
 
@@ -40,7 +35,7 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     }
 }
 
-// Check if the token is about to expire and send a notification if it is.
+/// Find tokens that are about to expire and send notifications to their owners.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     info!("Checking if tokens are about to expire");
     let before = chrono::Utc::now() + EXPIRY_THRESHOLD;
@@ -57,6 +52,7 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Send an email to the user associated with the token.
 fn handle_expiring_token(
     conn: &mut PgConnection,
     token: &ApiToken,
