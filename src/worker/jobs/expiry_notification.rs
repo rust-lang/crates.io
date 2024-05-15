@@ -4,7 +4,7 @@ use crate::{email::Email, models::User, worker::Environment, Emails};
 use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
-use diesel::dsl::{now, IntervalDsl};
+use diesel::dsl::now;
 use diesel::prelude::*;
 use std::sync::Arc;
 
@@ -43,7 +43,8 @@ impl BackgroundJob for SendTokenExpiryNotifications {
 // Check if the token is about to expire and send a notification if it is.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
     info!("Checking if tokens are about to expire");
-    let expired_tokens = find_tokens_expiring_within_days(conn, EXPIRY_THRESHOLD)?;
+    let before = chrono::Utc::now() + EXPIRY_THRESHOLD;
+    let expired_tokens = find_expiring_tokens(conn, before)?;
     if expired_tokens.len() == MAX_ROWS as usize {
         warn!("The maximum number of API tokens per query has been reached. More API tokens might be processed on the next run.");
     }
@@ -79,10 +80,14 @@ fn handle_expiring_token(
     Ok(())
 }
 
-/// Find all tokens that are not revoked and will expire within the specified number of days.
-pub fn find_tokens_expiring_within_days(
+/// Find tokens that will expire before the given date, but haven't expired yet
+/// and haven't been notified about their impending expiry. Revoked tokens are
+/// also ignored.
+///
+/// This function returns at most `MAX_ROWS` tokens.
+pub fn find_expiring_tokens(
     conn: &mut PgConnection,
-    days_until_expiry: chrono::TimeDelta,
+    before: chrono::DateTime<chrono::Utc>,
 ) -> QueryResult<Vec<ApiToken>> {
     api_tokens::table
         .filter(api_tokens::revoked.eq(false))
@@ -92,7 +97,7 @@ pub fn find_tokens_expiring_within_days(
         .filter(
             api_tokens::expired_at
                 .assume_not_null()
-                .lt(now + days_until_expiry.num_days().day()),
+                .lt(before.naive_utc()),
         )
         .filter(api_tokens::expiry_notification_at.is_null())
         .select(ApiToken::as_select())
