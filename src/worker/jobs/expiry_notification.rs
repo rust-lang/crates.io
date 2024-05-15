@@ -59,10 +59,9 @@ fn handle_expiring_token(
     emails: &Emails,
 ) -> Result<(), anyhow::Error> {
     let user = User::find(conn, token.user_id)?;
-    let recipient = match user.email(conn)? {
-        Some(email) => email,
-        None => return Err(anyhow!("No address found")),
-    };
+    let recipient = user
+        .email(conn)?
+        .ok_or_else(|| anyhow!("No address found"))?;
     let email = ExpiryNotificationEmail {
         name: &user.gh_login,
         token_name: &token.name,
