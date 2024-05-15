@@ -4,10 +4,10 @@ use crate::{email::Email, models::User, worker::Environment, Emails};
 use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
-use diesel::dsl::IntervalDsl;
+use diesel::dsl::{now, IntervalDsl};
 use diesel::{
-    dsl::now, ExpressionMethods, NullableExpressionMethods, PgConnection, QueryDsl, QueryResult,
-    RunQueryDsl, SelectableHelper,
+    ExpressionMethods, NullableExpressionMethods, PgConnection, QueryDsl, QueryResult, RunQueryDsl,
+    SelectableHelper,
 };
 use std::sync::Arc;
 
@@ -212,7 +212,7 @@ mod tests {
                 api_tokens::user_id.eq(user.id),
                 api_tokens::name.eq("expired_token"),
                 api_tokens::token.eq(token.hashed()),
-                api_tokens::expired_at.eq(diesel::dsl::now.nullable() - 1.day()),
+                api_tokens::expired_at.eq(now.nullable() - 1.day()),
             ))
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)?;
