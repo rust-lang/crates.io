@@ -77,17 +77,21 @@ fn handle_expiring_token(
     let user = User::find(conn, token.user_id)?;
 
     debug!("Looking up email address for user {}…", user.id);
-    let recipient = user
-        .email(conn)?
-        .ok_or_else(|| anyhow!("No address found"))?;
-
-    debug!("Sending expiry notification to {}…", recipient);
-    let email = ExpiryNotificationEmail {
-        name: &user.gh_login,
-        token_name: &token.name,
-        expiry_date: token.expired_at.unwrap().and_utc(),
-    };
-    emails.send(&recipient, email)?;
+    let recipient = user.email(conn)?;
+    if let Some(recipient) = recipient {
+        debug!("Sending expiry notification to {}…", recipient);
+        let email = ExpiryNotificationEmail {
+            name: &user.gh_login,
+            token_name: &token.name,
+            expiry_date: token.expired_at.unwrap().and_utc(),
+        };
+        emails.send(&recipient, email)?;
+    } else {
+        info!(
+            "User {} has no email address set. Skipping expiry notification.",
+            user.id
+        );
+    }
 
     // Update the token to prevent duplicate notifications.
     debug!("Marking token {} as notified…", token.id);
