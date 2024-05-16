@@ -18,7 +18,7 @@ const MAX_ROWS: i64 = 10000;
 pub struct SendTokenExpiryNotifications;
 
 impl BackgroundJob for SendTokenExpiryNotifications {
-    const JOB_NAME: &'static str = "expiry_notification";
+    const JOB_NAME: &'static str = "send_token_expiry_notifications";
 
     type Context = Arc<Environment>;
 
