@@ -37,17 +37,32 @@ impl BackgroundJob for SendTokenExpiryNotifications {
 
 /// Find tokens that are about to expire and send notifications to their owners.
 fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
-    info!("Checking if tokens are about to expire");
     let before = chrono::Utc::now() + EXPIRY_THRESHOLD;
+    info!("Searching for tokens that will expire before {before}…");
+
     let expired_tokens = find_expiring_tokens(conn, before)?;
-    if expired_tokens.len() == MAX_ROWS as usize {
+    let num_tokens = expired_tokens.len();
+    if num_tokens == 0 {
+        info!("Found no tokens that will expire before {before}. Skipping expiry notifications.");
+        return Ok(());
+    }
+
+    info!("Found {num_tokens} tokens that will expire before {before}. Sending out expiry notifications…");
+
+    if num_tokens == MAX_ROWS as usize {
         warn!("The maximum number of API tokens per query has been reached. More API tokens might be processed on the next run.");
     }
+
+    let mut success = 0;
     for token in &expired_tokens {
         if let Err(e) = handle_expiring_token(conn, token, emails) {
             error!(?e, "Failed to handle expiring token");
+        } else {
+            success += 1;
         }
     }
+
+    info!("Sent expiry notifications for {success} of {num_tokens} expiring tokens.");
 
     Ok(())
 }
@@ -58,20 +73,28 @@ fn handle_expiring_token(
     token: &ApiToken,
     emails: &Emails,
 ) -> Result<(), anyhow::Error> {
+    debug!("Looking up user {} for token {}…", token.user_id, token.id);
     let user = User::find(conn, token.user_id)?;
+
+    debug!("Looking up email address for user {}…", user.id);
     let recipient = user
         .email(conn)?
         .ok_or_else(|| anyhow!("No address found"))?;
+
+    debug!("Sending expiry notification to {}…", recipient);
     let email = ExpiryNotificationEmail {
         name: &user.gh_login,
         token_name: &token.name,
         expiry_date: token.expired_at.unwrap().and_utc(),
     };
     emails.send(&recipient, email)?;
+
     // Update the token to prevent duplicate notifications.
+    debug!("Marking token {} as notified…", token.id);
     diesel::update(token)
         .set(api_tokens::expiry_notification_at.eq(now.nullable()))
         .execute(conn)?;
+
     Ok(())
 }
 
