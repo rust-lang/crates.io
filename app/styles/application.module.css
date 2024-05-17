@@ -77,6 +77,14 @@
     color-scheme: light dark;
 }
 
+[data-color-scheme="light"] {
+     color-scheme: light;
+}
+
+[data-color-scheme="dark"] {
+     color-scheme: dark;
+}
+
 [data-theme="new-design"] {
     --header-bg-color: var(--violet800);
     --main-bg: white;

@@ -14,6 +14,8 @@
     </div>
 
     <nav local-class='nav'>
+      <ColorSchemeMenu local-class="color-scheme-menu" />
+
       <LinkTo @route="crates" @query={{hash letter=null page=1}} data-test-all-crates-link>
         Browse All Crates
       </LinkTo>
@@ -81,6 +83,8 @@
     </nav>
 
     <div local-class='menu'>
+      <ColorSchemeMenu local-class="color-scheme-menu" />
+
       <Dropdown as |dd|>
         <dd.Trigger local-class="dropdown-button">
           Menu

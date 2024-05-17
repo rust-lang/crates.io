@@ -101,7 +101,7 @@
 .nav {
     grid-area: nav;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-self: end;
 
     @media only screen and (max-width: 900px) {
@@ -115,12 +115,17 @@
     display: none;
 
     @media only screen and (max-width: 900px) {
-        display: block;
+        display: flex;
+        align-items: center;
     }
 }
 
 .menu-item-with-separator {
     border-top: 1px solid var(--gray-border);
+}
+
+.color-scheme-menu {
+    margin-right: var(--space-xs);
 }
 
 .login-button {

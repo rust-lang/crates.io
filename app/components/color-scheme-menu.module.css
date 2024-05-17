@@ -1,0 +1,35 @@
+.dropdown {
+    line-height: 1rem;
+}
+
+.icon {
+    width: 1.4em;
+    height: auto;
+}
+
+.trigger {
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.trigger-label {
+    composes: sr-only from '../styles/shared/a11y.module.css'
+}
+
+.menu {
+    right: 0;
+    min-width: max-content;
+}
+
+.menu-button {
+    composes: button-reset from '../styles/shared/buttons.module.css';
+    align-items: center;
+    gap: var(--space-2xs);
+    cursor: pointer;
+    text-transform: capitalize;
+}
+
+.selected {
+    background: light-dark(#e6e6e6, #404040);
+}
