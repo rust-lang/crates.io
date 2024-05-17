@@ -1,6 +1,6 @@
 .boxed {
     padding: var(--space-m);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     margin-bottom: var(--space-s);
     border-radius: 5px;
 }
@@ -25,7 +25,7 @@
         display: block;
         overflow-x: auto;
         padding: var(--space-xs);
-        background-color: #f6f8fa;
+        background-color: light-dark(#f6f8fa, #161b22);
         font-size: 85%;
         border-radius: var(--space-3xs);
     }
@@ -40,7 +40,7 @@
 
     p, li {
         code {
-            background-color: #f6f8fa;
+            background-color: light-dark(#f6f8fa, #383836);
             border-radius: var(--space-3xs);
             font-size: 85%;
             margin: 0;

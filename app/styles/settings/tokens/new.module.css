@@ -12,12 +12,12 @@
 
 .help-link {
     flex-shrink: 0;
-    color: var(--grey600);
+    color: light-dark(var(--grey600), var(--grey700));
     padding: var(--space-3xs);
     margin: calc(-1 * var(--space-3xs));
 
     &:hover {
-        color: var(--grey700);
+        color: light-dark(var(--grey700), var(--grey600));
     }
 
     svg {
@@ -45,12 +45,12 @@
 
 .base-input {
     padding: var(--space-2xs);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
     &[aria-invalid="true"] {
-        background: #fff2f2;
+        background: light-dark(#fff2f2, #170808);
         border-color: red;
     }
 }
@@ -86,12 +86,12 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
     &.invalid {
-        background: #fff2f2;
+        background: light-dark(#fff2f2, #170808);
         border-color: red;
     }
 
@@ -123,7 +123,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
@@ -157,7 +157,7 @@
     }
 
     &.invalid input {
-        background: #fff2f2;
+        background: light-dark(#fff2f2, #170808);
         border-color: red;
     }
 
@@ -173,8 +173,8 @@
         align-items: center;
 
         &:hover {
-            background: var(--grey200);
-            color: var(--grey900);
+            background: light-dark(var(--grey200), #333333);
+            color: light-dark(var(--grey900), white);
         }
 
         svg {
@@ -213,7 +213,7 @@
     font-weight: bold;
 
     &:hover {
-        background: var(--grey200);
+        background: light-dark(var(--grey200), #333333);
     }
 }
 

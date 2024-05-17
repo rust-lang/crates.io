@@ -1,17 +1,17 @@
 .row {
     --bg-color: var(--grey200);
-    --hover-bg-color: hsl(217, 37%, 98%);
-    --range-color: var(--grey900);
-    --crate-color: var(--grey700);
+    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --range-color: light-dark(var(--grey900), #d1cfc7);
+    --crate-color: light-dark(var(--grey700), #d1cfc7);
     --placeholder-opacity: 0.35;
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
     display: flex;
     align-items: center;
     position: relative;
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
@@ -26,8 +26,8 @@
     }
 
     &.optional {
-        --range-color: var(--grey600);
-        --crate-color: var(--grey600);
+        --range-color: light-dark(var(--grey600), var(--grey600));
+        --crate-color: light-dark(var(--grey600), var(--grey600));
         --placeholder-opacity: 0.15;
     }
 

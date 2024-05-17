@@ -1,4 +1,6 @@
 <button type="button" local-class="button" {{on "click" @toggle}} ...attributes>
   {{yield}}
-  <span local-class="arrow"></span>
+  {{#unless @hideArrow}}
+    <span local-class="arrow"></span>
+  {{/unless}}
 </button>

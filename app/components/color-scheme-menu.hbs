@@ -1,0 +1,20 @@
+<Dropdown local-class="dropdown" data-test-dark-mode-menu ...attributes as |dd|>
+  <dd.Trigger @hideArrow={{true}} local-class="trigger" data-test-dark-mode-toggle>
+    {{svg-jar this.icon local-class="icon"}}
+    <span local-class="trigger-label">Change color scheme</span>
+  </dd.Trigger>
+
+  <dd.Menu local-class="menu" as |menu|>
+    {{#each this.colorSchemes as |colorScheme|}}
+      <menu.Item>
+        <button
+          local-class="menu-button {{if (eq colorScheme.mode this.colorScheme.scheme) 'selected'}}"
+          type="button"
+          {{on 'click' (fn this.colorScheme.set colorScheme.mode)}}
+        >
+          {{svg-jar colorScheme.svg local-class="icon"}} {{colorScheme.mode}}
+        </button>
+      </menu.Item>
+    {{/each}}
+  </dd.Menu>
+</Dropdown>

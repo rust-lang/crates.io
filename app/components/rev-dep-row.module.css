@@ -1,13 +1,13 @@
 .row {
-    --hover-bg-color: hsl(217, 37%, 98%);
-    --crate-color: var(--grey700);
+    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --crate-color: light-dark(var(--grey700), var(--grey600));
     --placeholder-opacity: 0.35;
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
     position: relative;
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);

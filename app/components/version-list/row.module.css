@@ -1,15 +1,15 @@
 .row {
-    --bg-color: var(--grey200);
-    --hover-bg-color: hsl(217, 37%, 98%);
-    --fg-color: var(--grey700);
-    --shadow: 0 1px 3px hsla(51, 90%, 42%, .35);
+    --bg-color: light-dark(var(--grey200), #242422);
+    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --fg-color: light-dark(var(--grey700), #ccc);
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
     display: flex;
     align-items: center;
     position: relative;
     font-size: 18px;
     padding: var(--space-s) var(--space-m);
-    background-color: white;
+    background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow);
     transition: all var(--transition-slow);
@@ -24,21 +24,21 @@
     }
 
     &.latest {
-        --bg-color: hsl(109, 75%, 87%);
-        --hover-bg-color: hsl(109, 75%, 97%);
-        --fg-color: hsl(136, 67%, 38%);
+        --bg-color: light-dark(hsl(109, 75%, 87%), hsl(136, 67%, 11%));
+        --hover-bg-color: light-dark(hsl(109, 75%, 97%), hsl(109, 10%, 11%));
+        --fg-color: light-dark(hsl(136, 67%, 38%), hsl(109, 75%, 87%));
     }
 
     &.prerelease {
-        --bg-color: hsl(39, 100%, 91%);
-        --hover-bg-color: hsl(39, 100%, 97%);
-        --fg-color: hsl(39, 71%, 45%);
+        --bg-color: light-dark(hsl(39, 100%, 91%), hsl(39, 71%, 15%));
+        --hover-bg-color: light-dark(hsl(39, 100%, 97%), hsl(39, 10%, 11%));
+        --fg-color: light-dark(hsl(39, 71%, 45%), hsl(39, 100%, 91%));
     }
 
     &.yanked {
-        --bg-color: hsl(0, 92%, 90%);
-        --hover-bg-color: hsl(0, 92%, 98%);
-        --fg-color: hsl(0, 84%, 32%);
+        --bg-color: light-dark(hsl(0, 92%, 90%), hsl(0, 84%, 12%));
+        --hover-bg-color: light-dark(hsl(0, 92%, 98%), hsl(0, 10%, 11%));
+        --fg-color: light-dark(hsl(0, 84%, 32%), hsl(0, 92%, 90%));
     }
 
     [title], :global(.ember-tooltip-target) {
@@ -75,7 +75,7 @@
     font-variant-numeric: tabular-nums;
     color: var(--fg-color);
     background-color: var(--bg-color);
-    border: 1px solid white;
+    border: 1px solid light-dark(white, #808080);
     border-radius: 50%;
     transition: all var(--transition-fast);
 
@@ -85,8 +85,8 @@
     }
 
     .row:hover &, .row.focused & {
-        border: var(--space-4xs) solid white;
-        box-shadow: 0 1px 3px var(--fg-color);
+        border: var(--space-4xs) solid light-dark(white, #bfbfbf);
+        box-shadow: 0 1px 3px light-dark(var(--fg-color), #232321);
     }
 
     @media only screen and (max-width: 550px) {
@@ -132,17 +132,17 @@
 .metadata {
     flex-grow: 1;
     margin-left: var(--space-m);
-    color: var(--grey600);
+    color: light-dark(var(--grey600), #d1cfc7);
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
 
     a {
         position: relative;
-        color: var(--grey600);
+        color: inherit;
 
         &:hover {
-            color: var(--grey900);
+            color: light-dark(var(--grey900), #f5f3e9);
         }
 
         &:focus-visible {

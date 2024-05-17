@@ -81,7 +81,7 @@
     cursor: pointer;
 
     &:hover {
-        background-color: white;
+        background-color: light-dark(white, #141413);
     }
 }
 
