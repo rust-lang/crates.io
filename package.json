@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/browser": "7.115.0",
-    "@sentry/utils": "7.115.0",
+    "@sentry/browser": "7.116.0",
+    "@sentry/utils": "7.116.0",
     "chart.js": "4.4.2",
     "date-fns": "3.6.0",
     "highlight.js": "11.9.0",
