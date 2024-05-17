@@ -24,8 +24,8 @@ importers:
         specifier: 7.116.0
         version: 7.116.0
       chart.js:
-        specifier: 4.4.2
-        version: 4.4.2
+        specifier: 4.4.3
+        version: 4.4.3
       date-fns:
         specifier: 3.6.0
         version: 3.6.0
@@ -2934,8 +2934,8 @@ packages:
   charm@1.0.2:
     resolution: {integrity: sha512-wqW3VdPnlSWT4eRiYX+hcs+C6ViBPUWk1qTCd+37qw9kEm/a5n2qcyQDMBWvSYKN/ctqZzeXNQaeBjOetJJUkw==}
 
-  chart.js@4.4.2:
-    resolution: {integrity: sha512-6GD7iKwFpP5kbSD4MeRRRlTnQvxfQREy36uEtm1hzHzcOqwWx0YEHuspuoNlslu+nciLIB7fjjsHkUv/FzFcOg==}
+  chart.js@4.4.3:
+    resolution: {integrity: sha512-qK1gkGSRYcJzqrrzdR6a+I0vQ4/R+SoODXyAjscQ/4mzuNzySaMCd+hyVxitSY1+L2fjPD1Gbn+ibNqRmwQeLw==}
     engines: {pnpm: '>=8'}
 
   cheerio-select@2.1.0:
@@ -12966,7 +12966,7 @@ snapshots:
     dependencies:
       inherits: 2.0.4
 
-  chart.js@4.4.2:
+  chart.js@4.4.3:
     dependencies:
       '@kurkle/color': 0.3.2
 
