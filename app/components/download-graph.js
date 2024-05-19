@@ -15,6 +15,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export default class DownloadGraph extends Component {
   @service chartjs;
+  @service colorScheme;
 
   @action loadChartJs() {
     waitForPromise(this.chartjs.loadTask.perform()).catch(() => {
@@ -22,13 +23,24 @@ export default class DownloadGraph extends Component {
     });
   }
 
+  get fontColor() {
+    return this.colorScheme.isDark ? '#ADBABD' : '#666';
+  }
+
+  get borderColor() {
+    return this.colorScheme.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  }
+
   @action createChart(element) {
     let Chart = this.chartjs.loadTask.lastSuccessful.value;
+
+    let { fontColor: color, borderColor } = this;
 
     this.chart = new Chart(element, {
       type: 'line',
       data: this.data,
       options: {
+        color,
         maintainAspectRatio: false,
         layout: {
           padding: 10,
@@ -37,9 +49,15 @@ export default class DownloadGraph extends Component {
           x: {
             type: 'time',
             time: { tooltipFormat: 'MMM d', unit: 'day' },
-            ticks: { maxTicksLimit: 13 },
+            ticks: { maxTicksLimit: 13, color },
+            grid: { color: borderColor },
           },
-          y: { beginAtZero: true, stacked: true, ticks: { precision: 0 } },
+          y: {
+            beginAtZero: true,
+            stacked: true,
+            ticks: { precision: 0, color },
+            grid: { color: borderColor },
+          },
         },
         interaction: {
           mode: 'index',
@@ -48,6 +66,20 @@ export default class DownloadGraph extends Component {
         },
       },
     });
+  }
+
+  @action updateColorScheme() {
+    let { chart } = this;
+
+    if (chart) {
+      let { fontColor, borderColor } = this;
+      chart.options.color = fontColor;
+      chart.options.scales.x.ticks.color = fontColor;
+      chart.options.scales.x.grid.color = borderColor;
+      chart.options.scales.y.ticks.color = fontColor;
+      chart.options.scales.y.grid.color = borderColor;
+      chart.update();
+    }
   }
 
   @action updateChart() {
