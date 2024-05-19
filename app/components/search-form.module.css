@@ -61,7 +61,8 @@
     composes: button-reset from '../styles/shared/buttons.module.css';
 
     position: absolute;
-    right: 0;
+    /* see https://github.com/rust-lang/crates.io/issues/8677 🤷 */
+    right: -.5px;
     top: 0;
     bottom: 0;
     display: inline-grid;
