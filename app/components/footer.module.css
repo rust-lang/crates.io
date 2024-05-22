@@ -7,10 +7,6 @@
     --footer-link-hover-shadow-color: var(--green900);
 }
 
-[data-theme="new-design"] {
-    --footer-bg-color: var(--grey900);
-}
-
 .footer {
     display: grid;
     justify-items: center;

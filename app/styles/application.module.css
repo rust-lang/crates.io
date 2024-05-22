@@ -85,11 +85,6 @@
      color-scheme: dark;
 }
 
-[data-theme="new-design"] {
-    --header-bg-color: var(--violet800);
-    --main-bg: white;
-}
-
 * {
     box-sizing: border-box;
 }
