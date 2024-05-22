@@ -6,7 +6,7 @@ import { restartableTask, waitForEvent } from 'ember-concurrency';
 
 import * as localStorage from '../utils/local-storage';
 
-const DEFAULT_SCHEME = 'light';
+const DEFAULT_SCHEME = 'system';
 const VALID_SCHEMES = new Set(['light', 'dark', 'system']);
 const LS_KEY = 'color-scheme';
 
