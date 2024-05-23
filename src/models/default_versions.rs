@@ -36,15 +36,7 @@ impl Version {
 /// The default version is then written to the `default_versions` table.
 #[instrument(skip(conn))]
 pub fn update_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<()> {
-    debug!("Loading all versions for the crate…");
-    let versions = versions::table
-        .filter(versions::crate_id.eq(crate_id))
-        .select(Version::as_returning())
-        .load::<Version>(conn)?;
-
-    debug!("Found {} versions", versions.len());
-
-    let default_version = find_default_version(&versions).ok_or(diesel::result::Error::NotFound)?;
+    let default_version = calculate_default_version(crate_id, conn)?;
 
     debug!(
         "Updating default version to {} (id: {})…",
@@ -62,6 +54,20 @@ pub fn update_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryRe
         .execute(conn)?;
 
     Ok(())
+}
+
+fn calculate_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<Version> {
+    debug!("Loading all versions for the crate…");
+    let versions = versions::table
+        .filter(versions::crate_id.eq(crate_id))
+        .select(Version::as_returning())
+        .load::<Version>(conn)?;
+
+    debug!("Found {} versions", versions.len());
+
+    find_default_version(&versions)
+        .cloned()
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 fn find_default_version(versions: &[Version]) -> Option<&Version> {
