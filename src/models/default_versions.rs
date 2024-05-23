@@ -36,15 +36,7 @@ impl Version {
 /// The default version is then written to the `default_versions` table.
 #[instrument(skip(conn))]
 pub fn update_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<()> {
-    debug!("Loading all versions for the crate…");
-    let versions = versions::table
-        .filter(versions::crate_id.eq(crate_id))
-        .select(Version::as_returning())
-        .load::<Version>(conn)?;
-
-    debug!("Found {} versions", versions.len());
-
-    let default_version = find_default_version(&versions).ok_or(diesel::result::Error::NotFound)?;
+    let default_version = calculate_default_version(crate_id, conn)?;
 
     debug!(
         "Updating default version to {} (id: {})…",
@@ -62,6 +54,50 @@ pub fn update_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryRe
         .execute(conn)?;
 
     Ok(())
+}
+
+/// Verifies that the default version for the specified crate is up-to-date.
+#[instrument(skip(conn))]
+pub fn verify_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<()> {
+    let calculated = calculate_default_version(crate_id, conn)?;
+
+    let saved = default_versions::table
+        .select(default_versions::version_id)
+        .filter(default_versions::crate_id.eq(crate_id))
+        .first::<i32>(conn)
+        .optional()?;
+
+    if let Some(saved) = saved {
+        if saved == calculated.id {
+            debug!("Default version for crate {crate_id} is up to date");
+        } else {
+            warn!(
+                "Default version for crate {crate_id} is outdated (expected: {saved}, actual: {})",
+                calculated.id,
+            );
+        }
+    } else {
+        warn!(
+            "Default version for crate {crate_id} is missing (expected: {})",
+            calculated.id
+        );
+    }
+
+    Ok(())
+}
+
+fn calculate_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<Version> {
+    debug!("Loading all versions for the crate…");
+    let versions = versions::table
+        .filter(versions::crate_id.eq(crate_id))
+        .select(Version::as_returning())
+        .load::<Version>(conn)?;
+
+    debug!("Found {} versions", versions.len());
+
+    find_default_version(&versions)
+        .cloned()
+        .ok_or(diesel::result::Error::NotFound)
 }
 
 fn find_default_version(versions: &[Version]) -> Option<&Version> {
