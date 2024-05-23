@@ -27,3 +27,9 @@ docker-compose.override.yml
 *~
 src/schema.rs.orig
 
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+

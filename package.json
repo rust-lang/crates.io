@@ -22,14 +22,15 @@
     "lint:hbs": "ember-template-lint app",
     "lint:js": "eslint . --cache",
     "precompress": "node ./script/precompress-assets.mjs",
-    "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.md'",
-    "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.md'",
+    "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
+    "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
     "start": "ember serve",
     "start:live": "PROXY_BACKEND=https://crates.io ember serve",
     "start:local": "PROXY_BACKEND=http://127.0.0.1:8888 ember serve",
     "start:staging": "PROXY_BACKEND=https://staging-crates-io.herokuapp.com ember serve",
     "test": "ember exam --split=2 --parallel",
-    "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report"
+    "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report",
+    "e2e": "playwright test"
   },
   "prettier": {
     "arrowParens": "avoid",
@@ -53,6 +54,7 @@
     "tracked-toolbox": "2.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.9.0",
     "@babel/core": "7.24.5",
     "@babel/eslint-parser": "7.24.5",
     "@babel/plugin-proposal-decorators": "7.24.1",
@@ -69,7 +71,12 @@
     "@mainmatter/ember-api-actions": "0.6.0",
     "@percy/cli": "1.28.6",
     "@percy/ember": "4.2.0",
+    "@percy/playwright": "^1.0.5",
+    "@playwright/test": "^1.43.1",
     "@sinonjs/fake-timers": "11.2.2",
+    "@types/ember": "^4.0.11",
+    "@types/node": "^20.12.8",
+    "@types/sinonjs__fake-timers": "^8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
     "ember-a11y-testing": "6.1.1",
@@ -135,6 +142,7 @@
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.1.2",
     "tracked-built-ins": "3.3.0",
+    "typescript": "^5.4.5",
     "webpack": "5.91.0"
   },
   "resolutions": {
