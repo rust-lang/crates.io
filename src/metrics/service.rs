@@ -45,6 +45,8 @@ impl ServiceMetrics {
                 count_star(),
             ))
             .load::<(String, i16, i64)>(conn)?;
+
+        self.background_jobs.reset();
         for (job, priority, count) in background_jobs {
             let priority = format!("{priority}");
             self.background_jobs
