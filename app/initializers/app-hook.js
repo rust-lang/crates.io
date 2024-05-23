@@ -1,6 +1,6 @@
 import config from 'crates-io/config/environment';
 import { APP_HOOK_CUSTOM_EVENTS, APP_HOOK_KEY, SENTRY_HOOK_KEY } from 'crates-io/consts';
-import { MockSentryService } from 'crates-io/tests/helpers/sentry';
+import { MockSentryService } from 'crates-io/utils/sentry';
 
 export function initialize(app) {
   if (config.environment === 'production') {
