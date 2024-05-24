@@ -136,7 +136,7 @@
     "normalize.css": "8.0.1",
     "nyc": "15.1.0",
     "postcss-nested": "6.0.1",
-    "postcss-preset-env": "9.5.13",
+    "postcss-preset-env": "9.5.14",
     "prettier": "3.2.5",
     "qunit": "2.20.1",
     "qunit-console-grouper": "0.3.0",
