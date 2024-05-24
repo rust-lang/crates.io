@@ -71,15 +71,23 @@ impl BackgroundJob for DumpDb {
 /// make sure it gets deleted again even in the case of an error.
 #[derive(Debug)]
 pub struct DumpDirectory {
+    /// The temporary directory that contains the export directory. This is
+    /// allowing `dead_code` since we're only relying on the `Drop`
+    /// implementation to clean up the directory.
+    #[allow(dead_code)]
+    tempdir: tempfile::TempDir,
+
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub export_dir: PathBuf,
 }
 
 impl DumpDirectory {
     pub fn create() -> anyhow::Result<Self> {
+        let tempdir = tempfile::tempdir()?;
+
         let timestamp = chrono::Utc::now();
         let timestamp_str = timestamp.format("%Y-%m-%d-%H%M%S").to_string();
-        let export_dir = std::env::temp_dir().join("dump-db").join(timestamp_str);
+        let export_dir = tempdir.path().join(timestamp_str);
 
         debug!(?export_dir, "Creating database dump folder…");
         fs::create_dir_all(&export_dir).with_context(|| {
@@ -90,6 +98,7 @@ impl DumpDirectory {
         })?;
 
         Ok(Self {
+            tempdir,
             timestamp,
             export_dir,
         })
@@ -176,12 +185,6 @@ impl DumpDirectory {
             .context("Failed to create `data` directory")?;
 
         run_psql(&export_script, database_url)
-    }
-}
-
-impl Drop for DumpDirectory {
-    fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.export_dir).unwrap();
     }
 }
 
