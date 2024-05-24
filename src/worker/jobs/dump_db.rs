@@ -1,5 +1,4 @@
 use self::configuration::VisibilityConfig;
-use crate::storage::Storage;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
@@ -44,7 +43,7 @@ impl BackgroundJob for DumpDb {
         .await?;
 
         info!("Uploading tarball");
-        Storage::from_environment()
+        env.storage
             .upload_db_dump(target_name, &tarball.tarball_path)
             .await?;
         info!("Database dump tarball uploaded");
