@@ -283,6 +283,7 @@ mod gen_scripts;
 mod tests {
     use super::*;
     use flate2::read::GzDecoder;
+    use insta::assert_debug_snapshot;
     use tar::Archive;
 
     #[test]
@@ -304,18 +305,20 @@ mod tests {
         let gz = GzDecoder::new(File::open(&*tarball.tarball_path).unwrap());
         let mut tar = Archive::new(gz);
 
-        for (i, entry) in tar.entries().unwrap().enumerate() {
-            let entry = entry.unwrap();
-            let expected_path = Path::new(match i {
-                0 => "0000-00-00",
-                1 => "0000-00-00/README.md",
-                2 => "0000-00-00/data",
-                3 => "0000-00-00/data/crates.csv",
-                4 => "0000-00-00/data/users.csv", // alphabetically after crates.csv
-                5 => "0000-00-00/data/crate_owners.csv", // depends on crates.csv and users.csv
-                _ => panic!("unexpected extra tar entry: {:?}", entry.path()),
-            });
-            assert_eq!(entry.path().unwrap(), expected_path, "entry {i}");
-        }
+        let entries = tar.entries().unwrap();
+        let paths = entries
+            .map(|entry| entry.unwrap().path().unwrap().display().to_string())
+            .collect::<Vec<_>>();
+
+        assert_debug_snapshot!(paths, @r###"
+        [
+            "0000-00-00",
+            "0000-00-00/README.md",
+            "0000-00-00/data",
+            "0000-00-00/data/crates.csv",
+            "0000-00-00/data/users.csv",
+            "0000-00-00/data/crate_owners.csv",
+        ]
+        "###);
     }
 }
