@@ -11,14 +11,12 @@ use std::sync::Arc;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DumpDb {
     database_url: String,
-    target_name: String,
 }
 
 impl DumpDb {
-    pub fn new(database_url: impl Into<String>, target_name: impl Into<String>) -> Self {
+    pub fn new(database_url: impl Into<String>) -> Self {
         Self {
             database_url: database_url.into(),
-            target_name: target_name.into(),
         }
     }
 }
@@ -31,6 +29,7 @@ impl BackgroundJob for DumpDb {
     /// Create CSV dumps of the public information in the database, wrap them in a
     /// tarball and upload to S3.
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
+        let target_name = "db-dump.tar.gz";
         let database_url = self.database_url.clone();
 
         let tarball = spawn_blocking(move || {
@@ -46,19 +45,19 @@ impl BackgroundJob for DumpDb {
 
         info!("Uploading tarball");
         Storage::from_environment()
-            .upload_db_dump(&self.target_name, &tarball.tarball_path)
+            .upload_db_dump(target_name, &tarball.tarball_path)
             .await?;
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches");
         if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(&self.target_name).await {
+            if let Err(error) = cloudfront.invalidate(target_name).await {
                 warn!("failed to invalidate CloudFront cache: {}", error);
             }
         }
 
         if let Some(fastly) = env.fastly() {
-            if let Err(error) = fastly.invalidate(&self.target_name).await {
+            if let Err(error) = fastly.invalidate(target_name).await {
                 warn!("failed to invalidate Fastly cache: {}", error);
             }
         }
