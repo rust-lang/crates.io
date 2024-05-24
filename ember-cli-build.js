@@ -45,7 +45,6 @@ module.exports = function (defaults) {
     cssModules: {
       extension: 'module.css',
       plugins: {
-        before: [require('postcss-nested')],
         postprocess: [require('postcss-preset-env')({ browsers, preserve: false })],
       },
     },
