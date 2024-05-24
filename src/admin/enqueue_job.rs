@@ -25,8 +25,6 @@ pub enum Command {
     DumpDb {
         #[arg(env = "READ_ONLY_REPLICA_URL")]
         database_url: SecretString,
-        #[arg(default_value = "db-dump.tar.gz")]
-        target_name: String,
     },
     DailyDbMaintenance,
     SquashIndex,
@@ -76,11 +74,8 @@ pub fn run(command: Command) -> Result<()> {
         Command::CleanProcessedLogFiles => {
             jobs::CleanProcessedLogFiles.enqueue(conn)?;
         }
-        Command::DumpDb {
-            database_url,
-            target_name,
-        } => {
-            jobs::DumpDb::new(database_url.expose_secret(), target_name).enqueue(conn)?;
+        Command::DumpDb { database_url } => {
+            jobs::DumpDb::new(database_url.expose_secret()).enqueue(conn)?;
         }
         Command::SyncAdmins { force } => {
             if !force {
