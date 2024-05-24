@@ -38,13 +38,13 @@ impl BackgroundJob for DumpDb {
             directory.populate(&database_url)?;
 
             info!(path = ?directory.export_dir, "Creating tarball");
-            DumpTarball::create(&directory.export_dir)
+            create_tarball(&directory.export_dir)
         })
         .await?;
 
         info!("Uploading tarball");
         env.storage
-            .upload_db_dump(target_name, &tarball.tarball_path)
+            .upload_db_dump(target_name, tarball.path())
             .await?;
         info!("Database dump tarball uploaded");
 
@@ -213,73 +213,56 @@ pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Manage the tarball of the database dump.
-///
-/// Create the tarball, upload it to S3, and make sure it gets deleted.
-struct DumpTarball {
-    tarball_path: PathBuf,
-}
+fn create_tarball(export_dir: &Path) -> anyhow::Result<tempfile::NamedTempFile> {
+    debug!("Creating tarball file");
+    let tempfile = tempfile::NamedTempFile::new()?;
+    let encoder = flate2::write::GzEncoder::new(tempfile.as_file(), flate2::Compression::default());
 
-impl DumpTarball {
-    fn create(export_dir: &Path) -> anyhow::Result<Self> {
-        let tarball_path = export_dir.with_extension("tar.gz");
+    let mut archive = tar::Builder::new(encoder);
 
-        debug!(path = ?tarball_path, "Creating tarball file");
-        let tarfile = File::create(&tarball_path)?;
+    let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
+    debug!(path = ?tar_top_dir, "Appending directory to tarball");
+    archive.append_dir(&tar_top_dir, export_dir)?;
 
-        let result = Self { tarball_path };
-        let encoder = flate2::write::GzEncoder::new(tarfile, flate2::Compression::default());
-
-        let mut archive = tar::Builder::new(encoder);
-
-        let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
-        debug!(path = ?tar_top_dir, "Appending directory to tarball");
-        archive.append_dir(&tar_top_dir, export_dir)?;
-
-        // Append readme, metadata, schemas.
-        let mut paths = Vec::new();
-        for entry in fs::read_dir(export_dir)? {
-            let entry = entry?;
-            let file_type = entry.file_type()?;
-            if file_type.is_file() {
-                paths.push((entry.path(), entry.file_name()));
-            }
+    // Append readme, metadata, schemas.
+    let mut paths = Vec::new();
+    for entry in fs::read_dir(export_dir)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_file() {
+            paths.push((entry.path(), entry.file_name()));
         }
-        // Sort paths to make the tarball deterministic.
-        paths.sort();
-        for (path, file_name) in paths {
-            let name_in_tar = tar_top_dir.join(file_name);
+    }
+    // Sort paths to make the tarball deterministic.
+    paths.sort();
+    for (path, file_name) in paths {
+        let name_in_tar = tar_top_dir.join(file_name);
+        debug!(name = ?name_in_tar, "Appending file to tarball");
+        archive.append_path_with_name(path, name_in_tar)?;
+    }
+
+    // Append topologically sorted tables to make it possible to pipeline
+    // importing with gz extraction.
+
+    debug!("Sorting database tables");
+    let visibility_config = VisibilityConfig::get();
+    let sorted_tables = visibility_config.topological_sort();
+
+    let path = tar_top_dir.join("data");
+    debug!(?path, "Appending directory to tarball");
+    archive.append_dir(path, export_dir.join("data"))?;
+    for table in sorted_tables {
+        let csv_path = export_dir.join("data").join(table).with_extension("csv");
+        if csv_path.exists() {
+            let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
             debug!(name = ?name_in_tar, "Appending file to tarball");
-            archive.append_path_with_name(path, name_in_tar)?;
+            archive.append_path_with_name(csv_path, name_in_tar)?;
         }
-
-        // Append topologically sorted tables to make it possible to pipeline
-        // importing with gz extraction.
-
-        debug!("Sorting database tables");
-        let visibility_config = VisibilityConfig::get();
-        let sorted_tables = visibility_config.topological_sort();
-
-        let path = tar_top_dir.join("data");
-        debug!(?path, "Appending directory to tarball");
-        archive.append_dir(path, export_dir.join("data"))?;
-        for table in sorted_tables {
-            let csv_path = export_dir.join("data").join(table).with_extension("csv");
-            if csv_path.exists() {
-                let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
-                debug!(name = ?name_in_tar, "Appending file to tarball");
-                archive.append_path_with_name(csv_path, name_in_tar)?;
-            }
-        }
-
-        Ok(result)
     }
-}
 
-impl Drop for DumpTarball {
-    fn drop(&mut self) {
-        std::fs::remove_file(&self.tarball_path).unwrap();
-    }
+    drop(archive);
+
+    Ok(tempfile)
 }
 
 mod configuration;
@@ -307,8 +290,8 @@ mod tests {
         fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
         fs::write(p.join("data").join("users.csv"), "").unwrap();
 
-        let tarball = DumpTarball::create(&p).unwrap();
-        let gz = GzDecoder::new(File::open(&*tarball.tarball_path).unwrap());
+        let tarball = create_tarball(&p).unwrap();
+        let gz = GzDecoder::new(File::open(tarball.path()).unwrap());
         let mut tar = Archive::new(gz);
 
         let entries = tar.entries().unwrap();
