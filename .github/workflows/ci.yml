@@ -195,3 +195,43 @@ jobs:
 
       - if: github.repository != 'rust-lang/crates.io'
         run: pnpm test-coverage
+
+  e2e-test:
+    name: Frontend / Test (playwright)
+    runs-on: ubuntu-22.04
+    needs: changed-files
+    timeout-minutes: 60
+    if: needs.changed-files.outputs.non-rust == 'true'
+
+    env:
+      JOBS: 1 # See https://git.io/vdao3 for details.
+
+      # Percy secrets are included here to enable Percy's GitHub integration
+      # on community-submitted PRs
+      PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
+
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - run: pnpm playwright install chromium
+
+      - if: github.repository == 'rust-lang/crates.io'
+        run: pnpm percy exec -- pnpm e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
