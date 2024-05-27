@@ -40,11 +40,8 @@ fn test_sql_scripts() {
     let directory = dump_db::DumpDirectory::create().unwrap();
     directory.populate(db.url()).unwrap();
 
-    let path = directory.export_dir.join("import.sql");
-    let content = std::fs::read_to_string(&path).unwrap();
-    assert_snapshot!("import.sql", content);
-
-    let path = directory.export_dir.join("export.sql");
-    let content = std::fs::read_to_string(&path).unwrap();
-    assert_snapshot!("export.sql", content);
+    insta::glob!(&directory.export_dir, "{import,export}.sql", |path| {
+        let content = std::fs::read_to_string(path).unwrap();
+        assert_snapshot!(content);
+    });
 }
