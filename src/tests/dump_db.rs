@@ -1,12 +1,91 @@
-use crates_io::worker::jobs::dump_db;
+use crate::builders::CrateBuilder;
+use crate::util::TestApp;
+use bytes::Buf;
+use crates_io::worker::jobs::{dump_db, DumpDb};
 use crates_io_test_db::TestDatabase;
-use insta::assert_snapshot;
+use crates_io_worker::BackgroundJob;
+use flate2::read::GzDecoder;
+use insta::{assert_debug_snapshot, assert_snapshot};
 use once_cell::sync::Lazy;
+use regex::Regex;
+use secrecy::ExposeSecret;
+use std::io::Read;
 use std::sync::Mutex;
+use tar::Archive;
 
 /// Mutex to ensure that only one test is dumping the database at a time, since
 /// the dump directory is shared between all invocations of the background job.
 static DUMP_DIR_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+static PATH_DATE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_dump_db_job() {
+    let _guard = DUMP_DIR_MUTEX.lock();
+
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("test-crate", token.as_model().user_id).expect_build(conn);
+
+        let database_url = app.as_inner().config.db.primary.url.expose_secret();
+        DumpDb::new(database_url).enqueue(conn).unwrap();
+    });
+
+    app.run_pending_background_jobs().await;
+
+    let stored_files = app.stored_files().await;
+    assert_eq!(stored_files.len(), 1);
+    assert_eq!(stored_files[0], "db-dump.tar.gz");
+
+    let path = object_store::path::Path::parse("db-dump.tar.gz").unwrap();
+    let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
+    let bytes = result.bytes().await.unwrap();
+
+    let gz = GzDecoder::new(bytes.reader());
+    let mut tar = Archive::new(gz);
+
+    let mut paths = tar_paths(&mut tar);
+    // Sort the paths to make the snapshot stable until we have a consistent
+    // order in the tarball.
+    paths.sort();
+
+    assert_debug_snapshot!(paths, @r###"
+    [
+        "YYYY-MM-DD-HHMMSS",
+        "YYYY-MM-DD-HHMMSS/README.md",
+        "YYYY-MM-DD-HHMMSS/data",
+        "YYYY-MM-DD-HHMMSS/data/categories.csv",
+        "YYYY-MM-DD-HHMMSS/data/crate_downloads.csv",
+        "YYYY-MM-DD-HHMMSS/data/crate_owners.csv",
+        "YYYY-MM-DD-HHMMSS/data/crates.csv",
+        "YYYY-MM-DD-HHMMSS/data/crates_categories.csv",
+        "YYYY-MM-DD-HHMMSS/data/crates_keywords.csv",
+        "YYYY-MM-DD-HHMMSS/data/default_versions.csv",
+        "YYYY-MM-DD-HHMMSS/data/dependencies.csv",
+        "YYYY-MM-DD-HHMMSS/data/keywords.csv",
+        "YYYY-MM-DD-HHMMSS/data/metadata.csv",
+        "YYYY-MM-DD-HHMMSS/data/reserved_crate_names.csv",
+        "YYYY-MM-DD-HHMMSS/data/teams.csv",
+        "YYYY-MM-DD-HHMMSS/data/users.csv",
+        "YYYY-MM-DD-HHMMSS/data/version_downloads.csv",
+        "YYYY-MM-DD-HHMMSS/data/versions.csv",
+        "YYYY-MM-DD-HHMMSS/export.sql",
+        "YYYY-MM-DD-HHMMSS/import.sql",
+        "YYYY-MM-DD-HHMMSS/metadata.json",
+        "YYYY-MM-DD-HHMMSS/schema.sql",
+    ]
+    "###);
+}
+
+fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
+    archive
+        .entries()
+        .unwrap()
+        .map(|entry| entry.unwrap().path().unwrap().display().to_string())
+        .map(|path| PATH_DATE_RE.replace(&path, "YYYY-MM-DD-HHMMSS").to_string())
+        .collect()
+}
 
 #[test]
 fn dump_db_and_reimport_dump() {
