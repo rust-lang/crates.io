@@ -5,6 +5,7 @@ use crates_io::{
 };
 
 use chrono::NaiveDateTime;
+use crates_io::models::update_default_version;
 use crates_io::schema::crate_downloads;
 use diesel::prelude::*;
 
@@ -168,6 +169,8 @@ impl<'a> CrateBuilder<'a> {
                 .returning(Crate::as_returning())
                 .get_result(connection)?;
         }
+
+        update_default_version(krate.id, connection)?;
 
         Ok(krate)
     }
