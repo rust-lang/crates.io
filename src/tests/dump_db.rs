@@ -1,5 +1,6 @@
 use crates_io::worker::jobs::dump_db;
 use crates_io_test_db::TestDatabase;
+use insta::assert_snapshot;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
@@ -26,4 +27,24 @@ fn dump_db_and_reimport_dump() {
     dump_db::run_psql(&import_script, db_two.url()).unwrap();
 
     // TODO: Consistency checks on the re-imported data?
+}
+
+#[test]
+fn test_sql_scripts() {
+    let _guard = DUMP_DIR_MUTEX.lock();
+
+    crates_io::util::tracing::init_for_test();
+
+    let db = TestDatabase::new();
+
+    let directory = dump_db::DumpDirectory::create().unwrap();
+    directory.populate(db.url()).unwrap();
+
+    let path = directory.export_dir.join("import.sql");
+    let content = std::fs::read_to_string(&path).unwrap();
+    assert_snapshot!("import.sql", content);
+
+    let path = directory.export_dir.join("export.sql");
+    let content = std::fs::read_to_string(&path).unwrap();
+    assert_snapshot!("export.sql", content);
 }
