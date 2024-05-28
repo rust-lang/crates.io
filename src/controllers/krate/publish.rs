@@ -38,6 +38,8 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
      to accept an invitation to be an owner before \
      publishing.";
 
+const MAX_DESCRIPTION_LENGTH: usize = 1000;
+
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
@@ -158,6 +160,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         if !missing.is_empty() {
             let message = missing_metadata_error_message(&missing);
             return Err(bad_request(&message));
+        }
+
+        if let Some(description) = &description {
+            if description.len() > MAX_DESCRIPTION_LENGTH {
+                return Err(bad_request(format!("The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed.")));
+            }
         }
 
         if let Some(ref license) = license {
