@@ -10,19 +10,12 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use secrecy::ExposeSecret;
 use std::io::Read;
-use std::sync::Mutex;
 use tar::Archive;
-
-/// Mutex to ensure that only one test is dumping the database at a time, since
-/// the dump directory is shared between all invocations of the background job.
-static DUMP_DIR_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 static PATH_DATE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump_db_job() {
-    let _guard = DUMP_DIR_MUTEX.lock();
-
     let (app, _, _, token) = TestApp::full().with_token();
 
     app.db(|conn| {
@@ -85,8 +78,6 @@ fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
 
 #[test]
 fn dump_db_and_reimport_dump() {
-    let _guard = DUMP_DIR_MUTEX.lock();
-
     crates_io::util::tracing::init_for_test();
 
     let db_one = TestDatabase::new();
@@ -109,8 +100,6 @@ fn dump_db_and_reimport_dump() {
 
 #[test]
 fn test_sql_scripts() {
-    let _guard = DUMP_DIR_MUTEX.lock();
-
     crates_io::util::tracing::init_for_test();
 
     let db = TestDatabase::new();
