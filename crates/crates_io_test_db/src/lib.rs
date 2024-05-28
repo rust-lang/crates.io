@@ -98,6 +98,28 @@ impl TestDatabase {
         TestDatabase { name, url, pool }
     }
 
+    /// Creates a new Postgres database. Once the `TestDatabase` instance is
+    /// dropped, the database is automatically deleted.
+    #[instrument]
+    pub fn empty() -> TestDatabase {
+        let template = TemplateDatabase::instance();
+
+        let name = format!("{}_{}", template.prefix, generate_name().to_lowercase());
+
+        let mut conn = template.get_connection();
+        create_database(&name, &mut conn).expect("Failed to create test database");
+
+        let mut url = template.base_url.clone();
+        url.set_path(&format!("/{name}"));
+
+        let pool = Pool::builder()
+            .min_idle(Some(0))
+            .build_unchecked(ConnectionManager::new(url.as_ref()));
+
+        let pool = Some(pool);
+        TestDatabase { name, url, pool }
+    }
+
     pub fn url(&self) -> &str {
         self.url.as_ref()
     }
