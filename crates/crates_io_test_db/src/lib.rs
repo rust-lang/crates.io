@@ -79,35 +79,26 @@ impl TestDatabase {
     /// the database is automatically deleted.
     #[instrument]
     pub fn new() -> TestDatabase {
-        let template = TemplateDatabase::instance();
-
-        let name = format!("{}_{}", template.prefix, generate_name().to_lowercase());
-
-        let mut conn = template.get_connection();
-        create_database_from_template(&name, &template.template_name, &mut conn)
-            .expect("failed to create test database");
-
-        let mut url = template.base_url.clone();
-        url.set_path(&format!("/{name}"));
-
-        let pool = Pool::builder()
-            .min_idle(Some(0))
-            .build_unchecked(ConnectionManager::new(url.as_ref()));
-
-        let pool = Some(pool);
-        TestDatabase { name, url, pool }
+        Self::new_inner(|name, conn| {
+            let template = TemplateDatabase::instance();
+            create_database_from_template(name, &template.template_name, conn)
+        })
     }
 
     /// Creates a new Postgres database. Once the `TestDatabase` instance is
     /// dropped, the database is automatically deleted.
     #[instrument]
     pub fn empty() -> TestDatabase {
+        Self::new_inner(create_database)
+    }
+
+    fn new_inner(f: impl Fn(&str, &mut PgConnection) -> QueryResult<()>) -> TestDatabase {
         let template = TemplateDatabase::instance();
 
         let name = format!("{}_{}", template.prefix, generate_name().to_lowercase());
 
         let mut conn = template.get_connection();
-        create_database(&name, &mut conn).expect("Failed to create test database");
+        f(&name, &mut conn).expect("Failed to create test database");
 
         let mut url = template.base_url.clone();
         url.set_path(&format!("/{name}"));
