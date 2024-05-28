@@ -21,7 +21,10 @@ fn dump_db_and_reimport_dump() {
     let directory = dump_db::DumpDirectory::create().unwrap();
     directory.populate(db_one.url()).unwrap();
 
-    let db_two = TestDatabase::new();
+    let db_two = TestDatabase::empty();
+
+    let schema_script = directory.export_dir.join("schema.sql");
+    dump_db::run_psql(&schema_script, db_two.url()).unwrap();
 
     let import_script = directory.export_dir.join("import.sql");
     dump_db::run_psql(&import_script, db_two.url()).unwrap();
