@@ -45,35 +45,31 @@ async fn test_dump_db_job() {
     let gz = GzDecoder::new(bytes.reader());
     let mut tar = Archive::new(gz);
 
-    let mut paths = tar_paths(&mut tar);
-    // Sort the paths to make the snapshot stable until we have a consistent
-    // order in the tarball.
-    paths.sort();
-
+    let paths = tar_paths(&mut tar);
     assert_debug_snapshot!(paths, @r###"
     [
         "YYYY-MM-DD-HHMMSS",
         "YYYY-MM-DD-HHMMSS/README.md",
+        "YYYY-MM-DD-HHMMSS/export.sql",
+        "YYYY-MM-DD-HHMMSS/import.sql",
+        "YYYY-MM-DD-HHMMSS/metadata.json",
+        "YYYY-MM-DD-HHMMSS/schema.sql",
         "YYYY-MM-DD-HHMMSS/data",
         "YYYY-MM-DD-HHMMSS/data/categories.csv",
         "YYYY-MM-DD-HHMMSS/data/crate_downloads.csv",
-        "YYYY-MM-DD-HHMMSS/data/crate_owners.csv",
         "YYYY-MM-DD-HHMMSS/data/crates.csv",
-        "YYYY-MM-DD-HHMMSS/data/crates_categories.csv",
-        "YYYY-MM-DD-HHMMSS/data/crates_keywords.csv",
-        "YYYY-MM-DD-HHMMSS/data/default_versions.csv",
-        "YYYY-MM-DD-HHMMSS/data/dependencies.csv",
         "YYYY-MM-DD-HHMMSS/data/keywords.csv",
         "YYYY-MM-DD-HHMMSS/data/metadata.csv",
         "YYYY-MM-DD-HHMMSS/data/reserved_crate_names.csv",
         "YYYY-MM-DD-HHMMSS/data/teams.csv",
         "YYYY-MM-DD-HHMMSS/data/users.csv",
-        "YYYY-MM-DD-HHMMSS/data/version_downloads.csv",
+        "YYYY-MM-DD-HHMMSS/data/crates_categories.csv",
+        "YYYY-MM-DD-HHMMSS/data/crates_keywords.csv",
+        "YYYY-MM-DD-HHMMSS/data/crate_owners.csv",
         "YYYY-MM-DD-HHMMSS/data/versions.csv",
-        "YYYY-MM-DD-HHMMSS/export.sql",
-        "YYYY-MM-DD-HHMMSS/import.sql",
-        "YYYY-MM-DD-HHMMSS/metadata.json",
-        "YYYY-MM-DD-HHMMSS/schema.sql",
+        "YYYY-MM-DD-HHMMSS/data/default_versions.csv",
+        "YYYY-MM-DD-HHMMSS/data/dependencies.csv",
+        "YYYY-MM-DD-HHMMSS/data/version_downloads.csv",
     ]
     "###);
 }
