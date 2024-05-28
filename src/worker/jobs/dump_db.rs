@@ -237,14 +237,20 @@ impl DumpTarball {
         archive.append_dir(&tar_top_dir, export_dir)?;
 
         // Append readme, metadata, schemas.
+        let mut paths = Vec::new();
         for entry in fs::read_dir(export_dir)? {
             let entry = entry?;
             let file_type = entry.file_type()?;
             if file_type.is_file() {
-                let name_in_tar = tar_top_dir.join(entry.file_name());
-                debug!(name = ?name_in_tar, "Appending file to tarball");
-                archive.append_path_with_name(entry.path(), name_in_tar)?;
+                paths.push((entry.path(), entry.file_name()));
             }
+        }
+        // Sort paths to make the tarball deterministic.
+        paths.sort();
+        for (path, file_name) in paths {
+            let name_in_tar = tar_top_dir.join(file_name);
+            debug!(name = ?name_in_tar, "Appending file to tarball");
+            archive.append_path_with_name(path, name_in_tar)?;
         }
 
         // Append topologically sorted tables to make it possible to pipeline
