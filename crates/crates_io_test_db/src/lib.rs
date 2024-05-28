@@ -132,6 +132,13 @@ fn connect(database_url: &str) -> ConnectionResult<PgConnection> {
 }
 
 #[instrument(skip(conn))]
+fn create_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
+    debug!("Creating new database…");
+    sql_query(format!("CREATE DATABASE {name}")).execute(conn)?;
+    Ok(())
+}
+
+#[instrument(skip(conn))]
 fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<()> {
     table! {
         pg_database (datname) {
@@ -146,8 +153,7 @@ fn create_template_database(name: &str, conn: &mut PgConnection) -> QueryResult<
         .get_result(conn)?;
 
     if count == 0 {
-        debug!("Creating new template database…");
-        sql_query(format!("CREATE DATABASE {name}")).execute(conn)?;
+        create_database(name, conn)?;
     } else {
         debug!(%count, "Skipping template database creation");
     }
