@@ -34,11 +34,13 @@ impl BackgroundJob for DumpDb {
         let tarball = spawn_blocking(move || {
             let directory = DumpDirectory::create()?;
 
-            info!(path = ?directory.export_dir, "Begin exporting database");
+            info!("Begin exporting database");
             directory.populate(&database_url)?;
 
-            info!(path = ?directory.export_dir, "Creating tarball");
-            create_tarball(&directory.export_dir)
+            let export_dir = directory.path();
+            info!(path = ?export_dir, "Creating tarball");
+            let prefix = PathBuf::from(directory.timestamp.format("%Y-%m-%d-%H%M%S").to_string());
+            create_tarball(export_dir, &prefix)
         })
         .await?;
 
@@ -71,37 +73,22 @@ impl BackgroundJob for DumpDb {
 /// make sure it gets deleted again even in the case of an error.
 #[derive(Debug)]
 pub struct DumpDirectory {
-    /// The temporary directory that contains the export directory. This is
-    /// allowing `dead_code` since we're only relying on the `Drop`
-    /// implementation to clean up the directory.
-    #[allow(dead_code)]
+    /// The temporary directory that contains the export directory.
     tempdir: tempfile::TempDir,
-
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    pub export_dir: PathBuf,
 }
 
 impl DumpDirectory {
     pub fn create() -> anyhow::Result<Self> {
+        debug!("Creating database dump folder…");
         let tempdir = tempfile::tempdir()?;
-
         let timestamp = chrono::Utc::now();
-        let timestamp_str = timestamp.format("%Y-%m-%d-%H%M%S").to_string();
-        let export_dir = tempdir.path().join(timestamp_str);
 
-        debug!(?export_dir, "Creating database dump folder…");
-        fs::create_dir_all(&export_dir).with_context(|| {
-            format!(
-                "Failed to create export directory: {}",
-                export_dir.display()
-            )
-        })?;
+        Ok(Self { tempdir, timestamp })
+    }
 
-        Ok(Self {
-            tempdir,
-            timestamp,
-            export_dir,
-        })
+    pub fn path(&self) -> &Path {
+        self.tempdir.path()
     }
 
     pub fn populate(&self, database_url: &str) -> anyhow::Result<()> {
@@ -121,7 +108,7 @@ impl DumpDirectory {
     fn add_readme(&self) -> anyhow::Result<()> {
         use std::io::Write;
 
-        let path = self.export_dir.join("README.md");
+        let path = self.path().join("README.md");
         debug!(?path, "Writing README.md file…");
         let mut readme = File::create(path)?;
         readme.write_all(include_bytes!("dump_db/readme_for_tarball.md"))?;
@@ -139,7 +126,7 @@ impl DumpDirectory {
             crates_io_commit: dotenvy::var("HEROKU_SLUG_COMMIT")
                 .unwrap_or_else(|_| "unknown".to_owned()),
         };
-        let path = self.export_dir.join("metadata.json");
+        let path = self.path().join("metadata.json");
         debug!(?path, "Writing metadata.json file…");
         let file = File::create(path)?;
         serde_json::to_writer_pretty(file, &metadata)?;
@@ -147,7 +134,7 @@ impl DumpDirectory {
     }
 
     pub fn dump_schema(&self, database_url: &str) -> anyhow::Result<()> {
-        let path = self.export_dir.join("schema.sql");
+        let path = self.path().join("schema.sql");
         debug!(?path, "Writing schema.sql file…");
         let schema_sql =
             File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
@@ -175,14 +162,13 @@ impl DumpDirectory {
 
     pub fn dump_db(&self, database_url: &str) -> anyhow::Result<()> {
         debug!("Generating export.sql and import.sql files…");
-        let export_script = self.export_dir.join("export.sql");
-        let import_script = self.export_dir.join("import.sql");
+        let export_script = self.path().join("export.sql");
+        let import_script = self.path().join("import.sql");
         gen_scripts::gen_scripts(&export_script, &import_script)
             .context("Failed to generate export/import scripts")?;
 
         debug!("Filling data folder…");
-        fs::create_dir(self.export_dir.join("data"))
-            .context("Failed to create `data` directory")?;
+        fs::create_dir(self.path().join("data")).context("Failed to create `data` directory")?;
 
         run_psql(&export_script, database_url)
     }
@@ -216,16 +202,15 @@ pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn create_tarball(export_dir: &Path) -> anyhow::Result<tempfile::NamedTempFile> {
+fn create_tarball(export_dir: &Path, prefix: &Path) -> anyhow::Result<tempfile::NamedTempFile> {
     debug!("Creating tarball file");
     let tempfile = tempfile::NamedTempFile::new()?;
     let encoder = flate2::write::GzEncoder::new(tempfile.as_file(), flate2::Compression::default());
 
     let mut archive = tar::Builder::new(encoder);
 
-    let tar_top_dir = PathBuf::from(export_dir.file_name().unwrap());
-    debug!(path = ?tar_top_dir, "Appending directory to tarball");
-    archive.append_dir(&tar_top_dir, export_dir)?;
+    debug!(path = ?prefix, "Appending directory to tarball");
+    archive.append_dir(prefix, export_dir)?;
 
     // Append readme, metadata, schemas.
     let mut paths = Vec::new();
@@ -239,7 +224,7 @@ fn create_tarball(export_dir: &Path) -> anyhow::Result<tempfile::NamedTempFile> 
     // Sort paths to make the tarball deterministic.
     paths.sort();
     for (path, file_name) in paths {
-        let name_in_tar = tar_top_dir.join(file_name);
+        let name_in_tar = prefix.join(file_name);
         debug!(name = ?name_in_tar, "Appending file to tarball");
         archive.append_path_with_name(path, name_in_tar)?;
     }
@@ -251,13 +236,13 @@ fn create_tarball(export_dir: &Path) -> anyhow::Result<tempfile::NamedTempFile> 
     let visibility_config = VisibilityConfig::get();
     let sorted_tables = visibility_config.topological_sort();
 
-    let path = tar_top_dir.join("data");
+    let path = prefix.join("data");
     debug!(?path, "Appending directory to tarball");
     archive.append_dir(path, export_dir.join("data"))?;
     for table in sorted_tables {
         let csv_path = export_dir.join("data").join(table).with_extension("csv");
         if csv_path.exists() {
-            let name_in_tar = tar_top_dir.join("data").join(table).with_extension("csv");
+            let name_in_tar = prefix.join("data").join(table).with_extension("csv");
             debug!(name = ?name_in_tar, "Appending file to tarball");
             archive.append_path_with_name(csv_path, name_in_tar)?;
         }
@@ -284,16 +269,15 @@ mod tests {
             .prefix("DumpTarball")
             .tempdir()
             .unwrap();
-        let p = tempdir.path().join("0000-00-00");
+        let p = tempdir.path();
 
-        fs::create_dir(&p).unwrap();
         fs::write(p.join("README.md"), "# crates.io Database Dump\n").unwrap();
         fs::create_dir(p.join("data")).unwrap();
         fs::write(p.join("data").join("crates.csv"), "").unwrap();
         fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
         fs::write(p.join("data").join("users.csv"), "").unwrap();
 
-        let tarball = create_tarball(&p).unwrap();
+        let tarball = create_tarball(p, &PathBuf::from("0000-00-00")).unwrap();
         let gz = GzDecoder::new(File::open(tarball.path()).unwrap());
         let mut tar = Archive::new(gz);
 

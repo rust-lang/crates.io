@@ -89,10 +89,10 @@ fn dump_db_and_reimport_dump() {
 
     let db_two = TestDatabase::empty();
 
-    let schema_script = directory.export_dir.join("schema.sql");
+    let schema_script = directory.path().join("schema.sql");
     dump_db::run_psql(&schema_script, db_two.url()).unwrap();
 
-    let import_script = directory.export_dir.join("import.sql");
+    let import_script = directory.path().join("import.sql");
     dump_db::run_psql(&import_script, db_two.url()).unwrap();
 
     // TODO: Consistency checks on the re-imported data?
@@ -107,7 +107,7 @@ fn test_sql_scripts() {
     let directory = dump_db::DumpDirectory::create().unwrap();
     directory.populate(db.url()).unwrap();
 
-    insta::glob!(&directory.export_dir, "{import,export}.sql", |path| {
+    insta::glob!(directory.path(), "{import,export}.sql", |path| {
         let content = std::fs::read_to_string(path).unwrap();
         assert_snapshot!(content);
     });
