@@ -3,7 +3,7 @@ use crate::util::{RequestHelper, TestApp};
 use crates_io::models::krate::MAX_NAME_LENGTH;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_json() {
@@ -85,6 +85,20 @@ async fn license_and_description_required() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
+
+    assert_that!(app.stored_files().await, empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn long_description() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let description = "a".repeat(2000);
+    let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").description(&description);
+
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"The `description` is too long. A maximum of 1000 characters are currently allowed."}]}"###);
 
     assert_that!(app.stored_files().await, empty());
 }
