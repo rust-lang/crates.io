@@ -1,11 +1,17 @@
 WITH filtered_default_versions as (
+    -- Get all `default_versions` that are depending on the crate $1
     SELECT default_versions.*
     FROM default_versions
-    WHERE version_id IN (SELECT version_id FROM dependencies WHERE crate_id = $1)
-        AND NOT EXISTS (
-            SELECT 1
-            FROM versions
-            WHERE id = version_id and yanked
+    WHERE version_id IN (
+        SELECT dependencies.version_id
+        FROM dependencies
+        WHERE dependencies.crate_id = $1
+    ) AND NOT EXISTS (
+        -- Filter out yanked crates
+        -- (if the default version is yanked, then the whole crate is yanked)
+        SELECT 1
+        FROM versions
+        WHERE id = version_id and yanked
     )
 )
 SELECT
