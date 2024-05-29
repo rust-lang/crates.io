@@ -34,7 +34,7 @@ impl BackgroundJob for DumpDb {
 
         let database_url = self.database_url.clone();
 
-        let (tarball, zip) = spawn_blocking(move || {
+        let archives = spawn_blocking(move || {
             let directory = DumpDirectory::create()?;
 
             info!("Exporting database…");
@@ -49,7 +49,9 @@ impl BackgroundJob for DumpDb {
         .await?;
 
         info!("Uploading tarball…");
-        env.storage.upload_db_dump(TAR_PATH, tarball.path()).await?;
+        env.storage
+            .upload_db_dump(TAR_PATH, archives.tar.path())
+            .await?;
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
@@ -66,7 +68,9 @@ impl BackgroundJob for DumpDb {
         }
 
         info!("Uploading zip file…");
-        env.storage.upload_db_dump(ZIP_PATH, zip.path()).await?;
+        env.storage
+            .upload_db_dump(ZIP_PATH, archives.zip.path())
+            .await?;
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
@@ -221,10 +225,12 @@ pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn create_archives(
-    export_dir: &Path,
-    tarball_prefix: &Path,
-) -> anyhow::Result<(tempfile::NamedTempFile, tempfile::NamedTempFile)> {
+struct Archives {
+    tar: tempfile::NamedTempFile,
+    zip: tempfile::NamedTempFile,
+}
+
+fn create_archives(export_dir: &Path, tarball_prefix: &Path) -> anyhow::Result<Archives> {
     debug!("Creating tarball file…");
     let tar_tempfile = tempfile::NamedTempFile::new()?;
     let encoder =
@@ -293,7 +299,10 @@ fn create_archives(
     drop(tar);
     zip.finish()?;
 
-    Ok((tar_tempfile, zip_tempfile))
+    Ok(Archives {
+        tar: tar_tempfile,
+        zip: zip_tempfile,
+    })
 }
 
 mod configuration;
@@ -321,8 +330,8 @@ mod tests {
         fs::write(p.join("data").join("crate_owners.csv"), "").unwrap();
         fs::write(p.join("data").join("users.csv"), "").unwrap();
 
-        let (tarball, zip) = create_archives(p, &PathBuf::from("0000-00-00")).unwrap();
-        let gz = GzDecoder::new(File::open(tarball.path()).unwrap());
+        let archives = create_archives(p, &PathBuf::from("0000-00-00")).unwrap();
+        let gz = GzDecoder::new(File::open(archives.tar.path()).unwrap());
         let mut tar = Archive::new(gz);
 
         let entries = tar.entries().unwrap();
@@ -341,7 +350,7 @@ mod tests {
         ]
         "###);
 
-        let file = File::open(zip.path()).unwrap();
+        let file = File::open(archives.zip.path()).unwrap();
         let reader = BufReader::new(file);
 
         let archive = zip::ZipArchive::new(reader).unwrap();
