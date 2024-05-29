@@ -137,7 +137,7 @@
     "nyc": "15.1.0",
     "postcss-preset-env": "9.5.14",
     "prettier": "3.2.5",
-    "qunit": "2.20.1",
+    "qunit": "2.21.0",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.1.2",
     "tracked-built-ins": "3.3.0",
