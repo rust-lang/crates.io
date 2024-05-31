@@ -15,7 +15,7 @@ pub(super) struct BackgroundJob {
 fn retriable() -> Box<dyn BoxableExpression<background_jobs::table, Pg, SqlType = Bool>> {
     use diesel::dsl::*;
 
-    sql_function!(fn power(x: Integer, y: Integer) -> Integer);
+    define_sql_function!(fn power(x: Integer, y: Integer) -> Integer);
 
     Box::new(
         background_jobs::last_retry

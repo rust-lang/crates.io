@@ -15,7 +15,7 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
-type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::sql::lower::HelperType<&'a str>>;
+type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::sql::lower<&'a str>>;
 type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]

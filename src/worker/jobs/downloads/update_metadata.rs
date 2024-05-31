@@ -67,7 +67,7 @@ fn update(conn: &mut PgConnection) -> QueryResult<()> {
         .execute(conn)?;
     info!("Finished freezing old version_downloads");
 
-    sql_function!(fn refresh_recent_crate_downloads());
+    define_sql_function!(fn refresh_recent_crate_downloads());
     select(refresh_recent_crate_downloads()).execute(conn)?;
     info!("Finished running refresh_recent_crate_downloads");
 
