@@ -73,9 +73,9 @@
             // This is causing weird "Cannot find replaceString in current file content" errors,
             // so we disable it for now.
             matchFileNames: ["frontend.Dockerfile"],
-            matchDepNames: ["node"],
-            matchUpdateTypes: ["pin"],
-            enabled: false,
+            matchDatasources: ["docker"],
+            matchUpdateTypes: ["pinDigest"],
+            enabled: false
         },
     ],
 }
