@@ -4,7 +4,7 @@ ARG NODE_VERSION=20.14.0
 FROM node:${NODE_VERSION}-alpine
 
 # renovate: datasource=npm depName=pnpm
-ARG PNPM_VERSION=9.1.3
+ARG PNPM_VERSION=9.1.4
 
 # Install `pnpm`
 RUN npm install --global pnpm@$PNPM_VERSION
