@@ -151,7 +151,7 @@ impl<'a> CrateBuilder<'a> {
                 ))
                 .execute(connection)?;
 
-            sql_function!(fn refresh_recent_crate_downloads());
+            define_sql_function!(fn refresh_recent_crate_downloads());
             select(refresh_recent_crate_downloads()).execute(connection)?;
         }
 

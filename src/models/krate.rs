@@ -78,9 +78,8 @@ pub const ALL_COLUMNS: AllColumns = (
 
 pub const MAX_NAME_LENGTH: usize = 64;
 
-type CanonCrateName<T> = canon_crate_name::HelperType<T>;
 type All = diesel::dsl::Select<crates::table, diesel::dsl::AsSelect<Crate, diesel::pg::Pg>>;
-type WithName<'a> = diesel::dsl::Eq<CanonCrateName<crates::name>, CanonCrateName<&'a str>>;
+type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
 type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
 type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
