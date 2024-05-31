@@ -22,11 +22,11 @@
             labels: ["A-frontend 🐹"],
         },
         {
-            matchPackageNames: ["ember-cli", "ember-data", "ember-source"],
+            matchDepNames: ["ember-cli", "ember-data", "ember-source"],
             separateMinorPatch: true,
         },
         {
-            matchPackageNames: [
+            matchDepNames: [
                 "@percy/cli",
                 "tj-actions/changed-files",
                 "webpack",
@@ -36,7 +36,7 @@
         {
             // Avoid "Artifact update problem" for pnpm updates when the renovatebot
             // setup does not support the new version yet.
-            matchPackageNames: ["pnpm"],
+            matchDepNames: ["pnpm"],
             minimumReleaseAge: "24 hours",
         },
         {
@@ -53,20 +53,28 @@
         },
         {
             matchManagers: ["custom.regex"],
-            matchPackageNames: ["rust"],
+            matchDepNames: ["rust"],
             commitMessageTopic: "Rust",
             labels: ["A-backend ⚙️"],
         },
         {
-            matchPackagePatterns: ["^diesel$", "^diesel_"],
+            matchDepPatterns: ["^diesel$", "^diesel_"],
             groupName: "diesel packages",
         },
         {
-            matchPackageNames: ["aws-ip-ranges", "github-meta"],
+            matchDepNames: ["aws-ip-ranges", "github-meta"],
             automerge: true,
         },
         {
             matchUpdateTypes: ["digest"],
+            enabled: false,
+        },
+        {
+            // This is causing weird "Cannot find replaceString in current file content" errors,
+            // so we disable it for now.
+            matchFileNames: ["frontend.Dockerfile"],
+            matchDepNames: ["node"],
+            matchUpdateTypes: ["pin"],
             enabled: false,
         },
     ],
