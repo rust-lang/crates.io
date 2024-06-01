@@ -120,6 +120,7 @@ tracing-subscriber = { version = "=0.3.18", features = ["env-filter"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.0"
 unicode-xid = "=0.2.4"
+zip = { version = "=2.1.1", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 bytes = "=1.6.0"

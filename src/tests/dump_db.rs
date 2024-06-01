@@ -9,7 +9,7 @@ use insta::{assert_debug_snapshot, assert_snapshot};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use secrecy::ExposeSecret;
-use std::io::Read;
+use std::io::{Cursor, Read};
 use tar::Archive;
 
 static PATH_DATE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
@@ -28,8 +28,9 @@ async fn test_dump_db_job() {
     app.run_pending_background_jobs().await;
 
     let stored_files = app.stored_files().await;
-    assert_eq!(stored_files.len(), 1);
+    assert_eq!(stored_files.len(), 2);
     assert_eq!(stored_files[0], "db-dump.tar.gz");
+    assert_eq!(stored_files[1], "db-dump.zip");
 
     let path = object_store::path::Path::parse("db-dump.tar.gz").unwrap();
     let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
@@ -63,6 +64,38 @@ async fn test_dump_db_job() {
         "YYYY-MM-DD-HHMMSS/data/default_versions.csv",
         "YYYY-MM-DD-HHMMSS/data/dependencies.csv",
         "YYYY-MM-DD-HHMMSS/data/version_downloads.csv",
+    ]
+    "###);
+
+    let path = object_store::path::Path::parse("db-dump.zip").unwrap();
+    let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
+    let bytes = result.bytes().await.unwrap();
+
+    let archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+    let zip_paths = archive.file_names().collect::<Vec<_>>();
+    assert_debug_snapshot!(zip_paths, @r###"
+    [
+        "README.md",
+        "export.sql",
+        "import.sql",
+        "metadata.json",
+        "schema.sql",
+        "data/",
+        "data/categories.csv",
+        "data/crate_downloads.csv",
+        "data/crates.csv",
+        "data/keywords.csv",
+        "data/metadata.csv",
+        "data/reserved_crate_names.csv",
+        "data/teams.csv",
+        "data/users.csv",
+        "data/crates_categories.csv",
+        "data/crates_keywords.csv",
+        "data/crate_owners.csv",
+        "data/versions.csv",
+        "data/default_versions.csv",
+        "data/dependencies.csv",
+        "data/version_downloads.csv",
     ]
     "###);
 }

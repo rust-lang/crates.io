@@ -19,7 +19,8 @@ const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
 const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
-const CONTENT_TYPE_DB_DUMP: &str = "application/gzip";
+const CONTENT_TYPE_GZIP: &str = "application/gzip";
+const CONTENT_TYPE_ZIP: &str = "application/zip";
 const CONTENT_TYPE_INDEX: &str = "text/plain";
 const CONTENT_TYPE_README: &str = "text/html";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
@@ -126,7 +127,8 @@ impl Storage {
                     // The `BufWriter::new()` API currently does not allow
                     // specifying any file attributes, so we need to set the
                     // content type here instead for the database dump upload.
-                    .with_content_type_for_suffix("gz", CONTENT_TYPE_DB_DUMP);
+                    .with_content_type_for_suffix("gz", CONTENT_TYPE_GZIP)
+                    .with_content_type_for_suffix("zip", CONTENT_TYPE_ZIP);
 
                 let store = build_s3(default, options);
 
