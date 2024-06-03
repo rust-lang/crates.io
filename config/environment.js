@@ -34,6 +34,10 @@ module.exports = function (environment) {
       // We don't want to use Mirage if a proxy backend has been provided.
       enabled: !process.env.PROXY_BACKEND,
     },
+
+    '@sentry/ember': {
+      disablePerformance: true,
+    },
   };
 
   if (environment === 'development') {
