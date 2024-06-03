@@ -24,11 +24,17 @@ pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
 }
 
 pub fn validate_package(package: &Package) -> Result<(), Error> {
+    // Check that the `version` field exists in the package table.
+    let version = package
+        .version
+        .as_ref()
+        .ok_or(Error::Other("missing field `version`".to_string()))?;
+
     // These checks ensure that package field workspace inheritance has been
     // normalized by cargo before publishing.
     if package.edition.is_inherited()
         || package.rust_version.is_inherited()
-        || package.version.is_inherited()
+        || version.is_inherited()
         || package.authors.is_inherited()
         || package.description.is_inherited()
         || package.homepage.is_inherited()
