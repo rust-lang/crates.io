@@ -147,7 +147,7 @@ impl From<DieselError> for BoxedAppError {
         match err {
             DieselError::NotFound => not_found(),
             e if is_read_only_error(&e) => {
-                let detail = "crates.io is currently in read-only mode for maintenance. Please try again later.";
+                let detail = "crates.io is currently in read-only mode. Please check https://status.crates.io/ for details and try again later.";
                 custom(StatusCode::SERVICE_UNAVAILABLE, detail)
             }
             DieselError::DatabaseError(DatabaseErrorKind::ClosedConnection, _) => {

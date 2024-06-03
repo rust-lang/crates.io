@@ -5,7 +5,7 @@ expression: response.json()
 {
   "errors": [
     {
-      "detail": "crates.io is currently in read-only mode for maintenance. Please try again later."
+      "detail": "crates.io is currently in read-only mode. Please check https://status.crates.io/ for details and try again later."
     }
   ]
 }
