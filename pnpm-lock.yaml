@@ -17,12 +17,9 @@ importers:
       '@juggle/resize-observer':
         specifier: 3.4.0
         version: 3.4.0
-      '@sentry/browser':
+      '@sentry/ember':
         specifier: 7.116.0
-        version: 7.116.0
-      '@sentry/utils':
-        specifier: 7.116.0
-        version: 7.116.0
+        version: 7.116.0(webpack@5.91.0)
       chart.js:
         specifier: 4.4.3
         version: 4.4.3
@@ -1770,6 +1767,10 @@ packages:
   '@sentry/core@7.116.0':
     resolution: {integrity: sha512-J6Wmjjx+o7RwST0weTU1KaKUAlzbc8MGkJV1rcHM9xjNTWTva+nrcCM3vFBagnk2Gm/zhwv3h0PvWEqVyp3U1Q==}
     engines: {node: '>=8'}
+
+  '@sentry/ember@7.116.0':
+    resolution: {integrity: sha512-tz9Ee21a+CsLC6jj8UZo8oqabSg2nL3sf39dnxCgR+j23UVLU/MbIAHouZJOWXs3OHThY/Ocw2TkVkEnm0eWGg==}
+    engines: {node: 14.* || 16.* || >= 18}
 
   '@sentry/integrations@7.116.0':
     resolution: {integrity: sha512-UZb60gaF+7veh1Yv79RiGvgGYOnU6xA97H+hI6tKgc1uT20YpItO4X56Vhp0lvyEyUGFZzBRRH1jpMDPNGPkqw==}
@@ -11259,6 +11260,22 @@ snapshots:
     dependencies:
       '@sentry/types': 7.116.0
       '@sentry/utils': 7.116.0
+
+  '@sentry/ember@7.116.0(webpack@5.91.0)':
+    dependencies:
+      '@embroider/macros': 1.16.2
+      '@sentry/browser': 7.116.0
+      '@sentry/core': 7.116.0
+      '@sentry/types': 7.116.0
+      '@sentry/utils': 7.116.0
+      ember-auto-import: 2.7.3(webpack@5.91.0)
+      ember-cli-babel: 7.26.11
+      ember-cli-htmlbars: 6.3.0
+      ember-cli-typescript: 5.3.0
+    transitivePeerDependencies:
+      - '@glint/template'
+      - supports-color
+      - webpack
 
   '@sentry/integrations@7.116.0':
     dependencies:

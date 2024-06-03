@@ -1,6 +1,6 @@
 import Service from '@ember/service';
 
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/ember';
 
 export default class SentryService extends Service {
   captureException(error, captureContext) {
