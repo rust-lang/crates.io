@@ -142,9 +142,9 @@ pub fn process_tarball<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::process_tarball;
-    use crate::{TarballBuilder, TarballError};
+    use crate::TarballBuilder;
     use cargo_manifest::{MaybeInherited, StringOrBool};
-    use std::path::PathBuf;
+    use insta::assert_snapshot;
 
     #[test]
     fn process_tarball_test() {
@@ -158,7 +158,8 @@ mod tests {
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, limit));
         assert_none!(tarball_info.vcs_info);
 
-        assert_err!(process_tarball("bar-0.0.1", &*tarball, limit));
+        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, limit));
+        assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
     }
 
     #[test]
@@ -292,26 +293,28 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incorrect_manifest_casing() {
-        for file in ["CARGO.TOML", "Cargo.Toml"] {
-            let manifest = br#"
+        let manifest = br#"
                 [package]
                 name = "foo"
                 version = "0.0.1"
                 repository = "https://github.com/foo/bar"
                 "#;
+
+        let limit = 512 * 1024 * 1024;
+
+        let process = |file: &str| {
             let tarball = TarballBuilder::new()
                 .add_file(&format!("foo-0.0.1/{file}"), manifest)
                 .build();
 
-            let limit = 512 * 1024 * 1024;
+            process_tarball("foo-0.0.1", &*tarball, limit)
+        };
 
-            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limit));
-            if let TarballError::IncorrectlyCasedManifest(have) = err {
-                assert_eq!(have, PathBuf::from(file));
-            } else {
-                panic!("expected IncorrectlyCasedManifest, got {err:?} instead");
-            }
-        }
+        let err = assert_err!(process("CARGO.TOML"));
+        assert_snapshot!(err, @r###"Cargo.toml manifest is incorrectly cased: "CARGO.TOML""###);
+
+        let err = assert_err!(process("Cargo.Toml"));
+        assert_snapshot!(err, @r###"Cargo.toml manifest is incorrectly cased: "Cargo.Toml""###);
     }
 
     #[test]
@@ -323,11 +326,9 @@ mod tests {
             repository = "https://github.com/foo/bar"
             "#;
 
-        for files in [
-            vec!["cargo.toml", "Cargo.toml"],
-            vec!["Cargo.toml", "Cargo.Toml"],
-            vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"],
-        ] {
+        let limit = 512 * 1024 * 1024;
+
+        let process = |files: Vec<&str>| {
             let tarball = files
                 .iter()
                 .fold(TarballBuilder::new(), |builder, file| {
@@ -335,20 +336,16 @@ mod tests {
                 })
                 .build();
 
-            let limit = 512 * 1024 * 1024;
+            process_tarball("foo-0.0.1", &*tarball, limit)
+        };
 
-            let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, limit));
-            if let TarballError::TooManyManifests(have) = err {
-                let mut want: Vec<_> = files
-                    .into_iter()
-                    .map(|file| PathBuf::from("foo-0.0.1").join(file))
-                    .collect();
-                want.sort();
+        let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]));
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
 
-                assert_eq!(have, want);
-            } else {
-                panic!("expected TooManyManifests, got {err:?} instead");
-            }
-        }
+        let err = assert_err!(process(vec!["Cargo.toml", "Cargo.Toml"]));
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.Toml", "foo-0.0.1/Cargo.toml"]"###);
+
+        let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]));
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
     }
 }
