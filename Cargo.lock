@@ -1143,6 +1143,7 @@ dependencies = [
  "clap",
  "flate2",
  "indicatif",
+ "insta",
  "rayon",
  "serde",
  "serde_json",
