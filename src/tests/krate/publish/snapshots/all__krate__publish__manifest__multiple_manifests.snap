@@ -1,11 +1,11 @@
 ---
 source: src/tests/krate/publish/manifest.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "errors": [
     {
-      "detail": "uploaded tarball contains more than one `Cargo.toml` manifest file; found `Cargo.toml`, `cargo.toml`"
+      "detail": "uploaded tarball contains more than one file with the same path: `foo-1.0.0/cargo.toml`"
     }
   ]
 }
