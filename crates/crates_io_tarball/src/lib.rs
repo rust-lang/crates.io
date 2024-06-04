@@ -146,11 +146,12 @@ mod tests {
     use cargo_manifest::{MaybeInherited, StringOrBool};
     use insta::assert_snapshot;
 
+    const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
+
     #[test]
     fn process_tarball_test() {
-        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
         let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", manifest)
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -164,9 +165,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incomplete_vcs_info() {
-        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
         let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", manifest)
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
@@ -179,10 +179,9 @@ mod tests {
 
     #[test]
     fn process_tarball_test_vcs_info() {
-        let manifest = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
         let vcs_info = br#"{"path_in_vcs": "path/in/vcs"}"#;
         let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", manifest)
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
             .build();
 
@@ -237,13 +236,8 @@ mod tests {
 
     #[test]
     fn process_tarball_test_manifest_with_default_readme() {
-        let manifest = br#"
-            [package]
-            name = "foo"
-            version = "0.0.1"
-            "#;
         let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", manifest)
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
         let limit = 512 * 1024 * 1024;
@@ -293,18 +287,11 @@ mod tests {
 
     #[test]
     fn process_tarball_test_incorrect_manifest_casing() {
-        let manifest = br#"
-                [package]
-                name = "foo"
-                version = "0.0.1"
-                repository = "https://github.com/foo/bar"
-                "#;
-
         let limit = 512 * 1024 * 1024;
 
         let process = |file: &str| {
             let tarball = TarballBuilder::new()
-                .add_file(&format!("foo-0.0.1/{file}"), manifest)
+                .add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 .build();
 
             process_tarball("foo-0.0.1", &*tarball, limit)
@@ -319,20 +306,13 @@ mod tests {
 
     #[test]
     fn process_tarball_test_multiple_manifests() {
-        let manifest = br#"
-            [package]
-            name = "foo"
-            version = "0.0.1"
-            repository = "https://github.com/foo/bar"
-            "#;
-
         let limit = 512 * 1024 * 1024;
 
         let process = |files: Vec<&str>| {
             let tarball = files
                 .iter()
                 .fold(TarballBuilder::new(), |builder, file| {
-                    builder.add_file(&format!("foo-0.0.1/{file}"), manifest)
+                    builder.add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 })
                 .build();
 
