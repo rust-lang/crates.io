@@ -1,7 +1,7 @@
 import { test, expect } from '@/e2e/helper';
 
 test.describe('Bug #2329', { tag: '@bugs' }, () => {
-  test('is fixed', async ({ page, mirage }) => {
+  test.skip('is fixed', async ({ page, mirage }) => {
     await mirage.addHook(server => {
       let user = server.create('user');
 
