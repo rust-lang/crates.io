@@ -260,7 +260,7 @@ importers:
         version: 1.3.1(eslint@8.57.0)
       eslint-plugin-prettier:
         specifier: 5.1.3
-        version: 5.1.3(@types/eslint@8.56.10)(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(prettier@3.3.0)
+        version: 5.1.3(@types/eslint@8.56.10)(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(prettier@3.3.1)
       eslint-plugin-qunit:
         specifier: 8.1.1
         version: 8.1.1(eslint@8.57.0)
@@ -295,8 +295,8 @@ importers:
         specifier: 9.5.14
         version: 9.5.14(postcss@8.4.38)
       prettier:
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: 3.3.1
+        version: 3.3.1
       qunit:
         specifier: 2.21.0
         version: 2.21.0
@@ -7035,8 +7035,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.3.0:
-    resolution: {integrity: sha512-J9odKxERhCQ10OC2yb93583f6UnYutOeiV5i0zEDS7UGTdUt0u+y8erxl3lBKvwo/JHyyoEdXjwp4dke9oyZ/g==}
+  prettier@3.3.1:
+    resolution: {integrity: sha512-7CAwy5dRsxs8PHXT3twixW9/OEll8MLE0VRPCJyl7CkS6VHGPSlsVaWTiASPTyGyYRyApxlaWTzwUxVNrhcwDg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -11328,26 +11328,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.24.6)
-      '@types/ember__array': 4.0.10(@babel/core@7.24.6)
-      '@types/ember__component': 4.0.22(@babel/core@7.24.6)
-      '@types/ember__controller': 4.0.12(@babel/core@7.24.6)
-      '@types/ember__debug': 4.0.8(@babel/core@7.24.6)
-      '@types/ember__engine': 4.0.11(@babel/core@7.24.6)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.24.6)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10(@babel/core@7.24.6)
-      '@types/ember__service': 4.0.9(@babel/core@7.24.6)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.24.6)
-      '@types/ember__utils': 4.0.7
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.24.6)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.24.6)
@@ -11380,11 +11360,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.24.6)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.24.6)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.24.6)
       '@types/ember__engine': 4.0.11(@babel/core@7.24.6)
       '@types/ember__object': 4.0.12(@babel/core@7.24.6)
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22
+      '@types/ember__routing': 4.0.22(@babel/core@7.24.6)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11479,13 +11459,6 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
-  '@types/ember__routing@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12(@babel/core@7.24.6)
-      '@types/ember__object': 4.0.12(@babel/core@7.24.6)
-      '@types/ember__service': 4.0.9(@babel/core@7.24.6)
-
   '@types/ember__routing@4.0.22(@babel/core@7.24.6)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.6)
@@ -11538,10 +11511,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.24.6)':
     dependencies:
@@ -15324,10 +15293,10 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-prettier@5.1.3(@types/eslint@8.56.10)(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(prettier@3.3.0):
+  eslint-plugin-prettier@5.1.3(@types/eslint@8.56.10)(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(prettier@3.3.1):
     dependencies:
       eslint: 8.57.0
-      prettier: 3.3.0
+      prettier: 3.3.1
       prettier-linter-helpers: 1.0.0
       synckit: 0.8.8
     optionalDependencies:
@@ -18403,7 +18372,7 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.3.0: {}
+  prettier@3.3.1: {}
 
   pretty-bytes@6.1.1: {}
 
