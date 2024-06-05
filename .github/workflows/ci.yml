@@ -21,7 +21,7 @@ env:
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 9.1.4
   # renovate: datasource=docker depName=postgres
-  POSTGRES_VERSION: 13
+  POSTGRES_VERSION: 16
 
 jobs:
   changed-files:
