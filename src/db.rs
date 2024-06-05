@@ -52,6 +52,8 @@ pub struct ConnectionConfig {
 
 impl ConnectionConfig {
     fn apply(&self, conn: &mut PgConnection) -> QueryResult<()> {
+        diesel::sql_query("SET application_name = 'crates.io'").execute(conn)?;
+
         let statement_timeout = self.statement_timeout.as_millis();
         diesel::sql_query(format!("SET statement_timeout = {statement_timeout}")).execute(conn)?;
 
