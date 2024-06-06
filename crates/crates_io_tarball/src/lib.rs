@@ -96,9 +96,11 @@ pub fn process_tarball<R: Read>(
 
         let lowercase_path = entry_path.as_os_str().to_ascii_lowercase();
         if !paths.insert(lowercase_path) {
-            return Err(TarballError::DuplicatePath(
-                entry_path.display().to_string(),
-            ));
+            let path = entry_path.display().to_string();
+            // see https://github.com/rust-lang/crates.io/pull/8788#issuecomment-2151695951
+            if !path.to_ascii_lowercase().ends_with("/readme.md") {
+                return Err(TarballError::DuplicatePath(path));
+            }
         }
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
@@ -333,5 +335,16 @@ mod tests {
 
         let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
         assert_snapshot!(err, @"duplicate path found: foo-0.0.1/FOO.rs")
+    }
+
+    #[test]
+    fn test_double_readme() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/Readme.md", b"")
+            .add_file("foo-0.0.1/README.md", b"")
+            .build();
+
+        assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
     }
 }
