@@ -9,7 +9,7 @@ use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 pub use cargo_manifest::{Manifest, StringOrBool};
 use flate2::read::GzDecoder;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -33,8 +33,6 @@ pub enum TarballError {
     Malformed(#[source] std::io::Error),
     #[error("invalid path found: {0}")]
     InvalidPath(String),
-    #[error("duplicate path found: {0}")]
-    DuplicatePath(String),
     #[error("unexpected symlink or hard link found: {0}")]
     UnexpectedSymlink(String),
     #[error("Cargo.toml manifest is missing")]
@@ -43,6 +41,8 @@ pub enum TarballError {
     InvalidManifest(#[from] cargo_manifest::Error),
     #[error("Cargo.toml manifest is incorrectly cased: {0:?}")]
     IncorrectlyCasedManifest(PathBuf),
+    #[error("more than one Cargo.toml manifest in tarball: {0:?}")]
+    TooManyManifests(Vec<PathBuf>),
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -67,7 +67,6 @@ pub fn process_tarball<R: Read>(
 
     let mut vcs_info = None;
     let mut manifests = BTreeMap::new();
-    let mut paths = HashSet::new();
 
     for entry in archive.entries()? {
         let mut entry = entry.map_err(TarballError::Malformed)?;
@@ -94,13 +93,6 @@ pub fn process_tarball<R: Read>(
             ));
         }
 
-        let lowercase_path = entry_path.as_os_str().to_ascii_lowercase();
-        if !paths.insert(lowercase_path) {
-            return Err(TarballError::DuplicatePath(
-                entry_path.display().to_string(),
-            ));
-        }
-
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
         if entry_path.parent() == Some(pkg_root) {
@@ -122,6 +114,13 @@ pub fn process_tarball<R: Read>(
                 manifests.insert(owned_entry_path, manifest);
             }
         }
+    }
+
+    if manifests.len() > 1 {
+        // There are no scenarios where we want to accept a crate file with multiple manifests.
+        return Err(TarballError::TooManyManifests(
+            manifests.into_keys().collect(),
+        ));
     }
 
     // Although we're interested in all possible cases of `Cargo.toml` above to protect users
@@ -302,36 +301,12 @@ mod tests {
         };
 
         let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]));
-        assert_snapshot!(err, @"duplicate path found: foo-0.0.1/Cargo.toml");
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
 
         let err = assert_err!(process(vec!["Cargo.toml", "Cargo.Toml"]));
-        assert_snapshot!(err, @"duplicate path found: foo-0.0.1/Cargo.Toml");
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.Toml", "foo-0.0.1/Cargo.toml"]"###);
 
         let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]));
-        assert_snapshot!(err, @"duplicate path found: foo-0.0.1/cargo.toml");
-    }
-
-    #[test]
-    fn test_duplicate_paths() {
-        let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
-            .add_file("foo-0.0.1/foo.rs", b"")
-            .add_file("foo-0.0.1/foo.rs", b"")
-            .build();
-
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
-        assert_snapshot!(err, @"duplicate path found: foo-0.0.1/foo.rs")
-    }
-
-    #[test]
-    fn test_case_insensitivity() {
-        let tarball = TarballBuilder::new()
-            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
-            .add_file("foo-0.0.1/foo.rs", b"")
-            .add_file("foo-0.0.1/FOO.rs", b"")
-            .build();
-
-        let err = assert_err!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
-        assert_snapshot!(err, @"duplicate path found: foo-0.0.1/FOO.rs")
+        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
     }
 }

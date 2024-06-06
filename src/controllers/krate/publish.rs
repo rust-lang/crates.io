@@ -714,11 +714,6 @@ impl From<TarballError> for BoxedAppError {
                 "uploaded tarball is malformed or too large when decompressed",
             ),
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
-            TarballError::DuplicatePath(path) => {
-                bad_request(format!(
-                    "uploaded tarball contains more than one file with the same path: `{path}`"
-                ))
-            }
             TarballError::UnexpectedSymlink(path) => {
                 bad_request(format!("unexpected symlink or hard link found: {path}"))
             }
@@ -730,6 +725,21 @@ impl From<TarballError> for BoxedAppError {
                 bad_request(format!(
                     "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
                     name = name.to_string_lossy(),
+                ))
+            }
+            TarballError::TooManyManifests(paths) => {
+                let paths = paths
+                    .into_iter()
+                    .map(|path| {
+                        path.file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .into_owned()
+                    })
+                    .collect::<Vec<_>>()
+                    .join("`, `");
+                bad_request(format!(
+                    "uploaded tarball contains more than one `Cargo.toml` manifest file; found `{paths}`"
                 ))
             }
             TarballError::InvalidManifest(err) => bad_request(format!(
