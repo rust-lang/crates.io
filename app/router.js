@@ -51,7 +51,11 @@ Router.map(function () {
   });
   this.route('category-slugs', { path: 'category_slugs' });
   this.route('team', { path: '/teams/:team_id' });
-  this.route('policies');
+  this.route('policies', function () {
+    this.route('security');
+  });
+  // The canonical security page is `/policies/security`; this is a redirect to support guessing
+  // of the URL to be `/security`.
   this.route('security');
   this.route('data-access');
   this.route('confirm', { path: '/confirm/:email_token' });
