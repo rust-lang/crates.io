@@ -22,7 +22,7 @@ tracing = "=0.1.40"
 [dev-dependencies]
 anyhow = "=1.0.86"
 claims = "=0.7.1"
-clap = { version = "=4.5.4", features = ["derive", "unicode", "wrap_help"] }
+clap = { version = "=4.5.6", features = ["derive", "unicode", "wrap_help"] }
 indicatif = { version = "=0.17.8", features = ["rayon"] }
 insta = "=1.39.0"
 rayon = "=1.10.0"
