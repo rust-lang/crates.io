@@ -163,6 +163,7 @@ impl DumpDirectory {
             File::create(&path).with_context(|| format!("Failed to create {}", path.display()))?;
 
         let status = std::process::Command::new("pg_dump")
+            .arg("--schema=public")
             .arg("--schema-only")
             .arg("--no-owner")
             .arg("--no-acl")
