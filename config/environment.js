@@ -78,9 +78,7 @@ module.exports = function (environment) {
 
     // Heroku Git Hash support
     if (process.env.SOURCE_VERSION) {
-      let hash = process.env.SOURCE_VERSION.slice(0, 7);
-      ENV['ember-cli-app-version'] = { version: hash };
-      ENV.sentry.release = hash;
+      ENV.sentry.release = process.env.SOURCE_VERSION.slice(0, 7);
     }
   }
 
