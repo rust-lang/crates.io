@@ -211,8 +211,8 @@ importers:
         specifier: 8.1.0
         version: 8.1.0(@ember/test-helpers@3.3.0(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0))(webpack@5.91.0))(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0))(qunit@2.21.0)
       ember-resolver:
-        specifier: 12.0.0
-        version: 12.0.0(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0))
+        specifier: 12.0.1
+        version: 12.0.1(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0))
       ember-router-scroll:
         specifier: 4.1.2
         version: 4.1.2(@babel/core@7.24.7)
@@ -4370,11 +4370,11 @@ packages:
       ember-source: '>=4.0.0'
       qunit: ^2.13.0
 
-  ember-resolver@12.0.0:
-    resolution: {integrity: sha512-JOD8Ja0wU8Q8ZX3NJwprgnbJKO7cbLtoaqHtFdkV4avkLAT8McLWYv82tp4j7EVsZsYhthRJV9jVsX+G/hm0Mg==}
+  ember-resolver@12.0.1:
+    resolution: {integrity: sha512-U+ZBdbEHMhmvcZly1xhZKwqeH5/igjT93p9bbD6x+mQVg7hm4jrsQA4jsxHu3BqgL5MmqOVx0gtAuYEWV1x2MQ==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
-      ember-source: ^4.8.3 || >= 5.0.0
+      ember-source: ^4.12.0 || >= 5.0.0
     peerDependenciesMeta:
       ember-source:
         optional: true
@@ -15160,7 +15160,7 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-resolver@12.0.0(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0)):
+  ember-resolver@12.0.1(ember-source@5.9.0(@babel/core@7.24.7)(@glimmer/component@1.1.2(@babel/core@7.24.7))(rsvp@4.8.5)(webpack@5.91.0)):
     dependencies:
       ember-cli-babel: 7.26.11
     optionalDependencies:
