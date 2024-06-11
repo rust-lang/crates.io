@@ -6,7 +6,6 @@ use chrono::NaiveDate;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
 use diesel::prelude::*;
-use secrecy::{ExposeSecret, SecretString};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -22,10 +21,7 @@ pub enum Command {
     },
     UpdateDownloads,
     CleanProcessedLogFiles,
-    DumpDb {
-        #[arg(env = "READ_ONLY_REPLICA_URL")]
-        database_url: SecretString,
-    },
+    DumpDb,
     DailyDbMaintenance,
     SquashIndex,
     NormalizeIndex {
@@ -74,8 +70,8 @@ pub fn run(command: Command) -> Result<()> {
         Command::CleanProcessedLogFiles => {
             jobs::CleanProcessedLogFiles.enqueue(conn)?;
         }
-        Command::DumpDb { database_url } => {
-            jobs::DumpDb::new(database_url.expose_secret()).enqueue(conn)?;
+        Command::DumpDb => {
+            jobs::DumpDb.enqueue(conn)?;
         }
         Command::SyncAdmins { force } => {
             if !force {

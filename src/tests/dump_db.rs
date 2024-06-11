@@ -8,7 +8,6 @@ use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use secrecy::ExposeSecret;
 use std::io::{Cursor, Read};
 use tar::Archive;
 
@@ -21,8 +20,7 @@ async fn test_dump_db_job() {
     app.db(|conn| {
         CrateBuilder::new("test-crate", token.as_model().user_id).expect_build(conn);
 
-        let database_url = app.as_inner().config.db.primary.url.expose_secret();
-        DumpDb::new(database_url).enqueue(conn).unwrap();
+        DumpDb.enqueue(conn).unwrap();
     });
 
     app.run_pending_background_jobs().await;
