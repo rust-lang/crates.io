@@ -111,6 +111,7 @@ pub struct Storage {
     cdn_prefix: Option<String>,
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
+    supports_attributes: bool,
 }
 
 impl Storage {
@@ -134,6 +135,8 @@ impl Storage {
 
                 let index_store = build_s3(index, Default::default());
 
+                let supports_attributes = true;
+
                 if cdn_prefix.is_none() {
                     panic!("Missing S3_CDN environment variable");
                 }
@@ -142,6 +145,7 @@ impl Storage {
                     cdn_prefix,
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
+                    supports_attributes,
                 }
             }
 
@@ -165,10 +169,13 @@ impl Storage {
                 let store: Arc<dyn ObjectStore> = Arc::new(local);
                 let index_store: Arc<dyn ObjectStore> = Arc::new(local_index);
 
+                let supports_attributes = false;
+
                 Self {
                     cdn_prefix,
                     store,
                     index_store,
+                    supports_attributes,
                 }
             }
 
@@ -176,10 +183,13 @@ impl Storage {
                 warn!("Using in-memory file storage");
                 let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
 
+                let supports_attributes = true;
+
                 Self {
                     cdn_prefix,
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
+                    supports_attributes,
                 }
             }
         }
@@ -226,10 +236,14 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
-        let attributes = Attributes::from_iter([
-            (Attribute::ContentType, CONTENT_TYPE_CRATE),
-            (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
-        ]);
+        let attributes = if self.supports_attributes {
+            Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_CRATE),
+                (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
+            ])
+        } else {
+            Attributes::new()
+        };
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
         Ok(())
@@ -238,10 +252,14 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = readme_path(name, version);
-        let attributes = Attributes::from_iter([
-            (Attribute::ContentType, CONTENT_TYPE_README),
-            (Attribute::CacheControl, CACHE_CONTROL_README),
-        ]);
+        let attributes = if self.supports_attributes {
+            Attributes::from_iter([
+                (Attribute::ContentType, CONTENT_TYPE_README),
+                (Attribute::CacheControl, CACHE_CONTROL_README),
+            ])
+        } else {
+            Attributes::new()
+        };
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
         Ok(())
@@ -251,10 +269,14 @@ impl Storage {
     pub async fn sync_index(&self, name: &str, content: Option<String>) -> Result<()> {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
-            let attributes = Attributes::from_iter([
-                (Attribute::ContentType, CONTENT_TYPE_INDEX),
-                (Attribute::CacheControl, CACHE_CONTROL_INDEX),
-            ]);
+            let attributes = if self.supports_attributes {
+                Attributes::from_iter([
+                    (Attribute::ContentType, CONTENT_TYPE_INDEX),
+                    (Attribute::CacheControl, CACHE_CONTROL_INDEX),
+                ])
+            } else {
+                Attributes::new()
+            };
             let payload = content.into();
             let opts = attributes.into();
             self.index_store.put_opts(&path, payload, opts).await?;
