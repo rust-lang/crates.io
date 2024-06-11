@@ -3,23 +3,14 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use crates_io_worker::BackgroundJob;
+use secrecy::ExposeSecret;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use zip::write::SimpleFileOptions;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct DumpDb {
-    database_url: String,
-}
-
-impl DumpDb {
-    pub fn new(database_url: impl Into<String>) -> Self {
-        Self {
-            database_url: database_url.into(),
-        }
-    }
-}
+pub struct DumpDb;
 
 impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
@@ -32,13 +23,15 @@ impl BackgroundJob for DumpDb {
         const TAR_PATH: &str = "db-dump.tar.gz";
         const ZIP_PATH: &str = "db-dump.zip";
 
-        let database_url = self.database_url.clone();
+        let db_config = &env.config.db;
+        let db_pool_config = db_config.replica.as_ref().unwrap_or(&db_config.primary);
+        let database_url = db_pool_config.url.clone();
 
         let archives = spawn_blocking(move || {
             let directory = DumpDirectory::create()?;
 
             info!("Exporting database…");
-            directory.populate(&database_url)?;
+            directory.populate(database_url.expose_secret())?;
 
             let export_dir = directory.path();
             info!(path = ?export_dir, "Creating tarball…");
