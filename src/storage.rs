@@ -111,6 +111,7 @@ pub struct Storage {
     cdn_prefix: Option<String>,
     store: Arc<dyn ObjectStore>,
     index_store: Arc<dyn ObjectStore>,
+    supports_attributes: bool,
 }
 
 impl Storage {
@@ -142,6 +143,7 @@ impl Storage {
                     cdn_prefix,
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
+                    supports_attributes: true,
                 }
             }
 
@@ -169,6 +171,7 @@ impl Storage {
                     cdn_prefix,
                     store,
                     index_store,
+                    supports_attributes: false,
                 }
             }
 
@@ -180,6 +183,7 @@ impl Storage {
                     cdn_prefix,
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
+                    supports_attributes: true,
                 }
             }
         }
@@ -226,7 +230,7 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
-        let attributes = Attributes::from_iter([
+        let attributes = self.attrs([
             (Attribute::ContentType, CONTENT_TYPE_CRATE),
             (Attribute::CacheControl, CACHE_CONTROL_IMMUTABLE),
         ]);
@@ -238,7 +242,7 @@ impl Storage {
     #[instrument(skip(self, bytes))]
     pub async fn upload_readme(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = readme_path(name, version);
-        let attributes = Attributes::from_iter([
+        let attributes = self.attrs([
             (Attribute::ContentType, CONTENT_TYPE_README),
             (Attribute::CacheControl, CACHE_CONTROL_README),
         ]);
@@ -251,7 +255,7 @@ impl Storage {
     pub async fn sync_index(&self, name: &str, content: Option<String>) -> Result<()> {
         let path = crates_io_index::Repository::relative_index_file_for_url(name).into();
         if let Some(content) = content {
-            let attributes = Attributes::from_iter([
+            let attributes = self.attrs([
                 (Attribute::ContentType, CONTENT_TYPE_INDEX),
                 (Attribute::CacheControl, CACHE_CONTROL_INDEX),
             ]);
@@ -304,6 +308,14 @@ impl Storage {
             .await?;
 
         Ok(())
+    }
+
+    fn attrs(&self, slice: impl IntoIterator<Item = (Attribute, &'static str)>) -> Attributes {
+        if self.supports_attributes {
+            Attributes::from_iter(slice)
+        } else {
+            Attributes::new()
+        }
     }
 }
 
