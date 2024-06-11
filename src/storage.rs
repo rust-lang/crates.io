@@ -135,8 +135,6 @@ impl Storage {
 
                 let index_store = build_s3(index, Default::default());
 
-                let supports_attributes = true;
-
                 if cdn_prefix.is_none() {
                     panic!("Missing S3_CDN environment variable");
                 }
@@ -145,7 +143,7 @@ impl Storage {
                     cdn_prefix,
                     store: Arc::new(store),
                     index_store: Arc::new(index_store),
-                    supports_attributes,
+                    supports_attributes: true,
                 }
             }
 
@@ -169,13 +167,11 @@ impl Storage {
                 let store: Arc<dyn ObjectStore> = Arc::new(local);
                 let index_store: Arc<dyn ObjectStore> = Arc::new(local_index);
 
-                let supports_attributes = false;
-
                 Self {
                     cdn_prefix,
                     store,
                     index_store,
-                    supports_attributes,
+                    supports_attributes: false,
                 }
             }
 
@@ -183,13 +179,11 @@ impl Storage {
                 warn!("Using in-memory file storage");
                 let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
 
-                let supports_attributes = true;
-
                 Self {
                     cdn_prefix,
                     store: store.clone(),
                     index_store: Arc::new(PrefixStore::new(store, "index")),
-                    supports_attributes,
+                    supports_attributes: true,
                 }
             }
         }
