@@ -40,7 +40,10 @@ fn is_cloud_front_ip(ip: &IpAddr) -> bool {
 
 pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
     let mut xff_iter = headers.get_all(X_FORWARDED_FOR).iter();
-    let first_header = xff_iter.next()?;
+    let Some(first_header) = xff_iter.next() else {
+        debug!(target: "real_ip", "No X-Forwarded-For header found");
+        return None;
+    };
 
     let has_more_headers = xff_iter.next().is_some();
     return if has_more_headers {
@@ -55,6 +58,8 @@ pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
         // have to care about the trusted proxies, since the request was
         // apparently sent to Heroku directly.
 
+        debug!(target: "real_ip", ?first_header, "Multiple X-Forwarded-For headers found, using the first one due to Heroku bug");
+
         parse_xff_header(first_header)
             .into_iter()
             .filter_map(|r| r.ok())
@@ -68,6 +73,8 @@ pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
         //
         // In this case return the right-most IP address that is not in the list
         // of IPs from trusted proxies (i.e. CloudFront).
+
+        debug!(target: "real_ip", ?first_header, "Single X-Forwarded-For header found");
 
         parse_xff_header(first_header)
             .into_iter()

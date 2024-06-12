@@ -13,7 +13,13 @@ pub async fn middleware(
     next: Next,
 ) -> impl IntoResponse {
     let xff_ip = process_xff_headers(req.headers());
-    let real_ip = xff_ip.unwrap_or_else(|| socket_addr.ip());
+    let real_ip = xff_ip
+        .inspect(|ip| debug!(target: "real_ip", "Using X-Forwarded-For header as real IP: {ip}"))
+        .unwrap_or_else(|| {
+            let ip = socket_addr.ip();
+            debug!(target: "real_ip", "Using socket address as real IP: {ip}");
+            ip
+        });
 
     req.extensions_mut().insert(RealIp(real_ip));
 
