@@ -73,7 +73,7 @@ deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
 derive_builder = "=0.20.0"
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
-diesel = { version = "=2.2.0", features = ["postgres", "serde_json", "chrono", "numeric"] }
+diesel = { version = "=2.2.1", features = ["postgres", "serde_json", "chrono", "numeric"] }
 diesel_full_text_search = "=2.2.0"
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
@@ -128,7 +128,7 @@ crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.7.1"
-diesel = { version = "=2.2.0", features = ["r2d2"] }
+diesel = { version = "=2.2.1", features = ["r2d2"] }
 googletest = "=0.11.0"
 insta = { version = "=1.39.0", features = ["glob", "json", "redactions"] }
 regex = "=1.10.5"
