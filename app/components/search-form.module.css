@@ -70,13 +70,17 @@
     padding-left: var(--submit-button-padding-left);
     padding-right: var(--submit-button-padding-right);
     color: white;
-    background-color: var(--yellow500);
+    --bg-color-top: #fede9e;
+    --bg-color-bottom: #fdc452;
+    --bg-color-top-dark: #fed585;
+    --bg-color-bottom-dark: #fdbb39;
+    background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
     border-top-right-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
     cursor: pointer;
 
     &:hover {
-        background-color: var(--yellow700);
+        background: linear-gradient(to bottom, var(--bg-color-top-dark) 0%, var(--bg-color-bottom-dark) 100%);
     }
 }
 

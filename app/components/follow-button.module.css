@@ -1,5 +1,5 @@
 .button {
-    composes: tan-button from '../styles/shared/buttons.module.css';
+    composes: button from '../styles/shared/buttons.module.css';
 
     height: 48px;
     width: 150px;
