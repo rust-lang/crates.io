@@ -7,11 +7,12 @@ pub use crate::builder::TarballBuilder;
 use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
+use cargo_manifest::AbstractFilesystem;
 pub use cargo_manifest::{Manifest, StringOrBool};
 use flate2::read::GzDecoder;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tracing::instrument;
 
@@ -66,6 +67,7 @@ pub fn process_tarball<R: Read>(
     let pkg_root = Path::new(&pkg_name);
 
     let mut vcs_info = None;
+    let mut paths = Vec::new();
     let mut manifests = BTreeMap::new();
 
     for entry in archive.entries()? {
@@ -77,9 +79,9 @@ pub fn process_tarball<R: Read>(
         // as `bar-0.1.0/` source code, and this could overwrite other crates in
         // the registry!
         let entry_path = entry.path()?;
-        if !entry_path.starts_with(pkg_name) {
+        let Ok(in_pkg_path) = entry_path.strip_prefix(pkg_root) else {
             return Err(TarballError::InvalidPath(entry_path.display().to_string()));
-        }
+        };
 
         // Historical versions of the `tar` crate which Cargo uses internally
         // don't properly prevent hard links and symlinks from overwriting
@@ -92,6 +94,8 @@ pub fn process_tarball<R: Read>(
                 entry_path.display().to_string(),
             ));
         }
+
+        paths.push(in_pkg_path.to_path_buf());
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
@@ -127,7 +131,7 @@ pub fn process_tarball<R: Read>(
     // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
     // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
     // manifest.
-    let Some((path, manifest)) = manifests.pop_first() else {
+    let Some((path, mut manifest)) = manifests.pop_first() else {
         return Err(TarballError::MissingManifest);
     };
 
@@ -136,7 +140,37 @@ pub fn process_tarball<R: Read>(
         return Err(TarballError::IncorrectlyCasedManifest(file.into()));
     }
 
+    manifest.complete_from_abstract_filesystem(&PathsFileSystem(paths))?;
+
     Ok(TarballInfo { manifest, vcs_info })
+}
+
+struct PathsFileSystem(Vec<PathBuf>);
+
+impl AbstractFilesystem for PathsFileSystem {
+    fn file_names_in<T: AsRef<Path>>(&self, rel_path: T) -> std::io::Result<BTreeSet<Box<str>>> {
+        let mut rel_path = rel_path.as_ref();
+
+        // Deal with relative paths that start with `./`
+        let mut components = rel_path.components();
+        while components.next() == Some(Component::CurDir) {
+            rel_path = components.as_path();
+        }
+
+        let paths = &self.0;
+        let file_names = paths
+            .iter()
+            .filter_map(move |p| p.strip_prefix(rel_path).ok())
+            .filter_map(|name| match name.components().next() {
+                // We can skip non-utf8 paths, since those are not checked by `cargo_manifest` anyway
+                Some(Component::Normal(p)) => p.to_str(),
+                _ => None,
+            })
+            .map(From::from)
+            .collect();
+
+        Ok(file_names)
+    }
 }
 
 #[cfg(test)]
@@ -144,7 +178,7 @@ mod tests {
     use super::process_tarball;
     use crate::TarballBuilder;
     use cargo_manifest::{MaybeInherited, StringOrBool};
-    use insta::assert_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const MAX_SIZE: u64 = 512 * 1024 * 1024;
@@ -157,6 +191,9 @@ mod tests {
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
         assert_none!(tarball_info.vcs_info);
+        assert_none!(tarball_info.manifest.lib);
+        assert_eq!(tarball_info.manifest.bin, vec![]);
+        assert_eq!(tarball_info.manifest.example, vec![]);
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE));
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
@@ -308,5 +345,49 @@ mod tests {
 
         let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]));
         assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
+    }
+
+    #[test]
+    fn test_lib() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
+            .build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let lib = assert_some!(tarball_info.manifest.lib);
+        assert_debug_snapshot!(lib);
+        assert_eq!(tarball_info.manifest.bin, vec![]);
+        assert_eq!(tarball_info.manifest.example, vec![]);
+    }
+
+    #[test]
+    fn test_lib_with_bins_and_example() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/examples/how-to-use-foo.rs", b"fn main() {}")
+            .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
+            .add_file("foo-0.0.1/src/bin/foo.rs", b"fn main() {}")
+            .add_file("foo-0.0.1/src/bin/bar.rs", b"fn main() {}")
+            .build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let lib = assert_some!(tarball_info.manifest.lib);
+        assert_debug_snapshot!(lib);
+        assert_debug_snapshot!(tarball_info.manifest.bin);
+        assert_debug_snapshot!(tarball_info.manifest.example);
+    }
+
+    #[test]
+    fn test_app() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .add_file("foo-0.0.1/src/main.rs", b"fn main() {}")
+            .build();
+
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        assert_none!(tarball_info.manifest.lib);
+        assert_debug_snapshot!(tarball_info.manifest.bin);
+        assert_eq!(tarball_info.manifest.example, vec![]);
     }
 }
