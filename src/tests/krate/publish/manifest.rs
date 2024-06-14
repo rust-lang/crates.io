@@ -144,3 +144,31 @@ async fn invalid_rust_version() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_lib_and_bin_crate() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+
+    let publish_builder = PublishBuilder::new("foo", "1.0.0")
+        .add_file("foo-1.0.0/src/lib.rs", "pub fn foo() {}")
+        .add_file("foo-1.0.0/src/main.rs", "fn main() {}")
+        .add_file("foo-1.0.0/src/bin/bar.rs", "fn main() {}");
+
+    let response = token.publish_crate(publish_builder).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    let response = token.get::<()>("/api/v1/crates/foo/1.0.0").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".version.id" => any_id_redaction(),
+        ".version.created_at" => "[datetime]",
+        ".version.updated_at" => "[datetime]",
+        ".version.published_by.id" => id_redaction(token.as_model().user_id),
+        ".version.audit_actions[].time" => "[datetime]",
+        ".version.audit_actions[].user.id" => id_redaction(token.as_model().user_id),
+    });
+}
