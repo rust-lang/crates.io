@@ -31,72 +31,6 @@ pub struct Version {
     pub semver_no_prerelease: Option<Triple>,
 }
 
-#[derive(Insertable, Debug)]
-#[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
-pub struct NewVersion {
-    crate_id: i32,
-    num: String,
-    features: serde_json::Value,
-    license: Option<String>,
-    crate_size: Option<i32>,
-    published_by: i32,
-    checksum: String,
-    links: Option<String>,
-    rust_version: Option<String>,
-}
-
-/// The highest version (semver order) and the most recently updated version.
-/// Typically used for a single crate.
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct TopVersions {
-    /// The "highest" version in terms of semver
-    pub highest: Option<semver::Version>,
-    /// The "highest" non-prerelease version
-    pub highest_stable: Option<semver::Version>,
-    /// The "newest" version in terms of publishing date
-    pub newest: Option<semver::Version>,
-}
-
-impl TopVersions {
-    /// Return both the newest (most recently updated) and the
-    /// highest version (in semver order) for a list of `Version` instances.
-    pub fn from_versions(versions: Vec<Version>) -> Self {
-        Self::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
-    }
-
-    /// Return both the newest (most recently updated) and the
-    /// highest version (in semver order) for a collection of date/version pairs.
-    pub fn from_date_version_pairs<T>(pairs: T) -> Self
-    where
-        T: IntoIterator<Item = (NaiveDateTime, String)>,
-    {
-        // filter out versions that we can't parse
-        let pairs: Vec<(NaiveDateTime, semver::Version)> = pairs
-            .into_iter()
-            .filter_map(|(date, version)| {
-                semver::Version::parse(&version)
-                    .ok()
-                    .map(|version| (date, version))
-            })
-            .collect();
-
-        let newest = pairs.iter().max().map(|(_, v)| v.clone());
-        let highest = pairs.iter().map(|(_, v)| v).max().cloned();
-        let highest_stable = pairs
-            .iter()
-            .map(|(_, v)| v)
-            .filter(|v| v.pre.is_empty())
-            .max()
-            .cloned();
-
-        Self {
-            highest,
-            highest_stable,
-            newest,
-        }
-    }
-}
-
 impl Version {
     /// Returns (dependency, crate dependency name)
     pub fn dependencies(&self, conn: &mut PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
@@ -126,6 +60,20 @@ impl Version {
             None => None,
         }
     }
+}
+
+#[derive(Insertable, Debug)]
+#[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
+pub struct NewVersion {
+    crate_id: i32,
+    num: String,
+    features: serde_json::Value,
+    license: Option<String>,
+    crate_size: Option<i32>,
+    published_by: i32,
+    checksum: String,
+    links: Option<String>,
+    rust_version: Option<String>,
 }
 
 impl NewVersion {
@@ -192,6 +140,58 @@ fn strip_build_metadata(version: &str) -> &str {
         .split_once('+')
         .map(|parts| parts.0)
         .unwrap_or(version)
+}
+
+/// The highest version (semver order) and the most recently updated version.
+/// Typically used for a single crate.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TopVersions {
+    /// The "highest" version in terms of semver
+    pub highest: Option<semver::Version>,
+    /// The "highest" non-prerelease version
+    pub highest_stable: Option<semver::Version>,
+    /// The "newest" version in terms of publishing date
+    pub newest: Option<semver::Version>,
+}
+
+impl TopVersions {
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a list of `Version` instances.
+    pub fn from_versions(versions: Vec<Version>) -> Self {
+        Self::from_date_version_pairs(versions.into_iter().map(|v| (v.created_at, v.num)))
+    }
+
+    /// Return both the newest (most recently updated) and the
+    /// highest version (in semver order) for a collection of date/version pairs.
+    pub fn from_date_version_pairs<T>(pairs: T) -> Self
+    where
+        T: IntoIterator<Item = (NaiveDateTime, String)>,
+    {
+        // filter out versions that we can't parse
+        let pairs: Vec<(NaiveDateTime, semver::Version)> = pairs
+            .into_iter()
+            .filter_map(|(date, version)| {
+                semver::Version::parse(&version)
+                    .ok()
+                    .map(|version| (date, version))
+            })
+            .collect();
+
+        let newest = pairs.iter().max().map(|(_, v)| v.clone());
+        let highest = pairs.iter().map(|(_, v)| v).max().cloned();
+        let highest_stable = pairs
+            .iter()
+            .map(|(_, v)| v)
+            .filter(|v| v.pre.is_empty())
+            .max()
+            .cloned();
+
+        Self {
+            highest,
+            highest_stable,
+            newest,
+        }
+    }
 }
 
 #[cfg(test)]
