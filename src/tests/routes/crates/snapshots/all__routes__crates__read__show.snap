@@ -49,6 +49,7 @@ expression: response.json()
   "versions": [
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "foo_show",
       "crate_size": 0,
@@ -56,6 +57,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/foo_show/1.0.0/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 1,
       "license": null,
       "links": {
@@ -72,6 +74,7 @@ expression: response.json()
     },
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "foo_show",
       "crate_size": 0,
@@ -79,6 +82,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/foo_show/0.5.1/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 3,
       "license": null,
       "links": {
@@ -101,6 +105,7 @@ expression: response.json()
     },
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "foo_show",
       "crate_size": 0,
@@ -108,6 +113,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/foo_show/0.5.0/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 2,
       "license": null,
       "links": {
