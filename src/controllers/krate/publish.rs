@@ -338,6 +338,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 }
             }
 
+            // https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field says that
+            // the `name` field is required for `bin` targets, so we can ignore `None` values via
+            // `filter_map()` here.
+            let bin_names = tarball_info.manifest.bin
+                .into_iter()
+                .filter_map(|bin| bin.name.clone())
+                .collect();
+
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
@@ -352,6 +360,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .checksum(hex_cksum)
                 .links(package.links)
                 .rust_version(rust_version)
+                .has_lib(tarball_info.manifest.lib.is_some())
+                .bin_names(bin_names)
                 .build()
                 .map_err(|error| internal(error.to_string()))?
                 .save(conn, &verified_email_address)?;
