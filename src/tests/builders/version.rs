@@ -9,11 +9,11 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 /// A builder to create version records for the purpose of inserting directly into the database.
-pub struct VersionBuilder<'a> {
+pub struct VersionBuilder {
     created_at: Option<NaiveDateTime>,
     dependencies: Vec<(i32, Option<&'static str>)>,
     features: BTreeMap<String, Vec<String>>,
-    license: Option<&'a str>,
+    license: Option<String>,
     num: semver::Version,
     size: i32,
     yanked: bool,
@@ -23,7 +23,7 @@ pub struct VersionBuilder<'a> {
 }
 
 #[allow(dead_code)]
-impl<'a> VersionBuilder<'a> {
+impl VersionBuilder {
     /// Creates a VersionBuilder from a string slice `num` representing the version's number.
     ///
     /// # Panics
@@ -56,8 +56,8 @@ impl<'a> VersionBuilder<'a> {
     }
 
     /// Sets the version's `license` value.
-    pub fn license(mut self, license: Option<&'a str>) -> Self {
-        self.license = license;
+    pub fn license(mut self, license: impl Into<String>) -> Self {
+        self.license = Some(license.into());
         self
     }
 
@@ -166,7 +166,7 @@ impl<'a> VersionBuilder<'a> {
     }
 }
 
-impl<'a> From<&'a str> for VersionBuilder<'a> {
+impl<'a> From<&'a str> for VersionBuilder {
     fn from(num: &'a str) -> Self {
         VersionBuilder::new(num)
     }
