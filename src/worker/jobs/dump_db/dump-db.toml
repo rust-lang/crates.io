@@ -231,7 +231,6 @@ published_by = "public"
 checksum = "public"
 links = "public"
 rust_version = "public"
-semver_no_prerelease = "private"
 
 [versions_published_by.columns]
 version_id = "private"
