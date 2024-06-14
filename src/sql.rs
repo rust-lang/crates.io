@@ -57,39 +57,3 @@ macro_rules! pg_enum {
 }
 
 pub(crate) use pg_enum;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::db::sql_types::semver::Triple;
-    use crate::schema::sql_types::SemverTriple;
-    use crate::test_util::test_db_connection;
-    use diesel::prelude::*;
-    use diesel::select;
-
-    define_sql_function!(fn to_semver_no_prerelease(x: Text) -> Nullable<SemverTriple>);
-
-    #[test]
-    fn to_semver_no_prerelease_works() {
-        let (_test_db, mut conn) = test_db_connection();
-
-        #[track_caller]
-        fn test(conn: &mut PgConnection, text: &str, expected: Option<(u64, u64, u64)>) {
-            let query = select(to_semver_no_prerelease(text));
-            let result = query
-                .get_result::<Option<Triple>>(conn)
-                .unwrap()
-                .map(|triple| (triple.major, triple.minor, triple.teeny));
-
-            assert_eq!(result, expected);
-        }
-
-        test(&mut conn, "0.0.0", Some((0, 0, 0)));
-        test(&mut conn, "1.2.4", Some((1, 2, 4)));
-        test(&mut conn, "1.2.4+metadata", Some((1, 2, 4)));
-        test(&mut conn, "1.2.4-beta.3", None);
-        // see https://github.com/rust-lang/crates.io/issues/3882
-        test(&mut conn, "0.4.45+curl-7.78.0", Some((0, 4, 45)));
-        test(&mut conn, "0.1.4-preview+4.3.2", None);
-    }
-}

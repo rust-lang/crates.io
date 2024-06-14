@@ -6,8 +6,6 @@ use url::Url;
 
 use crate::config;
 
-pub mod sql_types;
-
 pub fn oneoff_connection_with_config(
     config: &config::DatabasePools,
 ) -> ConnectionResult<PgConnection> {
