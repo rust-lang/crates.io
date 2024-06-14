@@ -22,7 +22,7 @@ pub struct CrateBuilder<'a> {
     owner_id: i32,
     recent_downloads: Option<i32>,
     updated_at: Option<NaiveDateTime>,
-    versions: Vec<VersionBuilder<'a>>,
+    versions: Vec<VersionBuilder>,
 }
 
 impl<'a> CrateBuilder<'a> {
@@ -90,7 +90,7 @@ impl<'a> CrateBuilder<'a> {
 
     /// Adds a version record to be associated with the crate record when the crate record is
     /// built.
-    pub fn version<T: Into<VersionBuilder<'a>>>(mut self, version: T) -> Self {
+    pub fn version<T: Into<VersionBuilder>>(mut self, version: T) -> Self {
         self.versions.push(version.into());
         self
     }
