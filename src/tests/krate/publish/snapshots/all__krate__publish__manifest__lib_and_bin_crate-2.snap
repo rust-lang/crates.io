@@ -1,0 +1,52 @@
+---
+source: src/tests/krate/publish/manifest.rs
+expression: response.json()
+---
+{
+  "version": {
+    "audit_actions": [
+      {
+        "action": "publish",
+        "time": "[datetime]",
+        "user": {
+          "avatar": null,
+          "id": "[id]",
+          "login": "foo",
+          "name": null,
+          "url": "https://github.com/foo"
+        }
+      }
+    ],
+    "bin_names": [
+      "bar",
+      "foo"
+    ],
+    "checksum": "ed125a8d83193391762787872f6363ef11d472fe9e963b984a761f970d63a7a8",
+    "crate": "foo",
+    "crate_size": 241,
+    "created_at": "[datetime]",
+    "dl_path": "/api/v1/crates/foo/1.0.0/download",
+    "downloads": 0,
+    "features": {},
+    "has_lib": true,
+    "id": "[id]",
+    "license": "MIT",
+    "links": {
+      "authors": "/api/v1/crates/foo/1.0.0/authors",
+      "dependencies": "/api/v1/crates/foo/1.0.0/dependencies",
+      "version_downloads": "/api/v1/crates/foo/1.0.0/downloads"
+    },
+    "num": "1.0.0",
+    "published_by": {
+      "avatar": null,
+      "id": "[id]",
+      "login": "foo",
+      "name": null,
+      "url": "https://github.com/foo"
+    },
+    "readme_path": "/api/v1/crates/foo/1.0.0/readme",
+    "rust_version": null,
+    "updated_at": "[datetime]",
+    "yanked": false
+  }
+}
