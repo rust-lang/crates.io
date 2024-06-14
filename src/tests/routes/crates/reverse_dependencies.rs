@@ -207,7 +207,7 @@ async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     let (app, anon, user) = TestApp::init().with_user();
     let user = user.as_model();
 
-    let large_but_valid_version_number = format!("1.0.{}", std::u64::MAX);
+    let large_but_valid_version_number = format!("1.0.{}", u64::MAX);
 
     app.db(|conn| {
         let c1 = CrateBuilder::new("c1", user.id).expect_build(conn);
