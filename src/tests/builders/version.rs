@@ -6,6 +6,7 @@ use crates_io::{
 use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
+use crates_io::util::errors::internal;
 use diesel::prelude::*;
 
 /// A builder to create version records for the purpose of inserting directly into the database.
@@ -98,20 +99,18 @@ impl VersionBuilder {
     ) -> AppResult<Version> {
         use diesel::{insert_into, update};
 
-        let license = self.license.map(|license| license.to_owned());
+        let new_version = NewVersion::builder(crate_id, self.num.to_string())
+            .features(&self.features)?
+            .license(self.license)
+            .size(self.size)
+            .published_by(published_by)
+            .checksum(self.checksum)
+            .links(self.links)
+            .rust_version(self.rust_version)
+            .build()
+            .map_err(|error| internal(error.to_string()))?;
 
-        let mut vers = NewVersion::new(
-            crate_id,
-            &self.num,
-            &self.features,
-            license,
-            self.size,
-            published_by,
-            self.checksum,
-            self.links,
-            self.rust_version,
-        )?
-        .save(connection, "someone@example.com")?;
+        let mut vers = new_version.save(connection, "someone@example.com")?;
 
         if self.yanked {
             vers = update(&vers)
