@@ -23,6 +23,7 @@ expression: response.json()
   "versions": [
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "c2",
       "crate_size": 0,
@@ -30,6 +31,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/c2/1.0.18446744073709551615/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 2,
       "license": null,
       "links": {

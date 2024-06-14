@@ -566,6 +566,8 @@ pub struct EncodableVersion {
     pub audit_actions: Vec<EncodableAuditAction>,
     pub checksum: String,
     pub rust_version: Option<String>,
+    pub has_lib: Option<bool>,
+    pub bin_names: Option<Vec<Option<String>>>,
 }
 
 impl EncodableVersion {
@@ -587,6 +589,8 @@ impl EncodableVersion {
             crate_size,
             checksum,
             rust_version,
+            has_lib,
+            bin_names,
             ..
         } = version;
 
@@ -612,6 +616,8 @@ impl EncodableVersion {
             crate_size,
             checksum,
             rust_version,
+            has_lib,
+            bin_names,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -736,6 +742,8 @@ mod tests {
             crate_size: Some(1234),
             checksum: String::new(),
             rust_version: None,
+            has_lib: None,
+            bin_names: None,
             published_by: None,
             audit_actions: vec![EncodableAuditAction {
                 action: "publish".to_string(),

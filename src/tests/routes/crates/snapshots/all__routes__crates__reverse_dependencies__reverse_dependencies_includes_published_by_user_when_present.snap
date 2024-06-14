@@ -35,6 +35,7 @@ expression: response.json()
   "versions": [
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "c3",
       "crate_size": 0,
@@ -42,6 +43,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/c3/3.0.0/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 3,
       "license": null,
       "links": {
@@ -64,6 +66,7 @@ expression: response.json()
     },
     {
       "audit_actions": [],
+      "bin_names": null,
       "checksum": "                                                                ",
       "crate": "c2",
       "crate_size": 0,
@@ -71,6 +74,7 @@ expression: response.json()
       "dl_path": "/api/v1/crates/c2/2.0.0/download",
       "downloads": 0,
       "features": {},
+      "has_lib": null,
       "id": 2,
       "license": null,
       "links": {
