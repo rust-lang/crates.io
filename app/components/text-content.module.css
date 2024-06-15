@@ -38,6 +38,12 @@
             margin: 0;
             padding: var(--space-4xs) var(--space-3xs);
         }
+        /* Remove background color and padding from preformatted code blocks within lists. */
+        /* See: https://github.com/rust-lang/crates.io/issues/8866 */
+        pre code {
+            background-color: initial;
+            padding: initial;
+        }
     }
 
     code {
