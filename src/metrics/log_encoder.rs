@@ -6,6 +6,7 @@ use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer as _};
 use serde_json::Serializer;
 use std::cell::Cell;
+use std::collections::HashMap;
 use std::io::Write;
 use std::rc::Rc;
 
@@ -42,6 +43,22 @@ impl LogEncoder {
 impl Encoder for LogEncoder {
     fn encode<W: Write>(&self, families: &[MetricFamily], dest: &mut W) -> prometheus::Result<()> {
         let events = families_to_json_events(families);
+
+        let metrics = events
+            .iter()
+            .map(|event| {
+                let value = MapMetric {
+                    data: event.metric.data.clone(),
+                    tags: event.metric.tags.clone(),
+                };
+                (event.metric.name, value)
+            })
+            .collect::<HashMap<_, _>>();
+
+        match serde_json::to_string(&metrics) {
+            Ok(json) => info!(target: "metrics", "{{\"metrics\":{json}}}"),
+            Err(error) => warn!(target: "metrics", "Failed to serialize metrics: {error}"),
+        }
 
         let chunks = serialize_and_split_list(events.iter(), CHUNKS_MAX_SIZE_BYTES)
             .map_err(|e| Error::Msg(e.to_string()))?;
@@ -181,6 +198,13 @@ impl Write for TrackedWriter {
 }
 
 #[derive(Serialize, Debug, PartialEq)]
+struct MapMetric<'a> {
+    #[serde(flatten)]
+    data: VectorMetricData,
+    tags: IndexMap<&'a str, &'a str>,
+}
+
+#[derive(Serialize, Debug, PartialEq)]
 struct VectorEvent<'a> {
     metric: VectorMetric<'a>,
 }
@@ -194,7 +218,7 @@ struct VectorMetric<'a> {
     tags: IndexMap<&'a str, &'a str>,
 }
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 enum VectorMetricData {
     AggregatedHistogram {
