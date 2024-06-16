@@ -6,7 +6,7 @@ use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::real_ip::RealIp;
-use axum::extract::Request;
+use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::Extension;
@@ -32,6 +32,7 @@ pub struct RequestMetadata {
     method: Method,
     uri: Uri,
     original_path: Option<Extension<OriginalPath>>,
+    matched_path: Option<Extension<MatchedPath>>,
     real_ip: Extension<RealIp>,
     user_agent: Option<TypedHeader<UserAgent>>,
     request_id: Option<TypedHeader<XRequestId>>,
@@ -59,6 +60,12 @@ pub async fn log_requests(
         .map(|p| Cow::Borrowed(&p.0 .0))
         .unwrap_or_else(|| Cow::Owned(request_metadata.uri.to_string()));
 
+    let matched_path = request_metadata
+        .matched_path
+        .as_ref()
+        .map(|p| p.0.as_str())
+        .unwrap_or_default();
+
     let status = response.status();
 
     let custom_metadata = {
@@ -74,6 +81,7 @@ pub async fn log_requests(
         network.client.ip = %**request_metadata.real_ip,
         http.method = %method,
         http.url = %url,
+        http.matched_path = %matched_path,
         http.request_id = %request_metadata.request_id.as_ref().map(|h| h.as_str()).unwrap_or_default(),
         http.useragent = %request_metadata.user_agent.as_ref().map(|h| h.as_str()).unwrap_or_default(),
         http.status_code = status.as_u16(),
