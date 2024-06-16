@@ -12,14 +12,14 @@ use axum::response::IntoResponse;
 use axum::Extension;
 use axum_extra::headers::UserAgent;
 use axum_extra::TypedHeader;
-use http::{Method, StatusCode, Uri};
+use http::{Method, Uri};
 use parking_lot::Mutex;
-use std::fmt::{self, Display, Formatter};
-use std::ops::Deref;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::fmt::Display;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-
-const SLOW_REQUEST_THRESHOLD_MS: u128 = 1000;
+use std::time::Instant;
+use tracing::Level;
 
 #[derive(Clone, Debug)]
 pub struct ErrorField(pub String);
@@ -38,74 +38,6 @@ pub struct RequestMetadata {
     ci_service: Option<CiService>,
 }
 
-pub struct Metadata<'a> {
-    request: RequestMetadata,
-    status: StatusCode,
-    cause: Option<&'a CauseField>,
-    error: Option<&'a ErrorField>,
-    duration: Duration,
-    custom_metadata: RequestLog,
-}
-
-impl Display for Metadata<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut line = LogLine::new(f);
-
-        line.add_field("method", &self.request.method)?;
-
-        if let Some(original_path) = &self.request.original_path {
-            line.add_quoted_field("path", &original_path.deref().0)?;
-        } else {
-            line.add_quoted_field("path", &self.request.uri)?;
-        }
-
-        match &self.request.request_id {
-            Some(header) => line.add_field("request_id", header.as_str())?,
-            None => line.add_field("request_id", "")?,
-        };
-
-        line.add_quoted_field("ip", **self.request.real_ip)?;
-
-        let response_time_in_ms = self.duration.as_millis();
-        if response_time_in_ms > 0 {
-            line.add_field("service", format!("{response_time_in_ms}ms"))?;
-        }
-
-        line.add_field("status", self.status.as_str())?;
-
-        let user_agent = self.request.user_agent.as_ref();
-        let user_agent = user_agent.map(|ua| ua.as_str()).unwrap_or_default();
-        line.add_quoted_field("user_agent", user_agent)?;
-
-        if self.request.original_path.is_some() {
-            line.add_quoted_field("normalized_path", &self.request.uri)?;
-        }
-
-        if let Some(ci_service) = self.request.ci_service {
-            line.add_quoted_field("ci", ci_service)?;
-        }
-
-        let metadata = self.custom_metadata.lock();
-        for (key, value) in &*metadata {
-            line.add_quoted_field(key, value)?;
-        }
-
-        if let Some(CauseField(ref cause)) = self.cause {
-            line.add_quoted_field("cause", cause)?;
-        }
-
-        if let Some(ErrorField(ref error)) = self.error {
-            line.add_quoted_field("error", error)?;
-        }
-
-        if response_time_in_ms > SLOW_REQUEST_THRESHOLD_MS {
-            line.add_marker("SLOW REQUEST")?;
-        }
-
-        Ok(())
-    }
-}
-
 pub async fn log_requests(
     request_metadata: RequestMetadata,
     mut req: Request,
@@ -118,20 +50,39 @@ pub async fn log_requests(
 
     let response = next.run(req).await;
 
-    let metadata = Metadata {
-        request: request_metadata,
-        status: response.status(),
-        cause: response.extensions().get(),
-        error: response.extensions().get(),
-        duration: start_instant.elapsed(),
-        custom_metadata,
+    let duration = start_instant.elapsed();
+
+    let method = &request_metadata.method;
+    let url = request_metadata
+        .original_path
+        .as_ref()
+        .map(|p| Cow::Borrowed(&p.0 .0))
+        .unwrap_or_else(|| Cow::Owned(request_metadata.uri.to_string()));
+
+    let status = response.status();
+
+    let custom_metadata = {
+        let metadata = custom_metadata.lock();
+        let metadata = metadata.iter().cloned().collect::<HashMap<&str, String>>();
+        serde_json::to_string(&metadata).unwrap_or_default()
     };
 
-    if metadata.status.is_server_error() {
-        error!(target: "http", "{metadata}");
-    } else {
-        info!(target: "http", "{metadata}");
-    };
+    event!(
+        target: "http",
+        Level::INFO,
+        duration = duration.as_nanos(),
+        network.client.ip = %**request_metadata.real_ip,
+        http.method = %method,
+        http.url = %url,
+        http.request_id = %request_metadata.request_id.as_ref().map(|h| h.as_str()).unwrap_or_default(),
+        http.useragent = %request_metadata.user_agent.as_ref().map(|h| h.as_str()).unwrap_or_default(),
+        http.status_code = status.as_u16(),
+        cause = response.extensions().get::<CauseField>().map(|e| e.0.as_str()).unwrap_or_default(),
+        error.message = response.extensions().get::<ErrorField>().map(|e| e.0.as_str()).unwrap_or_default(),
+        ci = %request_metadata.ci_service.map(|ci| ci.to_string()).unwrap_or_default(),
+        %custom_metadata,
+        "{method} {url} → {status} ({duration:?})",
+    );
 
     response
 }
@@ -157,53 +108,5 @@ impl<T: RequestPartsExt> RequestLogExt for T {
         self.extensions()
             .get::<RequestLog>()
             .expect("Failed to find `RequestLog` request extension")
-    }
-}
-
-struct LogLine<'f, 'g> {
-    f: &'f mut Formatter<'g>,
-    first: bool,
-}
-
-impl<'f, 'g> LogLine<'f, 'g> {
-    fn new(f: &'f mut Formatter<'g>) -> Self {
-        Self { f, first: true }
-    }
-
-    fn add_field<K: Display, V: Display>(&mut self, key: K, value: V) -> fmt::Result {
-        self.start_item()?;
-
-        key.fmt(self.f)?;
-        self.f.write_str("=")?;
-        value.fmt(self.f)?;
-
-        Ok(())
-    }
-
-    fn add_quoted_field<K: Display, V: Display>(&mut self, key: K, value: V) -> fmt::Result {
-        self.start_item()?;
-
-        key.fmt(self.f)?;
-        self.f.write_str("=\"")?;
-        value.fmt(self.f)?;
-        self.f.write_str("\"")?;
-
-        Ok(())
-    }
-
-    fn add_marker<M: Display>(&mut self, marker: M) -> fmt::Result {
-        self.start_item()?;
-
-        marker.fmt(self.f)?;
-
-        Ok(())
-    }
-
-    fn start_item(&mut self) -> fmt::Result {
-        if !self.first {
-            self.f.write_str(" ")?;
-        }
-        self.first = false;
-        Ok(())
     }
 }
