@@ -342,20 +342,19 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             // Persist the new version of this crate
-            let version = NewVersion::new(
-                krate.id,
-                &version,
-                &features,
-                license,
+            let version = NewVersion::builder(krate.id, &version_string)
+                .features(&features)?
+                .license(license)
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
-                content_length as i32,
-                user.id,
-                hex_cksum,
-                package.links,
-                rust_version,
-            )?
-            .save(conn, &verified_email_address)?;
+                .size(content_length as i32)
+                .published_by(user.id)
+                .checksum(hex_cksum)
+                .links(package.links)
+                .rust_version(rust_version)
+                .build()
+                .map_err(|error| internal(error.to_string()))?
+                .save(conn, &verified_email_address)?;
 
             insert_version_owner_action(
                 conn,

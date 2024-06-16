@@ -106,7 +106,6 @@ mod tests {
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use crate::schema::{crate_downloads, crates, versions};
     use crate::test_util::test_db_connection;
-    use std::collections::BTreeMap;
 
     fn user(conn: &mut PgConnection) -> User {
         NewUser::new(2, "login", None, None, "access_token")
@@ -121,18 +120,13 @@ mod tests {
         }
         .create(conn, user_id)
         .unwrap();
-        let version = NewVersion::new(
-            krate.id,
-            &semver::Version::parse("1.0.0").unwrap(),
-            &BTreeMap::new(),
-            None,
-            0,
-            user_id,
-            "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
-            None,
-            None,
-        )
-        .unwrap();
+
+        let version = NewVersion::builder(krate.id, "1.0.0")
+            .published_by(user_id)
+            .dummy_checksum()
+            .build()
+            .unwrap();
+
         let version = version.save(conn, "someone@example.com").unwrap();
         (krate, version)
     }

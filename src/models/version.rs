@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
+use derive_builder::Builder;
 use diesel::prelude::*;
 
 use crate::util::errors::{bad_request, AppResult};
@@ -60,46 +61,53 @@ impl Version {
     }
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
 pub struct NewVersion {
     crate_id: i32,
     num: String,
+    #[builder(
+        default = "serde_json::Value::Object(Default::default())",
+        setter(custom)
+    )]
     features: serde_json::Value,
+    #[builder(default)]
     license: Option<String>,
-    crate_size: Option<i32>,
+    #[builder(default, setter(name = "size"))]
+    crate_size: i32,
     published_by: i32,
+    #[builder(setter(into))]
     checksum: String,
+    #[builder(default)]
     links: Option<String>,
+    #[builder(default)]
     rust_version: Option<String>,
 }
 
-impl NewVersion {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        crate_id: i32,
-        num: &semver::Version,
+impl NewVersionBuilder {
+    pub fn features(
+        &mut self,
         features: &BTreeMap<String, Vec<String>>,
-        license: Option<String>,
-        crate_size: i32,
-        published_by: i32,
-        checksum: String,
-        links: Option<String>,
-        rust_version: Option<String>,
-    ) -> AppResult<Self> {
-        let features = serde_json::to_value(features)?;
+    ) -> serde_json::Result<&mut Self> {
+        self.features = Some(serde_json::to_value(features)?);
+        Ok(self)
+    }
 
-        Ok(NewVersion {
-            crate_id,
-            num: num.to_string(),
-            features,
-            license,
-            crate_size: Some(crate_size),
-            published_by,
-            checksum,
-            links,
-            rust_version,
-        })
+    /// Set the `checksum` field to a basic dummy value.
+    pub fn dummy_checksum(&mut self) -> &mut Self {
+        const DUMMY_CHECKSUM: &str =
+            "0000000000000000000000000000000000000000000000000000000000000000";
+
+        self.checksum = Some(DUMMY_CHECKSUM.to_string());
+        self
+    }
+}
+
+impl NewVersion {
+    pub fn builder(crate_id: i32, version: impl Into<String>) -> NewVersionBuilder {
+        let mut builder = NewVersionBuilder::default();
+        builder.crate_id(crate_id).num(version.into());
+        builder
     }
 
     pub fn save(&self, conn: &mut PgConnection, published_by_email: &str) -> AppResult<Version> {

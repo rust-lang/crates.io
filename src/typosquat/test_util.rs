@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use diesel::{prelude::*, PgConnection};
 
 use crate::{
@@ -65,20 +63,13 @@ impl Faker {
             .set(crate_downloads::downloads.eq(downloads as i64))
             .execute(conn)?;
 
-        let version = NewVersion::new(
-            krate.id,
-            &semver::Version::parse("1.0.0")?,
-            &BTreeMap::new(),
-            None,
-            0,
-            user.id,
-            "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
-            None,
-            None,
-        )
-        .unwrap()
-        .save(conn, "someone@example.com")
-        .unwrap();
+        let version = NewVersion::builder(krate.id, "1.0.0")
+            .published_by(user.id)
+            .dummy_checksum()
+            .build()
+            .unwrap()
+            .save(conn, "someone@example.com")
+            .unwrap();
 
         Ok((krate, version))
     }
