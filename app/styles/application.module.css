@@ -164,16 +164,14 @@ noscript {
     font-size: 0.9em
 }
 
-:global {
-    .c-notification__icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+:global(.c-notification__icon) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    .c-notification__content {
-        line-height: 1.5;
-    }
+:global(.c-notification__content) {
+    line-height: 1.5;
 }
 
 .width-limit {
