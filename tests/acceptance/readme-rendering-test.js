@@ -64,6 +64,22 @@ graph TD;
     C-->D;
 </code></pre>
 
+<ul>
+  <li>
+    <p>Delegate to a method with a different name</p>
+    <pre><code class="language-rust hljs" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Stack</span> { inner: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u32</span>&gt; }
+<span class="hljs-keyword">impl</span> <span class="hljs-title class_">Stack</span> {
+    delegate! {
+        to <span class="hljs-keyword">self</span>.inner {
+            <span class="hljs-meta">#[call(push)]</span>
+            <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, value: <span class="hljs-type">u32</span>);
+        }
+    }
+}
+</code></pre>
+  </li>
+</ul>
+
 <section class="footnotes">
 <ol>
 <li id="user-content-fn-1">
@@ -82,8 +98,8 @@ module('Acceptance | README rendering', function (hooks) {
 
     await visit('/crates/serde');
     assert.dom('[data-test-readme]').exists();
-    assert.dom('[data-test-readme] ul > li').exists({ count: 6 });
-    assert.dom('[data-test-readme] pre > code.language-rust.hljs').exists();
+    assert.dom('[data-test-readme] ul > li').exists({ count: 7 });
+    assert.dom('[data-test-readme] pre > code.language-rust.hljs').exists({ count: 2 });
     assert.dom('[data-test-readme] pre > code.language-mermaid svg').exists();
 
     await percySnapshot(assert);

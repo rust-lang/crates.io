@@ -85,6 +85,14 @@
         }
     }
 
+    /* Reset background color, padding and font-size for syntax-highlighted code blocks. */
+    /* See: https://github.com/rust-lang/crates.io/issues/8866 */
+    :global(.hljs) {
+        background: unset;
+        padding: 0;
+        font-size: unset;
+    }
+
     /*
      * This is a combination of the `github.css` and `github-dark.css` themes,
      * but merged together using the `light-dark` function.
