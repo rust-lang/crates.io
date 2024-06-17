@@ -140,6 +140,22 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
     .await?
 }
 
+/// Handles the `GET /me/tokens/:id` route.
+pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+    let conn = &mut *app.db_write().await?;
+    conn.interact(move |conn| {
+        let auth = AuthCheck::default().check(&req, conn)?;
+        let user = auth.user();
+        let token = ApiToken::belonging_to(user)
+            .find(id)
+            .select(ApiToken::as_select())
+            .first(conn)?;
+
+        Ok(Json(json!({ "api_token": token })))
+    })
+    .await?
+}
+
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     let conn = &mut *app.db_write().await?;
