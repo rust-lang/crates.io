@@ -24,7 +24,7 @@ export default class Version extends Model {
 
   /**
    * The minimum supported Rust version of this crate version.
-   * @type string | null
+   * @type {string | null}
    */
   @attr rust_version;
 
