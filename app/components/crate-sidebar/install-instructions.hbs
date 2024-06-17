@@ -1,33 +1,82 @@
-<p local-class="copy-help">Run the following Cargo command in your project directory:</p>
+{{#if @binNames}}
+  {{#if (is-clipboard-supported)}}
+    <CopyButton
+      @copyText={{this.cargoInstallCommand}}
+      title="Copy command to clipboard"
+      local-class="copy-button"
+    >
+      <span local-class="selectable">{{this.cargoInstallCommand}}</span>
+      {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+    </CopyButton>
+  {{else}}
+    <code local-class="copy-fallback">
+      {{this.cargoInstallCommand}}
+    </code>
+  {{/if}}
 
-{{#if (is-clipboard-supported)}}
-  <CopyButton
-    @copyText={{this.cargoAddCommand}}
-    title="Copy command to clipboard"
-    local-class="copy-button"
-  >
-    <span local-class="selectable">{{this.cargoAddCommand}}</span>
-    {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
-  </CopyButton>
-{{else}}
-  <code local-class="copy-fallback">
-    {{this.cargoAddCommand}}
-  </code>
+  <p local-class="copy-help">
+    {{#if (eq @binNames.length 1)}}
+      Running the above command will globally install the
+      <span local-class="bin-name">{{get @binNames 0}}</span>
+      binary.
+    {{else if (eq @binNames.length 2)}}
+      Running the above command will globally install the
+      <span local-class="bin-name">{{get @binNames 0}}</span>
+      and
+      <span local-class="bin-name">{{get @binNames 1}}</span>
+      binaries.
+    {{else}}
+      Running the above command will globally install these binaries:
+      {{#each @binNames as |binName index|~}}
+        {{~#if (eq index 0)~}}
+          <span local-class="bin-name">{{binName}}</span>
+        {{~else if (eq index (sum @binNames.length -1))}}
+          and <span local-class="bin-name">{{binName}}</span>
+        {{~else~}}
+          , <span local-class="bin-name">{{binName}}</span>
+        {{~/if}}
+      {{~/each}}
+    {{/if}}
+  </p>
+
 {{/if}}
 
-<p local-class="copy-help">Or add the following line to your Cargo.toml:</p>
+{{#if (and @hasLib @binNames)}}
+  <h3>Install as library</h3>
+{{/if}}
 
-{{#if (is-clipboard-supported)}}
-  <CopyButton
-    @copyText={{this.tomlSnippet}}
-    title="Copy Cargo.toml snippet to clipboard"
-    local-class="copy-button"
-  >
-    <span local-class="selectable">{{this.tomlSnippet}}</span>
-    {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
-  </CopyButton>
-{{else}}
-  <code local-class="copy-fallback">
-    {{this.tomlSnippet}}
-  </code>
+{{#if @hasLib}}
+  <p local-class="copy-help">Run the following Cargo command in your project directory:</p>
+
+  {{#if (is-clipboard-supported)}}
+    <CopyButton
+      @copyText={{this.cargoAddCommand}}
+      title="Copy command to clipboard"
+      local-class="copy-button"
+    >
+      <span local-class="selectable">{{this.cargoAddCommand}}</span>
+      {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+    </CopyButton>
+  {{else}}
+    <code local-class="copy-fallback">
+      {{this.cargoAddCommand}}
+    </code>
+  {{/if}}
+
+  <p local-class="copy-help">Or add the following line to your Cargo.toml:</p>
+
+  {{#if (is-clipboard-supported)}}
+    <CopyButton
+      @copyText={{this.tomlSnippet}}
+      title="Copy Cargo.toml snippet to clipboard"
+      local-class="copy-button"
+    >
+      <span local-class="selectable">{{this.tomlSnippet}}</span>
+      {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+    </CopyButton>
+  {{else}}
+    <code local-class="copy-fallback">
+      {{this.tomlSnippet}}
+    </code>
+  {{/if}}
 {{/if}}

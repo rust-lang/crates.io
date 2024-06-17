@@ -1,5 +1,6 @@
 .copy-help {
     font-size: 12px;
+    overflow-wrap: break-word;
 }
 
 .copy-button,
@@ -50,4 +51,9 @@
 
 .selectable {
     user-select: text;
+}
+
+.bin-name {
+    font-family: var(--font-monospace);
+    font-weight: bold;
 }
