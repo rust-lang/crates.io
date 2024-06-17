@@ -1,0 +1,33 @@
+<p local-class="copy-help">Run the following Cargo command in your project directory:</p>
+
+{{#if (is-clipboard-supported)}}
+  <CopyButton
+    @copyText={{this.cargoAddCommand}}
+    title="Copy command to clipboard"
+    local-class="copy-button"
+  >
+    <span local-class="selectable">{{this.cargoAddCommand}}</span>
+    {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+  </CopyButton>
+{{else}}
+  <code local-class="copy-fallback">
+    {{this.cargoAddCommand}}
+  </code>
+{{/if}}
+
+<p local-class="copy-help">Or add the following line to your Cargo.toml:</p>
+
+{{#if (is-clipboard-supported)}}
+  <CopyButton
+    @copyText={{this.tomlSnippet}}
+    title="Copy Cargo.toml snippet to clipboard"
+    local-class="copy-button"
+  >
+    <span local-class="selectable">{{this.tomlSnippet}}</span>
+    {{svg-jar "copy" aria-hidden="true" local-class="copy-icon"}}
+  </CopyButton>
+{{else}}
+  <code local-class="copy-fallback">
+    {{this.tomlSnippet}}
+  </code>
+{{/if}}
