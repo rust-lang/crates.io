@@ -112,7 +112,7 @@ importers:
         specifier: ^4.0.11
         version: 4.0.11(@babel/core@7.24.7)
       '@types/node':
-        specifier: ^20.14.0
+        specifier: ^20.14.2
         version: 20.14.2
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
