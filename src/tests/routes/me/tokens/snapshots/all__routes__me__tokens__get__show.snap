@@ -1,0 +1,15 @@
+---
+source: src/tests/routes/me/tokens/get.rs
+expression: response.json()
+---
+{
+  "api_token": {
+    "crate_scopes": null,
+    "created_at": "[datetime]",
+    "endpoint_scopes": null,
+    "expired_at": null,
+    "id": 1,
+    "last_used_at": null,
+    "name": "bar"
+  }
+}
