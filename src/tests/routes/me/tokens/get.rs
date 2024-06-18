@@ -71,3 +71,24 @@ async fn show_with_anonymous_user() {
     let (_, anon) = TestApp::init().empty();
     anon.get(url).await.assert_forbidden();
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn show_other_user_token() {
+    let (app, _, user1) = TestApp::init().with_user();
+    let user2 = app.db_new_user("baz");
+    let user2 = user2.as_model();
+    app.db(|conn| {
+        assert_ok!(ApiToken::insert(conn, user2.id, "bar"));
+    });
+    let token = app.db(|conn| {
+        ApiToken::belonging_to(user2)
+            .filter(api_tokens::name.eq("bar"))
+            .select(ApiToken::as_select())
+            .first(conn)
+            .unwrap()
+    });
+
+    let url = format!("/api/v1/me/tokens/{}", token.id);
+    let response = user1.get::<()>(&url).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
