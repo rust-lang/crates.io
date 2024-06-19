@@ -2,8 +2,6 @@ use crate::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
-use crates_io::schema::api_tokens;
-use diesel::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -31,32 +29,22 @@ async fn show_token_with_scopes() {
     let (app, _, user) = TestApp::init().with_user();
     let user_model = user.as_model();
     let id = user_model.id;
-    app.db(|conn| {
-        vec![
-            assert_ok!(ApiToken::insert(conn, id, "bar")),
-            assert_ok!(ApiToken::insert_with_scopes(
-                conn,
-                id,
-                "baz",
-                Some(vec![
-                    CrateScope::try_from("serde").unwrap(),
-                    CrateScope::try_from("serde-*").unwrap()
-                ]),
-                Some(vec![EndpointScope::PublishUpdate]),
-                Some((Utc::now() - Duration::days(31)).naive_utc()),
-            )),
-        ]
+    let token = app.db(|conn| {
+        assert_ok!(ApiToken::insert(conn, id, "bar"));
+        assert_ok!(ApiToken::insert_with_scopes(
+            conn,
+            id,
+            "baz",
+            Some(vec![
+                CrateScope::try_from("serde").unwrap(),
+                CrateScope::try_from("serde-*").unwrap()
+            ]),
+            Some(vec![EndpointScope::PublishUpdate]),
+            Some((Utc::now() - Duration::days(31)).naive_utc()),
+        ))
     });
 
-    let token: ApiToken = app.db(|conn| {
-        ApiToken::belonging_to(user_model)
-            .filter(api_tokens::name.eq("baz"))
-            .select(ApiToken::as_select())
-            .first(conn)
-            .unwrap()
-    });
-
-    let url = format!("/api/v1/me/tokens/{}", token.id);
+    let url = format!("/api/v1/me/tokens/{}", token.model.id);
     let response = user.get::<()>(&url).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_json_snapshot!(response.json(), {
@@ -77,18 +65,9 @@ async fn show_other_user_token() {
     let (app, _, user1) = TestApp::init().with_user();
     let user2 = app.db_new_user("baz");
     let user2 = user2.as_model();
-    app.db(|conn| {
-        assert_ok!(ApiToken::insert(conn, user2.id, "bar"));
-    });
-    let token = app.db(|conn| {
-        ApiToken::belonging_to(user2)
-            .filter(api_tokens::name.eq("bar"))
-            .select(ApiToken::as_select())
-            .first(conn)
-            .unwrap()
-    });
+    let token = app.db(|conn| assert_ok!(ApiToken::insert(conn, user2.id, "bar")));
 
-    let url = format!("/api/v1/me/tokens/{}", token.id);
+    let url = format!("/api/v1/me/tokens/{}", token.model.id);
     let response = user1.get::<()>(&url).await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
