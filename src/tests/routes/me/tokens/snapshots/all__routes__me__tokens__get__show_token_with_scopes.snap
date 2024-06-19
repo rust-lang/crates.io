@@ -1,0 +1,20 @@
+---
+source: src/tests/routes/me/tokens/get.rs
+expression: response.json()
+---
+{
+  "api_token": {
+    "crate_scopes": [
+      "serde",
+      "serde-*"
+    ],
+    "created_at": "[datetime]",
+    "endpoint_scopes": [
+      "publish-update"
+    ],
+    "expired_at": "[datetime]",
+    "id": 2,
+    "last_used_at": null,
+    "name": "baz"
+  }
+}
