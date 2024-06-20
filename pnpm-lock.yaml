@@ -95,7 +95,7 @@ importers:
         version: 0.6.0
       '@percy/cli':
         specifier: 1.28.7
-        version: 1.28.7(typescript@5.4.5)
+        version: 1.28.7(typescript@5.5.2)
       '@percy/ember':
         specifier: 4.2.0
         version: 4.2.0
@@ -307,8 +307,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       typescript:
-        specifier: ^5.4.5
-        version: 5.4.5
+        specifier: ^5.5.2
+        version: 5.5.2
       webpack:
         specifier: 5.92.0
         version: 5.92.0
@@ -8143,8 +8143,8 @@ packages:
   typescript-memoize@1.1.1:
     resolution: {integrity: sha512-GQ90TcKpIH4XxYTI2F98yEQYZgjNMOGPpOgdjIBhaLaWji5HPWlRnZ4AeA1hfBxtY7bCGDJsqDDHk/KaHOl5bA==}
 
-  typescript@5.4.5:
-    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
+  typescript@5.5.2:
+    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -11092,29 +11092,29 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@percy/cli-app@1.28.7(typescript@5.4.5)':
+  '@percy/cli-app@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
-      '@percy/cli-exec': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
+      '@percy/cli-exec': 1.28.7(typescript@5.5.2)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-build@1.28.7(typescript@5.4.5)':
+  '@percy/cli-build@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-command@1.28.7(typescript@5.4.5)':
+  '@percy/cli-command@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/config': 1.28.7(typescript@5.4.5)
-      '@percy/core': 1.28.7(typescript@5.4.5)
+      '@percy/config': 1.28.7(typescript@5.5.2)
+      '@percy/core': 1.28.7(typescript@5.5.2)
       '@percy/logger': 1.28.7
     transitivePeerDependencies:
       - bufferutil
@@ -11122,18 +11122,18 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-config@1.28.7(typescript@5.4.5)':
+  '@percy/cli-config@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-exec@1.28.7(typescript@5.4.5)':
+  '@percy/cli-exec@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
       cross-spawn: 7.0.3
       which: 2.0.2
     transitivePeerDependencies:
@@ -11142,9 +11142,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-snapshot@1.28.7(typescript@5.4.5)':
+  '@percy/cli-snapshot@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
       yaml: 2.4.5
     transitivePeerDependencies:
       - bufferutil
@@ -11152,9 +11152,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-upload@1.28.7(typescript@5.4.5)':
+  '@percy/cli-upload@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
       fast-glob: 3.3.2
       image-size: 1.1.1
     transitivePeerDependencies:
@@ -11163,15 +11163,15 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli@1.28.7(typescript@5.4.5)':
+  '@percy/cli@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/cli-app': 1.28.7(typescript@5.4.5)
-      '@percy/cli-build': 1.28.7(typescript@5.4.5)
-      '@percy/cli-command': 1.28.7(typescript@5.4.5)
-      '@percy/cli-config': 1.28.7(typescript@5.4.5)
-      '@percy/cli-exec': 1.28.7(typescript@5.4.5)
-      '@percy/cli-snapshot': 1.28.7(typescript@5.4.5)
-      '@percy/cli-upload': 1.28.7(typescript@5.4.5)
+      '@percy/cli-app': 1.28.7(typescript@5.5.2)
+      '@percy/cli-build': 1.28.7(typescript@5.5.2)
+      '@percy/cli-command': 1.28.7(typescript@5.5.2)
+      '@percy/cli-config': 1.28.7(typescript@5.5.2)
+      '@percy/cli-exec': 1.28.7(typescript@5.5.2)
+      '@percy/cli-snapshot': 1.28.7(typescript@5.5.2)
+      '@percy/cli-upload': 1.28.7(typescript@5.5.2)
       '@percy/client': 1.28.7
       '@percy/logger': 1.28.7
     transitivePeerDependencies:
@@ -11186,22 +11186,22 @@ snapshots:
       '@percy/logger': 1.28.7
       pako: 2.1.0
 
-  '@percy/config@1.28.7(typescript@5.4.5)':
+  '@percy/config@1.28.7(typescript@5.5.2)':
     dependencies:
       '@percy/logger': 1.28.7
       ajv: 8.16.0
-      cosmiconfig: 8.3.6(typescript@5.4.5)
+      cosmiconfig: 8.3.6(typescript@5.5.2)
       yaml: 2.4.5
     transitivePeerDependencies:
       - typescript
 
-  '@percy/core@1.28.7(typescript@5.4.5)':
+  '@percy/core@1.28.7(typescript@5.5.2)':
     dependencies:
       '@percy/client': 1.28.7
-      '@percy/config': 1.28.7(typescript@5.4.5)
+      '@percy/config': 1.28.7(typescript@5.5.2)
       '@percy/dom': 1.28.7
       '@percy/logger': 1.28.7
-      '@percy/webdriver-utils': 1.28.7(typescript@5.4.5)
+      '@percy/webdriver-utils': 1.28.7(typescript@5.5.2)
       content-disposition: 0.5.4
       cross-spawn: 7.0.3
       extract-zip: 2.0.1
@@ -11240,9 +11240,9 @@ snapshots:
 
   '@percy/sdk-utils@1.28.7': {}
 
-  '@percy/webdriver-utils@1.28.7(typescript@5.4.5)':
+  '@percy/webdriver-utils@1.28.7(typescript@5.5.2)':
     dependencies:
-      '@percy/config': 1.28.7(typescript@5.4.5)
+      '@percy/config': 1.28.7(typescript@5.5.2)
       '@percy/sdk-utils': 1.28.7
     transitivePeerDependencies:
       - typescript
@@ -13504,14 +13504,14 @@ snapshots:
     dependencies:
       layout-base: 1.0.2
 
-  cosmiconfig@8.3.6(typescript@5.4.5):
+  cosmiconfig@8.3.6(typescript@5.5.2):
     dependencies:
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.4.5
+      typescript: 5.5.2
 
   create-ecdh@4.0.4:
     dependencies:
@@ -19805,7 +19805,7 @@ snapshots:
 
   typescript-memoize@1.1.1: {}
 
-  typescript@5.4.5: {}
+  typescript@5.5.2: {}
 
   uc.micro@1.0.6: {}
 
