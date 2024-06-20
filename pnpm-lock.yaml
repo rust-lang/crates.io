@@ -76,14 +76,14 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       '@embroider/compat':
-        specifier: 3.5.3
-        version: 3.5.3(@embroider/core@3.4.12)
+        specifier: 3.5.4
+        version: 3.5.4(@embroider/core@3.4.13)
       '@embroider/core':
-        specifier: 3.4.12
-        version: 3.4.12
+        specifier: 3.4.13
+        version: 3.4.13
       '@embroider/webpack':
         specifier: 4.0.3
-        version: 4.0.3(@embroider/core@3.4.12)(webpack@5.92.0)
+        version: 4.0.3(@embroider/core@3.4.13)(webpack@5.92.0)
       '@glimmer/component':
         specifier: 1.1.2
         version: 1.1.2(@babel/core@7.24.7)
@@ -140,7 +140,7 @@ importers:
         version: 1.0.0
       ember-cli-code-coverage:
         specifier: 3.0.0
-        version: 3.0.0(@embroider/compat@3.5.3(@embroider/core@3.4.12))(@embroider/core@3.4.12)
+        version: 3.0.0(@embroider/compat@3.5.4(@embroider/core@3.4.13))(@embroider/core@3.4.13)
       ember-cli-dependency-checker:
         specifier: 3.3.2
         version: 3.3.2(ember-cli@5.9.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6))
@@ -1374,15 +1374,15 @@ packages:
     peerDependencies:
       '@embroider/core': ^3.4.0
 
-  '@embroider/compat@3.5.3':
-    resolution: {integrity: sha512-RJIwaecrAoO7cHNwM7Ew8JvKjy1KqGJVImTZz+HJL9jkR74JGtg+Om2P6dkFRu+O3TkBTosp33gp7h4dWxnx2w==}
+  '@embroider/compat@3.5.4':
+    resolution: {integrity: sha512-WTHR2PnBYtFrHsDJ0glU8feWr5sMmb3eDolH4M0n3oUNzfEkerRqeosNHAjSfQTlJIh2KDHd4Pf2XYLhRrDFPg==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
-      '@embroider/core': ^3.4.12
+      '@embroider/core': ^3.4.13
 
-  '@embroider/core@3.4.12':
-    resolution: {integrity: sha512-pim5byNeaWwlU8uKgF37C1uuLSSgFHmLHJ6CGf5XFg4wbQ8Si0ZzrE5zhml+YKxgBxZ7iSVJAUNLa6t2a3ZTFA==}
+  '@embroider/core@3.4.13':
+    resolution: {integrity: sha512-DQRVNJ3QwY6olZSOsaShNjSz74GReQzm6hMjydF5867v3conV61Pedgrn1thmvYrdLlOm20H+iqRDzllLiJZLg==}
     engines: {node: 12.* || 14.* || >= 16}
 
   '@embroider/hbs-loader@3.0.3':
@@ -1394,6 +1394,15 @@ packages:
 
   '@embroider/macros@1.16.3':
     resolution: {integrity: sha512-WOQjl3aT3I5gG4XDLpCJjrKhNSapgH7FiLtpzM6lGfTFoA90rZojfjf5MELwzqlhjug0U2xLvyjw0l+kiBmDig==}
+    engines: {node: 12.* || 14.* || >= 16}
+    peerDependencies:
+      '@glint/template': ^1.0.0
+    peerDependenciesMeta:
+      '@glint/template':
+        optional: true
+
+  '@embroider/macros@1.16.4':
+    resolution: {integrity: sha512-xGPke1N8uD+RM4RCM1brfPWawDs7aSP1JQ+4VsTp1g2goI7vNtdMRQmKWWUUTqeV/rqk21ENpvy3r2oyufGW1w==}
     engines: {node: 12.* || 14.* || >= 16}
     peerDependencies:
       '@glint/template': ^1.0.0
@@ -10576,16 +10585,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/babel-loader-9@3.1.1(@embroider/core@3.4.12)(supports-color@8.1.1)(webpack@5.92.0)':
+  '@embroider/babel-loader-9@3.1.1(@embroider/core@3.4.13)(supports-color@8.1.1)(webpack@5.92.0)':
     dependencies:
       '@babel/core': 7.24.7(supports-color@8.1.1)
-      '@embroider/core': 3.4.12
+      '@embroider/core': 3.4.13
       babel-loader: 9.1.3(@babel/core@7.24.7(supports-color@8.1.1))(webpack@5.92.0)
     transitivePeerDependencies:
       - supports-color
       - webpack
 
-  '@embroider/compat@3.5.3(@embroider/core@3.4.12)':
+  '@embroider/compat@3.5.4(@embroider/core@3.4.13)':
     dependencies:
       '@babel/code-frame': 7.24.7
       '@babel/core': 7.24.7
@@ -10594,8 +10603,8 @@ snapshots:
       '@babel/preset-env': 7.24.7(@babel/core@7.24.7)
       '@babel/runtime': 7.24.7
       '@babel/traverse': 7.24.7(supports-color@8.1.1)
-      '@embroider/core': 3.4.12
-      '@embroider/macros': 1.16.3
+      '@embroider/core': 3.4.13
+      '@embroider/macros': 1.16.4
       '@types/babel__code-frame': 7.0.6
       '@types/yargs': 17.0.32
       assert-never: 1.2.1
@@ -10636,12 +10645,12 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@embroider/core@3.4.12':
+  '@embroider/core@3.4.13':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/parser': 7.24.7
       '@babel/traverse': 7.24.7(supports-color@8.1.1)
-      '@embroider/macros': 1.16.3
+      '@embroider/macros': 1.16.4
       '@embroider/shared-internals': 2.6.1(supports-color@8.1.1)
       assert-never: 1.2.1
       babel-plugin-ember-template-compilation: 2.2.5
@@ -10669,12 +10678,25 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@embroider/hbs-loader@3.0.3(@embroider/core@3.4.12)(webpack@5.92.0)':
+  '@embroider/hbs-loader@3.0.3(@embroider/core@3.4.13)(webpack@5.92.0)':
     dependencies:
-      '@embroider/core': 3.4.12
+      '@embroider/core': 3.4.13
       webpack: 5.92.0
 
   '@embroider/macros@1.16.3':
+    dependencies:
+      '@embroider/shared-internals': 2.6.1(supports-color@8.1.1)
+      assert-never: 1.2.1
+      babel-import-util: 2.1.1
+      ember-cli-babel: 7.26.11
+      find-up: 5.0.0
+      lodash: 4.17.21
+      resolve: 1.22.8
+      semver: 7.6.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@embroider/macros@1.16.4':
     dependencies:
       '@embroider/shared-internals': 2.6.1(supports-color@8.1.1)
       assert-never: 1.2.1
@@ -10713,13 +10735,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/webpack@4.0.3(@embroider/core@3.4.12)(webpack@5.92.0)':
+  '@embroider/webpack@4.0.3(@embroider/core@3.4.13)(webpack@5.92.0)':
     dependencies:
       '@babel/core': 7.24.7(supports-color@8.1.1)
       '@babel/preset-env': 7.24.7(@babel/core@7.24.7(supports-color@8.1.1))(supports-color@8.1.1)
-      '@embroider/babel-loader-9': 3.1.1(@embroider/core@3.4.12)(supports-color@8.1.1)(webpack@5.92.0)
-      '@embroider/core': 3.4.12
-      '@embroider/hbs-loader': 3.0.3(@embroider/core@3.4.12)(webpack@5.92.0)
+      '@embroider/babel-loader-9': 3.1.1(@embroider/core@3.4.13)(supports-color@8.1.1)(webpack@5.92.0)
+      '@embroider/core': 3.4.13
+      '@embroider/hbs-loader': 3.0.3(@embroider/core@3.4.13)(webpack@5.92.0)
       '@embroider/shared-internals': 2.6.1(supports-color@8.1.1)
       '@types/supports-color': 8.1.3
       assert-never: 1.2.1
@@ -14308,7 +14330,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-code-coverage@3.0.0(@embroider/compat@3.5.3(@embroider/core@3.4.12))(@embroider/core@3.4.12):
+  ember-cli-code-coverage@3.0.0(@embroider/compat@3.5.4(@embroider/core@3.4.13))(@embroider/core@3.4.13):
     dependencies:
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.2
@@ -14322,8 +14344,8 @@ snapshots:
       node-dir: 0.1.17
       walk-sync: 2.2.0
     optionalDependencies:
-      '@embroider/compat': 3.5.3(@embroider/core@3.4.12)
-      '@embroider/core': 3.4.12
+      '@embroider/compat': 3.5.4(@embroider/core@3.4.13)
+      '@embroider/core': 3.4.13
     transitivePeerDependencies:
       - supports-color
 
