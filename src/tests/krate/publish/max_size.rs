@@ -4,7 +4,7 @@ use crates_io_tarball::TarballBuilder;
 use flate2::Compression;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn tarball_between_default_axum_limit_and_max_upload_size() {
@@ -49,7 +49,10 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-    assert_eq!(app.stored_files().await.len(), 2);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo/foo-1.1.0.crate
+    index/3/f/foo
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -140,9 +143,8 @@ async fn new_krate_too_big_but_whitelisted() {
 
     token.publish_crate(crate_to_publish).await.good();
 
-    let expected_files = vec![
-        "crates/foo_whitelist/foo_whitelist-1.1.0.crate",
-        "index/fo/o_/foo_whitelist",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_whitelist/foo_whitelist-1.1.0.crate
+    index/fo/o_/foo_whitelist
+    "###);
 }

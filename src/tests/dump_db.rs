@@ -25,10 +25,10 @@ async fn test_dump_db_job() {
 
     app.run_pending_background_jobs().await;
 
-    let stored_files = app.stored_files().await;
-    assert_eq!(stored_files.len(), 2);
-    assert_eq!(stored_files[0], "db-dump.tar.gz");
-    assert_eq!(stored_files[1], "db-dump.zip");
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    db-dump.tar.gz
+    db-dump.zip
+    "###);
 
     let path = object_store::path::Path::parse("db-dump.tar.gz").unwrap();
     let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
