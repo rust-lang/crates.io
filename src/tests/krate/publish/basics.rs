@@ -4,7 +4,7 @@ use crates_io::schema::versions_published_by;
 use diesel::{QueryDsl, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate() {
@@ -21,8 +21,10 @@ async fn new_krate() {
     let crates = app.crates_from_index_head("foo_new");
     assert_json_snapshot!(crates);
 
-    let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_new/foo_new-1.0.0.crate
+    index/fo/o_/foo_new
+    "###);
 
     app.db(|conn| {
         let email: String = versions_published_by::table
@@ -45,8 +47,10 @@ async fn new_krate_with_token() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let expected_files = vec!["crates/foo_new/foo_new-1.0.0.crate", "index/fo/o_/foo_new"];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_new/foo_new-1.0.0.crate
+    index/fo/o_/foo_new
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -61,11 +65,10 @@ async fn new_krate_weird_version() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let expected_files = vec![
-        "crates/foo_weird/foo_weird-0.0.0-pre.crate",
-        "index/fo/o_/foo_weird",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_weird/foo_weird-0.0.0-pre.crate
+    index/fo/o_/foo_weird
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -87,12 +90,11 @@ async fn new_krate_twice() {
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
 
-    let expected_files = vec![
-        "crates/foo_twice/foo_twice-0.99.0.crate",
-        "crates/foo_twice/foo_twice-2.0.0.crate",
-        "index/fo/o_/foo_twice",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_twice/foo_twice-0.99.0.crate
+    crates/foo_twice/foo_twice-2.0.0.crate
+    index/fo/o_/foo_twice
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]

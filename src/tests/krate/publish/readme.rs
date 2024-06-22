@@ -1,7 +1,7 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_readme() {
@@ -15,12 +15,11 @@ async fn new_krate_with_readme() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let expected_files = vec![
-        "crates/foo_readme/foo_readme-1.0.0.crate",
-        "index/fo/o_/foo_readme",
-        "readmes/foo_readme/foo_readme-1.0.0.html",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_readme/foo_readme-1.0.0.crate
+    index/fo/o_/foo_readme
+    readmes/foo_readme/foo_readme-1.0.0.html
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -35,11 +34,10 @@ async fn new_krate_with_empty_readme() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let expected_files = vec![
-        "crates/foo_readme/foo_readme-1.0.0.crate",
-        "index/fo/o_/foo_readme",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_readme/foo_readme-1.0.0.crate
+    index/fo/o_/foo_readme
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -54,12 +52,11 @@ async fn new_krate_with_readme_and_plus_version() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    let expected_files = vec![
-        "crates/foo_readme/foo_readme-1.0.0+foo.crate",
-        "index/fo/o_/foo_readme",
-        "readmes/foo_readme/foo_readme-1.0.0+foo.html",
-    ];
-    assert_eq!(app.stored_files().await, expected_files);
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_readme/foo_readme-1.0.0+foo.crate
+    index/fo/o_/foo_readme
+    readmes/foo_readme/foo_readme-1.0.0+foo.html
+    "###);
 }
 
 #[tokio::test(flavor = "multi_thread")]
