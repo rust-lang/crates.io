@@ -52,6 +52,7 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo/foo-1.1.0.crate
     index/3/f/foo
+    rss/crates.xml
     rss/updates.xml
     "###);
 }

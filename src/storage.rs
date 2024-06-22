@@ -376,12 +376,14 @@ fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
 
 #[derive(Debug)]
 pub enum FeedId {
+    Crates,
     Updates,
 }
 
 impl From<&FeedId> for Path {
     fn from(feed_id: &FeedId) -> Path {
         match feed_id {
+            FeedId::Crates => "rss/crates.xml".into(),
             FeedId::Updates => "rss/updates.xml".into(),
         }
     }

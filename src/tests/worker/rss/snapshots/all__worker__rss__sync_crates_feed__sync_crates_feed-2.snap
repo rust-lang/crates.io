@@ -1,0 +1,44 @@
+---
+source: src/tests/worker/rss/sync_crates_feed.rs
+expression: content
+---
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:crates="https://crates.io/">
+    <channel>
+        <title>crates.io: newest crates</title>
+        <link>https://crates.io/</link>
+        <description>Newest crates registered on the crates.io package registry</description>
+        <language>en</language>
+        <atom:link href="https://static.crates.io/rss/crates.xml" rel="self" type="application/rss+xml"/>
+        <item>
+            <title>New crate created: quux</title>
+            <link>https://crates.io/crates/quux</link>
+            <guid>https://crates.io/crates/quux</guid>
+            <pubDate>Fri, 21 Jun 2024 17:03:45 +0000</pubDate>
+            <crates:name>quux</crates:name>
+        </item>
+        <item>
+            <title>New crate created: baz</title>
+            <link>https://crates.io/crates/baz</link>
+            <description><![CDATA[does it handle XML? &lt;item&gt;]]></description>
+            <guid>https://crates.io/crates/baz</guid>
+            <pubDate>Fri, 21 Jun 2024 17:01:33 +0000</pubDate>
+            <crates:name>baz</crates:name>
+        </item>
+        <item>
+            <title>New crate created: bar</title>
+            <link>https://crates.io/crates/bar</link>
+            <guid>https://crates.io/crates/bar</guid>
+            <pubDate>Thu, 20 Jun 2024 12:45:12 +0000</pubDate>
+            <crates:name>bar</crates:name>
+        </item>
+        <item>
+            <title>New crate created: foo</title>
+            <link>https://crates.io/crates/foo</link>
+            <description><![CDATA[something something foo]]></description>
+            <guid>https://crates.io/crates/foo</guid>
+            <pubDate>Thu, 20 Jun 2024 10:13:54 +0000</pubDate>
+            <crates:name>foo</crates:name>
+        </item>
+    </channel>
+</rss>
