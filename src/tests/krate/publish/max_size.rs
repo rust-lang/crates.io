@@ -52,6 +52,7 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo/foo-1.1.0.crate
     index/3/f/foo
+    rss/updates.xml
     "###);
 }
 
@@ -146,5 +147,6 @@ async fn new_krate_too_big_but_whitelisted() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo_whitelist/foo_whitelist-1.1.0.crate
     index/fo/o_/foo_whitelist
+    rss/updates.xml
     "###);
 }

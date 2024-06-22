@@ -7,9 +7,10 @@ use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
 use object_store::prefix::PrefixStore;
-use object_store::{Attribute, Attributes, ClientOptions, ObjectStore, Result};
+use object_store::{Attribute, Attributes, ClientOptions, ObjectStore, PutPayload, Result};
 use secrecy::{ExposeSecret, SecretString};
 use std::fs;
+use std::io::Cursor;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs::File;
@@ -203,6 +204,11 @@ impl Storage {
         apply_cdn_prefix(&self.cdn_prefix, &readme_path(name, version)).replace('+', "%2B")
     }
 
+    /// Returns the URL of an uploaded RSS feed.
+    pub fn feed_url(&self, feed_id: &FeedId) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &feed_id.into()).replace('+', "%2B")
+    }
+
     #[instrument(skip(self))]
     pub async fn delete_all_crate_files(&self, name: &str) -> Result<()> {
         let prefix = format!("{PREFIX_CRATES}/{name}").into();
@@ -248,6 +254,25 @@ impl Storage {
         ]);
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
+        Ok(())
+    }
+
+    #[instrument(skip(self, channel))]
+    pub async fn upload_feed(
+        &self,
+        feed_id: &FeedId,
+        channel: &rss::Channel,
+    ) -> anyhow::Result<()> {
+        let path = feed_id.into();
+
+        let mut buffer = Vec::new();
+        let mut cursor = Cursor::new(&mut buffer);
+        channel.pretty_write_to(&mut cursor, b' ', 4)?;
+        let payload = PutPayload::from_bytes(buffer.into());
+
+        let attributes = self.attrs([(Attribute::ContentType, "text/xml; charset=UTF-8")]);
+        let opts = attributes.into();
+        self.store.put_opts(&path, payload, opts).await?;
         Ok(())
     }
 
@@ -346,6 +371,19 @@ fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
         }
         Some(cdn_prefix) => format!("{cdn_prefix}/{path}"),
         None => format!("/{path}"),
+    }
+}
+
+#[derive(Debug)]
+pub enum FeedId {
+    Updates,
+}
+
+impl From<&FeedId> for Path {
+    fn from(feed_id: &FeedId) -> Path {
+        match feed_id {
+            FeedId::Updates => "rss/updates.xml".into(),
+        }
     }
 }
 

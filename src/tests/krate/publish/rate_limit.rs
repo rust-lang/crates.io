@@ -69,6 +69,7 @@ async fn publish_new_crate_ratelimit_expires() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/rate_limited/rate_limited-1.0.0.crate
     index/ra/te/rate_limited
+    rss/updates.xml
     "###);
 
     let json = anon.show_crate("rate_limited").await;
@@ -105,6 +106,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     let json = anon.show_crate("rate_limited1").await;
@@ -118,6 +120,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     crates/rate_limited2/rate_limited2-1.0.0.crate
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
+    rss/updates.xml
     "###);
 
     let json = anon.show_crate("rate_limited2").await;
@@ -134,6 +137,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     crates/rate_limited2/rate_limited2-1.0.0.crate
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
+    rss/updates.xml
     "###);
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited3").await;
@@ -171,6 +175,7 @@ async fn publish_new_crate_expired_override_ignored() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     let json = anon.show_crate("rate_limited1").await;
@@ -185,6 +190,7 @@ async fn publish_new_crate_expired_override_ignored() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited2").await;
@@ -220,6 +226,7 @@ async fn publish_existing_crate_rate_limited() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     // Uploading the first update to the crate works
@@ -232,6 +239,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     crates/rate_limited1/rate_limited1-1.0.1.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     // Uploading the second update to the crate is rate limited
@@ -248,6 +256,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     crates/rate_limited1/rate_limited1-1.0.1.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 
     // Wait for the limit to be up
@@ -263,6 +272,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.1.crate
     crates/rate_limited1/rate_limited1-1.0.2.crate
     index/ra/te/rate_limited1
+    rss/updates.xml
     "###);
 }
 
