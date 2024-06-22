@@ -9,7 +9,7 @@ export default class CratesController extends Controller {
   queryParams = ['page', 'per_page', 'sort'];
   @tracked page = '1';
   @tracked per_page = 50;
-  @tracked sort = 'alpha';
+  @tracked sort = 'recent-downloads';
 
   @reads('model.meta.total') totalItems;
   @pagination() pagination;
