@@ -416,7 +416,7 @@ mod tests {
 
         let code_block = "```markup, no_run\n<hello>World</hello>\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-markup">&lt;hello&lt;World&lt;/hello&lt;
+        <pre><code class="language-markup">&lt;hello&gt;World&lt;/hello&gt;
         </code></pre>
         "###);
 
