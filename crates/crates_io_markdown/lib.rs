@@ -39,7 +39,6 @@ impl<'a> MarkdownRenderer<'a> {
                     "language-sql",
                     "language-toml",
                     "language-yaml",
-
                     // Aliases
                     "language-rs",
                     "language-clike",
@@ -403,6 +402,27 @@ mod tests {
         let code_block = "```rust, no_run\nprintln!(\"Hello World\");\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
         <pre><code class="language-rust">println!("Hello World");
+        </code></pre>
+        "###);
+    }
+
+    #[test]
+    fn code_block_with_syntax_highlighting_with_aliases() {
+        let code_block = "```rs, no_run\nprintln!(\"Hello World\");\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-rs">println!("Hello World");
+        </code></pre>
+        "###);
+
+        let code_block = "```markup, no_run\nprintln!(\"Hello World\");\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-markup">println!("Hello World");
+        </code></pre>
+        "###);
+
+        let code_block = "```clike, no_run\nprintln!(\"Hello World\");\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-clike">println!("Hello World");
         </code></pre>
         "###);
     }
