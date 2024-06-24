@@ -22,14 +22,15 @@ impl<'a> MarkdownRenderer<'a> {
             (
                 "code",
                 hashset(&[
+                    // Languages
                     "language-bash",
-                    "language-clike",
+                    "language-c",
                     "language-glsl",
                     "language-go",
                     "language-ini",
                     "language-javascript",
                     "language-json",
-                    "language-markup",
+                    "language-xml",
                     "language-mermaid",
                     "language-protobuf",
                     "language-ruby",
@@ -38,6 +39,10 @@ impl<'a> MarkdownRenderer<'a> {
                     "language-sql",
                     "language-toml",
                     "language-yaml",
+                    // Aliases
+                    "language-rs",
+                    "language-clike",
+                    "language-markup",
                 ]),
             ),
             ("section", hashset(&["footnotes"])),
@@ -397,6 +402,27 @@ mod tests {
         let code_block = "```rust, no_run\nprintln!(\"Hello World\");\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
         <pre><code class="language-rust">println!("Hello World");
+        </code></pre>
+        "###);
+    }
+
+    #[test]
+    fn code_block_with_syntax_highlighting_with_aliases() {
+        let code_block = "```rs, no_run\nprintln!(\"Hello World\");\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-rs">println!("Hello World");
+        </code></pre>
+        "###);
+
+        let code_block = "```markup, no_run\n<hello>World</hello>\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-markup">&lt;hello&gt;World&lt;/hello&gt;
+        </code></pre>
+        "###);
+
+        let code_block = "```clike, no_run\nint main() { }\n```";
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        <pre><code class="language-clike">int main() { }
         </code></pre>
         "###);
     }
