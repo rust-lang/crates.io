@@ -414,15 +414,15 @@ mod tests {
         </code></pre>
         "###);
 
-        let code_block = "```markup, no_run\nprintln!(\"Hello World\");\n```";
+        let code_block = "```markup, no_run\n<hello>World</hello>\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-markup">println!("Hello World");
+        <pre><code class="language-markup">&lt;hello&lt;World&lt;/hello&lt;
         </code></pre>
         "###);
 
-        let code_block = "```clike, no_run\nprintln!(\"Hello World\");\n```";
+        let code_block = "```clike, no_run\nint main() { }\n```";
         assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
-        <pre><code class="language-clike">println!("Hello World");
+        <pre><code class="language-clike">int main() { }
         </code></pre>
         "###);
     }
