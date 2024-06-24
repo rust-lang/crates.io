@@ -22,14 +22,15 @@ impl<'a> MarkdownRenderer<'a> {
             (
                 "code",
                 hashset(&[
+                    // Languages
                     "language-bash",
-                    "language-clike",
+                    "language-c",
                     "language-glsl",
                     "language-go",
                     "language-ini",
                     "language-javascript",
                     "language-json",
-                    "language-markup",
+                    "language-xml",
                     "language-mermaid",
                     "language-protobuf",
                     "language-ruby",
@@ -38,6 +39,11 @@ impl<'a> MarkdownRenderer<'a> {
                     "language-sql",
                     "language-toml",
                     "language-yaml",
+
+                    // Aliases
+                    "language-rs",
+                    "language-clike",
+                    "language-markup",
                 ]),
             ),
             ("section", hashset(&["footnotes"])),
