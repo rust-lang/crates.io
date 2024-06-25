@@ -100,8 +100,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       '@percy/playwright':
-        specifier: 1.0.5
-        version: 1.0.5(playwright-core@1.45.0)
+        specifier: 1.0.6
+        version: 1.0.6(playwright-core@1.45.0)
       '@playwright/test':
         specifier: 1.45.0
         version: 1.45.0
@@ -1701,8 +1701,8 @@ packages:
     resolution: {integrity: sha512-OktqjykPT3FMUKkwyafjQdRWMQ8jnXOOcSkvyVIT9P7cbU1USeRUWw8Z6+W1cLk50RdsimChnab6F/GRWRdBew==}
     engines: {node: '>=14'}
 
-  '@percy/playwright@1.0.5':
-    resolution: {integrity: sha512-5WNNkua1CzWm0suyfAqRxPuXOEPd9Vs79759DpgPO0r/QACDcICCLCmAOM+urGlVj17uZqsdC2rMK7MphEXslw==}
+  '@percy/playwright@1.0.6':
+    resolution: {integrity: sha512-oi98dnsTp/QG0NUFTUHsyqoWvgDOuzBmSzCwZCjxu52k7F8hzaOazqRqqdRHc7GVRUL561RUdkzZi0xhiW+Jfg==}
     engines: {node: '>=14'}
     peerDependencies:
       playwright-core: '>=1'
@@ -11256,7 +11256,7 @@ snapshots:
 
   '@percy/logger@1.28.7': {}
 
-  '@percy/playwright@1.0.5(playwright-core@1.45.0)':
+  '@percy/playwright@1.0.6(playwright-core@1.45.0)':
     dependencies:
       playwright-core: 1.45.0
 
@@ -11447,6 +11447,26 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
+  '@types/ember@4.0.11':
+    dependencies:
+      '@types/ember__application': 4.0.11(@babel/core@7.24.7)
+      '@types/ember__array': 4.0.10
+      '@types/ember__component': 4.0.22
+      '@types/ember__controller': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__debug': 4.0.8(@babel/core@7.24.7)
+      '@types/ember__engine': 4.0.11(@babel/core@7.24.7)
+      '@types/ember__error': 4.0.6
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__polyfills': 4.0.6
+      '@types/ember__routing': 4.0.22(@babel/core@7.24.7)
+      '@types/ember__runloop': 4.0.10
+      '@types/ember__service': 4.0.9(@babel/core@7.24.7)
+      '@types/ember__string': 3.0.15
+      '@types/ember__template': 4.0.7
+      '@types/ember__test': 4.0.6(@babel/core@7.24.7)
+      '@types/ember__utils': 4.0.7
+      '@types/rsvp': 4.0.9
+
   '@types/ember@4.0.11(@babel/core@7.24.7)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.24.7)
@@ -11479,7 +11499,7 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.24.7)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.24.7)
-      '@types/ember': 4.0.11(@babel/core@7.24.7)
+      '@types/ember': 4.0.11
       '@types/ember__engine': 4.0.11(@babel/core@7.24.7)
       '@types/ember__object': 4.0.12(@babel/core@7.24.7)
       '@types/ember__owner': 4.0.9
@@ -11491,6 +11511,11 @@ snapshots:
   '@types/ember__array@3.16.11':
     dependencies:
       '@types/ember__object': 3.12.13
+
+  '@types/ember__array@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
 
   '@types/ember__array@4.0.10(@babel/core@7.24.7)':
     dependencies:
@@ -11504,6 +11529,11 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.30
+
+  '@types/ember__component@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
 
   '@types/ember__component@4.0.22(@babel/core@7.24.7)':
     dependencies:
@@ -11590,6 +11620,10 @@ snapshots:
 
   '@types/ember__runloop@3.16.10': {}
 
+  '@types/ember__runloop@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
+
   '@types/ember__runloop@4.0.10(@babel/core@7.24.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.7)
@@ -11630,6 +11664,10 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
+
+  '@types/ember__utils@4.0.7':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.24.7)':
     dependencies:
