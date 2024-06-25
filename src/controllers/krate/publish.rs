@@ -384,7 +384,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             // Update all categories for this crate, collecting any invalid categories
             // in order to be able to warn about them
-            let ignored_invalid_categories = Category::update_crate(conn, &krate, &categories)?;
+            let unknown_categories = Category::update_crate(conn, &krate, &categories)?;
+            if !unknown_categories.is_empty() {
+                let unknown_categories = unknown_categories.join(", ");
+                let domain = &app.config.domain_name;
+                return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
+            }
 
             let top_versions = krate.top_versions(conn)?;
 
@@ -435,7 +440,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // that is no longer needed. As such, crates.io currently does not return any `other`
             // warnings at this time, but if we need to, the field is available.
             let warnings = PublishWarnings {
-                invalid_categories: ignored_invalid_categories,
+                invalid_categories: vec![],
                 invalid_badges: vec![],
                 other: vec![],
             };
