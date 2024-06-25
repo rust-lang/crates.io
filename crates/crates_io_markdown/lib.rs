@@ -101,6 +101,25 @@ impl<'a> MarkdownRenderer<'a> {
                 if let Some((before_comma, _)) = orig_annot.split_once(',') {
                     ncb.info = before_comma.to_string();
                 }
+
+                // Remove hidden lines in Rust code blocks.
+                // (see https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example)
+                if ncb.info == "rust" || ncb.info == "rs" {
+                    ncb.literal = ncb
+                        .literal
+                        .split('\n')
+                        .filter_map(|line| {
+                            if line.starts_with("# ") {
+                                None
+                            } else if line.starts_with("##") {
+                                Some(&line[1..])
+                            } else {
+                                Some(line)
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                }
             }
         });
 
@@ -699,10 +718,7 @@ fn say_hello() {
         "#;
 
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <pre><code class="language-rust"># use std::time::Duration;
-        # // Yes, this is cheating
-        # fn sleep(_: Duration) { std::process::exit(0) }
-        use service_skeleton::service;
+        <pre><code class="language-rs">use service_skeleton::service;
 
         fn main() {
             service("SayHello").run(|_cfg: ()| say_hello());
@@ -712,6 +728,19 @@ fn say_hello() {
             println!("Hello world!");
             sleep(Duration::from_secs(5));
         }
+        </code></pre>
+        "###);
+
+        let text = r#"
+```rs
+let s = "foo
+## bar # baz";
+```
+        "#;
+
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <pre><code class="language-rs">let s = "foo
+        # bar # baz";
         </code></pre>
         "###);
     }
