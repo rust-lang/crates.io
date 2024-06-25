@@ -677,4 +677,42 @@ There can also be some text in between!
         <p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>
         "###);
     }
+
+    #[test]
+    fn rust_comments() {
+        let text = r#"
+```rs
+# use std::time::Duration;
+# // Yes, this is cheating
+# fn sleep(_: Duration) { std::process::exit(0) }
+use service_skeleton::service;
+
+fn main() {
+    service("SayHello").run(|_cfg: ()| say_hello());
+}
+
+fn say_hello() {
+    println!("Hello world!");
+    sleep(Duration::from_secs(5));
+}
+```
+        "#;
+
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <pre><code class="language-rust"># use std::time::Duration;
+        # // Yes, this is cheating
+        # fn sleep(_: Duration) { std::process::exit(0) }
+        use service_skeleton::service;
+
+        fn main() {
+            service("SayHello").run(|_cfg: ()| say_hello());
+        }
+
+        fn say_hello() {
+            println!("Hello world!");
+            sleep(Duration::from_secs(5));
+        }
+        </code></pre>
+        "###);
+    }
 }
