@@ -11,7 +11,7 @@ expression: content
         <language>en</language>
         <atom:link href="https://static.crates.io/rss/updates.xml" rel="self" type="application/rss+xml"/>
         <item>
-            <title>foo v1.2.0</title>
+            <title>New crate version published: foo v1.2.0</title>
             <link>https://crates.io/crates/foo/1.2.0</link>
             <guid>https://crates.io/crates/foo/1.2.0</guid>
             <pubDate>Sat, 22 Jun 2024 15:57:19 +0000</pubDate>
@@ -19,7 +19,7 @@ expression: content
             <crates:version>1.2.0</crates:version>
         </item>
         <item>
-            <title>foo v1.1.0</title>
+            <title>New crate version published: foo v1.1.0</title>
             <link>https://crates.io/crates/foo/1.1.0</link>
             <guid>https://crates.io/crates/foo/1.1.0</guid>
             <pubDate>Sat, 22 Jun 2024 08:30:01 +0000</pubDate>
@@ -27,7 +27,7 @@ expression: content
             <crates:version>1.1.0</crates:version>
         </item>
         <item>
-            <title>bar v3.0.0-beta.1</title>
+            <title>New crate version published: bar v3.0.0-beta.1</title>
             <link>https://crates.io/crates/bar/3.0.0-beta.1</link>
             <description><![CDATA[let&apos;s try &amp; break this &lt;item&gt;]]></description>
             <guid>https://crates.io/crates/bar/3.0.0-beta.1</guid>
@@ -36,7 +36,7 @@ expression: content
             <crates:version>3.0.0-beta.1</crates:version>
         </item>
         <item>
-            <title>foo v1.0.0</title>
+            <title>New crate version published: foo v1.0.0</title>
             <link>https://crates.io/crates/foo/1.0.0</link>
             <guid>https://crates.io/crates/foo/1.0.0</guid>
             <pubDate>Fri, 21 Jun 2024 17:01:33 +0000</pubDate>
@@ -44,7 +44,7 @@ expression: content
             <crates:version>1.0.0</crates:version>
         </item>
         <item>
-            <title>foo v0.1.1</title>
+            <title>New crate version published: foo v0.1.1</title>
             <link>https://crates.io/crates/foo/0.1.1</link>
             <guid>https://crates.io/crates/foo/0.1.1</guid>
             <pubDate>Thu, 20 Jun 2024 12:45:12 +0000</pubDate>
@@ -52,7 +52,7 @@ expression: content
             <crates:version>0.1.1</crates:version>
         </item>
         <item>
-            <title>foo v0.1.0</title>
+            <title>New crate version published: foo v0.1.0</title>
             <link>https://crates.io/crates/foo/0.1.0</link>
             <guid>https://crates.io/crates/foo/0.1.0</guid>
             <pubDate>Thu, 20 Jun 2024 10:13:54 +0000</pubDate>

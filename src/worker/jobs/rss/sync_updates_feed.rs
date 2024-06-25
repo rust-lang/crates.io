@@ -90,7 +90,10 @@ struct VersionUpdate {
 
 impl VersionUpdate {
     fn into_rss_item(self, domain: &str) -> rss::Item {
-        let title = format!("{} v{}", self.name, self.version);
+        let title = format!(
+            "New crate version published: {} v{}",
+            self.name, self.version
+        );
         let link = format!("https://{domain}/crates/{}/{}", self.name, self.version);
         let pub_date = self.time.and_utc().to_rfc2822();
 
