@@ -70,9 +70,7 @@
             enabled: false,
         },
         {
-            // This is causing weird "Cannot find replaceString in current file content" errors,
-            // so we disable it for now.
-            matchFileNames: ["frontend.Dockerfile"],
+            // This is causing various issues, so we disable it for now.
             matchDatasources: ["docker"],
             matchUpdateTypes: ["pinDigest"],
             enabled: false
