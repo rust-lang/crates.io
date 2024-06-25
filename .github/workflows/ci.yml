@@ -229,7 +229,7 @@ jobs:
       - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec -- pnpm e2e
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
