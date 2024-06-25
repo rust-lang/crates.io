@@ -5,8 +5,11 @@ use diesel::sql_query;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use once_cell::sync::Lazy;
 use rand::Rng;
+use std::time::Duration;
 use tracing::{debug, instrument};
 use url::Url;
+
+const CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 
 struct TemplateDatabase {
     base_url: Url,
@@ -33,6 +36,7 @@ impl TemplateDatabase {
         // contention, so this is using a connection pool to reduce unnecessary
         // waiting times for the tests.
         let pool = Pool::builder()
+            .connection_timeout(CONNECTION_TIMEOUT)
             .max_size(10)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(base_url.as_ref()));
@@ -104,6 +108,7 @@ impl TestDatabase {
         url.set_path(&format!("/{name}"));
 
         let pool = Pool::builder()
+            .connection_timeout(CONNECTION_TIMEOUT)
             .min_idle(Some(0))
             .build_unchecked(ConnectionManager::new(url.as_ref()));
 
