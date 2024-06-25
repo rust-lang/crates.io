@@ -3,7 +3,7 @@ source: src/tests/worker/rss/sync_updates_feed.rs
 expression: content
 ---
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:crates="https://crates.io/">
     <channel>
         <title>crates.io: recent updates</title>
         <link>https://crates.io/</link>
