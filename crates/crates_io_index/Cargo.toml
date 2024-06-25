@@ -22,7 +22,7 @@ crates_io_env_vars = { path = "../crates_io_env_vars" }
 git2 = "=0.19.0"
 secrecy = "=0.8.0"
 serde = { version = "=1.0.203", features = ["derive"] }
-serde_json = "=1.0.117"
+serde_json = "=1.0.118"
 tempfile = "=3.10.1"
 tracing = "=0.1.40"
 url = "=2.5.2"
