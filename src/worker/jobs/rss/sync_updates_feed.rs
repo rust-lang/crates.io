@@ -103,12 +103,33 @@ impl VersionUpdate {
             .description
             .map(|d| quick_xml::escape::escape(&d).to_string());
 
+        let name_extension = rss::extension::Extension {
+            name: "crates:name".into(),
+            value: Some(self.name),
+            ..Default::default()
+        };
+
+        let version_extension = rss::extension::Extension {
+            name: "crates:version".into(),
+            value: Some(self.version),
+            ..Default::default()
+        };
+
+        let extensions = vec![
+            ("name".to_string(), vec![name_extension]),
+            ("version".to_string(), vec![version_extension]),
+        ];
+        let extensions = extensions.into_iter().collect();
+        let extensions = vec![("crates".to_string(), extensions)];
+        let extensions = extensions.into_iter().collect();
+
         rss::Item {
             guid: Some(guid),
             title: Some(title),
             link: Some(link),
             description,
             pub_date: Some(pub_date),
+            extensions,
             ..Default::default()
         }
     }
