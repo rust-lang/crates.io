@@ -51,8 +51,7 @@ impl Category {
                 .load(conn)?;
             let invalid_categories = slugs
                 .iter()
-                .cloned()
-                .filter(|s| !categories.iter().any(|c| c.slug == *s))
+                .filter(|s| !categories.iter().any(|c| c.slug == **s))
                 .map(ToString::to_string)
                 .collect();
             let crate_categories = categories
