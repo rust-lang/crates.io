@@ -2,6 +2,7 @@ use crate::schema::{crates, versions};
 use crate::storage::FeedId;
 use crate::worker::Environment;
 use anyhow::anyhow;
+use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -9,6 +10,15 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize)]
 pub struct SyncUpdatesFeed;
 
+/// Items younger than this will always be included in the feed.
+const ALWAYS_INCLUDE_AGE: Duration = Duration::minutes(60);
+
+/// The number of items to include in the feed.
+///
+/// If there are less than this number of items in the database, the feed will
+/// contain fewer items. If there are more items in the database that are
+/// younger than [`ALWAYS_INCLUDE_AGE`], all of them will be included in
+/// the feed.
 const NUM_ITEMS: i64 = 100;
 
 impl BackgroundJob for SyncUpdatesFeed {
@@ -70,7 +80,27 @@ impl BackgroundJob for SyncUpdatesFeed {
     }
 }
 
+/// Load the latest versions from the database.
+///
+/// This function will load all versions from the database that are younger
+/// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] versions
+/// then the list will be padded with older versions until [`NUM_ITEMS`] are
+/// returned.
 fn load_version_updates(conn: &mut PgConnection) -> QueryResult<Vec<VersionUpdate>> {
+    let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
+
+    let updates = versions::table
+        .inner_join(crates::table)
+        .filter(versions::created_at.gt(threshold_dt))
+        .order(versions::created_at.desc())
+        .select(VersionUpdate::as_select())
+        .load(conn)?;
+
+    let num_updates = updates.len();
+    if num_updates as i64 >= NUM_ITEMS {
+        return Ok(updates);
+    }
+
     versions::table
         .inner_join(crates::table)
         .order(versions::created_at.desc())
@@ -139,5 +169,87 @@ impl VersionUpdate {
             extensions,
             ..Default::default()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDateTime;
+    use crates_io_test_db::TestDatabase;
+    use insta::assert_debug_snapshot;
+
+    #[test]
+    fn test_load_version_updates() {
+        crate::util::tracing::init_for_test();
+
+        let db = TestDatabase::new();
+        let mut conn = db.connect();
+
+        let now = chrono::Utc::now().naive_utc();
+
+        let updates = assert_ok!(load_version_updates(&mut conn));
+        assert_eq!(updates.len(), 0);
+
+        let foo = create_crate(&mut conn, "foo");
+
+        // If there are less than NUM_ITEMS versions, they should all be returned
+        create_version(&mut conn, foo, "1.0.0", now - Duration::days(123));
+        create_version(&mut conn, foo, "1.0.1", now - Duration::days(110));
+        create_version(&mut conn, foo, "1.1.0", now - Duration::days(100));
+        create_version(&mut conn, foo, "1.2.0", now - Duration::days(90));
+
+        let updates = assert_ok!(load_version_updates(&mut conn));
+        assert_eq!(updates.len(), 4);
+        assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
+
+        // If there are more than NUM_ITEMS versions, only the most recent NUM_ITEMS should be returned
+        for i in 1..=NUM_ITEMS {
+            let version = format!("1.2.{i}");
+            let publish_time = now - Duration::days(90) + Duration::hours(i);
+            create_version(&mut conn, foo, &version, publish_time);
+        }
+
+        let updates = assert_ok!(load_version_updates(&mut conn));
+        assert_eq!(updates.len() as i64, NUM_ITEMS);
+        assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
+
+        // But if there are more than NUM_ITEMS versions that are younger than ALWAYS_INCLUDE_AGE, all of them should be returned
+        for i in 1..=(NUM_ITEMS + 10) {
+            let version = format!("1.3.{i}");
+            let publish_time = now - Duration::minutes(30) + Duration::seconds(i);
+            create_version(&mut conn, foo, &version, publish_time);
+        }
+
+        let updates = assert_ok!(load_version_updates(&mut conn));
+        assert_eq!(updates.len() as i64, NUM_ITEMS + 10);
+        assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
+    }
+
+    fn create_crate(conn: &mut PgConnection, name: &str) -> i32 {
+        diesel::insert_into(crates::table)
+            .values((crates::name.eq(name),))
+            .returning(crates::id)
+            .get_result(conn)
+            .unwrap()
+    }
+
+    fn create_version(
+        conn: &mut PgConnection,
+        crate_id: i32,
+        version: &str,
+        publish_time: NaiveDateTime,
+    ) -> i32 {
+        diesel::insert_into(versions::table)
+            .values((
+                versions::crate_id.eq(crate_id),
+                versions::num.eq(version),
+                versions::created_at.eq(publish_time),
+                versions::updated_at.eq(publish_time),
+                versions::checksum.eq("checksum"),
+            ))
+            .returning(versions::id)
+            .get_result(conn)
+            .unwrap()
     }
 }
