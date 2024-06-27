@@ -301,8 +301,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0
       qunit-dom:
-        specifier: 3.1.2
-        version: 3.1.2
+        specifier: 3.2.0
+        version: 3.2.0
       tracked-built-ins:
         specifier: 3.3.0
         version: 3.3.0
@@ -3873,6 +3873,9 @@ packages:
   dom-element-descriptors@0.5.0:
     resolution: {integrity: sha512-CVzntLid1oFVHTKdTp/Qu7Kz+wSm8uO30TSQyAJ6n4Dz09yTzVQn3S1oRhVhUubxdMuKs1DjDqt88pubHagbPw==}
 
+  dom-element-descriptors@0.5.1:
+    resolution: {integrity: sha512-DLayMRQ+yJaziF4JJX1FMjwjdr7wdTr1y9XvZ+NfHELfOMcYDnCHneAYXAS4FT1gLILh4V0juMZohhH1N5FsoQ==}
+
   dom-serializer@0.2.2:
     resolution: {integrity: sha512-2/xPb3ORsQ42nHYiSunXkDjPLBaEj/xTwUO4B7XCZQTRk7EBtTOPaygh10YAAh2OI1Qrp6NWfpAhzswj0ydt9g==}
 
@@ -7162,8 +7165,8 @@ packages:
     resolution: {integrity: sha512-uHg5kcjyEGX85Rh9mimWoXsqeGmJZxfNLqmVxA5O2xJW+JAlQ0r0JFA07lHqlOQcegs5CAhvioKUXpjicDra6g==}
     engines: {node: 10.* || 12.* || >= 14.*}
 
-  qunit-dom@3.1.2:
-    resolution: {integrity: sha512-urHvzhDxihYrMBpsT/Fk7So79CPfvS0ZwZw2VPA+0JV1Q1XP2IhDg/PLHTt+r2j7787iQAOpILx2GjwAa6CpnA==}
+  qunit-dom@3.2.0:
+    resolution: {integrity: sha512-VYFXbwod2sis16Nzgx5UrdCvjNUPYIAbTwEGv7hF1RfgJaVgG5ASVaQz9en0ZRvlybtql0LrVuAbleJU/57zQQ==}
 
   qunit-theme-ember@1.0.0:
     resolution: {integrity: sha512-vdMVVo6ecdCkWttMTKeyq1ZTLGHcA6zdze2zhguNuc3ritlJMhOXY5RDseqazOwqZVfCg3rtlmL3fMUyIzUyFQ==}
@@ -14113,6 +14116,8 @@ snapshots:
 
   dom-element-descriptors@0.5.0: {}
 
+  dom-element-descriptors@0.5.1: {}
+
   dom-serializer@0.2.2:
     dependencies:
       domelementtype: 2.3.0
@@ -18683,7 +18688,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  qunit-dom@3.1.2: {}
+  qunit-dom@3.2.0:
+    dependencies:
+      dom-element-descriptors: 0.5.1
 
   qunit-theme-ember@1.0.0: {}
 
