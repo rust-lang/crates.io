@@ -1,0 +1,59 @@
+.copy-help {
+    font-size: 12px;
+    overflow-wrap: break-word;
+}
+
+.copy-button,
+.copy-fallback {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2xs) var(--space-xs);
+    font-family: var(--font-monospace);
+    font-size: 14px;
+    line-height: 1.5em;
+    color: var(--main-color);
+    background: transparent;
+    border-radius: var(--space-3xs);
+    border: solid var(--space-4xs) var(--gray-border);
+
+    span {
+        flex: auto;
+        display: block;
+        word-break: break-word;
+    }
+}
+
+.copy-button {
+    text-align: start;
+    cursor: pointer;
+
+    &:hover {
+        background-color: light-dark(white, #141413);
+    }
+}
+
+.copy-icon {
+    flex-shrink: 0;
+    height: 1.1em;
+    width: auto;
+    /* for slightly nicer alignment... */
+    margin-top: -3px;
+    margin-left: var(--space-2xs);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+
+    .copy-button:hover & {
+        opacity: 1;
+    }
+}
+
+.selectable {
+    user-select: text;
+}
+
+.bin-name {
+    font-family: var(--font-monospace);
+    font-weight: bold;
+}

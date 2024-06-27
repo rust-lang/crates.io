@@ -14,18 +14,6 @@ export default class CrateSidebar extends Component {
     return homepage && (!repository || simplifyUrl(repository) !== simplifyUrl(homepage));
   }
 
-  get cargoAddCommand() {
-    return this.args.requestedVersion
-      ? `cargo add ${this.args.crate.name}@=${this.args.requestedVersion}`
-      : `cargo add ${this.args.crate.name}`;
-  }
-
-  get tomlSnippet() {
-    let version = this.args.version.num.split('+')[0];
-    let exact = this.args.requestedVersion ? '=' : '';
-    return `${this.args.crate.name} = "${exact}${version}"`;
-  }
-
   get playgroundLink() {
     let playgroundCrates = this.playground.crates;
     if (!playgroundCrates) return;

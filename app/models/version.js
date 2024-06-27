@@ -28,6 +28,11 @@ export default class Version extends Model {
    */
   @attr rust_version;
 
+  /** @type {boolean | null} */
+  @attr has_lib;
+  /** @type {string[] | null} */
+  @attr bin_names;
+
   @belongsTo('crate', { async: false, inverse: 'versions' }) crate;
 
   @belongsTo('user', { async: false, inverse: null }) published_by;
