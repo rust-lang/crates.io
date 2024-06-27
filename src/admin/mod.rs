@@ -3,7 +3,6 @@ pub mod delete_crate;
 pub mod delete_version;
 pub mod dialoguer;
 pub mod enqueue_job;
-pub mod git_import;
 pub mod migrate;
 pub mod on_call;
 pub mod populate;
