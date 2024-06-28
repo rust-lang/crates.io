@@ -12,6 +12,7 @@ pub mod dump_db;
 mod expiry_notification;
 mod git;
 mod readmes;
+pub mod rss;
 mod sync_admins;
 mod typosquat;
 mod update_default_version;

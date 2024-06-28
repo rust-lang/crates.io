@@ -24,6 +24,7 @@ async fn new_krate() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
+    rss/updates.xml
     "###);
 
     app.db(|conn| {
@@ -50,6 +51,7 @@ async fn new_krate_with_token() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
+    rss/updates.xml
     "###);
 }
 
@@ -68,6 +70,7 @@ async fn new_krate_weird_version() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo_weird/foo_weird-0.0.0-pre.crate
     index/fo/o_/foo_weird
+    rss/updates.xml
     "###);
 }
 
@@ -94,6 +97,7 @@ async fn new_krate_twice() {
     crates/foo_twice/foo_twice-0.99.0.crate
     crates/foo_twice/foo_twice-2.0.0.crate
     index/fo/o_/foo_twice
+    rss/updates.xml
     "###);
 }
 

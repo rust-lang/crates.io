@@ -1,0 +1,10 @@
+---
+source: src/worker/jobs/rss/sync_updates_feed.rs
+expression: "updates.iter().map(|u| &u.version).collect::<Vec<_>>()"
+---
+[
+    "1.2.0",
+    "1.1.0",
+    "1.0.1",
+    "1.0.0",
+]

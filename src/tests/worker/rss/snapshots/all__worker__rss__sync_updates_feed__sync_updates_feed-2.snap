@@ -1,0 +1,63 @@
+---
+source: src/tests/worker/rss/sync_updates_feed.rs
+expression: content
+---
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:crates="https://crates.io/">
+    <channel>
+        <title>crates.io: recent updates</title>
+        <link>https://crates.io/</link>
+        <description>Recent version publishes on the crates.io package registry</description>
+        <language>en</language>
+        <atom:link href="https://static.crates.io/rss/updates.xml" rel="self" type="application/rss+xml"/>
+        <item>
+            <title>New crate version published: foo v1.2.0</title>
+            <link>https://crates.io/crates/foo/1.2.0</link>
+            <guid>https://crates.io/crates/foo/1.2.0</guid>
+            <pubDate>Sat, 22 Jun 2024 15:57:19 +0000</pubDate>
+            <crates:name>foo</crates:name>
+            <crates:version>1.2.0</crates:version>
+        </item>
+        <item>
+            <title>New crate version published: foo v1.1.0</title>
+            <link>https://crates.io/crates/foo/1.1.0</link>
+            <guid>https://crates.io/crates/foo/1.1.0</guid>
+            <pubDate>Sat, 22 Jun 2024 08:30:01 +0000</pubDate>
+            <crates:name>foo</crates:name>
+            <crates:version>1.1.0</crates:version>
+        </item>
+        <item>
+            <title>New crate version published: bar v3.0.0-beta.1</title>
+            <link>https://crates.io/crates/bar/3.0.0-beta.1</link>
+            <description><![CDATA[let&apos;s try &amp; break this &lt;item&gt;]]></description>
+            <guid>https://crates.io/crates/bar/3.0.0-beta.1</guid>
+            <pubDate>Fri, 21 Jun 2024 17:03:45 +0000</pubDate>
+            <crates:name>bar</crates:name>
+            <crates:version>3.0.0-beta.1</crates:version>
+        </item>
+        <item>
+            <title>New crate version published: foo v1.0.0</title>
+            <link>https://crates.io/crates/foo/1.0.0</link>
+            <guid>https://crates.io/crates/foo/1.0.0</guid>
+            <pubDate>Fri, 21 Jun 2024 17:01:33 +0000</pubDate>
+            <crates:name>foo</crates:name>
+            <crates:version>1.0.0</crates:version>
+        </item>
+        <item>
+            <title>New crate version published: foo v0.1.1</title>
+            <link>https://crates.io/crates/foo/0.1.1</link>
+            <guid>https://crates.io/crates/foo/0.1.1</guid>
+            <pubDate>Thu, 20 Jun 2024 12:45:12 +0000</pubDate>
+            <crates:name>foo</crates:name>
+            <crates:version>0.1.1</crates:version>
+        </item>
+        <item>
+            <title>New crate version published: foo v0.1.0</title>
+            <link>https://crates.io/crates/foo/0.1.0</link>
+            <guid>https://crates.io/crates/foo/0.1.0</guid>
+            <pubDate>Thu, 20 Jun 2024 10:13:54 +0000</pubDate>
+            <crates:name>foo</crates:name>
+            <crates:version>0.1.0</crates:version>
+        </item>
+    </channel>
+</rss>
