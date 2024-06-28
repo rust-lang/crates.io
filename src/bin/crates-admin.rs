@@ -2,8 +2,8 @@
 extern crate tracing;
 
 use crates_io::admin::{
-    default_versions, delete_crate, delete_version, enqueue_job, git_import, migrate, populate,
-    render_readmes, test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
+    default_versions, delete_crate, delete_version, enqueue_job, migrate, populate, render_readmes,
+    test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -19,7 +19,6 @@ enum Command {
     Migrate(migrate::Opts),
     UploadIndex(upload_index::Opts),
     YankVersion(yank_version::Opts),
-    GitImport(git_import::Opts),
     #[clap(subcommand)]
     EnqueueJob(enqueue_job::Command),
     #[clap(subcommand)]
@@ -49,7 +48,6 @@ fn main() -> anyhow::Result<()> {
         Command::Migrate(opts) => migrate::run(opts),
         Command::UploadIndex(opts) => upload_index::run(opts),
         Command::YankVersion(opts) => yank_version::run(opts),
-        Command::GitImport(opts) => git_import::run(opts),
         Command::EnqueueJob(command) => enqueue_job::run(command),
         Command::DefaultVersions(opts) => default_versions::run(opts),
     }
