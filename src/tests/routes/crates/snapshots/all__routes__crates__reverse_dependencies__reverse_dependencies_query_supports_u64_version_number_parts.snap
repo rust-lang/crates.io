@@ -31,6 +31,7 @@ expression: response.json()
       "downloads": 0,
       "features": {},
       "id": 2,
+      "lib_links": null,
       "license": null,
       "links": {
         "authors": "/api/v1/crates/c2/1.0.18446744073709551615/authors",
