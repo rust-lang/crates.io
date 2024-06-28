@@ -27,6 +27,7 @@ expression: response.json()
     "features": {},
     "has_lib": false,
     "id": "[id]",
+    "lib_links": null,
     "license": "MIT",
     "links": {
       "authors": "/api/v1/crates/foo/1.0.0/authors",

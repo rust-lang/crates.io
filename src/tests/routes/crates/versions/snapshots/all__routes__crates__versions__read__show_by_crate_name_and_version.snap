@@ -15,6 +15,7 @@ expression: json
     "features": {},
     "has_lib": null,
     "id": "[id]",
+    "lib_links": null,
     "license": null,
     "links": {
       "authors": "/api/v1/crates/foo_vers_show/2.0.0/authors",
