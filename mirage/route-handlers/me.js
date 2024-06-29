@@ -67,6 +67,22 @@ export function register(server) {
     return json;
   });
 
+  server.get('/api/v1/me/tokens/:tokenId', function (schema, request) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { tokenId } = request.params;
+    let token = schema.apiTokens.findBy({ id: tokenId, userId: user.id });
+
+    if (!token) {
+      return new Response(404);
+    }
+
+    return this.serialize(token);
+  });
+
   server.delete('/api/v1/me/tokens/:tokenId', function (schema, request) {
     let { user } = getSession(schema);
     if (!user) {
