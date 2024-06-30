@@ -317,4 +317,12 @@ module('/settings/tokens/new', function (hooks) {
 
     assert.strictEqual(currentURL(), '/settings/tokens');
   });
+
+  test('token not found', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new?token_id=1');
+    assert.strictEqual(currentURL(), '/settings/tokens/new?token_id=1');
+    assert.dom('[data-test-title]').hasText('Token not found');
+  });
 });
