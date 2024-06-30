@@ -1,9 +1,11 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
 import { patternDescription } from '../../../utils/token-scopes';
 
 export default class TokenListRoute extends Route {
+  @service router;
   @service store;
 
   queryParams = {
@@ -12,10 +14,20 @@ export default class TokenListRoute extends Route {
     },
   };
 
-  async model(params) {
+  async model(params, transition) {
     const tokenId = params.token_id;
     if (tokenId) {
-      return await this.store.findRecord('api-token', tokenId);
+      try {
+        return await this.store.findRecord('api-token', tokenId);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          let title = `Token not found`;
+          this.router.replaceWith('catch-all', { transition, title });
+        } else {
+          let title = `Failed to load token data`;
+          this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
+        }
+      }
     }
     return null;
   }
