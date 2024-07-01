@@ -258,9 +258,9 @@ dependencies = [
 
 [[package]]
 name = "aws-ip-ranges"
-version = "0.438.0"
+version = "0.443.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc2dfe70af64ba6223a307158c1876fd71400be96ef14c98e5fd1dcefc5a57ae"
+checksum = "e6a69610d7738d759153b35bba39287f68bef7bcfae5fa5a894894afcd578517"
 dependencies = [
  "serde",
  "serde_json",
