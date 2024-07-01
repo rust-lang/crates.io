@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
+use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
@@ -80,8 +81,6 @@ pub const MAX_NAME_LENGTH: usize = 64;
 
 type All = diesel::dsl::Select<crates::table, diesel::dsl::AsSelect<Crate, diesel::pg::Pg>>;
 type WithName<'a> = diesel::dsl::Eq<canon_crate_name<crates::name>, canon_crate_name<&'a str>>;
-type ByName<'a> = diesel::dsl::Filter<All, WithName<'a>>;
-type ByExactName<'a> = diesel::dsl::Filter<All, diesel::dsl::Eq<crates::name, &'a str>>;
 
 #[derive(Insertable, AsChangeset, Default, Debug)]
 #[diesel(
@@ -170,12 +169,17 @@ impl Crate {
         canon_crate_name(crates::name).eq(canon_crate_name(name))
     }
 
-    pub fn by_name(name: &str) -> ByName<'_> {
-        Crate::all().filter(Self::with_name(name))
+    #[dsl::auto_type(no_type_alias)]
+    pub fn by_name<'a>(name: &'a str) -> _ {
+        let all: All = Crate::all();
+        let filter: WithName<'a> = Self::with_name(name);
+        all.filter(filter)
     }
 
-    pub fn by_exact_name(name: &str) -> ByExactName<'_> {
-        Crate::all().filter(crates::name.eq(name))
+    #[dsl::auto_type(no_type_alias)]
+    pub fn by_exact_name<'a>(name: &'a str) -> _ {
+        let all: All = Crate::all();
+        all.filter(crates::name.eq(name))
     }
 
     pub fn all() -> All {
