@@ -141,7 +141,7 @@ export default class NewTokenController extends Controller {
   }
 }
 
-class CratePattern {
+export class CratePattern {
   @tracked pattern;
   @tracked showAsInvalid = false;
 
