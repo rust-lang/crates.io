@@ -231,6 +231,8 @@ published_by = "public"
 checksum = "public"
 links = "public"
 rust_version = "public"
+has_lib = "public"
+bin_names = "public"
 
 [versions_published_by.columns]
 version_id = "private"

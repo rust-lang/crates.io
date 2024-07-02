@@ -17,15 +17,18 @@ expression: response.json()
         }
       }
     ],
-    "bin_names": [],
-    "checksum": "418c24c55cbcde274a5b1815d2c844203c7116e7f712008f4727d38bc7c82d8d",
+    "bin_names": [
+      "bar",
+      "foo"
+    ],
+    "checksum": "ed125a8d83193391762787872f6363ef11d472fe9e963b984a761f970d63a7a8",
     "crate": "foo",
-    "crate_size": 170,
+    "crate_size": 241,
     "created_at": "[datetime]",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "downloads": 0,
     "features": {},
-    "has_lib": false,
+    "has_lib": true,
     "id": "[id]",
     "license": "MIT",
     "links": {
@@ -42,7 +45,7 @@ expression: response.json()
       "url": "https://github.com/foo"
     },
     "readme_path": "/api/v1/crates/foo/1.0.0/readme",
-    "rust_version": "1.69",
+    "rust_version": null,
     "updated_at": "[datetime]",
     "yanked": false
   }

@@ -28,6 +28,8 @@ pub struct Version {
     pub checksum: String,
     pub links: Option<String>,
     pub rust_version: Option<String>,
+    pub has_lib: Option<bool>,
+    pub bin_names: Option<Vec<Option<String>>>,
 }
 
 impl Version {
@@ -82,6 +84,10 @@ pub struct NewVersion {
     links: Option<String>,
     #[builder(default)]
     rust_version: Option<String>,
+    #[builder(default, setter(strip_option))]
+    pub has_lib: Option<bool>,
+    #[builder(default, setter(strip_option))]
+    pub bin_names: Option<Vec<String>>,
 }
 
 impl NewVersionBuilder {
