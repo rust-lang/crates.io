@@ -320,6 +320,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     expect(newToken, 'New API token has been created in the backend database').toBeTruthy();
 
     await expect(page).toHaveURL('/settings/tokens');
+    await page.click('[data-test-new-token-button]');
+    // It should reset the token ID query parameter.
+    await expect(page).toHaveURL('/settings/tokens/new');
   });
 
   test('token not found', async ({ page }) => {
