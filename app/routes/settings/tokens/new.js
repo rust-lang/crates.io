@@ -2,7 +2,7 @@ import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-import { patternDescription } from '../../../utils/token-scopes';
+import { CratePattern } from '../../../controllers/settings/tokens/new';
 
 export default class TokenListRoute extends Route {
   @service router;
@@ -40,11 +40,7 @@ export default class TokenListRoute extends Route {
         name,
         ...(endpoint_scopes && { scopes: endpoint_scopes }),
         ...(crate_scopes && {
-          crateScopes: crate_scopes.map(pattern => ({
-            pattern,
-            showAsInvalid: false,
-            description: patternDescription(pattern),
-          })),
+          crateScopes: crate_scopes.map(pattern => new CratePattern(pattern)),
         }),
       };
 
@@ -54,5 +50,6 @@ export default class TokenListRoute extends Route {
 
   resetController(controller) {
     controller.saveTokenTask.cancelAll();
+    controller.set('token_id', null);
   }
 }
