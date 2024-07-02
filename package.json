@@ -133,7 +133,7 @@
     "miragejs": "0.1.48",
     "normalize.css": "8.0.1",
     "nyc": "17.0.0",
-    "postcss-preset-env": "9.5.14",
+    "postcss-preset-env": "9.5.15",
     "prettier": "3.3.2",
     "qunit": "2.21.0",
     "qunit-console-grouper": "0.3.0",
