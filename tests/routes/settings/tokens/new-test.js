@@ -316,6 +316,9 @@ module('/settings/tokens/new', function (hooks) {
     assert.ok(Boolean(newToken), 'New API token has been created in the backend database');
 
     assert.strictEqual(currentURL(), '/settings/tokens');
+    await click('[data-test-new-token-button]');
+    // It should reset the token ID query parameter.
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
   });
 
   test('token not found', async function (assert) {
