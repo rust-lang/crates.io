@@ -286,8 +286,8 @@ module('/settings/tokens/new', function (hooks) {
       endpointScopes: ['publish-update'],
     });
 
-    await visit(`/settings/tokens/new?token_id=${token.id}`);
-    assert.strictEqual(currentURL(), `/settings/tokens/new?token_id=${token.id}`);
+    await visit(`/settings/tokens/new?from=${token.id}`);
+    assert.strictEqual(currentURL(), `/settings/tokens/new?from=${token.id}`);
     assert.dom('[data-test-crates-unrestricted]').exists();
     assert.dom('[data-test-crate-pattern]').doesNotExist();
 
@@ -317,8 +317,8 @@ module('/settings/tokens/new', function (hooks) {
       endpointScopes: ['publish-update'],
     });
 
-    await visit(`/settings/tokens/new?token_id=${token.id}`);
-    assert.strictEqual(currentURL(), `/settings/tokens/new?token_id=${token.id}`);
+    await visit(`/settings/tokens/new?from=${token.id}`);
+    assert.strictEqual(currentURL(), `/settings/tokens/new?from=${token.id}`);
     assert.dom('[data-test-crate-pattern]').exists({ count: 2 });
 
     await click('[data-test-add-crate-pattern]');
@@ -331,8 +331,8 @@ module('/settings/tokens/new', function (hooks) {
   test('token not found', async function (assert) {
     prepare(this);
 
-    await visit('/settings/tokens/new?token_id=1');
-    assert.strictEqual(currentURL(), '/settings/tokens/new?token_id=1');
+    await visit('/settings/tokens/new?from=1');
+    assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
     assert.dom('[data-test-title]').hasText('Token not found');
   });
 });

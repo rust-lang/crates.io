@@ -7,27 +7,26 @@ export default class TokenListRoute extends Route {
   @service store;
 
   queryParams = {
-    token_id: {
+    from: {
       refreshModel: true,
     },
   };
 
   async model(params, transition) {
-    const tokenId = params.token_id;
-    if (tokenId) {
-      try {
-        return await this.store.findRecord('api-token', tokenId);
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          let title = `Token not found`;
-          this.router.replaceWith('catch-all', { transition, title });
-        } else {
-          let title = `Failed to load token data`;
-          this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
-        }
+    let tokenId = params.from;
+    if (!tokenId) return null;
+
+    try {
+      return await this.store.findRecord('api-token', tokenId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        let title = 'Token not found';
+        this.router.replaceWith('catch-all', { transition, title });
+      } else {
+        let title = 'Failed to load token data';
+        this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
     }
-    return null;
   }
 
   setupController(controller, model) {
@@ -49,6 +48,6 @@ export default class TokenListRoute extends Route {
 
   resetController(controller) {
     controller.saveTokenTask.cancelAll();
-    controller.set('token_id', null);
+    controller.set('from', null);
   }
 }

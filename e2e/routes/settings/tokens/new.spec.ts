@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { Response } from 'miragejs';
 
 test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
@@ -298,8 +298,8 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
       });
     });
 
-    await page.goto('/settings/tokens/new?token_id=1');
-    await expect(page).toHaveURL('/settings/tokens/new?token_id=1');
+    await page.goto('/settings/tokens/new?from=1');
+    await expect(page).toHaveURL('/settings/tokens/new?from=1');
     await expect(page.locator('[data-test-crates-unrestricted]')).toBeVisible();
     await expect(page.locator('[data-test-crate-pattern]')).toHaveCount(0);
 
@@ -326,8 +326,8 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   });
 
   test('token not found', async ({ page }) => {
-    await page.goto('/settings/tokens/new?token_id=1');
-    await expect(page).toHaveURL('/settings/tokens/new?token_id=1');
+    await page.goto('/settings/tokens/new?from=1');
+    await expect(page).toHaveURL('/settings/tokens/new?from=1');
     await expect(page.locator('[data-test-title]')).toHaveText('Token not found');
   });
 });
