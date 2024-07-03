@@ -16,7 +16,6 @@ pub struct Category {
 }
 
 type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crate::sql::lower<&'a str>>;
-type BySlug<'a> = diesel::dsl::Filter<categories::table, WithSlug<'a>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -36,8 +35,10 @@ impl Category {
         categories::slug.eq(crate::sql::lower(slug))
     }
 
-    pub fn by_slug(slug: &str) -> BySlug<'_> {
-        categories::table.filter(Self::with_slug(slug))
+    #[dsl::auto_type(no_type_alias)]
+    pub fn by_slug<'a>(slug: &'a str) -> _ {
+        let filter: WithSlug<'a> = Self::with_slug(slug);
+        categories::table.filter(filter)
     }
 
     pub fn update_crate(
