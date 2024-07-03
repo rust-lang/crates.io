@@ -307,6 +307,27 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
   });
 
+  test('prefilled: crate scoped can be added', async function (assert) {
+    let { user } = prepare(this);
+
+    let token = this.server.create('api-token', {
+      user,
+      name: 'serde',
+      crateScopes: ['serde', 'serde-*'],
+      endpointScopes: ['publish-update'],
+    });
+
+    await visit(`/settings/tokens/new?token_id=${token.id}`);
+    assert.strictEqual(currentURL(), `/settings/tokens/new?token_id=${token.id}`);
+    assert.dom('[data-test-crate-pattern]').exists({ count: 2 });
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crate-pattern]').exists({ count: 3 });
+    await fillIn('[data-test-crate-pattern="2"] input', 'serde2');
+    await click('[data-test-generate]');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+  });
+
   test('token not found', async function (assert) {
     prepare(this);
 
