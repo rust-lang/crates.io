@@ -76,8 +76,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       '@embroider/compat':
-        specifier: 3.5.5
-        version: 3.5.5(@embroider/core@3.4.14)
+        specifier: 3.5.6
+        version: 3.5.6(@embroider/core@3.4.14)
       '@embroider/core':
         specifier: 3.4.14
         version: 3.4.14
@@ -140,7 +140,7 @@ importers:
         version: 1.0.0
       ember-cli-code-coverage:
         specifier: 3.0.0
-        version: 3.0.0(@embroider/compat@3.5.5(@embroider/core@3.4.14))(@embroider/core@3.4.14)
+        version: 3.0.0(@embroider/compat@3.5.6(@embroider/core@3.4.14))(@embroider/core@3.4.14)
       ember-cli-dependency-checker:
         specifier: 3.3.2
         version: 3.3.2(ember-cli@5.9.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.6))
@@ -1374,8 +1374,8 @@ packages:
     peerDependencies:
       '@embroider/core': ^3.4.0
 
-  '@embroider/compat@3.5.5':
-    resolution: {integrity: sha512-AFdsoitgxdU4VDmoGJohvPJtcQ0hpNrueHDHaeY1agPw18+CD+NQNtKI6BbGltEvneNBgWn8xaRChNqj+1tXoQ==}
+  '@embroider/compat@3.5.6':
+    resolution: {integrity: sha512-yATWUTGrbHms/FLBe+tbvmmTWqfkTxUrgQTaagwjXSsVRkI5IBIX6CKfGMn/iaHcEQuTVmMJMxIT1X1XRJJqNw==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
@@ -10578,7 +10578,7 @@ snapshots:
       - supports-color
       - webpack
 
-  '@embroider/compat@3.5.5(@embroider/core@3.4.14)':
+  '@embroider/compat@3.5.6(@embroider/core@3.4.14)':
     dependencies:
       '@babel/code-frame': 7.24.7
       '@babel/core': 7.24.7
@@ -11427,12 +11427,12 @@ snapshots:
       '@types/ember__object': 4.0.12
       '@types/ember__polyfills': 4.0.6
       '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10(@babel/core@7.24.7)
+      '@types/ember__runloop': 4.0.10
       '@types/ember__service': 4.0.9
       '@types/ember__string': 3.0.15
       '@types/ember__template': 4.0.7
       '@types/ember__test': 4.0.6(@babel/core@7.24.7)
-      '@types/ember__utils': 4.0.7
+      '@types/ember__utils': 4.0.7(@babel/core@7.24.7)
       '@types/rsvp': 4.0.9
 
   '@types/ember@4.0.11(@babel/core@7.24.7)':
@@ -11614,6 +11614,10 @@ snapshots:
 
   '@types/ember__runloop@3.16.10': {}
 
+  '@types/ember__runloop@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
+
   '@types/ember__runloop@4.0.10(@babel/core@7.24.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.7)
@@ -11658,10 +11662,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.24.7)':
     dependencies:
@@ -14362,7 +14362,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-code-coverage@3.0.0(@embroider/compat@3.5.5(@embroider/core@3.4.14))(@embroider/core@3.4.14):
+  ember-cli-code-coverage@3.0.0(@embroider/compat@3.5.6(@embroider/core@3.4.14))(@embroider/core@3.4.14):
     dependencies:
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.2
@@ -14376,7 +14376,7 @@ snapshots:
       node-dir: 0.1.17
       walk-sync: 2.2.0
     optionalDependencies:
-      '@embroider/compat': 3.5.5(@embroider/core@3.4.14)
+      '@embroider/compat': 3.5.6(@embroider/core@3.4.14)
       '@embroider/core': 3.4.14
     transitivePeerDependencies:
       - supports-color
