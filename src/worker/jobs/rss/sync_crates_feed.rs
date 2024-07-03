@@ -2,6 +2,7 @@ use crate::schema::crates;
 use crate::storage::FeedId;
 use crate::worker::Environment;
 use anyhow::anyhow;
+use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -9,6 +10,15 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize)]
 pub struct SyncCratesFeed;
 
+/// Items younger than this will always be included in the feed.
+const ALWAYS_INCLUDE_AGE: Duration = Duration::minutes(60);
+
+/// The number of items to include in the feed.
+///
+/// If there are less than this number of items in the database, the feed will
+/// contain fewer items. If there are more items in the database that are
+/// younger than [`ALWAYS_INCLUDE_AGE`], all of them will be included in
+/// the feed.
 const NUM_ITEMS: i64 = 50;
 
 impl BackgroundJob for SyncCratesFeed {
@@ -76,7 +86,26 @@ impl BackgroundJob for SyncCratesFeed {
     }
 }
 
+/// Load the latest crates from the database.
+///
+/// This function will load all crates from the database that are younger
+/// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] crates
+/// then the list will be padded with older crates until [`NUM_ITEMS`] are
+/// returned.
 fn load_new_crates(conn: &mut PgConnection) -> QueryResult<Vec<NewCrate>> {
+    let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
+
+    let new_crates = crates::table
+        .filter(crates::created_at.gt(threshold_dt))
+        .order(crates::created_at.desc())
+        .select(NewCrate::as_select())
+        .load(conn)?;
+
+    let num_new_crates = new_crates.len();
+    if num_new_crates as i64 >= NUM_ITEMS {
+        return Ok(new_crates);
+    }
+
     crates::table
         .order(crates::created_at.desc())
         .select(NewCrate::as_select())
@@ -130,5 +159,70 @@ impl NewCrate {
             extensions,
             ..Default::default()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::NaiveDateTime;
+    use crates_io_test_db::TestDatabase;
+    use insta::assert_debug_snapshot;
+
+    #[test]
+    fn test_load_version_updates() {
+        crate::util::tracing::init_for_test();
+
+        let db = TestDatabase::new();
+        let mut conn = db.connect();
+
+        let now = chrono::Utc::now().naive_utc();
+
+        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        assert_eq!(new_crates.len(), 0);
+
+        // If there are less than NUM_ITEMS crates, they should all be returned
+        create_crate(&mut conn, "foo", now - Duration::days(123));
+        create_crate(&mut conn, "bar", now - Duration::days(110));
+        create_crate(&mut conn, "baz", now - Duration::days(100));
+        create_crate(&mut conn, "qux", now - Duration::days(90));
+
+        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        assert_eq!(new_crates.len(), 4);
+        assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
+
+        // If there are more than NUM_ITEMS crates, only the most recent NUM_ITEMS should be returned
+        for i in 1..=NUM_ITEMS {
+            let name = format!("crate-{i}");
+            let publish_time = now - Duration::days(90) + Duration::hours(i);
+            create_crate(&mut conn, &name, publish_time);
+        }
+
+        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        assert_eq!(new_crates.len() as i64, NUM_ITEMS);
+        assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
+
+        // But if there are more than NUM_ITEMS crates that are younger than ALWAYS_INCLUDE_AGE, all of them should be returned
+        for i in 1..=(NUM_ITEMS + 10) {
+            let name = format!("other-crate-{i}");
+            let publish_time = now - Duration::minutes(30) + Duration::seconds(i);
+            create_crate(&mut conn, &name, publish_time);
+        }
+
+        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        assert_eq!(new_crates.len() as i64, NUM_ITEMS + 10);
+        assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
+    }
+
+    fn create_crate(conn: &mut PgConnection, name: &str, publish_time: NaiveDateTime) -> i32 {
+        diesel::insert_into(crates::table)
+            .values((
+                crates::name.eq(name),
+                crates::created_at.eq(publish_time),
+                crates::updated_at.eq(publish_time),
+            ))
+            .returning(crates::id)
+            .get_result(conn)
+            .unwrap()
     }
 }
