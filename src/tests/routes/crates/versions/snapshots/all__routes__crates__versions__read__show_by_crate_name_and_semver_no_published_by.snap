@@ -5,6 +5,7 @@ expression: json
 {
   "version": {
     "audit_actions": [],
+    "bin_names": null,
     "checksum": "                                                                ",
     "crate": "foo_vers_show_no_pb",
     "crate_size": 0,
@@ -12,6 +13,7 @@ expression: json
     "dl_path": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/download",
     "downloads": 0,
     "features": {},
+    "has_lib": null,
     "id": "[id]",
     "license": null,
     "links": {
