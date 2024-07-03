@@ -132,8 +132,8 @@ export default class NewTokenController extends Controller {
     this.scopesInvalid = false;
   }
 
-  @action addCratePattern() {
-    this.crateScopes.push(new CratePattern(''));
+  @action addCratePattern(pattern) {
+    this.crateScopes.push(new CratePattern(pattern));
   }
 
   @action removeCrateScope(index) {
@@ -141,7 +141,7 @@ export default class NewTokenController extends Controller {
   }
 }
 
-export class CratePattern {
+class CratePattern {
   @tracked pattern;
   @tracked showAsInvalid = false;
 

@@ -2,8 +2,6 @@ import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 
-import { CratePattern } from '../../../controllers/settings/tokens/new';
-
 export default class TokenListRoute extends Route {
   @service router;
   @service store;
@@ -36,15 +34,16 @@ export default class TokenListRoute extends Route {
     super.setupController(controller, model);
     if (model) {
       const { name, endpoint_scopes, crate_scopes } = model;
-      let properties = {
-        name,
-        ...(endpoint_scopes && { scopes: endpoint_scopes }),
-        ...(crate_scopes && {
-          crateScopes: crate_scopes.map(pattern => new CratePattern(pattern)),
-        }),
-      };
 
-      controller.setProperties(properties);
+      controller.name = name;
+      if (endpoint_scopes) {
+        controller.scopes = endpoint_scopes;
+      }
+      if (crate_scopes) {
+        for (let pattern of crate_scopes) {
+          controller.addCratePattern(pattern);
+        }
+      }
     }
   }
 
