@@ -104,7 +104,7 @@
     "ember-keyboard": "8.2.1",
     "ember-link": "3.2.0",
     "ember-load-initializers": "2.1.2",
-    "ember-modifier": "4.1.0",
+    "ember-modifier": "4.2.0",
     "ember-page-title": "8.2.3",
     "ember-qunit": "8.1.0",
     "ember-resolver": "12.0.1",
@@ -145,7 +145,7 @@
   "resolutions": {
     "ember-get-config": "2.1.1",
     "ember-inflector": "4.0.2",
-    "ember-modifier": "4.1.0",
+    "ember-modifier": "4.2.0",
     "miragejs": "0.1.48"
   },
   "pnpm": {
