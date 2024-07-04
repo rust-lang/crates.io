@@ -383,7 +383,7 @@ fn simple_config() -> config::Server {
             // something is broken.
             url: String::from("invalid default url").into(),
             read_only_mode: false,
-            pool_size: 3,
+            pool_size: 5,
             min_idle: None,
         },
         replica: None,
