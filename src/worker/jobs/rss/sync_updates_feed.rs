@@ -66,13 +66,19 @@ impl BackgroundJob for SyncUpdatesFeed {
         info!("Uploading feed to storage…");
         ctx.storage.upload_feed(&feed_id, &channel).await?;
 
+        let path = object_store::path::Path::from(&feed_id);
         if let Some(cloudfront) = ctx.cloudfront() {
-            let path = object_store::path::Path::from(&feed_id);
-
             info!(%path, "Invalidating CloudFront cache…");
             cloudfront.invalidate(path.as_ref()).await?;
         } else {
             info!("Skipping CloudFront cache invalidation (CloudFront not configured)");
+        }
+
+        if let Some(fastly) = ctx.fastly() {
+            info!(%path, "Invalidating Fastly cache…");
+            fastly.invalidate(path.as_ref()).await?;
+        } else {
+            info!("Skipping Fastly cache invalidation (Fastly not configured)");
         }
 
         info!("Finished syncing updates feed");
