@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish/manifest.rs
+source: src/tests/krate/publish/links.rs
 expression: response.json()
 ---
 {
@@ -10,7 +10,7 @@ expression: response.json()
         "time": "[datetime]",
         "user": {
           "avatar": null,
-          "id": "[id]",
+          "id": 1,
           "login": "foo",
           "name": null,
           "url": "https://github.com/foo"
@@ -18,16 +18,16 @@ expression: response.json()
       }
     ],
     "bin_names": [],
-    "checksum": "418c24c55cbcde274a5b1815d2c844203c7116e7f712008f4727d38bc7c82d8d",
+    "checksum": "5631ca06d228e58274bbd8d6a3e81f7138a9e227a84bd63ecedb78afbc8144ea",
     "crate": "foo",
-    "crate_size": 170,
+    "crate_size": 162,
     "created_at": "[datetime]",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "downloads": 0,
     "features": {},
     "has_lib": false,
     "id": "[id]",
-    "lib_links": null,
+    "lib_links": "git2",
     "license": "MIT",
     "links": {
       "authors": "/api/v1/crates/foo/1.0.0/authors",
@@ -43,7 +43,7 @@ expression: response.json()
       "url": "https://github.com/foo"
     },
     "readme_path": "/api/v1/crates/foo/1.0.0/readme",
-    "rust_version": "1.69",
+    "rust_version": null,
     "updated_at": "[datetime]",
     "yanked": false
   }

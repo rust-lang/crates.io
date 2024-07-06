@@ -9,6 +9,7 @@ mod features;
 mod git;
 mod inheritance;
 mod keywords;
+mod links;
 mod manifest;
 mod max_size;
 mod rate_limit;

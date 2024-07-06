@@ -33,6 +33,7 @@ expression: response.json()
       "features": {},
       "has_lib": null,
       "id": 3,
+      "lib_links": null,
       "license": null,
       "links": {
         "authors": "/api/v1/crates/c2/1.1.0/authors",
