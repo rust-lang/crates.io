@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   // should match the default set in the crates controller
@@ -72,7 +72,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates');
 
-    await expect(page.locator('[data-test-crates-sort] [data-test-current-order]')).toHaveText('Alphabetical');
+    await expect(page.locator('[data-test-crates-sort] [data-test-current-order]')).toHaveText('Recent Downloads');
   });
 
   test('downloads appears for each crate on crate list', async ({ page, mirage }) => {
@@ -81,7 +81,7 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     });
 
     await page.goto('/crates');
-    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText('All-Time: 497');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-downloads]')).toHaveText('All-Time: 21,573');
   });
 
   test('recent downloads appears for each crate on crate list', async ({ page, mirage }) => {
@@ -90,6 +90,6 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
     });
 
     await page.goto('/crates');
-    await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText('Recent: 497');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText('Recent: 2,000');
   });
 });

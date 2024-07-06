@@ -66,25 +66,29 @@ module('Acceptance | crates page', function (hooks) {
     assert.dom('[data-test-crates-nav] [data-test-total-rows]').hasText(`${total}`);
   });
 
-  test('crates default sort is alphabetical', async function (assert) {
+  test('crates default sort is by recent downloads', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
 
-    assert.dom('[data-test-crates-sort] [data-test-current-order]').hasText('Alphabetical');
+    assert.dom('[data-test-crates-sort] [data-test-current-order]').hasText('Recent Downloads');
   });
 
   test('downloads appears for each crate on crate list', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
-    assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText('All-Time: 497');
+
+    let formatted = Number(21_573).toLocaleString();
+    assert.dom('[data-test-crate-row="0"] [data-test-downloads]').hasText(`All-Time: ${formatted}`);
   });
 
   test('recent downloads appears for each crate on crate list', async function (assert) {
     this.server.loadFixtures();
 
     await visit('/crates');
-    assert.dom('[data-test-crate-row="0"] [data-test-recent-downloads]').hasText('Recent: 497');
+
+    let formatted = Number(2000).toLocaleString();
+    assert.dom('[data-test-crate-row="0"] [data-test-recent-downloads]').hasText(`Recent: ${formatted}`);
   });
 });
