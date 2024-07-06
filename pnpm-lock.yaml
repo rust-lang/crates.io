@@ -27,8 +27,8 @@ importers:
         specifier: 3.6.0
         version: 3.6.0
       highlight.js:
-        specifier: 11.9.0
-        version: 11.9.0
+        specifier: 11.10.0
+        version: 11.10.0
       macro-decorators:
         specifier: 0.1.2
         version: 0.1.2
@@ -5220,8 +5220,8 @@ packages:
   heimdalljs@0.2.6:
     resolution: {integrity: sha512-o9bd30+5vLBvBtzCPwwGqpry2+n0Hi6H1+qwt6y+0kwRHGGF8TFIhJPmnuM0xO97zaKrDZMwO/V56fAnn8m/tA==}
 
-  highlight.js@11.9.0:
-    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
+  highlight.js@11.10.0:
+    resolution: {integrity: sha512-SYVnVFswQER+zu1laSya563s+F8VDGt7o35d4utbamowvUNLLMovFqwCLSocpZTz3MgaSRA1IbqRWZv97dtErQ==}
     engines: {node: '>=12.0.0'}
 
   hmac-drbg@1.0.1:
@@ -11418,6 +11418,26 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
+  '@types/ember@4.0.11':
+    dependencies:
+      '@types/ember__application': 4.0.11(@babel/core@7.24.7)
+      '@types/ember__array': 4.0.10(@babel/core@7.24.7)
+      '@types/ember__component': 4.0.22
+      '@types/ember__controller': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__debug': 4.0.8(@babel/core@7.24.7)
+      '@types/ember__engine': 4.0.11(@babel/core@7.24.7)
+      '@types/ember__error': 4.0.6
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__polyfills': 4.0.6
+      '@types/ember__routing': 4.0.22
+      '@types/ember__runloop': 4.0.10
+      '@types/ember__service': 4.0.9(@babel/core@7.24.7)
+      '@types/ember__string': 3.0.15
+      '@types/ember__template': 4.0.7
+      '@types/ember__test': 4.0.6(@babel/core@7.24.7)
+      '@types/ember__utils': 4.0.7(@babel/core@7.24.7)
+      '@types/rsvp': 4.0.9
+
   '@types/ember@4.0.11(@babel/core@7.24.7)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.24.7)
@@ -11450,11 +11470,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.24.7)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.24.7)
-      '@types/ember': 4.0.11(@babel/core@7.24.7)
+      '@types/ember': 4.0.11
       '@types/ember__engine': 4.0.11(@babel/core@7.24.7)
       '@types/ember__object': 4.0.12(@babel/core@7.24.7)
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22(@babel/core@7.24.7)
+      '@types/ember__routing': 4.0.22
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11475,6 +11495,11 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.30
+
+  '@types/ember__component@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
 
   '@types/ember__component@4.0.22(@babel/core@7.24.7)':
     dependencies:
@@ -11549,6 +11574,13 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
+  '@types/ember__routing@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__controller': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__object': 4.0.12(@babel/core@7.24.7)
+      '@types/ember__service': 4.0.9(@babel/core@7.24.7)
+
   '@types/ember__routing@4.0.22(@babel/core@7.24.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.7)
@@ -11560,6 +11592,10 @@ snapshots:
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
+
+  '@types/ember__runloop@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.24.7)':
     dependencies:
@@ -16427,7 +16463,7 @@ snapshots:
     dependencies:
       rsvp: 3.2.1
 
-  highlight.js@11.9.0: {}
+  highlight.js@11.10.0: {}
 
   hmac-drbg@1.0.1:
     dependencies:
