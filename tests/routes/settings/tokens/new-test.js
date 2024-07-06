@@ -21,6 +21,8 @@ module('/settings/tokens/new', function (hooks) {
     });
 
     context.authenticateAs(user);
+
+    return { user };
   }
 
   test('can navigate to the route', async function (assert) {
@@ -271,5 +273,66 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
     assert.dom('[data-test-name-group] [data-test-error]').doesNotExist();
     assert.dom('[data-test-scopes-group] [data-test-error]').exists();
+  });
+
+  test('prefill with the exist token', async function (assert) {
+    let { user } = prepare(this);
+
+    let token = this.server.create('api-token', {
+      user,
+      name: 'foo',
+      createdAt: '2017-08-01T12:34:56',
+      lastUsedAt: '2017-11-02T01:45:14',
+      endpointScopes: ['publish-update'],
+    });
+
+    await visit(`/settings/tokens/new?from=${token.id}`);
+    assert.strictEqual(currentURL(), `/settings/tokens/new?from=${token.id}`);
+    assert.dom('[data-test-crates-unrestricted]').exists();
+    assert.dom('[data-test-crate-pattern]').doesNotExist();
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crates-unrestricted]').doesNotExist();
+    assert.dom('[data-test-crate-pattern]').exists({ count: 1 });
+    await fillIn('[data-test-crate-pattern="0"] input', 'serde');
+    assert.dom('[data-test-crate-pattern="0"] [data-test-description]').hasText('Matches only the serde crate');
+    await click('[data-test-generate]');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+
+    let tokens = this.server.schema.apiTokens.where({ name: 'foo' });
+    assert.strictEqual(tokens.length, 2, 'New API token has been created in the backend database');
+
+    // It should reset the token ID query parameter.
+    await click('[data-test-new-token-button]');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+  });
+
+  test('prefilled: crate scoped can be added', async function (assert) {
+    let { user } = prepare(this);
+
+    let token = this.server.create('api-token', {
+      user,
+      name: 'serde',
+      crateScopes: ['serde', 'serde-*'],
+      endpointScopes: ['publish-update'],
+    });
+
+    await visit(`/settings/tokens/new?from=${token.id}`);
+    assert.strictEqual(currentURL(), `/settings/tokens/new?from=${token.id}`);
+    assert.dom('[data-test-crate-pattern]').exists({ count: 2 });
+
+    await click('[data-test-add-crate-pattern]');
+    assert.dom('[data-test-crate-pattern]').exists({ count: 3 });
+    await fillIn('[data-test-crate-pattern="2"] input', 'serde2');
+    await click('[data-test-generate]');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+  });
+
+  test('token not found', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new?from=1');
+    assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
+    assert.dom('[data-test-title]').hasText('Token not found');
   });
 });

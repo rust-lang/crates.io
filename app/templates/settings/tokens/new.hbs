@@ -160,7 +160,7 @@
         <button
           type="button"
           data-test-add-crate-pattern
-          {{on "click" this.addCratePattern}}
+          {{on "click" (fn this.addCratePattern "")}}
         >
           Add pattern
         </button>

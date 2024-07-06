@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { Response } from 'miragejs';
 
 test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
@@ -12,6 +12,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
       });
 
       authenticateAs(user);
+      globalThis.user = user;
     });
   });
 
@@ -280,6 +281,54 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new');
     await expect(page.locator('[data-test-name-group] [data-test-error]')).toHaveCount(0);
     await expect(page.locator('[data-test-scopes-group] [data-test-error]')).toBeVisible();
+  });
+
+  test('prefill with the exist token', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
+      const user = globalThis.user;
+
+      server.create('apiToken', {
+        user: user,
+        id: '1',
+        name: 'foo',
+        token: 'test',
+        createdAt: '2017-08-01T12:34:56',
+        lastUsedAt: '2017-11-02T01:45:14',
+        endpointScopes: ['publish-update'],
+      });
+    });
+
+    await page.goto('/settings/tokens/new?from=1');
+    await expect(page).toHaveURL('/settings/tokens/new?from=1');
+    await expect(page.locator('[data-test-crates-unrestricted]')).toBeVisible();
+    await expect(page.locator('[data-test-crate-pattern]')).toHaveCount(0);
+
+    await page.click('[data-test-add-crate-pattern]');
+    await expect(page.locator('[data-test-crates-unrestricted]')).toHaveCount(0);
+    await expect(page.locator('[data-test-crate-pattern]')).toHaveCount(1);
+
+    await page.fill('[data-test-crate-pattern="0"] input', 'serde');
+    await expect(page.locator('[data-test-crate-pattern="0"] [data-test-description]')).toHaveText(
+      'Matches only the serde crate',
+    );
+    await page.click('[data-test-generate]');
+
+    let newToken = await page.evaluate(() => {
+      let newToken = server.schema['apiTokens'].findBy({ name: 'foo', crateScopes: ['serde'] });
+      return JSON.parse(JSON.stringify(newToken));
+    });
+    expect(newToken, 'New API token has been created in the backend database').toBeTruthy();
+
+    await expect(page).toHaveURL('/settings/tokens');
+    await page.click('[data-test-new-token-button]');
+    // It should reset the token ID query parameter.
+    await expect(page).toHaveURL('/settings/tokens/new');
+  });
+
+  test('token not found', async ({ page }) => {
+    await page.goto('/settings/tokens/new?from=1');
+    await expect(page).toHaveURL('/settings/tokens/new?from=1');
+    await expect(page.locator('[data-test-title]')).toHaveText('Token not found');
   });
 });
 
