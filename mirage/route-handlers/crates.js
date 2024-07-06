@@ -44,6 +44,8 @@ export function list(schema, request) {
 
   if (request.queryParams.sort === 'alpha') {
     crates = crates.sort((a, b) => compareStrings(a.id.toLowerCase(), b.id.toLowerCase()));
+  } else if (request.queryParams.sort === 'recent-downloads') {
+    crates = crates.sort((a, b) => b.recent_downloads - a.recent_downloads);
   }
 
   return { ...this.serialize(crates.slice(start, end)), meta: { total: crates.length } };
