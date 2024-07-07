@@ -44,7 +44,7 @@
     "@sentry/ember": "8.15.0",
     "chart.js": "4.4.3",
     "date-fns": "3.6.0",
-    "highlight.js": "11.9.0",
+    "highlight.js": "11.10.0",
     "macro-decorators": "0.1.2",
     "mermaid": "10.9.1",
     "morgan": "1.10.0",
