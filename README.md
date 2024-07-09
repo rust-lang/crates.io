@@ -11,7 +11,7 @@
 
 [Homepage][crates.io]
 | [Usage Policy](https://crates.io/policies)
-| [Security](https://www.rust-lang.org/policies/security)
+| [Security](https://crates.io/policies/security)
 | [Status](https://status.crates.io/)
 | [Contact](#️-contact)
 | [Contributing](#️-contributing)
