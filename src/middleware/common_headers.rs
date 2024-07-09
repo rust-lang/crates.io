@@ -23,11 +23,12 @@ pub async fn add_common_headers(
 
     let path = request.uri().path();
 
-    const STATIC_FILES: [&str; 4] = [
+    const STATIC_FILES: [&str; 5] = [
         "/github-redirect.html",
         "/favicon.ico",
         "/robots.txt",
         "/opensearch.xml",
+        "/.well-known/security.txt",
     ];
     if STATIC_FILES.contains(&path) {
         expires(&mut headers, ONE_DAY);
