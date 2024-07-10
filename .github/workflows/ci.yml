@@ -119,22 +119,32 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+        with:
+          # Ensure that we cache from the right target directory. (See below
+          # for the details of how and when this gets created.)
+          workspaces: '. -> /mnt/target'
 
       # Update `pg_dump` to the same version as the running PostgreSQL server
       - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${{ env.POSTGRES_VERSION }} -i -p
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
-      - run: cargo build --tests --workspace
-      - run: cargo test --workspace
+      # Create a working directory on /mnt, which is a larger temporary
+      # filesystem than /, that we can then point our later commands to.
+      - run: |
+          sudo mkdir /mnt/target
+          sudo chown $(id -u):$(id -g) /mnt/target
+
+      - run: cargo build --tests --workspace --target-dir=/mnt/target
+      - run: cargo test --workspace --target-dir=/mnt/target
 
       - run: curl -sL https://github.com/mozilla/grcov/releases/download/v${{ env.GRCOV_VERSION }}/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar xjf -
       - run: rustup component add llvm-tools
-      - run: ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" --ignore "target/debug/build/**" -o target/coverage.lcov
+      - run: ./grcov . --binary-path /mnt/target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" --ignore "/mnt/target/debug/build/**" -o /mnt/target/coverage.lcov
 
       - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
         with:
-          files: target/coverage.lcov
+          files: /mnt/target/coverage.lcov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
