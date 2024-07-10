@@ -82,6 +82,7 @@ fn handle_expiring_token(
         debug!("Sending expiry notification to {}…", recipient);
         let email = ExpiryNotificationEmail {
             name: &user.gh_login,
+            token_id: token.id,
             token_name: &token.name,
             expiry_date: token.expired_at.unwrap().and_utc(),
         };
@@ -131,6 +132,7 @@ pub fn find_expiring_tokens(
 #[derive(Debug, Clone)]
 struct ExpiryNotificationEmail<'a> {
     name: &'a str,
+    token_id: i32,
     token_name: &'a str,
     expiry_date: chrono::DateTime<chrono::Utc>,
 }
@@ -144,13 +146,14 @@ impl<'a> Email for ExpiryNotificationEmail<'a> {
 
 We noticed your token "{}" will expire on {}.
 
-If this token is still needed, visit https://crates.io/settings/tokens/new to generate a new one.
+If this token is still needed, visit https://crates.io/settings/tokens/new?from={} to generate a new one.
 
 Thanks,
 The crates.io team"#,
             self.name,
             self.token_name,
-            self.expiry_date.to_rfc3339_opts(SecondsFormat::Secs, true)
+            self.expiry_date.to_rfc3339_opts(SecondsFormat::Secs, true),
+            self.token_id
         )
     }
 }
