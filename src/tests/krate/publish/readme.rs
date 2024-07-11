@@ -19,6 +19,7 @@ async fn new_krate_with_readme() {
     crates/foo_readme/foo_readme-1.0.0.crate
     index/fo/o_/foo_readme
     readmes/foo_readme/foo_readme-1.0.0.html
+    rss/crates.xml
     rss/updates.xml
     "###);
 }
@@ -38,6 +39,7 @@ async fn new_krate_with_empty_readme() {
     assert_snapshot!(app.stored_files().await.join("\n"), @r###"
     crates/foo_readme/foo_readme-1.0.0.crate
     index/fo/o_/foo_readme
+    rss/crates.xml
     rss/updates.xml
     "###);
 }
@@ -58,6 +60,7 @@ async fn new_krate_with_readme_and_plus_version() {
     crates/foo_readme/foo_readme-1.0.0+foo.crate
     index/fo/o_/foo_readme
     readmes/foo_readme/foo_readme-1.0.0+foo.html
+    rss/crates.xml
     rss/updates.xml
     "###);
 }

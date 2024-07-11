@@ -450,6 +450,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
             }
 
+            if existing_crate.is_none() {
+                if let Err(error) = jobs::rss::SyncCratesFeed.enqueue(conn) {
+                    error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
+                }
+            }
+
             // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
             // that is no longer needed. As such, crates.io currently does not return any `other`
             // warnings at this time, but if we need to, the field is available.

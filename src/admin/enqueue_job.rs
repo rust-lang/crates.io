@@ -39,6 +39,7 @@ pub enum Command {
         force: bool,
     },
     SendTokenExpiryNotifications,
+    SyncCratesFeed,
     SyncUpdatesFeed,
 }
 
@@ -125,6 +126,9 @@ pub fn run(command: Command) -> Result<()> {
         }
         Command::SendTokenExpiryNotifications => {
             jobs::SendTokenExpiryNotifications.enqueue(conn)?;
+        }
+        Command::SyncCratesFeed => {
+            jobs::rss::SyncCratesFeed.enqueue(conn)?;
         }
         Command::SyncUpdatesFeed => {
             jobs::rss::SyncUpdatesFeed.enqueue(conn)?;
