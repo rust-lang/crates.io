@@ -115,6 +115,7 @@ jobs:
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost/postgres
       RUSTFLAGS: "-D warnings -Cinstrument-coverage"
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
+      CARGO_TARGET_DIR: /mnt/target
 
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -122,7 +123,7 @@ jobs:
         with:
           # Ensure that we cache from the right target directory. (See below
           # for the details of how and when this gets created.)
-          workspaces: '. -> /mnt/target'
+          workspaces: '. -> ${{ env.CARGO_TARGET_DIR }}'
 
       # Update `pg_dump` to the same version as the running PostgreSQL server
       - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${{ env.POSTGRES_VERSION }} -i -p
@@ -132,19 +133,19 @@ jobs:
       # Create a working directory on /mnt, which is a larger temporary
       # filesystem than /, that we can then point our later commands to.
       - run: |
-          sudo mkdir /mnt/target
-          sudo chown $(id -u):$(id -g) /mnt/target
+          sudo mkdir ${{ env.CARGO_TARGET_DIR }}
+          sudo chown $(id -u):$(id -g) ${{ env.CARGO_TARGET_DIR }}
 
-      - run: cargo build --tests --workspace --target-dir=/mnt/target
-      - run: cargo test --workspace --target-dir=/mnt/target
+      - run: cargo build --tests --workspace
+      - run: cargo test --workspace
 
       - run: curl -sL https://github.com/mozilla/grcov/releases/download/v${{ env.GRCOV_VERSION }}/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar xjf -
       - run: rustup component add llvm-tools
-      - run: ./grcov . --binary-path /mnt/target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" --ignore "/mnt/target/debug/build/**" -o /mnt/target/coverage.lcov
+      - run: ./grcov . --binary-path ${{ env.CARGO_TARGET_DIR }}/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" --ignore "${{ env.CARGO_TARGET_DIR }}/debug/build/**" -o ${{ env.CARGO_TARGET_DIR }}/coverage.lcov
 
       - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
         with:
-          files: /mnt/target/coverage.lcov
+          files: ${{ env.CARGO_TARGET_DIR }}/coverage.lcov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
