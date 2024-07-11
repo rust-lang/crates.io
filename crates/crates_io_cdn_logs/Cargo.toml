@@ -21,7 +21,7 @@ tracing = "=0.1.40"
 
 [dev-dependencies]
 claims = "=0.7.1"
-clap = { version = "=4.5.8", features = ["derive"] }
+clap = { version = "=4.5.9", features = ["derive"] }
 criterion = { version = "=0.5.1", features = ["async_tokio"] }
 insta = "=1.39.0"
 tokio = { version = "=1.38.0", features = ["fs", "macros", "rt", "rt-multi-thread"] }
