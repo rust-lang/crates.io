@@ -69,10 +69,13 @@ jobs:
       rust-lockfile: ${{ steps.changed-files-rust-lockfile.outputs.any_modified }}
 
   percy-nonce:
+    name: Frontend / Percy Nonce
     runs-on: ubuntu-latest
+
     # persist job results to other jobs in the workflow
     outputs:
       nonce: ${{ steps.percy-nonce.outputs.nonce }}
+
     steps:
       # persist step results to other steps in the job
       - id: percy-nonce
