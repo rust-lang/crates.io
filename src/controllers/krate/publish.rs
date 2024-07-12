@@ -446,6 +446,11 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 CheckTyposquat::new(&krate.name).enqueue(conn)?;
             }
 
+            let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
+            if let Err(error) = job.enqueue(conn) {
+                error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
+            }
+
             if let Err(error) = jobs::rss::SyncUpdatesFeed.enqueue(conn) {
                 error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
             }

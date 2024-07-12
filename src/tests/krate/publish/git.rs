@@ -15,6 +15,7 @@ async fn new_krate_git_upload_with_conflicts() {
     crates/foo_conflicts/foo_conflicts-1.0.0.crate
     index/fo/o_/foo_conflicts
     rss/crates.xml
+    rss/crates/foo_conflicts.xml
     rss/updates.xml
     "###);
 }

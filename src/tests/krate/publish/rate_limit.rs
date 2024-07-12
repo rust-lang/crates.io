@@ -70,6 +70,7 @@ async fn publish_new_crate_ratelimit_expires() {
     crates/rate_limited/rate_limited-1.0.0.crate
     index/ra/te/rate_limited
     rss/crates.xml
+    rss/crates/rate_limited.xml
     rss/updates.xml
     "###);
 
@@ -108,6 +109,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -123,6 +125,8 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
     rss/crates.xml
+    rss/crates/rate_limited1.xml
+    rss/crates/rate_limited2.xml
     rss/updates.xml
     "###);
 
@@ -141,6 +145,8 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     index/ra/te/rate_limited1
     index/ra/te/rate_limited2
     rss/crates.xml
+    rss/crates/rate_limited1.xml
+    rss/crates/rate_limited2.xml
     rss/updates.xml
     "###);
 
@@ -180,6 +186,7 @@ async fn publish_new_crate_expired_override_ignored() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -196,6 +203,7 @@ async fn publish_new_crate_expired_override_ignored() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -233,6 +241,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.0.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -247,6 +256,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.1.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -265,6 +275,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.1.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 
@@ -282,6 +293,7 @@ async fn publish_existing_crate_rate_limited() {
     crates/rate_limited1/rate_limited1-1.0.2.crate
     index/ra/te/rate_limited1
     rss/crates.xml
+    rss/crates/rate_limited1.xml
     rss/updates.xml
     "###);
 }
