@@ -71,6 +71,8 @@ jobs:
   percy-nonce:
     name: Frontend / Percy Nonce
     runs-on: ubuntu-latest
+    needs: changed-files
+    if: needs.changed-files.outputs.non-rust == 'true'
 
     # persist job results to other jobs in the workflow
     outputs:
