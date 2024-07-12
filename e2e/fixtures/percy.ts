@@ -14,7 +14,9 @@ export class PercyPage {
   private title(): string {
     // Skip the filename
     const paths = this.testInfo.titlePath.slice(1);
-    return paths.join(' | ');
+    // Add an "e2e" prefix to differentiate the snapshots from the QUnit tests.
+    // This address the visual changes caused by the font not loading in QUnit tests (#9052).
+    return ['e2e'].concat(paths).join(' | ');
   }
 
   async snapshot(options?: Parameters<typeof percySnapshot>[2]) {
