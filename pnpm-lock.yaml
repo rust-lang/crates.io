@@ -147,9 +147,6 @@ importers:
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
-      ember-cli-deprecation-workflow:
-        specifier: 2.2.0
-        version: 2.2.0
       ember-cli-head:
         specifier: 2.0.0
         version: 2.0.0
@@ -4055,10 +4052,6 @@ packages:
   ember-cli-dependency-lint@2.0.1:
     resolution: {integrity: sha512-FIWdE2ijwp9ZvgM43ZCnFtTLTM74QVrZmYy8tmEnAmDir2bWKtyryF0LmeiW29vfznRy7UvaDW7YiOFegTtHUA==}
     engines: {node: 10.* || >= 12.*}
-
-  ember-cli-deprecation-workflow@2.2.0:
-    resolution: {integrity: sha512-23bXZqZJBJSKBTfT0LK7qzSJX861TgafL6RVdMfn/iubpLnoZIWergYwEdgs24CNTUbuehVbHy2Q71o8jYfwfw==}
-    engines: {node: 12.* || 14.* || >= 16}
 
   ember-cli-get-component-path-option@1.0.0:
     resolution: {integrity: sha512-k47TDwcJ2zPideBCZE8sCiShSxQSpebY2BHcX2DdipMmBox5gsfyVrbKJWIHeSTTKyEUgmBIvQkqTOozEziCZA==}
@@ -11551,26 +11544,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.24.8)
-      '@types/ember__array': 4.0.10
-      '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12(@babel/core@7.24.8)
-      '@types/ember__debug': 4.0.8(@babel/core@7.24.8)
-      '@types/ember__engine': 4.0.11(@babel/core@7.24.8)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.24.8)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9(@babel/core@7.24.8)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.24.8)
-      '@types/ember__utils': 4.0.7(@babel/core@7.24.8)
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.24.8)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.24.8)
@@ -11603,11 +11576,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.24.8)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.24.8)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.24.8)
       '@types/ember__engine': 4.0.11(@babel/core@7.24.8)
       '@types/ember__object': 4.0.12(@babel/core@7.24.8)
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22
+      '@types/ember__routing': 4.0.22(@babel/core@7.24.8)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11615,11 +11588,6 @@ snapshots:
   '@types/ember__array@3.16.11':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__array@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.24.8)
 
   '@types/ember__array@4.0.10(@babel/core@7.24.8)':
     dependencies:
@@ -11633,11 +11601,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.30
-
-  '@types/ember__component@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.24.8)
 
   '@types/ember__component@4.0.22(@babel/core@7.24.8)':
     dependencies:
@@ -11712,13 +11675,6 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
-  '@types/ember__routing@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12(@babel/core@7.24.8)
-      '@types/ember__object': 4.0.12(@babel/core@7.24.8)
-      '@types/ember__service': 4.0.9(@babel/core@7.24.8)
-
   '@types/ember__routing@4.0.22(@babel/core@7.24.8)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.8)
@@ -11730,10 +11686,6 @@ snapshots:
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
-
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.24.8)':
     dependencies:
@@ -14519,15 +14471,6 @@ snapshots:
       broccoli-plugin: 1.3.1
       chalk: 2.4.2
       semver: 5.7.2
-
-  ember-cli-deprecation-workflow@2.2.0:
-    dependencies:
-      '@ember/string': 3.1.1
-      broccoli-funnel: 3.0.8
-      broccoli-merge-trees: 4.2.0
-      broccoli-plugin: 4.0.7
-    transitivePeerDependencies:
-      - supports-color
 
   ember-cli-get-component-path-option@1.0.0: {}
 
