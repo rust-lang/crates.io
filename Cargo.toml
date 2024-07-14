@@ -87,7 +87,7 @@ hyper = { version = "=1.4.1", features = ["client", "http1"] }
 indexmap = { version = "=2.2.6", features = ["serde"] }
 indicatif = "=0.17.8"
 ipnetwork = "=0.20.0"
-tikv-jemallocator = { version = "=0.5.4", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
+tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.11.7", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=2.0.3"
 mockall = "=0.12.1"
