@@ -50,7 +50,7 @@
       {{/if}}
 
       <time
-        datetime={{date-format-iso @version.updated_at}}
+        datetime={{date-format-iso @version.created_at}}
         local-class="date {{if @version.isNew "new"}}"
       >
         {{svg-jar "calendar"}}
