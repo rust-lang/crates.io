@@ -15,7 +15,6 @@ export default class Version extends Model {
   @attr dl_path;
   @attr readme_path;
   @attr('date') created_at;
-  @attr('date') updated_at;
   @attr downloads;
   @attr features;
   @attr yanked;
