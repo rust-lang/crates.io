@@ -71,7 +71,7 @@
     "@percy/cli": "1.28.9",
     "@percy/ember": "4.2.0",
     "@percy/playwright": "1.0.6",
-    "@playwright/test": "1.45.1",
+    "@playwright/test": "1.45.2",
     "@sinonjs/fake-timers": "11.2.2",
     "@types/ember": "4.0.11",
     "@types/node": "20.14.10",
