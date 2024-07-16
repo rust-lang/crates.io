@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/ember": "8.17.0",
+    "@sentry/ember": "8.18.0",
     "chart.js": "4.4.3",
     "date-fns": "3.6.0",
     "highlight.js": "11.10.0",
