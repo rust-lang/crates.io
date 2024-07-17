@@ -91,7 +91,15 @@ pub async fn authorize(
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
+
         if !session_state.is_some_and(|state| query.state.secret() == state.secret()) {
+            if session_state.is_none() {
+                request_log.add("cause", "missing github_oauth_state in session");
+                return Err(bad_request("missing github_oauth_state in session"));
+            } else {
+                request_log.add("cause", "invalid state parameter");
+                return Err(bad_request("invalid state parameter"));
+            }
             return Err(bad_request("invalid state parameter"));
         }
 
