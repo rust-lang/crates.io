@@ -52,7 +52,7 @@
         @crate={{@crate.name}}
         @version={{@version.num}}
         @exactVersion={{@requestedVersion}}
-        @hasLib={{not (@version.has_lib false)}}
+        @hasLib={{not (eq @version.has_lib false)}}
         @binNames={{@version.bin_names}}
       />
     </div>
