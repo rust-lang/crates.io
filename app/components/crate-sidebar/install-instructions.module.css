@@ -1,6 +1,10 @@
 .copy-help {
     font-size: 12px;
     overflow-wrap: break-word;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 }
 
 .copy-button,
