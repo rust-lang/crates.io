@@ -8,6 +8,7 @@ use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
 use parking_lot::RwLock;
 use std::collections::HashMap;
+use std::env;
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -50,6 +51,9 @@ impl Deref for SessionExtension {
 }
 
 pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) -> Response {
+    // Check if the cookie should be secure
+    let is_local = env::var("IS_LOCAL").unwrap_or_else(|_| "true".to_string()) == "true";
+
     // Decode session cookie
     let data = jar.get(COOKIE_NAME).map(decode).unwrap_or_default();
 
@@ -68,7 +72,7 @@ pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) 
         let encoded = encode(&session.data);
         let cookie = Cookie::build((COOKIE_NAME, encoded))
             .http_only(true)
-            .secure(false)
+            .secure(!is_local)
             .same_site(SameSite::Strict)
             .max_age(Duration::days(MAX_AGE_DAYS))
             .path("/");
