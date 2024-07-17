@@ -68,7 +68,7 @@ pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) 
         let encoded = encode(&session.data);
         let cookie = Cookie::build((COOKIE_NAME, encoded))
             .http_only(true)
-            .secure(true)
+            .secure(false)
             .same_site(SameSite::Strict)
             .max_age(Duration::days(MAX_AGE_DAYS))
             .path("/");
