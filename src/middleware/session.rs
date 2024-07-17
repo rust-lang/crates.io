@@ -52,7 +52,7 @@ impl Deref for SessionExtension {
 
 pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) -> Response {
     // Check if the cookie should be secure
-    let is_local = env::var("IS_LOCAL").unwrap_or_else(|_| "true".to_string()) == "true";
+    let is_local = env::var("IS_LOCAL").unwrap_or_else(|_| "false".to_string()) == "true";
 
     // Decode session cookie
     let data = jar.get(COOKIE_NAME).map(decode).unwrap_or_default();
