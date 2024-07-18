@@ -5,6 +5,7 @@
 <TextContent
   ...attributes
   {{highlight-syntax selector="pre > code:not(.language-mermaid)"}}
+  {{update-source-media this.colorScheme.resolvedScheme}}
   {{render-mermaids}}
 >
   {{html-safe @html}}
