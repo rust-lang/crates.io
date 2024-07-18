@@ -233,6 +233,12 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    #[instrument(skip(self))]
+    pub async fn delete_feed(&self, feed_id: &FeedId) -> Result<()> {
+        let path = feed_id.into();
+        self.store.delete(&path).await
+    }
+
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
