@@ -25,6 +25,7 @@ async fn new_krate() {
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
     rss/crates.xml
+    rss/crates/foo_new.xml
     rss/updates.xml
     "###);
 
@@ -53,6 +54,7 @@ async fn new_krate_with_token() {
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
     rss/crates.xml
+    rss/crates/foo_new.xml
     rss/updates.xml
     "###);
 }
@@ -73,6 +75,7 @@ async fn new_krate_weird_version() {
     crates/foo_weird/foo_weird-0.0.0-pre.crate
     index/fo/o_/foo_weird
     rss/crates.xml
+    rss/crates/foo_weird.xml
     rss/updates.xml
     "###);
 }
@@ -101,6 +104,7 @@ async fn new_krate_twice() {
     crates/foo_twice/foo_twice-2.0.0.crate
     index/fo/o_/foo_twice
     rss/crates.xml
+    rss/crates/foo_twice.xml
     rss/updates.xml
     "###);
 }

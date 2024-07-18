@@ -233,6 +233,12 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    #[instrument(skip(self))]
+    pub async fn delete_feed(&self, feed_id: &FeedId) -> Result<()> {
+        let path = feed_id.into();
+        self.store.delete(&path).await
+    }
+
     #[instrument(skip(self, bytes))]
     pub async fn upload_crate_file(&self, name: &str, version: &str, bytes: Bytes) -> Result<()> {
         let path = crate_file_path(name, version);
@@ -376,6 +382,7 @@ fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
 
 #[derive(Debug)]
 pub enum FeedId {
+    Crate { name: String },
     Crates,
     Updates,
 }
@@ -383,6 +390,7 @@ pub enum FeedId {
 impl From<&FeedId> for Path {
     fn from(feed_id: &FeedId) -> Path {
         match feed_id {
+            FeedId::Crate { name } => format!("rss/crates/{name}.xml").into(),
             FeedId::Crates => "rss/crates.xml".into(),
             FeedId::Updates => "rss/updates.xml".into(),
         }

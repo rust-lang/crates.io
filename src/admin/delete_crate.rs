@@ -1,5 +1,5 @@
 use crate::schema::{crate_owners, teams, users};
-use crate::storage::Storage;
+use crate::storage::{FeedId, Storage};
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
@@ -101,6 +101,12 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         info!(%name, "Deleting readme files from S3");
         if let Err(error) = rt.block_on(store.delete_all_readmes(name)) {
             warn!(%name, ?error, "Failed to delete readme files from S3");
+        }
+
+        info!(%name, "Deleting RSS feed from S3");
+        let feed_id = FeedId::Crate { name: name.clone() };
+        if let Err(error) = rt.block_on(store.delete_feed(&feed_id)) {
+            warn!(%name, ?error, "Failed to delete RSS feed from S3");
         }
     }
 
