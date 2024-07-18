@@ -677,4 +677,20 @@ There can also be some text in between!
         <p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>
         "###);
     }
+
+    #[test]
+    fn pictures_and_sources() {
+        let text = r#"
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://test.crates.io/logo_dark.svg">
+    <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
+</picture>
+        "#;
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+
+            
+            <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
+
+        "###);
+    }
 }
