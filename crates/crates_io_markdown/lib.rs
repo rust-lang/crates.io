@@ -51,12 +51,13 @@ impl<'a> MarkdownRenderer<'a> {
 
         let mut html_sanitizer = Builder::default();
         html_sanitizer
-            .add_tags(&["input", "ol", "section"])
+            .add_tags(&["input", "ol", "picture", "section", "source"])
             .link_rel(Some("nofollow noopener noreferrer"))
             .add_generic_attributes(&["align"])
             .add_tag_attributes("a", &["id", "target"])
             .add_tag_attributes("input", &["checked", "disabled", "type"])
             .add_tag_attributes("li", &["id"])
+            .add_tag_attributes("source", &["media", "srcset"])
             .allowed_classes(allowed_classes)
             .url_relative(sanitize_url)
             .id_prefix(Some("user-content-"));
@@ -675,6 +676,22 @@ There can also be some text in between!
             "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r###"
         <p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>
+        "###);
+    }
+
+    #[test]
+    fn pictures_and_sources() {
+        let text = r#"
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://test.crates.io/logo_dark.svg">
+    <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
+</picture>
+        "#;
+        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="https://test.crates.io/logo_dark.svg">
+            <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
+        </picture>
         "###);
     }
 }
