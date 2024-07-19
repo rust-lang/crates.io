@@ -88,6 +88,15 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-error]')).toHaveCount(0);
   });
 
+  test('API tokens can be regenerated', async ({ page }) => {
+    await page.goto('/settings/tokens');
+    await expect(page).toHaveURL('/settings/tokens');
+    await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
+
+    await page.click('[data-test-api-token="1"] [data-test-regenerate-token-button]');
+    await expect(page).toHaveURL('/settings/tokens/new?from=1');
+  });
+
   test('failed API tokens revocation shows an error', async ({ page, mirage }) => {
     await mirage.addHook(server => {
       server.delete('/api/v1/me/tokens/:id', {}, 500);
