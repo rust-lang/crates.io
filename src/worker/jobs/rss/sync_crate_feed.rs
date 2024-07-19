@@ -3,6 +3,7 @@ use crate::storage::FeedId;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use chrono::Duration;
+use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -82,11 +83,13 @@ impl BackgroundJob for SyncCrateFeed {
         ctx.storage.upload_feed(&feed_id, &channel).await?;
 
         let path = object_store::path::Path::from(&feed_id);
-        if let Some(cloudfront) = ctx.cloudfront() {
-            info!(%path, "Invalidating CloudFront cache…");
-            cloudfront.invalidate(path.as_ref()).await?;
-        } else {
-            info!("Skipping CloudFront cache invalidation (CloudFront not configured)");
+        if !matches!(var("SKIP_RSS_CLOUDFRONT_INVALIDATION"), Ok(Some(_))) {
+            if let Some(cloudfront) = ctx.cloudfront() {
+                info!(%path, "Invalidating CloudFront cache…");
+                cloudfront.invalidate(path.as_ref()).await?;
+            } else {
+                info!("Skipping CloudFront cache invalidation (CloudFront not configured)");
+            }
         }
 
         if let Some(fastly) = ctx.fastly() {
