@@ -89,6 +89,12 @@
     border-radius: var(--space-3xs);
 }
 
+.regenerate-button {
+    composes: yellow-button small from '../../styles/shared/buttons.module.css';
+    flex-grow: 1;
+    border-radius: var(--space-3xs);
+}
+
 .new-token {
     margin-top: var(--space-s);
 }
@@ -190,9 +196,17 @@
         }
 
         .actions {
+            display: flex;
+            flex-direction: column;
             grid-area: actions;
             align-self: start;
             margin: 0 0 0 var(--space-xs);
+        }
+
+        .actions > * {
+            flex-grow: 1;
+            width: 100%;
+            margin-top: var(--space-xs);
         }
 
         .new-token {
