@@ -1084,6 +1084,62 @@ async fn crates_by_user_id_not_including_deleted_owners() {
     }
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn crates_with_stopword_keyword() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let user = user.as_model();
+    app.db(|conn| {
+        CrateBuilder::new("any", user.id)
+            .readme("readme")
+            .description("description")
+            .keyword("kw1")
+            .expect_build(conn);
+
+        CrateBuilder::new("short-stopword", user.id)
+            .keyword("kw1")
+            .keyword("an")
+            .expect_build(conn);
+
+        CrateBuilder::new("ANY_INDEX_QUERIES", user.id)
+            .keyword("KW1")
+            .expect_build(conn);
+
+        CrateBuilder::new("foo-kw-is-stopword", user.id)
+            .keyword("any")
+            .keyword("kw3")
+            .expect_build(conn);
+
+        CrateBuilder::new("bar-kw-is-stopword", user.id)
+            .keyword("any")
+            .keyword("kw1")
+            .expect_build(conn);
+    });
+
+    for json in search_both(&anon, "q=any").await {
+        assert_eq!(json.crates.len(), 4);
+        assert_eq!(json.meta.total, 4);
+        assert_eq!(json.crates[0].name, "any");
+        assert_eq!(json.crates[1].name, "bar-kw-is-stopword");
+        assert_eq!(json.crates[2].name, "foo-kw-is-stopword");
+        assert_eq!(json.crates[3].name, "ANY_INDEX_QUERIES");
+    }
+
+    for json in search_both(&anon, "q=an").await {
+        assert_eq!(json.crates.len(), 3);
+        assert_eq!(json.meta.total, 3);
+        assert_eq!(json.crates[0].name, "short-stopword");
+        assert_eq!(json.crates[1].name, "ANY_INDEX_QUERIES");
+        assert_eq!(json.crates[2].name, "any");
+    }
+
+    // Both `an` and `any` are stopwords.
+    // The query string `an any` is not a valid keyword
+    for json in search_both(&anon, "q=an%20any").await {
+        assert_eq!(json.crates.len(), 0);
+        assert_eq!(json.meta.total, 0);
+    }
+}
+
 static PAGE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
 
 // search with both offset-based (prepend with `page=1` query) and seek-based pagination

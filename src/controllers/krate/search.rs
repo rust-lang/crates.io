@@ -3,12 +3,13 @@
 use crate::auth::AuthCheck;
 use diesel::dsl::*;
 use diesel::sql_types::{Array, Bool, Text};
+use diesel_full_text_search::configuration::TsConfigurationByName;
 use diesel_full_text_search::*;
 use once_cell::sync::OnceCell;
 
 use crate::controllers::cargo_prelude::*;
 use crate::controllers::helpers::Paginate;
-use crate::models::{Crate, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version};
+use crate::models::{Crate, CrateOwner, CrateVersions, Keyword, OwnerKind, TopVersions, Version};
 use crate::schema::*;
 use crate::util::errors::bad_request;
 use crate::views::EncodableCrate;
@@ -92,9 +93,25 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 query = query.order(Crate::with_name(q_string).desc());
 
                 if sort == "relevance" {
-                    let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                    // If the query string is not a stop word, search using `plainto_tsquery(...)`.
+                    // Else if the it is a valid keyword, search by casting it to `tsquery` with weight B(keyword).
+                    // Otherwise, search using `null::tsquery`.
+                    let qs = sql::<TsQuery>("plainto_tsquery('english', ")
                         .bind::<Text, _>(q_string)
                         .sql(")");
+                    let qs_keyword = sql::<TsQuery>("(")
+                        .bind::<Text, _>(q_string)
+                        .sql("::text || ':B')::tsquery");
+                    let q = case_when(
+                        length(to_tsvector_with_search_config::<Text, _, _>(
+                            TsConfigurationByName("english"),
+                            q_string,
+                        ))
+                        .ne(0),
+                        qs,
+                    )
+                    .when(Keyword::valid_name(q_string).into_sql::<Bool>(), qs_keyword)
+                    .otherwise(sql::<TsQuery>("NULL::tsquery"));
                     let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                     query = query.select((
                         ALL_COLUMNS,
@@ -298,9 +315,25 @@ impl<'a> FilterParams<'a> {
 
         if let Some(q_string) = self.q_string {
             if !q_string.is_empty() {
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                // If the query string is not a stop word, search using `plainto_tsquery(...)`.
+                // Else if it is a valid keyword, search by casting it to `tsquery` with weight B(keyword).
+                // Otherwise, search using `null::tsquery`.
+                let qs = sql::<TsQuery>("plainto_tsquery('english', ")
                     .bind::<Text, _>(q_string)
                     .sql(")");
+                let qs_keyword = sql::<TsQuery>("(")
+                    .bind::<Text, _>(q_string)
+                    .sql("::text || ':B')::tsquery");
+                let q = case_when(
+                    length(to_tsvector_with_search_config::<Text, _, _>(
+                        TsConfigurationByName("english"),
+                        q_string,
+                    ))
+                    .ne(0),
+                    qs,
+                )
+                .when(Keyword::valid_name(q_string).into_sql::<Bool>(), qs_keyword)
+                .otherwise(sql::<TsQuery>("NULL::tsquery"));
                 query = query.filter(
                     q.matches(crates::textsearchable_index_col)
                         .or(Crate::loosly_matches_name(q_string)),
@@ -518,10 +551,26 @@ impl<'a> FilterParams<'a> {
                 // `WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
                 //      OR (exact_match = exact_match' AND rank < rank')
                 //      OR exact_match < exact_match'`
+                // If the query string is not a stop word, search using `plainto_tsquery(...)`.
+                // Else if it is a valid keyword, search by casting it to `tsquery` with weight B(keyword).
+                // Otherwise, search using `null::tsquery`.
                 let q_string = self.q_string.expect("q_string should not be None");
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
+                let qs = sql::<TsQuery>("plainto_tsquery('english', ")
                     .bind::<Text, _>(q_string)
                     .sql(")");
+                let qs_keyword = sql::<TsQuery>("(")
+                    .bind::<Text, _>(q_string)
+                    .sql("::text || ':B')::tsquery");
+                let q = case_when(
+                    length(to_tsvector_with_search_config::<Text, _, _>(
+                        TsConfigurationByName("english"),
+                        q_string,
+                    ))
+                    .ne(0),
+                    qs,
+                )
+                .when(Keyword::valid_name(q_string).into_sql::<Bool>(), qs_keyword)
+                .otherwise(sql::<TsQuery>("NULL::tsquery"));
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 let name_exact_match = Crate::with_name(q_string);
                 vec![
