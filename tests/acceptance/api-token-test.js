@@ -103,6 +103,17 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-error]').doesNotExist();
   });
 
+  test('API tokens can be regenerated', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token]').exists({ count: 3 });
+
+    await click('[data-test-api-token="1"] [data-test-regenerate-token-button]');
+    assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
+  });
+
   test('failed API tokens revocation shows an error', async function (assert) {
     prepare(this);
 
