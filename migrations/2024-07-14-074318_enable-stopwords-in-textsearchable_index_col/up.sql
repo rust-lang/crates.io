@@ -1,8 +1,35 @@
+-- This is an aggregation function that combines multiple rows of tsvector data into a single tsvector
+-- using the tsvector concat operator.
 CREATE OR REPLACE aggregate tsvector_agg (tsvector) (
   STYPE = pg_catalog.tsvector,
   SFUNC = pg_catalog.tsvector_concat,
   INITCOND = ''
 );
+-- e.g.
+-- WITH expected AS (
+--   SELECT
+--     'macro:1'::tsvector || 'any:1'::tsvector AS concat
+-- ),
+-- data as (
+--   SELECT *
+--   FROM (
+--     VALUES
+--       ('macro:1' :: tsvector),
+--       ('any:1' :: tsvector)
+--   ) k(tv)
+-- )
+-- SELECT
+--   ( SELECT concat FROM expected ),
+--   ( SELECT tsvector_agg(tv) FROM data ) AS agg,
+--   ( SELECT concat FROM expected ) = (
+--     SELECT tsvector_agg(tv) FROM data
+--   ) AS is_eq;
+--
+-- EOF
+--       concat       |        agg        | is_eq
+-- -------------------+-------------------+-------
+--  'any':2 'macro':1 | 'any':2 'macro':1 | t
+-- (1 row)
 
 -- Add support for storing keywords considered stopwords in `crates.textsearchable_index_col` by casting
 -- to tsvector
