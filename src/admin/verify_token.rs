@@ -1,6 +1,6 @@
 use crate::models::ApiToken;
+use crate::util::token::HashedToken;
 use crate::{db, models::User};
-use anyhow::anyhow;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -16,8 +16,8 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let conn = &mut db::oneoff_connection()?;
-    let token =
-        ApiToken::find_by_api_token(conn, &opts.api_token).map_err(|err| anyhow!("{err}"))?;
+    let token = HashedToken::parse(&opts.api_token)?;
+    let token = ApiToken::find_by_api_token(conn, &token)?;
     let user = User::find(conn, token.user_id)?;
     println!("The token belongs to user {}", user.gh_login);
     Ok(())

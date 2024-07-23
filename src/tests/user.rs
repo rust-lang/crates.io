@@ -4,6 +4,7 @@ use crate::{
     TestApp,
 };
 use crates_io::models::{ApiToken, Email, NewUser, User};
+use crates_io::util::token::HashedToken;
 use diesel::prelude::*;
 use http::StatusCode;
 use secrecy::ExposeSecret;
@@ -34,7 +35,8 @@ async fn updating_existing_user_doesnt_change_api_token() {
         );
 
         // Use the original API token to find the now updated user
-        let api_token = assert_ok!(ApiToken::find_by_api_token(conn, token.expose_secret()));
+        let hashed_token = assert_ok!(HashedToken::parse(token.expose_secret()));
+        let api_token = assert_ok!(ApiToken::find_by_api_token(conn, &hashed_token));
         assert_ok!(User::find(conn, api_token.user_id))
     });
 

@@ -22,7 +22,7 @@ pub struct InvalidTokenError;
 pub struct HashedToken(SecretVec<u8>);
 
 impl HashedToken {
-    pub(crate) fn parse(plaintext: &str) -> Result<Self, InvalidTokenError> {
+    pub fn parse(plaintext: &str) -> Result<Self, InvalidTokenError> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if !plaintext.starts_with(TOKEN_PREFIX) {
             return Err(InvalidTokenError);

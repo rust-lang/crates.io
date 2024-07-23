@@ -7,6 +7,7 @@ use crate::models::{ApiToken, User};
 use crate::util::errors::{
     account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
+use crate::util::token::HashedToken;
 use chrono::Utc;
 use diesel::PgConnection;
 use http::header;
@@ -209,15 +210,14 @@ fn authenticate_via_token<T: RequestPartsExt>(
         return Ok(None);
     };
 
-    let token = ApiToken::find_by_api_token(conn, header_value).map_err(|e| {
-        if e.is::<InsecurelyGeneratedTokenRevoked>() {
-            e
-        } else {
-            let cause = format!("invalid token caused by {e}");
-            req.request_log().add("cause", cause);
+    let token =
+        HashedToken::parse(header_value).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
 
-            forbidden("authentication failed")
-        }
+    let token = ApiToken::find_by_api_token(conn, &token).map_err(|e| {
+        let cause = format!("invalid token caused by {e}");
+        req.request_log().add("cause", cause);
+
+        forbidden("authentication failed")
     })?;
 
     let user = User::find(conn, token.user_id).map_err(|err| {
