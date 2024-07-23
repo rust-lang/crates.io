@@ -9,6 +9,7 @@ use anyhow::{anyhow, Context};
 use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
 use crates_io_github::GitHubPublicKey;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::HeaderMap;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
@@ -257,7 +258,9 @@ pub async fn verify(
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let feedback = alerts
             .into_iter()
             .map(|alert| {
@@ -272,7 +275,7 @@ pub async fn verify(
 
         Ok(Json(feedback))
     })
-    .await?
+    .await
 }
 
 #[cfg(test)]

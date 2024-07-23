@@ -1,5 +1,6 @@
-use deadpool_diesel::postgres::{Hook, HookError};
-use diesel::prelude::*;
+use diesel::{Connection, ConnectionResult, PgConnection, QueryResult};
+use diesel_async::pooled_connection::deadpool::{Hook, HookError};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::ExposeSecret;
 use std::time::Duration;
 use url::Url;
@@ -49,28 +50,32 @@ pub struct ConnectionConfig {
 }
 
 impl ConnectionConfig {
-    fn apply(&self, conn: &mut PgConnection) -> QueryResult<()> {
-        diesel::sql_query("SET application_name = 'crates.io'").execute(conn)?;
+    async fn apply(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+        diesel::sql_query("SET application_name = 'crates.io'")
+            .execute(conn)
+            .await?;
 
         let statement_timeout = self.statement_timeout.as_millis();
-        diesel::sql_query(format!("SET statement_timeout = {statement_timeout}")).execute(conn)?;
+        diesel::sql_query(format!("SET statement_timeout = {statement_timeout}"))
+            .execute(conn)
+            .await?;
 
         if self.read_only {
-            diesel::sql_query("SET default_transaction_read_only = 't'").execute(conn)?;
+            diesel::sql_query("SET default_transaction_read_only = 't'")
+                .execute(conn)
+                .await?;
         }
 
         Ok(())
     }
 }
 
-impl From<ConnectionConfig> for Hook {
+impl From<ConnectionConfig> for Hook<AsyncPgConnection> {
     fn from(config: ConnectionConfig) -> Self {
         Hook::async_fn(move |conn, _| {
             Box::pin(async move {
-                conn.interact(move |conn| config.apply(conn))
-                    .await
-                    .map_err(|err| HookError::message(err.to_string()))?
-                    .map_err(|err| HookError::message(err.to_string()))
+                let result = config.apply(conn).await;
+                result.map_err(|err| HookError::message(err.to_string()))
             })
         })
     }

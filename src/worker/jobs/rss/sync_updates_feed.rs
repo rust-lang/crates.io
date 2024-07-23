@@ -1,11 +1,12 @@
 use crate::schema::{crates, versions};
 use crate::storage::FeedId;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
@@ -33,10 +34,11 @@ impl BackgroundJob for SyncUpdatesFeed {
 
         info!("Loading latest {NUM_ITEMS} version updates from the database…");
         let conn = ctx.deadpool.get().await?;
-        let version_updates = conn
-            .interact(load_version_updates)
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
+        let version_updates = spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            Ok::<_, anyhow::Error>(load_version_updates(conn)?)
+        })
+        .await?;
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),

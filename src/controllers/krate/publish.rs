@@ -8,6 +8,7 @@ use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
@@ -75,7 +76,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_version", &version_string);
 
     let conn = app.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
@@ -477,7 +479,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }))
         })
     })
-    .await?
+    .await
 }
 
 /// Counts the number of versions for `crate_id` that were published within

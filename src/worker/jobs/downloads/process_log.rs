@@ -1,14 +1,17 @@
 use crate::config::CdnLogStorageConfig;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use chrono::NaiveDate;
 use crates_io_cdn_logs::{count_downloads, Decompressor, DownloadsMap};
 use crates_io_worker::BackgroundJob;
-use deadpool_diesel::postgres::Pool;
 use diesel::dsl::exists;
 use diesel::prelude::*;
-use diesel::{select, PgConnection, QueryResult};
+use diesel::{select, QueryResult};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use object_store::aws::AmazonS3Builder;
 use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
@@ -97,7 +100,11 @@ fn build_store(
 /// it can be tested without having to construct a full [`Environment`]
 /// struct.
 #[instrument(skip_all, fields(cdn_log_store.path = %path))]
-async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: Pool) -> anyhow::Result<()> {
+async fn run(
+    store: Arc<dyn ObjectStore>,
+    path: &str,
+    db_pool: Pool<AsyncPgConnection>,
+) -> anyhow::Result<()> {
     if already_processed(path, db_pool.clone()).await? {
         warn!("Skipping already processed log file");
         return Ok(());
@@ -116,7 +123,9 @@ async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: Pool) -> anyhow::
 
     let path = path.to_string();
     let conn = db_pool.get().await?;
-    conn.interact(|conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         conn.transaction(|conn| {
             // Mark the log file as processed before saving the downloads to
             // the database.
@@ -136,9 +145,6 @@ async fn run(store: Arc<dyn ObjectStore>, path: &str, db_pool: Pool) -> anyhow::
         Ok::<_, anyhow::Error>(())
     })
     .await
-    .map_err(|err| anyhow!(err.to_string()))??;
-
-    Ok(())
 }
 
 /// Loads the given log file from the object store and counts the number of
@@ -346,14 +352,18 @@ impl Debug for NameAndVersion {
 ///
 /// Acquires a connection from the pool before passing it to the
 /// [`already_processed_inner()`] function.
-async fn already_processed(path: impl Into<String>, db_pool: Pool) -> anyhow::Result<bool> {
+async fn already_processed(
+    path: impl Into<String>,
+    db_pool: Pool<AsyncPgConnection>,
+) -> anyhow::Result<bool> {
     let path = path.into();
 
     let conn = db_pool.get().await?;
-    let already_processed = conn
-        .interact(move |conn| already_processed_inner(path, conn))
-        .await
-        .map_err(|err| anyhow!(err.to_string()))??;
+    let already_processed = spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        Ok::<_, anyhow::Error>(already_processed_inner(path, conn)?)
+    })
+    .await?;
 
     Ok(already_processed)
 }
@@ -387,9 +397,9 @@ fn save_as_processed(path: impl Into<String>, conn: &mut impl Conn) -> QueryResu
 mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
+    use crate::util::diesel::Conn;
     use crates_io_test_db::TestDatabase;
-    use deadpool_diesel::postgres::Manager;
-    use deadpool_diesel::Runtime;
+    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_debug_snapshot;
 
     const CLOUDFRONT_PATH: &str =
@@ -468,15 +478,17 @@ mod tests {
     }
 
     /// Builds a connection pool to the test database.
-    fn build_connection_pool(url: &str) -> Pool {
-        let manager = Manager::new(url, Runtime::Tokio1);
+    fn build_connection_pool(url: &str) -> Pool<AsyncPgConnection> {
+        let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
         Pool::builder(manager).build().unwrap()
     }
 
     /// Inserts some dummy crates and versions into the database.
-    async fn create_dummy_crates_and_versions(db_pool: Pool) {
+    async fn create_dummy_crates_and_versions(db_pool: Pool<AsyncPgConnection>) {
         let conn = db_pool.get().await.unwrap();
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             create_crate_and_version("bindgen", "0.65.1", conn);
             create_crate_and_version("tracing-core", "0.1.32", conn);
             create_crate_and_version("quick-error", "1.2.3", conn);
@@ -484,7 +496,6 @@ mod tests {
             Ok::<_, anyhow::Error>(())
         })
         .await
-        .unwrap()
         .unwrap();
     }
 
@@ -508,9 +519,14 @@ mod tests {
 
     /// Queries all version downloads from the database and returns them as a
     /// [`Vec`] of strings for use with [`assert_debug_snapshot!()`].
-    async fn all_version_downloads(db_pool: Pool) -> Vec<String> {
+    async fn all_version_downloads(db_pool: Pool<AsyncPgConnection>) -> Vec<String> {
         let conn = db_pool.get().await.unwrap();
-        let downloads = conn.interact(query_all_version_downloads).await.unwrap();
+        let downloads = spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            Ok::<_, anyhow::Error>(query_all_version_downloads(conn))
+        })
+        .await
+        .unwrap();
 
         downloads
             .into_iter()

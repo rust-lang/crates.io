@@ -3,6 +3,7 @@
 //! The endpoint for downloading a crate and exposing version specific
 //! download counts are located in `version::downloads`.
 
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::cmp;
 
 use crate::controllers::frontend_prelude::*;
@@ -16,7 +17,9 @@ use crate::views::EncodableVersionDownload;
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::dsl::*;
         use diesel::sql_types::BigInt;
 
@@ -68,5 +71,5 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
             },
         })))
     })
-    .await?
+    .await
 }

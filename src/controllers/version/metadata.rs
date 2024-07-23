@@ -5,6 +5,7 @@
 //! `Cargo.toml` file.
 
 use crate::controllers::frontend_prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 use crate::models::VersionOwnerAction;
 use crate::util::errors::version_not_found;
@@ -28,7 +29,9 @@ pub async fn dependencies(
     }
 
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
         let deps = version.dependencies(conn)?;
         let deps = deps
@@ -38,7 +41,7 @@ pub async fn dependencies(
 
         Ok(Json(json!({ "dependencies": deps })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -65,7 +68,9 @@ pub async fn show(
     }
 
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
         let published_by = version.published_by(conn);
         let actions = VersionOwnerAction::by_version(conn, &version)?;
@@ -73,5 +78,5 @@ pub async fn show(
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
         Ok(Json(json!({ "version": version })))
     })
-    .await?
+    .await
 }

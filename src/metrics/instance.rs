@@ -19,7 +19,8 @@
 
 use crate::app::App;
 use crate::metrics::macros::metrics;
-use deadpool_diesel::postgres::Pool;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use prometheus::{
     proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
 };
@@ -61,7 +62,11 @@ impl InstanceMetrics {
         Ok(self.registry.gather())
     }
 
-    fn refresh_pool_stats(&self, name: &str, pool: &Pool) -> prometheus::Result<()> {
+    fn refresh_pool_stats(
+        &self,
+        name: &str,
+        pool: &Pool<AsyncPgConnection>,
+    ) -> prometheus::Result<()> {
         let status = pool.status();
 
         self.database_idle_conns

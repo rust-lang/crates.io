@@ -1,4 +1,5 @@
 use crate::controllers::frontend_prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 use crate::models::Team;
 use crate::schema::teams;
@@ -9,9 +10,10 @@ pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<J
     use self::teams::dsl::{login, teams};
 
     let conn = state.db_read().await?;
-    let team: Team = conn
-        .interact(move |conn| teams.filter(login.eq(&name)).first(conn))
-        .await??;
-
-    Ok(Json(json!({ "team": EncodableTeam::from(team) })))
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let team: Team = teams.filter(login.eq(&name)).first(conn)?;
+        Ok(Json(json!({ "team": EncodableTeam::from(team) })))
+    })
+    .await
 }

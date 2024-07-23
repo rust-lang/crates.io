@@ -2,12 +2,13 @@ use crate::models;
 use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use chrono::Utc;
 use crates_io_env_vars::var_parsed;
 use crates_io_index::{Crate, Repository};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use sentry::Level;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, ErrorKind, Write};
@@ -41,7 +42,9 @@ impl BackgroundJob for SyncToGitIndex {
 
         let crate_name = self.krate.clone();
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let new = get_index_data(&crate_name, conn).context("Failed to get index data")?;
 
             let repo = env.lock_index()?;
@@ -76,7 +79,6 @@ impl BackgroundJob for SyncToGitIndex {
             Ok(())
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 
@@ -105,11 +107,12 @@ impl BackgroundJob for SyncToSparseIndex {
 
         let crate_name = self.krate.clone();
         let conn = env.deadpool.get().await?;
-        let content = conn
-            .interact(move |conn| get_index_data(&crate_name, conn))
-            .await
-            .map_err(|err| anyhow!(err.to_string()))?
-            .context("Failed to get index data")?;
+        let content = spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            get_index_data(&crate_name, conn)
+        })
+        .await
+        .context("Failed to get index data")?;
 
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;

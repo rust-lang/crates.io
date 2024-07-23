@@ -1,10 +1,11 @@
 use crate::email::Email;
 use crate::schema::{emails, users};
+use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::RunQueryDsl;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
@@ -30,7 +31,9 @@ impl BackgroundJob for SyncAdmins {
             .collect::<HashSet<_>>();
 
         let conn = ctx.deadpool.get().await?;
-        conn.interact::<_, anyhow::Result<_>>(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let format_repo_admins = |github_ids: &HashSet<i32>| {
                 repo_admins
                     .iter()
@@ -158,9 +161,6 @@ impl BackgroundJob for SyncAdmins {
             Ok(())
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))??;
-
-        Ok(())
     }
 }
 

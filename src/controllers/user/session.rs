@@ -1,6 +1,7 @@
 use crate::controllers::frontend_prelude::*;
 
 use axum::extract::{FromRequestParts, Query};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use tokio::runtime::Handle;
@@ -88,7 +89,9 @@ pub async fn authorize(
     let request_log = req.request_log().clone();
 
     let conn = app.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         // Make sure that the state we just got matches the session state that we
         // should have issued earlier.
         let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
@@ -117,7 +120,7 @@ pub async fn authorize(
 
         Ok(())
     })
-    .await??;
+    .await?;
 
     super::me::me(app_clone, req).await
 }

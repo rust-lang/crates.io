@@ -3,26 +3,28 @@ use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
-use deadpool_diesel::postgres::Pool;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use futures_util::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::task::JoinHandle;
+use tokio::task::{spawn_blocking, JoinHandle};
 use tracing::{info, info_span, warn, Instrument};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
 /// The core runner responsible for locking and running jobs
 pub struct Runner<Context> {
-    connection_pool: Pool,
+    connection_pool: Pool<AsyncPgConnection>,
     queues: HashMap<String, Queue<Context>>,
     context: Context,
     shutdown_when_queue_empty: bool,
 }
 
 impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
-    pub fn new(connection_pool: Pool, context: Context) -> Self {
+    pub fn new(connection_pool: Pool<AsyncPgConnection>, context: Context) -> Self {
         Self {
             connection_pool,
             queues: HashMap::new(),
@@ -96,7 +98,9 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     /// any jobs have failed.
     pub async fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
         let conn = self.connection_pool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let failed_jobs = storage::failed_job_count(conn)?;
             if failed_jobs == 0 {
                 Ok(())

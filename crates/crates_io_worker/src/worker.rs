@@ -2,19 +2,22 @@ use crate::job_registry::JobRegistry;
 use crate::storage;
 use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
 use anyhow::anyhow;
-use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use futures_util::FutureExt;
 use sentry_core::{Hub, SentryFutureExt};
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Handle;
+use tokio::task::spawn_blocking;
 use tokio::time::sleep;
 use tracing::{debug, error, info_span, warn};
 
 pub struct Worker<Context> {
-    pub(crate) connection_pool: Pool,
+    pub(crate) connection_pool: Pool<AsyncPgConnection>,
     pub(crate) context: Context,
     pub(crate) job_registry: Arc<JobRegistry<Context>>,
     pub(crate) shutdown_when_queue_empty: bool,
@@ -58,7 +61,9 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
         let job_registry = self.job_registry.clone();
         let conn = self.connection_pool.get().await?;
 
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let job_types = job_registry.job_types();
             conn.transaction(|conn| {
                 debug!("Looking for next background worker job…");

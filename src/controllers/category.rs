@@ -1,5 +1,6 @@
 use super::helpers::pagination::*;
 use super::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 use crate::models::Category;
 use crate::schema::categories;
@@ -13,7 +14,9 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let options = PaginationOptions::builder().gather(&req)?;
 
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let query = req.query();
         let sort = query.get("sort").map_or("alpha", String::as_str);
 
@@ -33,13 +36,15 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             "meta": { "total": total },
         })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /categories/:category_id` route.
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let cat: Category = Category::by_slug(&slug).first(conn)?;
         let subcats = cat
             .subcategories(conn)?
@@ -66,13 +71,15 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<V
 
         Ok(Json(json!({ "category": cat_with_subcats })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let slugs: Vec<Slug> = categories::table
             .select((categories::slug, categories::slug, categories::description))
             .order(categories::slug)
@@ -87,5 +94,5 @@ pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
 
         Ok(Json(json!({ "category_slugs": slugs })))
     })
-    .await?
+    .await
 }

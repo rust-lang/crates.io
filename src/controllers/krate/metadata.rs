@@ -4,6 +4,7 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::cmp::Reverse;
 use std::str::FromStr;
 
@@ -28,7 +29,9 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let include = req
             .query()
             .get("include")
@@ -142,7 +145,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             "categories": encodable_cats,
         })))
     })
-    .await?
+    .await
 }
 
 #[derive(Debug)]
@@ -228,7 +231,9 @@ pub async fn reverse_dependencies(
     req: Parts,
 ) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let pagination_options = PaginationOptions::builder().gather(&req)?;
 
         let krate: Crate = Crate::by_name(&name)
@@ -273,5 +278,5 @@ pub async fn reverse_dependencies(
             "meta": { "total": total },
         })))
     })
-    .await?
+    .await
 }

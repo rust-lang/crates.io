@@ -3,6 +3,7 @@
 use crate::auth::AuthCheck;
 use diesel::dsl::*;
 use diesel::sql_types::{Array, Bool, Text};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_full_text_search::*;
 use std::cell::OnceCell;
 
@@ -41,7 +42,9 @@ use crate::util::diesel::Conn;
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::sql_types::Float;
         use seek::*;
 
@@ -246,7 +249,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             },
         })))
     })
-    .await?
+    .await
 }
 
 #[derive(Default)]

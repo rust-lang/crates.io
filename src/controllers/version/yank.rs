@@ -12,6 +12,7 @@ use crate::util::errors::{custom, version_not_found};
 use crate::worker::jobs;
 use crate::worker::jobs::UpdateDefaultVersion;
 use crates_io_worker::BackgroundJob;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use tokio::runtime::Handle;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -56,7 +57,9 @@ async fn modify_yank(
     }
 
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::default()
             .with_endpoint_scope(EndpointScope::Yank)
             .for_crate(&crate_name)
@@ -109,5 +112,5 @@ async fn modify_yank(
 
         ok_true()
     })
-    .await?
+    .await
 }

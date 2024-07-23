@@ -1,12 +1,13 @@
 use crate::util::{RequestHelper, TestApp};
-use deadpool_diesel::postgres::Pool;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use http::StatusCode;
 use std::time::{Duration, Instant};
 use tracing::info;
 
 const DB_HEALTHY_TIMEOUT: Duration = Duration::from_millis(2000);
 
-async fn wait_until_healthy(pool: &Pool) {
+async fn wait_until_healthy(pool: &Pool<AsyncPgConnection>) {
     info!("Waiting for the database to become healthy…");
 
     let start_time = Instant::now();

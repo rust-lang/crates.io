@@ -1,7 +1,8 @@
 use crate::models::update_default_version;
+use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
@@ -26,13 +27,11 @@ impl BackgroundJob for UpdateDefaultVersion {
 
         info!("Updating default version for crate {crate_id}");
         let conn = ctx.deadpool.get().await?;
-        conn.interact::<_, anyhow::Result<_>>(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
             update_default_version(crate_id, conn)?;
             Ok(())
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))??;
-
-        Ok(())
     }
 }

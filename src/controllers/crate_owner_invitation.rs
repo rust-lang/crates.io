@@ -13,6 +13,7 @@ use crate::views::{
 };
 use chrono::{Duration, Utc};
 use diesel::{pg::Pg, sql_types::Bool};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 use tokio::runtime::Handle;
@@ -20,7 +21,9 @@ use tokio::runtime::Handle;
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user_id = auth.user_id();
 
@@ -54,13 +57,15 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             "users": users,
         })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
@@ -74,7 +79,7 @@ pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateLi
         let list = prepare_list(&app, &req, auth, filter, conn)?;
         Ok(Json(list))
     })
-    .await?
+    .await
 }
 
 enum ListFilter {
@@ -269,7 +274,9 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
     let crate_invite = crate_invite.crate_owner_invite;
 
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::default().check(&req, conn)?;
         let user_id = auth.user_id();
 
@@ -284,7 +291,7 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
 
         Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
@@ -293,7 +300,9 @@ pub async fn handle_invite_with_token(
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let config = &state.config;
 
         let invitation = CrateOwnerInvitation::find_by_token(&token, conn)?;
@@ -307,5 +316,5 @@ pub async fn handle_invite_with_token(
             },
         })))
     })
-    .await?
+    .await
 }

@@ -6,9 +6,11 @@ use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
 use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
-use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use futures_util::StreamExt;
 use object_store::aws::AmazonS3Builder;
 use object_store::ObjectStore;
@@ -242,11 +244,13 @@ async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow
 }
 
 /// Delete version downloads for the given dates from the database.
-async fn delete(db_pool: &Pool, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+async fn delete(db_pool: &Pool<AsyncPgConnection>, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     let conn = db_pool.get().await?;
-    conn.interact(move |conn| delete_inner(conn, dates))
-        .await
-        .map_err(|err| anyhow!(err.to_string()))?
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        delete_inner(conn, dates)
+    })
+    .await
 }
 
 fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
@@ -275,9 +279,7 @@ mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
-    use deadpool_diesel::postgres::Manager;
-    use deadpool_diesel::Runtime;
-    use diesel::PgConnection;
+    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_snapshot;
 
     #[tokio::test]
@@ -388,7 +390,7 @@ mod tests {
         let mut conn = test_db.connect();
         prepare_database(&mut conn);
 
-        let manager = Manager::new(test_db.url(), Runtime::Tokio1);
+        let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(test_db.url());
         let db_pool = Pool::builder(manager).build().unwrap();
         let dates = vec![NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()];
         delete(&db_pool, dates).await.unwrap();

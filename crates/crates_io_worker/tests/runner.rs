@@ -1,9 +1,10 @@
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, Runner};
-use deadpool_diesel::postgres::{Manager, Pool};
-use deadpool_diesel::Runtime;
 use diesel::prelude::*;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Barrier;
@@ -210,7 +211,7 @@ fn runner<Context: Clone + Send + Sync + 'static>(
     database_url: &str,
     context: Context,
 ) -> Runner<Context> {
-    let manager = Manager::new(database_url, Runtime::Tokio1);
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
     let deadpool = Pool::builder(manager).max_size(4).build().unwrap();
 
     Runner::new(deadpool, context)

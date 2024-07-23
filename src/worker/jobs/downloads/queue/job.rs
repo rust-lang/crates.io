@@ -1,15 +1,17 @@
 use crate::config::CdnLogQueueConfig;
 use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::jobs::ProcessCdnLog;
 use crate::worker::Environment;
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
 use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
-use deadpool_diesel::postgres::Pool;
-use diesel::PgConnection;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use std::sync::Arc;
 
 /// A background job that processes messages from the CDN log queue.
@@ -67,7 +69,7 @@ fn build_queue(config: &CdnLogQueueConfig) -> Box<dyn SqsQueue + Send + Sync> {
 async fn run(
     queue: &impl SqsQueue,
     max_messages: usize,
-    connection_pool: &Pool,
+    connection_pool: &Pool<AsyncPgConnection>,
 ) -> anyhow::Result<()> {
     const MAX_BATCH_SIZE: usize = 10;
 
@@ -102,7 +104,7 @@ async fn run(
 async fn process_message(
     message: &Message,
     queue: &impl SqsQueue,
-    connection_pool: &Pool,
+    connection_pool: &Pool<AsyncPgConnection>,
 ) -> anyhow::Result<()> {
     debug!("Processing message…");
 
@@ -134,7 +136,7 @@ async fn process_message(
 /// warning and returns `Ok(())` instead. This is because we don't want to
 /// requeue the message in the case of a parsing error, as it would just be
 /// retried indefinitely.
-async fn process_body(body: &str, connection_pool: &Pool) -> anyhow::Result<()> {
+async fn process_body(body: &str, connection_pool: &Pool<AsyncPgConnection>) -> anyhow::Result<()> {
     let message = match serde_json::from_str::<super::message::Message>(body) {
         Ok(message) => message,
         Err(err) => {
@@ -155,9 +157,11 @@ async fn process_body(body: &str, connection_pool: &Pool) -> anyhow::Result<()> 
 
     let conn = connection_pool.get().await;
     let conn = conn.context("Failed to acquire database connection")?;
-    conn.interact(move |conn| enqueue_jobs(jobs, conn))
-        .await
-        .map_err(|err| anyhow!(err.to_string()))?
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        enqueue_jobs(jobs, conn)
+    })
+    .await
 }
 
 /// Extracts a list of [`ProcessCdnLog`] jobs from a message.
@@ -225,10 +229,9 @@ mod tests {
     use aws_sdk_sqs::types::Message;
     use crates_io_test_db::TestDatabase;
     use crates_io_worker::schema::background_jobs;
-    use deadpool_diesel::postgres::Manager;
-    use deadpool_diesel::Runtime;
     use diesel::prelude::*;
     use diesel::QueryDsl;
+    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_snapshot;
     use parking_lot::Mutex;
 
@@ -393,8 +396,8 @@ mod tests {
         deleted_handles
     }
 
-    fn build_connection_pool(url: &str) -> Pool {
-        let manager = Manager::new(url, Runtime::Tokio1);
+    fn build_connection_pool(url: &str) -> Pool<AsyncPgConnection> {
+        let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
         Pool::builder(manager).build().unwrap()
     }
 

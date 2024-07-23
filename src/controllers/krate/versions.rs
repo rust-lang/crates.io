@@ -3,6 +3,7 @@
 use std::cmp::Reverse;
 
 use diesel::connection::DefaultLoadingMode;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use indexmap::IndexMap;
 
 use crate::controllers::frontend_prelude::*;
@@ -21,7 +22,9 @@ pub async fn versions(
     req: Parts,
 ) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let crate_id: i32 = Crate::by_name(&crate_name)
             .select(crates::id)
             .first(conn)
@@ -65,7 +68,7 @@ pub async fn versions(
             None => json!({ "versions": versions }),
         }))
     })
-    .await?
+    .await
 }
 
 /// Seek-based pagination of versions by date

@@ -1,11 +1,11 @@
-use anyhow::anyhow;
 use std::sync::Arc;
 
 use crates_io_worker::BackgroundJob;
-use diesel::PgConnection;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use typomania::Package;
 
 use crate::email::Email;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::{
     typosquat::{Cache, Crate},
@@ -36,12 +36,13 @@ impl BackgroundJob for CheckTyposquat {
         let crate_name = self.name.clone();
 
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let cache = env.typosquat_cache(conn)?;
             check(&env.emails, cache, conn, &crate_name)
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 

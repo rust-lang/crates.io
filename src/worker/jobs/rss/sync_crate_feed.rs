@@ -1,11 +1,12 @@
 use crate::schema::{crates, versions};
 use crate::storage::FeedId;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 /// Items younger than this will always be included in the feed.
@@ -41,13 +42,15 @@ impl BackgroundJob for SyncCrateFeed {
 
         info!("Loading latest {NUM_ITEMS} version updates for `{name}` from the database…");
         let conn = ctx.deadpool.get().await?;
-        let version_updates = conn
-            .interact({
-                let name = name.clone();
-                move |conn| load_version_updates(&name, conn)
-            })
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
+
+        let version_updates = spawn_blocking({
+            let name = name.clone();
+            move || {
+                let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+                Ok::<_, anyhow::Error>(load_version_updates(&name, conn)?)
+            }
+        })
+        .await?;
 
         let feed_id = FeedId::Crate { name: name.clone() };
 

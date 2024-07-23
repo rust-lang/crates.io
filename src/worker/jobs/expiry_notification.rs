@@ -1,12 +1,13 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::{email::Email, models::User, worker::Environment, Emails};
-use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 /// The threshold for the expiry notification.
@@ -26,13 +27,14 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     #[instrument(skip(env), err)]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             // Check if the token is about to expire
             // If the token is about to expire, trigger a notification.
             check(&env.emails, conn)
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 

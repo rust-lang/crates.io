@@ -1,10 +1,11 @@
 use crate::schema::version_downloads;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::BigInt;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -18,11 +19,11 @@ impl BackgroundJob for UpdateDownloads {
 
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let conn = env.deadpool.get().await?;
-        conn.interact(update)
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
-
-        Ok(())
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            Ok(update(conn)?)
+        })
+        .await
     }
 }
 

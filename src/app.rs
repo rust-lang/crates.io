@@ -11,20 +11,25 @@ use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
-use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
 use deadpool_diesel::Runtime;
+use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
 use oauth2::basic::BasicClient;
 
-type DeadpoolResult = Result<deadpool_diesel::postgres::Connection, deadpool_diesel::PoolError>;
+type DeadpoolResult = Result<
+    diesel_async::pooled_connection::deadpool::Object<AsyncPgConnection>,
+    diesel_async::pooled_connection::deadpool::PoolError,
+>;
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
 pub struct App {
     /// Database connection pool connected to the primary database
-    pub primary_database: DeadpoolPool,
+    pub primary_database: DeadpoolPool<AsyncPgConnection>,
 
     /// Database connection pool connected to the read-only replica database
-    pub replica_database: Option<DeadpoolPool>,
+    pub replica_database: Option<DeadpoolPool<AsyncPgConnection>>,
 
     /// GitHub API client
     pub github: Box<dyn GitHubClient>,
@@ -83,7 +88,7 @@ impl App {
             };
 
             let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager = DeadpoolManager::new(url, Runtime::Tokio1);
+            let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
@@ -103,7 +108,7 @@ impl App {
             };
 
             let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager = DeadpoolManager::new(url, Runtime::Tokio1);
+            let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
@@ -158,7 +163,7 @@ impl App {
             Ok(connection) => Ok(connection),
 
             // Replica is not available, but primary might be available
-            Err(deadpool_diesel::PoolError::Backend(error)) => {
+            Err(error) => {
                 let _ = self
                     .instance_metrics
                     .database_fallback_used
@@ -168,9 +173,6 @@ impl App {
                 warn!("Replica is unavailable, falling back to primary ({error})");
                 self.primary_database.get().await
             }
-
-            // Replica failed
-            Err(error) => Err(error),
         }
     }
 
@@ -188,7 +190,7 @@ impl App {
             Ok(connection) => Ok(connection),
 
             // Primary is not available, but replica might be available
-            Err(deadpool_diesel::PoolError::Backend(error)) => {
+            Err(error) => {
                 let _ = self
                     .instance_metrics
                     .database_fallback_used
@@ -198,9 +200,6 @@ impl App {
                 warn!("Primary is unavailable, falling back to replica ({error})");
                 read_only_pool.get().await
             }
-
-            // Primary failed
-            Err(error) => Err(error),
         }
     }
 }
