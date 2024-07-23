@@ -6,7 +6,6 @@ use diesel::prelude::*;
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
-use crate::util::errors::{AppResult, InsecurelyGeneratedTokenRevoked};
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
@@ -70,10 +69,11 @@ impl ApiToken {
         })
     }
 
-    pub fn find_by_api_token(conn: &mut PgConnection, token: &str) -> AppResult<ApiToken> {
+    pub fn find_by_api_token(
+        conn: &mut PgConnection,
+        token: &HashedToken,
+    ) -> QueryResult<ApiToken> {
         use diesel::{dsl::now, update};
-
-        let token = HashedToken::parse(token).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
 
         let tokens = api_tokens::table
             .filter(api_tokens::revoked.eq(false))
@@ -82,7 +82,7 @@ impl ApiToken {
                     .is_null()
                     .or(api_tokens::expired_at.gt(now)),
             )
-            .filter(api_tokens::token.eq(&token));
+            .filter(api_tokens::token.eq(token));
 
         // If the database is in read only mode, we can't update last_used_at.
         // Try updating in a new transaction, if that fails, fall back to reading
