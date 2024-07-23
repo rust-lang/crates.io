@@ -7,7 +7,7 @@ use crate::controllers::user::me::UserConfirmEmail;
 use crate::email::Emails;
 use crate::util::errors::AppResult;
 
-use crate::models::{ApiToken, Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::sql::lower;
 
@@ -120,13 +120,6 @@ impl<'a> NewUser<'a> {
 impl User {
     pub fn find(conn: &mut PgConnection, id: i32) -> QueryResult<User> {
         users::table.find(id).first(conn)
-    }
-
-    /// Queries the database for a user with a certain `api_token` value.
-    pub fn find_by_api_token(conn: &mut PgConnection, token: &str) -> AppResult<User> {
-        let api_token = ApiToken::find_by_api_token(conn, token)?;
-
-        Ok(Self::find(conn, api_token.user_id)?)
     }
 
     pub fn find_by_login(conn: &mut PgConnection, login: &str) -> QueryResult<User> {

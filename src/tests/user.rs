@@ -3,7 +3,7 @@ use crate::{
     util::{MockCookieUser, RequestHelper},
     TestApp,
 };
-use crates_io::models::{Email, NewUser, User};
+use crates_io::models::{ApiToken, Email, NewUser, User};
 use diesel::prelude::*;
 use http::StatusCode;
 use secrecy::ExposeSecret;
@@ -34,7 +34,8 @@ async fn updating_existing_user_doesnt_change_api_token() {
         );
 
         // Use the original API token to find the now updated user
-        assert_ok!(User::find_by_api_token(conn, token.expose_secret()))
+        let api_token = assert_ok!(ApiToken::find_by_api_token(conn, token.expose_secret()));
+        assert_ok!(User::find(conn, api_token.user_id))
     });
 
     assert_eq!(user.gh_login, "bar");
