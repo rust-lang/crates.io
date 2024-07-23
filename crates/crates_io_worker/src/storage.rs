@@ -1,4 +1,5 @@
 use crate::schema::background_jobs;
+use diesel::connection::LoadConnection;
 use diesel::dsl::now;
 use diesel::pg::Pg;
 use diesel::prelude::*;
@@ -26,7 +27,7 @@ fn retriable() -> Box<dyn BoxableExpression<background_jobs::table, Pg, SqlType 
 /// Finds the next job that is unlocked, and ready to be retried. If a row is
 /// found, it will be locked.
 pub(super) fn find_next_unlocked_job(
-    conn: &mut PgConnection,
+    conn: &mut impl LoadConnection<Backend = Pg>,
     job_types: &[String],
 ) -> QueryResult<BackgroundJob> {
     background_jobs::table
@@ -40,7 +41,7 @@ pub(super) fn find_next_unlocked_job(
 }
 
 /// The number of jobs that have failed at least once
-pub(super) fn failed_job_count(conn: &mut PgConnection) -> QueryResult<i64> {
+pub(super) fn failed_job_count(conn: &mut impl LoadConnection<Backend = Pg>) -> QueryResult<i64> {
     background_jobs::table
         .count()
         .filter(background_jobs::retries.gt(0))
@@ -48,7 +49,10 @@ pub(super) fn failed_job_count(conn: &mut PgConnection) -> QueryResult<i64> {
 }
 
 /// Deletes a job that has successfully completed running
-pub(super) fn delete_successful_job(conn: &mut PgConnection, job_id: i64) -> QueryResult<()> {
+pub(super) fn delete_successful_job(
+    conn: &mut impl LoadConnection<Backend = Pg>,
+    job_id: i64,
+) -> QueryResult<()> {
     delete(background_jobs::table.find(job_id)).execute(conn)?;
     Ok(())
 }
@@ -57,7 +61,7 @@ pub(super) fn delete_successful_job(conn: &mut PgConnection, job_id: i64) -> Que
 ///
 /// Ignores any database errors that may have occurred. If the DB has gone away,
 /// we assume that just trying again with a new connection will succeed.
-pub(super) fn update_failed_job(conn: &mut PgConnection, job_id: i64) {
+pub(super) fn update_failed_job(conn: &mut impl LoadConnection<Backend = Pg>, job_id: i64) {
     let _ = update(background_jobs::table.find(job_id))
         .set((
             background_jobs::retries.eq(background_jobs::retries + 1),

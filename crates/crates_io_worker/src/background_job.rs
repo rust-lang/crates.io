@@ -1,7 +1,8 @@
 use crate::errors::EnqueueError;
 use crate::schema::background_jobs;
+use diesel::connection::LoadConnection;
+use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::PgConnection;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::future::Future;
@@ -29,14 +30,14 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Execute the task. This method should define its logic.
     fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
-    fn enqueue(&self, conn: &mut PgConnection) -> Result<i64, EnqueueError> {
+    fn enqueue(&self, conn: &mut impl LoadConnection<Backend = Pg>) -> Result<i64, EnqueueError> {
         self.enqueue_with_priority(conn, Self::PRIORITY)
     }
 
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
     fn enqueue_with_priority(
         &self,
-        conn: &mut PgConnection,
+        conn: &mut impl LoadConnection<Backend = Pg>,
         job_priority: i16,
     ) -> Result<i64, EnqueueError> {
         let job_data = serde_json::to_value(self)?;
