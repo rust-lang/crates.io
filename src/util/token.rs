@@ -9,19 +9,27 @@ const TOKEN_LENGTH: usize = 32;
 /// revoke all the tokens, disrupting production users.
 const TOKEN_PREFIX: &str = "cio";
 
+/// An error indicating that a token is invalid.
+///
+/// This error is returned when a token is not prefixed with a
+/// known crates.io-specific prefix.
+#[derive(Debug, thiserror::Error)]
+#[error("invalid token format")]
+pub struct InvalidTokenError;
+
 #[derive(FromSqlRow, AsExpression)]
 #[diesel(sql_type = Bytea)]
 pub struct HashedToken(SecretVec<u8>);
 
 impl HashedToken {
-    pub(crate) fn parse(plaintext: &str) -> Option<Self> {
+    pub(crate) fn parse(plaintext: &str) -> Result<Self, InvalidTokenError> {
         // This will both reject tokens without a prefix and tokens of the wrong kind.
         if !plaintext.starts_with(TOKEN_PREFIX) {
-            return None;
+            return Err(InvalidTokenError);
         }
 
         let sha256 = Self::hash(plaintext).into();
-        Some(Self(sha256))
+        Ok(Self(sha256))
     }
 
     pub fn hash(plaintext: &str) -> Vec<u8> {
@@ -106,6 +114,6 @@ mod tests {
 
     #[test]
     fn test_parse_no_kind() {
-        assert!(HashedToken::parse("nokind").is_none());
+        assert_err!(HashedToken::parse("nokind"));
     }
 }

@@ -73,7 +73,8 @@ impl ApiToken {
     pub fn find_by_api_token(conn: &mut PgConnection, token: &str) -> AppResult<ApiToken> {
         use diesel::{dsl::now, update};
 
-        let token = HashedToken::parse(token).ok_or_else(InsecurelyGeneratedTokenRevoked::boxed)?;
+        let token =
+            HashedToken::parse(token).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
 
         let tokens = api_tokens::table
             .filter(api_tokens::revoked.eq(false))
