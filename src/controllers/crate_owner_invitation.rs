@@ -5,6 +5,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
+use crate::util::diesel::Conn;
 use crate::util::errors::{forbidden, internal};
 use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
@@ -86,7 +87,7 @@ fn prepare_list(
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<PrivateListResponse> {
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)

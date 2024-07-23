@@ -10,6 +10,7 @@ use crate::util::errors::AppResult;
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::sql::lower;
+use crate::util::diesel::Conn;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
@@ -58,7 +59,7 @@ impl<'a> NewUser<'a> {
         &self,
         email: Option<&'a str>,
         emails: &Emails,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> QueryResult<User> {
         use diesel::dsl::sql;
         use diesel::insert_into;
@@ -118,11 +119,11 @@ impl<'a> NewUser<'a> {
 }
 
 impl User {
-    pub fn find(conn: &mut PgConnection, id: i32) -> QueryResult<User> {
+    pub fn find(conn: &mut impl Conn, id: i32) -> QueryResult<User> {
         users::table.find(id).first(conn)
     }
 
-    pub fn find_by_login(conn: &mut PgConnection, login: &str) -> QueryResult<User> {
+    pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<User> {
         users::table
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
@@ -130,7 +131,7 @@ impl User {
             .first(conn)
     }
 
-    pub fn owning(krate: &Crate, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(users::all_columns)
@@ -171,7 +172,7 @@ impl User {
 
     /// Queries the database for the verified emails
     /// belonging to a given user
-    pub fn verified_email(&self, conn: &mut PgConnection) -> QueryResult<Option<String>> {
+    pub fn verified_email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
@@ -180,7 +181,7 @@ impl User {
     }
 
     /// Queries for the email belonging to a particular user
-    pub fn email(&self, conn: &mut PgConnection) -> QueryResult<Option<String>> {
+    pub fn email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .first(conn)

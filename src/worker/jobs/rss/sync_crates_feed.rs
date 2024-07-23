@@ -1,5 +1,6 @@
 use crate::schema::crates;
 use crate::storage::FeedId;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use chrono::Duration;
@@ -92,7 +93,7 @@ impl BackgroundJob for SyncCratesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] crates
 /// then the list will be padded with older crates until [`NUM_ITEMS`] are
 /// returned.
-fn load_new_crates(conn: &mut PgConnection) -> QueryResult<Vec<NewCrate>> {
+fn load_new_crates(conn: &mut impl Conn) -> QueryResult<Vec<NewCrate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let new_crates = crates::table
@@ -214,7 +215,7 @@ mod tests {
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str, publish_time: NaiveDateTime) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str, publish_time: NaiveDateTime) -> i32 {
         diesel::insert_into(crates::table)
             .values((
                 crates::name.eq(name),

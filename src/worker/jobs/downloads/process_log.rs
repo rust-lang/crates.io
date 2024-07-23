@@ -1,4 +1,5 @@
 use crate::config::CdnLogStorageConfig;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::NaiveDate;
@@ -211,7 +212,7 @@ impl From<(String, Version, NaiveDate, u64)> for NewDownload {
 /// The temporary table only exists on the current connection, but if a
 /// connection pool is used, the temporary table will not be dropped when
 /// the connection is returned to the pool.
-pub fn save_downloads(downloads: DownloadsMap, conn: &mut PgConnection) -> anyhow::Result<()> {
+pub fn save_downloads(downloads: DownloadsMap, conn: &mut impl Conn) -> anyhow::Result<()> {
     debug!("Creating temp_downloads table");
     create_temp_downloads_table(conn).context("Failed to create temp_downloads table")?;
 
@@ -239,7 +240,7 @@ pub fn save_downloads(downloads: DownloadsMap, conn: &mut PgConnection) -> anyho
 /// look up the `version_id` for each crate and version combination, and that
 /// requires a join with the `crates` and `versions` tables.
 #[instrument("db.query", skip_all, fields(message = "CREATE TEMPORARY TABLE ..."))]
-fn create_temp_downloads_table(conn: &mut PgConnection) -> QueryResult<usize> {
+fn create_temp_downloads_table(conn: &mut impl Conn) -> QueryResult<usize> {
     diesel::sql_query(
         r#"
             CREATE TEMPORARY TABLE temp_downloads (
@@ -260,7 +261,7 @@ fn create_temp_downloads_table(conn: &mut PgConnection) -> QueryResult<usize> {
     skip_all,
     fields(message = "INSERT INTO temp_downloads ...")
 )]
-fn fill_temp_downloads_table(downloads: DownloadsMap, conn: &mut PgConnection) -> QueryResult<()> {
+fn fill_temp_downloads_table(downloads: DownloadsMap, conn: &mut impl Conn) -> QueryResult<()> {
     // Postgres has a limit of 65,535 parameters per query, so we have to
     // insert the downloads in batches. Since we fill four columns per
     // [NewDownload] we can only insert 16,383 rows at a time. To be safe we
@@ -290,7 +291,7 @@ fn fill_temp_downloads_table(downloads: DownloadsMap, conn: &mut PgConnection) -
     skip_all,
     fields(message = "INSERT INTO version_downloads ...")
 )]
-fn save_to_version_downloads(conn: &mut PgConnection) -> QueryResult<Vec<NameAndVersion>> {
+fn save_to_version_downloads(conn: &mut impl Conn) -> QueryResult<Vec<NameAndVersion>> {
     diesel::sql_query(
         r#"
             WITH joined_data AS (
@@ -363,7 +364,7 @@ async fn already_processed(path: impl Into<String>, db_pool: Pool) -> anyhow::Re
 /// Note that if a second job is already processing the same log file, this
 /// function will return `false` because the second job will not have inserted
 /// the path into the `processed_log_files` table yet.
-fn already_processed_inner(path: impl Into<String>, conn: &mut PgConnection) -> QueryResult<bool> {
+fn already_processed_inner(path: impl Into<String>, conn: &mut impl Conn) -> QueryResult<bool> {
     use crate::schema::processed_log_files;
 
     let query = processed_log_files::table.filter(processed_log_files::path.eq(path.into()));
@@ -372,7 +373,7 @@ fn already_processed_inner(path: impl Into<String>, conn: &mut PgConnection) -> 
 
 /// Inserts the given path into the `processed_log_files` table to mark it as
 /// processed.
-fn save_as_processed(path: impl Into<String>, conn: &mut PgConnection) -> QueryResult<()> {
+fn save_as_processed(path: impl Into<String>, conn: &mut impl Conn) -> QueryResult<()> {
     use crate::schema::processed_log_files;
 
     diesel::insert_into(processed_log_files::table)
@@ -488,7 +489,7 @@ mod tests {
     }
 
     /// Inserts a dummy crate and version into the database.
-    fn create_crate_and_version(name: &str, version: &str, conn: &mut PgConnection) {
+    fn create_crate_and_version(name: &str, version: &str, conn: &mut impl Conn) {
         let crate_id: i32 = diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -522,7 +523,7 @@ mod tests {
     /// Queries all version downloads from the database and returns them as a
     /// [`Vec`] of tuples.
     fn query_all_version_downloads(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> Vec<(String, String, i32, i32, NaiveDate, bool)> {
         version_downloads::table
             .inner_join(versions::table)

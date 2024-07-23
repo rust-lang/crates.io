@@ -21,6 +21,7 @@ use crate::util::errors::{version_not_found, AppResult};
 use crate::models::helpers::with_count::*;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
+use crate::util::diesel::Conn;
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[diesel(
@@ -100,7 +101,7 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn update(&self, conn: &mut PgConnection) -> QueryResult<Crate> {
+    pub fn update(&self, conn: &mut impl Conn) -> QueryResult<Crate> {
         use diesel::update;
 
         update(crates::table)
@@ -116,7 +117,7 @@ impl<'a> NewCrate<'a> {
             .get_result(conn)
     }
 
-    pub fn create(&self, conn: &mut PgConnection, user_id: i32) -> QueryResult<Crate> {
+    pub fn create(&self, conn: &mut impl Conn, user_id: i32) -> QueryResult<Crate> {
         conn.transaction(|conn| {
             let krate: Crate = diesel::insert_into(crates::table)
                 .values(self)
@@ -186,7 +187,7 @@ impl Crate {
         crates::table.select(Self::as_select())
     }
 
-    pub fn find_version(&self, conn: &mut PgConnection, version: &str) -> AppResult<Version> {
+    pub fn find_version(&self, conn: &mut impl Conn, version: &str) -> AppResult<Version> {
         self.all_versions()
             .filter(versions::num.eq(version))
             .first(conn)
@@ -326,7 +327,7 @@ impl Crate {
 
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate.
-    pub fn top_versions(&self, conn: &mut PgConnection) -> QueryResult<TopVersions> {
+    pub fn top_versions(&self, conn: &mut impl Conn) -> QueryResult<TopVersions> {
         Ok(TopVersions::from_date_version_pairs(
             self.versions()
                 .select((versions::created_at, versions::num))
@@ -334,7 +335,7 @@ impl Crate {
         ))
     }
 
-    pub fn owners(&self, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owners(&self, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
@@ -356,7 +357,7 @@ impl Crate {
     pub fn owner_add(
         &self,
         app: &App,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         req_user: &User,
         login: &str,
     ) -> AppResult<String> {
@@ -419,7 +420,7 @@ impl Crate {
         }
     }
 
-    pub fn owner_remove(&self, conn: &mut PgConnection, login: &str) -> AppResult<()> {
+    pub fn owner_remove(&self, conn: &mut impl Conn, login: &str) -> AppResult<()> {
         let owner = Owner::find_by_login(conn, login)?;
 
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind()));
@@ -433,7 +434,7 @@ impl Crate {
     #[instrument(skip_all, fields(krate.name = %self.name))]
     pub(crate) fn reverse_dependencies(
         &self,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         options: PaginationOptions,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
@@ -451,10 +452,7 @@ impl Crate {
     }
 
     /// Gather all the necessary data to write an index metadata file
-    pub fn index_metadata(
-        &self,
-        conn: &mut PgConnection,
-    ) -> QueryResult<Vec<crates_io_index::Crate>> {
+    pub fn index_metadata(&self, conn: &mut impl Conn) -> QueryResult<Vec<crates_io_index::Crate>> {
         let mut versions: Vec<Version> = self.all_versions().load(conn)?;
 
         // We sort by `created_at` by default, but since tests run within a

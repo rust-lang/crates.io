@@ -1,5 +1,6 @@
 use crate::schema::{default_versions, versions};
 use crate::sql::SemverVersion;
+use crate::util::diesel::Conn;
 use diesel::prelude::*;
 
 /// A subset of the columns of the `versions` table.
@@ -35,7 +36,7 @@ impl Version {
 ///
 /// The default version is then written to the `default_versions` table.
 #[instrument(skip(conn))]
-pub fn update_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<()> {
+pub fn update_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
     let default_version = calculate_default_version(crate_id, conn)?;
 
     debug!(
@@ -86,7 +87,7 @@ pub fn verify_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryRe
     Ok(())
 }
 
-fn calculate_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<Version> {
+fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<Version> {
     debug!("Loading all versions for the crate…");
     let versions = versions::table
         .filter(versions::crate_id.eq(crate_id))
@@ -178,7 +179,7 @@ mod tests {
         check(&versions, "1.0.0-beta.3");
     }
 
-    fn create_crate(name: &str, conn: &mut PgConnection) -> i32 {
+    fn create_crate(name: &str, conn: &mut impl Conn) -> i32 {
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -186,7 +187,7 @@ mod tests {
             .unwrap()
     }
 
-    fn create_version(crate_id: i32, num: &str, conn: &mut PgConnection) {
+    fn create_version(crate_id: i32, num: &str, conn: &mut impl Conn) {
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -197,7 +198,7 @@ mod tests {
             .unwrap();
     }
 
-    fn get_default_version(crate_id: i32, conn: &mut PgConnection) -> String {
+    fn get_default_version(crate_id: i32, conn: &mut impl Conn) -> String {
         default_versions::table
             .inner_join(versions::table)
             .select(versions::num)

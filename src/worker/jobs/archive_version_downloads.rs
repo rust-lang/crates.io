@@ -1,5 +1,6 @@
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
@@ -248,7 +249,7 @@ async fn delete(db_pool: &Pool, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
         .map_err(|err| anyhow!(err.to_string()))?
 }
 
-fn delete_inner(conn: &mut PgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     // Delete version downloads for the given dates in chunks to avoid running
     // into the maximum query parameter limit.
     const CHUNK_SIZE: usize = 5000;
@@ -399,7 +400,7 @@ mod tests {
         assert_eq!(row_count, 4);
     }
 
-    fn prepare_database(conn: &mut PgConnection) {
+    fn prepare_database(conn: &mut impl Conn) {
         let c1 = create_crate(conn, "foo");
         let v1 = create_version(conn, c1, "1.0.0");
         let v2 = create_version(conn, c1, "2.0.0");
@@ -411,7 +412,7 @@ mod tests {
         insert_downloads(conn, v2, "2021-01-03", 600);
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str) -> i32 {
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -419,7 +420,7 @@ mod tests {
             .unwrap()
     }
 
-    fn create_version(conn: &mut PgConnection, crate_id: i32, num: &str) -> i32 {
+    fn create_version(conn: &mut impl Conn, crate_id: i32, num: &str) -> i32 {
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -431,7 +432,7 @@ mod tests {
             .unwrap()
     }
 
-    fn insert_downloads(conn: &mut PgConnection, version_id: i32, date: &str, downloads: i32) {
+    fn insert_downloads(conn: &mut impl Conn, version_id: i32, date: &str, downloads: i32) {
         let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
 
         diesel::insert_into(version_downloads::table)

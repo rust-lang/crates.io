@@ -1,5 +1,6 @@
 use crate::config::CdnLogQueueConfig;
 use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
+use crate::util::diesel::Conn;
 use crate::worker::jobs::ProcessCdnLog;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
@@ -202,7 +203,7 @@ fn is_ignored_path(path: &str) -> bool {
     path.contains("/index.staging.crates.io/") || path.contains("/index.crates.io/")
 }
 
-fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, conn: &mut PgConnection) -> anyhow::Result<()> {
+fn enqueue_jobs(jobs: Vec<ProcessCdnLog>, conn: &mut impl Conn) -> anyhow::Result<()> {
     for job in jobs {
         let path = &job.path;
 
@@ -415,7 +416,7 @@ mod tests {
             .build()
     }
 
-    fn open_jobs(conn: &mut PgConnection) -> String {
+    fn open_jobs(conn: &mut impl Conn) -> String {
         let jobs = background_jobs::table
             .select((background_jobs::job_type, background_jobs::data))
             .load::<(String, serde_json::Value)>(conn)

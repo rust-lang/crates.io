@@ -3,6 +3,7 @@ use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::team_repo::TeamRepo;
 use crate::typosquat;
+use crate::util::diesel::Conn;
 use crate::Emails;
 use crates_io_index::{Repository, RepositoryConfig};
 use deadpool_diesel::postgres::Pool as DeadpoolPool;
@@ -73,7 +74,7 @@ impl Environment {
     /// Returns the typosquatting cache, initialising it if required.
     pub(crate) fn typosquat_cache(
         &self,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> Result<&typosquat::Cache, typosquat::CacheError> {
         // We have to pass conn back in here because the caller might be in a transaction, and
         // getting a new connection here to query crates can result in a deadlock.

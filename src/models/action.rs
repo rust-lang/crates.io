@@ -1,6 +1,7 @@
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 use crate::sql::pg_enum;
+use crate::util::diesel::Conn;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
@@ -48,14 +49,11 @@ pub struct VersionOwnerAction {
 }
 
 impl VersionOwnerAction {
-    pub fn all(conn: &mut PgConnection) -> QueryResult<Vec<Self>> {
+    pub fn all(conn: &mut impl Conn) -> QueryResult<Vec<Self>> {
         version_owner_actions::table.load(conn)
     }
 
-    pub fn by_version(
-        conn: &mut PgConnection,
-        version: &Version,
-    ) -> QueryResult<Vec<(Self, User)>> {
+    pub fn by_version(conn: &mut impl Conn, version: &Version) -> QueryResult<Vec<(Self, User)>> {
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
@@ -66,7 +64,7 @@ impl VersionOwnerAction {
     }
 
     pub fn for_versions(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         versions: &[Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
@@ -78,7 +76,7 @@ impl VersionOwnerAction {
 }
 
 pub fn insert_version_owner_action(
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
     version_id_: i32,
     user_id_: i32,
     api_token_id_: Option<i32>,

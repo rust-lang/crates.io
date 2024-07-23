@@ -1,4 +1,5 @@
 use crate::schema::processed_log_files;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
@@ -28,7 +29,7 @@ impl BackgroundJob for CleanProcessedLogFiles {
     }
 }
 
-fn run(conn: &mut PgConnection) -> QueryResult<()> {
+fn run(conn: &mut impl Conn) -> QueryResult<()> {
     let filter = processed_log_files::time.lt(cut_off_date());
     diesel::delete(processed_log_files::table.filter(filter)).execute(conn)?;
 

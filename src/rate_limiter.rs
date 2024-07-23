@@ -1,5 +1,6 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
+use crate::util::diesel::Conn;
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{NaiveDateTime, Utc};
 use diesel::dsl::IntervalDsl;
@@ -77,7 +78,7 @@ impl RateLimiter {
         &self,
         uploader: i32,
         performed_action: LimitedAction,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> AppResult<()> {
         let bucket = self.take_token(uploader, performed_action, Utc::now().naive_utc(), conn)?;
         if bucket.tokens >= 1 {
@@ -105,7 +106,7 @@ impl RateLimiter {
         uploader: i32,
         performed_action: LimitedAction,
         now: NaiveDateTime,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> QueryResult<Bucket> {
         let config = self.config_for_action(performed_action);
         let refill_rate = (config.rate.as_millis() as i64).milliseconds();
@@ -636,7 +637,7 @@ mod tests {
         Ok(())
     }
 
-    fn new_user(conn: &mut PgConnection, gh_login: &str) -> QueryResult<i32> {
+    fn new_user(conn: &mut impl Conn, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
 
         let user = NewUser {
@@ -648,7 +649,7 @@ mod tests {
     }
 
     fn new_user_bucket(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         tokens: i32,
         now: NaiveDateTime,
     ) -> QueryResult<Bucket> {

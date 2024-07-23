@@ -7,6 +7,7 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::models::{Crate, Team, User};
 use crate::schema::crate_owners;
 use crate::sql::pg_enum;
+use crate::util::diesel::Conn;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -62,7 +63,7 @@ impl Owner {
     /// sensitive.
     pub fn find_or_create_by_login(
         app: &App,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         req_user: &User,
         name: &str,
     ) -> AppResult<Owner> {
@@ -84,7 +85,7 @@ impl Owner {
     ///
     /// May be a user's GH login or a full team name. This is case
     /// sensitive.
-    pub fn find_by_login(conn: &mut PgConnection, name: &str) -> AppResult<Owner> {
+    pub fn find_by_login(conn: &mut impl Conn, name: &str) -> AppResult<Owner> {
         if name.contains(':') {
             Team::find_by_login(conn, name)
                 .optional()?

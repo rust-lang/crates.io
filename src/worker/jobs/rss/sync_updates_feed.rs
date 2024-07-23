@@ -1,5 +1,6 @@
 use crate::schema::{crates, versions};
 use crate::storage::FeedId;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use chrono::Duration;
@@ -92,7 +93,7 @@ impl BackgroundJob for SyncUpdatesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] versions
 /// then the list will be padded with older versions until [`NUM_ITEMS`] are
 /// returned.
-fn load_version_updates(conn: &mut PgConnection) -> QueryResult<Vec<VersionUpdate>> {
+fn load_version_updates(conn: &mut impl Conn) -> QueryResult<Vec<VersionUpdate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let updates = versions::table
@@ -232,7 +233,7 @@ mod tests {
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str) -> i32 {
         diesel::insert_into(crates::table)
             .values((crates::name.eq(name),))
             .returning(crates::id)
@@ -241,7 +242,7 @@ mod tests {
     }
 
     fn create_version(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         crate_id: i32,
         version: &str,
         publish_time: NaiveDateTime,

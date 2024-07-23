@@ -1,5 +1,6 @@
 use crate::models;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::Utc;
@@ -125,7 +126,7 @@ impl BackgroundJob for SyncToSparseIndex {
 }
 
 #[instrument(skip_all, fields(krate.name = ?name))]
-pub fn get_index_data(name: &str, conn: &mut PgConnection) -> anyhow::Result<Option<String>> {
+pub fn get_index_data(name: &str, conn: &mut impl Conn) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
     let Some(krate): Option<models::Crate> =
         models::Crate::by_exact_name(name).first(conn).optional()?

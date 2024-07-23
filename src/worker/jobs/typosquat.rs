@@ -6,6 +6,7 @@ use diesel::PgConnection;
 use typomania::Package;
 
 use crate::email::Email;
+use crate::util::diesel::Conn;
 use crate::{
     typosquat::{Cache, Crate},
     worker::Environment,
@@ -44,12 +45,7 @@ impl BackgroundJob for CheckTyposquat {
     }
 }
 
-fn check(
-    emails: &Emails,
-    cache: &Cache,
-    conn: &mut PgConnection,
-    name: &str,
-) -> anyhow::Result<()> {
+fn check(emails: &Emails, cache: &Cache, conn: &mut impl Conn, name: &str) -> anyhow::Result<()> {
     if let Some(harness) = cache.get_harness() {
         info!(name, "Checking new crate for potential typosquatting");
 

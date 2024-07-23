@@ -248,9 +248,9 @@ pub(crate) struct PaginatedQuery<T> {
 }
 
 impl<T> PaginatedQuery<T> {
-    pub(crate) fn load<'a, U>(self, conn: &mut PgConnection) -> QueryResult<Paginated<U>>
+    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
     where
-        Self: LoadQuery<'a, PgConnection, WithCount<U>>,
+        Self: LoadQuery<'a, Conn, WithCount<U>>,
     {
         let options = self.options.clone();
         let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
@@ -388,9 +388,9 @@ where
 }
 
 impl<T, C> PaginatedQueryWithCountSubq<T, C> {
-    pub(crate) fn load<'a, U>(self, conn: &mut PgConnection) -> QueryResult<Paginated<U>>
+    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
     where
-        Self: LoadQuery<'a, PgConnection, WithCount<U>>,
+        Self: LoadQuery<'a, Conn, WithCount<U>>,
     {
         let options = self.options.clone();
         let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;

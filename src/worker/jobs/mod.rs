@@ -1,3 +1,4 @@
+use crate::util::diesel::Conn;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, not};
@@ -40,7 +41,7 @@ pub use self::update_default_version::UpdateDefaultVersion;
 #[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
 pub fn enqueue_sync_to_index<T: Display>(
     krate: T,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> Result<(), EnqueueError> {
     // Returns jobs with matching `job_type`, `data` and `priority`,
     // skipping ones that are already locked by the background worker.

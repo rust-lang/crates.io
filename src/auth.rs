@@ -4,12 +4,12 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
+use crate::util::diesel::Conn;
 use crate::util::errors::{
     account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use crate::util::token::HashedToken;
 use chrono::Utc;
-use diesel::PgConnection;
 use http::header;
 
 #[derive(Debug, Clone)]
@@ -60,7 +60,7 @@ impl AuthCheck {
     pub fn check<T: RequestPartsExt>(
         &self,
         request: &T,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> AppResult<Authentication> {
         let auth = authenticate(request, conn)?;
 
@@ -173,7 +173,7 @@ impl Authentication {
 #[instrument(skip_all)]
 fn authenticate_via_cookie<T: RequestPartsExt>(
     req: &T,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<Option<CookieAuthentication>> {
     let user_id_from_session = req
         .session()
@@ -199,7 +199,7 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
 #[instrument(skip_all)]
 fn authenticate_via_token<T: RequestPartsExt>(
     req: &T,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<Option<TokenAuthentication>> {
     let maybe_authorization = req
         .headers()
@@ -234,7 +234,7 @@ fn authenticate_via_token<T: RequestPartsExt>(
 }
 
 #[instrument(skip_all)]
-fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut PgConnection) -> AppResult<Authentication> {
+fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut impl Conn) -> AppResult<Authentication> {
     controllers::util::verify_origin(req)?;
 
     match authenticate_via_cookie(req, conn) {

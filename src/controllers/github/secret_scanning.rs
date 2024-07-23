@@ -3,6 +3,7 @@ use crate::controllers::frontend_prelude::*;
 use crate::email::Email;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
+use crate::util::diesel::Conn;
 use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
@@ -127,7 +128,7 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
     let hashed_token = HashedToken::hash(&alert.token);
 
@@ -174,7 +175,7 @@ fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id).context("Failed to find user")?;
     let Some(recipient) = user.email(conn)? else {

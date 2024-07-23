@@ -6,6 +6,7 @@ use secrecy::SecretString;
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
+use crate::util::diesel::Conn;
 use crate::util::errors::{custom, AppResult};
 
 #[derive(Debug)]
@@ -32,7 +33,7 @@ impl CrateOwnerInvitation {
         invited_user_id: i32,
         invited_by_user_id: i32,
         crate_id: i32,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
         #[derive(Insertable, Clone, Copy, Debug)]
@@ -84,19 +85,19 @@ impl CrateOwnerInvitation {
         })
     }
 
-    pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut PgConnection) -> QueryResult<Self> {
+    pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut impl Conn) -> QueryResult<Self> {
         crate_owner_invitations::table
             .find((user_id, crate_id))
             .first::<Self>(conn)
     }
 
-    pub fn find_by_token(token: &str, conn: &mut PgConnection) -> QueryResult<Self> {
+    pub fn find_by_token(token: &str, conn: &mut impl Conn) -> QueryResult<Self> {
         crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
             .first::<Self>(conn)
     }
 
-    pub fn accept(self, conn: &mut PgConnection, config: &config::Server) -> AppResult<()> {
+    pub fn accept(self, conn: &mut impl Conn, config: &config::Server) -> AppResult<()> {
         if self.is_expired(config) {
             let crate_name: String = crates::table
                 .find(self.crate_id)
@@ -131,7 +132,7 @@ impl CrateOwnerInvitation {
         })
     }
 
-    pub fn decline(self, conn: &mut PgConnection) -> QueryResult<()> {
+    pub fn decline(self, conn: &mut impl Conn) -> QueryResult<()> {
         // The check to prevent declining expired invitations is *explicitly* missing. We do not
         // care if an expired invitation is declined, as that just removes the invitation from the
         // database.

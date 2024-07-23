@@ -2,6 +2,7 @@ use crate::app::AppState;
 use crate::controllers::cargo_prelude::AppResult;
 use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Version};
 use crate::schema::{crate_downloads, crates, keywords, metadata, recent_crate_downloads};
+use crate::util::diesel::Conn;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
 use diesel::prelude::*;
@@ -19,7 +20,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .get_result(conn)?;
 
         fn encode_crates(
-            conn: &mut PgConnection,
+            conn: &mut impl Conn,
             data: Vec<(Crate, i64, Option<i64>)>,
         ) -> AppResult<Vec<EncodableCrate>> {
             let downloads = data

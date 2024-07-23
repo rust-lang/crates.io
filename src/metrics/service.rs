@@ -12,8 +12,9 @@
 
 use crate::metrics::macros::metrics;
 use crate::schema::{background_jobs, crates, versions};
+use crate::util::diesel::Conn;
 use crate::util::errors::AppResult;
-use diesel::{dsl::count_star, prelude::*, PgConnection};
+use diesel::{dsl::count_star, prelude::*};
 use prometheus::{proto::MetricFamily, IntGauge, IntGaugeVec};
 
 metrics! {
@@ -31,7 +32,7 @@ metrics! {
 }
 
 impl ServiceMetrics {
-    pub(crate) fn gather(&self, conn: &mut PgConnection) -> AppResult<Vec<MetricFamily>> {
+    pub(crate) fn gather(&self, conn: &mut impl Conn) -> AppResult<Vec<MetricFamily>> {
         self.crates_total
             .set(crates::table.select(count_star()).first(conn)?);
         self.versions_total

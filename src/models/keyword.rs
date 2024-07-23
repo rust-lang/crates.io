@@ -4,6 +4,7 @@ use diesel::prelude::*;
 use crate::models::Crate;
 use crate::schema::*;
 use crate::sql::lower;
+use crate::util::diesel::Conn;
 
 #[derive(Clone, Identifiable, Queryable, Debug)]
 pub struct Keyword {
@@ -27,16 +28,13 @@ pub struct CrateKeyword {
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &mut PgConnection, name: &str) -> QueryResult<Keyword> {
+    pub fn find_by_keyword(conn: &mut impl Conn, name: &str) -> QueryResult<Keyword> {
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
             .first(conn)
     }
 
-    pub fn find_or_create_all(
-        conn: &mut PgConnection,
-        names: &[&str],
-    ) -> QueryResult<Vec<Keyword>> {
+    pub fn find_or_create_all(conn: &mut impl Conn, names: &[&str]) -> QueryResult<Vec<Keyword>> {
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
         let new_keywords: Vec<_> = lowercase_names
@@ -63,11 +61,7 @@ impl Keyword {
             && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
-    pub fn update_crate(
-        conn: &mut PgConnection,
-        krate: &Crate,
-        keywords: &[&str],
-    ) -> QueryResult<()> {
+    pub fn update_crate(conn: &mut impl Conn, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
         conn.transaction(|conn| {
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
             diesel::delete(CrateKeyword::belonging_to(krate)).execute(conn)?;

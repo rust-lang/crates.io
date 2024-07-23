@@ -1,4 +1,5 @@
 use crate::schema::version_downloads;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
@@ -25,7 +26,7 @@ impl BackgroundJob for UpdateDownloads {
     }
 }
 
-fn update(conn: &mut PgConnection) -> QueryResult<()> {
+fn update(conn: &mut impl Conn) -> QueryResult<()> {
     use diesel::dsl::now;
     use diesel::select;
 
@@ -75,7 +76,7 @@ fn update(conn: &mut PgConnection) -> QueryResult<()> {
 }
 
 #[instrument(skip_all)]
-fn batch_update(batch_size: i64, conn: &mut PgConnection) -> QueryResult<i64> {
+fn batch_update(batch_size: i64, conn: &mut impl Conn) -> QueryResult<i64> {
     table! {
         /// Imaginary table to make Diesel happy when using the `sql_query` function.
         sql_query_results (count) {
@@ -107,13 +108,13 @@ mod tests {
     use crate::schema::{crate_downloads, crates, versions};
     use crate::test_util::test_db_connection;
 
-    fn user(conn: &mut PgConnection) -> User {
+    fn user(conn: &mut impl Conn) -> User {
         NewUser::new(2, "login", None, None, "access_token")
             .create_or_update(None, &Emails::new_in_memory(), conn)
             .unwrap()
     }
 
-    fn crate_and_version(conn: &mut PgConnection, user_id: i32) -> (Crate, Version) {
+    fn crate_and_version(conn: &mut impl Conn, user_id: i32) -> (Crate, Version) {
         let krate = NewCrate {
             name: "foo",
             ..Default::default()

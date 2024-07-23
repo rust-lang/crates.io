@@ -10,6 +10,7 @@ use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptio
 
 use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::{crates, users, versions};
+use crate::util::diesel::Conn;
 use crate::util::errors::crate_not_found;
 use crate::views::EncodableVersion;
 
@@ -76,7 +77,7 @@ fn list_by_date(
     crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
@@ -140,7 +141,7 @@ fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 

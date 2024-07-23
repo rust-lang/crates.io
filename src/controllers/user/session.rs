@@ -10,6 +10,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
+use crate::util::diesel::Conn;
 use crate::util::errors::ReadOnlyMode;
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
@@ -125,7 +126,7 @@ fn save_user_to_database(
     user: &GithubUser,
     access_token: &str,
     emails: &Emails,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<User> {
     NewUser::new(
         user.id,

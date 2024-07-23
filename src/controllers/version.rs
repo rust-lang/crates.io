@@ -5,10 +5,11 @@ pub mod yank;
 use super::prelude::*;
 
 use crate::models::{Crate, Version};
+use crate::util::diesel::Conn;
 use crate::util::errors::crate_not_found;
 
 fn version_and_crate(
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
