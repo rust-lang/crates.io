@@ -235,8 +235,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       ember-window-mock:
-        specifier: 0.9.0
-        version: 0.9.0(ember-source@5.9.0(@babel/core@7.24.9)(@glimmer/component@1.1.2(@babel/core@7.24.9))(rsvp@4.8.5)(webpack@5.93.0))
+        specifier: 1.0.0
+        version: 1.0.0
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -4318,11 +4318,8 @@ packages:
     resolution: {integrity: sha512-437ue2c2dy8zwjoUohjLqs+Opb4c8bHVw6U3keKYb8F3Mk/XoFTFsgKgFHIUlb7SyBiAQD+6JsNjGXX71Kljcg==}
     engines: {node: 10.* || 12.* || >= 14.*}
 
-  ember-window-mock@0.9.0:
-    resolution: {integrity: sha512-jFWq8zNFhiKNA0QnJFnhsYW+Y+2FwpvFuAf4s393Il5f1fJJfZoiwjL5l8FMpxV1alf2o8jZ2XqNQWh8rM9YBA==}
-    engines: {node: 16.* || >= 18}
-    peerDependencies:
-      ember-source: ^4.0.0
+  ember-window-mock@1.0.0:
+    resolution: {integrity: sha512-zaTxOj72fGUXcOC6ib/+JC9SfXQepRPATN1qlyxPEaMN8qnCb3A0MmnBVuXazR6TS2HSxe7pCwoee5dByEVx3A==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -15205,12 +15202,12 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  ember-window-mock@0.9.0(ember-source@5.9.0(@babel/core@7.24.9)(@glimmer/component@1.1.2(@babel/core@7.24.9))(rsvp@4.8.5)(webpack@5.93.0)):
+  ember-window-mock@1.0.0:
     dependencies:
-      ember-cli-babel: 7.26.11
-      ember-cli-htmlbars: 6.3.0
-      ember-source: 5.9.0(@babel/core@7.24.9)(@glimmer/component@1.1.2(@babel/core@7.24.9))(rsvp@4.8.5)(webpack@5.93.0)
+      '@embroider/addon-shim': 1.8.9
+      '@embroider/macros': 1.16.5
     transitivePeerDependencies:
+      - '@glint/template'
       - supports-color
 
   emoji-regex@8.0.0: {}
