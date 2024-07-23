@@ -89,7 +89,7 @@ indicatif = "=0.17.8"
 ipnetwork = "=0.20.0"
 tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.11.7", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
-minijinja = "=2.0.3"
+minijinja = "=2.1.0"
 mockall = "=0.13.0"
 oauth2 = "=4.4.2"
 object_store = { version = "=0.10.2", features = ["aws"] }
