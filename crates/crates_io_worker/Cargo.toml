@@ -21,4 +21,4 @@ tracing = "=0.1.40"
 
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
-tokio = { version = "=1.39.2", features = ["macros", "rt", "sync"]}
+tokio = { version = "=1.39.2", features = ["macros", "rt", "rt-multi-thread", "sync"]}
