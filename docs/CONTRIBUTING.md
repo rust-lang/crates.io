@@ -134,13 +134,13 @@ To build and serve the frontend assets, use the command `pnpm start`. There
 are variations on this command that change which backend your frontend tries to
 talk to:
 
-| Command                                      | Backend                                                           | Use case                                                |
-| -------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| `pnpm start:live`                            | <https://crates.io>                                               | Testing UI changes with the full live site's data       |
-| `pnpm start:staging`                         | <https://staging-crates-io.herokuapp.com>                         | Testing UI changes with a smaller set of realistic data |
-| `pnpm start`                                 | Static fixture test data in `mirage/fixtures`                     | Setting up particular situations, see note              |
-| `pnpm start:local`                           | Backend server running locally                                    | See the Working on the backend section for setup        |
-| `PROXY_BACKEND=https://crates.io pnpm start` | Whatever is specified in the `PROXY_BACKEND` environment variable | If your use case is not covered here                    |
+| Command                                   | Backend                                       | Use case                                                |
+| ----------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| `pnpm start:live`                         | <https://crates.io>                           | Testing UI changes with the full live site's data       |
+| `pnpm start:staging`                      | <https://staging-crates-io.herokuapp.com>     | Testing UI changes with a smaller set of realistic data |
+| `pnpm start`                              | Static fixture test data in `mirage/fixtures` | Setting up particular situations, see note              |
+| `pnpm start:local`                        | Backend server running locally                | See the Working on the backend section for setup        |
+| `pnpm start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg        | If your use case is not covered here                    |
 
 > Note: If you want to set up a particular situation, you can edit the fixture
 > data used for tests in `mirage/fixtures`. The fixture data does not currently

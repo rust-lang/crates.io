@@ -25,9 +25,9 @@
     "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
     "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
     "start": "ember serve",
-    "start:live": "PROXY_BACKEND=https://crates.io ember serve",
-    "start:local": "PROXY_BACKEND=http://127.0.0.1:8888 ember serve",
-    "start:staging": "PROXY_BACKEND=https://staging-crates-io.herokuapp.com ember serve",
+    "start:live": "ember serve --proxy https://crates.io",
+    "start:local": "ember serve --proxy http://127.0.0.1:8888",
+    "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
     "test": "ember exam --split=2 --parallel",
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report",
     "e2e": "playwright test"
@@ -47,7 +47,6 @@
     "highlight.js": "11.10.0",
     "macro-decorators": "0.1.2",
     "mermaid": "10.9.1",
-    "morgan": "1.10.0",
     "pretty-bytes": "6.1.1",
     "semver": "7.6.3",
     "tracked-toolbox": "2.0.0"
@@ -126,7 +125,6 @@
     "eslint-plugin-qunit-dom": "0.2.0",
     "eslint-plugin-unicorn": "54.0.0",
     "globby": "14.0.2",
-    "http-proxy": "1.18.1",
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
     "miragejs": "0.1.48",

@@ -28,13 +28,6 @@ module.exports = function (environment) {
       clearDuration: 10_000,
     },
 
-    // Note that this configuration will be removed entirely below if we're in a
-    // production environment.
-    'ember-cli-mirage': {
-      // We don't want to use Mirage if a proxy backend has been provided.
-      enabled: !process.env.PROXY_BACKEND,
-    },
-
     '@sentry/ember': {
       disablePerformance: true,
     },
