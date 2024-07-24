@@ -1,6 +1,5 @@
 use crate::controllers::frontend_prelude::*;
 use crate::util::errors::{custom, forbidden, not_found};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.
@@ -24,12 +23,8 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
 
     let metrics = match kind.as_str() {
         "service" => {
-            let conn = app.db_read().await?;
-            spawn_blocking(move || {
-                let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-                app.service_metrics.gather(conn)
-            })
-            .await?
+            let mut conn = app.db_read().await?;
+            app.service_metrics.gather(&mut conn).await?
         }
         "instance" => {
             spawn_blocking(move || Ok::<_, BoxedAppError>(app.instance_metrics.gather(&app)?))

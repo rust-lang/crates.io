@@ -12,9 +12,9 @@
 
 use crate::metrics::macros::metrics;
 use crate::schema::{background_jobs, crates, versions};
-use crate::util::diesel::Conn;
 use crate::util::errors::AppResult;
 use diesel::{dsl::count_star, prelude::*};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use prometheus::{proto::MetricFamily, IntGauge, IntGaugeVec};
 
 metrics! {
@@ -32,11 +32,14 @@ metrics! {
 }
 
 impl ServiceMetrics {
-    pub(crate) fn gather(&self, conn: &mut impl Conn) -> AppResult<Vec<MetricFamily>> {
+    pub(crate) async fn gather(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> AppResult<Vec<MetricFamily>> {
         self.crates_total
-            .set(crates::table.select(count_star()).first(conn)?);
+            .set(crates::table.select(count_star()).first(conn).await?);
         self.versions_total
-            .set(versions::table.select(count_star()).first(conn)?);
+            .set(versions::table.select(count_star()).first(conn).await?);
 
         let background_jobs = background_jobs::table
             .group_by((background_jobs::job_type, background_jobs::priority))
@@ -45,7 +48,8 @@ impl ServiceMetrics {
                 background_jobs::priority,
                 count_star(),
             ))
-            .load::<(String, i16, i64)>(conn)?;
+            .load::<(String, i16, i64)>(conn)
+            .await?;
 
         self.background_jobs.reset();
         for (job, priority, count) in background_jobs {
