@@ -176,7 +176,10 @@ fn list_by_semver(
         }
         if let Some(start) = idx {
             let end = (start + options.per_page as usize).min(sorted_versions.len());
-            let ids = sorted_versions[start..end].keys().collect::<Vec<_>>();
+            let ids = sorted_versions[start..end]
+                .keys()
+                .cloned()
+                .collect::<Vec<_>>();
             for result in versions::table
                 .filter(versions::crate_id.eq(crate_id))
                 .left_outer_join(users::table)

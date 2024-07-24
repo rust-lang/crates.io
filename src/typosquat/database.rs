@@ -67,7 +67,7 @@ impl TopCrates {
         // term.
         for result in crate_owners::table
             .filter(crate_owners::deleted.eq(false))
-            .filter(crate_owners::crate_id.eq_any(crates.keys().collect::<Vec<_>>()))
+            .filter(crate_owners::crate_id.eq_any(crates.keys().cloned().collect::<Vec<_>>()))
             .select((
                 crate_owners::crate_id,
                 crate_owners::owner_id,
