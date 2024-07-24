@@ -1,6 +1,6 @@
-import { dasherize } from '@ember/string';
-
 import { Factory } from 'miragejs';
+
+import { dasherize } from '../utils/strings';
 
 export default Factory.extend({
   category: i => `Category ${i}`,
