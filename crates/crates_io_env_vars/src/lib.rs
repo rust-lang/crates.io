@@ -125,14 +125,13 @@ where
 mod tests {
     use super::*;
     use claims::*;
-    use once_cell::sync::Lazy;
-    use std::sync::Mutex;
+    use std::sync::{LazyLock, Mutex};
 
     const TEST_VAR: &str = "CRATES_IO_ENV_VARS_TEST_VAR";
 
     /// A mutex to ensure that the tests don't run in parallel, since they all
     /// modify the shared environment variable.
-    static MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+    static MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
     #[test]
     fn test_var() {

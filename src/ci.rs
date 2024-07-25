@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use http::request::Parts;
 use ipnetwork::IpNetwork;
-use once_cell::sync::Lazy;
 use std::fmt::Display;
 use std::net::IpAddr;
+use std::sync::LazyLock;
 
 #[derive(Copy, Clone, Debug)]
 pub enum CiService {
@@ -36,7 +36,7 @@ impl<S> FromRequestParts<S> for CiService {
 }
 
 fn is_github_actions_ip(ip: &IpAddr) -> bool {
-    static GITHUB_ACTIONS_CIDRS: Lazy<Vec<IpNetwork>> = Lazy::new(|| {
+    static GITHUB_ACTIONS_CIDRS: LazyLock<Vec<IpNetwork>> = LazyLock::new(|| {
         github_meta::META
             .actions
             .iter()

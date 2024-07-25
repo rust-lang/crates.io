@@ -9,12 +9,12 @@ use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
 use crates_io_github::GitHubPublicKey;
 use http::HeaderMap;
-use once_cell::sync::Lazy;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
 use p256::PublicKey;
 use serde_json as json;
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::time::Duration;
 use tokio::sync::Mutex;
 
@@ -22,7 +22,7 @@ use tokio::sync::Mutex;
 const PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours
 
 // Cache of public keys that have been fetched from GitHub API
-static PUBLIC_KEY_CACHE: Lazy<Mutex<GitHubPublicKeyCache>> = Lazy::new(|| {
+static PUBLIC_KEY_CACHE: LazyLock<Mutex<GitHubPublicKeyCache>> = LazyLock::new(|| {
     let keys: Vec<GitHubPublicKey> = Vec::new();
     let cache = GitHubPublicKeyCache {
         keys,

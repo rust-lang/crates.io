@@ -7,8 +7,8 @@ use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_json_snapshot;
-use once_cell::sync::Lazy;
 use regex::Regex;
+use std::sync::LazyLock;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
@@ -1084,7 +1084,8 @@ async fn crates_by_user_id_not_including_deleted_owners() {
     }
 }
 
-static PAGE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
+static PAGE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
 
 // search with both offset-based (prepend with `page=1` query) and seek-based pagination
 async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2] {
