@@ -20,7 +20,6 @@ rust_2021_compatibility = "warn"
 unused = "warn"
 
 [workspace.lints.clippy]
-all = "warn"
 dbg_macro = "warn"
 todo = "warn"
 
