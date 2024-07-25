@@ -220,8 +220,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       ember-test-selectors:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 7.0.0
+        version: 7.0.0
       ember-tooltips:
         specifier: 3.6.0
         version: 3.6.0
@@ -4284,9 +4284,9 @@ packages:
     engines: {node: 12.* || 14.* || >= 16.*}
     hasBin: true
 
-  ember-test-selectors@6.0.0:
-    resolution: {integrity: sha512-PgYcI9PeNvtKaF0QncxfbS68olMYM1idwuI8v/WxsjOGqUx5bmsu6V17vy/d9hX4mwmjgsBhEghrVasGSuaIgw==}
-    engines: {node: 12.* || 14.* || >= 16.*}
+  ember-test-selectors@7.0.0:
+    resolution: {integrity: sha512-gGJzzBw6CsBB9gfk9/4qw0+iOSvhlqvUe4jIZKDf4waMkgVLtnPdFUWMocfFvUnJS7IitwKB/iTgIctD4RgH7w==}
+    engines: {node: 18.* || 20.* || >= 22.*}
 
   ember-tooltips@3.6.0:
     resolution: {integrity: sha512-DsqF6vvL3DKWSUHJKuMJ8KSxbE/T+eZAE2xtzAuHRqjl1AYIOkugGBVynGYYP8+2/10NMwk05LYbT1dirAcEBQ==}
@@ -11410,10 +11410,10 @@ snapshots:
   '@types/ember@4.0.11':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.24.9)
-      '@types/ember__array': 4.0.10(@babel/core@7.24.9)
+      '@types/ember__array': 4.0.10
       '@types/ember__component': 4.0.22
       '@types/ember__controller': 4.0.12
-      '@types/ember__debug': 4.0.8
+      '@types/ember__debug': 4.0.8(@babel/core@7.24.9)
       '@types/ember__engine': 4.0.11
       '@types/ember__error': 4.0.6
       '@types/ember__object': 4.0.12
@@ -11424,7 +11424,7 @@ snapshots:
       '@types/ember__string': 3.0.15
       '@types/ember__template': 4.0.7
       '@types/ember__test': 4.0.6(@babel/core@7.24.9)
-      '@types/ember__utils': 4.0.7
+      '@types/ember__utils': 4.0.7(@babel/core@7.24.9)
       '@types/rsvp': 4.0.9
 
   '@types/ember@4.0.11(@babel/core@7.24.9)':
@@ -11472,10 +11472,15 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
 
+  '@types/ember__array@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12
+
   '@types/ember__array@4.0.10(@babel/core@7.24.9)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.24.9)
-      '@types/ember__object': 4.0.12(@babel/core@7.24.9)
+      '@types/ember__object': 4.0.12
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11517,11 +11522,6 @@ snapshots:
     dependencies:
       '@types/ember__engine': 3.16.9
       '@types/ember__object': 3.12.13
-
-  '@types/ember__debug@4.0.8':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
 
   '@types/ember__debug@4.0.8(@babel/core@7.24.9)':
     dependencies:
@@ -11649,10 +11649,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.24.9)':
     dependencies:
@@ -15176,7 +15172,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-test-selectors@6.0.0:
+  ember-test-selectors@7.0.0:
     dependencies:
       calculate-cache-key-for-tree: 2.0.0
       ember-cli-babel: 7.26.11
