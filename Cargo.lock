@@ -1032,7 +1032,6 @@ dependencies = [
  "mockall",
  "oauth2",
  "object_store",
- "once_cell",
  "p256",
  "parking_lot",
  "paste",
