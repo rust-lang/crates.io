@@ -67,7 +67,7 @@ crates_io_tarball = { path = "crates/crates_io_tarball" }
 crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.3.0"
 chrono = { version = "=0.4.38", default-features = false, features = ["serde"] }
-clap = { version = "=4.5.9", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.5.11", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
 derive_builder = "=0.20.0"
