@@ -52,8 +52,8 @@ importers:
         specifier: 7.24.9
         version: 7.24.9
       '@babel/eslint-parser':
-        specifier: 7.25.0
-        version: 7.25.0(@babel/core@7.24.9)(eslint@8.57.0)
+        specifier: 7.25.1
+        version: 7.25.1(@babel/core@7.24.9)(eslint@8.57.0)
       '@babel/plugin-proposal-decorators':
         specifier: 7.24.7
         version: 7.24.7(@babel/core@7.24.9)
@@ -334,8 +334,8 @@ packages:
       '@babel/core': ^7.11.0
       eslint: ^7.5.0 || ^8.0.0
 
-  '@babel/eslint-parser@7.25.0':
-    resolution: {integrity: sha512-mlcTKuQAjczDRwWLIxv+Q925jaMUO8Jl5dxmWJSSGVYfZ4rKMp8daQvVC3rM1G2v8V+/fO0yIVTSLS+2zcB8rg==}
+  '@babel/eslint-parser@7.25.1':
+    resolution: {integrity: sha512-Y956ghgTT4j7rKesabkh5WeqgSFZVFwaPR0IWFm7KFHFmmJ4afbG49SmfW4S+GyRPx0Dy5jxEWA5t0rpxfElWg==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': ^7.11.0
@@ -8648,7 +8648,7 @@ snapshots:
       eslint-visitor-keys: 2.1.0
       semver: 6.3.1
 
-  '@babel/eslint-parser@7.25.0(@babel/core@7.24.9)(eslint@8.57.0)':
+  '@babel/eslint-parser@7.25.1(@babel/core@7.24.9)(eslint@8.57.0)':
     dependencies:
       '@babel/core': 7.24.9
       '@nicolo-ribaudo/eslint-scope-5-internals': 5.1.1-v1
