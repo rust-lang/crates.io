@@ -1032,7 +1032,6 @@ dependencies = [
  "mockall",
  "oauth2",
  "object_store",
- "once_cell",
  "p256",
  "parking_lot",
  "paste",
@@ -1094,7 +1093,6 @@ dependencies = [
  "anyhow",
  "claims",
  "dotenvy",
- "once_cell",
 ]
 
 [[package]]
@@ -1186,7 +1184,6 @@ dependencies = [
  "crates_io_env_vars",
  "diesel",
  "diesel_migrations",
- "once_cell",
  "rand",
  "tracing",
  "url",

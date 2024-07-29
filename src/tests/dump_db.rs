@@ -6,12 +6,13 @@ use crates_io_test_db::TestDatabase;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::io::{Cursor, Read};
+use std::sync::LazyLock;
 use tar::Archive;
 
-static PATH_DATE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
+static PATH_DATE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump_db_job() {

@@ -13,4 +13,3 @@ dotenvy = "=0.15.7"
 
 [dev-dependencies]
 claims = "=0.7.1"
-once_cell = "=1.19.0"

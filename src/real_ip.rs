@@ -1,13 +1,13 @@
 use http::{HeaderMap, HeaderValue};
 use ipnetwork::IpNetwork;
-use once_cell::sync::Lazy;
 use std::iter::Iterator;
 use std::net::IpAddr;
 use std::str::from_utf8;
+use std::sync::LazyLock;
 
 const X_FORWARDED_FOR: &str = "X-Forwarded-For";
 
-static CLOUD_FRONT_NETWORKS: Lazy<Vec<IpNetwork>> = Lazy::new(|| {
+static CLOUD_FRONT_NETWORKS: LazyLock<Vec<IpNetwork>> = LazyLock::new(|| {
     let ipv4_prefixes = aws_ip_ranges::IP_RANGES
         .prefixes
         .iter()

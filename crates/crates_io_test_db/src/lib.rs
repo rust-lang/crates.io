@@ -3,8 +3,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
-use once_cell::sync::Lazy;
 use rand::Rng;
+use std::sync::LazyLock;
 use std::time::Duration;
 use tracing::{debug, instrument};
 use url::Url;
@@ -21,7 +21,7 @@ struct TemplateDatabase {
 impl TemplateDatabase {
     #[instrument]
     pub fn instance() -> &'static Self {
-        static INSTANCE: Lazy<TemplateDatabase> = Lazy::new(TemplateDatabase::new);
+        static INSTANCE: LazyLock<TemplateDatabase> = LazyLock::new(TemplateDatabase::new);
         &INSTANCE
     }
 
