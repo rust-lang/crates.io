@@ -1,11 +1,12 @@
-use anyhow::anyhow;
 use std::sync::Arc;
 
 use crates_io_worker::BackgroundJob;
-use diesel::PgConnection;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use typomania::Package;
 
 use crate::email::Email;
+use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::{
     typosquat::{Cache, Crate},
     worker::Environment,
@@ -35,21 +36,17 @@ impl BackgroundJob for CheckTyposquat {
         let crate_name = self.name.clone();
 
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             let cache = env.typosquat_cache(conn)?;
             check(&env.emails, cache, conn, &crate_name)
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 
-fn check(
-    emails: &Emails,
-    cache: &Cache,
-    conn: &mut PgConnection,
-    name: &str,
-) -> anyhow::Result<()> {
+fn check(emails: &Emails, cache: &Cache, conn: &mut impl Conn, name: &str) -> anyhow::Result<()> {
     if let Some(harness) = cache.get_harness() {
         info!(name, "Checking new crate for potential typosquatting");
 

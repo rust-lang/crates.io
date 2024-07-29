@@ -5,7 +5,8 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
 };
 
-use diesel::{connection::DefaultLoadingMode, PgConnection, QueryResult};
+use crate::util::diesel::Conn;
+use diesel::{connection::DefaultLoadingMode, QueryResult};
 use typomania::{AuthorSet, Corpus, Package};
 
 /// A corpus of the current top crates on crates.io, as determined by their download counts, along
@@ -17,7 +18,7 @@ pub struct TopCrates {
 
 impl TopCrates {
     /// Retrieves the `num` top crates from the database.
-    pub fn new(conn: &mut PgConnection, num: i64) -> QueryResult<Self> {
+    pub fn new(conn: &mut impl Conn, num: i64) -> QueryResult<Self> {
         use crate::{
             models,
             schema::{crate_downloads, crate_owners},
@@ -103,7 +104,7 @@ pub struct Crate {
 
 impl Crate {
     /// Hydrates a crate and its owners from the database given the crate name.
-    pub fn from_name(conn: &mut PgConnection, name: &str) -> QueryResult<Self> {
+    pub fn from_name(conn: &mut impl Conn, name: &str) -> QueryResult<Self> {
         use crate::models;
         use diesel::prelude::*;
 

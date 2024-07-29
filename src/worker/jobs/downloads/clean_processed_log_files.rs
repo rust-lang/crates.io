@@ -1,8 +1,10 @@
 use crate::schema::processed_log_files;
+use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 /// This job is responsible for cleaning up old entries in the
@@ -20,15 +22,15 @@ impl BackgroundJob for CleanProcessedLogFiles {
 
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let conn = env.deadpool.get().await?;
-        conn.interact(run)
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
-
-        Ok(())
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            Ok(run(conn)?)
+        })
+        .await
     }
 }
 
-fn run(conn: &mut PgConnection) -> QueryResult<()> {
+fn run(conn: &mut impl Conn) -> QueryResult<()> {
     let filter = processed_log_files::time.lt(cut_off_date());
     diesel::delete(processed_log_files::table.filter(filter)).execute(conn)?;
 

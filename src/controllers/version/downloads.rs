@@ -9,6 +9,7 @@ use crate::schema::*;
 use crate::util::errors::version_not_found;
 use crate::views::EncodableVersionDownload;
 use chrono::{Duration, NaiveDate, Utc};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
@@ -37,7 +38,9 @@ pub async fn downloads(
     }
 
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
@@ -57,5 +60,5 @@ pub async fn downloads(
 
         Ok(Json(json!({ "version_downloads": downloads })))
     })
-    .await?
+    .await
 }

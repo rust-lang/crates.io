@@ -9,6 +9,7 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::sql::split_part;
+use crate::util::diesel::Conn;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable)]
@@ -34,7 +35,7 @@ pub struct Version {
 
 impl Version {
     /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &mut PgConnection) -> QueryResult<Vec<(Dependency, String)>> {
+    pub fn dependencies(&self, conn: &mut impl Conn) -> QueryResult<Vec<(Dependency, String)>> {
         Dependency::belonging_to(self)
             .inner_join(crates::table)
             .select((dependencies::all_columns, crates::name))
@@ -42,7 +43,7 @@ impl Version {
             .load(conn)
     }
 
-    pub fn record_readme_rendering(version_id: i32, conn: &mut PgConnection) -> QueryResult<usize> {
+    pub fn record_readme_rendering(version_id: i32, conn: &mut impl Conn) -> QueryResult<usize> {
         use diesel::dsl::now;
 
         diesel::insert_into(readme_renderings::table)
@@ -55,7 +56,7 @@ impl Version {
 
     /// Gets the User who ran `cargo publish` for this version, if recorded.
     /// Not for use when you have a group of versions you need the publishers for.
-    pub fn published_by(&self, conn: &mut PgConnection) -> Option<User> {
+    pub fn published_by(&self, conn: &mut impl Conn) -> Option<User> {
         match self.published_by {
             Some(pb) => users::table.find(pb).first(conn).ok(),
             None => None,
@@ -116,7 +117,7 @@ impl NewVersion {
         builder
     }
 
-    pub fn save(&self, conn: &mut PgConnection, published_by_email: &str) -> AppResult<Version> {
+    pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> AppResult<Version> {
         use diesel::dsl::exists;
         use diesel::{insert_into, select};
 

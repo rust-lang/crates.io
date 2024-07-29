@@ -11,6 +11,7 @@ use tokio::runtime::Handle;
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
 use crate::sql::lower;
+use crate::util::diesel::Conn;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -60,7 +61,7 @@ impl<'a> NewTeam<'a> {
         }
     }
 
-    pub fn create_or_update(&self, conn: &mut PgConnection) -> QueryResult<Team> {
+    pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Team> {
         use diesel::insert_into;
 
         insert_into(teams::table)
@@ -73,7 +74,7 @@ impl<'a> NewTeam<'a> {
 }
 
 impl Team {
-    pub fn find_by_login(conn: &mut PgConnection, login: &str) -> QueryResult<Self> {
+    pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<Self> {
         teams::table
             .filter(lower(teams::login).eq(&login.to_lowercase()))
             .first(conn)
@@ -87,7 +88,7 @@ impl Team {
     /// This function will panic if login contains less than 2 `:` characters.
     pub fn create_or_update(
         app: &App,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         login: &str,
         req_user: &User,
     ) -> AppResult<Self> {
@@ -126,7 +127,7 @@ impl Team {
     /// convenience to avoid rebuilding it.
     fn create_or_update_github_team(
         app: &App,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         login: &str,
         org_name: &str,
         team_name: &str,
@@ -195,7 +196,7 @@ impl Team {
         }
     }
 
-    pub fn owning(krate: &Crate, conn: &mut PgConnection) -> QueryResult<Vec<Owner>> {
+    pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

@@ -1,10 +1,12 @@
 use crate::schema::crates;
 use crate::storage::FeedId;
+use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
@@ -32,10 +34,11 @@ impl BackgroundJob for SyncCratesFeed {
 
         info!("Loading latest {NUM_ITEMS} crates from the database…");
         let conn = ctx.deadpool.get().await?;
-        let new_crates = conn
-            .interact(load_new_crates)
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
+        let new_crates = spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+            Ok::<_, anyhow::Error>(load_new_crates(conn)?)
+        })
+        .await?;
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),
@@ -92,7 +95,7 @@ impl BackgroundJob for SyncCratesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] crates
 /// then the list will be padded with older crates until [`NUM_ITEMS`] are
 /// returned.
-fn load_new_crates(conn: &mut PgConnection) -> QueryResult<Vec<NewCrate>> {
+fn load_new_crates(conn: &mut impl Conn) -> QueryResult<Vec<NewCrate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let new_crates = crates::table
@@ -214,7 +217,7 @@ mod tests {
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str, publish_time: NaiveDateTime) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str, publish_time: NaiveDateTime) -> i32 {
         diesel::insert_into(crates::table)
             .values((
                 crates::name.eq(name),

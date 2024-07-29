@@ -8,6 +8,7 @@ use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use hex::ToHex;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
@@ -27,6 +28,7 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
+use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, custom, internal, AppResult};
 use crate::util::Maximums;
 use crate::views::{
@@ -74,7 +76,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_version", &version_string);
 
     let conn = app.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
@@ -476,12 +479,12 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }))
         })
     })
-    .await?
+    .await
 }
 
 /// Counts the number of versions for `crate_id` that were published within
 /// the last 24 hours.
-fn count_versions_published_today(crate_id: i32, conn: &mut PgConnection) -> QueryResult<i64> {
+fn count_versions_published_today(crate_id: i32, conn: &mut impl Conn) -> QueryResult<i64> {
     use diesel::dsl::{now, IntervalDsl};
 
     versions::table
@@ -531,7 +534,7 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     Ok((json_bytes, tarball_bytes))
 }
 
-fn is_reserved_name(name: &str, conn: &mut PgConnection) -> QueryResult<bool> {
+fn is_reserved_name(name: &str, conn: &mut impl Conn) -> QueryResult<bool> {
     select(exists(reserved_crate_names::table.filter(
         canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
     )))
@@ -692,7 +695,7 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
 
 #[instrument(skip_all)]
 pub fn add_dependencies(
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
     deps: &[EncodableCrateDependency],
     version_id: i32,
 ) -> AppResult<()> {

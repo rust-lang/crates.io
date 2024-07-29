@@ -25,8 +25,9 @@ use crates_io::{db, ssh};
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use crates_io_worker::Runner;
-use deadpool_diesel::postgres::{Manager as DeadpoolManager, Pool as DeadpoolPool};
-use deadpool_diesel::Runtime;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
 use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
@@ -81,8 +82,8 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let manager = DeadpoolManager::new(db_url, Runtime::Tokio1);
-    let deadpool = DeadpoolPool::builder(manager).max_size(10).build().unwrap();
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let deadpool = Pool::builder(manager).max_size(10).build().unwrap();
 
     let environment = Environment::builder()
         .config(Arc::new(config))

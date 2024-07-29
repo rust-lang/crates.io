@@ -3,11 +3,13 @@ use crate::controllers::frontend_prelude::*;
 use crate::email::Email;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
+use crate::util::diesel::Conn;
 use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
 use axum::body::Bytes;
 use base64::{engine::general_purpose, Engine};
 use crates_io_github::GitHubPublicKey;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::HeaderMap;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
@@ -127,7 +129,7 @@ struct GitHubSecretAlert {
 fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
     let hashed_token = HashedToken::hash(&alert.token);
 
@@ -174,7 +176,7 @@ fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> anyhow::Result<()> {
     let user = User::find(conn, token.user_id).context("Failed to find user")?;
     let Some(recipient) = user.email(conn)? else {
@@ -256,7 +258,9 @@ pub async fn verify(
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let feedback = alerts
             .into_iter()
             .map(|alert| {
@@ -271,7 +275,7 @@ pub async fn verify(
 
         Ok(Json(feedback))
     })
-    .await?
+    .await
 }
 
 #[cfg(test)]

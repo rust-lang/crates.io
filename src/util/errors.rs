@@ -171,15 +171,9 @@ impl From<EmailError> for BoxedAppError {
     }
 }
 
-impl From<deadpool_diesel::PoolError> for BoxedAppError {
-    fn from(_err: deadpool_diesel::PoolError) -> BoxedAppError {
+impl From<diesel_async::pooled_connection::deadpool::PoolError> for BoxedAppError {
+    fn from(_err: diesel_async::pooled_connection::deadpool::PoolError) -> BoxedAppError {
         service_unavailable()
-    }
-}
-
-impl From<deadpool_diesel::InteractError> for BoxedAppError {
-    fn from(err: deadpool_diesel::InteractError) -> BoxedAppError {
-        Box::new(err)
     }
 }
 

@@ -1,13 +1,16 @@
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
 use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
-use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::AsyncPgConnection;
 use futures_util::StreamExt;
 use object_store::aws::AmazonS3Builder;
 use object_store::ObjectStore;
@@ -241,14 +244,16 @@ async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow
 }
 
 /// Delete version downloads for the given dates from the database.
-async fn delete(db_pool: &Pool, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+async fn delete(db_pool: &Pool<AsyncPgConnection>, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     let conn = db_pool.get().await?;
-    conn.interact(move |conn| delete_inner(conn, dates))
-        .await
-        .map_err(|err| anyhow!(err.to_string()))?
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        delete_inner(conn, dates)
+    })
+    .await
 }
 
-fn delete_inner(conn: &mut PgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     // Delete version downloads for the given dates in chunks to avoid running
     // into the maximum query parameter limit.
     const CHUNK_SIZE: usize = 5000;
@@ -274,9 +279,7 @@ mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
-    use deadpool_diesel::postgres::Manager;
-    use deadpool_diesel::Runtime;
-    use diesel::PgConnection;
+    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_snapshot;
 
     #[tokio::test]
@@ -387,7 +390,7 @@ mod tests {
         let mut conn = test_db.connect();
         prepare_database(&mut conn);
 
-        let manager = Manager::new(test_db.url(), Runtime::Tokio1);
+        let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(test_db.url());
         let db_pool = Pool::builder(manager).build().unwrap();
         let dates = vec![NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()];
         delete(&db_pool, dates).await.unwrap();
@@ -399,7 +402,7 @@ mod tests {
         assert_eq!(row_count, 4);
     }
 
-    fn prepare_database(conn: &mut PgConnection) {
+    fn prepare_database(conn: &mut impl Conn) {
         let c1 = create_crate(conn, "foo");
         let v1 = create_version(conn, c1, "1.0.0");
         let v2 = create_version(conn, c1, "2.0.0");
@@ -411,7 +414,7 @@ mod tests {
         insert_downloads(conn, v2, "2021-01-03", 600);
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str) -> i32 {
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -419,7 +422,7 @@ mod tests {
             .unwrap()
     }
 
-    fn create_version(conn: &mut PgConnection, crate_id: i32, num: &str) -> i32 {
+    fn create_version(conn: &mut impl Conn, crate_id: i32, num: &str) -> i32 {
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -431,7 +434,7 @@ mod tests {
             .unwrap()
     }
 
-    fn insert_downloads(conn: &mut PgConnection, version_id: i32, date: &str, downloads: i32) {
+    fn insert_downloads(conn: &mut impl Conn, version_id: i32, date: &str, downloads: i32) {
         let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
 
         diesel::insert_into(version_downloads::table)

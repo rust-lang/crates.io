@@ -2,6 +2,7 @@ use super::prelude::*;
 use crate::app::AppState;
 use axum::extract::{Path, Query};
 use axum::Json;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::controllers::helpers::{pagination::Paginated, Paginate};
@@ -27,7 +28,9 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
     let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
 
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let data: Paginated<Keyword> = query.load(conn)?;
         let total = data.total();
         let kws = data
@@ -40,16 +43,18 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
             "meta": { "total": total },
         })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.
 pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
-    let conn = &mut state.db_read().await?;
-    conn.interact(move |conn| {
+    let conn = state.db_read().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let kw = Keyword::find_by_keyword(conn, &name)?;
 
         Ok(Json(json!({ "keyword": EncodableKeyword::from(kw) })))
     })
-    .await?
+    .await
 }

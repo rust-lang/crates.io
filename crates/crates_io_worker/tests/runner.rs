@@ -1,9 +1,10 @@
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, Runner};
-use deadpool_diesel::postgres::{Manager, Pool};
-use deadpool_diesel::Runtime;
 use diesel::prelude::*;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Barrier;
@@ -30,7 +31,7 @@ fn job_is_locked(id: i64, conn: &mut PgConnection) -> bool {
         .is_none()
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn jobs_are_locked_when_fetched() {
     #[derive(Clone)]
     struct TestContext {
@@ -79,7 +80,7 @@ async fn jobs_are_locked_when_fetched() {
     assert!(!job_exists(job_id, &mut conn));
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn jobs_are_deleted_when_successfully_run() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
@@ -115,7 +116,7 @@ async fn jobs_are_deleted_when_successfully_run() {
     assert_eq!(remaining_jobs(&mut conn), 0);
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     #[derive(Clone)]
     struct TestContext {
@@ -172,7 +173,7 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     runner.wait_for_shutdown().await;
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn panicking_in_jobs_updates_retry_counter() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
@@ -210,7 +211,7 @@ fn runner<Context: Clone + Send + Sync + 'static>(
     database_url: &str,
     context: Context,
 ) -> Runner<Context> {
-    let manager = Manager::new(database_url, Runtime::Tokio1);
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
     let deadpool = Pool::builder(manager).max_size(4).build().unwrap();
 
     Runner::new(deadpool, context)

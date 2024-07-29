@@ -1,11 +1,13 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
+use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::{email::Email, models::User, worker::Environment, Emails};
-use anyhow::anyhow;
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 /// The threshold for the expiry notification.
@@ -25,18 +27,19 @@ impl BackgroundJob for SendTokenExpiryNotifications {
     #[instrument(skip(env), err)]
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             // Check if the token is about to expire
             // If the token is about to expire, trigger a notification.
             check(&env.emails, conn)
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
 
 /// Find tokens that are about to expire and send notifications to their owners.
-fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
+fn check(emails: &Emails, conn: &mut impl Conn) -> anyhow::Result<()> {
     let before = chrono::Utc::now() + EXPIRY_THRESHOLD;
     info!("Searching for tokens that will expire before {before}…");
 
@@ -69,7 +72,7 @@ fn check(emails: &Emails, conn: &mut PgConnection) -> anyhow::Result<()> {
 
 /// Send an email to the user associated with the token.
 fn handle_expiring_token(
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
     token: &ApiToken,
     emails: &Emails,
 ) -> Result<(), anyhow::Error> {
@@ -109,7 +112,7 @@ fn handle_expiring_token(
 ///
 /// This function returns at most `MAX_ROWS` tokens.
 pub fn find_expiring_tokens(
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
     before: chrono::DateTime<chrono::Utc>,
 ) -> QueryResult<Vec<ApiToken>> {
     api_tokens::table

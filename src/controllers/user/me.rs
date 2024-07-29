@@ -1,4 +1,5 @@
 use crate::auth::AuthCheck;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use secrecy::{ExposeSecret, SecretString};
 use std::collections::HashMap;
 
@@ -16,7 +17,9 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let conn = app.db_read_prefer_primary().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
 
         let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
@@ -52,13 +55,15 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
             owned_crates,
         }))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read_prefer_primary().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
@@ -94,7 +99,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             "meta": { "more": more },
         })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `PUT /users/:user_id` route.
@@ -104,7 +109,9 @@ pub async fn update_user(
     req: BytesRequest,
 ) -> AppResult<Response> {
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use self::emails::user_id;
         use diesel::insert_into;
 
@@ -171,13 +178,15 @@ pub async fn update_user(
 
         ok_true()
     })
-    .await?
+    .await
 }
 
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::update;
 
         let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
@@ -190,7 +199,7 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
 
         ok_true()
     })
-    .await?
+    .await
 }
 
 /// Handles `PUT /user/:user_id/resend` route
@@ -200,7 +209,9 @@ pub async fn regenerate_token_and_send(
     req: Parts,
 ) -> AppResult<Response> {
     let conn = state.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::dsl::sql;
         use diesel::update;
 
@@ -230,7 +241,7 @@ pub async fn regenerate_token_and_send(
 
         ok_true()
     })
-    .await?
+    .await
 }
 
 /// Handles `PUT /me/email_notifications` route
@@ -249,7 +260,9 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
             .collect();
 
     let conn = app.db_write().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::pg::upsert::excluded;
 
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
@@ -293,7 +306,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
         ok_true()
     })
-    .await?
+    .await
 }
 
 pub struct UserConfirmEmail<'a> {

@@ -3,6 +3,7 @@ use diesel::{self, *};
 
 use crate::models::Crate;
 use crate::schema::*;
+use crate::util::diesel::Conn;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
@@ -42,7 +43,7 @@ impl Category {
     }
 
     pub fn update_crate(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         krate: &Crate,
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
@@ -71,7 +72,7 @@ impl Category {
         })
     }
 
-    pub fn count_toplevel(conn: &mut PgConnection) -> QueryResult<i64> {
+    pub fn count_toplevel(conn: &mut impl Conn) -> QueryResult<i64> {
         categories::table
             .filter(categories::category.not_like("%::%"))
             .count()
@@ -79,7 +80,7 @@ impl Category {
     }
 
     pub fn toplevel(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         sort: &str,
         limit: i64,
         offset: i64,
@@ -99,7 +100,7 @@ impl Category {
             .load(conn)
     }
 
-    pub fn subcategories(&self, conn: &mut PgConnection) -> QueryResult<Vec<Category>> {
+    pub fn subcategories(&self, conn: &mut impl Conn) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
         sql_query(include_str!("../subcategories.sql"))
@@ -111,7 +112,7 @@ impl Category {
     /// Returns categories as a Vector in order of traversal, not including this Category.
     /// The intention is to be able to have slugs or parent categories arrayed in order, to
     /// offer the frontend, for examples, slugs to create links to each parent category in turn.
-    pub fn parent_categories(&self, conn: &mut PgConnection) -> QueryResult<Vec<Category>> {
+    pub fn parent_categories(&self, conn: &mut impl Conn) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
         sql_query(include_str!("../parent_categories.sql"))
@@ -132,7 +133,7 @@ pub struct NewCategory<'a> {
 
 impl<'a> NewCategory<'a> {
     /// Inserts the category into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &mut PgConnection) -> QueryResult<Category> {
+    pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Category> {
         insert_into(categories::table)
             .values(self)
             .on_conflict(categories::slug)

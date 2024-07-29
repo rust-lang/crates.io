@@ -6,6 +6,7 @@ use diesel::prelude::*;
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
+use crate::util::diesel::Conn;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
@@ -33,16 +34,12 @@ pub struct ApiToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(
-        conn: &mut PgConnection,
-        user_id: i32,
-        name: &str,
-    ) -> QueryResult<CreatedApiToken> {
+    pub fn insert(conn: &mut impl Conn, user_id: i32, name: &str) -> QueryResult<CreatedApiToken> {
         Self::insert_with_scopes(conn, user_id, name, None, None, None)
     }
 
     pub fn insert_with_scopes(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         user_id: i32,
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
@@ -69,10 +66,7 @@ impl ApiToken {
         })
     }
 
-    pub fn find_by_api_token(
-        conn: &mut PgConnection,
-        token: &HashedToken,
-    ) -> QueryResult<ApiToken> {
+    pub fn find_by_api_token(conn: &mut impl Conn, token: &HashedToken) -> QueryResult<ApiToken> {
         use diesel::{dsl::now, update};
 
         let tokens = api_tokens::table

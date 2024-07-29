@@ -12,6 +12,7 @@ use axum::response::IntoResponse;
 use chrono::NaiveDateTime;
 use diesel::data_types::PgInterval;
 use diesel::dsl::{now, IntervalDsl};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use serde_json as json;
 
 #[derive(Deserialize)]
@@ -35,8 +36,10 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_read_prefer_primary().await?;
-    conn.interact(move |conn| {
+    let conn = app.db_read_prefer_primary().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
@@ -53,13 +56,15 @@ pub async fn list(
 
         Ok(Json(json!({ "api_tokens": tokens })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `PUT /me/tokens` route.
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_write().await?;
-    conn.interact(move |conn| {
+    let conn = app.db_write().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         /// The incoming serialization format for the `ApiToken` model.
         #[derive(Deserialize)]
         struct NewApiToken {
@@ -137,13 +142,15 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
 
         Ok(Json(json!({ "api_token": api_token })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `GET /me/tokens/:id` route.
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_write().await?;
-    conn.interact(move |conn| {
+    let conn = app.db_write().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
         let token = ApiToken::belonging_to(user)
@@ -153,13 +160,15 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<J
 
         Ok(Json(json!({ "api_token": token })))
     })
-    .await?
+    .await
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = &mut *app.db_write().await?;
-    conn.interact(move |conn| {
+    let conn = app.db_write().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
         diesel::update(ApiToken::belonging_to(user).find(id))
@@ -168,13 +177,15 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
         Ok(Json(json!({})))
     })
-    .await?
+    .await
 }
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    let conn = &mut *app.db_write().await?;
-    conn.interact(move |conn| {
+    let conn = app.db_write().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let auth = AuthCheck::default().check(&req, conn)?;
         let api_token_id = auth
             .api_token_id()
@@ -186,5 +197,5 @@ pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
 
         Ok(StatusCode::NO_CONTENT.into_response())
     })
-    .await?
+    .await
 }

@@ -3,6 +3,7 @@
 use std::cmp::Reverse;
 
 use diesel::connection::DefaultLoadingMode;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use indexmap::IndexMap;
 
 use crate::controllers::frontend_prelude::*;
@@ -10,6 +11,7 @@ use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptio
 
 use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::{crates, users, versions};
+use crate::util::diesel::Conn;
 use crate::util::errors::crate_not_found;
 use crate::views::EncodableVersion;
 
@@ -20,7 +22,9 @@ pub async fn versions(
     req: Parts,
 ) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         let crate_id: i32 = Crate::by_name(&crate_name)
             .select(crates::id)
             .first(conn)
@@ -64,7 +68,7 @@ pub async fn versions(
             None => json!({ "versions": versions }),
         }))
     })
-    .await?
+    .await
 }
 
 /// Seek-based pagination of versions by date
@@ -76,7 +80,7 @@ fn list_by_date(
     crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
@@ -140,7 +144,7 @@ fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,
     req: &Parts,
-    conn: &mut PgConnection,
+    conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 

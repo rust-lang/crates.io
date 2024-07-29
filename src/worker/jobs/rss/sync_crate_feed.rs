@@ -1,10 +1,12 @@
 use crate::schema::{crates, versions};
 use crate::storage::FeedId;
+use crate::tasks::spawn_blocking;
+use crate::util::diesel::Conn;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 
 /// Items younger than this will always be included in the feed.
@@ -40,13 +42,15 @@ impl BackgroundJob for SyncCrateFeed {
 
         info!("Loading latest {NUM_ITEMS} version updates for `{name}` from the database…");
         let conn = ctx.deadpool.get().await?;
-        let version_updates = conn
-            .interact({
-                let name = name.clone();
-                move |conn| load_version_updates(&name, conn)
-            })
-            .await
-            .map_err(|err| anyhow!(err.to_string()))??;
+
+        let version_updates = spawn_blocking({
+            let name = name.clone();
+            move || {
+                let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+                Ok::<_, anyhow::Error>(load_version_updates(&name, conn)?)
+            }
+        })
+        .await?;
 
         let feed_id = FeedId::Crate { name: name.clone() };
 
@@ -107,7 +111,7 @@ impl BackgroundJob for SyncCrateFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] versions
 /// then the list will be padded with older versions until [`NUM_ITEMS`] are
 /// returned.
-fn load_version_updates(name: &str, conn: &mut PgConnection) -> QueryResult<Vec<VersionUpdate>> {
+fn load_version_updates(name: &str, conn: &mut impl Conn) -> QueryResult<Vec<VersionUpdate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let updates = versions::table
@@ -237,7 +241,7 @@ mod tests {
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
     }
 
-    fn create_crate(conn: &mut PgConnection, name: &str) -> i32 {
+    fn create_crate(conn: &mut impl Conn, name: &str) -> i32 {
         diesel::insert_into(crates::table)
             .values((crates::name.eq(name),))
             .returning(crates::id)
@@ -246,7 +250,7 @@ mod tests {
     }
 
     fn create_version(
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
         crate_id: i32,
         version: &str,
         publish_time: NaiveDateTime,

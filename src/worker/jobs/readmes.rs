@@ -3,9 +3,9 @@
 use crate::models::Version;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::anyhow;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 
@@ -65,7 +65,9 @@ impl BackgroundJob for RenderAndUploadReadme {
         }
 
         let conn = env.deadpool.get().await?;
-        conn.interact(move |conn| {
+        spawn_blocking(move || {
+            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
             conn.transaction(|conn| {
                 Version::record_readme_rendering(job.version_id, conn)?;
                 let (crate_name, vers): (String, String) = versions::table
@@ -84,6 +86,5 @@ impl BackgroundJob for RenderAndUploadReadme {
             })
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }

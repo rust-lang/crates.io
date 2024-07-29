@@ -3,6 +3,7 @@
 use crate::auth::AuthCheck;
 use diesel::dsl::*;
 use diesel::sql_types::{Array, Bool, Text};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_full_text_search::*;
 use std::cell::OnceCell;
 
@@ -16,6 +17,7 @@ use crate::views::EncodableCrate;
 use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions};
 use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
+use crate::util::diesel::Conn;
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the
@@ -40,7 +42,9 @@ use crate::sql::{array_agg, canon_crate_name, lower};
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
-    conn.interact(move |conn| {
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
         use diesel::sql_types::Float;
         use seek::*;
 
@@ -245,7 +249,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             },
         })))
     })
-    .await?
+    .await
 }
 
 #[derive(Default)]
@@ -282,7 +286,7 @@ impl<'a> FilterParams<'a> {
             .as_deref()
     }
 
-    fn authed_user_id(&self, req: &Parts, conn: &mut PgConnection) -> AppResult<i32> {
+    fn authed_user_id(&self, req: &Parts, conn: &mut impl Conn) -> AppResult<i32> {
         if let Some(val) = self._auth_user_id.get() {
             return Ok(*val);
         }
@@ -298,7 +302,7 @@ impl<'a> FilterParams<'a> {
     fn make_query(
         &'a self,
         req: &Parts,
-        conn: &mut PgConnection,
+        conn: &mut impl Conn,
     ) -> AppResult<crates::BoxedQuery<'a, diesel::pg::Pg>> {
         let mut query = crates::table.into_boxed();
 
