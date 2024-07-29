@@ -172,7 +172,8 @@ impl From<EmailError> for BoxedAppError {
 }
 
 impl From<diesel_async::pooled_connection::deadpool::PoolError> for BoxedAppError {
-    fn from(_err: diesel_async::pooled_connection::deadpool::PoolError) -> BoxedAppError {
+    fn from(err: diesel_async::pooled_connection::deadpool::PoolError) -> BoxedAppError {
+        error!("Database pool error: {err}");
         service_unavailable()
     }
 }
