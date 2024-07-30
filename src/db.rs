@@ -1,6 +1,9 @@
 use diesel::{Connection, ConnectionResult, PgConnection, QueryResult};
 use diesel_async::pooled_connection::deadpool::{Hook, HookError};
+use diesel_async::pooled_connection::ManagerConfig;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use native_tls::TlsConnector;
+use postgres_native_tls::MakeTlsConnector;
 use secrecy::ExposeSecret;
 use std::time::Duration;
 use url::Url;
@@ -41,6 +44,45 @@ fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
     if !url.query_pairs().any(|(k, _)| k == key) {
         url.query_pairs_mut().append_pair(key, value);
     }
+}
+
+/// Create a new [ManagerConfig] for the database connection pool, which can
+/// be used with [diesel_async::pooled_connection::AsyncDieselConnectionManager::new_with_config()].
+pub fn make_manager_config() -> ManagerConfig<AsyncPgConnection> {
+    let mut manager_config = ManagerConfig::default();
+    manager_config.custom_setup = Box::new(|url| Box::pin(establish_async_connection(url)));
+    manager_config
+}
+
+/// Establish a new database connection with the given URL.
+///
+/// Adapted from <https://github.com/weiznich/diesel_async/blob/v0.5.0/examples/postgres/pooled-with-rustls/src/main.rs>.
+async fn establish_async_connection(url: &str) -> ConnectionResult<AsyncPgConnection> {
+    use diesel::ConnectionError::BadConnection;
+
+    let connector = TlsConnector::builder()
+        // The TLS certificate of our current database server has a long validity
+        // period and OSX rejects such certificates as "not trusted". If you run
+        // into "Certificate was not trusted" errors during local development,
+        // you may consider temporarily (!) enabling the following instruction.
+        //
+        // See also https://github.com/sfackler/rust-native-tls/issues/143.
+        //
+        // .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|err| BadConnection(err.to_string()))?;
+
+    let connector = MakeTlsConnector::new(connector);
+    let result = tokio_postgres::connect(url, connector).await;
+    let (client, conn) = result.map_err(|err| BadConnection(err.to_string()))?;
+
+    tokio::spawn(async move {
+        if let Err(e) = conn.await {
+            eprintln!("Database connection: {e}");
+        }
+    });
+
+    AsyncPgConnection::try_from(client).await
 }
 
 #[derive(Debug, Clone, Copy)]

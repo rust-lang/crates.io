@@ -91,11 +91,13 @@ tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supp
 lettre = { version = "=0.11.7", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=2.1.0"
 mockall = "=0.13.0"
+native-tls = "=0.2.12"
 oauth2 = "=4.4.2"
 object_store = { version = "=0.10.2", features = ["aws"] }
 p256 = "=0.13.2"
 parking_lot = "=0.12.3"
 paste = "=1.0.15"
+postgres-native-tls = "=0.5.0"
 prometheus = { version = "=0.13.4", default-features = false }
 quick-xml = "=0.36.1"
 rand = "=0.8.5"
@@ -113,6 +115,7 @@ tar = "=0.4.41"
 tempfile = "=3.10.1"
 thiserror = "=1.0.63"
 tokio = { version = "=1.39.2", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
+tokio-postgres = "=0.7.11"
 toml = "=0.8.15"
 tower = "=0.4.13"
 tower-http = { version = "=0.5.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }

@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::config;
-use crate::db::{connection_url, ConnectionConfig};
+use crate::db::{connection_url, make_manager_config, ConnectionConfig};
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -88,7 +88,7 @@ impl App {
             };
 
             let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, make_manager_config());
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
@@ -108,7 +108,7 @@ impl App {
             };
 
             let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(url);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, make_manager_config());
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
