@@ -1,8 +1,9 @@
+use crate::certs::CRUNCHY;
 use diesel::{Connection, ConnectionResult, PgConnection, QueryResult};
 use diesel_async::pooled_connection::deadpool::{Hook, HookError};
 use diesel_async::pooled_connection::ManagerConfig;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use native_tls::TlsConnector;
+use native_tls::{Certificate, TlsConnector};
 use postgres_native_tls::MakeTlsConnector;
 use secrecy::ExposeSecret;
 use std::time::Duration;
@@ -60,7 +61,10 @@ pub fn make_manager_config() -> ManagerConfig<AsyncPgConnection> {
 async fn establish_async_connection(url: &str) -> ConnectionResult<AsyncPgConnection> {
     use diesel::ConnectionError::BadConnection;
 
+    let cert = Certificate::from_pem(CRUNCHY).map_err(|err| BadConnection(err.to_string()))?;
+
     let connector = TlsConnector::builder()
+        .add_root_certificate(cert)
         // The TLS certificate of our current database server has a long validity
         // period and OSX rejects such certificates as "not trusted". If you run
         // into "Certificate was not trusted" errors during local development,
