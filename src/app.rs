@@ -88,7 +88,8 @@ impl App {
             };
 
             let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager = AsyncDieselConnectionManager::new_with_config(url, make_manager_config());
+            let manager_config = make_manager_config(config.db.enforce_tls);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
@@ -108,7 +109,8 @@ impl App {
             };
 
             let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager = AsyncDieselConnectionManager::new_with_config(url, make_manager_config());
+            let manager_config = make_manager_config(config.db.enforce_tls);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)

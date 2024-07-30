@@ -49,30 +49,35 @@ fn maybe_append_url_param(url: &mut Url, key: &str, value: &str) {
 
 /// Create a new [ManagerConfig] for the database connection pool, which can
 /// be used with [diesel_async::pooled_connection::AsyncDieselConnectionManager::new_with_config()].
-pub fn make_manager_config() -> ManagerConfig<AsyncPgConnection> {
+pub fn make_manager_config(enforce_tls: bool) -> ManagerConfig<AsyncPgConnection> {
     let mut manager_config = ManagerConfig::default();
-    manager_config.custom_setup = Box::new(|url| Box::pin(establish_async_connection(url)));
+    manager_config.custom_setup =
+        Box::new(move |url| Box::pin(establish_async_connection(url, enforce_tls)));
     manager_config
 }
 
 /// Establish a new database connection with the given URL.
 ///
 /// Adapted from <https://github.com/weiznich/diesel_async/blob/v0.5.0/examples/postgres/pooled-with-rustls/src/main.rs>.
-async fn establish_async_connection(url: &str) -> ConnectionResult<AsyncPgConnection> {
+async fn establish_async_connection(
+    url: &str,
+    enforce_tls: bool,
+) -> ConnectionResult<AsyncPgConnection> {
     use diesel::ConnectionError::BadConnection;
 
     let cert = Certificate::from_pem(CRUNCHY).map_err(|err| BadConnection(err.to_string()))?;
 
     let connector = TlsConnector::builder()
         .add_root_certificate(cert)
-        // The TLS certificate of our current database server has a long validity
-        // period and OSX rejects such certificates as "not trusted". If you run
-        // into "Certificate was not trusted" errors during local development,
-        // you may consider temporarily (!) enabling the following instruction.
+        // On OSX the native TLS stack is complaining about the long validity
+        // period of the certificate, so if locally we don't enforce TLS
+        // connections, we also don't enforce the validity of the certificate.
         //
-        // See also https://github.com/sfackler/rust-native-tls/issues/143.
-        //
-        // .danger_accept_invalid_certs(true)
+        // Similarly, on CI the native TLS stack is complaining about the
+        // certificate being self-signed. On CI we are connecting to a locally
+        // running database, so we also don't need to enforce the validity of
+        // the certificate either.
+        .danger_accept_invalid_certs(!enforce_tls)
         .build()
         .map_err(|err| BadConnection(err.to_string()))?;
 

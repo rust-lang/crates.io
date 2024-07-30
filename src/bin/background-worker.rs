@@ -82,7 +82,8 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let manager = AsyncDieselConnectionManager::new_with_config(db_url, make_manager_config());
+    let manager_config = make_manager_config(config.db.enforce_tls);
+    let manager = AsyncDieselConnectionManager::new_with_config(db_url, manager_config);
     let deadpool = Pool::builder(manager).max_size(10).build().unwrap();
 
     let environment = Environment::builder()
