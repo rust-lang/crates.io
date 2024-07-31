@@ -227,8 +227,10 @@ async fn publish_new_crate_rate_limit_doesnt_affect_existing_crates() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_existing_crate_rate_limited() {
+    const RATE_LIMIT: Duration = Duration::from_millis(1000);
+
     let (app, anon, _, token) = TestApp::full()
-        .with_rate_limit(LimitedAction::PublishUpdate, Duration::from_millis(500), 1)
+        .with_rate_limit(LimitedAction::PublishUpdate, RATE_LIMIT, 1)
         .with_token();
 
     // Upload a new crate
@@ -280,7 +282,7 @@ async fn publish_existing_crate_rate_limited() {
     "###);
 
     // Wait for the limit to be up
-    thread::sleep(Duration::from_millis(500));
+    thread::sleep(RATE_LIMIT);
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
     token.publish_crate(crate_to_publish).await.good();
