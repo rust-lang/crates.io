@@ -19,7 +19,6 @@ use crates_io::db::make_manager_config;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::team_repo::TeamRepoImpl;
-use crates_io::worker::jobs::ArchiveVersionDownloads;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{config, Emails};
 use crates_io::{db, ssh};
@@ -28,6 +27,8 @@ use crates_io_index::RepositoryConfig;
 use crates_io_worker::Runner;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use object_store::prefix::PrefixStore;
+use object_store::ObjectStore;
 use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
@@ -71,7 +72,9 @@ fn main() -> anyhow::Result<()> {
 
     let cloudfront = CloudFront::from_environment();
     let storage = Arc::new(Storage::from_config(&config.storage));
-    let downloads_archive_store = ArchiveVersionDownloads::store_from_environment()?;
+
+    let downloads_archive_store = PrefixStore::new(storage.as_inner(), "archive/version-downloads");
+    let downloads_archive_store: Box<dyn ObjectStore> = Box::new(downloads_archive_store);
 
     let client = Client::builder()
         .timeout(Duration::from_secs(45))
@@ -92,7 +95,7 @@ fn main() -> anyhow::Result<()> {
         .cloudfront(cloudfront)
         .fastly(fastly)
         .storage(storage)
-        .downloads_archive_store(downloads_archive_store)
+        .downloads_archive_store(Some(downloads_archive_store))
         .deadpool(deadpool.clone())
         .emails(emails)
         .team_repo(Box::new(team_repo))

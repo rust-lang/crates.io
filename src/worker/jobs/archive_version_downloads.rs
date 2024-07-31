@@ -4,7 +4,6 @@ use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
-use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, RunQueryDsl};
@@ -12,7 +11,6 @@ use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
 use futures_util::StreamExt;
-use object_store::aws::AmazonS3Builder;
 use object_store::ObjectStore;
 use secrecy::{ExposeSecret, SecretString};
 use std::collections::btree_map::Entry;
@@ -39,31 +37,6 @@ pub struct ArchiveVersionDownloads {
 impl ArchiveVersionDownloads {
     pub fn before(before: NaiveDate) -> Self {
         Self { before }
-    }
-
-    pub fn store_from_environment() -> anyhow::Result<Option<Box<dyn ObjectStore>>> {
-        let Some(region) = var("DOWNLOADS_ARCHIVE_REGION")? else {
-            return Ok(None);
-        };
-        let Some(bucket) = var("DOWNLOADS_ARCHIVE_BUCKET")? else {
-            return Ok(None);
-        };
-        let Some(access_key) = var("DOWNLOADS_ARCHIVE_ACCESS_KEY")? else {
-            return Ok(None);
-        };
-        let Some(secret_key) = var("DOWNLOADS_ARCHIVE_SECRET_KEY")? else {
-            return Ok(None);
-        };
-
-        let store = AmazonS3Builder::new()
-            .with_region(region)
-            .with_bucket_name(bucket)
-            .with_access_key_id(access_key)
-            .with_secret_access_key(secret_key)
-            .build()
-            .context("Failed to initialize S3 code")?;
-
-        Ok(Some(Box::new(store)))
     }
 }
 

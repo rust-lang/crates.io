@@ -325,8 +325,8 @@ impl Storage {
     }
 
     /// This should only be used for assertions in the test suite!
-    pub fn as_inner(&self) -> &dyn ObjectStore {
-        &self.store
+    pub fn as_inner(&self) -> Arc<dyn ObjectStore> {
+        self.store.clone()
     }
 
     async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
