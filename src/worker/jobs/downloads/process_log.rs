@@ -268,11 +268,10 @@ fn create_temp_downloads_table(conn: &mut impl Conn) -> QueryResult<usize> {
     fields(message = "INSERT INTO temp_downloads ...")
 )]
 fn fill_temp_downloads_table(downloads: DownloadsMap, conn: &mut impl Conn) -> QueryResult<()> {
-    // Postgres has a limit of 65,535 parameters per query, so we have to
-    // insert the downloads in batches. Since we fill four columns per
-    // [NewDownload] we can only insert 16,383 rows at a time. To be safe we
-    // use a maximum batch size of 10,000.
-    const MAX_BATCH_SIZE: usize = 10_000;
+    // `tokio-postgres` has a limit on the size of values it can send to the
+    // database. To avoid hitting this limit, we insert the downloads in
+    // batches.
+    const MAX_BATCH_SIZE: usize = 5_000;
 
     let map = downloads
         .into_vec()
