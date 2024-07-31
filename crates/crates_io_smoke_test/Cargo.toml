@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.86"
-bytes = "=1.6.1"
+bytes = "=1.7.0"
 clap = { version = "=4.5.9", features = ["derive", "env", "unicode", "wrap_help"] }
 crates_io_index = { path = "../crates_io_index" }
 reqwest = { version = "=0.12.5", features = ["gzip", "json"] }
