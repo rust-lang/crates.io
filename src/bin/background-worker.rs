@@ -15,6 +15,7 @@ extern crate tracing;
 
 use anyhow::Context;
 use crates_io::cloudfront::CloudFront;
+use crates_io::db::make_manager_config;
 use crates_io::fastly::Fastly;
 use crates_io::storage::Storage;
 use crates_io::team_repo::TeamRepoImpl;
@@ -27,7 +28,6 @@ use crates_io_index::RepositoryConfig;
 use crates_io_worker::Runner;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::AsyncPgConnection;
 use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
@@ -82,7 +82,8 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let manager_config = make_manager_config(config.db.enforce_tls);
+    let manager = AsyncDieselConnectionManager::new_with_config(db_url, manager_config);
     let deadpool = Pool::builder(manager).max_size(10).build().unwrap();
 
     let environment = Environment::builder()

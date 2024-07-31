@@ -1031,11 +1031,13 @@ dependencies = [
  "lettre",
  "minijinja",
  "mockall",
+ "native-tls",
  "oauth2",
  "object_store",
  "p256",
  "parking_lot",
  "paste",
+ "postgres-native-tls",
  "prometheus",
  "quick-xml 0.36.1",
  "rand",
@@ -1055,6 +1057,7 @@ dependencies = [
  "thiserror",
  "tikv-jemallocator",
  "tokio",
+ "tokio-postgres",
  "toml",
  "tower",
  "tower-http",
@@ -3352,6 +3355,19 @@ name = "portable-atomic"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da544ee218f0d287a911e9c99a39a8c9bc8fcad3cb8db5959940044ecfc67265"
+
+[[package]]
+name = "postgres-native-tls"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d442770e2b1e244bb5eb03b31c79b65bb2568f413b899eaba850fa945a65954"
+dependencies = [
+ "futures",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+ "tokio-postgres",
+]
 
 [[package]]
 name = "postgres-protocol"
