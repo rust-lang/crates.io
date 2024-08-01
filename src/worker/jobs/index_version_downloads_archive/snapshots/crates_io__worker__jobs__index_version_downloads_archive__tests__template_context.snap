@@ -1,0 +1,40 @@
+---
+source: src/worker/jobs/index_version_downloads_archive/mod.rs
+expression: context.into_string()?
+---
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>crates.io version download archives</title>
+    </head>
+    <body>
+        <h1>crates.io version download archives</h1>
+
+        <table>
+            <tbody>
+                
+                    <tr>
+                        <td><a href="2024-08-01.csv">2024-08-01.csv</a></td>
+                        <td>138</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a href="2024-07-31.csv">2024-07-31.csv</a></td>
+                        <td>123</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a href="2024-07-30.csv">2024-07-30.csv</a></td>
+                        <td>124</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a href="2024-07-29.csv">2024-07-29.csv</a></td>
+                        <td>234</td>
+                    </tr>
+                
+            </tbody>
+        </table>
+    </body>
+</html>
