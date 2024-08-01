@@ -67,6 +67,10 @@ impl BackgroundJob for ArchiveVersionDownloads {
         let uploaded_dates = upload(downloads_archive_store, tempdir.path(), dates).await?;
         delete(&env.deadpool, uploaded_dates).await?;
 
+        // Queue up the job to regenerate the archive index.
+        let conn: &mut AsyncConnectionWrapper<_> = &mut env.deadpool.get().await?.into();
+        super::IndexVersionDownloadsArchive.enqueue(conn)?;
+
         info!("Finished archiving old version downloads");
         Ok(())
     }
