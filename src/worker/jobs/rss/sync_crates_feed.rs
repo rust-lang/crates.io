@@ -70,18 +70,8 @@ impl BackgroundJob for SyncCratesFeed {
         ctx.storage.upload_feed(&feed_id, &channel).await?;
 
         let path = object_store::path::Path::from(&feed_id);
-        if let Some(cloudfront) = ctx.cloudfront() {
-            info!(%path, "Invalidating CloudFront cache…");
-            cloudfront.invalidate(path.as_ref()).await?;
-        } else {
-            info!("Skipping CloudFront cache invalidation (CloudFront not configured)");
-        }
-
-        if let Some(fastly) = ctx.fastly() {
-            info!(%path, "Invalidating Fastly cache…");
-            fastly.invalidate(path.as_ref()).await?;
-        } else {
-            info!("Skipping Fastly cache invalidation (Fastly not configured)");
+        if let Err(error) = ctx.invalidate_cdns(path.as_ref()).await {
+            warn!("Failed to invalidate CDN caches: {error}");
         }
 
         info!("Finished syncing crates feed");

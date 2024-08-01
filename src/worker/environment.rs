@@ -5,6 +5,7 @@ use crate::team_repo::TeamRepo;
 use crate::typosquat;
 use crate::util::diesel::Conn;
 use crate::Emails;
+use anyhow::Context;
 use crates_io_index::{Repository, RepositoryConfig};
 use derive_builder::Builder;
 use diesel_async::pooled_connection::deadpool::Pool;
@@ -69,6 +70,19 @@ impl Environment {
 
     pub(crate) fn fastly(&self) -> Option<&Fastly> {
         self.fastly.as_ref()
+    }
+
+    /// Invalidate a file in all registered CDNs.
+    pub(crate) async fn invalidate_cdns(&self, path: &str) -> anyhow::Result<()> {
+        if let Some(cloudfront) = self.cloudfront() {
+            cloudfront.invalidate(path).await.context("CloudFront")?;
+        }
+
+        if let Some(fastly) = self.fastly() {
+            fastly.invalidate(path).await.context("Fastly")?;
+        }
+
+        Ok(())
     }
 
     /// Returns the typosquatting cache, initialising it if required.
