@@ -48,16 +48,8 @@ impl BackgroundJob for DumpDb {
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(TAR_PATH).await {
-                warn!("Failed to invalidate CloudFront cache: {}", error);
-            }
-        }
-
-        if let Some(fastly) = env.fastly() {
-            if let Err(error) = fastly.invalidate(TAR_PATH).await {
-                warn!("Failed to invalidate Fastly cache: {}", error);
-            }
+        if let Err(error) = env.invalidate_cdns(TAR_PATH).await {
+            warn!("Failed to invalidate CDN caches: {error}");
         }
 
         info!("Uploading zip file…");
@@ -67,16 +59,8 @@ impl BackgroundJob for DumpDb {
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Some(cloudfront) = env.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(ZIP_PATH).await {
-                warn!("Failed to invalidate CloudFront cache: {}", error);
-            }
-        }
-
-        if let Some(fastly) = env.fastly() {
-            if let Err(error) = fastly.invalidate(ZIP_PATH).await {
-                warn!("Failed to invalidate Fastly cache: {}", error);
-            }
+        if let Err(error) = env.invalidate_cdns(ZIP_PATH).await {
+            warn!("Failed to invalidate CDN caches: {error}");
         }
 
         Ok(())
