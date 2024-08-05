@@ -135,5 +135,5 @@ claims = "=0.7.1"
 diesel = { version = "=2.2.2", features = ["r2d2"] }
 googletest = "=0.11.0"
 insta = { version = "=1.39.0", features = ["glob", "json", "redactions"] }
-regex = "=1.10.5"
+regex = "=1.10.6"
 tokio = "=1.39.2"
