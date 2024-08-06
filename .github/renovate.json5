@@ -34,8 +34,6 @@
             extends: ["schedule:weekly"],
         },
         {
-            // Avoid "Artifact update problem" for pnpm updates when the renovatebot
-            // setup does not support the new version yet.
             matchDepNames: ["pnpm"],
             minimumReleaseAge: "24 hours",
         },
@@ -58,8 +56,8 @@
             labels: ["A-backend ⚙️"],
         },
         {
-            matchDepPatterns: ["^diesel$", "^diesel_"],
             groupName: "diesel packages",
+            matchDepNames: ["/^diesel$/", "/^diesel_/"],
         },
         {
             matchDepNames: ["aws-ip-ranges", "github-meta"],
@@ -70,10 +68,9 @@
             enabled: false,
         },
         {
-            // This is causing various issues, so we disable it for now.
             matchDatasources: ["docker"],
             matchUpdateTypes: ["pinDigest"],
-            enabled: false
+            enabled: false,
         },
     ],
 }
