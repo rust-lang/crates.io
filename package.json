@@ -141,7 +141,7 @@
   },
   "resolutions": {
     "ember-get-config": "2.1.1",
-    "ember-inflector": "5.0.0",
+    "ember-inflector": "5.0.1",
     "ember-modifier": "4.2.0",
     "miragejs": "0.1.48"
   },
