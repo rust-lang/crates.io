@@ -25,12 +25,10 @@ related crates. More information about the backend is in
 
 These files and directories have to do with the backend:
 
-- `build.rs` - Cargo build script
 - `Cargo.lock` - Locks dependencies to specific versions providing consistency across development
   and deployment
 - `Cargo.toml` - Defines the crate and its dependencies
 - `migrations/` - Diesel migrations applied to the database during development and deployment
-- `.rustfmt.toml` - Defines Rust coding style guidelines which are enforced by the CI environment
 - `src/` - The backend's source code
 - `target/` - Compiled output, including dependencies and final binary artifacts - (ignored in
   `.gitignore`)
