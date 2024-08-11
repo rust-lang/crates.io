@@ -180,6 +180,7 @@ pub fn run_psql(script: &Path, database_url: &str) -> anyhow::Result<()> {
         File::open(script).with_context(|| format!("Failed to open {}", script.display()))?;
 
     let psql = std::process::Command::new("psql")
+        .arg("--no-psqlrc")
         .arg(database_url)
         .current_dir(script.parent().unwrap())
         .stdin(psql_script)
