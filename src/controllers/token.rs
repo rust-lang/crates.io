@@ -232,7 +232,7 @@ impl<'a> crate::email::Email for NewTokenEmail<'a> {
             "\
 Hello {user_name}!
 
-A new API token was recently added to your crates.io account.
+A new API token was recently added to your {domain} account.
 
 If this wasn't you, you should revoke the token immediately: https://{domain}/settings/tokens",
             user_name = self.user_name,
