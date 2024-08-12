@@ -87,13 +87,6 @@ struct TemplateContext {
 }
 
 impl TemplateContext {
-    pub fn new() -> anyhow::Result<Self> {
-        Ok(Self {
-            env: Self::new_environment()?,
-            files: FileSet::default(),
-        })
-    }
-
     pub async fn new_from_store(store: &impl ObjectStore) -> anyhow::Result<Self> {
         Ok(Self {
             env: Self::new_environment()?,
