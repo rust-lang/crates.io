@@ -1,6 +1,6 @@
 ---
 source: src/worker/jobs/index_version_downloads_archive/mod.rs
-expression: context.into_string()?
+expression: context.to_html()?
 ---
 <!DOCTYPE HTML>
 <html>
@@ -10,6 +10,10 @@ expression: context.into_string()?
     </head>
     <body>
         <h1>crates.io version download archives</h1>
+
+        <p>
+            This index is also available <a href="index.json">in JSON form</a>.
+        </p>
 
         <table>
             <tbody>

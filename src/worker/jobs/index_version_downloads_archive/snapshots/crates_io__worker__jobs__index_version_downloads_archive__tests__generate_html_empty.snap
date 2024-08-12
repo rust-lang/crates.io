@@ -11,6 +11,10 @@ expression: "std::str::from_utf8(&index)?"
     <body>
         <h1>crates.io version download archives</h1>
 
+        <p>
+            This index is also available <a href="index.json">in JSON form</a>.
+        </p>
+
         <table>
             <tbody>
                 
