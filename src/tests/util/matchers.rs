@@ -1,17 +1,18 @@
-use googletest::description::Description;
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::{
+    description::Description,
+    matcher::{Matcher, MatcherBase, MatcherResult},
+};
 use http::StatusCode;
 
 pub fn is_success() -> SuccessMatcher {
     SuccessMatcher
 }
 
+#[derive(MatcherBase)]
 pub struct SuccessMatcher;
 
-impl Matcher for SuccessMatcher {
-    type ActualT = StatusCode;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+impl Matcher<StatusCode> for SuccessMatcher {
+    fn matches(&self, actual: StatusCode) -> MatcherResult {
         actual.is_success().into()
     }
 
