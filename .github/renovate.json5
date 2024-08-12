@@ -58,7 +58,7 @@
             labels: ["A-backend ⚙️"],
         },
         {
-            matchDepPatterns: ["^diesel$", "^diesel_"],
+            matchDepNames: ["/^diesel$/", "/^diesel_/"],
             groupName: "diesel packages",
         },
         {
