@@ -68,8 +68,7 @@ impl BackgroundJob for ArchiveVersionDownloads {
         delete(&env.deadpool, uploaded_dates).await?;
 
         // Queue up the job to regenerate the archive index.
-        let conn: &mut AsyncConnectionWrapper<_> = &mut env.deadpool.get().await?.into();
-        super::IndexVersionDownloadsArchive.enqueue(conn)?;
+        enqueue_index_job(&env.deadpool).await?;
 
         info!("Finished archiving old version downloads");
         Ok(())
@@ -247,6 +246,17 @@ fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<(
             }
         }
     }
+
+    Ok(())
+}
+
+async fn enqueue_index_job(db_pool: &Pool<AsyncPgConnection>) -> anyhow::Result<()> {
+    let conn = db_pool.get().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        super::IndexVersionDownloadsArchive.enqueue(conn)
+    })
+    .await?;
 
     Ok(())
 }
