@@ -27,11 +27,21 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
         };
 
         info!("Generating and uploading index.html…");
-        if let Err(error) = generate(downloads_archive_store).await {
-            warn!("Error generating index.html: {error}");
+        let files = match generate_html(downloads_archive_store).await {
+            Ok(files) => files,
+            Err(error) => {
+                warn!("Error generating index.html: {error}");
+                return Err(error);
+            }
+        };
+        info!("index.html generated and uploaded");
+
+        info!("Generating and uploading index.json…");
+        if let Err(error) = generate_json(downloads_archive_store, files).await {
+            warn!("Error generating index.json: {error}");
             return Err(error);
         }
-        info!("index.html generated and uploaded");
+        info!("index.json generated and uploaded");
 
         info!("Invalidating CDN caches…");
         if let Err(error) = env.invalidate_cdns(INDEX_PATH).await {
@@ -45,46 +55,81 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 }
 
 /// Generate and upload an index.html based on the objects within the given store.
-async fn generate(store: &impl ObjectStore) -> anyhow::Result<()> {
-    let mut context = TemplateContext::new().context("instantiating TemplateContext")?;
-    context
-        .build_from_store(store)
+async fn generate_html(store: &impl ObjectStore) -> anyhow::Result<FileSet> {
+    let context = TemplateContext::new_from_store(store)
         .await
-        .context("building up files from object store")?;
-    let index = context.into_string().context("rendering template")?;
+        .context("instantiating context from object store")?;
+    let index = context.to_html().context("rendering template")?;
 
     store
         .put(&"index.html".into(), index.into())
         .await
         .context("uploading index.html")?;
 
+    Ok(context.into())
+}
+
+/// Generate and upload an index.json based on the objects within the given store.
+async fn generate_json(store: &impl ObjectStore, files: FileSet) -> anyhow::Result<()> {
+    let content = serde_json::to_string(&files)?;
+
+    store
+        .put(&"index.json".into(), content.into())
+        .await
+        .context("uploading index.json")?;
+
     Ok(())
 }
 
 struct TemplateContext {
     env: minijinja::Environment<'static>,
-    files: BTreeSet<File>,
+    files: FileSet,
 }
 
 impl TemplateContext {
-    fn new() -> anyhow::Result<Self> {
+    pub fn new() -> anyhow::Result<Self> {
+        Ok(Self {
+            env: Self::new_environment()?,
+            files: FileSet::default(),
+        })
+    }
+
+    pub async fn new_from_store(store: &impl ObjectStore) -> anyhow::Result<Self> {
+        Ok(Self {
+            env: Self::new_environment()?,
+            files: FileSet::new_from_store(store).await?,
+        })
+    }
+
+    pub fn to_html(&self) -> anyhow::Result<String> {
+        use minijinja::context;
+
+        Ok(self.env.get_template("index.html")?.render(context! {
+            files => &self.files,
+        })?)
+    }
+
+    fn new_environment() -> anyhow::Result<minijinja::Environment<'static>> {
         use minijinja::Environment;
 
         let mut env = Environment::new();
         env.add_template("index.html", include_str!("index.html.j2"))?;
 
-        Ok(Self {
-            env,
-            files: BTreeSet::new(),
-        })
+        Ok(env)
     }
+}
 
-    async fn build_from_store(&mut self, store: &impl ObjectStore) -> anyhow::Result<()> {
+#[derive(Serialize, Debug, Default)]
+struct FileSet(BTreeSet<File>);
+
+impl FileSet {
+    async fn new_from_store(store: &impl ObjectStore) -> anyhow::Result<Self> {
+        let mut set = BTreeSet::new();
         let mut contents = store.list(None);
         while let Some(object) = contents.try_next().await? {
             match File::try_from(object) {
                 Ok(file) => {
-                    self.files.insert(file);
+                    set.insert(file);
                 }
                 Err(e) => {
                     warn!(?e, "ignoring file in object store");
@@ -92,15 +137,13 @@ impl TemplateContext {
             }
         }
 
-        Ok(())
+        Ok(Self(set))
     }
+}
 
-    fn into_string(self) -> anyhow::Result<String> {
-        use minijinja::context;
-
-        Ok(self.env.get_template("index.html")?.render(context! {
-            files => self.files,
-        })?)
+impl From<TemplateContext> for FileSet {
+    fn from(context: TemplateContext) -> Self {
+        context.files
     }
 }
 
@@ -156,9 +199,9 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_generate() -> anyhow::Result<()> {
+    async fn test_generate_html() -> anyhow::Result<()> {
         let store = fake_store().await?;
-        generate(&store).await?;
+        generate_html(&store).await?;
 
         let index = store.get(&"index.html".into()).await?.bytes().await?;
 
@@ -171,9 +214,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_generate_empty() -> anyhow::Result<()> {
+    async fn test_generate_html_empty() -> anyhow::Result<()> {
         let store = InMemory::new();
-        generate(&store).await?;
+        generate_html(&store).await?;
 
         let index = store.get(&"index.html".into()).await?.bytes().await?;
         assert_snapshot!(std::str::from_utf8(&index)?);
@@ -182,15 +225,38 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_generate_json() -> anyhow::Result<()> {
+        let store = fake_store().await?;
+        let context = TemplateContext::new_from_store(&store).await?;
+        generate_json(&store, context.into()).await?;
+
+        let index = store.get(&"index.json".into()).await?.bytes().await?;
+        assert_snapshot!(std::str::from_utf8(&index)?);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_generate_json_empty() -> anyhow::Result<()> {
+        let store = fake_store().await?;
+        let context = TemplateContext::new_from_store(&store).await?;
+        generate_json(&store, context.into()).await?;
+
+        let index = store.get(&"index.json".into()).await?.bytes().await?;
+        assert_snapshot!(std::str::from_utf8(&index)?);
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_template_context() -> anyhow::Result<()> {
         let store = fake_store().await?;
-
-        let mut context = TemplateContext::new()?;
-        context.build_from_store(&store).await?;
+        let context = TemplateContext::new_from_store(&store).await?;
 
         // Validate that only the expected date CSVs are present, in order.
         let filenames: Vec<_> = context
             .files
+            .0
             .iter()
             .map(|file| file.name.as_str())
             .collect();
@@ -205,7 +271,7 @@ mod tests {
             ]),
         );
 
-        assert_snapshot!(context.into_string()?);
+        assert_snapshot!(context.to_html()?);
 
         Ok(())
     }
