@@ -18,8 +18,8 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       '@sentry/ember':
-        specifier: 8.25.0
-        version: 8.25.0(webpack@5.93.0)
+        specifier: 8.26.0
+        version: 8.26.0(webpack@5.93.0)
       chart.js:
         specifier: 4.4.3
         version: 4.4.3
@@ -1720,40 +1720,40 @@ packages:
     resolution: {integrity: sha512-C5DHU6YlKaISB5utGQ+jpsMB57ZtY0uZ8UkD29j855BjqG6eJ98lhA2h/BoJbyPw89RKLP1EEXroy9+5JPoyVw==}
     engines: {node: 12.* || >= 14}
 
-  '@sentry-internal/browser-utils@8.25.0':
-    resolution: {integrity: sha512-nlWgp1lVhNQOTUplW85G3qm0fOIgAhJ/sl/31OIuScVrITYhYDF2bO+Zv/jQ8YsdUBAUXqY1tPT9wwPJklnPhw==}
+  '@sentry-internal/browser-utils@8.26.0':
+    resolution: {integrity: sha512-O2Tj+WK33/ZVp5STnz6ZL0OO+/Idk2KqsH0ITQkQmyZ2z0kdzWOeqK7s7q3/My6rB1GfPcyqPcBBv4dVv92FYQ==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/feedback@8.25.0':
-    resolution: {integrity: sha512-327I5XJAFrsgjc5qUKxZ9rff3WNCfGvf1fIii70LQ2YQhQgG4XHZILmkD06ETEyXb+H1tkrNQQEJ1/d4ai+q5g==}
+  '@sentry-internal/feedback@8.26.0':
+    resolution: {integrity: sha512-hQtw1gg8n6ERK1UH47F7ZI1zOsbhu0J2VX+TrnkpaQR2FgxDW1oe9Ja6oCV4CQKuR4w+1ZI/Kj4imSt0K33kEw==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/replay-canvas@8.25.0':
-    resolution: {integrity: sha512-dPXlkAbkFL1DBum8rGTaHS+apJKaXEZJF9gLcBBKTruhTCizrugFLxajzIfVSiFVuwNKuJWa2fzhzbeQM0ee7w==}
+  '@sentry-internal/replay-canvas@8.26.0':
+    resolution: {integrity: sha512-2CFQW6f9aJHIo/DqmqYa9PaYoLn1o36ywc0h8oyGrD4oPCbrnE5F++PmTdc71GBODu41HBn/yoCTLmxOD+UjpA==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/replay@8.25.0':
-    resolution: {integrity: sha512-3f7x8EYthyj157uV9V8vBjun+1gJnHhh2+i0qxYLhMGx7N2Fq0J3Bvvo1rosSg+fYh5HzPNZDufwIRdg5C/MQw==}
+  '@sentry-internal/replay@8.26.0':
+    resolution: {integrity: sha512-JDY7W2bswlp5c3483lKP4kcb75fHNwGNfwD8x8FsY9xMjv7nxeXjLpR5cCEk1XqPq2+n6w4j7mJOXhEXGiUIKg==}
     engines: {node: '>=14.18'}
 
-  '@sentry/browser@8.25.0':
-    resolution: {integrity: sha512-51bdVGXjyooqVGzaSGsnExqRTt9NvZ1zGFsxbbCSXi5UoEFN6zdMUz6jKYsL2K80eeELP2VKOVlobHlEzeJQfw==}
+  '@sentry/browser@8.26.0':
+    resolution: {integrity: sha512-e5s6eKlwLZWzTwQcBwqyAGZMMuQROW9Z677VzwkSyREWAIkKjfH2VBxHATnNGc0IVkNHjD7iH3ixo3C0rLKM3w==}
     engines: {node: '>=14.18'}
 
-  '@sentry/core@8.25.0':
-    resolution: {integrity: sha512-7KtglbrW1eX4DOHkf6i4rRIExEf2CgtQ99qZ8gn5FUaAmNMg0rK7bb1yZMx0RZtp5G1TSz/S0jQQgxHWebaEig==}
+  '@sentry/core@8.26.0':
+    resolution: {integrity: sha512-g/tVmTZD4GNbLFf++hKJfBpcCAtduFEMLnbfa9iT/QEZjlmP+EzY+GsH9bafM5VsNe8DiOUp+kJKWtShzlVdBA==}
     engines: {node: '>=14.18'}
 
-  '@sentry/ember@8.25.0':
-    resolution: {integrity: sha512-8W5eUwJe0JerIPdg3n+moDkONmyl3QZ6yOmdAO+eIAl6E+7Jl0Pk0scWVmOzO2MVXxj+lUdHkqptLeHwz5tlZA==}
+  '@sentry/ember@8.26.0':
+    resolution: {integrity: sha512-SM1diLfWUkGjLbZAORB5KTtde8IxGB5bP6yeAPZhlvnxCI2l+tVxm7OrSmECvWZh8OM2PQeS5ZW9kYY5gjuYxA==}
     engines: {node: '>=14.18'}
 
-  '@sentry/types@8.25.0':
-    resolution: {integrity: sha512-ojim0gDcRhGJPguYrtms4FsprX4xZz3LGNk9Z0hwTbSVEdlhQIInsQ7CYcdM3sjUs+qT7kfpxTRZGUeZNRRJcA==}
+  '@sentry/types@8.26.0':
+    resolution: {integrity: sha512-zKmh6SWsJh630rpt7a9vP4Cm4m1C2gDTUqUiH565CajCL/4cePpNWYrNwalSqsOSL7B9OrczA1+n6a6XvND+ng==}
     engines: {node: '>=14.18'}
 
-  '@sentry/utils@8.25.0':
-    resolution: {integrity: sha512-mVlkV7S62ZZ2jM38/kOwWx2xoW8fUv2cjw2IwFKoAIPyLBh3mo1WJtvfdtN/rXGjQWZJBKW53EWaWnD00rkjyA==}
+  '@sentry/utils@8.26.0':
+    resolution: {integrity: sha512-xvlPU9Hd2BlyT+FhWHGNwnxWqdVRk2AHnDtVcW4Ma0Ri5EwS+uy4Jeik5UkSv8C5RVb9VlxFmS8LN3I1MPJsLw==}
     engines: {node: '>=14.18'}
 
   '@simple-dom/document@1.4.0':
@@ -11254,55 +11254,55 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sentry-internal/browser-utils@8.25.0':
+  '@sentry-internal/browser-utils@8.26.0':
     dependencies:
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry-internal/feedback@8.25.0':
+  '@sentry-internal/feedback@8.26.0':
     dependencies:
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry-internal/replay-canvas@8.25.0':
+  '@sentry-internal/replay-canvas@8.26.0':
     dependencies:
-      '@sentry-internal/replay': 8.25.0
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry-internal/replay': 8.26.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry-internal/replay@8.25.0':
+  '@sentry-internal/replay@8.26.0':
     dependencies:
-      '@sentry-internal/browser-utils': 8.25.0
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry-internal/browser-utils': 8.26.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry/browser@8.25.0':
+  '@sentry/browser@8.26.0':
     dependencies:
-      '@sentry-internal/browser-utils': 8.25.0
-      '@sentry-internal/feedback': 8.25.0
-      '@sentry-internal/replay': 8.25.0
-      '@sentry-internal/replay-canvas': 8.25.0
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry-internal/browser-utils': 8.26.0
+      '@sentry-internal/feedback': 8.26.0
+      '@sentry-internal/replay': 8.26.0
+      '@sentry-internal/replay-canvas': 8.26.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry/core@8.25.0':
+  '@sentry/core@8.26.0':
     dependencies:
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
 
-  '@sentry/ember@8.25.0(webpack@5.93.0)':
+  '@sentry/ember@8.26.0(webpack@5.93.0)':
     dependencies:
       '@babel/core': 7.25.2
       '@embroider/macros': 1.16.5
-      '@sentry/browser': 8.25.0
-      '@sentry/core': 8.25.0
-      '@sentry/types': 8.25.0
-      '@sentry/utils': 8.25.0
+      '@sentry/browser': 8.26.0
+      '@sentry/core': 8.26.0
+      '@sentry/types': 8.26.0
+      '@sentry/utils': 8.26.0
       ember-auto-import: 2.7.4(webpack@5.93.0)
       ember-cli-babel: 8.2.0(@babel/core@7.25.2)
       ember-cli-htmlbars: 6.3.0
@@ -11312,11 +11312,11 @@ snapshots:
       - supports-color
       - webpack
 
-  '@sentry/types@8.25.0': {}
+  '@sentry/types@8.26.0': {}
 
-  '@sentry/utils@8.25.0':
+  '@sentry/utils@8.26.0':
     dependencies:
-      '@sentry/types': 8.25.0
+      '@sentry/types': 8.26.0
 
   '@simple-dom/document@1.4.0':
     dependencies:
@@ -11403,26 +11403,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__array': 4.0.10
-      '@types/ember__component': 4.0.22(@babel/core@7.25.2)
-      '@types/ember__controller': 4.0.12
-      '@types/ember__debug': 4.0.8
-      '@types/ember__engine': 4.0.11
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.25.2)
-      '@types/ember__utils': 4.0.7
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.25.2)
@@ -11455,11 +11435,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.25.2)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.25.2)
-      '@types/ember': 4.0.11
-      '@types/ember__engine': 4.0.11
-      '@types/ember__object': 4.0.12
+      '@types/ember': 4.0.11(@babel/core@7.25.2)
+      '@types/ember__engine': 4.0.11(@babel/core@7.25.2)
+      '@types/ember__object': 4.0.12(@babel/core@7.25.2)
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22
+      '@types/ember__routing': 4.0.22(@babel/core@7.25.2)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11468,15 +11448,10 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
 
-  '@types/ember__array@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12
-
   '@types/ember__array@4.0.10(@babel/core@7.25.2)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__object': 4.0.12
+      '@types/ember__object': 4.0.12(@babel/core@7.25.2)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11498,10 +11473,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
 
-  '@types/ember__controller@4.0.12':
-    dependencies:
-      '@types/ember__object': 4.0.12
-
   '@types/ember__controller@4.0.12(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__object': 4.0.12(@babel/core@7.25.2)
@@ -11514,11 +11485,6 @@ snapshots:
       '@types/ember__engine': 3.16.9
       '@types/ember__object': 3.12.13
 
-  '@types/ember__debug@4.0.8':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
-
   '@types/ember__debug@4.0.8(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__object': 4.0.12(@babel/core@7.25.2)
@@ -11530,11 +11496,6 @@ snapshots:
   '@types/ember__engine@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__engine@4.0.11':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
 
   '@types/ember__engine@4.0.11(@babel/core@7.25.2)':
     dependencies:
@@ -11550,11 +11511,6 @@ snapshots:
 
   '@types/ember__object@3.12.13':
     dependencies:
-      '@types/rsvp': 4.0.9
-
-  '@types/ember__object@4.0.12':
-    dependencies:
-      '@types/ember': 4.0.11
       '@types/rsvp': 4.0.9
 
   '@types/ember__object@4.0.12(@babel/core@7.25.2)':
@@ -11578,28 +11534,17 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
-  '@types/ember__routing@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12
-      '@types/ember__object': 4.0.12
-      '@types/ember__service': 4.0.9
-
   '@types/ember__routing@4.0.22(@babel/core@7.25.2)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__controller': 4.0.12
-      '@types/ember__object': 4.0.12
-      '@types/ember__service': 4.0.9
+      '@types/ember__controller': 4.0.12(@babel/core@7.25.2)
+      '@types/ember__object': 4.0.12(@babel/core@7.25.2)
+      '@types/ember__service': 4.0.9(@babel/core@7.25.2)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
-
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.25.2)':
     dependencies:
@@ -11611,10 +11556,6 @@ snapshots:
   '@types/ember__service@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__service@4.0.9':
-    dependencies:
-      '@types/ember__object': 4.0.12
 
   '@types/ember__service@4.0.9(@babel/core@7.25.2)':
     dependencies:
@@ -11645,10 +11586,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.25.2)':
     dependencies:
