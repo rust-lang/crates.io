@@ -93,7 +93,7 @@ minijinja = "=2.1.2"
 mockall = "=0.13.0"
 native-tls = "=0.2.12"
 oauth2 = "=4.4.2"
-object_store = { version = "=0.10.2", features = ["aws"] }
+object_store = { version = "=0.11.0", features = ["aws"] }
 p256 = "=0.13.2"
 parking_lot = "=0.12.3"
 paste = "=1.0.15"
