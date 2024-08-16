@@ -130,6 +130,8 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             .transpose()
             .map_err(|_err| bad_request("invalid endpoint scope"))?;
 
+        let recipient = user.email(conn)?;
+
         let api_token = ApiToken::insert_with_scopes(
             conn,
             user.id,
@@ -138,6 +140,23 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             endpoint_scopes,
             new.api_token.expired_at,
         )?;
+
+        if let Some(recipient) = recipient {
+            let email = NewTokenEmail {
+                token_name: name,
+                user_name: &user.gh_login,
+                domain: &app.emails.domain,
+            };
+
+            // At this point the token has been created so failing to send the
+            // email should not cause an error response to be returned to the
+            // caller.
+            let email_ret = app.emails.send(&recipient, email);
+            if let Err(e) = email_ret {
+                error!("Failed to send token creation email: {e}")
+            }
+        }
+
         let api_token = EncodableApiTokenWithToken::from(api_token);
 
         Ok(Json(json!({ "api_token": api_token })))
@@ -198,4 +217,28 @@ pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
         Ok(StatusCode::NO_CONTENT.into_response())
     })
     .await
+}
+
+struct NewTokenEmail<'a> {
+    token_name: &'a str,
+    user_name: &'a str,
+    domain: &'a str,
+}
+
+impl<'a> crate::email::Email for NewTokenEmail<'a> {
+    const SUBJECT: &'static str = "New API token created";
+
+    fn body(&self) -> String {
+        format!(
+            "\
+Hello {user_name}!
+
+A new API token with the name \"{token_name}\" was recently added to your {domain} account.
+
+If this wasn't you, you should revoke the token immediately: https://{domain}/settings/tokens",
+            token_name = self.token_name,
+            user_name = self.user_name,
+            domain = self.domain,
+        )
+    }
 }

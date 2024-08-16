@@ -19,7 +19,7 @@ async fn create_token_logged_out() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_invalid_request() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user();
     let invalid: &[u8] = br#"{ "name": "" }"#;
     let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -27,11 +27,12 @@ async fn create_token_invalid_request() {
         response.json(),
         json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_no_name() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user();
     let empty_name: &[u8] = br#"{ "api_token": { "name": "" } }"#;
     let response = user.put::<()>("/api/v1/me/tokens", empty_name).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -39,6 +40,7 @@ async fn create_token_no_name() {
         response.json(),
         json!({ "errors": [{ "detail": "name must have a value" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -56,6 +58,7 @@ async fn create_token_exceeded_tokens_per_user() {
         response.json(),
         json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -82,6 +85,7 @@ async fn create_token_success() {
     assert_eq!(tokens[0].last_used_at, None);
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -107,7 +111,7 @@ async fn create_token_multiple_users_have_different_values() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn cannot_create_token_with_token() {
-    let (_, _, _, token) = TestApp::init().with_token();
+    let (app, _, _, token) = TestApp::init().with_token();
     let response = token
         .put::<()>(
             "/api/v1/me/tokens",
@@ -119,6 +123,7 @@ async fn cannot_create_token_with_token() {
         response.json(),
         json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -164,6 +169,7 @@ async fn create_token_with_scopes() {
         tokens[0].endpoint_scopes,
         Some(vec![EndpointScope::PublishUpdate])
     );
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -200,11 +206,12 @@ async fn create_token_with_null_scopes() {
     assert_eq!(tokens[0].last_used_at, None);
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_empty_crate_scope() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user();
 
     let json = json!({
         "api_token": {
@@ -222,11 +229,12 @@ async fn create_token_with_empty_crate_scope() {
         response.json(),
         json!({ "errors": [{ "detail": "invalid crate scope" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_invalid_endpoint_scope() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user();
 
     let json = json!({
         "api_token": {
@@ -244,11 +252,12 @@ async fn create_token_with_invalid_endpoint_scope() {
         response.json(),
         json!({ "errors": [{ "detail": "invalid endpoint scope" }] })
     );
+    assert!(app.as_inner().emails.mails_in_memory().unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_expiry_date() {
-    let (_app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user();
 
     let json = json!({
         "api_token": {
@@ -269,4 +278,5 @@ async fn create_token_with_expiry_date() {
         ".api_token.last_used_at" => "[datetime]",
         ".api_token.token" => insta::api_token_redaction(),
     });
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
 }
