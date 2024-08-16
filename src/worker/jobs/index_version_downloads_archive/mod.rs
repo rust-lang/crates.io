@@ -67,8 +67,7 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
 /// Generate and upload an index.html based on the objects within the given store.
 async fn generate_html(store: &impl ObjectStore, files: &FileSet) -> anyhow::Result<()> {
-    let context = TemplateContext::new(files);
-    let index = context.to_html().context("rendering template")?;
+    let index = files.to_html().context("rendering template")?;
 
     store
         .put(&"index.html".into(), index.into())
@@ -90,27 +89,6 @@ async fn generate_json(store: &impl ObjectStore, files: &FileSet) -> anyhow::Res
     Ok(())
 }
 
-struct TemplateContext<'a> {
-    files: &'a FileSet,
-}
-
-impl<'a> TemplateContext<'a> {
-    pub fn new(files: &'a FileSet) -> Self {
-        Self { files }
-    }
-
-    pub fn to_html(&self) -> anyhow::Result<String> {
-        use minijinja::{context, Environment};
-
-        let template = include_str!("index.html.j2");
-        let context = context! {
-            files => &self.files,
-        };
-
-        Ok(Environment::new().render_str(template, context)?)
-    }
-}
-
 #[derive(Serialize, Debug, Default)]
 struct FileSet(BTreeSet<File>);
 
@@ -130,6 +108,17 @@ impl FileSet {
         }
 
         Ok(Self(set))
+    }
+
+    pub fn to_html(&self) -> anyhow::Result<String> {
+        use minijinja::{context, Environment};
+
+        let template = include_str!("index.html.j2");
+        let context = context! {
+            files => self,
+        };
+
+        Ok(Environment::new().render_str(template, context)?)
     }
 }
 
@@ -254,8 +243,7 @@ mod tests {
             ]),
         );
 
-        let context = TemplateContext::new(&files);
-        assert_snapshot!(context.to_html()?);
+        assert_snapshot!(files.to_html()?);
 
         Ok(())
     }
