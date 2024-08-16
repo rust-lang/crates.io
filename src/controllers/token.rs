@@ -157,9 +157,9 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             }
         }
 
-        Ok(Json(
-            json!({ "api_token": EncodableApiTokenWithToken::from(api_token) }),
-        ))
+        let api_token = EncodableApiTokenWithToken::from(api_token);
+
+        Ok(Json(json!({ "api_token": api_token })))
     })
     .await
 }
