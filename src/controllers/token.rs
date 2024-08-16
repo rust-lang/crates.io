@@ -142,16 +142,15 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         )?;
 
         if let Some(recipient) = recipient {
+            let email = NewTokenEmail {
+                user_name: &user.gh_login,
+                domain: &app.emails.domain,
+            };
+
             // At this point the token has been created so failing to send the
             // email should not cause an error response to be returned to the
             // caller.
-            let email_ret = app.emails.send(
-                &recipient,
-                NewTokenEmail {
-                    user_name: &user.gh_login,
-                    domain: &app.emails.domain,
-                },
-            );
+            let email_ret = app.emails.send(&recipient, email);
             if let Err(e) = email_ret {
                 error!("Failed to send token creation email: {e}")
             }
