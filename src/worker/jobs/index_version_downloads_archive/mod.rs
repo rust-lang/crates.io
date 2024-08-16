@@ -8,6 +8,7 @@ use object_store::{ObjectMeta, ObjectStore};
 use crate::worker::Environment;
 
 const INDEX_PATH: &str = "archive/version-downloads/index.html";
+const INDEX_JSON_PATH: &str = "archive/version-downloads/index.json";
 
 /// Generate an index.html for the version download CSVs exported to S3.
 #[derive(Serialize, Deserialize, Default)]
@@ -52,6 +53,9 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
         info!("Invalidating CDN caches…");
         if let Err(error) = env.invalidate_cdns(INDEX_PATH).await {
+            warn!("Failed to invalidate CDN caches: {error}");
+        }
+        if let Err(error) = env.invalidate_cdns(INDEX_JSON_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
         info!("CDN caches invalidated");
