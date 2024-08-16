@@ -143,6 +143,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
 
         if let Some(recipient) = recipient {
             let email = NewTokenEmail {
+                token_name: name,
                 user_name: &user.gh_login,
                 domain: &app.emails.domain,
             };
@@ -219,6 +220,7 @@ pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
 }
 
 struct NewTokenEmail<'a> {
+    token_name: &'a str,
     user_name: &'a str,
     domain: &'a str,
 }
@@ -231,9 +233,10 @@ impl<'a> crate::email::Email for NewTokenEmail<'a> {
             "\
 Hello {user_name}!
 
-A new API token was recently added to your {domain} account.
+A new API token with the name \"{token_name}\" was recently added to your {domain} account.
 
 If this wasn't you, you should revoke the token immediately: https://{domain}/settings/tokens",
+            token_name = self.token_name,
             user_name = self.user_name,
             domain = self.domain,
         )
