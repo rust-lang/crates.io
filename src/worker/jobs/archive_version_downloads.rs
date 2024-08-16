@@ -254,7 +254,9 @@ async fn enqueue_index_job(db_pool: &Pool<AsyncPgConnection>) -> anyhow::Result<
     let conn = db_pool.get().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        super::IndexVersionDownloadsArchive.enqueue(conn)
+        super::IndexVersionDownloadsArchive
+            .enqueue(conn)
+            .context("Failed to enqueue IndexVersionDownloadsArchive job")
     })
     .await?;
 

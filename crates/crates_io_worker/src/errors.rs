@@ -9,8 +9,4 @@ pub enum EnqueueError {
     /// An error occurred inserting the job into the database
     #[error(transparent)]
     DatabaseError(#[from] diesel::result::Error),
-
-    /// An error occurred while waiting for a task enqueuing a job
-    #[error(transparent)]
-    JoinError(#[from] tokio::task::JoinError),
 }
