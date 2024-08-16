@@ -87,11 +87,14 @@ struct TemplateContext {
 }
 
 impl TemplateContext {
+    pub fn new(files: FileSet) -> anyhow::Result<Self> {
+        let env = Self::new_environment()?;
+        Ok(Self { env, files })
+    }
+
     pub async fn new_from_store(store: &impl ObjectStore) -> anyhow::Result<Self> {
-        Ok(Self {
-            env: Self::new_environment()?,
-            files: FileSet::new_from_store(store).await?,
-        })
+        let files = FileSet::new_from_store(store).await?;
+        Self::new(files)
     }
 
     pub fn to_html(&self) -> anyhow::Result<String> {
