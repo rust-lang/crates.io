@@ -102,12 +102,12 @@ impl<'a> TemplateContext<'a> {
     pub fn to_html(&self) -> anyhow::Result<String> {
         use minijinja::{context, Environment};
 
-        let mut env = Environment::new();
-        env.add_template("index.html", include_str!("index.html.j2"))?;
-
-        Ok(env.get_template("index.html")?.render(context! {
+        let template = include_str!("index.html.j2");
+        let context = context! {
             files => &self.files,
-        })?)
+        };
+
+        Ok(Environment::new().render_str(template, context)?)
     }
 }
 
