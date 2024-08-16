@@ -67,7 +67,7 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
 
 /// Generate and upload an index.html based on the objects within the given store.
 async fn generate_html(store: &impl ObjectStore, files: &FileSet) -> anyhow::Result<()> {
-    let context = TemplateContext::new(files).context("instantiating context from object store")?;
+    let context = TemplateContext::new(files);
     let index = context.to_html().context("rendering template")?;
 
     store
@@ -95,8 +95,8 @@ struct TemplateContext<'a> {
 }
 
 impl<'a> TemplateContext<'a> {
-    pub fn new(files: &'a FileSet) -> anyhow::Result<Self> {
-        Ok(Self { files })
+    pub fn new(files: &'a FileSet) -> Self {
+        Self { files }
     }
 
     pub fn to_html(&self) -> anyhow::Result<String> {
@@ -254,7 +254,7 @@ mod tests {
             ]),
         );
 
-        let context = TemplateContext::new(&files)?;
+        let context = TemplateContext::new(&files);
         assert_snapshot!(context.to_html()?);
 
         Ok(())
