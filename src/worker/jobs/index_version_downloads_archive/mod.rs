@@ -91,31 +91,23 @@ async fn generate_json(store: &impl ObjectStore, files: &FileSet) -> anyhow::Res
 }
 
 struct TemplateContext<'a> {
-    env: minijinja::Environment<'static>,
     files: &'a FileSet,
 }
 
 impl<'a> TemplateContext<'a> {
     pub fn new(files: &'a FileSet) -> anyhow::Result<Self> {
-        let env = Self::new_environment()?;
-        Ok(Self { env, files })
+        Ok(Self { files })
     }
 
     pub fn to_html(&self) -> anyhow::Result<String> {
-        use minijinja::context;
-
-        Ok(self.env.get_template("index.html")?.render(context! {
-            files => &self.files,
-        })?)
-    }
-
-    fn new_environment() -> anyhow::Result<minijinja::Environment<'static>> {
-        use minijinja::Environment;
+        use minijinja::{context, Environment};
 
         let mut env = Environment::new();
         env.add_template("index.html", include_str!("index.html.j2"))?;
 
-        Ok(env)
+        Ok(env.get_template("index.html")?.render(context! {
+            files => &self.files,
+        })?)
     }
 }
 
