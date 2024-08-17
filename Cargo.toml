@@ -114,7 +114,7 @@ spdx = "=0.10.6"
 tar = "=0.4.41"
 tempfile = "=3.12.0"
 thiserror = "=1.0.63"
-tokio = { version = "=1.39.2", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
+tokio = { version = "=1.39.3", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.11"
 toml = "=0.8.19"
 tower = "=0.4.13"
@@ -136,4 +136,4 @@ diesel = { version = "=2.2.2", features = ["r2d2"] }
 googletest = "=0.12.0"
 insta = { version = "=1.39.0", features = ["glob", "json", "redactions"] }
 regex = "=1.10.6"
-tokio = "=1.39.2"
+tokio = "=1.39.3"
