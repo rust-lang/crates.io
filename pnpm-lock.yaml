@@ -215,8 +215,8 @@ importers:
         specifier: 5.10.2
         version: 5.10.2(@glimmer/component@1.1.2(@babel/core@7.25.2))(rsvp@4.8.5)(webpack@5.93.0)
       ember-svg-jar:
-        specifier: 2.4.9
-        version: 2.4.9
+        specifier: 2.5.0
+        version: 2.5.0
       ember-template-lint:
         specifier: 6.0.0
         version: 6.0.0
@@ -4270,8 +4270,8 @@ packages:
     peerDependencies:
       '@glimmer/component': ^1.1.2
 
-  ember-svg-jar@2.4.9:
-    resolution: {integrity: sha512-d/8rdE2nDUt6xVMpTqbohE4kHAaoY+P/7jWCWow3UQGtaGhvURXfKgo8TG/UVK+TfTgJInN6JcU76XLg+MWEtw==}
+  ember-svg-jar@2.5.0:
+    resolution: {integrity: sha512-5NVGEsh8iM4YVL74lpEOFYN3/lTJVLn+oAvRxjcF9ptXKf5tMWEzdVb8xXyqnVTbOgWKyTrc482ndaW8/MGEIw==}
     engines: {node: 12.* || 14.* || >= 16}
 
   ember-template-imports@3.4.2:
@@ -11404,26 +11404,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__array': 4.0.10(@babel/core@7.25.2)
-      '@types/ember__component': 4.0.22(@babel/core@7.25.2)
-      '@types/ember__controller': 4.0.12(@babel/core@7.25.2)
-      '@types/ember__debug': 4.0.8(@babel/core@7.25.2)
-      '@types/ember__engine': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.25.2)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22(@babel/core@7.25.2)
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9(@babel/core@7.25.2)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.25.2)
-      '@types/ember__utils': 4.0.7
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.25.2)
@@ -11456,7 +11436,7 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.25.2)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.25.2)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.25.2)
       '@types/ember__engine': 4.0.11(@babel/core@7.25.2)
       '@types/ember__object': 4.0.12(@babel/core@7.25.2)
       '@types/ember__owner': 4.0.9
@@ -11567,10 +11547,6 @@ snapshots:
 
   '@types/ember__runloop@3.16.10': {}
 
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-
   '@types/ember__runloop@4.0.10(@babel/core@7.25.2)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.2)
@@ -11611,10 +11587,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.25.2)':
     dependencies:
@@ -15065,7 +15037,7 @@ snapshots:
       - supports-color
       - webpack
 
-  ember-svg-jar@2.4.9:
+  ember-svg-jar@2.5.0:
     dependencies:
       '@embroider/macros': 1.16.5
       broccoli-caching-writer: 3.0.3
