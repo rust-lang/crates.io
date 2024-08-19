@@ -47,8 +47,8 @@ importers:
         version: 2.0.0(@babel/core@7.25.2)(ember-source@5.10.2(@glimmer/component@1.1.2(@babel/core@7.25.2))(rsvp@4.8.5)(webpack@5.93.0))
     devDependencies:
       '@axe-core/playwright':
-        specifier: 4.9.1
-        version: 4.9.1(playwright-core@1.46.1)
+        specifier: 4.10.0
+        version: 4.10.0(playwright-core@1.46.1)
       '@babel/core':
         specifier: 7.25.2
         version: 7.25.2
@@ -311,8 +311,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@axe-core/playwright@4.9.1':
-    resolution: {integrity: sha512-8m4WZbZq7/aq7ZY5IG8GqV+ZdvtGn/iJdom+wBg+iv/3BAOBIfNQtIu697a41438DzEEyptXWmC3Xl5Kx/o9/g==}
+  '@axe-core/playwright@4.10.0':
+    resolution: {integrity: sha512-kEr3JPEVUSnKIYp/egV2jvFj+chIjCjPp3K3zlpJMza/CB3TFw8UZNbI9agEC2uMz4YbgAOyzlbUy0QS+OofFA==}
     peerDependencies:
       playwright-core: '>= 1.0.0'
 
@@ -2453,10 +2453,6 @@ packages:
 
   axe-core@4.10.0:
     resolution: {integrity: sha512-Mr2ZakwQ7XUAjp7pAwQWRhhK8mQQ6JAaNWSjmjxil0R8BPioMtQsTLOolGYkji1rcL++3dCqZA3zWqpT+9Ew6g==}
-    engines: {node: '>=4'}
-
-  axe-core@4.9.1:
-    resolution: {integrity: sha512-QbUdXJVTpvUTHU7871ppZkdOLBeGUKBQWHkHrvN2V9IQWGMt61zf3B45BtzjxEJzYuj0JBjBZP/hmYS/R9pmAw==}
     engines: {node: '>=4'}
 
   babel-code-frame@6.26.0:
@@ -8577,9 +8573,9 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@axe-core/playwright@4.9.1(playwright-core@1.46.1)':
+  '@axe-core/playwright@4.10.0(playwright-core@1.46.1)':
     dependencies:
-      axe-core: 4.9.1
+      axe-core: 4.10.0
       playwright-core: 1.46.1
 
   '@babel/code-frame@7.24.7':
@@ -12191,8 +12187,6 @@ snapshots:
       possible-typed-array-names: 1.0.0
 
   axe-core@4.10.0: {}
-
-  axe-core@4.9.1: {}
 
   babel-code-frame@6.26.0:
     dependencies:
