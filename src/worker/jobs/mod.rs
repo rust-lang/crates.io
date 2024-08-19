@@ -12,6 +12,7 @@ mod downloads;
 pub mod dump_db;
 mod expiry_notification;
 mod git;
+mod index_version_downloads_archive;
 mod readmes;
 pub mod rss;
 mod sync_admins;
@@ -26,6 +27,7 @@ pub use self::downloads::{
 pub use self::dump_db::DumpDb;
 pub use self::expiry_notification::SendTokenExpiryNotifications;
 pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
+pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::sync_admins::SyncAdmins;
 pub use self::typosquat::CheckTyposquat;

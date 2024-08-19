@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>crates.io version download archives</title>
+    </head>
+    <body>
+        <h1>crates.io version download archives</h1>
+
+        <p>
+            This index is also available <a href="index.json">in JSON form</a>.
+        </p>
+
+        <table>
+            <tbody>
+                {% for file in files %}
+                    <tr>
+                        <td><a href="{{ file.name }}">{{ file.name }}</a></td>
+                        <td>{{ file.size }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

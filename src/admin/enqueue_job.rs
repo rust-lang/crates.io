@@ -19,6 +19,7 @@ pub enum Command {
         /// The date before which to archive version downloads (default: 90 days ago)
         before: Option<NaiveDate>,
     },
+    IndexVersionDownloadsArchive,
     UpdateDownloads,
     CleanProcessedLogFiles,
     DumpDb,
@@ -53,6 +54,9 @@ pub fn run(command: Command) -> Result<()> {
                 .map(jobs::ArchiveVersionDownloads::before)
                 .unwrap_or_default()
                 .enqueue(conn)?;
+        }
+        Command::IndexVersionDownloadsArchive => {
+            jobs::IndexVersionDownloadsArchive.enqueue(conn)?;
         }
         Command::UpdateDownloads => {
             let count: i64 = background_jobs::table

@@ -1,0 +1,24 @@
+---
+source: src/worker/jobs/index_version_downloads_archive/mod.rs
+expression: "std::str::from_utf8(&index)?"
+---
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>crates.io version download archives</title>
+    </head>
+    <body>
+        <h1>crates.io version download archives</h1>
+
+        <p>
+            This index is also available <a href="index.json">in JSON form</a>.
+        </p>
+
+        <table>
+            <tbody>
+                
+            </tbody>
+        </table>
+    </body>
+</html>
