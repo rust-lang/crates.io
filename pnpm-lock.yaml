@@ -11421,7 +11421,7 @@ snapshots:
       '@types/ember__string': 3.0.15
       '@types/ember__template': 4.0.7
       '@types/ember__test': 4.0.6(@babel/core@7.25.2)
-      '@types/ember__utils': 4.0.7(@babel/core@7.25.2)
+      '@types/ember__utils': 4.0.7
       '@types/rsvp': 4.0.9
 
   '@types/ember@4.0.11(@babel/core@7.25.2)':
@@ -11646,6 +11646,10 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
+
+  '@types/ember__utils@4.0.7':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.25.2)':
     dependencies:
