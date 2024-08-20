@@ -126,6 +126,10 @@ impl Storage {
         match &config.backend {
             StorageBackend::S3 { default, index } => {
                 let options = ClientOptions::default()
+                    // Apply default content types for the version downloads archive
+                    .with_content_type_for_suffix("html", "text/html")
+                    .with_content_type_for_suffix("json", "application/json")
+                    .with_content_type_for_suffix("csv", "text/csv")
                     // The `BufWriter::new()` API currently does not allow
                     // specifying any file attributes, so we need to set the
                     // content type here instead for the database dump upload.
