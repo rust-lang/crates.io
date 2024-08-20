@@ -128,8 +128,8 @@ importers:
         specifier: 2.7.4
         version: 2.7.4(webpack@5.93.0)
       ember-cli:
-        specifier: 5.10.0
-        version: 5.10.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+        specifier: 5.11.0
+        version: 5.11.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       ember-cli-babel:
         specifier: 8.2.0
         version: 8.2.0(@babel/core@7.25.2)
@@ -141,7 +141,7 @@ importers:
         version: 3.0.1(@embroider/compat@3.6.0(@embroider/core@3.4.14))(@embroider/core@3.4.14)
       ember-cli-dependency-checker:
         specifier: 3.3.2
-        version: 3.3.2(ember-cli@5.10.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
+        version: 3.3.2(ember-cli@5.11.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -3350,6 +3350,9 @@ packages:
   content-tag@1.2.2:
     resolution: {integrity: sha512-9guqKIx2H+78N17otBpl8yLZbQGL5q1vBO/jDb3gF2JjixtcVpC62jDUNxjVMNoaZ09oxRX84ZOD6VX02qkVvg==}
 
+  content-tag@2.0.1:
+    resolution: {integrity: sha512-jxsETSDs5NbNwyiDuIp672fUMhUyu8Qxc5MOBOJOcgW/fQESI6o5K1LBDrnEE7Bh810a685lWEZHTF4jQYGEEw==}
+
   content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
     engines: {node: '>= 0.6'}
@@ -4108,8 +4111,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@5.10.0:
-    resolution: {integrity: sha512-Y9nihTELz3dxphn/Fvw9/Gdwe5Q13Zlsh3wa4qXyy84CHRo9FcDNb8ka8UstaUxHoCcsASS6iUq8cos2krLRdA==}
+  ember-cli@5.11.0:
+    resolution: {integrity: sha512-G+Fp194KLZy6NHC9c2i1ZlCB2SurxAMd5Hg61o9kRH4rogjDeoVUC3uiQ/mmrdn5DWRSnS0bfXV+i7+W4wu1Ug==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -13437,6 +13440,8 @@ snapshots:
 
   content-tag@1.2.2: {}
 
+  content-tag@2.0.1: {}
+
   content-type@1.0.5: {}
 
   continuable-cache@0.3.1: {}
@@ -14315,10 +14320,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.2(ember-cli@5.10.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
+  ember-cli-dependency-checker@3.3.2(ember-cli@5.11.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 5.10.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 5.11.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       find-yarn-workspace-root: 1.2.1
       is-git-url: 1.0.0
       resolve: 1.22.8
@@ -14546,7 +14551,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@5.10.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
+  ember-cli@5.11.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
     dependencies:
       '@pnpm/find-workspace-dir': 6.0.3
       broccoli: 3.5.2
@@ -14570,7 +14575,7 @@ snapshots:
       compression: 1.7.4
       configstore: 5.0.1
       console-ui: 3.1.2
-      content-tag: 1.2.2
+      content-tag: 2.0.1
       core-object: 3.1.5
       dag-map: 2.0.2
       diff: 5.2.0
