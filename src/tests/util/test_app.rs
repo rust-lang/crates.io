@@ -113,8 +113,8 @@ impl TestApp {
         f(&mut self.0.test_database.connect())
     }
 
-    /// Create a new user with a verified email address in the database and return a mock user
-    /// session
+    /// Create a new user with a verified email address in the database
+    /// (`<username>@example.com``) and return a mock user session.
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, username: &str) -> MockCookieUser {
@@ -122,7 +122,7 @@ impl TestApp {
         use diesel::prelude::*;
 
         let user = self.db(|conn| {
-            let email = "something@example.com";
+            let email = format!("{username}@example.com");
 
             let user = crate::new_user(username)
                 .create_or_update(None, &self.0.app.emails, conn)
