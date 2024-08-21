@@ -332,7 +332,10 @@ impl MockTokenUser {
     }
 
     /// Add to the specified crate the specified owners.
-    pub async fn add_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
+    pub async fn add_named_owners<T>(&self, krate_name: &str, owners: &[T]) -> Response<OkBool>
+    where
+        T: serde::Serialize,
+    {
         let url = format!("/api/v1/crates/{krate_name}/owners");
         let body = json!({ "owners": owners }).to_string();
         self.put(&url, body).await
