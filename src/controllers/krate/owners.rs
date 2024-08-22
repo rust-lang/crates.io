@@ -108,6 +108,14 @@ async fn modify_owners(
 ) -> AppResult<Json<Value>> {
     let logins = body.owners;
 
+    // Bound the number of invites processed per request to limit the cost of
+    // processing them all.
+    if logins.len() > 10 {
+        return Err(bad_request(
+            "too many invites for this request - maximum 10",
+        ));
+    }
+
     let conn = app.db_write().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();

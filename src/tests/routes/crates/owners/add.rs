@@ -353,3 +353,22 @@ async fn test_unknown_team() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"###);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn max_invites_per_request() {
+    let (app, _, _, owner) = TestApp::init().with_token();
+    app.db(|conn| CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(conn));
+
+    let usernames = (0..11)
+        .map(|i| format!("user_{i}"))
+        .collect::<Vec<String>>();
+
+    // Populate enough users in the database to submit 11 invites at once.
+    for user in &usernames {
+        app.db_new_user(user);
+    }
+
+    let response = owner.add_named_owners("crate_name", &usernames).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"too many invites for this request - maximum 10"}]}"#);
+}
