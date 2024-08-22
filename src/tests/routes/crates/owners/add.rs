@@ -372,3 +372,37 @@ async fn max_invites_per_request() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"too many invites for this request - maximum 10"}]}"#);
 }
+
+/// Assert that emails are only sent if the request succeeds.
+#[tokio::test(flavor = "multi_thread")]
+async fn no_invite_emails_for_txn_rollback() {
+    let (app, _, _, token) = TestApp::init().with_token();
+    app.db(|conn| CrateBuilder::new("crate_name", token.as_model().user_id).expect_build(conn));
+
+    let mut usernames = (0..9).map(|i| format!("user_{i}")).collect::<Vec<String>>();
+
+    // Populate enough users in the database to submit 9 good invites.
+    for user in &usernames {
+        app.db_new_user(user);
+    }
+
+    // Add an invalid username to the end of the invite list to cause the
+    // request to fail.
+    usernames.push("bananas".to_string());
+
+    let response = token.add_named_owners("crate_name", &usernames).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
+
+    // No emails should have been sent.
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+
+    // Remove the bad username.
+    let _ = usernames.pop();
+
+    let response = token.add_named_owners("crate_name", &usernames).await;
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // 9 emails to the good invitees should have been sent.
+    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 9);
+}

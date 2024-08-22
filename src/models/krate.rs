@@ -354,13 +354,15 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
+    /// Invite `login` as an owner of this crate, returning a status message and
+    /// optionally an invite email to be sent by the caller.
     pub fn owner_add(
         &self,
         app: &App,
         conn: &mut impl Conn,
         req_user: &User,
         login: &str,
-    ) -> AppResult<String> {
+    ) -> AppResult<(String, Option<OwnerInviteEmail>)> {
         use diesel::insert_into;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
@@ -371,28 +373,29 @@ impl Crate {
                 let config = &app.config;
                 match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        if let Ok(Some(recipient)) = user.verified_email(conn) {
-                            // Swallow any error. Whether or not the email is sent, the invitation
-                            // entry will be created in the database and the user will see the
-                            // invitation when they visit https://crates.io/me/pending-invites/.
-                            let email = OwnerInviteEmail {
-                                user_name: &req_user.gh_login,
-                                domain: &app.emails.domain,
-                                crate_name: &self.name,
+                        let email = user.verified_email(conn).ok().flatten().map(|recipient| {
+                            OwnerInviteEmail {
+                                recipient_email_address: recipient,
+                                user_name: req_user.gh_login.clone(),
+                                domain: app.emails.domain.clone(),
+                                crate_name: self.name.clone(),
                                 token: plaintext_token,
-                            };
+                            }
+                        });
 
-                            let _ = app.emails.send(&recipient, email);
-                        }
-
-                        Ok(format!(
+                        let msg = format!(
                             "user {} has been invited to be an owner of crate {}",
                             user.gh_login, self.name
-                        ))
+                        );
+
+                        Ok((msg, email))
                     }
-                    NewCrateOwnerInvitationOutcome::AlreadyExists => Ok(format!(
-                        "user {} already has a pending invitation to be an owner of crate {}",
-                        user.gh_login, self.name
+                    NewCrateOwnerInvitationOutcome::AlreadyExists => Ok((
+                        format!(
+                            "user {} already has a pending invitation to be an owner of crate {}",
+                            user.gh_login, self.name
+                        ),
+                        None,
                     )),
                 }
             }
@@ -411,10 +414,13 @@ impl Crate {
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)?;
 
-                Ok(format!(
-                    "team {} has been added as an owner of crate {}",
-                    owner.login(),
-                    self.name
+                Ok((
+                    format!(
+                        "team {} has been added as an owner of crate {}",
+                        owner.login(),
+                        self.name
+                    ),
+                    None,
                 ))
             }
         }
@@ -533,14 +539,24 @@ impl Crate {
     }
 }
 
-struct OwnerInviteEmail<'a> {
-    user_name: &'a str,
-    domain: &'a str,
-    crate_name: &'a str,
+pub struct OwnerInviteEmail {
+    /// The destination email address for this email.
+    recipient_email_address: String,
+
+    /// Email body variables.
+    user_name: String,
+    domain: String,
+    crate_name: String,
     token: SecretString,
 }
 
-impl Email for OwnerInviteEmail<'_> {
+impl OwnerInviteEmail {
+    pub fn recipient_email_address(&self) -> &str {
+        &self.recipient_email_address
+    }
+}
+
+impl Email for OwnerInviteEmail {
     const SUBJECT: &'static str = "Crate ownership invitation";
 
     fn body(&self) -> String {

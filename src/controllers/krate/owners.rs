@@ -127,7 +127,11 @@ async fn modify_owners(
 
         let user = auth.user();
 
-        conn.transaction(|conn| {
+        // The set of emails to send out after invite processing is complete and
+        // the database transaction has committed.
+        let mut emails = Vec::with_capacity(logins.len());
+
+        let comma_sep_msg = conn.transaction(|conn| {
             let krate: Crate = Crate::by_name(&crate_name)
                 .first(conn)
                 .optional()?
@@ -160,8 +164,12 @@ async fn modify_owners(
                     if owners.iter().any(login_test) {
                         return Err(bad_request(format_args!("`{login}` is already an owner")));
                     }
-                    let msg = krate.owner_add(&app, conn, user, login)?;
+                    let (msg, maybe_email) = krate.owner_add(&app, conn, user, login)?;
                     msgs.push(msg);
+
+                    if let Some(v) = maybe_email {
+                        emails.push(v);
+                    }
                 }
                 msgs.join(",")
             } else {
@@ -178,8 +186,20 @@ async fn modify_owners(
                 "owners successfully removed".to_owned()
             };
 
-            Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
-        })
+            Ok(comma_sep_msg)
+        })?;
+
+        // Send the accumulated invite emails now the database state has
+        // committed.
+        for email in emails {
+            let addr = email.recipient_email_address().to_string();
+
+            if let Err(e) = app.emails.send(&addr, email) {
+                warn!("Failed to send co-owner invite email: {e}");
+            }
+        }
+
+        Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
     })
     .await
 }
