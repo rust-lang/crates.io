@@ -985,6 +985,8 @@ diesel::table! {
         has_lib -> Nullable<Bool>,
         /// list of the names of all detected binaries in the version. the list may be empty which indicates that no binaries were detected in the version. the column may be NULL is the version has not been analyzed yet.
         bin_names -> Nullable<Array<Nullable<Text>>>,
+        /// message associated with a yanked version
+        yank_message -> Nullable<Text>,
     }
 }
 
