@@ -106,8 +106,8 @@
     {{/if}}
   {{/unless}}
 
-  {{#if this.playgroundLink}}
-    <div>
+  <div>
+    {{#if this.playgroundLink}}
       <a
         href={{this.playgroundLink}}
         target="_blank"
@@ -128,6 +128,13 @@
           try out directly in your browser.
         </p>
       {{/unless}}
-    </div>
-  {{/if}}
+    {{/if}}
+
+    <a
+      href="mailto:help@crates.io?subject=The%20%22{{@crate.name}}%22%20crate&body=I'm%20reporting%20the%20%22{{@crate.name}}%22%20crate%20because%3A%0A%0A-%20%5B%20%5D%20it%20contains%20spam%0A-%20%5B%20%5D%20it%20is%20name-squatting%20(reserving%20a%20crate%20name%20without%20content)%0A-%20%5B%20%5D%20it%20is%20abusive%20or%20otherwise%20harmful%0A-%20%5B%20%5D%20it%20contains%20a%20vulnerability%20(please%20try%20to%20contact%20the%20crate%20author%20first)%0A-%20%5B%20%5D%20it%20is%20violating%20the%20usage%20policy%20in%20some%20other%20way%20(please%20specify%20below)%0A%0AAdditional%20details%3A%0A%0A%3Cplease%20add%20more%20information%20if%20you%20can%3E"
+      local-class="report-button"
+    >
+      Report crate
+    </a>
+  </div>
 </section>
