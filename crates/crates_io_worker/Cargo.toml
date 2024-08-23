@@ -10,7 +10,7 @@ workspace = true
 [dependencies]
 anyhow = "=1.0.86"
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
-diesel = { version = "=2.2.2", features = ["postgres", "serde_json"] }
+diesel = { version = "=2.2.3", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.5.0", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 futures-util = "=0.3.30"
 sentry-core = { version = "=0.34.0", features = ["client"] }
