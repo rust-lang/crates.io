@@ -67,10 +67,20 @@
     line-height: 1.5;
 }
 
-.playground-button {
-    composes: yellow-button small from '../styles/shared/buttons.module.css';
+.button {
     justify-content: center;
     width: 220px;
+}
+
+.report-button {
+    composes: button;
+    composes: red-button small from '../styles/shared/buttons.module.css';
+}
+
+.playground-button {
+    composes: button;
+    composes: yellow-button small from '../styles/shared/buttons.module.css';
+    margin-bottom: var(--space-2xs);
 }
 
 .playground-help {

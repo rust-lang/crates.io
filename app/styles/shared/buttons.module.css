@@ -75,6 +75,19 @@
     --bg-color-bottom-dark: #cfc487;
 }
 
+.red-button {
+    composes: button;
+
+    --bg-color-top: #ffb8b8;
+    --bg-color-bottom: #f78888;
+
+    --bg-color-top-light: #ffcccc;
+    --bg-color-bottom-light: #f7adad;
+
+    --bg-color-top-dark: #fab4b4;
+    --bg-color-bottom-dark: #ed6b6b;
+}
+
 .small {
     padding: var(--space-2xs) var(--space-s);
 }
