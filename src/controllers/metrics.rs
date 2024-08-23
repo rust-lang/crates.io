@@ -1,5 +1,9 @@
-use crate::controllers::frontend_prelude::*;
-use crate::util::errors::{custom, forbidden, not_found};
+use crate::app::AppState;
+use crate::tasks::spawn_blocking;
+use crate::util::errors::{custom, forbidden, not_found, AppResult, BoxedAppError};
+use axum::extract::Path;
+use http::request::Parts;
+use http::{header, StatusCode};
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/:kind` endpoint.

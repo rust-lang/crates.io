@@ -3,16 +3,18 @@
 //! The endpoint for downloading a crate and exposing version specific
 //! download counts are located in `version::downloads`.
 
-use std::cmp;
-
-use crate::controllers::frontend_prelude::*;
-
+use crate::app::AppState;
 use crate::models::{Crate, Version, VersionDownload};
 use crate::schema::{crates, version_downloads, versions};
 use crate::sql::to_char;
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{crate_not_found, AppResult};
 use crate::views::EncodableVersionDownload;
+use axum::extract::Path;
+use axum::Json;
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde_json::Value;
+use std::cmp;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {

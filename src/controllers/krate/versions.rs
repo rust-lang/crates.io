@@ -1,18 +1,23 @@
 //! Endpoint for versions of a crate
 
+use axum::extract::Path;
+use axum::Json;
+use diesel::connection::DefaultLoadingMode;
+use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use indexmap::IndexMap;
+use serde_json::Value;
 use std::cmp::Reverse;
 
-use diesel::connection::DefaultLoadingMode;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use indexmap::IndexMap;
-
-use crate::controllers::frontend_prelude::*;
+use crate::app::AppState;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
-
 use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::{crates, users, versions};
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
 /// Handles the `GET /crates/:crate_id/versions` route.

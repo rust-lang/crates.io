@@ -1,14 +1,20 @@
 //! Endpoints for managing a per user list of followed crates
 
+use crate::app::AppState;
 use crate::auth::AuthCheck;
-use diesel::associations::Identifiable;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-
-use crate::controllers::frontend_prelude::*;
+use crate::controllers::helpers::ok_true;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{crate_not_found, AppResult};
+use axum::extract::Path;
+use axum::response::Response;
+use axum::Json;
+use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use serde_json::Value;
 
 fn follow_target(crate_name: &str, conn: &mut impl Conn, user_id: i32) -> AppResult<Follow> {
     let crate_id = Crate::by_name(crate_name)

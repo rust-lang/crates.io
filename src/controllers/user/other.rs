@@ -1,17 +1,22 @@
-use crate::controllers::frontend_prelude::*;
+use axum::extract::Path;
+use axum::Json;
 use bigdecimal::{BigDecimal, ToPrimitive};
-
-use crate::models::{CrateOwner, OwnerKind, User};
-use crate::schema::{crate_downloads, crate_owners, crates, users};
-use crate::sql::lower;
-use crate::views::EncodablePublicUser;
+use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde_json::Value;
+
+use crate::app::AppState;
+use crate::models::{CrateOwner, OwnerKind, User};
+use crate::schema::{crate_downloads, crate_owners, crates};
+use crate::sql::lower;
+use crate::util::errors::AppResult;
+use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
 pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<Json<Value>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
-    use self::users::dsl::{gh_login, id, users};
+    use crate::schema::users::dsl::{gh_login, id, users};
 
     let name = lower(&user_name);
     let user: User = users

@@ -4,11 +4,15 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use crate::controllers::frontend_prelude::*;
+use axum::extract::Path;
+use axum::Json;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use serde_json::Value;
 
+use crate::app::AppState;
 use crate::models::VersionOwnerAction;
-use crate::util::errors::version_not_found;
+use crate::tasks::spawn_blocking;
+use crate::util::errors::{version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 
 use super::version_and_crate;

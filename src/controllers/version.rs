@@ -2,17 +2,17 @@ pub mod downloads;
 pub mod metadata;
 pub mod yank;
 
-use super::prelude::*;
-
 use crate::models::{Crate, Version};
 use crate::util::diesel::Conn;
-use crate::util::errors::crate_not_found;
+use crate::util::errors::{crate_not_found, AppResult};
 
 fn version_and_crate(
     conn: &mut impl Conn,
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
+    use diesel::prelude::*;
+
     let krate: Crate = Crate::by_name(crate_name)
         .first(conn)
         .optional()?

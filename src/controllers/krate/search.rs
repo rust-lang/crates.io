@@ -1,23 +1,29 @@
 //! Endpoint for searching and discovery functionality
 
 use crate::auth::AuthCheck;
-use diesel::dsl::*;
+use axum::Json;
+use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
+use diesel::prelude::*;
 use diesel::sql_types::{Array, Bool, Text};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_full_text_search::*;
+use http::request::Parts;
+use serde_json::Value;
 use std::cell::OnceCell;
 
-use crate::controllers::cargo_prelude::*;
+use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
 use crate::models::{Crate, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version};
 use crate::schema::*;
-use crate::util::errors::bad_request;
+use crate::util::errors::{bad_request, AppResult};
 use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions};
 use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
+use crate::util::RequestUtils;
 
 /// Handles the `GET /crates` route.
 /// Returns a list of crates. Called in a variety of scenarios in the

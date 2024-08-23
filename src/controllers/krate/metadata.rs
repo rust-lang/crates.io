@@ -4,22 +4,28 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use std::cmp::Reverse;
-use std::str::FromStr;
-
-use crate::controllers::frontend_prelude::*;
+use crate::app::AppState;
 use crate::controllers::helpers::pagination::PaginationOptions;
-
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
     User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
-use crate::util::errors::crate_not_found;
+use crate::tasks::spawn_blocking;
+use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
+use crate::util::{redirect, RequestUtils};
 use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
+use axum::extract::Path;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use serde_json::Value;
+use std::cmp::Reverse;
+use std::str::FromStr;
 
 /// Handles the `GET /crates/new` special case.
 pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
