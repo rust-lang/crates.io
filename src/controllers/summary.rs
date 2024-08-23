@@ -1,9 +1,9 @@
 use crate::app::AppState;
-use crate::controllers::cargo_prelude::AppResult;
 use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Version};
 use crate::schema::{crate_downloads, crates, keywords, metadata, recent_crate_downloads};
 use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
+use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
 use diesel::prelude::*;

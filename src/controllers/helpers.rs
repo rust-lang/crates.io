@@ -1,5 +1,5 @@
-use crate::controllers::cargo_prelude::{AppResult, Response};
-use axum::response::IntoResponse;
+use crate::util::errors::AppResult;
+use axum::response::{IntoResponse, Response};
 use axum::Json;
 
 pub(crate) mod pagination;

@@ -1,22 +1,25 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
+use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::worker::jobs::{self, CheckTyposquat, UpdateDefaultVersion};
 use axum::body::Bytes;
+use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
+use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use hex::ToHex;
+use http::StatusCode;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::runtime::Handle;
 use url::Url;
 
-use crate::controllers::cargo_prelude::*;
 use crate::models::{
     insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
     Rights, VersionAction,
@@ -28,9 +31,10 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::{bad_request, custom, internal, AppResult};
-use crate::util::Maximums;
+use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
+use crate::util::{BytesRequest, Maximums};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };

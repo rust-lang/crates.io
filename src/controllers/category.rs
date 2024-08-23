@@ -1,10 +1,17 @@
 use super::helpers::pagination::*;
-use super::prelude::*;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-
+use crate::app::AppState;
 use crate::models::Category;
 use crate::schema::categories;
+use crate::tasks::spawn_blocking;
+use crate::util::errors::AppResult;
+use crate::util::RequestUtils;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
+use axum::extract::Path;
+use axum::Json;
+use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use serde_json::Value;
 
 /// Handles the `GET /categories` route.
 pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {

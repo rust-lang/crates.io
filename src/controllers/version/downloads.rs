@@ -3,13 +3,21 @@
 //! Crate level functionality is located in `krate::downloads`.
 
 use super::version_and_crate;
-use crate::controllers::prelude::*;
+use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
-use crate::util::errors::version_not_found;
+use crate::tasks::spawn_blocking;
+use crate::util::errors::{version_not_found, AppResult};
+use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
+use axum::extract::Path;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use chrono::{Duration, NaiveDate, Utc};
+use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use serde_json::Value;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.

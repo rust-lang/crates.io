@@ -1,18 +1,21 @@
-use crate::controllers::frontend_prelude::*;
-
 use axum::extract::{FromRequestParts, Query};
+use axum::Json;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
+use serde_json::Value;
 use tokio::runtime::Handle;
 
+use crate::app::AppState;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
+use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::ReadOnlyMode;
+use crate::util::errors::{bad_request, server_error, AppResult, BoxedAppError, ReadOnlyMode};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 
@@ -131,6 +134,8 @@ fn save_user_to_database(
     emails: &Emails,
     conn: &mut impl Conn,
 ) -> AppResult<User> {
+    use diesel::prelude::*;
+
     NewUser::new(
         user.id,
         &user.login,

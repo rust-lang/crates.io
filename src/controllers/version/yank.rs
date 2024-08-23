@@ -1,18 +1,25 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use super::version_and_crate;
+use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::cargo_prelude::*;
+use crate::controllers::helpers::ok_true;
 use crate::models::token::EndpointScope;
 use crate::models::Rights;
 use crate::models::{insert_version_owner_action, VersionAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::{custom, version_not_found};
+use crate::tasks::spawn_blocking;
+use crate::util::errors::{custom, version_not_found, AppResult};
 use crate::worker::jobs;
 use crate::worker::jobs::UpdateDefaultVersion;
+use axum::extract::Path;
+use axum::response::Response;
 use crates_io_worker::BackgroundJob;
+use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use http::StatusCode;
 use tokio::runtime::Handle;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
