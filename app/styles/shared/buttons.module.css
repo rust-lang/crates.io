@@ -34,7 +34,11 @@
     cursor: pointer;
 
     &:hover, &:active, &:visited {
-        color: var(--text-color);
+        /*
+         * This is using `important` to override the `a:hover` declaration which
+         * appears to have higher specificity than the `button:hover` declaration.
+         */
+        color: var(--text-color) !important;
     }
 
     img, svg {
