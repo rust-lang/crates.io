@@ -116,7 +116,7 @@ impl TestApp {
     }
 
     /// Create a new user with a verified email address in the database
-    /// (`<username>@example.com``) and return a mock user session.
+    /// (`<username>@example.com`) and return a mock user session.
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, username: &str) -> MockCookieUser {
