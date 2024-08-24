@@ -5,6 +5,7 @@ use crates_io::models::ApiToken;
 use diesel::prelude::*;
 use googletest::prelude::*;
 use http::StatusCode;
+use insta::assert_snapshot;
 use serde_json::Value;
 
 static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
@@ -85,7 +86,8 @@ async fn create_token_success() {
     assert_eq!(tokens[0].last_used_at, None);
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
-    assert_eq!(app.emails().len(), 1);
+
+    assert_snapshot!(app.emails_snapshot());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -169,7 +171,8 @@ async fn create_token_with_scopes() {
         tokens[0].endpoint_scopes,
         Some(vec![EndpointScope::PublishUpdate])
     );
-    assert_eq!(app.emails().len(), 1);
+
+    assert_snapshot!(app.emails_snapshot());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -206,7 +209,8 @@ async fn create_token_with_null_scopes() {
     assert_eq!(tokens[0].last_used_at, None);
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
-    assert_eq!(app.emails().len(), 1);
+
+    assert_snapshot!(app.emails_snapshot());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -278,5 +282,6 @@ async fn create_token_with_expiry_date() {
         ".api_token.last_used_at" => "[datetime]",
         ".api_token.token" => insta::api_token_redaction(),
     });
-    assert_eq!(app.emails().len(), 1);
+
+    assert_snapshot!(app.emails_snapshot());
 }

@@ -5,7 +5,7 @@ use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 static URL: &str = "/api/github/secret-scanning/verify";
 
@@ -65,7 +65,7 @@ async fn github_secret_alert_revokes_token() {
     });
 
     // Ensure exactly one email was sent
-    assert_eq!(app.emails().len(), 1);
+    assert_snapshot!(app.emails_snapshot());
 }
 
 #[tokio::test(flavor = "multi_thread")]

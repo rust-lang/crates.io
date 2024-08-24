@@ -1,8 +1,31 @@
 ---
 source: src/tests/worker/sync_admins.rs
-expression: emails
+expression: app.emails_snapshot()
 ---
-[
-    "To: existing-admin@crates.io\r\nFrom: noreply@crates.io\r\nSubject: crates.io: Admin account changes\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nGranted admin access:\r\n\r\n- new-admin (github_id: 3)\r\n\r\nRevoked admin access:\r\n- obsolete-admin (github_id: 2)\r\n",
-    "To: obsolete-admin@crates.io\r\nFrom: noreply@crates.io\r\nSubject: crates.io: Admin account changes\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nGranted admin access:\r\n\r\n- new-admin (github_id: 3)\r\n\r\nRevoked admin access:\r\n- obsolete-admin (github_id: 2)\r\n",
-]
+To: existing-admin@crates.io
+From: noreply@crates.io
+Subject: crates.io: Admin account changes
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Granted admin access:
+
+- new-admin (github_id: 3)
+
+Revoked admin access:
+- obsolete-admin (github_id: 2)
+
+----------------------------------------
+
+To: obsolete-admin@crates.io
+From: noreply@crates.io
+Subject: crates.io: Admin account changes
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Granted admin access:
+
+- new-admin (github_id: 3)
+
+Revoked admin access:
+- obsolete-admin (github_id: 2)

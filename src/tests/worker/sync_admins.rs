@@ -5,8 +5,7 @@ use crates_io::worker::jobs::SyncAdmins;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::{PgConnection, QueryResult, RunQueryDsl};
-use insta::assert_debug_snapshot;
-use regex::Regex;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_admins_job() {
@@ -40,14 +39,7 @@ async fn test_sync_admins_job() {
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
     assert_eq!(admins, expected_admins);
 
-    let email_header_regex = Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap();
-    let emails = app
-        .emails()
-        .into_iter()
-        .map(|email| email_header_regex.replace_all(&email, "").into())
-        .collect::<Vec<String>>();
-
-    assert_debug_snapshot!(emails);
+    assert_snapshot!(app.emails_snapshot());
 
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
