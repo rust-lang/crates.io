@@ -5,8 +5,7 @@ use crates_io::worker::jobs::SyncAdmins;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::{PgConnection, QueryResult, RunQueryDsl};
-use insta::assert_debug_snapshot;
-use regex::Regex;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_admins_job() {
@@ -40,22 +39,14 @@ async fn test_sync_admins_job() {
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
     assert_eq!(admins, expected_admins);
 
-    let email_header_regex = Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap();
-    let emails = app.as_inner().emails.mails_in_memory().unwrap();
-    let emails = emails
-        .iter()
-        .map(|(_, email)| email_header_regex.replace_all(email, ""))
-        .collect::<Vec<_>>();
-
-    assert_debug_snapshot!(emails);
+    assert_snapshot!(app.emails_snapshot());
 
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
     app.run_pending_background_jobs().await;
 
-    let emails = app.as_inner().emails.mails_in_memory().unwrap();
-    assert_eq!(emails.len(), 2);
+    assert_eq!(app.emails().len(), 2);
 }
 
 fn mock_permission(people: Vec<Person>) -> Permission {

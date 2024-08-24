@@ -5,7 +5,7 @@ use crates_io::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 static URL: &str = "/api/github/secret-scanning/verify";
 
@@ -21,7 +21,7 @@ async fn github_secret_alert_revokes_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+    assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -65,7 +65,7 @@ async fn github_secret_alert_revokes_token() {
     });
 
     // Ensure exactly one email was sent
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 1);
+    assert_snapshot!(app.emails_snapshot());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -73,7 +73,7 @@ async fn github_secret_alert_for_revoked_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+    assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -120,7 +120,7 @@ async fn github_secret_alert_for_revoked_token() {
     });
 
     // Ensure still no emails were sent
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+    assert_eq!(app.emails().len(), 0);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -128,7 +128,7 @@ async fn github_secret_alert_for_unknown_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+    assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
     app.db(|conn| {
@@ -159,7 +159,7 @@ async fn github_secret_alert_for_unknown_token() {
     });
 
     // Ensure still no emails were sent
-    assert_eq!(app.as_inner().emails.mails_in_memory().unwrap().len(), 0);
+    assert_eq!(app.emails().len(), 0);
 }
 
 #[tokio::test(flavor = "multi_thread")]

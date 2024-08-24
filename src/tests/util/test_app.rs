@@ -18,7 +18,9 @@ use crates_io_worker::Runner;
 use diesel::PgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
+use regex::Regex;
 use std::collections::HashSet;
+use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
 use tokio::task::block_in_place;
@@ -164,6 +166,24 @@ impl TestApp {
         list.into_iter()
             .map(|meta| meta.location.to_string())
             .collect()
+    }
+
+    pub fn emails(&self) -> Vec<String> {
+        let emails = self.as_inner().emails.mails_in_memory().unwrap();
+        emails.into_iter().map(|(_, email)| email).collect()
+    }
+
+    pub fn emails_snapshot(&self) -> String {
+        static EMAIL_HEADER_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
+
+        static SEPARATOR: &str = "\n----------------------------------------\n\n";
+
+        self.emails()
+            .iter()
+            .map(|email| EMAIL_HEADER_REGEX.replace_all(email, ""))
+            .collect::<Vec<_>>()
+            .join(SEPARATOR)
     }
 
     pub async fn run_pending_background_jobs(&self) {
