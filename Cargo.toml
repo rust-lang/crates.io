@@ -19,6 +19,9 @@ rust_2018_compatibility = "warn"
 rust_2021_compatibility = "warn"
 unused = "warn"
 
+[workspace.lints.rustdoc]
+unescaped_backticks = "warn"
+
 [workspace.lints.clippy]
 dbg_macro = "warn"
 todo = "warn"
