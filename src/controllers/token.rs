@@ -233,7 +233,7 @@ struct NewTokenEmail<'a> {
 
 impl<'a> crate::email::Email for NewTokenEmail<'a> {
     fn subject(&self) -> String {
-        "New API token created".into()
+        format!("crates.io: New API token \"{}\" created", self.token_name)
     }
 
     fn body(&self) -> String {

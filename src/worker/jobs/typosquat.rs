@@ -87,7 +87,10 @@ struct PossibleTyposquatEmail<'a> {
 
 impl Email for PossibleTyposquatEmail<'_> {
     fn subject(&self) -> String {
-        "Possible typosquatting in new crate".into()
+        format!(
+            "crates.io: Possible typosquatting in new crate \"{}\"",
+            self.crate_name
+        )
     }
 
     fn body(&self) -> String {

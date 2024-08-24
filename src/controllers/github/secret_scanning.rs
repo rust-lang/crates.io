@@ -209,7 +209,10 @@ struct TokenExposedEmail<'a> {
 
 impl Email for TokenExposedEmail<'_> {
     fn subject(&self) -> String {
-        "Exposed API token found".into()
+        format!(
+            "crates.io: Your API token \"{}\" has been revoked",
+            self.token_name
+        )
     }
 
     fn body(&self) -> String {

@@ -324,7 +324,7 @@ pub struct UserConfirmEmail<'a> {
 
 impl crate::email::Email for UserConfirmEmail<'_> {
     fn subject(&self) -> String {
-        "Please confirm your email address".into()
+        "crates.io: Please confirm your email address".into()
     }
 
     fn body(&self) -> String {

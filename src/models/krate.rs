@@ -558,7 +558,10 @@ impl OwnerInviteEmail {
 
 impl Email for OwnerInviteEmail {
     fn subject(&self) -> String {
-        "Crate ownership invitation".into()
+        format!(
+            "crates.io: Ownership invitation for \"{}\"",
+            self.crate_name
+        )
     }
 
     fn body(&self) -> String {
