@@ -10,7 +10,6 @@ use crates_io::{
     views::{
         EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
     },
-    Emails,
 };
 
 use chrono::{Duration, Utc};
@@ -557,7 +556,7 @@ async fn test_accept_invitation_by_mail() {
         .good();
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.as_inner().emails);
+    let invite_token = extract_token_from_invite_email(&app.emails());
 
     // Accept the invitation anonymously with a token
     anon.accept_ownership_invitation_by_token(&invite_token)
@@ -670,7 +669,7 @@ async fn test_accept_expired_invitation_by_mail() {
     expire_invitation(&app, krate.id);
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.as_inner().emails);
+    let invite_token = extract_token_from_invite_email(&app.emails());
 
     // Try to accept the invitation, and ensure it fails.
     let resp = anon
@@ -756,19 +755,15 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     assert_eq!(json.crate_owner_invitations.len(), 1);
 }
 
-fn extract_token_from_invite_email(emails: &Emails) -> String {
-    let emails = emails.mails_in_memory().unwrap();
-
-    let message = emails
-        .into_iter()
-        .map(|(_envelope, message)| message)
+fn extract_token_from_invite_email(emails: &[String]) -> String {
+    let body = emails
+        .iter()
         .find(|m| m.contains("Subject: Crate ownership invitation"))
         .expect("missing email");
 
     // Simple (but kinda fragile) parser to extract the token.
     let before_token = "/accept-invite/";
     let after_token = " ";
-    let body = message.as_str();
     let before_pos = body.find(before_token).unwrap() + before_token.len();
     let after_pos = before_pos + body[before_pos..].find(after_token).unwrap();
     body[before_pos..after_pos].to_string()

@@ -41,11 +41,11 @@ async fn test_sync_admins_job() {
     assert_eq!(admins, expected_admins);
 
     let email_header_regex = Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap();
-    let emails = app.as_inner().emails.mails_in_memory().unwrap();
-    let emails = emails
-        .iter()
-        .map(|(_, email)| email_header_regex.replace_all(email, ""))
-        .collect::<Vec<_>>();
+    let emails = app
+        .emails()
+        .into_iter()
+        .map(|email| email_header_regex.replace_all(&email, "").into())
+        .collect::<Vec<String>>();
 
     assert_debug_snapshot!(emails);
 
@@ -54,8 +54,7 @@ async fn test_sync_admins_job() {
     app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
     app.run_pending_background_jobs().await;
 
-    let emails = app.as_inner().emails.mails_in_memory().unwrap();
-    assert_eq!(emails.len(), 2);
+    assert_eq!(app.emails().len(), 2);
 }
 
 fn mock_permission(people: Vec<Person>) -> Permission {

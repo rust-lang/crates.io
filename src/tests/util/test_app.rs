@@ -166,6 +166,11 @@ impl TestApp {
             .collect()
     }
 
+    pub fn emails(&self) -> Vec<String> {
+        let emails = self.as_inner().emails.mails_in_memory().unwrap();
+        emails.into_iter().map(|(_, email)| email).collect()
+    }
+
     pub async fn run_pending_background_jobs(&self) {
         let runner = &self.0.runner;
         let runner = runner.as_ref().expect("Index has not been initialized");
