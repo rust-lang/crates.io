@@ -141,7 +141,9 @@ struct ExpiryNotificationEmail<'a> {
 }
 
 impl<'a> Email for ExpiryNotificationEmail<'a> {
-    const SUBJECT: &'static str = "Your token is about to expire";
+    fn subject(&self) -> String {
+        "Your token is about to expire".into()
+    }
 
     fn body(&self) -> String {
         format!(

@@ -208,7 +208,9 @@ struct TokenExposedEmail<'a> {
 }
 
 impl Email for TokenExposedEmail<'_> {
-    const SUBJECT: &'static str = "Exposed API token found";
+    fn subject(&self) -> String {
+        "Exposed API token found".into()
+    }
 
     fn body(&self) -> String {
         let mut body = format!(

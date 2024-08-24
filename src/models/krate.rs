@@ -557,7 +557,9 @@ impl OwnerInviteEmail {
 }
 
 impl Email for OwnerInviteEmail {
-    const SUBJECT: &'static str = "Crate ownership invitation";
+    fn subject(&self) -> String {
+        "Crate ownership invitation".into()
+    }
 
     fn body(&self) -> String {
         format!(

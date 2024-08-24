@@ -86,7 +86,9 @@ struct PossibleTyposquatEmail<'a> {
 }
 
 impl Email for PossibleTyposquatEmail<'_> {
-    const SUBJECT: &'static str = "Possible typosquatting in new crate";
+    fn subject(&self) -> String {
+        "Possible typosquatting in new crate".into()
+    }
 
     fn body(&self) -> String {
         let squats = self

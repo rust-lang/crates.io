@@ -323,7 +323,9 @@ pub struct UserConfirmEmail<'a> {
 }
 
 impl crate::email::Email for UserConfirmEmail<'_> {
-    const SUBJECT: &'static str = "Please confirm your email address";
+    fn subject(&self) -> String {
+        "Please confirm your email address".into()
+    }
 
     fn body(&self) -> String {
         // Create a URL with token string as path to send to user
