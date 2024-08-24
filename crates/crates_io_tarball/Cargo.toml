@@ -14,7 +14,7 @@ builder = []
 cargo-manifest = "=0.15.1"
 flate2 = "=1.0.32"
 serde = { version = "=1.0.208", features = ["derive"] }
-serde_json = "=1.0.125"
+serde_json = "=1.0.127"
 tar = "=0.4.41"
 thiserror = "=1.0.63"
 tracing = "=0.1.40"
