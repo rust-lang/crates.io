@@ -1,0 +1,5 @@
+---
+source: src/tests/team.rs
+expression: app.emails_snapshot()
+---
+

@@ -156,6 +156,8 @@ async fn new_crate_owner() {
         .publish_crate(crate_to_publish)
         .await
         .good();
+
+    assert_snapshot!(app.emails_snapshot());
 }
 
 async fn create_and_add_owner(

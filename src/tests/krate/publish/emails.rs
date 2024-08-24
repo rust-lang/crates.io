@@ -20,6 +20,7 @@ async fn new_krate_without_any_email_fails() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files().await, empty());
+    assert_that!(app.emails(), empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -39,4 +40,5 @@ async fn new_krate_with_unverified_email_fails() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_json_snapshot!(response.json());
     assert_that!(app.stored_files().await, empty());
+    assert_that!(app.emails(), empty());
 }

@@ -10,6 +10,7 @@ use crates_io::{
 
 use diesel::*;
 use http::StatusCode;
+use insta::assert_snapshot;
 
 impl crate::util::MockAnonymousUser {
     /// List the team owners of the specified crate.
@@ -399,6 +400,8 @@ async fn publish_owned() {
         .publish_crate(crate_to_publish)
         .await
         .good();
+
+    assert_snapshot!(app.emails_snapshot());
 }
 
 /// Test trying to change owners (when only on an owning team)
