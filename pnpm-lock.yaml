@@ -104,8 +104,8 @@ importers:
         specifier: 1.46.1
         version: 1.46.1
       '@sinonjs/fake-timers':
-        specifier: 11.3.1
-        version: 11.3.1
+        specifier: 12.0.0
+        version: 12.0.0
       '@types/ember':
         specifier: 4.0.11
         version: 4.0.11(@babel/core@7.25.2)
@@ -1770,8 +1770,8 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@11.3.1':
-    resolution: {integrity: sha512-EVJO7nW5M/F5Tur0Rf2z/QoMo+1Ia963RiMtapiQrEWvY0iBUvADo8Beegwjpnle5BHkyHuoxSTW3jF43H1XRA==}
+  '@sinonjs/fake-timers@12.0.0':
+    resolution: {integrity: sha512-bockPohsu/W5uL2w7km2fQcLBm0hi4k2h6Z3/tfzNGQ2BTuFEhJoFrMMpmGAW7zHqop0wtuXDm/WHPNY6JLoHA==}
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
@@ -11330,7 +11330,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@11.3.1':
+  '@sinonjs/fake-timers@12.0.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
