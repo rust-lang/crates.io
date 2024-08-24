@@ -34,7 +34,7 @@ async fn new_krate() {
             .select(versions_published_by::email)
             .first(conn)
             .unwrap();
-        assert_eq!(email, "something@example.com");
+        assert_eq!(email, "foo@example.com");
     });
 }
 

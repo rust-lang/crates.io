@@ -1,12 +1,12 @@
 ---
 source: src/tests/routes/me/get.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "owned_crates": [],
   "user": {
     "avatar": null,
-    "email": "something@example.com",
+    "email": "foo@example.com",
     "email_verification_sent": true,
     "email_verified": true,
     "id": 1,
