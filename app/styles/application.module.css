@@ -125,7 +125,7 @@ a, .link {
 
 /* Using `:not(...)` here for specificity reasons */
 a:not([href]) {
-    color: initial;
+    color: unset;
     cursor: initial;
 }
 
