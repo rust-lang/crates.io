@@ -208,7 +208,12 @@ struct TokenExposedEmail<'a> {
 }
 
 impl Email for TokenExposedEmail<'_> {
-    const SUBJECT: &'static str = "Exposed API token found";
+    fn subject(&self) -> String {
+        format!(
+            "crates.io: Your API token \"{}\" has been revoked",
+            self.token_name
+        )
+    }
 
     fn body(&self) -> String {
         let mut body = format!(

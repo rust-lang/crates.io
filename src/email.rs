@@ -11,7 +11,7 @@ use lettre::{Message, Transport};
 use rand::distributions::{Alphanumeric, DistString};
 
 pub trait Email {
-    const SUBJECT: &'static str;
+    fn subject(&self) -> String;
     fn body(&self) -> String;
 }
 
@@ -97,7 +97,7 @@ impl Emails {
             self.domain,
         );
 
-        let subject = E::SUBJECT;
+        let subject = email.subject();
         let body = email.body();
 
         let email = Message::builder()
@@ -160,7 +160,9 @@ mod tests {
     struct TestEmail;
 
     impl Email for TestEmail {
-        const SUBJECT: &'static str = "test";
+        fn subject(&self) -> String {
+            "test".into()
+        }
 
         fn body(&self) -> String {
             "test".into()

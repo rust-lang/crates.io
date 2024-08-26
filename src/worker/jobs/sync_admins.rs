@@ -180,7 +180,9 @@ impl AdminAccountEmail {
 }
 
 impl Email for AdminAccountEmail {
-    const SUBJECT: &'static str = "crates.io: Admin account changes";
+    fn subject(&self) -> String {
+        "crates.io: Admin account changes".into()
+    }
 
     fn body(&self) -> String {
         self.to_string()

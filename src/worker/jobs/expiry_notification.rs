@@ -141,7 +141,12 @@ struct ExpiryNotificationEmail<'a> {
 }
 
 impl<'a> Email for ExpiryNotificationEmail<'a> {
-    const SUBJECT: &'static str = "Your token is about to expire";
+    fn subject(&self) -> String {
+        format!(
+            "crates.io: Your API token \"{}\" is about to expire",
+            self.token_name
+        )
+    }
 
     fn body(&self) -> String {
         format!(
@@ -218,7 +223,9 @@ mod tests {
         assert_eq!(sent_mail.len(), 1);
         let sent = &sent_mail[0];
         assert_eq!(&sent.0.to(), &["testuser@test.com".parse::<Address>()?]);
-        assert!(sent.1.contains("Your token is about to expire"));
+        assert!(sent
+            .1
+            .contains("crates.io: Your API token \"test_token\" is about to expire"));
         let updated_token = api_tokens::table
             .filter(api_tokens::id.eq(token.id))
             .filter(api_tokens::expiry_notification_at.is_not_null())

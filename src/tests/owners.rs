@@ -758,7 +758,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
 fn extract_token_from_invite_email(emails: &[String]) -> String {
     let body = emails
         .iter()
-        .find(|m| m.contains("Subject: Crate ownership invitation"))
+        .find(|m| m.contains("Subject: crates.io: Ownership invitation"))
         .expect("missing email");
 
     // Simple (but kinda fragile) parser to extract the token.

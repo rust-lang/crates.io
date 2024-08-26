@@ -557,7 +557,12 @@ impl OwnerInviteEmail {
 }
 
 impl Email for OwnerInviteEmail {
-    const SUBJECT: &'static str = "Crate ownership invitation";
+    fn subject(&self) -> String {
+        format!(
+            "crates.io: Ownership invitation for \"{}\"",
+            self.crate_name
+        )
+    }
 
     fn body(&self) -> String {
         format!(
