@@ -2,7 +2,9 @@
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::worker::jobs::{self, CheckTyposquat, UpdateDefaultVersion};
+use crate::worker::jobs::{
+    self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
+};
 use axum::body::Bytes;
 use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
@@ -441,6 +443,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
             jobs::enqueue_sync_to_index(&krate.name, conn)?;
+
+            SendPublishNotificationsJob::new(version.id).enqueue(conn)?;
 
             // If this is a new version for an existing crate it is sufficient
             // to update the default version asynchronously in a background job.
