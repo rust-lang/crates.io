@@ -135,6 +135,8 @@ async fn new_crate_owner() {
     let user2 = app.db_new_user("Bar");
     token.add_named_owner("foo_owner", "BAR").await.good();
 
+    assert_snapshot!(app.emails_snapshot());
+
     // accept invitation for user to be added as owner
     let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
     user2
@@ -224,6 +226,8 @@ async fn modify_multiple_owners() {
     let user2 = create_and_add_owner(&app, &token, "user2", &krate).await;
     let user3 = create_and_add_owner(&app, &token, "user3", &krate).await;
 
+    assert_snapshot!(app.emails_snapshot());
+
     // Deleting all owners is not allowed.
     let response = token
         .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
@@ -269,6 +273,8 @@ async fn modify_multiple_owners() {
             "ok": true,
         })
     );
+
+    assert_snapshot!(app.emails_snapshot());
 
     user2
         .accept_ownership_invitation(&krate.name, krate.id)
