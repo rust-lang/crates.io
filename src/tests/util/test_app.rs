@@ -177,11 +177,18 @@ impl TestApp {
         static EMAIL_HEADER_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
 
+        static INVITE_TOKEN_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"/accept-invite/\w+").unwrap());
+
         static SEPARATOR: &str = "\n----------------------------------------\n\n";
 
         self.emails()
-            .iter()
-            .map(|email| EMAIL_HEADER_REGEX.replace_all(email, ""))
+            .into_iter()
+            .map(|email| {
+                let email = EMAIL_HEADER_REGEX.replace_all(&email, "");
+                let email = INVITE_TOKEN_REGEX.replace_all(&email, "/accept-invite/[invite-token]");
+                email.to_string()
+            })
             .collect::<Vec<_>>()
             .join(SEPARATOR)
     }
