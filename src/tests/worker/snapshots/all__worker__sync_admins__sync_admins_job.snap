@@ -3,7 +3,7 @@ source: src/tests/worker/sync_admins.rs
 expression: app.emails_snapshot()
 ---
 To: existing-admin@crates.io
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Admin account changes
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
@@ -18,7 +18,7 @@ Revoked admin access:
 ----------------------------------------
 
 To: obsolete-admin@crates.io
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Admin account changes
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
