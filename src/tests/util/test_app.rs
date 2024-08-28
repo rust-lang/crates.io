@@ -177,6 +177,9 @@ impl TestApp {
         static EMAIL_HEADER_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
 
+        static DATE_TIME_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z").unwrap());
+
         static INVITE_TOKEN_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"/accept-invite/\w+").unwrap());
 
@@ -186,6 +189,7 @@ impl TestApp {
             .into_iter()
             .map(|email| {
                 let email = EMAIL_HEADER_REGEX.replace_all(&email, "");
+                let email = DATE_TIME_REGEX.replace_all(&email, "[0000-00-00T00:00:00Z]");
                 let email = INVITE_TOKEN_REGEX.replace_all(&email, "/accept-invite/[invite-token]");
                 email.to_string()
             })
