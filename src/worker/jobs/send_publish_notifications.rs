@@ -49,6 +49,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .filter(crate_owners::owner_kind.eq(OwnerKind::User))
             .filter(crate_owners::crate_id.eq(publish_details.crate_id))
             .inner_join(users::table)
+            .filter(users::publish_notifications.eq(true))
             .inner_join(emails::table.on(users::id.eq(emails::user_id)))
             .filter(emails::verified.eq(true))
             .select((users::gh_login, emails::email))
