@@ -24,6 +24,7 @@ pub struct User {
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<NaiveDateTime>,
     pub is_admin: bool,
+    pub publish_notifications: bool,
 }
 
 impl User {
