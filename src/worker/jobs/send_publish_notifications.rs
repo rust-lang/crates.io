@@ -29,10 +29,14 @@ impl BackgroundJob for SendPublishNotificationsJob {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+        let version_id = self.version_id;
+
+        info!("Sending publish notifications for version {version_id}…");
+
         let mut conn = ctx.deadpool.get().await?;
 
         // Get crate name, version and other publish details
-        let publish_details = PublishDetails::for_version(self.version_id, &mut conn).await?;
+        let publish_details = PublishDetails::for_version(version_id, &mut conn).await?;
 
         let publish_time = publish_details
             .publish_time
@@ -50,6 +54,8 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .select((users::gh_login, emails::email))
             .load::<(String, String)>(&mut conn)
             .await?;
+
+        let num_recipients = recipients.len();
 
         // Sending emails is currently a blocking operation, so we have to use
         // `spawn_blocking()` to run it in a separate thread.
@@ -80,22 +86,41 @@ impl BackgroundJob for SendPublishNotificationsJob {
                         publisher_info,
                     };
 
+                    debug!("Sending publish notification for {krate}@{version} to {email_address}…");
                     ctx.emails.send(&email_address, email).inspect_err(|err| {
                         warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
                     })
                 })
                 .collect::<Vec<_>>();
 
-            // Check if any of the emails succeeded to send, in which case we
-            // consider the job successful enough and not worth retrying.
-            match results.iter().any(|result| result.is_ok()) {
-                true => Ok(()),
-                false => Err(anyhow!("Failed to send publish notifications")),
-            }
-        })
-        .await?;
+            let num_sent = results.iter().filter(|result| result.is_ok()).count();
 
-        Ok(())
+            // Check if *none* of the emails succeeded to send, in which case we
+            // consider the job failed and worth retrying.
+            if num_sent == 0 {
+                warn!(
+                    "Failed to send publish notifications for {}@{}",
+                    publish_details.krate, publish_details.version
+                );
+
+                return Err(anyhow!("Failed to send publish notifications"));
+            }
+
+            if num_sent == num_recipients {
+                info!(
+                    "Sent {num_sent} publish notifications for {}@{}",
+                    publish_details.krate, publish_details.version
+                );
+            } else {
+                warn!(
+                    "Sent only {num_sent} of {num_recipients} publish notifications for {}@{}",
+                    publish_details.krate, publish_details.version
+                );
+            }
+
+            Ok(())
+        })
+        .await
     }
 }
 
