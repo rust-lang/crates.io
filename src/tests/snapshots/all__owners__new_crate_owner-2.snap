@@ -3,7 +3,7 @@ source: src/tests/owners.rs
 expression: app.emails_snapshot()
 ---
 To: foo@example.com
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo_owner@1.0.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -18,7 +18,7 @@ es.io.
 ----------------------------------------
 
 To: Bar@example.com
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Ownership invitation for "foo_owner"
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -32,7 +32,7 @@ wnership invitations.
 ----------------------------------------
 
 To: foo@example.com
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo_owner@2.0.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -47,7 +47,7 @@ es.io.
 ----------------------------------------
 
 To: Bar@example.com
-From: noreply@crates.io
+From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo_owner@2.0.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
