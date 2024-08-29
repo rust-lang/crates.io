@@ -56,6 +56,14 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .await?;
 
         let num_recipients = recipients.len();
+        if num_recipients == 0 {
+            info!(
+                "Skipping publish notifications for {}@{}: no valid recipients found",
+                publish_details.krate, publish_details.version
+            );
+
+            return Ok(());
+        }
 
         // Sending emails is currently a blocking operation, so we have to use
         // `spawn_blocking()` to run it in a separate thread.
