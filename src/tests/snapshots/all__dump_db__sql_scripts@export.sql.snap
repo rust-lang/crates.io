@@ -20,6 +20,5 @@ BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
     \copy "versions" ("bin_names", "checksum", "crate_id", "crate_size", "created_at", "downloads", "features", "has_lib", "id", "license", "links", "num", "published_by", "rust_version", "updated_at", "yanked") TO 'data/versions.csv' WITH CSV HEADER
     \copy "default_versions" ("crate_id", "version_id") TO 'data/default_versions.csv' WITH CSV HEADER
     \copy "dependencies" ("crate_id", "default_features", "explicit_name", "features", "id", "kind", "optional", "req", "target", "version_id") TO 'data/dependencies.csv' WITH CSV HEADER
-    \copy (SELECT "date", "downloads", "version_id" FROM "version_downloads" WHERE date > current_date - interval '90 day') TO 'data/version_downloads.csv' WITH CSV HEADER
-
+    \copy "version_downloads" ("date", "downloads", "version_id") TO 'data/version_downloads.csv' WITH CSV HEADER
 COMMIT;
