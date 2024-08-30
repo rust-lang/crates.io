@@ -18,7 +18,7 @@ use crate::models::{
 };
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::tasks::spawn_blocking;
-use crate::util::errors::{bad_request, server_error, AppResult, BoxedAppError};
+use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::util::BytesRequest;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
@@ -157,36 +157,32 @@ pub async fn update_user(
             .parse::<Address>()
             .map_err(|_| bad_request("invalid email address"))?;
 
-        conn.transaction::<_, BoxedAppError, _>(|conn| {
-            let new_email = NewEmail {
-                user_id: user.id,
-                email: user_email,
-            };
+        let new_email = NewEmail {
+            user_id: user.id,
+            email: user_email,
+        };
 
-            let token = insert_into(emails::table)
-                .values(&new_email)
-                .on_conflict(user_id)
-                .do_update()
-                .set(&new_email)
-                .returning(emails::token)
-                .get_result(conn)
-                .map(SecretString::new)
-                .map_err(|_| server_error("Error in creating token"))?;
+        let token = insert_into(emails::table)
+            .values(&new_email)
+            .on_conflict(user_id)
+            .do_update()
+            .set(&new_email)
+            .returning(emails::token)
+            .get_result(conn)
+            .map(SecretString::new)
+            .map_err(|_| server_error("Error in creating token"))?;
 
-            // This swallows any errors that occur while attempting to send the email. Some users have
-            // an invalid email set in their GitHub profile, and we should let them sign in even though
-            // we're trying to silently use their invalid address during signup and can't send them an
-            // email. They'll then have to provide a valid email address.
-            let email = UserConfirmEmail {
-                user_name: &user.gh_login,
-                domain: &state.emails.domain,
-                token,
-            };
+        // This swallows any errors that occur while attempting to send the email. Some users have
+        // an invalid email set in their GitHub profile, and we should let them sign in even though
+        // we're trying to silently use their invalid address during signup and can't send them an
+        // email. They'll then have to provide a valid email address.
+        let email = UserConfirmEmail {
+            user_name: &user.gh_login,
+            domain: &state.emails.domain,
+            token,
+        };
 
-            let _ = state.emails.send(user_email, email);
-
-            Ok(())
-        })?;
+        let _ = state.emails.send(user_email, email);
 
         ok_true()
     })
