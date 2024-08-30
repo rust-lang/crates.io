@@ -7,17 +7,7 @@ pub trait MockEmailHelper: RequestHelper {
     // this is starting to look like a builder might help?
     // I want to explore alternative abstractions in any case.
     async fn update_email_more_control(&self, user_id: i32, email: Option<&str>) -> Response<()> {
-        // When updating your email in crates.io, the request goes to the user route with PUT.
-        // Ember sends all the user attributes. We check to make sure the ID in the URL matches
-        // the ID of the currently logged in user, then we ignore everything but the email address.
-        let body = json!({"user": {
-            "email": email,
-            "name": "Arbitrary Name",
-            "login": "arbitrary_login",
-            "avatar": "https://arbitrary.com/img.jpg",
-            "url": "https://arbitrary.com",
-            "kind": null
-        }});
+        let body = json!({"user": { "email": email }});
         let url = format!("/api/v1/users/{user_id}");
         self.put(&url, body.to_string()).await
     }
