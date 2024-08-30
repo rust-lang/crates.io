@@ -5,6 +5,7 @@ use axum::Json;
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
+use lettre::Address;
 use secrecy::{ExposeSecret, SecretString};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -151,6 +152,10 @@ pub async fn update_user(
         if user_email.is_empty() {
             return Err(bad_request("empty email rejected"));
         }
+
+        user_email
+            .parse::<Address>()
+            .map_err(|_| bad_request("invalid email address"))?;
 
         conn.transaction::<_, BoxedAppError, _>(|conn| {
             let new_email = NewEmail {

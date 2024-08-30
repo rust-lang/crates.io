@@ -96,3 +96,13 @@ async fn test_other_users_cannot_change_my_email() {
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_invalid_email_address() {
+    let (_app, _, user) = TestApp::init().with_user();
+    let model = user.as_model();
+
+    let response = user.update_email_more_control(model.id, Some("foo")).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid email address"}]}"###);
+}
