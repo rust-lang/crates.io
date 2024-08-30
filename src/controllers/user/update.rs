@@ -44,45 +44,44 @@ pub async fn update_user(
             return Err(bad_request("current user does not match requested user"));
         }
 
-        let user_email = match &user_update.user.email {
-            Some(email) => email.trim(),
-            None => return Err(bad_request("empty email rejected")),
-        };
+        if let Some(user_email) = &user_update.user.email {
+            let user_email = user_email.trim();
 
-        if user_email.is_empty() {
-            return Err(bad_request("empty email rejected"));
+            if user_email.is_empty() {
+                return Err(bad_request("empty email rejected"));
+            }
+
+            user_email
+                .parse::<Address>()
+                .map_err(|_| bad_request("invalid email address"))?;
+
+            let new_email = NewEmail {
+                user_id: user.id,
+                email: user_email,
+            };
+
+            let token = diesel::insert_into(emails::table)
+                .values(&new_email)
+                .on_conflict(emails::user_id)
+                .do_update()
+                .set(&new_email)
+                .returning(emails::token)
+                .get_result(conn)
+                .map(SecretString::new)
+                .map_err(|_| server_error("Error in creating token"))?;
+
+            // This swallows any errors that occur while attempting to send the email. Some users have
+            // an invalid email set in their GitHub profile, and we should let them sign in even though
+            // we're trying to silently use their invalid address during signup and can't send them an
+            // email. They'll then have to provide a valid email address.
+            let email = UserConfirmEmail {
+                user_name: &user.gh_login,
+                domain: &state.emails.domain,
+                token,
+            };
+
+            let _ = state.emails.send(user_email, email);
         }
-
-        user_email
-            .parse::<Address>()
-            .map_err(|_| bad_request("invalid email address"))?;
-
-        let new_email = NewEmail {
-            user_id: user.id,
-            email: user_email,
-        };
-
-        let token = diesel::insert_into(emails::table)
-            .values(&new_email)
-            .on_conflict(emails::user_id)
-            .do_update()
-            .set(&new_email)
-            .returning(emails::token)
-            .get_result(conn)
-            .map(SecretString::new)
-            .map_err(|_| server_error("Error in creating token"))?;
-
-        // This swallows any errors that occur while attempting to send the email. Some users have
-        // an invalid email set in their GitHub profile, and we should let them sign in even though
-        // we're trying to silently use their invalid address during signup and can't send them an
-        // email. They'll then have to provide a valid email address.
-        let email = UserConfirmEmail {
-            user_name: &user.gh_login,
-            domain: &state.emails.domain,
-            token,
-        };
-
-        let _ = state.emails.send(user_email, email);
 
         ok_true()
     })
