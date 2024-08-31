@@ -6,22 +6,23 @@ use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::Secret;
+use thiserror::Error;
 
-use crate::app::App;
 use crate::controllers::helpers::pagination::*;
-use crate::email::Email;
+use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
     CrateOwner, CrateOwnerInvitation, Dependency, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
-use crate::util::errors::{version_not_found, AppResult};
-
-use crate::models::helpers::with_count::*;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 use crate::util::diesel::Conn;
+use crate::util::errors::{version_not_found, AppResult};
+use crate::{app::App, util::errors::BoxedAppError};
+
+use super::Team;
 
 #[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
 #[diesel(
@@ -354,57 +355,40 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    /// Invite `login` as an owner of this crate, returning a status message and
-    /// optionally an invite email to be sent by the caller.
+    /// Invite `login` as an owner of this crate, returning the created
+    /// [`NewOwnerInvite`].
     pub fn owner_add(
         &self,
         app: &App,
         conn: &mut impl Conn,
         req_user: &User,
         login: &str,
-    ) -> AppResult<(String, Option<OwnerInviteEmail>)> {
+    ) -> Result<NewOwnerInvite, OwnerAddError> {
         use diesel::insert_into;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
-
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
-                let config = &app.config;
-                match CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, config)? {
+                let creation_ret =
+                    CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, &app.config)
+                        .map_err(BoxedAppError::from)?;
+
+                match creation_ret {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        let email = user.verified_email(conn).ok().flatten().map(|recipient| {
-                            OwnerInviteEmail {
-                                recipient_email_address: recipient,
-                                user_name: req_user.gh_login.clone(),
-                                domain: app.emails.domain.clone(),
-                                crate_name: self.name.clone(),
-                                token: plaintext_token,
-                            }
-                        });
-
-                        let msg = format!(
-                            "user {} has been invited to be an owner of crate {}",
-                            user.gh_login, self.name
-                        );
-
-                        Ok((msg, email))
+                        Ok(NewOwnerInvite::User(user, plaintext_token))
                     }
-                    NewCrateOwnerInvitationOutcome::AlreadyExists => Ok((
-                        format!(
-                            "user {} already has a pending invitation to be an owner of crate {}",
-                            user.gh_login, self.name
-                        ),
-                        None,
-                    )),
+                    NewCrateOwnerInvitationOutcome::AlreadyExists => {
+                        Err(OwnerAddError::AlreadyInvited(Box::new(user)))
+                    }
                 }
             }
             // Teams are added as owners immediately
-            owner @ Owner::Team(_) => {
+            Owner::Team(team) => {
                 insert_into(crate_owners::table)
                     .values(&CrateOwner {
                         crate_id: self.id,
-                        owner_id: owner.id(),
+                        owner_id: team.id,
                         created_by: req_user.id,
                         owner_kind: OwnerKind::Team,
                         email_notifications: true,
@@ -412,16 +396,10 @@ impl Crate {
                     .on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
-                    .execute(conn)?;
+                    .execute(conn)
+                    .map_err(BoxedAppError::from)?;
 
-                Ok((
-                    format!(
-                        "team {} has been added as an owner of crate {}",
-                        owner.login(),
-                        self.name
-                    ),
-                    None,
-                ))
+                Ok(NewOwnerInvite::Team(team))
             }
         }
     }
@@ -539,41 +517,37 @@ impl Crate {
     }
 }
 
-pub struct OwnerInviteEmail {
-    /// The destination email address for this email.
-    recipient_email_address: String,
+/// Details of a newly created invite.
+#[derive(Debug)]
+pub enum NewOwnerInvite {
+    /// The invitee was a [`User`], and they must accept the invite through the
+    /// UI or via the provided invite token.
+    User(User, Secret<String>),
 
-    /// Email body variables.
-    user_name: String,
-    domain: String,
-    crate_name: String,
-    token: SecretString,
+    /// The invitee was a [`Team`], and they were immediately added as an owner.
+    Team(Team),
 }
 
-impl OwnerInviteEmail {
-    pub fn recipient_email_address(&self) -> &str {
-        &self.recipient_email_address
-    }
+/// Error results from a [`Crate::owner_add()`] model call.
+#[derive(Debug, Error)]
+pub enum OwnerAddError {
+    /// An opaque [`BoxedAppError`].
+    #[error("{0}")] // AppError does not impl Error
+    AppError(BoxedAppError),
+
+    /// The requested invitee already has a pending invite.
+    ///
+    /// Note: Teams are always immediately added, so they cannot have a pending
+    /// invite to cause this error.
+    #[error("user already has pending invite")]
+    AlreadyInvited(Box<User>),
 }
 
-impl Email for OwnerInviteEmail {
-    fn subject(&self) -> String {
-        format!(
-            "crates.io: Ownership invitation for \"{}\"",
-            self.crate_name
-        )
-    }
-
-    fn body(&self) -> String {
-        format!(
-            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
-Visit https://{domain}/accept-invite/{token} to accept this invitation,
-or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            user_name = self.user_name,
-            domain = self.domain,
-            crate_name = self.crate_name,
-            token = self.token.expose_secret(),
-        )
+/// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual
+/// [`From`] impl.
+impl From<BoxedAppError> for OwnerAddError {
+    fn from(value: BoxedAppError) -> Self {
+        Self::AppError(value)
     }
 }
 

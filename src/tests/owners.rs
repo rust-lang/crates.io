@@ -357,6 +357,32 @@ async fn check_ownership_one_crate() {
     assert_eq!(json.users[0].name, user.name);
 }
 
+/// Assert the error response when attempting to add a team as a crate owner
+/// when that team is already a crate owner.
+#[tokio::test(flavor = "multi_thread")]
+async fn add_existing_team() {
+    let (app, _, user, token) = TestApp::init().with_token();
+    let user = user.as_model();
+
+    let _team = app.db(|conn| {
+        let t = new_team("github:test_org:bananas")
+            .create_or_update(conn)
+            .unwrap();
+        let krate = CrateBuilder::new("best_crate", user.id).expect_build(conn);
+        add_team_to_crate(&t, &krate, user, conn).unwrap();
+        t
+    });
+
+    let ret = token
+        .add_named_owner("best_crate", "github:test_org:bananas")
+        .await;
+    assert_eq!(ret.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        ret.text(),
+        r#"{"errors":[{"detail":"`github:test_org:bananas` is already an owner"}]}"#
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn deleted_ownership_isnt_in_owner_user() {
     let (app, anon, user) = TestApp::init().with_user();
