@@ -233,8 +233,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       ember-window-mock:
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.0.2
+        version: 1.0.2
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -4301,8 +4301,8 @@ packages:
     resolution: {integrity: sha512-437ue2c2dy8zwjoUohjLqs+Opb4c8bHVw6U3keKYb8F3Mk/XoFTFsgKgFHIUlb7SyBiAQD+6JsNjGXX71Kljcg==}
     engines: {node: 10.* || 12.* || >= 14.*}
 
-  ember-window-mock@1.0.1:
-    resolution: {integrity: sha512-K7o0o+t1DEWLsaw+TtS/D2t31pPUTYdabG6AKKKxJxZdgKNLwyMtlK7+X2UV0kRnr0CgiOeOMenvck0+8XbDmA==}
+  ember-window-mock@1.0.2:
+    resolution: {integrity: sha512-05qmab/YLHwg3Pn+NfQh7PwGY2H1GimxhNKxEoBX6/H3aMGmgwk9rOsV7fFV1PjZrq/V6op+BIqSfObw35psHg==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -14478,7 +14478,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  ember-window-mock@1.0.1:
+  ember-window-mock@1.0.2:
     dependencies:
       '@embroider/addon-shim': 1.8.9
       '@embroider/macros': 1.16.5
