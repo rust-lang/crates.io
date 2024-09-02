@@ -96,3 +96,14 @@ async fn test_invalid_email_address() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid email address"}]}"###);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_invalid_json() {
+    let (_app, _anon, user) = TestApp::init().with_user();
+    let model = user.as_model();
+
+    let url = format!("/api/v1/users/{}", model.id);
+    let response = user.put::<()>(&url, r#"{ "user": foo }"#).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+}
