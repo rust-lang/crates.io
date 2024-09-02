@@ -105,5 +105,5 @@ async fn test_invalid_json() {
     let url = format!("/api/v1/users/{}", model.id);
     let response = user.put::<()>(&url, r#"{ "user": foo }"#).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid json request"}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: user: expected ident at line 1 column 12"}]}"###);
 }
