@@ -5,6 +5,7 @@ use axum::Router;
 use http::{Method, StatusCode};
 
 use crate::app::AppState;
+use crate::controllers::user::update_user;
 use crate::controllers::*;
 use crate::util::errors::not_found;
 use crate::Env;
@@ -97,7 +98,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .route("/api/v1/category_slugs", get(category::slugs))
         .route(
             "/api/v1/users/:user_id",
-            get(user::other::show).put(user::me::update_user),
+            get(user::other::show).put(update_user),
         )
         .route("/api/v1/users/:user_id/stats", get(user::other::stats))
         .route("/api/v1/teams/:team_id", get(team::show_team))
@@ -132,7 +133,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         )
         .route(
             "/api/v1/users/:user_id/resend",
-            put(user::me::regenerate_token_and_send),
+            put(user::update::regenerate_token_and_send),
         )
         .route(
             "/api/v1/site_metadata",

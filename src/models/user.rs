@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use secrecy::SecretString;
 
 use crate::app::App;
-use crate::controllers::user::me::UserConfirmEmail;
+use crate::controllers::user::update::UserConfirmEmail;
 use crate::email::Emails;
 use crate::util::errors::AppResult;
 
