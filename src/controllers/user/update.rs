@@ -5,9 +5,9 @@ use crate::models::{Email, NewEmail};
 use crate::schema::emails;
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{bad_request, server_error, AppResult};
-use crate::util::BytesRequest;
 use axum::extract::Path;
 use axum::response::Response;
+use axum::Json;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
@@ -15,11 +15,22 @@ use http::request::Parts;
 use lettre::Address;
 use secrecy::{ExposeSecret, SecretString};
 
+#[derive(Deserialize)]
+pub struct UserUpdate {
+    user: User,
+}
+
+#[derive(Deserialize)]
+pub struct User {
+    email: Option<String>,
+}
+
 /// Handles the `PUT /users/:user_id` route.
 pub async fn update_user(
     state: AppState,
     Path(param_user_id): Path<i32>,
-    req: BytesRequest,
+    req: Parts,
+    Json(user_update): Json<UserUpdate>,
 ) -> AppResult<Response> {
     let conn = state.db_write().await?;
     spawn_blocking(move || {
@@ -32,19 +43,6 @@ pub async fn update_user(
         if user.id != param_user_id {
             return Err(bad_request("current user does not match requested user"));
         }
-
-        #[derive(Deserialize)]
-        struct UserUpdate {
-            user: User,
-        }
-
-        #[derive(Deserialize)]
-        struct User {
-            email: Option<String>,
-        }
-
-        let user_update: UserUpdate =
-            serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
 
         let user_email = match &user_update.user.email {
             Some(email) => email.trim(),
