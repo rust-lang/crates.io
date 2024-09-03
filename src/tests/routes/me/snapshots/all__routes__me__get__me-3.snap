@@ -19,6 +19,7 @@ expression: response.json()
     "is_admin": false,
     "login": "foo",
     "name": null,
+    "publish_notifications": true,
     "url": "https://github.com/foo"
   }
 }
