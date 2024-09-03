@@ -22,6 +22,7 @@ export default Factory.extend({
   emailVerified: null,
   emailVerificationToken: null,
   isAdmin: false,
+  publishNotifications: true,
 
   afterCreate(model) {
     if (model.emailVerified === null) {

@@ -24,6 +24,7 @@ export default BaseSerializer.extend({
       delete hash.email;
       delete hash.email_verified;
       delete hash.is_admin;
+      delete hash.publish_notifications;
     } else {
       hash.email_verification_sent = hash.email_verified || Boolean(hash.email_verification_token);
     }

@@ -25,6 +25,7 @@ module('Mirage | GET /api/v1/me', function (hooks) {
         is_admin: false,
         login: 'user-1',
         name: 'User 1',
+        publish_notifications: true,
         url: 'https://github.com/user-1',
       },
       owned_crates: [],
