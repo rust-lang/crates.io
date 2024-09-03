@@ -1,0 +1,46 @@
+---
+source: src/tests/routes/users/update/publish_notifications.rs
+expression: app.emails_snapshot()
+---
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Successfully published foo@1.0.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello foo!
+
+A new version of the package foo (1.0.0) was published by your account (htt=
+ps://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+
+If you have questions or security concerns, you can contact us at help@crat=
+es.io.
+----------------------------------------
+
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Unsubscribed from publish notifications
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello foo!
+
+You have been unsubscribed from publish notifications.
+
+If you would like to resubscribe, please visit https://crates.io/settings/p=
+rofile
+----------------------------------------
+
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Successfully published foo@1.2.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello foo!
+
+A new version of the package foo (1.2.0) was published by your account (htt=
+ps://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+
+If you have questions or security concerns, you can contact us at help@crat=
+es.io.

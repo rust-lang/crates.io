@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::{Email, NewEmail};
-use crate::schema::emails;
+use crate::schema::{emails, users};
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use axum::extract::Path;
@@ -23,6 +23,7 @@ pub struct UserUpdate {
 #[derive(Deserialize)]
 pub struct User {
     email: Option<String>,
+    publish_notifications: Option<bool>,
 }
 
 /// Handles the `PUT /users/:user_id` route.
@@ -42,6 +43,29 @@ pub async fn update_user(
         // need to check if current user matches user to be updated
         if user.id != param_user_id {
             return Err(bad_request("current user does not match requested user"));
+        }
+
+        if let Some(publish_notifications) = &user_update.user.publish_notifications {
+            if user.publish_notifications != *publish_notifications {
+                diesel::update(user)
+                    .set(users::publish_notifications.eq(*publish_notifications))
+                    .execute(conn)?;
+
+                if !publish_notifications {
+                    let email_address = user.verified_email(conn)?;
+
+                    if let Some(email_address) = email_address {
+                        let email = PublishNotificationsUnsubscribeEmail {
+                            user_name: &user.gh_login,
+                            domain: &state.emails.domain,
+                        };
+
+                        if let Err(error) = state.emails.send(&email_address, email) {
+                            warn!("Failed to send publish notifications unsubscribe email to {email_address}: {error}");
+                        }
+                    }
+                }
+            }
         }
 
         if let Some(user_email) = &user_update.user.email {
@@ -150,6 +174,28 @@ https://{domain}/confirm/{token}",
             user_name = self.user_name,
             domain = self.domain,
             token = self.token.expose_secret(),
+        )
+    }
+}
+
+pub struct PublishNotificationsUnsubscribeEmail<'a> {
+    pub user_name: &'a str,
+    pub domain: &'a str,
+}
+
+impl crate::email::Email for PublishNotificationsUnsubscribeEmail<'_> {
+    fn subject(&self) -> String {
+        "crates.io: Unsubscribed from publish notifications".into()
+    }
+
+    fn body(&self) -> String {
+        let Self { user_name, domain } = self;
+        format!(
+            "Hello {user_name}!
+
+You have been unsubscribed from publish notifications.
+
+If you would like to resubscribe, please visit https://{domain}/settings/profile",
         )
     }
 }

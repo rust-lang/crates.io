@@ -2,6 +2,8 @@ use crate::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
 
+mod publish_notifications;
+
 pub trait MockEmailHelper: RequestHelper {
     // TODO: I don't like the name of this method or `update_email` on the `MockCookieUser` impl;
     // this is starting to look like a builder might help?
