@@ -59,7 +59,7 @@ axum = { version = "=0.7.5", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.9.3", features = ["cookie-signed", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.5", features = ["serde"] }
-cargo-manifest = "=0.15.1"
+cargo-manifest = "=0.15.2"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_github = { path = "crates/crates_io_github" }

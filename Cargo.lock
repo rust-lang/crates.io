@@ -746,9 +746,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-manifest"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b29a81447dee6418e779b6d25c8ca7250d06b583fc3975e6577162518da9d80"
+checksum = "03fa8484a7f2eef80e6dd2e2be90b322b9c29aeb1bbc206013d6eb2104db7241"
 dependencies = [
  "serde",
  "thiserror",
