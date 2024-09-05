@@ -104,7 +104,7 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         }
 
         info!(%name, "Deleting RSS feed from S3");
-        let feed_id = FeedId::Crate { name: name.clone() };
+        let feed_id = FeedId::Crate { name };
         if let Err(error) = rt.block_on(store.delete_feed(&feed_id)) {
             warn!(%name, ?error, "Failed to delete RSS feed from S3");
         }
