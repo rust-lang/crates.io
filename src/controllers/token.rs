@@ -107,7 +107,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
         let max_token_per_user = 500;
         let count: i64 = ApiToken::belonging_to(user).count().get_result(conn)?;
         if count >= max_token_per_user {
-            return Err(bad_request(&format!(
+            return Err(bad_request(format!(
                 "maximum tokens per user is: {max_token_per_user}"
             )));
         }

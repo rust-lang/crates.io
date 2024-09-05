@@ -98,11 +98,11 @@ async fn verify_github_signature(
         .find(|key| key.key_identifier == req_key_id);
 
     let Some(key) = key else {
-        return Err(bad_request(&format!("unknown key id {req_key_id}")));
+        return Err(bad_request(format!("unknown key id {req_key_id}")));
     };
 
     if !key.is_current {
-        let error = bad_request(&format!("key id {req_key_id} is not a current key"));
+        let error = bad_request(format!("key id {req_key_id} is not a current key"));
         return Err(error);
     }
 
