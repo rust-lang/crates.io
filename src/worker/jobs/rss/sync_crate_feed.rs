@@ -52,7 +52,7 @@ impl BackgroundJob for SyncCrateFeed {
         })
         .await?;
 
-        let feed_id = FeedId::Crate { name: name.clone() };
+        let feed_id = FeedId::Crate { name };
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),
