@@ -80,33 +80,33 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
 
     for name in &crate_names {
         if let Some((id, _)) = existing_crates.get(name) {
-            info!(%name, "Deleting crate from the database");
+            info!("{name}: Deleting crate from the database…");
             if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
-                warn!(%name, %id, ?error, "Failed to delete crate from the database");
+                warn!(%id, "{name}: Failed to delete crate from the database: {error}");
             }
         } else {
-            info!(%name, "Skipping missing crate");
+            info!("{name}: Skipped missing crate");
         };
 
-        info!(%name, "Enqueuing index sync jobs");
+        info!("{name}: Enqueuing index sync jobs…");
         if let Err(error) = jobs::enqueue_sync_to_index(name, conn) {
-            warn!(%name, ?error, "Failed to enqueue index sync jobs");
+            warn!("{name}: Failed to enqueue index sync jobs: {error}");
         }
 
-        info!(%name, "Deleting crate files from S3");
+        info!("{name}: Deleting crate files from S3…");
         if let Err(error) = rt.block_on(store.delete_all_crate_files(name)) {
-            warn!(%name, ?error, "Failed to delete crate files from S3");
+            warn!("{name}: Failed to delete crate files from S3: {error}");
         }
 
-        info!(%name, "Deleting readme files from S3");
+        info!("{name}: Deleting readme files from S3…");
         if let Err(error) = rt.block_on(store.delete_all_readmes(name)) {
-            warn!(%name, ?error, "Failed to delete readme files from S3");
+            warn!("{name}: Failed to delete readme files from S3: {error}");
         }
 
-        info!(%name, "Deleting RSS feed from S3");
+        info!("{name}: Deleting RSS feed from S3…");
         let feed_id = FeedId::Crate { name };
         if let Err(error) = rt.block_on(store.delete_feed(&feed_id)) {
-            warn!(%name, ?error, "Failed to delete RSS feed from S3");
+            warn!("{name}: Failed to delete RSS feed from S3: {error}");
         }
     }
 
