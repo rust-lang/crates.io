@@ -1,26 +1,15 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
+use super::metadata::perform_version_yank_update;
 use super::version_and_crate;
 use crate::app::AppState;
-use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
-use crate::models::token::EndpointScope;
-use crate::models::Rights;
-use crate::models::{insert_version_owner_action, VersionAction};
-use crate::rate_limiter::LimitedAction;
-use crate::schema::versions;
 use crate::tasks::spawn_blocking;
-use crate::util::errors::{custom, version_not_found, AppResult};
-use crate::worker::jobs;
-use crate::worker::jobs::UpdateDefaultVersion;
+use crate::util::errors::{version_not_found, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
-use crates_io_worker::BackgroundJob;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use http::StatusCode;
-use tokio::runtime::Handle;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
 /// This does not delete a crate version, it makes the crate
@@ -66,57 +55,8 @@ async fn modify_yank(
     let conn = state.db_write().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let auth = AuthCheck::default()
-            .with_endpoint_scope(EndpointScope::Yank)
-            .for_crate(&crate_name)
-            .check(&req, conn)?;
-
-        state
-            .rate_limiter
-            .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, conn)?;
-
-        let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
-        let api_token_id = auth.api_token_id();
-        let user = auth.user();
-        let owners = krate.owners(conn)?;
-
-        if Handle::current().block_on(user.rights(&state, &owners))? < Rights::Publish {
-            if user.is_admin {
-                let action = if yanked { "yanking" } else { "unyanking" };
-                warn!(
-                    "Admin {} is {action} {}@{}",
-                    user.gh_login, krate.name, version.num
-                );
-            } else {
-                return Err(custom(
-                    StatusCode::FORBIDDEN,
-                    "must already be an owner to yank or unyank",
-                ));
-            }
-        }
-
-        if version.yanked == yanked {
-            // The crate is already in the state requested, nothing to do
-            return ok_true();
-        }
-
-        diesel::update(&version)
-            .set(versions::yanked.eq(yanked))
-            .execute(conn)?;
-
-        let action = if yanked {
-            VersionAction::Yank
-        } else {
-            VersionAction::Unyank
-        };
-
-        insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
-
-        jobs::enqueue_sync_to_index(&krate.name, conn)?;
-
-        UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
-
+        let (mut version, krate) = version_and_crate(conn, &crate_name, &version)?;
+        perform_version_yank_update(&state, &req, conn, &mut version, &krate, Some(yanked), None)?;
         ok_true()
     })
     .await
