@@ -16,9 +16,21 @@ pub async fn new_lib(parent_path: &Path, name: &str) -> anyhow::Result<()> {
 }
 
 #[allow(unstable_name_collisions)]
+pub async fn package(project_path: &Path) -> anyhow::Result<()> {
+    Command::new("cargo")
+        .args(["package"])
+        .current_dir(project_path)
+        .env("CARGO_TERM_COLOR", "always")
+        .status()
+        .await?
+        .exit_ok()
+        .map_err(Into::into)
+}
+
+#[allow(unstable_name_collisions)]
 pub async fn publish(project_path: &Path, token: &SecretString) -> anyhow::Result<()> {
     Command::new("cargo")
-        .args(["publish", "--registry", "staging", "--allow-dirty"])
+        .args(["publish", "--registry", "staging"])
         .current_dir(project_path)
         .env("CARGO_TERM_COLOR", "always")
         .env(
