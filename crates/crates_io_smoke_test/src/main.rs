@@ -52,26 +52,33 @@ async fn main() -> anyhow::Result<()> {
     let old_version = krate.max_version;
     let mut new_version = old_version.clone();
 
+    new_version.patch += 1;
+    info!(%old_version, %new_version, "Calculated new version number");
+
+    info!("Creating temporary working folder…");
+    let tempdir = tempdir().context("Failed to create temporary working folder")?;
+    debug!(tempdir.path = %tempdir.path().display());
+
+    info!("Creating `{}` project…", options.crate_name);
+    let project_path = create_project(tempdir.path(), &options.crate_name, &new_version)
+        .await
+        .context("Failed to create project")?;
+
     if options.skip_publish {
+        info!("Packaging crate file…");
+        cargo::package(&project_path)
+            .await
+            .context("Failed to run `cargo package`")?;
+
         info!("Skipping publish step");
     } else {
-        new_version.patch += 1;
-        info!(%old_version, %new_version, "Calculated new version number");
-
-        info!("Creating temporary working folder…");
-        let tempdir = tempdir().context("Failed to create temporary working folder")?;
-        debug!(tempdir.path = %tempdir.path().display());
-
-        info!("Creating `{}` project…", options.crate_name);
-        let project_path = create_project(tempdir.path(), &options.crate_name, &new_version)
-            .await
-            .context("Failed to create project")?;
-
         info!("Publishing to staging.crates.io…");
         cargo::publish(&project_path, &options.token)
             .await
             .context("Failed to run `cargo publish`")?;
     }
+
+    drop(tempdir);
 
     let version = new_version;
     info!(%version, "Checking staging.crates.io API for the new version…");
