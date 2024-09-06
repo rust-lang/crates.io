@@ -226,6 +226,14 @@ description = "test crate"
     }
 
     info!("Creating initial git commit…");
+    git::set_user_name(&project_path, "crates-io-smoke-test")
+        .await
+        .context("Failed to set git user name")?;
+
+    git::set_user_email(&project_path, "smoke-test@crates.io")
+        .await
+        .context("Failed to set git user email")?;
+
     git::add_all(&project_path)
         .await
         .context("Failed to add initial changes to git")?;
