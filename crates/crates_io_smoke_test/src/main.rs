@@ -1,6 +1,7 @@
 mod api;
 mod cargo;
 mod exit_status_ext;
+mod git;
 
 #[macro_use]
 extern crate tracing;
@@ -223,6 +224,15 @@ description = "test crate"
             .await
             .context("Failed to write `README.md` file content")?;
     }
+
+    info!("Creating initial git commit…");
+    git::add_all(&project_path)
+        .await
+        .context("Failed to add initial changes to git")?;
+
+    git::commit(&project_path, "initial commit")
+        .await
+        .context("Failed to commit initial changes")?;
 
     Ok(project_path)
 }
