@@ -20,7 +20,7 @@ thiserror = "=1.0.63"
 tracing = "=0.1.40"
 
 [dev-dependencies]
-anyhow = "=1.0.86"
+anyhow = "=1.0.87"
 claims = "=0.7.1"
 clap = { version = "=4.5.17", features = ["derive", "unicode", "wrap_help"] }
 indicatif = { version = "=0.17.8", features = ["rayon"] }
