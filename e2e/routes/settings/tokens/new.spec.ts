@@ -36,6 +36,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new');
 
     await page.fill('[data-test-name]', 'token-name');
+    await page.locator('[data-test-expiry]').selectOption('none');
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
@@ -64,6 +65,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new');
 
     await page.fill('[data-test-name]', 'token-name');
+    await page.locator('[data-test-expiry]').selectOption('none');
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-scope="yank"]');
 
@@ -152,14 +154,21 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   test('token expiry', async ({ page }) => {
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
-    await expect(page.locator('[data-test-expiry-description]')).toHaveText('The token will never expire');
-
-    await page.fill('[data-test-name]', 'token-name');
-    await page.locator('[data-test-expiry]').selectOption('30');
-
-    let expiryDate = new Date('2017-12-20T00:00:00');
+    await expect(page.locator('[data-test-name]')).toHaveValue('');
+    await expect(page.locator('[data-test-expiry]')).toHaveValue('90');
+    let expiryDate = new Date('2018-02-18T00:00:00');
     let expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
     let expectedDescription = `The token will expire on ${expectedDate}`;
+    await expect(page.locator('[data-test-expiry-description]')).toHaveText(expectedDescription);
+
+    await page.fill('[data-test-name]', 'token-name');
+    await page.locator('[data-test-expiry]').selectOption('none');
+    await expect(page.locator('[data-test-expiry-description]')).toHaveText('The token will never expire');
+
+    await page.locator('[data-test-expiry]').selectOption('30');
+    expiryDate = new Date('2017-12-20T00:00:00');
+    expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
+    expectedDescription = `The token will expire on ${expectedDate}`;
     await expect(page.locator('[data-test-expiry-description]')).toHaveText(expectedDescription);
 
     await page.click('[data-test-scope="publish-update"]');
@@ -190,9 +199,10 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   test('token expiry with custom date', async ({ page }) => {
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
-    await expect(page.locator('[data-test-expiry-description]')).toHaveText('The token will never expire');
 
     await page.fill('[data-test-name]', 'token-name');
+    await page.locator('[data-test-expiry]').selectOption('none');
+    await expect(page.locator('[data-test-expiry-description]')).toHaveText('The token will never expire');
     await page.locator('[data-test-expiry]').selectOption('custom');
     await expect(page.locator('[data-test-expiry-description]')).toHaveCount(0);
 
