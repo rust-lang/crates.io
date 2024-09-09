@@ -281,8 +281,8 @@ importers:
         specifier: 17.0.0
         version: 17.0.0
       postcss-preset-env:
-        specifier: 10.0.2
-        version: 10.0.2(postcss@8.4.45)
+        specifier: 10.0.3
+        version: 10.0.3(postcss@8.4.45)
       prettier:
         specifier: 3.3.3
         version: 3.3.3
@@ -3496,8 +3496,8 @@ packages:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
 
-  cssdb@8.1.0:
-    resolution: {integrity: sha512-BQN57lfS4dYt2iL0LgyrlDbefZKEtUyrO8rbzrbGrqBk6OoyNTQLF+porY9DrpDBjLo4NEvj2IJttC7vf3x+Ew==}
+  cssdb@8.1.1:
+    resolution: {integrity: sha512-kRbSRgZoxtZNl5snb3nOzBkFOt5AwnephcUTIEFc2DebKG9PN50/cHarlwOooTxYQ/gxsnKs3BxykhNLmfvyLg==}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -6917,11 +6917,11 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-opacity-percentage@2.0.0:
-    resolution: {integrity: sha512-lyDrCOtntq5Y1JZpBFzIWm2wG9kbEdujpNt4NLannF+J9c8CgFIzPa80YQfdza+Y+yFfzbYj/rfoOsYsooUWTQ==}
-    engines: {node: ^14 || ^16 || >=18}
+  postcss-opacity-percentage@3.0.0:
+    resolution: {integrity: sha512-K6HGVzyxUxd/VgZdX04DCtdwWJ4NGLG212US4/LA1TLAbHgmAsTWVR86o+gGIbFtnTkfOpb9sCRBx8K7HO66qQ==}
+    engines: {node: '>=18'}
     peerDependencies:
-      postcss: ^8.2
+      postcss: ^8.4
 
   postcss-overflow-shorthand@6.0.0:
     resolution: {integrity: sha512-BdDl/AbVkDjoTofzDQnwDdm/Ym6oS9KgmO7Gr+LHYjNWJ6ExORe4+3pcLQsLA9gIROMkiGVjjwZNoL/mpXHd5Q==}
@@ -6940,8 +6940,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.0.2:
-    resolution: {integrity: sha512-PMxqnz0RQYMUmUi6p4P7BhC9EVGyEUCIdwn4vJ7Fy1jvc2QP4mMH75BSBB1mBFqjl3x4xYwyCNMhGZ8y0+/qOA==}
+  postcss-preset-env@10.0.3:
+    resolution: {integrity: sha512-1nrZ4IeBXEEj53IMoRKE+k/Ub6nQb3gFjaxTeyUNG5zv3JQclFDY5GKKhAi3nsa1lnPMWgzQX+/1y6wUt2+I7Q==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -10767,26 +10767,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__array': 4.0.10(@babel/core@7.25.2)
-      '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12
-      '@types/ember__debug': 4.0.8
-      '@types/ember__engine': 4.0.11
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.25.2)
-      '@types/ember__utils': 4.0.7(@babel/core@7.25.2)
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.25.2)
@@ -10845,11 +10825,6 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.30
 
-  '@types/ember__component@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12
-
   '@types/ember__component@4.0.22(@babel/core@7.25.2)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.2)
@@ -10861,10 +10836,6 @@ snapshots:
   '@types/ember__controller@3.16.14':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__controller@4.0.12':
-    dependencies:
-      '@types/ember__object': 4.0.12
 
   '@types/ember__controller@4.0.12(@babel/core@7.25.2)':
     dependencies:
@@ -10878,11 +10849,6 @@ snapshots:
       '@types/ember__engine': 3.16.9
       '@types/ember__object': 3.12.13
 
-  '@types/ember__debug@4.0.8':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
-
   '@types/ember__debug@4.0.8(@babel/core@7.25.2)':
     dependencies:
       '@types/ember__object': 4.0.12(@babel/core@7.25.2)
@@ -10894,11 +10860,6 @@ snapshots:
   '@types/ember__engine@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__engine@4.0.11':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
 
   '@types/ember__engine@4.0.11(@babel/core@7.25.2)':
     dependencies:
@@ -10914,11 +10875,6 @@ snapshots:
 
   '@types/ember__object@3.12.13':
     dependencies:
-      '@types/rsvp': 4.0.9
-
-  '@types/ember__object@4.0.12':
-    dependencies:
-      '@types/ember': 4.0.11
       '@types/rsvp': 4.0.9
 
   '@types/ember__object@4.0.12(@babel/core@7.25.2)':
@@ -10942,28 +10898,17 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
-  '@types/ember__routing@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12
-      '@types/ember__object': 4.0.12
-      '@types/ember__service': 4.0.9
-
   '@types/ember__routing@4.0.22(@babel/core@7.25.2)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.2)
-      '@types/ember__controller': 4.0.12
+      '@types/ember__controller': 4.0.12(@babel/core@7.25.2)
       '@types/ember__object': 4.0.12(@babel/core@7.25.2)
-      '@types/ember__service': 4.0.9
+      '@types/ember__service': 4.0.9(@babel/core@7.25.2)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
-
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.25.2)':
     dependencies:
@@ -10975,10 +10920,6 @@ snapshots:
   '@types/ember__service@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__service@4.0.9':
-    dependencies:
-      '@types/ember__object': 4.0.12
 
   '@types/ember__service@4.0.9(@babel/core@7.25.2)':
     dependencies:
@@ -13000,7 +12941,7 @@ snapshots:
 
   css-what@6.1.0: {}
 
-  cssdb@8.1.0: {}
+  cssdb@8.1.1: {}
 
   cssesc@3.0.0: {}
 
@@ -17660,7 +17601,7 @@ snapshots:
       postcss: 8.4.45
       postcss-selector-parser: 6.1.2
 
-  postcss-opacity-percentage@2.0.0(postcss@8.4.45):
+  postcss-opacity-percentage@3.0.0(postcss@8.4.45):
     dependencies:
       postcss: 8.4.45
 
@@ -17678,7 +17619,7 @@ snapshots:
       postcss: 8.4.45
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.0.2(postcss@8.4.45):
+  postcss-preset-env@10.0.3(postcss@8.4.45):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.0(postcss@8.4.45)
       '@csstools/postcss-color-function': 4.0.2(postcss@8.4.45)
@@ -17715,7 +17656,7 @@ snapshots:
       css-blank-pseudo: 7.0.0(postcss@8.4.45)
       css-has-pseudo: 7.0.0(postcss@8.4.45)
       css-prefers-color-scheme: 10.0.0(postcss@8.4.45)
-      cssdb: 8.1.0
+      cssdb: 8.1.1
       postcss: 8.4.45
       postcss-attribute-case-insensitive: 7.0.0(postcss@8.4.45)
       postcss-clamp: 4.1.0(postcss@8.4.45)
@@ -17735,7 +17676,7 @@ snapshots:
       postcss-lab-function: 7.0.2(postcss@8.4.45)
       postcss-logical: 8.0.0(postcss@8.4.45)
       postcss-nesting: 13.0.0(postcss@8.4.45)
-      postcss-opacity-percentage: 2.0.0(postcss@8.4.45)
+      postcss-opacity-percentage: 3.0.0(postcss@8.4.45)
       postcss-overflow-shorthand: 6.0.0(postcss@8.4.45)
       postcss-page-break: 3.0.4(postcss@8.4.45)
       postcss-place: 10.0.0(postcss@8.4.45)
