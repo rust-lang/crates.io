@@ -43,7 +43,7 @@ pub async fn versions(
             pagination = Some(
                 PaginationOptions::builder()
                     .enable_seek(true)
-                    .enable_pages(false)
+                    .enable_pages(true)
                     .gather(&req)?,
             );
         }
@@ -96,17 +96,17 @@ fn list_by_date(
         .into_boxed();
 
     if let Some(options) = options {
-        assert!(
-            !matches!(&options.page, Page::Numeric(_)),
-            "?page= is not supported"
-        );
-        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.after(&options.page)? {
+        if let Page::Numeric(page) = options.page {
+            query = query.offset((page.saturating_sub(1) as i64).saturating_mul(options.per_page));
+        } else if let Some(SeekPayload::Date(Date { created_at, id })) =
+            Seek::Date.after(&options.page)?
+        {
             query = query.filter(
                 versions::created_at
                     .eq(created_at)
                     .and(versions::id.lt(id))
                     .or(versions::created_at.lt(created_at)),
-            )
+            );
         }
         query = query.limit(options.per_page);
     }
@@ -114,10 +114,19 @@ fn list_by_date(
     query = query.order((versions::created_at.desc(), versions::id.desc()));
 
     let data: Vec<(Version, Option<User>)> = query.load(conn)?;
-    let mut next_page = None;
-    if let Some(options) = options {
-        next_page = next_seek_params(&data, options, |last| Seek::Date.to_payload(last))?
-            .map(|p| req.query_with_params(p));
+    let (next_page, prev_page) = match options.map(|opt| &opt.page) {
+        Some(Page::Numeric(_)) => (
+            next_page_params(&data, options.expect("options")).map(|p| req.query_with_params(p)),
+            prev_page_params(options.expect("options")).map(|p| req.query_with_params(p)),
+        ),
+        Some(Page::Unspecified) | Some(Page::Seek(_)) => (
+            next_seek_params(&data, options.expect("options"), |last| {
+                Seek::Date.to_payload(last)
+            })?
+            .map(|p| req.query_with_params(p)),
+            None,
+        ),
+        None => (None, None),
     };
 
     // Since the total count is retrieved through an additional query, to maintain consistency
@@ -133,7 +142,11 @@ fn list_by_date(
 
     Ok(PaginatedVersionsAndPublishers {
         data,
-        meta: ResponseMeta { total, next_page },
+        meta: ResponseMeta {
+            total,
+            next_page,
+            prev_page,
+        },
     })
 }
 
@@ -172,19 +185,27 @@ fn list_by_semver(
         }
         sorted_versions.sort_by_cached_key(|_, (num, _)| Reverse(semver::Version::parse(num).ok()));
 
-        assert!(
-            !matches!(&options.page, Page::Numeric(_)),
-            "?page= is not supported"
-        );
-        let mut idx = Some(0);
-        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
-            idx = sorted_versions
+        let idx = if let Page::Numeric(page) = options.page {
+            Some((page.saturating_sub(1) as usize).saturating_mul(options.per_page as usize))
+        } else if let Some(SeekPayload::Semver(Semver { id })) =
+            Seek::Semver.after(&options.page)?
+        {
+            sorted_versions
                 .get_index_of(&id)
                 .filter(|i| i + 1 < sorted_versions.len())
-                .map(|i| i + 1);
-        }
-        if let Some(start) = idx {
-            let end = (start + options.per_page as usize).min(sorted_versions.len());
+                .map(|i| i + 1)
+        } else {
+            Some(0)
+        };
+
+        // Only make query while end > start
+        if let Some((start, end)) = idx
+            .map(|start| {
+                let end = (start + options.per_page as usize).min(sorted_versions.len());
+                (start, end)
+            })
+            .filter(|(start, end)| end > start)
+        {
             let ids = sorted_versions[start..end]
                 .keys()
                 .cloned()
@@ -222,10 +243,19 @@ fn list_by_semver(
         (data, total)
     };
 
-    let mut next_page = None;
-    if let Some(options) = options {
-        next_page = next_seek_params(&data, options, |last| Seek::Semver.to_payload(last))?
-            .map(|p| req.query_with_params(p))
+    let (next_page, prev_page) = match options.map(|opt| &opt.page) {
+        Some(Page::Numeric(_)) => (
+            next_page_params(&data, options.expect("options")).map(|p| req.query_with_params(p)),
+            prev_page_params(options.expect("options")).map(|p| req.query_with_params(p)),
+        ),
+        Some(Page::Unspecified) | Some(Page::Seek(_)) => (
+            next_seek_params(&data, options.expect("options"), |last| {
+                Seek::Semver.to_payload(last)
+            })?
+            .map(|p| req.query_with_params(p)),
+            None,
+        ),
+        None => (None, None),
     };
 
     Ok(PaginatedVersionsAndPublishers {
@@ -233,6 +263,7 @@ fn list_by_semver(
         meta: ResponseMeta {
             total: total as i64,
             next_page,
+            prev_page,
         },
     })
 }
@@ -269,6 +300,31 @@ mod seek {
     }
 }
 
+fn next_page_params<T>(
+    records: &[T],
+    options: &PaginationOptions,
+) -> Option<IndexMap<String, String>> {
+    if records.len() < options.per_page as usize {
+        return None;
+    }
+
+    let mut opts = IndexMap::new();
+    match options.page {
+        Page::Numeric(n) => opts.insert("page".into(), (n + 1).to_string()),
+        Page::Unspecified | Page::Seek(_) => return None,
+    };
+    Some(opts)
+}
+
+fn prev_page_params(options: &PaginationOptions) -> Option<IndexMap<String, String>> {
+    let mut opts = IndexMap::new();
+    match options.page {
+        Page::Numeric(1) | Page::Unspecified | Page::Seek(_) => return None,
+        Page::Numeric(n) => opts.insert("page".into(), (n - 1).to_string()),
+    };
+    Some(opts)
+}
+
 fn next_seek_params<T, S, F>(
     records: &[T],
     options: &PaginationOptions,
@@ -302,4 +358,5 @@ struct PaginatedVersionsAndPublishers {
 struct ResponseMeta {
     total: i64,
     next_page: Option<String>,
+    prev_page: Option<String>,
 }
