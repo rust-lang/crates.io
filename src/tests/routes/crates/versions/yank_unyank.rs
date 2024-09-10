@@ -1,8 +1,9 @@
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{RequestHelper, Response, TestApp};
-use crate::tests::OkBool;
+use crate::tests::{OkBool, VersionResponse};
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde_json::json;
 
 pub trait YankRequestHelper {
     /// Yank the specified version of the specified crate and run all pending background jobs
@@ -10,6 +11,15 @@ pub trait YankRequestHelper {
 
     /// Unyank the specified version of the specified crate and run all pending background jobs
     async fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool>;
+
+    /// Update the yank status of the specified version of the specified crate with a patch request and run all pending background jobs
+    async fn update_yank_status(
+        &self,
+        krate_name: &str,
+        version: &str,
+        yanked: Option<bool>,
+        yank_message: Option<&str>,
+    ) -> Response<VersionResponse>;
 }
 
 impl<T: RequestHelper> YankRequestHelper for T {
@@ -23,6 +33,28 @@ impl<T: RequestHelper> YankRequestHelper for T {
     async fn unyank(&self, krate_name: &str, version: &str) -> Response<OkBool> {
         let url = format!("/api/v1/crates/{krate_name}/{version}/unyank");
         let response = self.put(&url, &[] as &[u8]).await;
+        self.app().run_pending_background_jobs().await;
+        response
+    }
+
+    async fn update_yank_status(
+        &self,
+        krate_name: &str,
+        version: &str,
+        yanked: Option<bool>,
+        yank_message: Option<&str>,
+    ) -> Response<VersionResponse> {
+        let url = format!("/api/v1/crates/{krate_name}/{version}");
+
+        let json_body = json!({
+            "version": {
+                "yanked": yanked,
+                "yank_message": yank_message
+            }
+        });
+        let body = serde_json::to_string(&json_body).expect("Failed to serialize JSON body");
+
+        let response = self.patch(&url, body).await;
         self.app().run_pending_background_jobs().await;
         response
     }

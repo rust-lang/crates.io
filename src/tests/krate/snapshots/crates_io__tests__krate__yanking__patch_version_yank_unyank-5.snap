@@ -1,0 +1,84 @@
+---
+source: src/tests/krate/yanking.rs
+expression: json
+---
+{
+  "version": {
+    "id": 1,
+    "crate": "patchable",
+    "num": "1.0.0",
+    "dl_path": "/api/v1/crates/patchable/1.0.0/download",
+    "readme_path": "/api/v1/crates/patchable/1.0.0/readme",
+    "updated_at": "[datetime]",
+    "created_at": "[datetime]",
+    "downloads": 0,
+    "features": {},
+    "yanked": false,
+    "yank_message": null,
+    "lib_links": null,
+    "license": "MIT",
+    "links": {
+      "dependencies": "/api/v1/crates/patchable/1.0.0/dependencies",
+      "version_downloads": "/api/v1/crates/patchable/1.0.0/downloads",
+      "authors": "/api/v1/crates/patchable/1.0.0/authors"
+    },
+    "crate_size": 151,
+    "published_by": {
+      "id": 1,
+      "login": "foo",
+      "name": null,
+      "avatar": null,
+      "url": "https://github.com/foo"
+    },
+    "audit_actions": [
+      {
+        "action": "publish",
+        "user": {
+          "id": 1,
+          "login": "foo",
+          "name": null,
+          "avatar": null,
+          "url": "https://github.com/foo"
+        },
+        "time": "[datetime]"
+      },
+      {
+        "action": "yank",
+        "user": {
+          "id": 1,
+          "login": "foo",
+          "name": null,
+          "avatar": null,
+          "url": "https://github.com/foo"
+        },
+        "time": "[datetime]"
+      },
+      {
+        "action": "yank",
+        "user": {
+          "id": 1,
+          "login": "foo",
+          "name": null,
+          "avatar": null,
+          "url": "https://github.com/foo"
+        },
+        "time": "[datetime]"
+      },
+      {
+        "action": "unyank",
+        "user": {
+          "id": 1,
+          "login": "foo",
+          "name": null,
+          "avatar": null,
+          "url": "https://github.com/foo"
+        },
+        "time": "[datetime]"
+      }
+    ],
+    "checksum": "ddfc395ab340f413ee1d1ed0afce51a7c9df1c99c551fed5aef76edd4abe4048",
+    "rust_version": null,
+    "has_lib": false,
+    "bin_names": []
+  }
+}

@@ -56,7 +56,7 @@ pub struct CrateResponse {
     versions: Option<Vec<EncodableVersion>>,
     keywords: Option<Vec<EncodableKeyword>>,
 }
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct VersionResponse {
     version: EncodableVersion,
 }
