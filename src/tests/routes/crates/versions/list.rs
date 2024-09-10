@@ -87,6 +87,7 @@ async fn test_sorting() {
     });
 
     // Sort by semver
+    // without paginatino
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
     let json: AllVersions = anon.get(url).await.good();
     let expects = [
@@ -100,10 +101,9 @@ async fn test_sorting() {
         "1.0.0-alpha.1",
         "1.0.0-alpha",
     ];
-    for (num, expect) in nums(&json.versions).iter().zip(expects) {
-        assert_eq!(num, expect);
-    }
-    let (resp, calls) = page_with_seek(&anon, url).await;
+    assert_eq!(nums(&json.versions), expects);
+    // with pagination
+    let [_, (resp, calls)] = page_both(&anon, url, 1).await;
     for (json, expect) in resp.iter().zip(expects) {
         assert_eq!(json.versions[0].num, expect);
         assert_eq!(json.meta.total as usize, expects.len());
@@ -111,13 +111,13 @@ async fn test_sorting() {
     assert_eq!(calls as usize, expects.len() + 1);
 
     // Sort by date
+    // without paginatino
     let url = "/api/v1/crates/foo_versions/versions?sort=date";
     let json: AllVersions = anon.get(url).await.good();
     let expects = versions.iter().cloned().rev().collect::<Vec<_>>();
-    for (num, expect) in nums(&json.versions).iter().zip(&expects) {
-        assert_eq!(num, *expect);
-    }
-    let (resp, calls) = page_with_seek(&anon, url).await;
+    assert_eq!(nums(&json.versions), expects);
+    // with pagination
+    let [_, (resp, calls)] = page_both(&anon, url, 1).await;
     for (json, expect) in resp.iter().zip(&expects) {
         assert_eq!(json.versions[0].num, *expect);
         assert_eq!(json.meta.total as usize, expects.len());
@@ -248,9 +248,44 @@ fn nums(versions: &[EncodableVersion]) -> Vec<String> {
     versions.iter().map(|v| v.num.to_owned()).collect()
 }
 
-async fn page_with_seek<U: RequestHelper>(anon: &U, url: &str) -> (Vec<VersionList>, i32) {
+// Pagination with both offset-based (prepend with `page=1` query) and seek-based pagination
+async fn page_both<U: RequestHelper>(
+    anon: &U,
+    query: &str,
+    per_page: usize,
+) -> [(Vec<VersionList>, i32); 2] {
+    let ((offset_resps, offset_calls), (seek_resps, seek_calls)) = (
+        page_with(Pagination::Offset, anon, query, per_page).await,
+        page_with(Pagination::Seek, anon, query, per_page).await,
+    );
+    assert_eq!(offset_calls, seek_calls);
+    for (offset, seek) in offset_resps
+        .iter()
+        .flat_map(|resp| &resp.versions)
+        .zip(seek_resps.iter().flat_map(|resp| &resp.versions))
+    {
+        assert_eq!(offset.num, seek.num);
+    }
+    [(offset_resps, offset_calls), (seek_resps, seek_calls)]
+}
+
+enum Pagination {
+    Offset,
+    Seek,
+}
+
+async fn page_with<U: RequestHelper>(
+    pagination: Pagination,
+    anon: &U,
+    url: &str,
+    per_page: usize,
+) -> (Vec<VersionList>, i32) {
     let (url_without_query, query) = url.split_once('?').unwrap_or((url, ""));
-    let mut url = Some(format!("{url_without_query}?per_page=1&{query}"));
+    let is_offset = matches!(pagination, Pagination::Offset);
+    let mut url = Some(format!(
+        "{url_without_query}?per_page={per_page}{page}&{query}",
+        page = if is_offset { "&page=1" } else { "" }
+    ));
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
@@ -261,8 +296,13 @@ async fn page_with_seek<U: RequestHelper>(anon: &U, url: &str) -> (Vec<VersionLi
         }
 
         if let Some(ref new_url) = resp.meta.next_page {
-            assert!(new_url.contains("seek="));
-            assert_that!(resp.versions, len(eq(1)));
+            let expect_page = if is_offset {
+                &format!("page={}", calls + 1)
+            } else {
+                "seek="
+            };
+            assert!(new_url.contains(expect_page));
+            assert_that!(resp.versions, len(eq(per_page)));
             url = Some(format!("{url_without_query}{}", new_url));
             assert_ne!(resp.meta.total, 0)
         } else {
