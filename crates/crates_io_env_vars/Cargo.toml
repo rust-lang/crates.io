@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.87"
+anyhow = "=1.0.88"
 dotenvy = "=0.15.7"
 
 [dev-dependencies]
