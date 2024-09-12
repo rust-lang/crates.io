@@ -97,7 +97,7 @@ export default class NewTokenController extends Controller {
   reset() {
     this.name = '';
     this.nameInvalid = false;
-    this.expirySelection = 'none';
+    this.expirySelection = '90';
     this.expiryDateInput = null;
     this.expiryDateInvalid = false;
     this.scopes = [];

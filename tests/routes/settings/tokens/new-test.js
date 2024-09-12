@@ -56,6 +56,7 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
 
     await fillIn('[data-test-name]', 'token-name');
+    await select('[data-test-expiry]', 'none');
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
@@ -81,6 +82,7 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new');
 
     await fillIn('[data-test-name]', 'token-name');
+    await select('[data-test-expiry]', 'none');
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-scope="yank"]');
 
@@ -150,14 +152,22 @@ module('/settings/tokens/new', function (hooks) {
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
-    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
-
-    await fillIn('[data-test-name]', 'token-name');
-    await select('[data-test-expiry]', '30');
-
-    let expiryDate = new Date('2017-12-20T00:00:00');
+    assert.dom('[data-test-name]').hasValue('');
+    assert.dom('[data-test-expiry]').hasValue('90');
+    let expiryDate = new Date('2018-02-18T00:00:00');
     let expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
     let expectedDescription = `The token will expire on ${expectedDate}`;
+    assert.dom('[data-test-expiry-description]').hasText(expectedDescription);
+
+    await fillIn('[data-test-name]', 'token-name');
+
+    await select('[data-test-expiry]', 'none');
+    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
+
+    await select('[data-test-expiry]', '30');
+    expiryDate = new Date('2017-12-20T00:00:00');
+    expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
+    expectedDescription = `The token will expire on ${expectedDate}`;
     assert.dom('[data-test-expiry-description]').hasText(expectedDescription);
 
     await click('[data-test-scope="publish-update"]');
@@ -183,9 +193,10 @@ module('/settings/tokens/new', function (hooks) {
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
-    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
 
     await fillIn('[data-test-name]', 'token-name');
+    await select('[data-test-expiry]', 'none');
+    assert.dom('[data-test-expiry-description]').hasText('The token will never expire');
     await select('[data-test-expiry]', 'custom');
     assert.dom('[data-test-expiry-description]').doesNotExist();
 
