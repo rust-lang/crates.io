@@ -190,7 +190,7 @@ impl Email for PublishNotificationEmail<'_> {
 
 A new version of the package {krate} ({version}) was published{publisher_info} at {publish_time}.
 
-If you have questions or security concerns, you can contact us at help@crates.io."
+If you have questions or security concerns, you can contact us at help@crates.io. If you would like to stop receiving these security notifications, you can disable them in your account settings."
         )
     }
 }
