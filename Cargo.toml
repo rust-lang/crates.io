@@ -52,7 +52,7 @@ slow-tests = []
 anyhow = "=1.0.88"
 async-trait = "=0.1.82"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
-aws-ip-ranges = "=0.812.0"
+aws-ip-ranges = "=0.814.0"
 aws-sdk-cloudfront = "=1.44.0"
 aws-sdk-sqs = "=1.42.0"
 axum = { version = "=0.7.5", features = ["macros", "matched-path"] }
