@@ -558,6 +558,7 @@ pub struct EncodableVersion {
     pub downloads: i32,
     pub features: serde_json::Value,
     pub yanked: bool,
+    pub yank_message: Option<String>,
     pub lib_links: Option<String>,
     // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
@@ -586,6 +587,7 @@ impl EncodableVersion {
             downloads,
             features,
             yanked,
+            yank_message,
             links: lib_links,
             license,
             crate_size,
@@ -613,6 +615,7 @@ impl EncodableVersion {
             downloads,
             features,
             yanked,
+            yank_message,
             lib_links,
             license,
             links,
@@ -736,6 +739,7 @@ mod tests {
             downloads: 0,
             features: serde_json::from_str("{}").unwrap(),
             yanked: false,
+            yank_message: None,
             license: None,
             lib_links: None,
             links: EncodableVersionLinks {

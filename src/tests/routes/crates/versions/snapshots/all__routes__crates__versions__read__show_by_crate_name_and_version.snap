@@ -33,6 +33,7 @@ expression: json
     "readme_path": "/api/v1/crates/foo_vers_show/2.0.0/readme",
     "rust_version": "1.64",
     "updated_at": "[datetime]",
+    "yank_message": null,
     "yanked": false
   }
 }

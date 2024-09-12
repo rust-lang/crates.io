@@ -51,6 +51,7 @@ expression: response.json()
       "readme_path": "/api/v1/crates/c2/1.1.0/readme",
       "rust_version": null,
       "updated_at": "[datetime]",
+      "yank_message": null,
       "yanked": false
     }
   ]
