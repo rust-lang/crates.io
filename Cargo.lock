@@ -2729,9 +2729,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "lettre"
-version = "0.11.8"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1658ac89b01055e3ba23d66ecf6f8b97388ebe34ce125e49f8ef71234fb8aaba"
+checksum = "69f204773bab09b150320ea1c83db41dc6ee606a4bc36dc1f43005fe7b58ce06"
 dependencies = [
  "base64 0.22.1",
  "chumsky",
