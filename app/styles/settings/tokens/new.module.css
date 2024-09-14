@@ -10,6 +10,12 @@
     font-weight: 600;
 }
 
+.select-group {
+    display: flex;
+    align-content: center;
+    align-items: center;
+}
+
 .help-link {
     flex-shrink: 0;
     color: light-dark(var(--grey600), var(--grey700));
