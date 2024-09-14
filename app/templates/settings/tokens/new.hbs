@@ -30,41 +30,45 @@
   <div local-class="form-group" data-test-expiry-group>
     {{#let (unique-id) as |id|}}
       <label for={{id}} local-class="form-group-name">Expiration</label>
-
-      <select
-        id={{id}}
-        disabled={{this.saveTokenTask.isRunning}}
-        local-class="expiry-select"
-        data-test-expiry
-        {{on "change" this.updateExpirySelection}}
-      >
-        <option value="none">No expiration</option>
-        <option value="7">7 days</option>
-        <option value="30">30 days</option>
-        <option value="60">60 days</option>
-        <option value="90" selected>90 days</option>
-        <option value="365">365 days</option>
-        <option value="custom">Custom...</option>
-      </select>
     {{/let}}
 
-    {{#if (eq this.expirySelection "custom")}}
-      <Input
-        @type="date"
-        @value={{this.expiryDateInput}}
-        min={{this.today}}
-        disabled={{this.saveTokenTask.isRunning}}
-        aria-invalid={{if this.expiryDateInvalid "true" "false"}}
-        aria-label="Custom expiration date"
-        local-class="expiry-date-input"
-        data-test-expiry-date
-        {{on "input" this.resetExpiryDateValidation}}
-      />
-    {{else}}
-      <span local-class="expiry-description" data-test-expiry-description>
-        {{this.expiryDescription}}
-      </span>
-    {{/if}}
+    <div local-class="select-group">
+      {{#let (unique-id) as |id|}}
+        <select
+          id={{id}}
+          disabled={{this.saveTokenTask.isRunning}}
+          local-class="expiry-select"
+          data-test-expiry
+          {{on "change" this.updateExpirySelection}}
+        >
+          <option value="none">No expiration</option>
+          <option value="7">7 days</option>
+          <option value="30">30 days</option>
+          <option value="60">60 days</option>
+          <option value="90" selected>90 days</option>
+          <option value="365">365 days</option>
+          <option value="custom">Custom...</option>
+        </select>
+      {{/let}}
+
+      {{#if (eq this.expirySelection "custom")}}
+        <Input
+          @type="date"
+          @value={{this.expiryDateInput}}
+          min={{this.today}}
+          disabled={{this.saveTokenTask.isRunning}}
+          aria-invalid={{if this.expiryDateInvalid "true" "false"}}
+          aria-label="Custom expiration date"
+          local-class="expiry-date-input"
+          data-test-expiry-date
+          {{on "input" this.resetExpiryDateValidation}}
+        />
+      {{else}}
+        <span local-class="expiry-description" data-test-expiry-description>
+          {{this.expiryDescription}}
+        </span>
+      {{/if}}
+    </div>
   </div>
 
   <div local-class="form-group" data-test-scopes-group>
