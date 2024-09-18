@@ -130,7 +130,7 @@ unicode-xid = "=0.2.5"
 zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
-bytes = "=1.7.1"
+bytes = "=1.7.2"
 crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
