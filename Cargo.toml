@@ -107,7 +107,7 @@ rand = "=0.8.5"
 reqwest = { version = "=0.12.7", features = ["blocking", "gzip", "json"] }
 rss = { version = "=2.0.9", default-features = false, features = ["atom"] }
 scheduled-thread-pool = "=0.2.7"
-secrecy = "=0.8.0"
+secrecy = "=0.10.1"
 semver = { version = "=1.0.23", features = ["serde"] }
 sentry = { version = "=0.34.0", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
 serde = { version = "=1.0.210", features = ["derive"] }
