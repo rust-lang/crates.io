@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::{Email, NewEmail};
-use crate::schema::emails;
+use crate::schema::{emails, users};
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use axum::extract::Path;
@@ -23,6 +23,7 @@ pub struct UserUpdate {
 #[derive(Deserialize)]
 pub struct User {
     email: Option<String>,
+    publish_notifications: Option<bool>,
 }
 
 /// Handles the `PUT /users/:user_id` route.
@@ -44,45 +45,67 @@ pub async fn update_user(
             return Err(bad_request("current user does not match requested user"));
         }
 
-        let user_email = match &user_update.user.email {
-            Some(email) => email.trim(),
-            None => return Err(bad_request("empty email rejected")),
-        };
+        if let Some(publish_notifications) = &user_update.user.publish_notifications {
+            if user.publish_notifications != *publish_notifications {
+                diesel::update(user)
+                    .set(users::publish_notifications.eq(*publish_notifications))
+                    .execute(conn)?;
 
-        if user_email.is_empty() {
-            return Err(bad_request("empty email rejected"));
+                if !publish_notifications {
+                    let email_address = user.verified_email(conn)?;
+
+                    if let Some(email_address) = email_address {
+                        let email = PublishNotificationsUnsubscribeEmail {
+                            user_name: &user.gh_login,
+                            domain: &state.emails.domain,
+                        };
+
+                        if let Err(error) = state.emails.send(&email_address, email) {
+                            warn!("Failed to send publish notifications unsubscribe email to {email_address}: {error}");
+                        }
+                    }
+                }
+            }
         }
 
-        user_email
-            .parse::<Address>()
-            .map_err(|_| bad_request("invalid email address"))?;
+        if let Some(user_email) = &user_update.user.email {
+            let user_email = user_email.trim();
 
-        let new_email = NewEmail {
-            user_id: user.id,
-            email: user_email,
-        };
+            if user_email.is_empty() {
+                return Err(bad_request("empty email rejected"));
+            }
 
-        let token = diesel::insert_into(emails::table)
-            .values(&new_email)
-            .on_conflict(emails::user_id)
-            .do_update()
-            .set(&new_email)
-            .returning(emails::token)
-            .get_result(conn)
-            .map(SecretString::new)
-            .map_err(|_| server_error("Error in creating token"))?;
+            user_email
+                .parse::<Address>()
+                .map_err(|_| bad_request("invalid email address"))?;
 
-        // This swallows any errors that occur while attempting to send the email. Some users have
-        // an invalid email set in their GitHub profile, and we should let them sign in even though
-        // we're trying to silently use their invalid address during signup and can't send them an
-        // email. They'll then have to provide a valid email address.
-        let email = UserConfirmEmail {
-            user_name: &user.gh_login,
-            domain: &state.emails.domain,
-            token,
-        };
+            let new_email = NewEmail {
+                user_id: user.id,
+                email: user_email,
+            };
 
-        let _ = state.emails.send(user_email, email);
+            let token = diesel::insert_into(emails::table)
+                .values(&new_email)
+                .on_conflict(emails::user_id)
+                .do_update()
+                .set(&new_email)
+                .returning(emails::token)
+                .get_result(conn)
+                .map(SecretString::new)
+                .map_err(|_| server_error("Error in creating token"))?;
+
+            // This swallows any errors that occur while attempting to send the email. Some users have
+            // an invalid email set in their GitHub profile, and we should let them sign in even though
+            // we're trying to silently use their invalid address during signup and can't send them an
+            // email. They'll then have to provide a valid email address.
+            let email = UserConfirmEmail {
+                user_name: &user.gh_login,
+                domain: &state.emails.domain,
+                token,
+            };
+
+            let _ = state.emails.send(user_email, email);
+        }
 
         ok_true()
     })
@@ -151,6 +174,28 @@ https://{domain}/confirm/{token}",
             user_name = self.user_name,
             domain = self.domain,
             token = self.token.expose_secret(),
+        )
+    }
+}
+
+pub struct PublishNotificationsUnsubscribeEmail<'a> {
+    pub user_name: &'a str,
+    pub domain: &'a str,
+}
+
+impl crate::email::Email for PublishNotificationsUnsubscribeEmail<'_> {
+    fn subject(&self) -> String {
+        "crates.io: Unsubscribed from publish notifications".into()
+    }
+
+    fn body(&self) -> String {
+        let Self { user_name, domain } = self;
+        format!(
+            "Hello {user_name}!
+
+You have been unsubscribed from publish notifications.
+
+If you would like to resubscribe, please visit https://{domain}/settings/profile",
         )
     }
 }

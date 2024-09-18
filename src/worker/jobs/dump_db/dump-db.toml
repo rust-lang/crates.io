@@ -193,6 +193,7 @@ gh_id = "public"
 account_lock_reason = "private"
 account_lock_until = "private"
 is_admin = "private"
+publish_notifications = "private"
 [users.column_defaults]
 gh_access_token = "''"
 

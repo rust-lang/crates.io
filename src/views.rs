@@ -468,6 +468,7 @@ pub struct EncodablePrivateUser {
     pub avatar: Option<String>,
     pub url: Option<String>,
     pub is_admin: bool,
+    pub publish_notifications: bool,
 }
 
 impl EncodablePrivateUser {
@@ -484,6 +485,7 @@ impl EncodablePrivateUser {
             gh_login,
             gh_avatar,
             is_admin,
+            publish_notifications,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
@@ -498,6 +500,7 @@ impl EncodablePrivateUser {
             name,
             url: Some(url),
             is_admin,
+            publish_notifications,
         }
     }
 }

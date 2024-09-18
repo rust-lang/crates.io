@@ -34,7 +34,43 @@
 }
 
 .me-email {
-    margin-bottom: var(--space-s);
+    margin-bottom: var(--space-m);
     display: flex;
     flex-direction: column;
+}
+
+.notifications {
+    margin-bottom: var(--space-s);
+}
+
+.checkbox-input {
+    display: grid;
+    grid-template:
+        "checkbox label" auto
+        "- note" auto /
+        auto 1fr;
+    row-gap: var(--space-3xs);
+    column-gap: var(--space-xs);
+}
+
+.label {
+    grid-area: label;
+    font-weight: bold;
+}
+
+.note {
+    grid-area: note;
+    display: block;
+    font-size: 85%;
+}
+
+.buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    margin-top: var(--space-s);
+}
+
+.update-prefs-button {
+    composes: yellow-button small from '../shared/buttons.module.css';
 }

@@ -31,4 +31,37 @@
       data-test-email-input
     />
   </div>
+
+  <div local-class="notifications" data-test-notifications>
+    <h2>Notification Settings</h2>
+
+    <label local-class="checkbox-input">
+      <Input
+        @type="checkbox"
+        @checked={{this.publishNotifications}}
+        disabled={{this.updateNotificationSettings.isRunning}}
+        {{on "change" this.handleNotificationsChange}}
+      />
+      <span local-class="label">Publish Notifications</span>
+      <span local-class="note">
+        Publish notifications are sent to your email address whenever new
+        versions of a crate that you own are published. These can be useful to
+        quickly detect compromised accounts or API tokens.
+      </span>
+    </label>
+
+    <div local-class="buttons">
+      <button
+        type="button"
+        local-class="update-prefs-button"
+        disabled={{this.updateNotificationSettings.isRunning}}
+        {{on "click" (perform this.updateNotificationSettings)}}
+      >
+        Update preferences
+      </button>
+      {{#if this.updateNotificationSettings.isRunning}}
+        <LoadingSpinner local-class="spinner" data-test-spinner />
+      {{/if}}
+    </div>
+  </div>
 </SettingsPage>

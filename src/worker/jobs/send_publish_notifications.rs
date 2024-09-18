@@ -49,6 +49,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .filter(crate_owners::owner_kind.eq(OwnerKind::User))
             .filter(crate_owners::crate_id.eq(publish_details.crate_id))
             .inner_join(users::table)
+            .filter(users::publish_notifications.eq(true))
             .inner_join(emails::table.on(users::id.eq(emails::user_id)))
             .filter(emails::verified.eq(true))
             .select((users::gh_login, emails::email))
@@ -189,7 +190,7 @@ impl Email for PublishNotificationEmail<'_> {
 
 A new version of the package {krate} ({version}) was published{publisher_info} at {publish_time}.
 
-If you have questions or security concerns, you can contact us at help@crates.io."
+If you have questions or security concerns, you can contact us at help@crates.io. If you would like to stop receiving these security notifications, you can disable them in your account settings."
         )
     }
 }

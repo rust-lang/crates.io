@@ -16,6 +16,7 @@ export default class User extends Model {
   @attr avatar;
   @attr url;
   @attr kind;
+  @attr publish_notifications;
 
   async stats() {
     return await waitForPromise(apiAction(this, { method: 'GET', path: 'stats' }));
@@ -30,6 +31,17 @@ export default class User extends Model {
         email,
         email_verified: false,
         email_verification_sent: true,
+      },
+    });
+  }
+
+  async updatePublishNotifications(enabled) {
+    await waitForPromise(apiAction(this, { method: 'PUT', data: { user: { publish_notifications: enabled } } }));
+
+    this.store.pushPayload({
+      user: {
+        id: this.id,
+        publish_notifications: enabled,
       },
     });
   }

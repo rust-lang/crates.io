@@ -24,6 +24,20 @@ module('Mirage | PUT /api/v1/users/:id', function (hooks) {
     assert.strictEqual(user.emailVerificationToken, 'secret123');
   });
 
+  test('updates the `publish_notifications` settings', async function (assert) {
+    let user = this.server.create('user');
+    this.server.create('mirage-session', { user });
+    assert.true(user.publishNotifications);
+
+    let body = JSON.stringify({ user: { publish_notifications: false } });
+    let response = await fetch(`/api/v1/users/${user.id}`, { method: 'PUT', body });
+    assert.strictEqual(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+
+    user.reload();
+    assert.false(user.publishNotifications);
+  });
+
   test('returns 403 when not logged in', async function (assert) {
     let user = this.server.create('user', { email: 'old@email.com' });
 

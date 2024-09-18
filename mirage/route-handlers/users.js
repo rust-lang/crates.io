@@ -23,18 +23,25 @@ export function register(server) {
     }
 
     let json = JSON.parse(request.requestBody);
-    if (!json || !json.user || !('email' in json.user)) {
+    if (!json || !json.user) {
       return new Response(400, {}, { errors: [{ detail: 'invalid json request' }] });
     }
-    if (!json.user.email) {
-      return new Response(400, {}, { errors: [{ detail: 'empty email rejected' }] });
+
+    if (json.user.publish_notifications !== undefined) {
+      user.update({ publishNotifications: json.user.publish_notifications });
     }
 
-    user.update({
-      email: json.user.email,
-      emailVerified: false,
-      emailVerificationToken: 'secret123',
-    });
+    if (json.user.email !== undefined) {
+      if (!json.user.email) {
+        return new Response(400, {}, { errors: [{ detail: 'empty email rejected' }] });
+      }
+
+      user.update({
+        email: json.user.email,
+        emailVerified: false,
+        emailVerificationToken: 'secret123',
+      });
+    }
 
     return { ok: true };
   });

@@ -1,32 +1,32 @@
 ---
-source: src/tests/owners.rs
+source: src/tests/routes/users/update/publish_notifications.rs
 expression: app.emails_snapshot()
 ---
 To: foo@example.com
 From: crates.io <noreply@crates.io>
-Subject: crates.io: Successfully published foo_owner@1.0.0
+Subject: crates.io: Successfully published foo@1.0.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of the package foo_owner (1.0.0) was published by your accoun=
-t (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+A new version of the package foo (1.0.0) was published by your account (htt=
+ps://crates.io/users/foo) at [0000-00-00T00:00:00Z].
 
 If you have questions or security concerns, you can contact us at help@crat=
 es.io. If you would like to stop receiving these security notifications, yo=
 u can disable them in your account settings.
 ----------------------------------------
 
-To: Bar@example.com
+To: foo@example.com
 From: crates.io <noreply@crates.io>
-Subject: crates.io: Ownership invitation for "foo_owner"
+Subject: crates.io: Unsubscribed from publish notifications
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-foo has invited you to become an owner of the crate foo_owner!
+Hello foo!
 
-Visit https://crates.io/accept-invite/[invite-token] to accept =
-this invitation,
-or go to https://crates.io/me/pending-invites to manage all of your crate o=
-wnership invitations.
+You have been unsubscribed from publish notifications.
+
+If you would like to resubscribe, please visit https://crates.io/settings/p=
+rofile

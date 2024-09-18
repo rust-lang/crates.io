@@ -2,6 +2,8 @@ use crate::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
 
+mod publish_notifications;
+
 pub trait MockEmailHelper: RequestHelper {
     // TODO: I don't like the name of this method or `update_email` on the `MockCookieUser` impl;
     // this is starting to look like a builder might help?
@@ -45,13 +47,30 @@ async fn test_empty_email_not_added() {
         response.json(),
         json!({ "errors": [{ "detail": "empty email rejected" }] })
     );
+}
 
-    let response = user.update_email_more_control(model.id, None).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "empty email rejected" }] })
-    );
+#[tokio::test(flavor = "multi_thread")]
+async fn test_ignore_empty() {
+    let (_app, _anon, user) = TestApp::init().with_user();
+    let model = user.as_model();
+
+    let url = format!("/api/v1/users/{}", model.id);
+    let payload = json!({"user": {}});
+    let response = user.put::<()>(&url, payload.to_string()).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_ignore_nulls() {
+    let (_app, _anon, user) = TestApp::init().with_user();
+    let model = user.as_model();
+
+    let url = format!("/api/v1/users/{}", model.id);
+    let payload = json!({"user": { "email": null }});
+    let response = user.put::<()>(&url, payload.to_string()).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
 }
 
 /// Check to make sure that neither other signed in users nor anonymous users can edit another
