@@ -6,7 +6,7 @@ use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
-use secrecy::Secret;
+use secrecy::SecretString;
 use thiserror::Error;
 
 use crate::controllers::helpers::pagination::*;
@@ -522,7 +522,7 @@ impl Crate {
 pub enum NewOwnerInvite {
     /// The invitee was a [`User`], and they must accept the invite through the
     /// UI or via the provided invite token.
-    User(User, Secret<String>),
+    User(User, SecretString),
 
     /// The invitee was a [`Team`], and they were immediately added as an owner.
     Team(Team),

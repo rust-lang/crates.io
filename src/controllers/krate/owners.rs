@@ -13,7 +13,7 @@ use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
-use secrecy::{ExposeSecret, Secret};
+use secrecy::{ExposeSecret, SecretString};
 use serde_json::Value;
 use tokio::runtime::Handle;
 
@@ -253,7 +253,7 @@ pub struct OwnerInviteEmail {
     inviter: String,
     domain: String,
     crate_name: String,
-    token: Secret<String>,
+    token: SecretString,
 }
 
 impl OwnerInviteEmail {

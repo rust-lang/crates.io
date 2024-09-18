@@ -90,8 +90,8 @@ pub async fn update_user(
                 .do_update()
                 .set(&new_email)
                 .returning(emails::token)
-                .get_result(conn)
-                .map(SecretString::new)
+                .get_result::<String>(conn)
+                .map(SecretString::from)
                 .map_err(|_| server_error("Error in creating token"))?;
 
             // This swallows any errors that occur while attempting to send the email. Some users have
