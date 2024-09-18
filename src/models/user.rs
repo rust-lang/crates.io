@@ -170,9 +170,9 @@ impl<'a> NewUser<'a> {
                     .values(&new_email)
                     .on_conflict_do_nothing()
                     .returning(emails::token)
-                    .get_result(conn)
+                    .get_result::<String>(conn)
                     .optional()?
-                    .map(SecretString::new);
+                    .map(SecretString::from);
 
                 if let Some(token) = token {
                     // Swallows any error. Some users might insert an invalid email address here.

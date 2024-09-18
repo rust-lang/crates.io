@@ -436,7 +436,7 @@ impl From<CreatedApiToken> for EncodableApiTokenWithToken {
     fn from(token: CreatedApiToken) -> Self {
         EncodableApiTokenWithToken {
             token: token.model,
-            plaintext: token.plaintext.expose_secret().clone(),
+            plaintext: token.plaintext.expose_secret().to_string(),
         }
     }
 }
