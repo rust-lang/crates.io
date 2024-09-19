@@ -67,13 +67,8 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .map(|s| s == "yes")
             .unwrap_or(true);
 
-        // Remove 0x00 characters from the query string because Postgres can not
-        // handle them and will return an error, which would cause us to throw
-        // an Internal Server Error ourselves.
-        let q_string = option_param("q")?.map(|q| q.replace('\u{0}', ""));
-
         let filter_params = FilterParams {
-            q_string: q_string.as_deref(),
+            q_string: option_param("q")?,
             include_yanked,
             category: option_param("category")?,
             all_keywords: option_param("all_keywords")?,
@@ -101,7 +96,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .left_join(recent_crate_downloads::table)
             .select(selection);
 
-        if let Some(q_string) = &q_string {
+        if let Some(q_string) = &filter_params.q_string {
             if !q_string.is_empty() {
                 let sort = sort.unwrap_or("relevance");
 

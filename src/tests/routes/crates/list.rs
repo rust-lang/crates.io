@@ -193,11 +193,6 @@ async fn index_queries() {
         assert_eq!(cl.crates.len(), 0);
         assert_eq!(cl.meta.total, 0);
     }
-
-    // ignores 0x00 characters that Postgres does not support
-    for cl in search_both(&anon, "q=k%00w1").await {
-        assert_eq!(cl.meta.total, 3);
-    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
