@@ -25,8 +25,8 @@ importers:
         specifier: 4.4.4
         version: 4.4.4
       date-fns:
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 4.1.0
+        version: 4.1.0
       highlight.js:
         specifier: 11.10.0
         version: 11.10.0
@@ -3713,6 +3713,9 @@ packages:
 
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   date-time@2.1.0:
     resolution: {integrity: sha512-/9+C44X7lot0IeiyfgJmETtRMhBidBYM2QFFIkGa0U1k+hSyY87Nw7PY3eDqpvCBm7I3WCSfPeZskW/YYq6m4g==}
@@ -13216,6 +13219,8 @@ snapshots:
       is-data-view: 1.0.1
 
   date-fns@3.6.0: {}
+
+  date-fns@4.1.0: {}
 
   date-time@2.1.0:
     dependencies:
