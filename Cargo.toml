@@ -126,7 +126,7 @@ tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.2"
-unicode-xid = "=0.2.5"
+unicode-xid = "=0.2.6"
 zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
