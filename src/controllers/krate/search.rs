@@ -55,28 +55,34 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         use seek::*;
 
         let params = req.query();
-        let option_param = |s| params.get(s).map(|v| v.as_str());
-        let sort = option_param("sort");
-        let include_yanked = option_param("include_yanked")
+        let option_param = |s| match params.get(s).map(|v| v.as_str()) {
+            Some(v) if v.contains('\0') => Err(bad_request(format!(
+                "parameter {s} cannot contain a null byte"
+            ))),
+            Some(v) => Ok(Some(v)),
+            None => Ok(None),
+        };
+        let sort = option_param("sort")?;
+        let include_yanked = option_param("include_yanked")?
             .map(|s| s == "yes")
             .unwrap_or(true);
 
         // Remove 0x00 characters from the query string because Postgres can not
         // handle them and will return an error, which would cause us to throw
         // an Internal Server Error ourselves.
-        let q_string = option_param("q").map(|q| q.replace('\u{0}', ""));
+        let q_string = option_param("q")?.map(|q| q.replace('\u{0}', ""));
 
         let filter_params = FilterParams {
             q_string: q_string.as_deref(),
             include_yanked,
-            category: option_param("category"),
-            all_keywords: option_param("all_keywords"),
-            keyword: option_param("keyword"),
-            letter: option_param("letter"),
-            user_id: option_param("user_id").and_then(|s| s.parse::<i32>().ok()),
-            team_id: option_param("team_id").and_then(|s| s.parse::<i32>().ok()),
-            following: option_param("following").is_some(),
-            has_ids: option_param("ids[]").is_some(),
+            category: option_param("category")?,
+            all_keywords: option_param("all_keywords")?,
+            keyword: option_param("keyword")?,
+            letter: option_param("letter")?,
+            user_id: option_param("user_id")?.and_then(|s| s.parse::<i32>().ok()),
+            team_id: option_param("team_id")?.and_then(|s| s.parse::<i32>().ok()),
+            following: option_param("following")?.is_some(),
+            has_ids: option_param("ids[]")?.is_some(),
             ..Default::default()
         };
 

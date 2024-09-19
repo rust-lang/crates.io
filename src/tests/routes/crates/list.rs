@@ -1016,6 +1016,17 @@ async fn test_pages_work_even_with_seek_based_pagination() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn invalid_params_with_null_bytes() {
+    let (_app, anon, _cookie) = TestApp::init().with_user();
+
+    for name in ["q", "category", "all_keywords", "keyword", "letter"] {
+        let response = anon.get::<()>(&format!("/api/v1/crates?{name}=%00")).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_json_snapshot!(response.json());
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
     let (_app, anon, _cookie) = TestApp::init().with_user();
 
