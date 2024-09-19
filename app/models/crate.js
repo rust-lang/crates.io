@@ -1,8 +1,11 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 import { waitForPromise } from '@ember/test-waiters';
 
+import { task } from 'ember-concurrency';
 import { apiAction } from '@mainmatter/ember-api-actions';
 import { cached } from 'tracked-toolbox';
+
+import ajax from '../utils/ajax';
 
 export default class Crate extends Model {
   @attr name;
@@ -39,6 +42,45 @@ export default class Crate extends Model {
     }
     if (this.max_version && this.max_version !== '0.0.0') {
       return this.max_version;
+    }
+  }
+
+  get documentationLink() {
+    let crateDocsLink = this.documentation;
+
+    // if this is *not* a docs.rs link we'll return it directly
+    if (crateDocsLink && !crateDocsLink.startsWith('https://docs.rs/')) {
+      return crateDocsLink;
+    }
+
+    // if we know about a successful docs.rs build, we'll return a link to that
+    let { docsRsLink } = this;
+    if (docsRsLink) {
+      return docsRsLink;
+    }
+
+    // finally, we'll return the specified documentation link, whatever it is
+    if (crateDocsLink) {
+      return crateDocsLink;
+    }
+
+    return null;
+  }
+
+  loadDocsStatusTask = task(async () => {
+    if (!this.documentation) {
+      return await ajax(`https://docs.rs/crate/${this.name}/=${this.defaultVersion}/status.json`);
+    }
+  });
+
+  get hasDocsRsLink() {
+    let docsStatus = this.loadDocsStatusTask.lastSuccessful?.value;
+    return docsStatus?.doc_status === true;
+  }
+
+  get docsRsLink() {
+    if (this.hasDocsRsLink) {
+      return `https://docs.rs/${this.name}`;
     }
   }
 

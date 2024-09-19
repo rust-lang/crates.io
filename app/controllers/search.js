@@ -3,9 +3,10 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
-import { restartableTask } from 'ember-concurrency';
+import { all, restartableTask } from 'ember-concurrency';
 import { bool, reads } from 'macro-decorators';
 
+import { AjaxError } from '../utils/ajax';
 import { pagination } from '../utils/pagination';
 import { CATEGORY_PREFIX, processSearchQuery } from '../utils/search';
 
@@ -73,6 +74,22 @@ export default class SearchController extends Controller {
       ? { page, per_page, sort, q: query, all_keywords }
       : { page, per_page, sort, ...processSearchQuery(query) };
 
-    return await this.store.query('crate', searchOptions);
+    const crates = await this.store.query('crate', searchOptions);
+
+    // Prime the docs for the most recent versions of each crate.
+    const docTasks = [];
+    for (const crate of crates) {
+      docTasks.push(crate.loadDocsStatusTask.perform());
+    }
+    try {
+      await all(docTasks);
+    } catch (e) {
+      // report unexpected errors to Sentry and ignore `ajax()` errors
+      if (!didCancel(error) && !(error instanceof AjaxError)) {
+        this.sentry.captureException(error);
+      }
+    }
+
+    return crates;
   });
 }
