@@ -193,11 +193,6 @@ async fn index_queries() {
         assert_eq!(cl.crates.len(), 0);
         assert_eq!(cl.meta.total, 0);
     }
-
-    // ignores 0x00 characters that Postgres does not support
-    for cl in search_both(&anon, "q=k%00w1").await {
-        assert_eq!(cl.meta.total, 3);
-    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -1013,6 +1008,17 @@ async fn test_pages_work_even_with_seek_based_pagination() {
     let second = anon.search("page=2&per_page=1").await;
     assert!(second.meta.next_page.unwrap().contains("page=3"));
     assert_eq!(second.meta.total, 3);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn invalid_params_with_null_bytes() {
+    let (_app, anon, _cookie) = TestApp::init().with_user();
+
+    for name in ["q", "category", "all_keywords", "keyword", "letter"] {
+        let response = anon.get::<()>(&format!("/api/v1/crates?{name}=%00")).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_json_snapshot!(response.json());
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/crates/list.rs
+expression: response.json()
+---
+{
+  "errors": [
+    {
+      "detail": "parameter q cannot contain a null byte"
+    }
+  ]
+}
