@@ -4192,9 +4192,9 @@ dependencies = [
 
 [[package]]
 name = "secrecy"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d97d6b0620457bfe19b3b0fbfdd4c2c172a14c108096b8ff8bca6a71001f5d91"
+checksum = "ba079fa568d52545cd70b334b2ce6f88f62b8fc2bda9290f48a0578388a49331"
 dependencies = [
  "zeroize",
 ]
