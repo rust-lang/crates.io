@@ -55,8 +55,8 @@ aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"
 aws-ip-ranges = "=0.830.0"
 aws-sdk-cloudfront = "=1.45.0"
 aws-sdk-sqs = "=1.43.0"
-axum = { version = "=0.7.5", features = ["macros", "matched-path"] }
-axum-extra = { version = "=0.9.3", features = ["cookie-signed", "typed-header"] }
+axum = { version = "=0.7.6", features = ["macros", "matched-path"] }
+axum-extra = { version = "=0.9.4", features = ["cookie-signed", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.5", features = ["serde"] }
 cargo-manifest = "=0.15.2"
@@ -120,7 +120,7 @@ thiserror = "=1.0.63"
 tokio = { version = "=1.40.0", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.12"
 toml = "=0.8.19"
-tower = "=0.4.13"
+tower = "=0.5.1"
 tower-http = { version = "=0.6.0", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.40"
 tracing-subscriber = { version = "=0.3.18", features = ["env-filter", "json"] }
