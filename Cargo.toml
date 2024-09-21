@@ -102,7 +102,7 @@ parking_lot = "=0.12.3"
 paste = "=1.0.15"
 postgres-native-tls = "=0.5.0"
 prometheus = { version = "=0.13.4", default-features = false }
-quick-xml = "=0.36.1"
+quick-xml = "=0.36.2"
 rand = "=0.8.5"
 reqwest = { version = "=0.12.7", features = ["blocking", "gzip", "json"] }
 rss = { version = "=2.0.9", default-features = false, features = ["atom"] }
