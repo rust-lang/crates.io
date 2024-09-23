@@ -1,0 +1,66 @@
+<form local-class="report-form" {{on "submit" (prevent-default this.submit)}}>
+  <h3>Report Crate "{{@crate}}"</h3>
+
+  <fieldset local-class="form-group" data-test-reasons-group>
+    <div local-class="form-group-name">Reasons</div>
+    <ul role="list" local-class="reasons-list {{if this.reasonsInvalid "invalid"}}">
+      {{#each this.reasons as |option|}}
+        <li>
+          <label data-test-reason={{ option.reason }}>
+            <Input
+              @type="checkbox"
+              @checked={{this.isReasonSelected option.reason}}
+              {{on "change" (fn this.toggleReason option.reason)}}
+            />
+            {{option.description}}
+          </label>
+        </li>
+      {{/each}}
+    </ul>
+    {{#if this.reasonsInvalid}}
+      <div local-class="form-group-error" data-test-error>
+        Please choose reasons to report.
+      </div>
+    {{/if}}
+  </fieldset>
+
+  <fieldset local-class="form-group" data-test-detail-group>
+    {{#let (unique-id) as |id|}}
+      <label for={{id}} local-class="form-group-name">Detail</label>
+      <textarea
+        id={{id}}
+        local-class="detail {{if this.detailInvalid "invalid"}}"
+        aria-required={{if this.detailInvalid "true" "false" }}
+        aria-invalid={{if this.detailInvalid "true" "false"}}
+        rows="5"
+        data-test-detail
+        {{on "change" this.updateDetail}}
+        {{on "input" this.resetDetailValidation}}
+      />
+      {{#if this.detailInvalid}}
+        <div local-class="form-group-error" data-test-error>
+          Please provide some detail.
+        </div>
+      {{/if}}
+    {{/let}}
+  </fieldset>
+
+  <div local-class="buttons">
+    <button
+      type="button"
+      local-class="cancel-button"
+      data-test-cancel
+      {{on "click" this.cancel}}
+    >
+      Cancel
+    </button>
+
+    <button
+      type="submit"
+      local-class="report-button"
+      data-test-report
+    >
+      Report
+    </button>
+  </div>
+</form>

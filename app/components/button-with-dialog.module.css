@@ -1,0 +1,24 @@
+.dialog {
+  inset: 0px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  z-index: 20;
+  transition: all var(--transition-fast) ease-in;
+  opacity: 0;
+
+  &.open {
+    position: fixed;
+    opacity: 1;
+  }
+}
+
+.dialog__content {
+  --shadow: 0 25px 50px light-dark(hsla(51, 50%, 44%, 0.35), #232321);
+
+  height: min-content;
+  border-radius: var(--space-3xs);
+  box-shadow: var(--shadow);
+  outline: 1px solid var(--gray-border);
+  margin-top: 12.5vh;
+}

@@ -1,0 +1,69 @@
+.report-form {
+  background-color: var(--main-bg);
+  padding: 0.5rem 1rem;
+}
+
+.form-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+
+  & + & {
+    margin-top: 1rem;
+  }
+}
+
+.form-group-name {
+  composes: form-group-name from '../styles/settings/tokens/new.module.css';
+}
+
+.reasons-list {
+  composes: scopes-list from '../styles/settings/tokens/new.module.css';
+  label {
+    flex-wrap: nowrap;
+  }
+  input {
+    align-self: center;
+  }
+}
+
+.detail {
+  border: 1px solid var(--gray-border);
+  border-radius: var(--space-3xs);
+  resize: vertical;
+  width: 100%;
+
+  &.invalid {
+    background: light-dark(#fff2f2, #170808);
+    border-color: red;
+  }
+}
+
+.form-group-error {
+  composes: form-group-error from '../styles/settings/tokens/new.module.css';
+}
+
+.buttons {
+  composes: buttons from '../styles/settings/tokens/new.module.css';
+  justify-content: end;
+  gap: 2rem;
+}
+
+.button {
+  &:focus {
+    outline: 1px solid var(--bg-color-top-dark);
+    outline-offset: 2px;
+  }
+}
+
+.report-button {
+  composes: button;
+  composes: button small from '../styles/shared/buttons.module.css';
+  border-radius: var(--space-3xs);
+}
+
+.cancel-button {
+  composes: button;
+  composes: tan-button small from '../styles/shared/buttons.module.css';
+  border-radius: var(--space-3xs);
+}

@@ -1,0 +1,19 @@
+<button
+  type="button"
+  ...attributes
+  {{on "click" (fn this.toggleDialog true)}}
+>
+  {{ @text }}
+</button>
+
+<div
+  local-class="dialog {{ if this.isOpen 'open' }}"
+  role="dialog"
+  aria-label="dialog"
+>
+  {{#if this.isOpen}}
+    <div local-class="dialog__content" data-test-dialog-content>
+      {{yield this.toggleDialog this.isOpen}}
+    </div>
+  {{/if}}
+</div>
