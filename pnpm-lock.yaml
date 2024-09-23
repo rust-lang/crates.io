@@ -293,8 +293,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0
       qunit-dom:
-        specifier: 3.2.0
-        version: 3.2.0
+        specifier: 3.2.1
+        version: 3.2.1
       tracked-built-ins:
         specifier: 3.3.0
         version: 3.3.0
@@ -7117,8 +7117,8 @@ packages:
     resolution: {integrity: sha512-uHg5kcjyEGX85Rh9mimWoXsqeGmJZxfNLqmVxA5O2xJW+JAlQ0r0JFA07lHqlOQcegs5CAhvioKUXpjicDra6g==}
     engines: {node: 10.* || 12.* || >= 14.*}
 
-  qunit-dom@3.2.0:
-    resolution: {integrity: sha512-VYFXbwod2sis16Nzgx5UrdCvjNUPYIAbTwEGv7hF1RfgJaVgG5ASVaQz9en0ZRvlybtql0LrVuAbleJU/57zQQ==}
+  qunit-dom@3.2.1:
+    resolution: {integrity: sha512-+qSm8zQ7hPA9NijmTDVsUFNGEFP/K+DTymjlsU01O3NhkGtb9rsZRztJXwaiAlmVSX4vSzjydPxpZCRhpWIq4A==}
 
   qunit-theme-ember@1.0.0:
     resolution: {integrity: sha512-vdMVVo6ecdCkWttMTKeyq1ZTLGHcA6zdze2zhguNuc3ritlJMhOXY5RDseqazOwqZVfCg3rtlmL3fMUyIzUyFQ==}
@@ -17808,7 +17808,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  qunit-dom@3.2.0:
+  qunit-dom@3.2.1:
     dependencies:
       dom-element-descriptors: 0.5.1
 
