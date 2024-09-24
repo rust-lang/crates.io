@@ -67,6 +67,8 @@ pub async fn list(
 
 /// Handles the `PUT /me/tokens` route.
 pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
+    let (parts, body) = req.0.into_parts();
+
     let conn = app.db_write().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
@@ -87,7 +89,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             api_token: NewApiToken,
         }
 
-        let new: NewApiTokenRequest = json::from_slice(req.body())
+        let new: NewApiTokenRequest = json::from_slice(&body)
             .map_err(|e| bad_request(format!("invalid new token request: {e:?}")))?;
 
         let name = &new.api_token.name;
@@ -95,7 +97,7 @@ pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
             return Err(bad_request("name must have a value"));
         }
 
-        let auth = AuthCheck::default().check(&req, conn)?;
+        let auth = AuthCheck::default().check(&parts, conn)?;
         if auth.api_token_id().is_some() {
             return Err(bad_request(
                 "cannot use an API token to create a new API token",

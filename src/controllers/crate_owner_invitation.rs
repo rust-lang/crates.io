@@ -275,8 +275,10 @@ struct OwnerInvitation {
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
 pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
+    let (parts, body) = req.0.into_parts();
+
     let crate_invite: OwnerInvitation =
-        serde_json::from_slice(req.body()).map_err(|_| bad_request("invalid json request"))?;
+        serde_json::from_slice(&body).map_err(|_| bad_request("invalid json request"))?;
 
     let crate_invite = crate_invite.crate_owner_invite;
 
@@ -284,7 +286,7 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
+        let auth = AuthCheck::default().check(&parts, conn)?;
         let user_id = auth.user_id();
 
         let config = &state.config;

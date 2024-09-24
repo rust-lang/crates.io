@@ -10,9 +10,9 @@ use http::{header, Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Ver
 /// We don't want to accept authenticated requests that originated from other sites, so this
 /// function returns an error if the Origin header doesn't match what we expect "this site" to
 /// be: <https://crates.io> in production, or <http://localhost:port/> in development.
-pub fn verify_origin<T: RequestPartsExt>(req: &T) -> AppResult<()> {
-    let headers = req.headers();
-    let allowed_origins = &req.app().config.allowed_origins;
+pub fn verify_origin(parts: &Parts) -> AppResult<()> {
+    let headers = parts.headers();
+    let allowed_origins = &parts.app().config.allowed_origins;
 
     let bad_origin = headers
         .get_all(header::ORIGIN)
@@ -23,7 +23,7 @@ pub fn verify_origin<T: RequestPartsExt>(req: &T) -> AppResult<()> {
         let error_message =
             format!("only same-origin requests can be authenticated. got {bad_origin:?}");
 
-        req.request_log().add("cause", error_message);
+        parts.request_log().add("cause", error_message);
 
         return Err(forbidden("invalid origin header"));
     }

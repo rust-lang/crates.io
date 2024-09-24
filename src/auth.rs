@@ -11,6 +11,7 @@ use crate::util::errors::{
 use crate::util::token::HashedToken;
 use chrono::Utc;
 use http::header;
+use http::request::Parts;
 
 #[derive(Debug, Clone)]
 pub struct AuthCheck {
@@ -57,18 +58,14 @@ impl AuthCheck {
     }
 
     #[instrument(name = "auth.check", skip_all)]
-    pub fn check<T: RequestPartsExt>(
-        &self,
-        request: &T,
-        conn: &mut impl Conn,
-    ) -> AppResult<Authentication> {
-        let auth = authenticate(request, conn)?;
+    pub fn check(&self, parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
+        let auth = authenticate(parts, conn)?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
                 let error_message =
                     "API Token authentication was explicitly disallowed for this API";
-                request.request_log().add("cause", error_message);
+                parts.request_log().add("cause", error_message);
 
                 return Err(forbidden(
                     "this action can only be performed on the crates.io website",
@@ -77,7 +74,7 @@ impl AuthCheck {
 
             if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
                 let error_message = "Endpoint scope mismatch";
-                request.request_log().add("cause", error_message);
+                parts.request_log().add("cause", error_message);
 
                 return Err(forbidden(
                     "this token does not have the required permissions to perform this action",
@@ -86,7 +83,7 @@ impl AuthCheck {
 
             if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
                 let error_message = "Crate scope mismatch";
-                request.request_log().add("cause", error_message);
+                parts.request_log().add("cause", error_message);
 
                 return Err(forbidden(
                     "this token does not have the required permissions to perform this action",
@@ -171,11 +168,11 @@ impl Authentication {
 }
 
 #[instrument(skip_all)]
-fn authenticate_via_cookie<T: RequestPartsExt>(
-    req: &T,
+fn authenticate_via_cookie(
+    parts: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<Option<CookieAuthentication>> {
-    let user_id_from_session = req
+    let user_id_from_session = parts
         .session()
         .get("user_id")
         .and_then(|s| s.parse::<i32>().ok());
@@ -185,23 +182,23 @@ fn authenticate_via_cookie<T: RequestPartsExt>(
     };
 
     let user = User::find(conn, id).map_err(|err| {
-        req.request_log().add("cause", err);
+        parts.request_log().add("cause", err);
         internal("user_id from cookie not found in database")
     })?;
 
     ensure_not_locked(&user)?;
 
-    req.request_log().add("uid", id);
+    parts.request_log().add("uid", id);
 
     Ok(Some(CookieAuthentication { user }))
 }
 
 #[instrument(skip_all)]
-fn authenticate_via_token<T: RequestPartsExt>(
-    req: &T,
+fn authenticate_via_token(
+    parts: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<Option<TokenAuthentication>> {
-    let maybe_authorization = req
+    let maybe_authorization = parts
         .headers()
         .get(header::AUTHORIZATION)
         .and_then(|h| h.to_str().ok());
@@ -215,35 +212,35 @@ fn authenticate_via_token<T: RequestPartsExt>(
 
     let token = ApiToken::find_by_api_token(conn, &token).map_err(|e| {
         let cause = format!("invalid token caused by {e}");
-        req.request_log().add("cause", cause);
+        parts.request_log().add("cause", cause);
 
         forbidden("authentication failed")
     })?;
 
     let user = User::find(conn, token.user_id).map_err(|err| {
-        req.request_log().add("cause", err);
+        parts.request_log().add("cause", err);
         internal("user_id from token not found in database")
     })?;
 
     ensure_not_locked(&user)?;
 
-    req.request_log().add("uid", token.user_id);
-    req.request_log().add("tokenid", token.id);
+    parts.request_log().add("uid", token.user_id);
+    parts.request_log().add("tokenid", token.id);
 
     Ok(Some(TokenAuthentication { user, token }))
 }
 
 #[instrument(skip_all)]
-fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut impl Conn) -> AppResult<Authentication> {
-    controllers::util::verify_origin(req)?;
+fn authenticate(parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
+    controllers::util::verify_origin(parts)?;
 
-    match authenticate_via_cookie(req, conn) {
+    match authenticate_via_cookie(parts, conn) {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
         Err(err) => return Err(err),
     }
 
-    match authenticate_via_token(req, conn) {
+    match authenticate_via_token(parts, conn) {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
         Err(err) => return Err(err),
@@ -251,7 +248,7 @@ fn authenticate<T: RequestPartsExt>(req: &T, conn: &mut impl Conn) -> AppResult<
 
     // Unable to authenticate the user
     let cause = "no cookie session or auth header found";
-    req.request_log().add("cause", cause);
+    parts.request_log().add("cause", cause);
 
     return Err(forbidden("this action requires authentication"));
 }
