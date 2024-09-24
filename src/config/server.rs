@@ -14,6 +14,7 @@ use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
+use std::convert::Infallible;
 use std::net::IpAddr;
 use std::str::FromStr;
 use std::time::Duration;
@@ -277,17 +278,24 @@ fn parse_traffic_patterns(patterns: &str) -> impl Iterator<Item = (&str, &str)> 
 pub struct AllowedOrigins(Vec<String>);
 
 impl AllowedOrigins {
-    pub fn from_default_env() -> anyhow::Result<Self> {
-        let allowed_origins = required_var("WEB_ALLOWED_ORIGINS")?
-            .split(',')
-            .map(ToString::to_string)
-            .collect();
+    pub fn from_str(s: &str) -> Self {
+        Self(s.split(',').map(ToString::to_string).collect())
+    }
 
-        Ok(Self(allowed_origins))
+    pub fn from_default_env() -> anyhow::Result<Self> {
+        Ok(Self::from_str(&required_var("WEB_ALLOWED_ORIGINS")?))
     }
 
     pub fn contains(&self, value: &HeaderValue) -> bool {
         self.0.iter().any(|it| it == value)
+    }
+}
+
+impl FromStr for AllowedOrigins {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from_str(s))
     }
 }
 
