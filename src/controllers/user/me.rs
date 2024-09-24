@@ -129,18 +129,19 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
 
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
+    let (parts, body) = req.0.into_parts();
+
     #[derive(Deserialize)]
     struct CrateEmailNotifications {
         id: i32,
         email_notifications: bool,
     }
 
-    let updates: HashMap<i32, bool> =
-        serde_json::from_slice::<Vec<CrateEmailNotifications>>(req.body())
-            .map_err(|_| bad_request("invalid json request"))?
-            .iter()
-            .map(|c| (c.id, c.email_notifications))
-            .collect();
+    let updates: HashMap<i32, bool> = serde_json::from_slice::<Vec<CrateEmailNotifications>>(&body)
+        .map_err(|_| bad_request("invalid json request"))?
+        .iter()
+        .map(|c| (c.id, c.email_notifications))
+        .collect();
 
     let conn = app.db_write().await?;
     spawn_blocking(move || {
@@ -148,7 +149,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
         use diesel::pg::upsert::excluded;
 
-        let user_id = AuthCheck::default().check(&req, conn)?.user_id();
+        let user_id = AuthCheck::default().check(&parts, conn)?.user_id();
 
         // Build inserts from existing crates belonging to the current user
         let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
