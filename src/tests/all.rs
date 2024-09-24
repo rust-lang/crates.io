@@ -25,6 +25,7 @@ mod authentication;
 mod blocked_routes;
 mod builders;
 mod categories;
+mod cors;
 mod dump_db;
 mod github_secret_scanning;
 mod krate;
