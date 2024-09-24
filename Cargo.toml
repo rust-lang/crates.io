@@ -50,7 +50,7 @@ slow-tests = []
 
 [dependencies]
 anyhow = "=1.0.89"
-async-trait = "=0.1.82"
+async-trait = "=0.1.83"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.830.0"
 aws-sdk-cloudfront = "=1.45.0"
