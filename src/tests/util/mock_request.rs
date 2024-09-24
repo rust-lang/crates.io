@@ -13,7 +13,7 @@ impl MockRequestExt for MockRequest {
         K: IntoHeaderName,
     {
         self.headers_mut()
-            .insert(name, HeaderValue::from_str(value).unwrap());
+            .append(name, HeaderValue::from_str(value).unwrap());
     }
 }
 
