@@ -1,6 +1,6 @@
 ---
 source: src/tests/server.rs
-expression: resp.into_json()
+expression: resp.json()
 ---
 {
   "errors": [

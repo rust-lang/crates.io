@@ -1,6 +1,6 @@
 ---
 source: src/tests/krate/publish/build_metadata.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "crate": {

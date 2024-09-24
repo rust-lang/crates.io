@@ -1,6 +1,6 @@
 ---
 source: src/tests/krate/publish/categories.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "crate": {

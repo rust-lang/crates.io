@@ -1,6 +1,6 @@
 ---
 source: src/tests/routes/me/tokens/list.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "api_tokens": [
