@@ -63,10 +63,7 @@ async fn owner_change_via_cookie() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = cookie.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -84,10 +81,7 @@ async fn owner_change_via_token() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -106,10 +100,7 @@ async fn owner_change_via_change_owner_token() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -129,10 +120,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "ok": true, "msg": "user user-2 has been invited to be an owner of crate foo_crate" })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -249,13 +237,7 @@ async fn invite_already_invited_user() {
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({
-            "msg": "user invited_user has been invited to be an owner of crate crate_name",
-            "ok": true,
-        })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
     assert_eq!(app.emails().len(), 1);
@@ -263,13 +245,7 @@ async fn invite_already_invited_user() {
     // Then invite the user a second time, the message should point out the user is already invited
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({
-            "msg": "user invited_user already has a pending invitation to be an owner of crate crate_name",
-            "ok": true,
-        })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user already has a pending invitation to be an owner of crate crate_name","ok":true}"#);
 
     // Check that no new email is sent after the second invitation
     assert_eq!(app.emails().len(), 1);
@@ -288,13 +264,7 @@ async fn invite_with_existing_expired_invite() {
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({
-            "msg": "user invited_user has been invited to be an owner of crate crate_name",
-            "ok": true,
-        })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
     assert_eq!(app.emails().len(), 1);
@@ -305,13 +275,7 @@ async fn invite_with_existing_expired_invite() {
     // Then invite the user a second time, a new invite is created as the old one expired
     let response = owner.add_named_owner("crate_name", "invited_user").await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({
-            "msg": "user invited_user has been invited to be an owner of crate crate_name",
-            "ok": true,
-        })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check that the email for the second invite was sent
     assert_eq!(app.emails().len(), 2);

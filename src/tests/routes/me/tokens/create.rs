@@ -24,10 +24,7 @@ async fn create_token_invalid_request() {
     let invalid: &[u8] = br#"{ "name": "" }"#;
     let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)"}]}"#);
     assert!(app.emails().is_empty());
 }
 
@@ -37,10 +34,7 @@ async fn create_token_no_name() {
     let empty_name: &[u8] = br#"{ "api_token": { "name": "" } }"#;
     let response = user.put::<()>("/api/v1/me/tokens", empty_name).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "name must have a value" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"name must have a value"}]}"#);
     assert!(app.emails().is_empty());
 }
 
@@ -55,10 +49,7 @@ async fn create_token_exceeded_tokens_per_user() {
     });
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "maximum tokens per user is: 500" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"maximum tokens per user is: 500"}]}"#);
     assert!(app.emails().is_empty());
 }
 
@@ -121,10 +112,7 @@ async fn cannot_create_token_with_token() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "cannot use an API token to create a new API token" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot use an API token to create a new API token"}]}"#);
     assert!(app.emails().is_empty());
 }
 
@@ -229,10 +217,7 @@ async fn create_token_with_empty_crate_scope() {
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "invalid crate scope" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid crate scope"}]}"#);
     assert!(app.emails().is_empty());
 }
 
@@ -252,10 +237,7 @@ async fn create_token_with_invalid_endpoint_scope() {
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "invalid endpoint scope" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid endpoint scope"}]}"#);
     assert!(app.emails().is_empty());
 }
 

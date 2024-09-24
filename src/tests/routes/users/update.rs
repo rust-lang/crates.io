@@ -43,10 +43,7 @@ async fn test_empty_email_not_added() {
 
     let response = user.update_email_more_control(model.id, Some("")).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "empty email rejected" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"empty email rejected"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -91,10 +88,7 @@ async fn test_other_users_cannot_change_my_email() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "current user does not match requested user" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
     let response = anon
         .update_email_more_control(

@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use diesel::update;
 use googletest::prelude::*;
 use http::StatusCode;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {
@@ -98,8 +99,5 @@ async fn following() {
         .get_with_query::<()>("/api/v1/me/updates", "page=0")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "page indexing starts from 1, page 0 is invalid" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"page indexing starts from 1, page 0 is invalid"}]}"#);
 }

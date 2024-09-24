@@ -1,6 +1,7 @@
 use crate::{util::RequestHelper, TestApp};
-use chrono::{Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use http::StatusCode;
+use insta::assert_snapshot;
 
 const URL: &str = "/api/v1/me";
 const LOCK_REASON: &str = "test lock reason";
@@ -28,30 +29,22 @@ async fn account_locked_indefinitely() {
 
     let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-
-    let error_message = format!("This account is indefinitely locked. Reason: {LOCK_REASON}");
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": error_message }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This account is indefinitely locked. Reason: test lock reason"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn account_locked_with_future_expiry() {
-    let until = Utc::now().naive_utc() + Duration::days(1);
+    let until = "2099-12-12T12:12:12Z"
+        .parse::<DateTime<Utc>>()
+        .unwrap()
+        .naive_utc();
 
     let (app, _anon, user) = TestApp::init().with_user();
     lock_account(&app, user.as_model().id, Some(until));
 
-    let until = until.format("%Y-%m-%d at %H:%M:%S UTC");
     let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-
-    let error_message = format!("This account is locked until {until}. Reason: {LOCK_REASON}");
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": error_message }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This account is locked until 2099-12-12 at 12:12:12 UTC. Reason: test lock reason"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

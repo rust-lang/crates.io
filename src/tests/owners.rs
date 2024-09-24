@@ -188,10 +188,7 @@ async fn owners_can_remove_self() {
         .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
 
     create_and_add_owner(&app, &token, "secondowner", &krate).await;
 
@@ -200,20 +197,14 @@ async fn owners_can_remove_self() {
         .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "msg": "owners successfully removed", "ok": true })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 
     // After you delete yourself, you no longer have permissions to manage the crate.
     let response = token
         .remove_named_owner("owners_selfremove", username)
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
 /// Verify consistency when adidng or removing multiple owners in a single request.
@@ -235,10 +226,7 @@ async fn modify_multiple_owners() {
         .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
 
     // Deleting two owners at once is allowed.
@@ -246,10 +234,7 @@ async fn modify_multiple_owners() {
         .remove_named_owners("owners_multiple", &["user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({ "msg": "owners successfully removed", "ok": true })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
 
     // Adding multiple users fails if one of them already is an owner.
@@ -257,10 +242,7 @@ async fn modify_multiple_owners() {
         .add_named_owners("owners_multiple", &["user2", username])
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "`foo` is already an owner" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
     assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
 
     // Adding multiple users at once succeeds.
@@ -268,13 +250,7 @@ async fn modify_multiple_owners() {
         .add_named_owners("owners_multiple", &["user2", "user3"])
         .await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.json(),
-        json!({
-            "msg": "user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple",
-            "ok": true,
-        })
-    );
+    assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple","ok":true}"#);
 
     assert_snapshot!(app.emails_snapshot());
 

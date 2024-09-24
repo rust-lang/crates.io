@@ -1,8 +1,8 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::status::StatusCode;
+use insta::assert_snapshot;
 use ipnetwork::IpNetwork;
-use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_blocks_ip_from_cidr_block_list() {
@@ -24,8 +24,5 @@ async fn pagination_blocks_ip_from_cidr_block_list() {
         .get_with_query::<()>("/api/v1/crates", "page=2&per_page=1")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "Page 2 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Page 2 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives."}]}"#);
 }
