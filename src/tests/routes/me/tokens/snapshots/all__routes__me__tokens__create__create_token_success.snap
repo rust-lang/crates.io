@@ -1,6 +1,6 @@
 ---
 source: src/tests/routes/me/tokens/create.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "api_token": {

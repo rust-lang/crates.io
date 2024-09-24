@@ -1,6 +1,6 @@
 ---
 source: src/tests/read_only_mode.rs
-expression: response.into_json()
+expression: response.json()
 ---
 {
   "errors": [
