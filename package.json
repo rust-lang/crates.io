@@ -82,7 +82,7 @@
     "ember-cli": "5.11.0",
     "ember-cli-babel": "8.2.0",
     "ember-cli-bundle-analyzer": "1.0.0",
-    "ember-cli-code-coverage": "3.0.1",
+    "ember-cli-code-coverage": "3.1.0",
     "ember-cli-dependency-checker": "3.3.2",
     "ember-cli-dependency-lint": "2.0.1",
     "ember-cli-head": "2.0.0",
