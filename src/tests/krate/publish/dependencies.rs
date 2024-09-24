@@ -12,7 +12,7 @@ async fn invalid_dependency_name() {
         .publish_crate(PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `🦀` in dependency name: `🦀`, the first character must be an ASCII character"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -50,7 +50,7 @@ async fn invalid_dependency_rename() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `💩` in dependency name: `💩`, the first character must be an ASCII character, or `_`"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -70,7 +70,7 @@ async fn invalid_dependency_name_starts_with_digit() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"the name `1-foo` cannot be used as a dependency name, the name cannot start with a digit"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -90,7 +90,7 @@ async fn invalid_dependency_name_contains_unicode_chars() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `🦀` in dependency name: `foo-🦀-bar`, characters must be an ASCII alphanumeric characters, `-`, or `_`"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -110,7 +110,7 @@ async fn invalid_too_long_dependency_name() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"the dependency name `fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` is too long (max 64 characters)"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -129,7 +129,7 @@ async fn empty_dependency_name() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"dependency name cannot be empty"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -202,7 +202,7 @@ async fn new_krate_with_broken_dependency_requirement() {
     let crate_to_publish = PublishBuilder::new("new_dep", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"\"broken\" is an invalid version requirement"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -221,7 +221,7 @@ async fn reject_new_krate_with_non_exact_dependency() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"no known crate named `foo_dep`"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -249,7 +249,7 @@ async fn reject_new_crate_with_alternative_registry_dependency() {
         PublishBuilder::new("depends-on-alt-registry", "1.0.0").dependency(dependency);
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Dependency `dep` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io."}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -268,7 +268,7 @@ async fn new_krate_with_wildcard_dependency() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"wildcard (`*`) dependency constraints are not allowed on crates.io. Crate with this problem: `foo_wild` See https://doc.rust-lang.org/cargo/faq.html#can-libraries-use--as-a-version-for-their-dependencies for more information"}]}"##);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -283,7 +283,7 @@ async fn new_krate_dependency_missing() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"no known crate named `bar_missing`"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -321,7 +321,7 @@ async fn invalid_feature_name() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `🍺` in feature `🍺`, the first character must be a Unicode XID start character or digit (most letters or `_` or `0` to `9`)"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 

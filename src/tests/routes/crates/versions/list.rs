@@ -212,14 +212,14 @@ async fn invalid_seek_parameter() {
         .get_with_query::<()>(url, "per_page=1&sort=semver&seek=broken")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid seek parameter"}]}"#);
 
     // Sort by date
     let response = anon
         .get_with_query::<()>(url, "per_page=1&sort=date&seek=broken")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid seek parameter"}]}"#);
 
     // broken seek but without per_page parameter should be ok
     // since it's not consider as seek-based pagination

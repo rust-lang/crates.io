@@ -6,7 +6,7 @@ use crates_io::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -1027,7 +1027,7 @@ async fn invalid_seek_parameter() {
 
     let response = anon.get::<()>("/api/v1/crates?seek=broken").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid seek parameter"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

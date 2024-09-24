@@ -125,7 +125,7 @@ async fn new_krate_duplicate_version() {
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate version `1.0.0` is already uploaded"}]}"#);
 
     assert_that!(app.stored_files().await, empty());
 }
