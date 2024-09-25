@@ -6,7 +6,7 @@ use crates_io::schema::crates;
 use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -1027,7 +1027,7 @@ async fn invalid_seek_parameter() {
 
     let response = anon.get::<()>("/api/v1/crates?seek=broken").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid seek parameter"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -1045,19 +1045,13 @@ async fn pagination_parameters_only_accept_integers() {
         .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "invalid digit found in string" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid digit found in string"}]}"#);
 
     let response = anon
         .get_with_query::<()>("/api/v1/crates", "page=100%22%EF%BC%8Cexception&per_page=1")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "invalid digit found in string" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid digit found in string"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

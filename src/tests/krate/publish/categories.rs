@@ -50,6 +50,6 @@ async fn too_many_categories() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"expected at most 5 categories per crate"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }

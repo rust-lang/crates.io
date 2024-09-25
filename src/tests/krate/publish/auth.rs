@@ -4,7 +4,7 @@ use crates_io::schema::api_tokens;
 use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::{assert_json_snapshot, assert_snapshot};
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
@@ -47,7 +47,7 @@ async fn new_krate_wrong_user() {
 
     let response = another_user.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 
     assert_that!(app.stored_files().await, empty());
     assert_that!(app.emails(), empty());

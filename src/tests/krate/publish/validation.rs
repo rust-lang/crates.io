@@ -14,7 +14,7 @@ async fn empty_json() {
 
     let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid upload request: missing field `name` at line 1 column 2"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -55,7 +55,7 @@ async fn invalid_version() {
 
     let response = token.publish_crate(body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"\"broken\" is an invalid semver version"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -69,14 +69,12 @@ async fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
-
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing or empty metadata fields: description, license. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"}]}"#);
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").unset_description();
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
-
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing or empty metadata fields: description. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"}]}"#);
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
         .unset_license()
         .license_file("foo")
@@ -84,8 +82,7 @@ async fn license_and_description_required() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
-
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing or empty metadata fields: description. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -111,7 +108,7 @@ async fn invalid_license() {
         .publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"unknown or invalid license expression; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers\nNote: If you have a non-standard license that is not listed by SPDX, use the license-file field to specify the path to a file containing the text of the license.\nSee https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.\nMIT AND foobar\n        ^^^^^^ unknown term"}]}"##);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -125,7 +122,6 @@ async fn invalid_urls() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
-
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"URL for field `documentation` must begin with http:// or https:// (url: javascript:alert('boom'))"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }

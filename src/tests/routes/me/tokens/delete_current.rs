@@ -59,10 +59,7 @@ async fn revoke_current_token_with_cookie_user() {
     // Revoke the token
     let response = user.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "token not provided" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"token not provided"}]}"#);
 
     // Ensure that the token still exists in the database after the failed request
     app.db(|conn| {

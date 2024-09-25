@@ -1,6 +1,7 @@
 use crate::builders::PublishBuilder;
 use crate::util::{RequestHelper, TestApp};
 use http::StatusCode;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn daily_limit() {
@@ -15,9 +16,5 @@ async fn daily_limit() {
     let crate_to_publish = PublishBuilder::new("foo_daily_limit", "1.0.0");
     let response = user.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
-    let json = response.json();
-    assert_eq!(
-        json["errors"][0]["detail"],
-        "You have published too many versions of this crate in the last 24 hours"
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You have published too many versions of this crate in the last 24 hours"}]}"#);
 }

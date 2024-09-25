@@ -2,6 +2,7 @@ use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{RequestHelper, Response, TestApp};
 use crate::OkBool;
 use http::StatusCode;
+use insta::assert_snapshot;
 
 pub trait YankRequestHelper {
     /// Yank the specified version of the specified crate and run all pending background jobs
@@ -41,10 +42,7 @@ async fn yank_by_a_non_owner_fails() {
 
     let response = token.yank("foo_not", "1.0.0").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "must already be an owner to yank or unyank" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"must already be an owner to yank or unyank"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

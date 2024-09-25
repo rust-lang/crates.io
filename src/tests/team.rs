@@ -36,10 +36,7 @@ async fn not_github() {
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "unknown organization handler, only 'github:org:team' is supported" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -54,10 +51,7 @@ async fn weird_name() {
         .add_named_owner("foo_weird_name", "github:foo/../bar:wut")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "organization cannot contain special characters like /" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
 /// Test adding team without second `:`
@@ -71,10 +65,7 @@ async fn one_colon() {
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "missing github team argument; format is github:org:team" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -89,17 +80,7 @@ async fn add_nonexistent_team() {
         .add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({
-            "errors": [{
-                "detail":
-                "could not find the github team test-org/this-does-not-exist. \
-                Make sure that you have the right permissions in GitHub. \
-                See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
-            }]
-        })
-    );
+    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"could not find the github team test-org/this-does-not-exist. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"##);
 }
 
 /// Test adding a renamed team
@@ -212,10 +193,7 @@ async fn add_team_as_non_member() {
         .add_named_owner("foo_team_non_member", "github:test-org:core")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "only members of a team or organization owners can add it as an owner" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only members of a team or organization owners can add it as an owner"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -240,10 +218,7 @@ async fn remove_team_as_named_owner() {
         .remove_named_owner("foo_remove_team", username)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
 
     token_on_both_teams
         .remove_named_owner("foo_remove_team", "github:test-org:core")
@@ -254,10 +229,7 @@ async fn remove_team_as_named_owner() {
     let crate_to_publish = PublishBuilder::new("foo_remove_team", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -283,10 +255,7 @@ async fn remove_team_as_team_owner() {
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to modify owners"}]}"#);
 
     let user_org_owner = app.db_new_user("user-org-owner");
     let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
@@ -294,10 +263,7 @@ async fn remove_team_as_team_owner() {
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -345,10 +311,7 @@ async fn publish_not_owned() {
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -371,10 +334,7 @@ async fn publish_org_owner_owned() {
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_org_owner.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing." }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
 /// Test trying to publish a krate we do own (but only because of teams)
@@ -427,10 +387,7 @@ async fn add_owners_as_org_owner() {
         .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "only owners have permission to modify owners" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -455,10 +412,7 @@ async fn add_owners_as_team_owner() {
         .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_eq!(
-        response.json(),
-        json!({ "errors": [{ "detail": "team members don't have permission to modify owners" }] })
-    );
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to modify owners"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

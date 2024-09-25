@@ -4,6 +4,7 @@ use chrono::{Duration, Utc};
 use crates_io::models::token::{CrateScope, EndpointScope};
 use crates_io::models::ApiToken;
 use http::StatusCode;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_logged_out() {
@@ -22,9 +23,7 @@ async fn list_empty() {
     let (_, _, user) = TestApp::init().with_user();
     let response = user.get::<()>("/api/v1/me/tokens").await;
     assert_eq!(response.status(), StatusCode::OK);
-    let json = response.json();
-    let response_tokens = json["api_tokens"].as_array().unwrap();
-    assert_eq!(response_tokens.len(), 0);
+    assert_snapshot!(response.text(), @r#"{"api_tokens":[]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

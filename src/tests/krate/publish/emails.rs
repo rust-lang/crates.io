@@ -4,7 +4,7 @@ use crates_io::schema::emails;
 use diesel::{delete, update, ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_without_any_email_fails() {
@@ -18,7 +18,7 @@ async fn new_krate_without_any_email_fails() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address."}]}"#);
     assert_that!(app.stored_files().await, empty());
     assert_that!(app.emails(), empty());
 }
@@ -38,7 +38,7 @@ async fn new_krate_with_unverified_email_fails() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_json_snapshot!(response.json());
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address."}]}"#);
     assert_that!(app.stored_files().await, empty());
     assert_that!(app.emails(), empty());
 }
