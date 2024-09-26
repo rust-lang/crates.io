@@ -48,7 +48,6 @@ mod mock_request;
 mod response;
 mod test_app;
 
-pub(crate) use chaosproxy::ChaosProxy;
 use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
 pub use response::Response;
