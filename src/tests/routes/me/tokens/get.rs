@@ -1,7 +1,7 @@
-use crate::util::{RequestHelper, TestApp};
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::ApiToken;
+use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
-use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::models::ApiToken;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 

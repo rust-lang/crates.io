@@ -1,5 +1,5 @@
-use crate::util::{MockAnonymousUser, MockRequestExt, Response};
-use crate::{RequestHelper, TestApp};
+use crate::tests::util::{MockAnonymousUser, MockRequestExt, Response};
+use crate::tests::{RequestHelper, TestApp};
 use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]

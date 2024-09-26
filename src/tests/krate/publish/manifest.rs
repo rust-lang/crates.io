@@ -1,6 +1,6 @@
-use crate::builders::PublishBuilder;
-use crate::util::insta::{any_id_redaction, id_redaction};
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::PublishBuilder;
+use crate::tests::util::insta::{any_id_redaction, id_redaction};
+use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 

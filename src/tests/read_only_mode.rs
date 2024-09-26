@@ -1,5 +1,5 @@
-use crate::builders::CrateBuilder;
-use crate::{RequestHelper, TestApp};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::{RequestHelper, TestApp};
 
 use diesel::prelude::*;
 use http::StatusCode;
@@ -59,7 +59,7 @@ async fn can_download_crate_in_read_only_mode() {
 
     // We're in read only mode so the download should not have been counted
     app.db(|conn| {
-        use crates_io::schema::version_downloads;
+        use crate::schema::version_downloads;
         use diesel::dsl::sum;
 
         let dl_count: Result<Option<i64>, _> = version_downloads::table

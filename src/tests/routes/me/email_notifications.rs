@@ -1,7 +1,7 @@
-use crate::builders::CrateBuilder;
-use crate::new_user;
-use crate::util::{RequestHelper, TestApp};
-use crates_io::schema::crate_owners;
+use crate::schema::crate_owners;
+use crate::tests::builders::CrateBuilder;
+use crate::tests::new_user;
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
 
@@ -11,7 +11,7 @@ struct EmailNotificationsUpdate {
     email_notifications: bool,
 }
 
-impl crate::util::MockCookieUser {
+impl crate::tests::util::MockCookieUser {
     async fn update_email_notifications(&self, updates: Vec<EmailNotificationsUpdate>) {
         let response = self
             .put::<()>("/api/v1/me/email_notifications", json!(updates).to_string())

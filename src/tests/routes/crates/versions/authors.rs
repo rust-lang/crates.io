@@ -1,5 +1,5 @@
-use crate::builders::CrateBuilder;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 use insta::assert_json_snapshot;
 use serde_json::Value;
 

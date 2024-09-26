@@ -1,8 +1,8 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::{RequestHelper, TestApp};
-use crate::{new_category, new_user};
-use crates_io::models::Category;
-use crates_io::schema::crates;
+use crate::models::Category;
+use crate::schema::crates;
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
+use crate::tests::{new_category, new_user};
 use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
@@ -1088,7 +1088,7 @@ static PAGE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"((?:^page|&page|\?page)=\d+)").unwrap());
 
 // search with both offset-based (prepend with `page=1` query) and seek-based pagination
-async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateList; 2] {
+async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::tests::CrateList; 2] {
     if PAGE_RE.is_match(query) {
         panic!("url already contains page param");
     }
@@ -1111,12 +1111,18 @@ async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::CrateLi
     [offset, seek]
 }
 
-async fn search_both_by_user_id<U: RequestHelper>(anon: &U, id: i32) -> [crate::CrateList; 2] {
+async fn search_both_by_user_id<U: RequestHelper>(
+    anon: &U,
+    id: i32,
+) -> [crate::tests::CrateList; 2] {
     let url = format!("user_id={id}");
     search_both(anon, &url).await
 }
 
-async fn page_with_seek<U: RequestHelper>(anon: &U, query: &str) -> (Vec<crate::CrateList>, i32) {
+async fn page_with_seek<U: RequestHelper>(
+    anon: &U,
+    query: &str,
+) -> (Vec<crate::tests::CrateList>, i32) {
     let mut url = Some(format!("?per_page=1&{query}"));
     let mut results = Vec::new();
     let mut calls = 0;

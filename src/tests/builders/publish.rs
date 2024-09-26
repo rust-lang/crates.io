@@ -1,7 +1,7 @@
+use crate::models::DependencyKind;
+use crate::views::krate_publish as u;
 use bytes::{BufMut, Bytes, BytesMut};
 use cargo_manifest::{DependencyDetail, DepsSet, MaybeInherited};
-use crates_io::models::DependencyKind;
-use crates_io::views::krate_publish as u;
 use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;

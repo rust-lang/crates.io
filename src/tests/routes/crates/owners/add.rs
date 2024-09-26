@@ -1,7 +1,7 @@
-use crate::builders::CrateBuilder;
-use crate::owners::expire_invitation;
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::token::{CrateScope, EndpointScope};
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::owners::expire_invitation;
+use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
 

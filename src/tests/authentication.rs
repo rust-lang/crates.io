@@ -1,7 +1,7 @@
-use crate::util::{MockRequestExt, RequestHelper, Response};
-use crate::TestApp;
+use crate::tests::util::{MockRequestExt, RequestHelper, Response};
+use crate::tests::TestApp;
 
-use crate::util::encode_session_header;
+use crate::tests::util::encode_session_header;
 use http::{header, Method, StatusCode};
 use insta::assert_snapshot;
 

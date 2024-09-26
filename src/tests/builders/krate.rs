@@ -1,12 +1,12 @@
-use crates_io::{
+use crate::{
     models::{Category, Crate, Keyword, NewCrate},
     schema::{crates, version_downloads},
     util::errors::AppResult,
 };
 
+use crate::models::update_default_version;
+use crate::schema::crate_downloads;
 use chrono::NaiveDateTime;
-use crates_io::models::update_default_version;
-use crates_io::schema::crate_downloads;
 use diesel::prelude::*;
 
 use super::VersionBuilder;

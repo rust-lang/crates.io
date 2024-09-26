@@ -1,7 +1,7 @@
-use crate::util::TestApp;
+use crate::schema::crates;
+use crate::tests::util::TestApp;
+use crate::worker::jobs;
 use chrono::DateTime;
-use crates_io::schema::crates;
-use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::{PgConnection, RunQueryDsl};

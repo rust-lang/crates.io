@@ -1,5 +1,5 @@
-use crate::builders::*;
-use crate::util::*;
+use crate::tests::builders::*;
+use crate::tests::util::*;
 use std::collections::HashSet;
 
 use ::insta::assert_json_snapshot;

@@ -19,21 +19,21 @@
 //! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
-use crate::{
+use crate::middleware::session;
+use crate::models::{ApiToken, CreatedApiToken, User};
+use crate::tests::{
     CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OkBool,
     OwnersResponse, VersionResponse,
 };
-use crates_io::middleware::session;
-use crates_io::models::{ApiToken, CreatedApiToken, User};
 
 use http::{Method, Request};
 
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::util::token::PlainToken;
 use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
-use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::util::token::PlainToken;
 use http::header;
 use secrecy::ExposeSecret;
 use std::collections::HashMap;

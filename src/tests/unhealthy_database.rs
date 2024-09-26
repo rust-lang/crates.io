@@ -1,5 +1,5 @@
-use crate::builders::CrateBuilder;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
 use googletest::assert_that;

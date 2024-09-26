@@ -1,4 +1,4 @@
-use crate::{util::RequestHelper, TestApp};
+use crate::tests::{util::RequestHelper, TestApp};
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use http::StatusCode;
 use insta::assert_snapshot;
@@ -8,7 +8,7 @@ const LOCK_REASON: &str = "test lock reason";
 
 fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
     app.db(|conn| {
-        use crates_io::schema::users;
+        use crate::schema::users;
         use diesel::prelude::*;
 
         diesel::update(users::table)

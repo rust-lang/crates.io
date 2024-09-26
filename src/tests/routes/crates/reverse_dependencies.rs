@@ -1,5 +1,5 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
@@ -143,7 +143,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 
     app.db(|conn| {
-        use crates_io::schema::versions;
+        use crate::schema::versions;
         use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
         diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
@@ -168,7 +168,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     let user = user.as_model();
 
     app.db(|conn| {
-        use crates_io::schema::versions;
+        use crate::schema::versions;
         use diesel::{update, ExpressionMethods, RunQueryDsl};
 
         let c1 = CrateBuilder::new("c1", user.id)

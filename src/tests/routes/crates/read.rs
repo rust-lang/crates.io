@@ -1,5 +1,5 @@
-use crate::builders::{CrateBuilder, PublishBuilder, VersionBuilder};
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::{CrateBuilder, PublishBuilder, VersionBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -10,7 +10,7 @@ async fn show() {
     let user = user.as_model();
 
     app.db(|conn| {
-        use crates_io::schema::versions;
+        use crate::schema::versions;
         use diesel::{update, ExpressionMethods};
 
         let krate = CrateBuilder::new("foo_show", user.id)

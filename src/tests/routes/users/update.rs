@@ -1,4 +1,4 @@
-use crate::util::{RequestHelper, Response, TestApp};
+use crate::tests::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
 
@@ -15,10 +15,10 @@ pub trait MockEmailHelper: RequestHelper {
     }
 }
 
-impl MockEmailHelper for crate::util::MockCookieUser {}
-impl MockEmailHelper for crate::util::MockAnonymousUser {}
+impl MockEmailHelper for crate::tests::util::MockCookieUser {}
+impl MockEmailHelper for crate::tests::util::MockAnonymousUser {}
 
-impl crate::util::MockCookieUser {
+impl crate::tests::util::MockCookieUser {
     pub async fn update_email(&self, email: &str) {
         let model = self.as_model();
         let response = self.update_email_more_control(model.id, Some(email)).await;

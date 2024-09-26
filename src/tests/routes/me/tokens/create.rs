@@ -1,7 +1,7 @@
-use crate::util::insta::{self, assert_json_snapshot};
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::models::ApiToken;
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::ApiToken;
+use crate::tests::util::insta::{self, assert_json_snapshot};
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use googletest::prelude::*;
 use http::StatusCode;

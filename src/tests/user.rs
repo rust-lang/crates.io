@@ -1,15 +1,15 @@
-use crate::{
+use crate::models::{ApiToken, Email, NewUser, User};
+use crate::tests::{
     new_user,
     util::{MockCookieUser, RequestHelper},
     TestApp,
 };
-use crates_io::models::{ApiToken, Email, NewUser, User};
-use crates_io::util::token::HashedToken;
+use crate::util::token::HashedToken;
 use diesel::prelude::*;
 use http::StatusCode;
 use secrecy::ExposeSecret;
 
-impl crate::util::MockCookieUser {
+impl crate::tests::util::MockCookieUser {
     async fn confirm_email(&self, email_token: &str) {
         let url = format!("/api/v1/confirm/{email_token}");
         let response = self.put::<()>(&url, &[] as &[u8]).await;
@@ -100,7 +100,7 @@ async fn github_without_email_does_not_overwrite_email() {
 /// sign in again, that the email in crates.io will remain set to the original email used on GitHub.
 #[tokio::test(flavor = "multi_thread")]
 async fn github_with_email_does_not_overwrite_email() {
-    use crates_io::schema::emails;
+    use crate::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user();
     let model = user.as_model();
@@ -156,7 +156,7 @@ async fn test_email_get_and_put() {
 /// the email_verified field on user is now set to true.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_confirm_user_email() {
-    use crates_io::schema::emails;
+    use crate::schema::emails;
 
     let (app, _) = TestApp::init().empty();
 
@@ -195,8 +195,8 @@ async fn test_confirm_user_email() {
 /// make the user think we've sent an email when we haven't.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_existing_user_email() {
+    use crate::schema::emails;
     use chrono::NaiveDateTime;
-    use crates_io::schema::emails;
     use diesel::update;
 
     let (app, _) = TestApp::init().empty();
