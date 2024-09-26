@@ -1,0 +1,15 @@
+.inquire-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-s);
+  list-style: none;
+  padding: 0;
+}
+
+.link {
+  composes: link from '../components/front-page-list/item.module.css';
+  justify-content: center;
+  padding: var(--space-xs) var(--space-s);
+  height: inherit;
+  min-height: var(--space-2xl);
+}

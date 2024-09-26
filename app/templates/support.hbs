@@ -1,0 +1,24 @@
+<PageHeader @title="Contact Us" />
+
+<TextContent data-test-id="support-main-content">
+  {{#if this.supported}}
+  {{else}}
+    <section data-test-id="inquire-list-section">
+      <h2>Choose one of the these categories to continue.</h2>
+      <ul local-class="inquire-list" data-test-id="inquire-list">
+        {{#each this.supports as |support|}}
+          <li>
+            <LinkTo
+              @route="support"
+              @query={{hash inquire=support.inquire}}
+              data-test-id="link-{{support.inquire}}"
+              local-class="link"
+            >
+            {{support.label}}
+            </LinkTo>
+          </li>
+        {{/each}}
+      </ul>
+    </section>
+  {{/if}}
+</TextContent>
