@@ -1,8 +1,8 @@
 use crate::schema::{crate_owners, teams, users};
-use crate::storage::{FeedId, Storage};
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
+use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
@@ -26,8 +26,6 @@ pub struct Opts {
 
 pub fn run(opts: Opts) -> anyhow::Result<()> {
     let conn = &mut db::oneoff_connection().context("Failed to establish database connection")?;
-
-    let store = Storage::from_environment();
 
     let mut crate_names = opts.crate_names;
     crate_names.sort();
@@ -73,11 +71,6 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("Failed to initialize tokio runtime")?;
-
     for name in &crate_names {
         if let Some((id, _)) = existing_crates.get(name) {
             info!("{name}: Deleting crate from the database…");
@@ -93,20 +86,10 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
             warn!("{name}: Failed to enqueue index sync jobs: {error}");
         }
 
-        info!("{name}: Deleting crate files from S3…");
-        if let Err(error) = rt.block_on(store.delete_all_crate_files(name)) {
-            warn!("{name}: Failed to delete crate files from S3: {error}");
-        }
-
-        info!("{name}: Deleting readme files from S3…");
-        if let Err(error) = rt.block_on(store.delete_all_readmes(name)) {
-            warn!("{name}: Failed to delete readme files from S3: {error}");
-        }
-
-        info!("{name}: Deleting RSS feed from S3…");
-        let feed_id = FeedId::Crate { name };
-        if let Err(error) = rt.block_on(store.delete_feed(&feed_id)) {
-            warn!("{name}: Failed to delete RSS feed from S3: {error}");
+        info!("{name}: Enqueuing DeleteCrateFromStorage job…");
+        let job = jobs::DeleteCrateFromStorage::new(name.into());
+        if let Err(error) = job.enqueue(conn) {
+            warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
         }
     }
 

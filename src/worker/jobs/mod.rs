@@ -8,6 +8,7 @@ use std::fmt::Display;
 
 mod archive_version_downloads;
 mod daily_db_maintenance;
+mod delete_crate;
 mod downloads;
 pub mod dump_db;
 mod expiry_notification;
@@ -22,6 +23,7 @@ mod update_default_version;
 
 pub use self::archive_version_downloads::ArchiveVersionDownloads;
 pub use self::daily_db_maintenance::DailyDbMaintenance;
+pub use self::delete_crate::DeleteCrateFromStorage;
 pub use self::downloads::{
     CleanProcessedLogFiles, ProcessCdnLog, ProcessCdnLogQueue, UpdateDownloads,
 };
