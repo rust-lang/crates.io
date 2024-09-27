@@ -2,6 +2,11 @@
 
 <TextContent data-test-id="support-main-content">
   {{#if this.supported}}
+    {{#if (eq this.inquire "crate-violation")}}
+      <section data-test-id="crate-violation-section">
+        <Support::CrateReportForm @crate={{this.crate}} />
+      </section>
+    {{/if}}
   {{else}}
     <section data-test-id="inquire-list-section">
       <h2>Choose one of the these categories to continue.</h2>
