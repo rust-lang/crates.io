@@ -5,6 +5,7 @@ use crates_io::admin::{
     default_versions, delete_crate, delete_version, enqueue_job, migrate, populate, render_readmes,
     test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
 };
+use crates_io::tasks::spawn_blocking;
 
 #[derive(clap::Parser, Debug)]
 #[command(name = "crates-admin")]
@@ -25,7 +26,8 @@ enum Command {
     DefaultVersions(default_versions::Command),
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let _sentry = crates_io::sentry::init();
 
     // Initialize logging
@@ -38,18 +40,18 @@ fn main() -> anyhow::Result<()> {
     span.record("command", tracing::field::debug(&command));
 
     match command {
-        Command::DeleteCrate(opts) => delete_crate::run(opts),
-        Command::DeleteVersion(opts) => delete_version::run(opts),
-        Command::Populate(opts) => populate::run(opts),
-        Command::RenderReadmes(opts) => render_readmes::run(opts),
-        Command::TestPagerduty(opts) => test_pagerduty::run(opts),
-        Command::TransferCrates(opts) => transfer_crates::run(opts),
-        Command::VerifyToken(opts) => verify_token::run(opts),
-        Command::Migrate(opts) => migrate::run(opts),
-        Command::UploadIndex(opts) => upload_index::run(opts),
-        Command::YankVersion(opts) => yank_version::run(opts),
-        Command::EnqueueJob(command) => enqueue_job::run(command),
-        Command::DefaultVersions(opts) => default_versions::run(opts),
+        Command::DeleteCrate(opts) => spawn_blocking(move || delete_crate::run(opts)).await,
+        Command::DeleteVersion(opts) => spawn_blocking(move || delete_version::run(opts)).await,
+        Command::Populate(opts) => spawn_blocking(move || populate::run(opts)).await,
+        Command::RenderReadmes(opts) => spawn_blocking(move || render_readmes::run(opts)).await,
+        Command::TestPagerduty(opts) => spawn_blocking(move || test_pagerduty::run(opts)).await,
+        Command::TransferCrates(opts) => spawn_blocking(move || transfer_crates::run(opts)).await,
+        Command::VerifyToken(opts) => spawn_blocking(move || verify_token::run(opts)).await,
+        Command::Migrate(opts) => spawn_blocking(move || migrate::run(opts)).await,
+        Command::UploadIndex(opts) => spawn_blocking(move || upload_index::run(opts)).await,
+        Command::YankVersion(opts) => spawn_blocking(move || yank_version::run(opts)).await,
+        Command::EnqueueJob(command) => spawn_blocking(move || enqueue_job::run(command)).await,
+        Command::DefaultVersions(opts) => spawn_blocking(move || default_versions::run(opts)).await,
     }
 }
 
