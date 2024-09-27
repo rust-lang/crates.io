@@ -1,6 +1,9 @@
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use googletest::assert_that;
+use googletest::matchers::ends_with;
 use http::StatusCode;
 use std::time::{Duration, Instant};
 use tracing::info;
@@ -45,6 +48,27 @@ async fn http_error_with_unhealthy_database() {
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn download_requests_with_unhealthy_database_succeed() {
+    let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token();
+
+    app.db(|conn| {
+        CrateBuilder::new("foo", token.as_model().user_id)
+            .version("1.0.0")
+            .build(conn)
+            .unwrap();
+    });
+
+    app.primary_db_chaosproxy().break_networking().unwrap();
+
+    let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").await;
+    assert_eq!(response.status(), StatusCode::FOUND);
+
+    let location = assert_some!(response.headers().get("location"));
+    let location = assert_ok!(location.to_str());
+    assert_that!(location, ends_with("/crates/foo/foo-1.0.0.crate"));
 }
 
 #[tokio::test(flavor = "multi_thread")]

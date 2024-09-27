@@ -1,6 +1,6 @@
-use crate::builders::{CrateBuilder, PublishBuilder};
-use crate::util::{RequestHelper, TestApp};
-use crates_io::schema::versions_published_by;
+use crate::schema::versions_published_by;
+use crate::tests::builders::{CrateBuilder, PublishBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::{QueryDsl, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;

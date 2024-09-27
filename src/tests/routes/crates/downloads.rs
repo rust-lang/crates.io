@@ -1,8 +1,8 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
+use crate::schema::{crates, version_downloads, versions};
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
+use crate::views::EncodableVersionDownload;
 use chrono::{Duration, Utc};
-use crates_io::schema::{crates, version_downloads, versions};
-use crates_io::views::EncodableVersionDownload;
 use diesel::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};

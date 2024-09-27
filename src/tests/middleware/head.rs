@@ -1,4 +1,4 @@
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::util::{RequestHelper, TestApp};
 use http::{Method, StatusCode};
 
 #[tokio::test(flavor = "multi_thread")]

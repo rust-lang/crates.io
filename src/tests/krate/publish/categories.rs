@@ -1,6 +1,6 @@
-use crate::builders::PublishBuilder;
-use crate::new_category;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::PublishBuilder;
+use crate::tests::new_category;
+use crate::tests::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};

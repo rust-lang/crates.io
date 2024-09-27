@@ -36,10 +36,6 @@ opt-level = 2
 name = "crates_io"
 doctest = true
 
-[[test]]
-name = "all"
-path = "src/tests/all.rs"
-
 [features]
 default = ["slow-tests"]
 

@@ -1,11 +1,12 @@
-use crate::util::matchers::is_success;
+use crate::tests::util::matchers::is_success;
 use bytes::Bytes;
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
+use std::ops::Deref;
 use std::str::from_utf8;
 
-use crates_io::rate_limiter::LimitedAction;
+use crate::rate_limiter::LimitedAction;
 use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
@@ -13,6 +14,14 @@ use http::{header, StatusCode};
 pub struct Response<T> {
     response: hyper::Response<Bytes>,
     return_type: PhantomData<T>,
+}
+
+impl Deref for Response<()> {
+    type Target = hyper::Response<Bytes>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.response
+    }
 }
 
 impl<T> Response<T>

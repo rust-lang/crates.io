@@ -1,6 +1,6 @@
-use crate::builders::{CrateBuilder, PublishBuilder};
-use crate::util::{RequestHelper, TestApp};
-use crates_io::schema::api_tokens;
+use crate::schema::api_tokens;
+use crate::tests::builders::{CrateBuilder, PublishBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;

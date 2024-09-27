@@ -58,6 +58,8 @@ pub mod storage;
 pub mod tasks;
 pub mod team_repo;
 mod test_util;
+#[cfg(test)]
+mod tests;
 pub mod typosquat;
 pub mod util;
 pub mod views;

@@ -1,14 +1,5 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
-#[macro_use]
-extern crate claims;
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
-
-use crate::util::{RequestHelper, TestApp};
-use crates_io::{
+use crate::tests::util::{RequestHelper, TestApp};
+use crate::{
     models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User},
     schema::crate_owners,
     views::{
@@ -38,7 +29,6 @@ mod read_only_mode;
 mod routes;
 mod schema_details;
 mod server;
-mod server_binary;
 mod team;
 mod token;
 mod unhealthy_database;

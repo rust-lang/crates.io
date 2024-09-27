@@ -1,6 +1,6 @@
-use crate::builders::{CrateBuilder, PublishBuilder};
-use crate::util::{RequestHelper, Response, TestApp};
-use crate::OkBool;
+use crate::tests::builders::{CrateBuilder, PublishBuilder};
+use crate::tests::util::{RequestHelper, Response, TestApp};
+use crate::tests::OkBool;
 use http::StatusCode;
 use insta::assert_snapshot;
 
@@ -92,10 +92,10 @@ async fn unyank_records_an_audit_action() {
 
 mod auth {
     use super::*;
-    use crate::util::{MockAnonymousUser, MockCookieUser};
+    use crate::models::token::{CrateScope, EndpointScope};
+    use crate::schema::{crates, users, versions};
+    use crate::tests::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
-    use crates_io::models::token::{CrateScope, EndpointScope};
-    use crates_io::schema::{crates, users, versions};
     use diesel::prelude::*;
     use insta::assert_snapshot;
 

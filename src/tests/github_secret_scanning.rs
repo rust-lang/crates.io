@@ -1,7 +1,7 @@
-use crate::util::MockRequestExt;
-use crate::{RequestHelper, TestApp};
-use crates_io::util::token::HashedToken;
-use crates_io::{models::ApiToken, schema::api_tokens};
+use crate::tests::util::MockRequestExt;
+use crate::tests::{RequestHelper, TestApp};
+use crate::util::token::HashedToken;
+use crate::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
 use googletest::prelude::*;
 use http::StatusCode;

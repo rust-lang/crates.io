@@ -1,6 +1,6 @@
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::ApiToken;
-use crates_io::schema::api_tokens;
+use crate::models::ApiToken;
+use crate::schema::api_tokens;
+use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
 use insta::assert_snapshot;

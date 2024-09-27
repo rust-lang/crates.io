@@ -1,7 +1,7 @@
-use crate::builders::CrateBuilder;
-use crate::new_category;
-use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
-use crates_io::models::Category;
+use crate::models::Category;
+use crate::tests::builders::CrateBuilder;
+use crate::tests::new_category;
+use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
 use insta::assert_json_snapshot;
 use serde_json::Value;
 

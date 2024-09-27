@@ -1,7 +1,7 @@
-use crate::builders::PublishBuilder;
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::Crate;
-use crates_io::worker::jobs;
+use crate::models::Crate;
+use crate::tests::builders::PublishBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
+use crate::worker::jobs;
 use diesel::prelude::*;
 use http::StatusCode;
 
@@ -46,7 +46,7 @@ async fn index_smoke_test() {
     // Delete the crate
 
     app.db(|conn| {
-        use crates_io::schema::crates;
+        use crate::schema::crates;
 
         let krate: Crate = assert_ok!(Crate::by_name("serde").first(conn));
         assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(conn));

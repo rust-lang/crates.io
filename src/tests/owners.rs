@@ -1,11 +1,11 @@
-use crate::{
+use crate::tests::{
     add_team_to_crate,
     builders::{CrateBuilder, PublishBuilder},
     new_team,
     util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response},
     TestApp,
 };
-use crates_io::{
+use crate::{
     models::Crate,
     views::{
         EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
@@ -584,7 +584,7 @@ async fn test_accept_invitation_by_mail() {
 /// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
 /// pass, the creation date of the invite is moved back a month.
 pub fn expire_invitation(app: &TestApp, crate_id: i32) {
-    use crates_io::schema::crate_owner_invitations;
+    use crate::schema::crate_owner_invitations;
 
     app.db(|conn| {
         let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
@@ -705,7 +705,7 @@ async fn test_accept_expired_invitation_by_mail() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn inactive_users_dont_get_invitations() {
-    use crates_io::models::NewUser;
+    use crate::models::NewUser;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token();
     let owner = owner.as_model();
@@ -747,7 +747,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     let invited_gh_login = "user_bar";
     let krate_name = "newer_user_test";
 
-    // This user will get a lower gh_id, given how crate::new_user works
+    // This user will get a lower gh_id, given how crate::tests::new_user works
     app.db_new_user(invited_gh_login);
 
     let invited_user = app.db_new_user(invited_gh_login);

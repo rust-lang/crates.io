@@ -1,9 +1,9 @@
 #[tokio::test(flavor = "multi_thread")]
 async fn uploading_new_version_touches_crate() {
-    use crate::builders::PublishBuilder;
-    use crate::util::{RequestHelper, TestApp};
-    use crate::CrateResponse;
-    use crates_io::schema::crates;
+    use crate::schema::crates;
+    use crate::tests::builders::PublishBuilder;
+    use crate::tests::util::{RequestHelper, TestApp};
+    use crate::tests::CrateResponse;
     use diesel::dsl::*;
     use diesel::{ExpressionMethods, RunQueryDsl};
 

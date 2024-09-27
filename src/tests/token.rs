@@ -1,6 +1,6 @@
-use crate::util::MockRequestExt;
-use crate::{RequestHelper, TestApp};
-use crates_io::{models::ApiToken, views::EncodableMe};
+use crate::tests::util::MockRequestExt;
+use crate::tests::{RequestHelper, TestApp};
+use crate::{models::ApiToken, views::EncodableMe};
 use diesel::prelude::*;
 use http::{header, StatusCode};
 use insta::assert_snapshot;

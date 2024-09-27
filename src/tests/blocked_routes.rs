@@ -1,5 +1,5 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]

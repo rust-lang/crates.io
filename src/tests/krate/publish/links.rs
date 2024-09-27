@@ -1,6 +1,6 @@
-use crate::builders::PublishBuilder;
-use crate::util::insta::{self, assert_json_snapshot};
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::PublishBuilder;
+use crate::tests::util::insta::{self, assert_json_snapshot};
+use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]

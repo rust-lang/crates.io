@@ -1,5 +1,5 @@
-use crate::new_category;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::new_category;
+use crate::tests::util::{RequestHelper, TestApp};
 use insta::assert_json_snapshot;
 use serde_json::Value;
 

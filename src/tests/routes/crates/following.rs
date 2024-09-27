@@ -1,5 +1,5 @@
-use crate::builders::CrateBuilder;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::CrateBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn diesel_not_found_results_in_404() {

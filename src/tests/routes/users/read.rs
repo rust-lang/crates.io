@@ -1,6 +1,6 @@
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::NewUser;
-use crates_io::views::EncodablePublicUser;
+use crate::models::NewUser;
+use crate::tests::util::{RequestHelper, TestApp};
+use crate::views::EncodablePublicUser;
 
 #[derive(Deserialize)]
 pub struct UserShowPublicResponse {

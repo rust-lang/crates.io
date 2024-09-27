@@ -1,16 +1,16 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::util::chaosproxy::ChaosProxy;
-use crate::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
-use crates_io::config::{
+use crate::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
-use crates_io::middleware::cargo_compat::StatusCodeConfig;
-use crates_io::models::token::{CrateScope, EndpointScope};
-use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crates_io::storage::StorageConfig;
-use crates_io::team_repo::MockTeamRepo;
-use crates_io::worker::{Environment, RunnerExt};
-use crates_io::{App, Emails, Env};
+use crate::middleware::cargo_compat::StatusCodeConfig;
+use crate::models::token::{CrateScope, EndpointScope};
+use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crate::storage::StorageConfig;
+use crate::team_repo::MockTeamRepo;
+use crate::tests::util::chaosproxy::ChaosProxy;
+use crate::tests::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use crate::worker::{Environment, RunnerExt};
+use crate::{App, Emails, Env};
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_test_db::TestDatabase;
@@ -40,7 +40,7 @@ struct TestAppInner {
 
 impl Drop for TestAppInner {
     fn drop(&mut self) {
-        use crates_io::schema::background_jobs;
+        use crate::schema::background_jobs;
         use diesel::prelude::*;
 
         // Avoid a double-panic if the test is already failing
@@ -90,7 +90,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        crates_io::util::tracing::init_for_test();
+        crate::util::tracing::init_for_test();
 
         TestAppBuilder {
             config: simple_config(),
@@ -120,13 +120,13 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub fn db_new_user(&self, username: &str) -> MockCookieUser {
-        use crates_io::schema::emails;
+        use crate::schema::emails;
         use diesel::prelude::*;
 
         let user = self.db(|conn| {
             let email = format!("{username}@example.com");
 
-            let user = crate::new_user(username)
+            let user = crate::tests::new_user(username)
                 .create_or_update(None, &self.0.app.emails, conn)
                 .unwrap();
             diesel::insert_into(emails::table)
@@ -487,6 +487,6 @@ fn build_app(config: config::Server) -> (Arc<App>, axum::Router) {
     let app = App::new(config, emails, github);
 
     let app = Arc::new(app);
-    let router = crates_io::build_handler(Arc::clone(&app));
+    let router = crate::build_handler(Arc::clone(&app));
     (app, router)
 }

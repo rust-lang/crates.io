@@ -1,4 +1,4 @@
-use crate::{RequestHelper, TestApp};
+use crate::tests::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
 

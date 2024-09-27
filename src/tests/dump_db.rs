@@ -1,7 +1,7 @@
-use crate::builders::CrateBuilder;
-use crate::util::TestApp;
+use crate::tests::builders::CrateBuilder;
+use crate::tests::util::TestApp;
+use crate::worker::jobs::{dump_db, DumpDb};
 use bytes::Buf;
-use crates_io::worker::jobs::{dump_db, DumpDb};
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
@@ -110,7 +110,7 @@ fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
 
 #[test]
 fn dump_db_and_reimport_dump() {
-    crates_io::util::tracing::init_for_test();
+    crate::util::tracing::init_for_test();
 
     let db_one = TestDatabase::new();
 
@@ -132,7 +132,7 @@ fn dump_db_and_reimport_dump() {
 
 #[test]
 fn test_sql_scripts() {
-    crates_io::util::tracing::init_for_test();
+    crate::util::tracing::init_for_test();
 
     let db = TestDatabase::new();
 

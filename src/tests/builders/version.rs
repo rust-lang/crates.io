@@ -1,12 +1,12 @@
-use crates_io::{
+use crate::{
     models::{Crate, NewVersion, Version},
     schema::{dependencies, versions},
     util::errors::AppResult,
 };
 use std::collections::BTreeMap;
 
+use crate::util::errors::internal;
 use chrono::NaiveDateTime;
-use crates_io::util::errors::internal;
 use diesel::prelude::*;
 
 /// A builder to create version records for the purpose of inserting directly into the database.

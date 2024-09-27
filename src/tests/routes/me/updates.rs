@@ -1,8 +1,8 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::{RequestHelper, TestApp};
-use crate::OkBool;
-use crates_io::schema::versions;
-use crates_io::views::EncodableVersion;
+use crate::schema::versions;
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::{RequestHelper, TestApp};
+use crate::tests::OkBool;
+use crate::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;
 use googletest::prelude::*;

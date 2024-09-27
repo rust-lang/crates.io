@@ -1,4 +1,4 @@
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::util::{RequestHelper, TestApp};
 
 #[derive(Deserialize)]
 struct UserStats {
@@ -7,9 +7,9 @@ struct UserStats {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_total_downloads() {
-    use crate::builders::CrateBuilder;
-    use crate::util::{RequestHelper, TestApp};
-    use crates_io::schema::crate_downloads;
+    use crate::schema::crate_downloads;
+    use crate::tests::builders::CrateBuilder;
+    use crate::tests::util::{RequestHelper, TestApp};
     use diesel::prelude::*;
     use diesel::{update, QueryDsl, RunQueryDsl};
 

@@ -1,5 +1,5 @@
-use crate::builders::PublishBuilder;
-use crate::util::{RequestHelper, TestApp};
+use crate::tests::builders::PublishBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_tarball::TarballBuilder;
 use googletest::prelude::*;
 use http::StatusCode;

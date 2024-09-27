@@ -1,6 +1,6 @@
-use crate::builders::PublishBuilder;
-use crate::util::{RequestHelper, TestApp};
-use crates_io::models::krate::MAX_NAME_LENGTH;
+use crate::models::krate::MAX_NAME_LENGTH;
+use crate::tests::builders::PublishBuilder;
+use crate::tests::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};

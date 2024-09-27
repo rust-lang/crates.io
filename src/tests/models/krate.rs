@@ -1,6 +1,6 @@
-use crate::builders::{CrateBuilder, VersionBuilder};
-use crate::util::insta::assert_json_snapshot;
-use crate::TestApp;
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
+use crate::tests::util::insta::assert_json_snapshot;
+use crate::tests::TestApp;
 use chrono::{Days, Utc};
 
 #[test]

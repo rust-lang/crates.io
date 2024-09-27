@@ -1,4 +1,4 @@
-use crates_io::schema::categories;
+use crate::schema::categories;
 use crates_io_test_db::TestDatabase;
 use diesel::*;
 
@@ -50,7 +50,7 @@ fn sync_adds_new_categories() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.connect();
 
-    ::crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
+    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
 
     let categories = select_slugs(&mut conn);
     assert_eq!(categories, vec!["algorithms", "algorithms::such"]);
@@ -61,8 +61,8 @@ fn sync_removes_missing_categories() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.connect();
 
-    ::crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
-    ::crates_io::boot::categories::sync_with_connection(ALGORITHMS, &mut conn).unwrap();
+    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
+    crate::boot::categories::sync_with_connection(ALGORITHMS, &mut conn).unwrap();
 
     let categories = select_slugs(&mut conn);
     assert_eq!(categories, vec!["algorithms"]);
@@ -73,8 +73,8 @@ fn sync_adds_and_removes() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.connect();
 
-    ::crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
-    ::crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &mut conn).unwrap();
+    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn).unwrap();
+    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &mut conn).unwrap();
 
     let categories = select_slugs(&mut conn);
     assert_eq!(categories, vec!["algorithms", "another"]);
@@ -86,7 +86,7 @@ fn test_real_categories() {
     let mut conn = test_db.connect();
 
     const TOML: &str = include_str!("../boot/categories.toml");
-    assert_ok!(crates_io::boot::categories::sync_with_connection(
+    assert_ok!(crate::boot::categories::sync_with_connection(
         TOML, &mut conn
     ));
 }
