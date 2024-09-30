@@ -149,19 +149,18 @@ pub async fn update(
 }
 
 fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppResult<()> {
-    match (update_data.yanked, &update_data.yank_message) {
-        (Some(false), Some(_)) => {
+    if update_data.yank_message.is_some() {
+        if matches!(update_data.yanked, Some(false)) {
             return Err(bad_request("Cannot set yank message when unyanking"));
         }
-        (None, Some(_)) => {
-            if !version.yanked {
-                return Err(bad_request(
-                    "Cannot update yank message for a version that is not yanked",
-                ));
-            }
+
+        if update_data.yanked.is_none() && !version.yanked {
+            return Err(bad_request(
+                "Cannot update yank message for a version that is not yanked",
+            ));
         }
-        _ => {}
     }
+
     Ok(())
 }
 
