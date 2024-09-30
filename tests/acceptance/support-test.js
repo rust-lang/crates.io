@@ -24,7 +24,7 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'],
+      ['Report a crate that violates policies'].concat(['For all other cases']),
     );
 
     await percySnapshot(assert);
@@ -41,7 +41,7 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'],
+      ['Report a crate that violates policies'].concat(['For all other cases']),
     );
   });
 

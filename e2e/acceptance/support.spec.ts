@@ -9,7 +9,9 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
     const inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
-    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(['Report a crate that violates policies']);
+    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
+      ['Report a crate that violates policies'].concat(['For all other cases']),
+    );
 
     await percy.snapshot();
     await a11y.audit();
@@ -23,7 +25,9 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     await expect(page.getByTestId('inquire-list-section')).toBeVisible();
     const inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
-    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(['Report a crate that violates policies']);
+    await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
+      ['Report a crate that violates policies'].concat(['For all other cases']),
+    );
   });
 
   test.describe('reporting a crate from support page', () => {
