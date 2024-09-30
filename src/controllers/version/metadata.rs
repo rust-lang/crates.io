@@ -187,13 +187,11 @@ pub fn perform_version_yank_update(
     let user = auth.user();
     let owners = krate.owners(conn)?;
 
+    let yanked = yanked.unwrap_or(version.yanked);
+
     if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
         if user.is_admin {
-            let action = if version.yanked {
-                "yanking"
-            } else {
-                "unyanking"
-            };
+            let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
                 "Admin {} is {action} {}@{}",
                 user.gh_login, krate.name, version.num
@@ -206,7 +204,6 @@ pub fn perform_version_yank_update(
         }
     }
 
-    let yanked = yanked.unwrap_or(version.yanked);
     // Check if the yanked state or yank message has changed and update if necessary
     let updated_cnt = diesel::update(
         versions::table.find(version.id).filter(
@@ -230,7 +227,7 @@ pub fn perform_version_yank_update(
     version.yanked = yanked;
     version.yank_message = yank_message;
 
-    let action = if version.yanked {
+    let action = if yanked {
         VersionAction::Yank
     } else {
         VersionAction::Unyank
