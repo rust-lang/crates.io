@@ -45,7 +45,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .route("/api/v1/crates/:crate_id", get(krate::metadata::show))
         .route(
             "/api/v1/crates/:crate_id/:version",
-            get(version::metadata::show),
+            get(version::metadata::show).patch(version::metadata::update),
         )
         .route(
             "/api/v1/crates/:crate_id/:version/readme",

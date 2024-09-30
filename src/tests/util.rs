@@ -145,6 +145,20 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
+    /// Issue a PATCH request
+    async fn patch<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        let body = body.into();
+        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
+
+        let mut request = self.request_builder(Method::PATCH, path);
+        *request.body_mut() = body;
+        if is_json {
+            request.header(header::CONTENT_TYPE, "application/json");
+        }
+
+        self.run(request).await
+    }
+
     /// Issue a DELETE request
     async fn delete<T>(&self, path: &str) -> Response<T> {
         let request = self.request_builder(Method::DELETE, path);

@@ -6,16 +6,42 @@
 
 use axum::extract::Path;
 use axum::Json;
+use crates_io_worker::BackgroundJob;
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, PgExpressionMethods, QueryDsl, RunQueryDsl,
+};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use http::request::Parts;
+use http::StatusCode;
+use serde::Deserialize;
 use serde_json::Value;
+use tokio::runtime::Handle;
 
 use crate::app::AppState;
-use crate::models::VersionOwnerAction;
+use crate::auth::AuthCheck;
+use crate::models::token::EndpointScope;
+use crate::models::{
+    insert_version_owner_action, Crate, Rights, Version, VersionAction, VersionOwnerAction,
+};
+use crate::rate_limiter::LimitedAction;
+use crate::schema::versions;
 use crate::tasks::spawn_blocking;
-use crate::util::errors::{version_not_found, AppResult};
+use crate::util::diesel::Conn;
+use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
+use crate::worker::jobs::{self, UpdateDefaultVersion};
 
 use super::version_and_crate;
+
+#[derive(Deserialize)]
+pub struct VersionUpdate {
+    yanked: Option<bool>,
+    yank_message: Option<String>,
+}
+#[derive(Deserialize)]
+pub struct VersionUpdateRequest {
+    version: VersionUpdate,
+}
 
 /// Handles the `GET /crates/:crate_id/:version/dependencies` route.
 ///
@@ -83,4 +109,133 @@ pub async fn show(
         Ok(Json(json!({ "version": version })))
     })
     .await
+}
+
+/// Handles the `PATCH /crates/:crate/:version` route.
+///
+/// This endpoint allows updating the yanked state of a version, including a yank message.
+pub async fn update(
+    state: AppState,
+    Path((crate_name, version)): Path<(String, String)>,
+    req: Parts,
+    Json(update_request): Json<VersionUpdateRequest>,
+) -> AppResult<Json<Value>> {
+    if semver::Version::parse(&version).is_err() {
+        return Err(version_not_found(&crate_name, &version));
+    }
+
+    let conn = state.db_write().await?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let (mut version, krate) = version_and_crate(conn, &crate_name, &version)?;
+
+        validate_yank_update(&update_request.version, &version)?;
+        perform_version_yank_update(
+            &state,
+            &req,
+            conn,
+            &mut version,
+            &krate,
+            update_request.version.yanked,
+            update_request.version.yank_message,
+        )?;
+
+        let published_by = version.published_by(conn);
+        let actions = VersionOwnerAction::by_version(conn, &version)?;
+        let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
+        Ok(Json(json!({ "version": updated_version })))
+    })
+    .await
+}
+
+fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppResult<()> {
+    match (update_data.yanked, &update_data.yank_message) {
+        (Some(false), Some(_)) => {
+            return Err(bad_request("Cannot set yank message when unyanking"));
+        }
+        (None, Some(_)) => {
+            if !version.yanked {
+                return Err(bad_request(
+                    "Cannot update yank message for a version that is not yanked",
+                ));
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+pub fn perform_version_yank_update(
+    state: &AppState,
+    req: &Parts,
+    conn: &mut impl Conn,
+    version: &mut Version,
+    krate: &Crate,
+    yanked: Option<bool>,
+    yank_message: Option<String>,
+) -> AppResult<()> {
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::Yank)
+        .for_crate(&krate.name)
+        .check(req, conn)?;
+
+    state
+        .rate_limiter
+        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, conn)?;
+
+    let api_token_id = auth.api_token_id();
+    let user = auth.user();
+    let owners = krate.owners(conn)?;
+
+    let yanked = yanked.unwrap_or(version.yanked);
+
+    if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
+        if user.is_admin {
+            let action = if yanked { "yanking" } else { "unyanking" };
+            warn!(
+                "Admin {} is {action} {}@{}",
+                user.gh_login, krate.name, version.num
+            );
+        } else {
+            return Err(custom(
+                StatusCode::FORBIDDEN,
+                "must already be an owner to yank or unyank",
+            ));
+        }
+    }
+
+    // Check if the yanked state or yank message has changed and update if necessary
+    let updated_cnt = diesel::update(
+        versions::table.find(version.id).filter(
+            versions::yanked
+                .is_distinct_from(yanked)
+                .or(versions::yank_message.is_distinct_from(&yank_message)),
+        ),
+    )
+    .set((
+        versions::yanked.eq(yanked),
+        versions::yank_message.eq(&yank_message),
+    ))
+    .execute(conn)?;
+
+    // If no rows were updated, return early
+    if updated_cnt == 0 {
+        return Ok(());
+    }
+
+    // Apply the update to the version
+    version.yanked = yanked;
+    version.yank_message = yank_message;
+
+    let action = if yanked {
+        VersionAction::Yank
+    } else {
+        VersionAction::Unyank
+    };
+    insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
+
+    jobs::enqueue_sync_to_index(&krate.name, conn)?;
+    UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+
+    Ok(())
 }
