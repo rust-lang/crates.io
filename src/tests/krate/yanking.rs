@@ -8,7 +8,7 @@ use chrono::Utc;
 use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 use std::time::Duration;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -280,10 +280,12 @@ async fn patch_version_yank_unyank() {
         .update_yank_status("patchable", "1.0.0", None, Some("Invalid message"))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Cannot update yank message for a version that is not yanked"}]}"#);
 
     // Attempt to unyank with message (should fail)
     let response = token
         .update_yank_status("patchable", "1.0.0", Some(false), Some("Invalid message"))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Cannot set yank message when unyanking"}]}"#);
 }
