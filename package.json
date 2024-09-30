@@ -137,7 +137,7 @@
     "qunit-dom": "3.2.1",
     "tracked-built-ins": "3.3.0",
     "typescript": "5.6.2",
-    "webpack": "5.94.0"
+    "webpack": "5.95.0"
   },
   "resolutions": {
     "ember-get-config": "2.1.1",
