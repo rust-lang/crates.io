@@ -7,6 +7,7 @@ use crate::tests::VersionResponse;
 use chrono::Utc;
 use diesel::{ExpressionMethods, RunQueryDsl};
 use googletest::prelude::*;
+use http::StatusCode;
 use insta::assert_json_snapshot;
 use std::time::Duration;
 
@@ -275,15 +276,14 @@ async fn patch_version_yank_unyank() {
     assert_json_helper(json);
 
     // Attempt to set yank message on unyanked version (should fail)
-    token
+    let response = token
         .update_yank_status("patchable", "1.0.0", None, Some("Invalid message"))
-        .await
-        .status()
-        .is_client_error();
+        .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
     // Attempt to unyank with message (should fail)
-    token
+    let response = token
         .update_yank_status("patchable", "1.0.0", Some(false), Some("Invalid message"))
-        .await
-        .status()
-        .is_client_error();
+        .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
