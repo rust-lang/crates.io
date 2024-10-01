@@ -215,8 +215,8 @@ importers:
         specifier: 5.12.0
         version: 5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.2))(rsvp@4.8.5)(webpack@5.95.0)
       ember-svg-jar:
-        specifier: 2.5.0
-        version: 2.5.0
+        specifier: 2.6.0
+        version: 2.6.0
       ember-template-lint:
         specifier: 6.0.0
         version: 6.0.0
@@ -4272,8 +4272,8 @@ packages:
     peerDependencies:
       '@glimmer/component': ^1.1.2
 
-  ember-svg-jar@2.5.0:
-    resolution: {integrity: sha512-5NVGEsh8iM4YVL74lpEOFYN3/lTJVLn+oAvRxjcF9ptXKf5tMWEzdVb8xXyqnVTbOgWKyTrc482ndaW8/MGEIw==}
+  ember-svg-jar@2.6.0:
+    resolution: {integrity: sha512-LRG+BoQJTHPQlxfCPGIrOZo/UqXtadcOLuUjrhHRyQJJYDFEeJX5sWUsz/bJe48Bgi9FyOoQtdqrRAQ+COn2Kg==}
     engines: {node: 12.* || 14.* || >= 16}
 
   ember-template-imports@3.4.2:
@@ -14354,7 +14354,7 @@ snapshots:
       - supports-color
       - webpack
 
-  ember-svg-jar@2.5.0:
+  ember-svg-jar@2.6.0:
     dependencies:
       '@embroider/macros': 1.16.6
       broccoli-caching-writer: 3.0.3
