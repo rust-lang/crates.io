@@ -39,10 +39,6 @@ expression: split_features(features)
         "unicode": [
             "clap_builder/unicode",
         ],
-        "unstable-doc": [
-            "clap_builder/unstable-doc",
-            "derive",
-        ],
         "unstable-ext": [
             "clap_builder/unstable-ext",
         ],
@@ -67,6 +63,10 @@ expression: split_features(features)
         ],
         "derive": [
             "dep:clap_derive",
+        ],
+        "unstable-doc": [
+            "clap_builder/unstable-doc",
+            "derive",
         ],
         "unstable-v5": [
             "clap_builder/unstable-v5",

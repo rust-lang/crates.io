@@ -7,11 +7,38 @@ pub type FeaturesMap = BTreeMap<String, Vec<String>>;
 ///
 /// See <https://rust-lang.github.io/rfcs/3143-cargo-weak-namespaced-features.html>.
 pub fn split_features(features: FeaturesMap) -> (FeaturesMap, FeaturesMap) {
-    features.into_iter().partition(|(_k, vals)| {
-        !vals
-            .iter()
-            .any(|v| v.starts_with("dep:") || v.contains("?/"))
-    })
+    const ITERATION_LIMIT: usize = 100;
+
+    // First, we partition the features into two groups: those that use the new
+    // features syntax (`features2`) and those that don't (`features`).
+    let (mut features, mut features2) =
+        features
+            .into_iter()
+            .partition::<FeaturesMap, _>(|(_k, vals)| {
+                !vals
+                    .iter()
+                    .any(|v| v.starts_with("dep:") || v.contains("?/"))
+            });
+
+    // Then, we recursively move features from `features` to `features2` if they
+    // depend on features in `features2`.
+    for _ in 0..ITERATION_LIMIT {
+        let split = features
+            .into_iter()
+            .partition::<FeaturesMap, _>(|(_k, vals)| {
+                !vals.iter().any(|v| features2.contains_key(v))
+            });
+
+        features = split.0;
+
+        if !split.1.is_empty() {
+            features2.extend(split.1);
+        } else {
+            break;
+        }
+    }
+
+    (features, features2)
 }
 
 #[cfg(test)]
@@ -93,8 +120,8 @@ mod tests {
 
         let (features, features2) = split_features(features);
 
-        assert_compact_debug_snapshot!(features, @r#"{"feature1": ["feature2"], "feature2": ["feature3"]}"#);
-        assert_compact_debug_snapshot!(features2, @r#"{"feature3": ["dep:foo"]}"#);
+        assert_compact_debug_snapshot!(features, @"{}");
+        assert_compact_debug_snapshot!(features2, @r#"{"feature1": ["feature2"], "feature2": ["feature3"], "feature3": ["dep:foo"]}"#);
     }
 
     #[test]
