@@ -1044,7 +1044,7 @@ dependencies = [
  "quick-xml",
  "rand",
  "regex",
- "reqwest 0.12.7",
+ "reqwest 0.12.8",
  "rss",
  "scheduled-thread-pool",
  "secrecy",
@@ -1108,7 +1108,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "oauth2",
- "reqwest 0.12.7",
+ "reqwest 0.12.8",
  "serde",
  "thiserror",
  "tracing",
@@ -1150,7 +1150,7 @@ dependencies = [
  "bytes",
  "clap",
  "crates_io_index",
- "reqwest 0.12.7",
+ "reqwest 0.12.8",
  "secrecy",
  "semver",
  "serde",
@@ -3150,7 +3150,7 @@ dependencies = [
  "percent-encoding",
  "quick-xml",
  "rand",
- "reqwest 0.12.7",
+ "reqwest 0.12.8",
  "ring",
  "serde",
  "serde_json",
@@ -3877,9 +3877,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.7"
+version = "0.12.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8f4955649ef5c38cc7f9e8aa41761d48fb9677197daea9984dc54f56aad5e63"
+checksum = "f713147fbe92361e52392c73b8c9e48c04c6625bce969ef54dc901e58e042a7b"
 dependencies = [
  "async-compression",
  "base64 0.22.1",
@@ -3906,7 +3906,7 @@ dependencies = [
  "pin-project-lite",
  "quinn",
  "rustls 0.23.13",
- "rustls-native-certs 0.7.3",
+ "rustls-native-certs 0.8.0",
  "rustls-pemfile 2.1.3",
  "rustls-pki-types",
  "serde",
@@ -4030,19 +4030,6 @@ checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
 dependencies = [
  "openssl-probe",
  "rustls-pemfile 1.0.4",
- "schannel",
- "security-framework",
-]
-
-[[package]]
-name = "rustls-native-certs"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5bfb394eeed242e909609f56089eecfe5fda225042e8b171791b9c95f5931e5"
-dependencies = [
- "openssl-probe",
- "rustls-pemfile 2.1.3",
- "rustls-pki-types",
  "schannel",
  "security-framework",
 ]
@@ -4234,7 +4221,7 @@ checksum = "5484316556650182f03b43d4c746ce0e3e48074a21e2f51244b648b6542e1066"
 dependencies = [
  "httpdate",
  "native-tls",
- "reqwest 0.12.7",
+ "reqwest 0.12.8",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",

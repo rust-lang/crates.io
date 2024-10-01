@@ -100,7 +100,7 @@ postgres-native-tls = "=0.5.0"
 prometheus = { version = "=0.13.4", default-features = false }
 quick-xml = "=0.36.2"
 rand = "=0.8.5"
-reqwest = { version = "=0.12.7", features = ["blocking", "gzip", "json"] }
+reqwest = { version = "=0.12.8", features = ["blocking", "gzip", "json"] }
 rss = { version = "=2.0.9", default-features = false, features = ["atom"] }
 scheduled-thread-pool = "=0.2.7"
 secrecy = "=0.10.2"
