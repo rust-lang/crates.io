@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use chrono::NaiveDateTime;
 use derive_builder::Builder;
 use diesel::prelude::*;
+use serde::Deserialize;
 
 use crate::util::errors::{bad_request, AppResult};
 
@@ -62,6 +63,16 @@ impl Version {
             Some(pb) => users::table.find(pb).first(conn).ok(),
             None => None,
         }
+    }
+
+    /// Deserializes the `features` field from JSON into a `BTreeMap`.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(BTreeMap<String, Vec<String>>)` - If the deserialization was successful.
+    /// * `Err(serde_json::Error)` - If the deserialization failed.
+    pub fn features(&self) -> Result<BTreeMap<String, Vec<String>>, serde_json::Error> {
+        BTreeMap::<String, Vec<String>>::deserialize(&self.features)
     }
 }
 

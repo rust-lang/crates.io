@@ -483,8 +483,7 @@ impl Crate {
 
                 deps.sort();
 
-                let features: BTreeMap<String, Vec<String>> =
-                    serde_json::from_value(version.features).unwrap_or_default();
+                let features = version.features().unwrap_or_default();
                 let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
                     features.into_iter().partition(|(_k, vals)| {
                         !vals
