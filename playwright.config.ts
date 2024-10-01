@@ -30,6 +30,9 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* Set a custom test id that is also compatible with `ember-test-selectors` */
+    testIdAttribute: 'data-test-id',
   },
 
   /* Configure projects for major browsers */
