@@ -7,6 +7,7 @@ use serde::Deserialize;
 
 use crate::util::errors::{bad_request, AppResult};
 
+use crate::models::feature::FeaturesMap;
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::sql::split_part;
@@ -71,7 +72,7 @@ impl Version {
     ///
     /// * `Ok(BTreeMap<String, Vec<String>>)` - If the deserialization was successful.
     /// * `Err(serde_json::Error)` - If the deserialization failed.
-    pub fn features(&self) -> Result<BTreeMap<String, Vec<String>>, serde_json::Error> {
+    pub fn features(&self) -> Result<FeaturesMap, serde_json::Error> {
         BTreeMap::<String, Vec<String>>::deserialize(&self.features)
     }
 }

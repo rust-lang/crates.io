@@ -24,6 +24,7 @@ mod default_versions;
 pub mod dependency;
 mod download;
 mod email;
+pub mod feature;
 mod follow;
 mod keyword;
 pub mod krate;

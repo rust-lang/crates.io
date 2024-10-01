@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::dsl;
@@ -10,6 +8,7 @@ use secrecy::SecretString;
 use thiserror::Error;
 
 use crate::controllers::helpers::pagination::*;
+use crate::models::feature::split_features;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
@@ -484,12 +483,7 @@ impl Crate {
                 deps.sort();
 
                 let features = version.features().unwrap_or_default();
-                let (features, features2): (BTreeMap<_, _>, BTreeMap<_, _>) =
-                    features.into_iter().partition(|(_k, vals)| {
-                        !vals
-                            .iter()
-                            .any(|v| v.starts_with("dep:") || v.contains("?/"))
-                    });
+                let (features, features2) = split_features(features);
 
                 let (features2, v) = if features2.is_empty() {
                     (None, None)
