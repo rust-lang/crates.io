@@ -63,7 +63,8 @@ pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
 pub fn init_for_test() {
     let env_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::DEBUG.into())
-        .from_env_lossy();
+        .from_env_lossy()
+        .add_directive("tokio_postgres=info".parse().unwrap());
 
     let _ = tracing_subscriber::fmt()
         .compact()
