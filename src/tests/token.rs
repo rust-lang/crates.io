@@ -37,6 +37,25 @@ async fn using_token_updates_last_used_at() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn token_updates_are_skipped_in_read_only_mode() {
+    let (app, _, _, token_client) = TestApp::init()
+        .with_config(|app| {
+            app.db.primary.read_only_mode = true;
+        })
+        .with_token();
+
+    let token_id = token_client.as_model().id;
+    let token = app.db(|conn| get_token(conn, token_id));
+    assert_none!(token.last_used_at);
+
+    let response = token_client.get::<()>("/api/v1/crates?following=1").await;
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let token = app.db(|conn| get_token(conn, token_id));
+    assert_none!(token.last_used_at);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn old_tokens_give_specific_error_message() {
     let url = "/api/v1/me";
     let (_, anon) = TestApp::init().empty();
