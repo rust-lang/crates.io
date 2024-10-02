@@ -19,8 +19,8 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       '@sentry/ember':
-        specifier: 8.32.0
-        version: 8.32.0(webpack@5.95.0)
+        specifier: 8.33.0
+        version: 8.33.0(webpack@5.95.0)
       chart.js:
         specifier: 4.4.4
         version: 4.4.4
@@ -1863,40 +1863,40 @@ packages:
     resolution: {integrity: sha512-C5DHU6YlKaISB5utGQ+jpsMB57ZtY0uZ8UkD29j855BjqG6eJ98lhA2h/BoJbyPw89RKLP1EEXroy9+5JPoyVw==}
     engines: {node: 12.* || >= 14}
 
-  '@sentry-internal/browser-utils@8.32.0':
-    resolution: {integrity: sha512-DpUGhk5O1OVjT0fo9wsbEdO1R/S9gGBRDtn9+FFVeRtieJHwXpeZiLK+tZhTOvaILmtSoTPUEY3L5sK4j5Xq9g==}
+  '@sentry-internal/browser-utils@8.33.0':
+    resolution: {integrity: sha512-zwjmD+XI3pgxxiqKGLXYDGSd+zfO7az9zzbLn1le8Vv9cRL2lZyMLcwiwEaTpwz3B0pPONeDZMT8+bzMGRs8zw==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/feedback@8.32.0':
-    resolution: {integrity: sha512-XB7hiVJQW1tNzpoXIHbvm3rjipIt7PZiJJtFg2vxaqu/FzdgOcYqQiwIKivJVAKuRZ9rIeJtK1jdXQFOc/TRJA==}
+  '@sentry-internal/feedback@8.33.0':
+    resolution: {integrity: sha512-KSW/aiNgmJc8PDl2NsM+ONvGure4tPaluj7O1Nw+947Dh8W6CJnQ9srB7xPyoYYWyQW8Hyl1vzxY9W0J+fjlhA==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/replay-canvas@8.32.0':
-    resolution: {integrity: sha512-oBbhtDBkD+5z/T0NVJ5VenBWAid/S9QdVrod/UqxVqU7F8N+E9/INFQI48zCWr4iVlUMcszJPDElvJEsMDvvBQ==}
+  '@sentry-internal/replay-canvas@8.33.0':
+    resolution: {integrity: sha512-9fEhMP+gQYQrtn/SQd1Vd7U7emTSGBpLKc5h5f0iV0yDmjYAhNVbq4RgPTYAgnBEcdVo3qgboL6UIz9Dv+dYRQ==}
     engines: {node: '>=14.18'}
 
-  '@sentry-internal/replay@8.32.0':
-    resolution: {integrity: sha512-yiEUnn2yyo1AIQIFNeRX3tdK8fmyKIkxdFS1WiVQmeYI/hFwYBTZPly0FcO/g3xnRMSA2tvrS+hZEaaXfK4WhA==}
+  '@sentry-internal/replay@8.33.0':
+    resolution: {integrity: sha512-GFBaDA4yhlEf3wTXOVXnJVG/diuKxeqZuXcuhsAwJb+YcFR0NhgsRn3wIGuYOZZF8GBXzx9PFnb9yIuFgx5Nbw==}
     engines: {node: '>=14.18'}
 
-  '@sentry/browser@8.32.0':
-    resolution: {integrity: sha512-AEKFj64g4iYwEMRvVcxiY0FswmClRXCP1IEvCqujn8OBS8AjMOr1z/RwYieEs0D90yNNB3YEqF8adrKENblJmw==}
+  '@sentry/browser@8.33.0':
+    resolution: {integrity: sha512-qu/g20ZskywEU8BWc4Fts1kXFFBtw1vS+XvPq7Ta9zCeRG5dlXhhYDVQ4/v4nAL/cs0o6aLCq73m109CFF0Kig==}
     engines: {node: '>=14.18'}
 
-  '@sentry/core@8.32.0':
-    resolution: {integrity: sha512-+xidTr0lZ0c755tq4k75dXPEb8PA+qvIefW3U9+dQMORLokBrYoKYMf5zZTG2k/OfSJS6OSxatUj36NFuCs3aA==}
+  '@sentry/core@8.33.0':
+    resolution: {integrity: sha512-618PQGHQLBVCpAq1s+e/rpIUaLUnj19IPUgn97rUGXLLna8ETIAoyQoG70wz4q9niw4Z4GlS5kZNrael2O3+2w==}
     engines: {node: '>=14.18'}
 
-  '@sentry/ember@8.32.0':
-    resolution: {integrity: sha512-rFluNp9led8pu9puvgQ0jtgP+czV0NDqew3IkWmcrnlcfJ/ZxbTOJGgpg0sNTdtD/iIQlG0wpNOTjYprOZ3qxA==}
+  '@sentry/ember@8.33.0':
+    resolution: {integrity: sha512-n1nMtsS/RN1gYA6T6o1jO5bDKWLps+ZMQBUaKTiMDyng1XwCJbRV0VvgbGXF5FzGqTxFydibGoL1mt64ZAkMpg==}
     engines: {node: '>=14.18'}
 
-  '@sentry/types@8.32.0':
-    resolution: {integrity: sha512-hxckvN2MzS5SgGDgVQ0/QpZXk13Vrq4BtZLwXhPhyeTmZtUiUfWvcL5TFQqLinfKdTKPe9q2MxeAJ0D4LalhMg==}
+  '@sentry/types@8.33.0':
+    resolution: {integrity: sha512-V/A+72ZdnfGtXeXIpz1kUo3LRdq3WKEYYFUR2RKpCdPh9yeOrHq6u/rmzTWx49+om0yhZN+JhVoxDzt75UoFRg==}
     engines: {node: '>=14.18'}
 
-  '@sentry/utils@8.32.0':
-    resolution: {integrity: sha512-t1WVERhgmYURxbBj9J4/H2P2X+VKqm7B3ce9iQyrZbdf5NekhcU4jHIecPUWCPHjQkFIqkVTorqeBmDTlg/UmQ==}
+  '@sentry/utils@8.33.0':
+    resolution: {integrity: sha512-TdwtGdevJij2wq2x/hDUr+x5TXt47ZhWxZ8zluai/lnIDTUB3Xs/L9yHtj1J+H9hr8obkMASE9IanUrWXzrP6Q==}
     engines: {node: '>=14.18'}
 
   '@simple-dom/document@1.4.0':
@@ -11006,55 +11006,55 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sentry-internal/browser-utils@8.32.0':
+  '@sentry-internal/browser-utils@8.33.0':
     dependencies:
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry-internal/feedback@8.32.0':
+  '@sentry-internal/feedback@8.33.0':
     dependencies:
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry-internal/replay-canvas@8.32.0':
+  '@sentry-internal/replay-canvas@8.33.0':
     dependencies:
-      '@sentry-internal/replay': 8.32.0
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry-internal/replay': 8.33.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry-internal/replay@8.32.0':
+  '@sentry-internal/replay@8.33.0':
     dependencies:
-      '@sentry-internal/browser-utils': 8.32.0
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry-internal/browser-utils': 8.33.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry/browser@8.32.0':
+  '@sentry/browser@8.33.0':
     dependencies:
-      '@sentry-internal/browser-utils': 8.32.0
-      '@sentry-internal/feedback': 8.32.0
-      '@sentry-internal/replay': 8.32.0
-      '@sentry-internal/replay-canvas': 8.32.0
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry-internal/browser-utils': 8.33.0
+      '@sentry-internal/feedback': 8.33.0
+      '@sentry-internal/replay': 8.33.0
+      '@sentry-internal/replay-canvas': 8.33.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry/core@8.32.0':
+  '@sentry/core@8.33.0':
     dependencies:
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
 
-  '@sentry/ember@8.32.0(webpack@5.95.0)':
+  '@sentry/ember@8.33.0(webpack@5.95.0)':
     dependencies:
       '@babel/core': 7.25.7(supports-color@8.1.1)
-      '@embroider/macros': 1.16.6
-      '@sentry/browser': 8.32.0
-      '@sentry/core': 8.32.0
-      '@sentry/types': 8.32.0
-      '@sentry/utils': 8.32.0
+      '@embroider/macros': 1.16.7
+      '@sentry/browser': 8.33.0
+      '@sentry/core': 8.33.0
+      '@sentry/types': 8.33.0
+      '@sentry/utils': 8.33.0
       ember-auto-import: 2.8.1(webpack@5.95.0)
       ember-cli-babel: 8.2.0(@babel/core@7.25.7)
       ember-cli-htmlbars: 6.3.0
@@ -11064,11 +11064,11 @@ snapshots:
       - supports-color
       - webpack
 
-  '@sentry/types@8.32.0': {}
+  '@sentry/types@8.33.0': {}
 
-  '@sentry/utils@8.32.0':
+  '@sentry/utils@8.33.0':
     dependencies:
-      '@sentry/types': 8.32.0
+      '@sentry/types': 8.33.0
 
   '@simple-dom/document@1.4.0':
     dependencies:
@@ -13927,7 +13927,7 @@ snapshots:
 
   ember-cached-decorator-polyfill@1.0.2(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0)):
     dependencies:
-      '@embroider/macros': 1.16.6
+      '@embroider/macros': 1.16.7
       '@glimmer/tracking': 1.1.2
       babel-import-util: 1.4.1
       ember-cache-primitive-polyfill: 1.0.1(@babel/core@7.25.7)
