@@ -79,15 +79,13 @@ impl ApiToken {
             .filter(api_tokens::token.eq(token));
 
         // If the database is in read only mode, we can't update last_used_at.
-        // Try updating in a new transaction, if that fails, fall back to reading
-        conn.transaction(|conn| {
-            update(tokens)
-                .set(api_tokens::last_used_at.eq(now.nullable()))
-                .returning(ApiToken::as_returning())
-                .get_result(conn)
-        })
-        .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
-        .map_err(Into::into)
+        // Try updating, if that fails, fall back to reading
+        update(tokens)
+            .set(api_tokens::last_used_at.eq(now.nullable()))
+            .returning(ApiToken::as_returning())
+            .get_result(conn)
+            .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
+            .map_err(Into::into)
     }
 }
 
