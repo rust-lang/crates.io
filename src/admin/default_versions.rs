@@ -1,4 +1,5 @@
 use crate::models::{update_default_version, verify_default_version};
+use crate::tasks::spawn_blocking;
 use crate::{db, schema::crates};
 use anyhow::Context;
 use diesel::prelude::*;
@@ -14,29 +15,32 @@ pub enum Command {
     Verify,
 }
 
-pub fn run(command: Command) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_connection().context("Failed to connect to the database")?;
+pub async fn run(command: Command) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let mut conn = db::oneoff_connection().context("Failed to connect to the database")?;
 
-    let crate_ids: Vec<i32> = crates::table
-        .select(crates::id)
-        .load(&mut conn)
-        .context("Failed to load crates")?;
+        let crate_ids: Vec<i32> = crates::table
+            .select(crates::id)
+            .load(&mut conn)
+            .context("Failed to load crates")?;
 
-    let pb = ProgressBar::new(crate_ids.len() as u64);
-    pb.set_style(ProgressStyle::with_template(
-        "{bar:60} ({pos}/{len}, ETA {eta})",
-    )?);
+        let pb = ProgressBar::new(crate_ids.len() as u64);
+        pb.set_style(ProgressStyle::with_template(
+            "{bar:60} ({pos}/{len}, ETA {eta})",
+        )?);
 
-    for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
-        let func = match command {
-            Command::Update => update_default_version,
-            Command::Verify => verify_default_version,
-        };
+        for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
+            let func = match command {
+                Command::Update => update_default_version,
+                Command::Verify => verify_default_version,
+            };
 
-        if let Err(error) = func(crate_id, &mut conn) {
-            pb.suspend(|| warn!(%crate_id, %error, "Failed to update the default version"));
+            if let Err(error) = func(crate_id, &mut conn) {
+                pb.suspend(|| warn!(%crate_id, %error, "Failed to update the default version"));
+            }
         }
-    }
 
-    Ok(())
+        Ok(())
+    })
+    .await
 }

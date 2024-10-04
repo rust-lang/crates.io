@@ -1,4 +1,5 @@
 use crate::schema::{crate_owners, teams, users};
+use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
@@ -24,13 +25,15 @@ pub struct Opts {
     yes: bool,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = &mut db::oneoff_connection().context("Failed to establish database connection")?;
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let conn =
+            &mut db::oneoff_connection().context("Failed to establish database connection")?;
 
-    let mut crate_names = opts.crate_names;
-    crate_names.sort();
+        let mut crate_names = opts.crate_names;
+        crate_names.sort();
 
-    let query_result = crates::table
+        let query_result = crates::table
         .select((
             crates::name,
             crates::id,
@@ -45,53 +48,55 @@ pub fn run(opts: Opts) -> anyhow::Result<()> {
         .load::<(String, i32, String)>(conn)
         .context("Failed to look up crate name from the database")?;
 
-    let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
-    for (name, id, login) in query_result {
-        let entry = existing_crates
-            .entry(name)
-            .or_insert_with(|| (id, Vec::new()));
+        let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
+        for (name, id, login) in query_result {
+            let entry = existing_crates
+                .entry(name)
+                .or_insert_with(|| (id, Vec::new()));
 
-        entry.1.push(login);
-    }
+            entry.1.push(login);
+        }
 
-    println!("Deleting the following crates:");
-    println!();
-    for name in &crate_names {
-        match existing_crates.get(name) {
-            Some((id, owners)) => {
-                let owners = owners.join(", ");
-                println!(" - {name} (id={id}, owners={owners})");
+        println!("Deleting the following crates:");
+        println!();
+        for name in &crate_names {
+            match existing_crates.get(name) {
+                Some((id, owners)) => {
+                    let owners = owners.join(", ");
+                    println!(" - {name} (id={id}, owners={owners})");
+                }
+                None => println!(" - {name} (⚠️ crate not found)"),
             }
-            None => println!(" - {name} (⚠️ crate not found)"),
         }
-    }
-    println!();
+        println!();
 
-    if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?") {
-        return Ok(());
-    }
+        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?") {
+            return Ok(());
+        }
 
-    for name in &crate_names {
-        if let Some((id, _)) = existing_crates.get(name) {
-            info!("{name}: Deleting crate from the database…");
-            if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
-                warn!(%id, "{name}: Failed to delete crate from the database: {error}");
+        for name in &crate_names {
+            if let Some((id, _)) = existing_crates.get(name) {
+                info!("{name}: Deleting crate from the database…");
+                if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
+                    warn!(%id, "{name}: Failed to delete crate from the database: {error}");
+                }
+            } else {
+                info!("{name}: Skipped missing crate");
+            };
+
+            info!("{name}: Enqueuing index sync jobs…");
+            if let Err(error) = jobs::enqueue_sync_to_index(name, conn) {
+                warn!("{name}: Failed to enqueue index sync jobs: {error}");
             }
-        } else {
-            info!("{name}: Skipped missing crate");
-        };
 
-        info!("{name}: Enqueuing index sync jobs…");
-        if let Err(error) = jobs::enqueue_sync_to_index(name, conn) {
-            warn!("{name}: Failed to enqueue index sync jobs: {error}");
+            info!("{name}: Enqueuing DeleteCrateFromStorage job…");
+            let job = jobs::DeleteCrateFromStorage::new(name.into());
+            if let Err(error) = job.enqueue(conn) {
+                warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
+            }
         }
 
-        info!("{name}: Enqueuing DeleteCrateFromStorage job…");
-        let job = jobs::DeleteCrateFromStorage::new(name.into());
-        if let Err(error) = job.enqueue(conn) {
-            warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
-        }
-    }
-
-    Ok(())
+        Ok(())
+    })
+    .await
 }

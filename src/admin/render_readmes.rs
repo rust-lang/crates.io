@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::{io::Read, path::Path, sync::Arc, thread};
 
 use crate::storage::Storage;
+use crate::tasks::spawn_blocking;
 use chrono::{NaiveDateTime, Utc};
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
@@ -40,102 +41,109 @@ pub struct Opts {
     crate_name: Option<String>,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let storage = Arc::new(Storage::from_environment());
-    let conn = &mut db::oneoff_connection()?;
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let storage = Arc::new(Storage::from_environment());
+        let conn = &mut db::oneoff_connection()?;
 
-    let start_time = Utc::now();
+        let start_time = Utc::now();
 
-    let older_than = if let Some(ref time) = opts.older_than {
-        NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
-            .context("Could not parse --older-than argument as a time")?
-    } else {
-        start_time.naive_utc()
-    };
+        let older_than = if let Some(ref time) = opts.older_than {
+            NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
+                .context("Could not parse --older-than argument as a time")?
+        } else {
+            start_time.naive_utc()
+        };
 
-    println!("Start time:                   {start_time}");
-    println!("Rendering readmes older than: {older_than}");
+        println!("Start time:                   {start_time}");
+        println!("Rendering readmes older than: {older_than}");
 
-    let mut query = versions::table
-        .inner_join(crates::table)
-        .left_outer_join(readme_renderings::table)
-        .filter(
-            readme_renderings::rendered_at
-                .lt(older_than)
-                .or(readme_renderings::version_id.is_null()),
-        )
-        .select(versions::id)
-        .into_boxed();
-
-    if let Some(crate_name) = opts.crate_name {
-        println!("Rendering readmes for {crate_name}");
-        query = query.filter(crates::name.eq(crate_name));
-    }
-
-    let version_ids: Vec<i32> = query.load(conn).context("error loading version ids")?;
-
-    let total_versions = version_ids.len();
-    println!("Rendering {total_versions} versions");
-
-    let page_size = opts.page_size;
-
-    let total_pages = total_versions / page_size;
-    let total_pages = if total_versions % page_size == 0 {
-        total_pages
-    } else {
-        total_pages + 1
-    };
-
-    let client = Client::new();
-
-    for (page_num, version_ids_chunk) in version_ids.chunks(page_size).enumerate() {
-        println!(
-            "= Page {} of {} ==================================",
-            page_num + 1,
-            total_pages
-        );
-
-        let versions: Vec<(Version, String)> = versions::table
+        let mut query = versions::table
             .inner_join(crates::table)
-            .filter(versions::id.eq_any(version_ids_chunk))
-            .select((versions::all_columns, crates::name))
-            .load(conn)
-            .context("error loading versions")?;
+            .left_outer_join(readme_renderings::table)
+            .filter(
+                readme_renderings::rendered_at
+                    .lt(older_than)
+                    .or(readme_renderings::version_id.is_null()),
+            )
+            .select(versions::id)
+            .into_boxed();
 
-        let mut tasks = Vec::with_capacity(page_size);
-        for (version, krate_name) in versions {
-            Version::record_readme_rendering(version.id, conn)
-                .context("Couldn't record rendering time")?;
-
-            let client = client.clone();
-            let storage = storage.clone();
-            let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
-                println!("[{}-{}] Rendering README...", krate_name, version.num);
-                let readme = get_readme(&storage, &client, &version, &krate_name)?;
-                if !readme.is_empty() {
-                    let rt = tokio::runtime::Builder::new_current_thread()
-                        .enable_all()
-                        .build()
-                        .context("Failed to initialize tokio runtime")?;
-
-                    rt.block_on(storage.upload_readme(&krate_name, &version.num, readme.into()))
-                        .context("Failed to upload rendered README file to S3")?;
-                }
-
-                Ok(())
-            });
-            tasks.push(handle);
+        if let Some(crate_name) = opts.crate_name {
+            println!("Rendering readmes for {crate_name}");
+            query = query.filter(crates::name.eq(crate_name));
         }
-        for handle in tasks {
-            match handle.join() {
-                Err(err) => println!("Thread panicked: {err:?}"),
-                Ok(Err(err)) => println!("Thread failed: {err:?}"),
-                _ => {}
+
+        let version_ids: Vec<i32> = query.load(conn).context("error loading version ids")?;
+
+        let total_versions = version_ids.len();
+        println!("Rendering {total_versions} versions");
+
+        let page_size = opts.page_size;
+
+        let total_pages = total_versions / page_size;
+        let total_pages = if total_versions % page_size == 0 {
+            total_pages
+        } else {
+            total_pages + 1
+        };
+
+        let client = Client::new();
+
+        for (page_num, version_ids_chunk) in version_ids.chunks(page_size).enumerate() {
+            println!(
+                "= Page {} of {} ==================================",
+                page_num + 1,
+                total_pages
+            );
+
+            let versions: Vec<(Version, String)> = versions::table
+                .inner_join(crates::table)
+                .filter(versions::id.eq_any(version_ids_chunk))
+                .select((versions::all_columns, crates::name))
+                .load(conn)
+                .context("error loading versions")?;
+
+            let mut tasks = Vec::with_capacity(page_size);
+            for (version, krate_name) in versions {
+                Version::record_readme_rendering(version.id, conn)
+                    .context("Couldn't record rendering time")?;
+
+                let client = client.clone();
+                let storage = storage.clone();
+                let handle = thread::spawn::<_, anyhow::Result<()>>(move || {
+                    println!("[{}-{}] Rendering README...", krate_name, version.num);
+                    let readme = get_readme(&storage, &client, &version, &krate_name)?;
+                    if !readme.is_empty() {
+                        let rt = tokio::runtime::Builder::new_current_thread()
+                            .enable_all()
+                            .build()
+                            .context("Failed to initialize tokio runtime")?;
+
+                        rt.block_on(storage.upload_readme(
+                            &krate_name,
+                            &version.num,
+                            readme.into(),
+                        ))
+                        .context("Failed to upload rendered README file to S3")?;
+                    }
+
+                    Ok(())
+                });
+                tasks.push(handle);
+            }
+            for handle in tasks {
+                match handle.join() {
+                    Err(err) => println!("Thread panicked: {err:?}"),
+                    Ok(Err(err)) => println!("Thread failed: {err:?}"),
+                    _ => {}
+                }
             }
         }
-    }
 
-    Ok(())
+        Ok(())
+    })
+    .await
 }
 
 /// Renders the readme of an uploaded crate version.
