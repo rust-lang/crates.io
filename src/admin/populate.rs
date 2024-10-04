@@ -2,7 +2,8 @@ use crate::{db, schema::version_downloads};
 
 use crate::tasks::spawn_blocking;
 use diesel::prelude::*;
-use rand::{thread_rng, Rng};
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -27,7 +28,7 @@ fn update(opts: Opts, conn: &mut PgConnection) -> QueryResult<()> {
     use diesel::dsl::*;
 
     for id in opts.version_ids {
-        let mut rng = thread_rng();
+        let mut rng = StdRng::from_entropy();
         let mut dls = rng.gen_range(5_000i32..10_000);
 
         for day in 0..90 {
