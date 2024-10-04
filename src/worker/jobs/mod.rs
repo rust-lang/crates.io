@@ -12,7 +12,7 @@ mod delete_crate;
 mod downloads;
 pub mod dump_db;
 mod expiry_notification;
-mod git;
+mod index;
 mod index_version_downloads_archive;
 mod readmes;
 pub mod rss;
@@ -29,7 +29,7 @@ pub use self::downloads::{
 };
 pub use self::dump_db::DumpDb;
 pub use self::expiry_notification::SendTokenExpiryNotifications;
-pub use self::git::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
+pub use self::index::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::send_publish_notifications::SendPublishNotificationsJob;
