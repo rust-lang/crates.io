@@ -2,7 +2,6 @@ use anyhow::Result;
 use std::str::FromStr;
 
 use crate::admin::on_call;
-use crate::tasks::spawn_blocking;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum EventType {
@@ -33,22 +32,19 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
-    spawn_blocking(move || {
-        let event = match opts.event_type {
-            EventType::Trigger => on_call::Event::Trigger {
-                incident_key: Some("test".into()),
-                description: opts.description.unwrap_or_else(|| "Test event".into()),
-            },
-            EventType::Acknowledge => on_call::Event::Acknowledge {
-                incident_key: "test".into(),
-                description: opts.description,
-            },
-            EventType::Resolve => on_call::Event::Resolve {
-                incident_key: "test".into(),
-                description: opts.description,
-            },
-        };
-        event.send()
-    })
-    .await
+    let event = match opts.event_type {
+        EventType::Trigger => on_call::Event::Trigger {
+            incident_key: Some("test".into()),
+            description: opts.description.unwrap_or_else(|| "Test event".into()),
+        },
+        EventType::Acknowledge => on_call::Event::Acknowledge {
+            incident_key: "test".into(),
+            description: opts.description,
+        },
+        EventType::Resolve => on_call::Event::Resolve {
+            incident_key: "test".into(),
+            description: opts.description,
+        },
+    };
+    event.send().await
 }
