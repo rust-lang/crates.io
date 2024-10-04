@@ -41,6 +41,12 @@ pub enum Command {
     },
     SendTokenExpiryNotifications,
     SyncCratesFeed,
+    SyncToGitIndex {
+        name: String,
+    },
+    SyncToSparseIndex {
+        name: String,
+    },
     SyncUpdatesFeed,
 }
 
@@ -133,6 +139,12 @@ pub fn run(command: Command) -> Result<()> {
         }
         Command::SyncCratesFeed => {
             jobs::rss::SyncCratesFeed.enqueue(conn)?;
+        }
+        Command::SyncToGitIndex { name } => {
+            jobs::SyncToGitIndex::new(name).enqueue(conn)?;
+        }
+        Command::SyncToSparseIndex { name } => {
+            jobs::SyncToSparseIndex::new(name).enqueue(conn)?;
         }
         Command::SyncUpdatesFeed => {
             jobs::rss::SyncUpdatesFeed.enqueue(conn)?;
