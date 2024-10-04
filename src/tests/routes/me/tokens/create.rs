@@ -23,8 +23,8 @@ async fn create_token_invalid_request() {
     let (app, _, user) = TestApp::init().with_user();
     let invalid: &[u8] = br#"{ "name": "" }"#;
     let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid new token request: Error(\"missing field `api_token`\", line: 1, column: 14)"}]}"#);
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `api_token` at line 1 column 14"}]}"#);
     assert!(app.emails().is_empty());
 }
 

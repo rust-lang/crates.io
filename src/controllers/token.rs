@@ -1,6 +1,6 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::util::{rfc3339, BytesRequest};
+use crate::util::rfc3339;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::app::AppState;
@@ -18,7 +18,6 @@ use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
-use serde_json as json;
 use serde_json::Value;
 
 #[derive(Deserialize)]
@@ -65,32 +64,31 @@ pub async fn list(
     .await
 }
 
-/// Handles the `PUT /me/tokens` route.
-pub async fn new(app: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
-    let (parts, body) = req.0.into_parts();
+/// The incoming serialization format for the `ApiToken` model.
+#[derive(Deserialize)]
+pub struct NewApiToken {
+    name: String,
+    crate_scopes: Option<Vec<String>>,
+    endpoint_scopes: Option<Vec<String>>,
+    #[serde(default, with = "rfc3339::option")]
+    expired_at: Option<NaiveDateTime>,
+}
 
+/// The incoming serialization format for the `ApiToken` model.
+#[derive(Deserialize)]
+pub struct NewApiTokenRequest {
+    api_token: NewApiToken,
+}
+
+/// Handles the `PUT /me/tokens` route.
+pub async fn new(
+    app: AppState,
+    parts: Parts,
+    Json(new): Json<NewApiTokenRequest>,
+) -> AppResult<Json<Value>> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        /// The incoming serialization format for the `ApiToken` model.
-        #[derive(Deserialize)]
-        struct NewApiToken {
-            name: String,
-            crate_scopes: Option<Vec<String>>,
-            endpoint_scopes: Option<Vec<String>>,
-            #[serde(default, with = "rfc3339::option")]
-            expired_at: Option<NaiveDateTime>,
-        }
-
-        /// The incoming serialization format for the `ApiToken` model.
-        #[derive(Deserialize)]
-        struct NewApiTokenRequest {
-            api_token: NewApiToken,
-        }
-
-        let new: NewApiTokenRequest = json::from_slice(&body)
-            .map_err(|e| bad_request(format!("invalid new token request: {e:?}")))?;
 
         let name = &new.api_token.name;
         if name.is_empty() {
