@@ -281,8 +281,8 @@ importers:
         specifier: 17.1.0
         version: 17.1.0
       postcss-preset-env:
-        specifier: 10.0.5
-        version: 10.0.5(postcss@8.4.47)
+        specifier: 10.0.6
+        version: 10.0.6(postcss@8.4.47)
       prettier:
         specifier: 3.3.3
         version: 3.3.3
@@ -6951,8 +6951,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-custom-media@11.0.1:
-    resolution: {integrity: sha512-vfBliYVgEEJUFXCRPQ7jYt1wlD322u+/5GT0tZqMVYFInkpDHfjhU3nk2quTRW4uFc/umOOqLlxvrEOZRvloMw==}
+  postcss-custom-media@11.0.2:
+    resolution: {integrity: sha512-IDtxB1VgPayRLjNBMjuf827sn1j2m9EGnhIxpx2coVerbWJF+twt590+PKvdDc4K8QNFqFJh+W/SOiHpasVXsg==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -7075,8 +7075,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.0.5:
-    resolution: {integrity: sha512-ipPOgr3RY0utgJDbNoCX2dxKoQ4e4WO1pC21QhDlxCAX8+qC8O2Ezkzb54fd+8XtZ1UveA5gLjBsVo6dJDoWIg==}
+  postcss-preset-env@10.0.6:
+    resolution: {integrity: sha512-qixfM2wbvKJhUjJELLB8lV2UCsyrMdSXqiXHiNKMgAbNturstc80j/8MsthJeOpxYEekrCrFzcaoOJm8JRSdBg==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -11155,12 +11155,12 @@ snapshots:
       '@types/ember__object': 4.0.12(@babel/core@7.25.7)
       '@types/ember__polyfills': 4.0.6
       '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10(@babel/core@7.25.7)
+      '@types/ember__runloop': 4.0.10
       '@types/ember__service': 4.0.9(@babel/core@7.25.7)
       '@types/ember__string': 3.0.15
       '@types/ember__template': 4.0.7
       '@types/ember__test': 4.0.6(@babel/core@7.25.7)
-      '@types/ember__utils': 4.0.7(@babel/core@7.25.7)
+      '@types/ember__utils': 4.0.7
       '@types/rsvp': 4.0.9
 
   '@types/ember@4.0.11(@babel/core@7.25.7)':
@@ -11323,6 +11323,10 @@ snapshots:
 
   '@types/ember__runloop@3.16.10': {}
 
+  '@types/ember__runloop@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
+
   '@types/ember__runloop@4.0.10(@babel/core@7.25.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.7)
@@ -11363,6 +11367,10 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
+
+  '@types/ember__utils@4.0.7':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.25.7)':
     dependencies:
@@ -17865,7 +17873,7 @@ snapshots:
       postcss: 8.4.47
       postcss-value-parser: 4.2.0
 
-  postcss-custom-media@11.0.1(postcss@8.4.47):
+  postcss-custom-media@11.0.2(postcss@8.4.47):
     dependencies:
       '@csstools/cascade-layer-name-parser': 2.0.1(@csstools/css-parser-algorithms@3.0.1(@csstools/css-tokenizer@3.0.1))(@csstools/css-tokenizer@3.0.1)
       '@csstools/css-parser-algorithms': 3.0.1(@csstools/css-tokenizer@3.0.1)
@@ -17986,7 +17994,7 @@ snapshots:
       postcss: 8.4.47
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.0.5(postcss@8.4.47):
+  postcss-preset-env@10.0.6(postcss@8.4.47):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.0(postcss@8.4.47)
       '@csstools/postcss-color-function': 4.0.2(postcss@8.4.47)
@@ -18030,7 +18038,7 @@ snapshots:
       postcss-color-functional-notation: 7.0.2(postcss@8.4.47)
       postcss-color-hex-alpha: 10.0.0(postcss@8.4.47)
       postcss-color-rebeccapurple: 10.0.0(postcss@8.4.47)
-      postcss-custom-media: 11.0.1(postcss@8.4.47)
+      postcss-custom-media: 11.0.2(postcss@8.4.47)
       postcss-custom-properties: 14.0.1(postcss@8.4.47)
       postcss-custom-selectors: 8.0.1(postcss@8.4.47)
       postcss-dir-pseudo-class: 9.0.0(postcss@8.4.47)
