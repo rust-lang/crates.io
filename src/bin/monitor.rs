@@ -5,19 +5,24 @@
 //!     cargo run --bin monitor
 
 use anyhow::Result;
+use crates_io::tasks::spawn_blocking;
 use crates_io::worker::jobs;
 use crates_io::{admin::on_call, db, schema::*};
 use crates_io_env_vars::{var, var_parsed};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 
-fn main() -> Result<()> {
-    let conn = &mut db::oneoff_connection()?;
+#[tokio::main]
+async fn main() -> Result<()> {
+    spawn_blocking(move || {
+        let conn = &mut db::oneoff_connection()?;
 
-    check_failing_background_jobs(conn)?;
-    check_stalled_update_downloads(conn)?;
-    check_spam_attack(conn)?;
-    Ok(())
+        check_failing_background_jobs(conn)?;
+        check_stalled_update_downloads(conn)?;
+        check_spam_attack(conn)?;
+        Ok(())
+    })
+    .await
 }
 
 /// Check for old background jobs that are not currently running.
