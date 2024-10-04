@@ -22,7 +22,7 @@ pub fn split_features(features: FeaturesMap) -> (FeaturesMap, FeaturesMap) {
 
     // Then, we recursively move features from `features` to `features2` if they
     // depend on features in `features2`.
-    for _ in 0..ITERATION_LIMIT {
+    for i in (0..ITERATION_LIMIT).rev() {
         let split = features
             .into_iter()
             .partition::<FeaturesMap, _>(|(_k, vals)| {
@@ -33,6 +33,10 @@ pub fn split_features(features: FeaturesMap) -> (FeaturesMap, FeaturesMap) {
 
         if !split.1.is_empty() {
             features2.extend(split.1);
+
+            if i == 0 {
+                warn!("Iteration limit reached while splitting features!");
+            }
         } else {
             break;
         }
