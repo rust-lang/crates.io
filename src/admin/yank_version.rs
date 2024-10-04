@@ -2,6 +2,7 @@ use crate::admin::dialoguer;
 use crate::db;
 use crate::models::{Crate, Version};
 use crate::schema::versions;
+use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use crate::worker::jobs::UpdateDefaultVersion;
 use crates_io_worker::BackgroundJob;
@@ -22,10 +23,13 @@ pub struct Opts {
     yes: bool,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_connection()?;
-    conn.transaction(|conn| yank(opts, conn))?;
-    Ok(())
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let mut conn = db::oneoff_connection()?;
+        conn.transaction(|conn| yank(opts, conn))?;
+        Ok(())
+    })
+    .await
 }
 
 fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {

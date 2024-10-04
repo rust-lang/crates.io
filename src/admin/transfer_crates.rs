@@ -6,6 +6,7 @@ use crate::{
 };
 use std::process::exit;
 
+use crate::tasks::spawn_blocking;
 use diesel::prelude::*;
 
 #[derive(clap::Parser, Debug)]
@@ -20,10 +21,13 @@ pub struct Opts {
     to_user: String,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = &mut db::oneoff_connection()?;
-    conn.transaction(|conn| transfer(opts, conn))?;
-    Ok(())
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let conn = &mut db::oneoff_connection()?;
+        conn.transaction(|conn| transfer(opts, conn))?;
+        Ok(())
+    })
+    .await
 }
 
 fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {

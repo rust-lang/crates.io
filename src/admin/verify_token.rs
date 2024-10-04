@@ -1,4 +1,5 @@
 use crate::models::ApiToken;
+use crate::tasks::spawn_blocking;
 use crate::util::token::HashedToken;
 use crate::{db, models::User};
 
@@ -14,11 +15,14 @@ pub struct Opts {
     api_token: String,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = &mut db::oneoff_connection()?;
-    let token = HashedToken::parse(&opts.api_token)?;
-    let token = ApiToken::find_by_api_token(conn, &token)?;
-    let user = User::find(conn, token.user_id)?;
-    println!("The token belongs to user {}", user.gh_login);
-    Ok(())
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let conn = &mut db::oneoff_connection()?;
+        let token = HashedToken::parse(&opts.api_token)?;
+        let token = ApiToken::find_by_api_token(conn, &token)?;
+        let user = User::find(conn, token.user_id)?;
+        println!("The token belongs to user {}", user.gh_login);
+        Ok(())
+    })
+    .await
 }

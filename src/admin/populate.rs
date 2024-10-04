@@ -1,5 +1,6 @@
 use crate::{db, schema::version_downloads};
 
+use crate::tasks::spawn_blocking;
 use diesel::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -13,10 +14,13 @@ pub struct Opts {
     version_ids: Vec<i32>,
 }
 
-pub fn run(opts: Opts) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_connection()?;
-    conn.transaction(|conn| update(opts, conn))?;
-    Ok(())
+pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    spawn_blocking(move || {
+        let mut conn = db::oneoff_connection()?;
+        conn.transaction(|conn| update(opts, conn))?;
+        Ok(())
+    })
+    .await
 }
 
 fn update(opts: Opts, conn: &mut PgConnection) -> QueryResult<()> {
