@@ -56,6 +56,8 @@ module.exports = {
     'unicorn/no-nested-ternary': 'off',
     // disabled because of unfixable false positives
     'unicorn/prevent-abbreviations': 'off',
+    // disabled because we are targeting only browsers at the moment
+    'unicorn/prefer-global-this': 'off',
     // disabled because we don't want to go all-in on ES6 modules for Node.js code yet
     'unicorn/prefer-module': 'off',
     // disabled because it seems unnecessary

@@ -12,6 +12,7 @@ function findElementByFragmentName(document, name) {
   }
 
   try {
+    // eslint-disable-next-line unicorn/prefer-query-selector
     return document.querySelector(`#${name}`) || document.getElementsByName(name)[0];
   } catch {
     // Catches exceptions thrown when an anchor in a readme was invalid (see issue #3108)
