@@ -70,7 +70,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
         println!();
 
-        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?") {
+        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?")? {
             return Ok(());
         }
 

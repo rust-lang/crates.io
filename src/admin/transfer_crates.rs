@@ -47,7 +47,7 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
-        if !dialoguer::confirm("continue?") {
+        if !dialoguer::confirm("continue?")? {
             return Ok(());
         }
     }
@@ -56,7 +56,7 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         "Are you sure you want to transfer crates from {} to {}?",
         from.gh_login, to.gh_login
     );
-    if !dialoguer::confirm(&prompt) {
+    if !dialoguer::confirm(&prompt)? {
         return Ok(());
     }
 
@@ -74,7 +74,7 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         }
     }
 
-    if !dialoguer::confirm("commit?") {
+    if !dialoguer::confirm("commit?")? {
         return Ok(());
     }
 

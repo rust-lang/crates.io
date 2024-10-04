@@ -47,7 +47,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
         println!();
 
-        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?") {
+        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?")? {
             return Ok(());
         }
 
