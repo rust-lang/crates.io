@@ -4,7 +4,6 @@ use crate::{
     models::{Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},
 };
-use std::process::exit;
 
 use crate::tasks::spawn_blocking;
 use diesel::prelude::*;
@@ -24,7 +23,7 @@ pub struct Opts {
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
     spawn_blocking(move || {
         let conn = &mut db::oneoff_connection()?;
-        conn.transaction(|conn| transfer(opts, conn))?;
+        transfer(opts, conn)?;
         Ok(())
     })
     .await
@@ -48,14 +47,18 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
-        get_confirm("continue?");
+        if !dialoguer::confirm("continue?") {
+            return Ok(());
+        }
     }
 
     let prompt = format!(
         "Are you sure you want to transfer crates from {} to {}?",
         from.gh_login, to.gh_login
     );
-    get_confirm(&prompt);
+    if !dialoguer::confirm(&prompt) {
+        return Ok(());
+    }
 
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
@@ -71,17 +74,13 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         }
     }
 
+    if !dialoguer::confirm("commit?") {
+        return Ok(());
+    }
+
     diesel::update(crate_owners)
         .set(crate_owners::owner_id.eq(to.id))
         .execute(conn)?;
 
-    get_confirm("commit?");
-
     Ok(())
-}
-
-fn get_confirm(msg: &str) {
-    if !dialoguer::confirm(msg) {
-        exit(0);
-    }
 }
