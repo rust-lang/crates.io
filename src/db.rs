@@ -2,7 +2,7 @@ use crate::certs::CRUNCHY;
 use diesel::{Connection, ConnectionResult, PgConnection, QueryResult};
 use diesel_async::pooled_connection::deadpool::{Hook, HookError};
 use diesel_async::pooled_connection::ManagerConfig;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use native_tls::{Certificate, TlsConnector};
 use postgres_native_tls::MakeTlsConnector;
 use secrecy::ExposeSecret;
@@ -21,6 +21,18 @@ pub fn oneoff_connection_with_config(
 pub fn oneoff_connection() -> anyhow::Result<PgConnection> {
     let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
     oneoff_connection_with_config(&config).map_err(Into::into)
+}
+
+pub async fn oneoff_async_connection_with_config(
+    config: &config::DatabasePools,
+) -> ConnectionResult<AsyncPgConnection> {
+    let url = connection_url(config, config.primary.url.expose_secret());
+    AsyncPgConnection::establish(&url).await
+}
+
+pub async fn oneoff_async_connection() -> anyhow::Result<AsyncPgConnection> {
+    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
+    Ok(oneoff_async_connection_with_config(&config).await?)
 }
 
 pub fn connection_url(config: &config::DatabasePools, url: &str) -> String {
