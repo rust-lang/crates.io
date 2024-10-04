@@ -1,12 +1,11 @@
 use ::dialoguer::{theme::Theme, Confirm};
 
-pub fn confirm(msg: &str) -> bool {
+pub fn confirm(msg: &str) -> dialoguer::Result<bool> {
     Confirm::with_theme(&CustomTheme)
         .with_prompt(msg)
         .default(false)
         .wait_for_newline(true)
         .interact()
-        .unwrap()
 }
 
 #[derive(Debug, Copy, Clone)]

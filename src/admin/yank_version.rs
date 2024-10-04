@@ -53,7 +53,7 @@ fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
             "Are you sure you want to yank {crate_name}#{version} ({})?",
             v.id
         );
-        if !dialoguer::confirm(&prompt) {
+        if !dialoguer::confirm(&prompt)? {
             return Ok(());
         }
     }

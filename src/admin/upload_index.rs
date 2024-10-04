@@ -27,7 +27,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
         let files = repo.get_files_modified_since(opts.incremental_commit.as_deref())?;
         println!("found {} files to upload", files.len());
-        if !dialoguer::confirm("continue with upload?") {
+        if !dialoguer::confirm("continue with upload?")? {
             return Ok(());
         }
 
