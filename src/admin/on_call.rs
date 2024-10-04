@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use crates_io_env_vars::required_var;
-use reqwest::{blocking::Client, header, StatusCode as Status};
+use reqwest::{header, Client, StatusCode as Status};
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]
@@ -25,7 +25,7 @@ impl Event {
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub fn send(self) -> Result<()> {
+    pub async fn send(self) -> Result<()> {
         let api_token = required_var("PAGERDUTY_API_TOKEN")?;
         let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
 
@@ -37,12 +37,13 @@ impl Event {
                 service_key,
                 event: self,
             })
-            .send()?;
+            .send()
+            .await?;
 
         match response.status() {
             s if s.is_success() => Ok(()),
             Status::BAD_REQUEST => {
-                let error = response.json::<InvalidEvent>()?;
+                let error = response.json::<InvalidEvent>().await?;
                 Err(anyhow!("pagerduty error: {:?}", error))
             }
             Status::FORBIDDEN => Err(anyhow!("rate limited by pagerduty")),
