@@ -86,14 +86,13 @@ pub async fn new(
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
 ) -> AppResult<Json<Value>> {
+    if new.api_token.name.is_empty() {
+        return Err(bad_request("name must have a value"));
+    }
+
     let conn = app.db_write().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let name = &new.api_token.name;
-        if name.is_empty() {
-            return Err(bad_request("name must have a value"));
-        }
 
         let auth = AuthCheck::default().check(&parts, conn)?;
         if auth.api_token_id().is_some() {
@@ -141,7 +140,7 @@ pub async fn new(
         let api_token = ApiToken::insert_with_scopes(
             conn,
             user.id,
-            name,
+            &new.api_token.name,
             crate_scopes,
             endpoint_scopes,
             new.api_token.expired_at,
@@ -149,7 +148,7 @@ pub async fn new(
 
         if let Some(recipient) = recipient {
             let email = NewTokenEmail {
-                token_name: name,
+                token_name: &new.api_token.name,
                 user_name: &user.gh_login,
                 domain: &app.emails.domain,
             };
