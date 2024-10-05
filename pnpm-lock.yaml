@@ -161,8 +161,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       ember-click-outside:
-        specifier: 6.1.0
-        version: 6.1.0(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0))
+        specifier: 6.1.1
+        version: 6.1.1(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0))
       ember-concurrency:
         specifier: 4.0.2
         version: 4.0.2(@babel/core@7.25.7)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0))
@@ -4251,8 +4251,8 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
-  ember-click-outside@6.1.0:
-    resolution: {integrity: sha512-TUsGRAPkfiLC2XtXO8i9SNsgo7lEekvOuqTp9Ab88d1FKmTps8jlYBH1F0ZwFPyI2bz+dlE1J8WqGnsleALk9g==}
+  ember-click-outside@6.1.1:
+    resolution: {integrity: sha512-1SOW92/k5vm+QiLBdkiSxkxSEzvA1vWdVVAI5RLV9JFztA5cSEKB2m2+10Gvw90ItxekY92JVXXTXIPUcPBqYg==}
 
   ember-compatibility-helpers@1.2.7:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
@@ -14405,7 +14405,7 @@ snapshots:
       - walrus
       - whiskers
 
-  ember-click-outside@6.1.0(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0)):
+  ember-click-outside@6.1.1(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0)):
     dependencies:
       '@embroider/addon-shim': 1.8.9
       ember-modifier: 4.2.0(@babel/core@7.25.7)(ember-source@5.12.0(@glimmer/component@1.1.2(@babel/core@7.25.7))(rsvp@4.8.5)(webpack@5.95.0))

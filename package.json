@@ -90,7 +90,7 @@
     "ember-cli-inject-live-reload": "2.1.0",
     "ember-cli-mirage": "3.0.4",
     "ember-cli-notifications": "9.0.0",
-    "ember-click-outside": "6.1.0",
+    "ember-click-outside": "6.1.1",
     "ember-concurrency": "4.0.2",
     "ember-css-modules": "2.1.0",
     "ember-data": "4.12.8",
