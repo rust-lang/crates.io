@@ -32,12 +32,12 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to establish database connection")?;
 
-    spawn_blocking(move || {
+    let store = Storage::from_environment();
+
+    let opts = spawn_blocking::<_, _, anyhow::Error>(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let crate_name = &opts.crate_name;
-
-        let store = Storage::from_environment();
 
         let crate_id: i32 = crates::table
             .select(crates::id)
@@ -53,7 +53,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         println!();
 
         if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?")? {
-            return Ok(());
+            return Ok(opts);
         }
 
         conn.transaction(|conn| {
@@ -92,27 +92,26 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             warn!(%crate_name, ?error, "Failed to enqueue index sync jobs");
         }
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .context("Failed to initialize tokio runtime")?;
+        Ok(opts)
+    }).await?;
 
-        for version in &opts.versions {
-            debug!(%crate_name, %version, "Deleting crate file from S3");
-            if let Err(error) = rt.block_on(store.delete_crate_file(crate_name, version)) {
-                warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
-            }
+    let crate_name = &opts.crate_name;
 
-            debug!(%crate_name, %version, "Deleting readme file from S3");
-            match rt.block_on(store.delete_readme(crate_name, version)) {
-                Err(object_store::Error::NotFound { .. }) => {}
-                Err(error) => {
-                    warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
-                }
-                Ok(_) => {}
-            }
+    for version in &opts.versions {
+        debug!(%crate_name, %version, "Deleting crate file from S3");
+        if let Err(error) = store.delete_crate_file(crate_name, version).await {
+            warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
         }
 
-        Ok(())
-    }).await
+        debug!(%crate_name, %version, "Deleting readme file from S3");
+        match store.delete_readme(crate_name, version).await {
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(error) => {
+                warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
+            }
+            Ok(_) => {}
+        }
+    }
+
+    Ok(())
 }
