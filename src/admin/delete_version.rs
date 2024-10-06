@@ -5,7 +5,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::versions};
 use anyhow::Context;
-use diesel::prelude::*;
+use diesel::{Connection, ExpressionMethods, QueryDsl};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 #[derive(clap::Parser, Debug)]
@@ -28,22 +28,29 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = db::oneoff_async_connection()
+    let mut conn = db::oneoff_async_connection()
         .await
         .context("Failed to establish database connection")?;
 
     let store = Storage::from_environment();
 
+    let crate_id: i32 = {
+        use diesel_async::RunQueryDsl;
+
+        crates::table
+            .select(crates::id)
+            .filter(crates::name.eq(&opts.crate_name))
+            .first(&mut conn)
+            .await
+            .context("Failed to look up crate id from the database")
+    }?;
+
     let opts = spawn_blocking::<_, _, anyhow::Error>(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let crate_name = &opts.crate_name;
-
-        let crate_id: i32 = crates::table
-            .select(crates::id)
-            .filter(crates::name.eq(crate_name))
-            .first(conn)
-            .context("Failed to look up crate id from the database")?;
 
         println!("Deleting the following versions of the `{crate_name}` crate:");
         println!();
