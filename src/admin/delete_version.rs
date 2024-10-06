@@ -6,6 +6,7 @@ use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::versions};
 use anyhow::Context;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -27,10 +28,14 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    spawn_blocking(move || {
-        let crate_name = &opts.crate_name;
+    let conn = db::oneoff_async_connection()
+        .await
+        .context("Failed to establish database connection")?;
 
-        let conn = &mut db::oneoff_connection().context("Failed to establish database connection")?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
+        let crate_name = &opts.crate_name;
 
         let store = Storage::from_environment();
 
