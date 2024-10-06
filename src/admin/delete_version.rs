@@ -45,11 +45,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             .context("Failed to look up crate id from the database")
     }?;
 
-    let opts = spawn_blocking::<_, _, anyhow::Error>(move || {
-        use diesel::RunQueryDsl;
-
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
+    {
         let crate_name = &opts.crate_name;
 
         println!("Deleting the following versions of the `{crate_name}` crate:");
@@ -59,9 +55,20 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
         println!();
 
-        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these versions?")? {
-            return Ok(opts);
+        if !opts.yes
+            && !dialoguer::async_confirm("Do you want to permanently delete these versions?")
+                .await?
+        {
+            return Ok(());
         }
+    }
+
+    let opts = spawn_blocking::<_, _, anyhow::Error>(move || {
+        use diesel::RunQueryDsl;
+
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
+        let crate_name = &opts.crate_name;
 
         conn.transaction(|conn| {
             info!(%crate_name, %crate_id, versions = ?opts.versions, "Deleting versions from the database");
