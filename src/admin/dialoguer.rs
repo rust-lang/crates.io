@@ -1,6 +1,12 @@
+use crate::tasks::spawn_blocking;
 use ::dialoguer::{theme::Theme, Confirm};
 
-pub fn confirm(msg: &str) -> dialoguer::Result<bool> {
+pub async fn async_confirm(msg: impl Into<String>) -> anyhow::Result<bool> {
+    let msg = msg.into();
+    spawn_blocking(move || confirm(msg).map_err(anyhow::Error::from)).await
+}
+
+pub fn confirm(msg: impl Into<String>) -> dialoguer::Result<bool> {
     Confirm::with_theme(&CustomTheme)
         .with_prompt(msg)
         .default(false)
