@@ -74,8 +74,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       '@embroider/compat':
-        specifier: 3.6.2
-        version: 3.6.2(@embroider/core@3.4.17)
+        specifier: 3.6.3
+        version: 3.6.3(@embroider/core@3.4.17)
       '@embroider/core':
         specifier: 3.4.17
         version: 3.4.17
@@ -138,7 +138,7 @@ importers:
         version: 1.0.0
       ember-cli-code-coverage:
         specifier: 3.1.0
-        version: 3.1.0(@embroider/compat@3.6.2(@embroider/core@3.4.17))(@embroider/core@3.4.17)
+        version: 3.1.0(@embroider/compat@3.6.3(@embroider/core@3.4.17))(@embroider/core@3.4.17)
       ember-cli-dependency-checker:
         specifier: 3.3.2
         version: 3.3.2(ember-cli@5.12.0(babel-core@6.26.3)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
@@ -1373,8 +1373,8 @@ packages:
     peerDependencies:
       '@embroider/core': ^3.4.0
 
-  '@embroider/compat@3.6.2':
-    resolution: {integrity: sha512-5KLR/VLNdLlfUNSdukWlmQYJaPcztWVP36cxTMMZdGuMzs6/zM2cU875hlaYd4Ndh1Id7exFqd1rBDrTG6gwLA==}
+  '@embroider/compat@3.6.3':
+    resolution: {integrity: sha512-7rStvnWaP6MCpJOn0kyEMeen74dKtKiBboEZ2tmikPa9lWL7W+/WdA4O+z9Z2dLIj8mAz6UyrO6xNt3i01Xpgg==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
@@ -10021,12 +10021,13 @@ snapshots:
       - supports-color
       - webpack
 
-  '@embroider/compat@3.6.2(@embroider/core@3.4.17)':
+  '@embroider/compat@3.6.3(@embroider/core@3.4.17)':
     dependencies:
       '@babel/code-frame': 7.25.7
       '@babel/core': 7.25.7(supports-color@8.1.1)
       '@babel/plugin-syntax-decorators': 7.25.7(@babel/core@7.25.7)
       '@babel/plugin-syntax-dynamic-import': 7.8.3(@babel/core@7.25.7)
+      '@babel/plugin-syntax-typescript': 7.25.7(@babel/core@7.25.7)
       '@babel/plugin-transform-runtime': 7.25.7(@babel/core@7.25.7)
       '@babel/preset-env': 7.25.7(@babel/core@7.25.7)(supports-color@8.1.1)
       '@babel/runtime': 7.25.7
@@ -13743,7 +13744,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-code-coverage@3.1.0(@embroider/compat@3.6.2(@embroider/core@3.4.17))(@embroider/core@3.4.17):
+  ember-cli-code-coverage@3.1.0(@embroider/compat@3.6.3(@embroider/core@3.4.17))(@embroider/core@3.4.17):
     dependencies:
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.3
@@ -13757,7 +13758,7 @@ snapshots:
       node-dir: 0.1.17
       walk-sync: 2.2.0
     optionalDependencies:
-      '@embroider/compat': 3.6.2(@embroider/core@3.4.17)
+      '@embroider/compat': 3.6.3(@embroider/core@3.4.17)
       '@embroider/core': 3.4.17
     transitivePeerDependencies:
       - supports-color
