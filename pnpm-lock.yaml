@@ -93,7 +93,7 @@ importers:
         version: 0.6.0
       '@percy/cli':
         specifier: 1.29.4
-        version: 1.29.4(typescript@5.6.2)
+        version: 1.29.4(typescript@5.6.3)
       '@percy/ember':
         specifier: 4.2.0
         version: 4.2.0
@@ -299,8 +299,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       typescript:
-        specifier: 5.6.2
-        version: 5.6.2
+        specifier: 5.6.3
+        version: 5.6.3
       webpack:
         specifier: 5.95.0
         version: 5.95.0
@@ -8151,8 +8151,8 @@ packages:
   typescript-memoize@1.1.1:
     resolution: {integrity: sha512-GQ90TcKpIH4XxYTI2F98yEQYZgjNMOGPpOgdjIBhaLaWji5HPWlRnZ4AeA1hfBxtY7bCGDJsqDDHk/KaHOl5bA==}
 
-  typescript@5.6.2:
-    resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
+  typescript@5.6.3:
+    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -10546,29 +10546,29 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@percy/cli-app@1.29.4(typescript@5.6.2)':
+  '@percy/cli-app@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
-      '@percy/cli-exec': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
+      '@percy/cli-exec': 1.29.4(typescript@5.6.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-build@1.29.4(typescript@5.6.2)':
+  '@percy/cli-build@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-command@1.29.4(typescript@5.6.2)':
+  '@percy/cli-command@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/config': 1.29.4(typescript@5.6.2)
-      '@percy/core': 1.29.4(typescript@5.6.2)
+      '@percy/config': 1.29.4(typescript@5.6.3)
+      '@percy/core': 1.29.4(typescript@5.6.3)
       '@percy/logger': 1.29.4
     transitivePeerDependencies:
       - bufferutil
@@ -10576,18 +10576,18 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-config@1.29.4(typescript@5.6.2)':
+  '@percy/cli-config@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-exec@1.29.4(typescript@5.6.2)':
+  '@percy/cli-exec@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
       '@percy/logger': 1.29.4
       cross-spawn: 7.0.3
       which: 2.0.2
@@ -10597,9 +10597,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-snapshot@1.29.4(typescript@5.6.2)':
+  '@percy/cli-snapshot@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
       yaml: 2.5.1
     transitivePeerDependencies:
       - bufferutil
@@ -10607,9 +10607,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-upload@1.29.4(typescript@5.6.2)':
+  '@percy/cli-upload@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
       fast-glob: 3.3.2
       image-size: 1.1.1
     transitivePeerDependencies:
@@ -10618,15 +10618,15 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli@1.29.4(typescript@5.6.2)':
+  '@percy/cli@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/cli-app': 1.29.4(typescript@5.6.2)
-      '@percy/cli-build': 1.29.4(typescript@5.6.2)
-      '@percy/cli-command': 1.29.4(typescript@5.6.2)
-      '@percy/cli-config': 1.29.4(typescript@5.6.2)
-      '@percy/cli-exec': 1.29.4(typescript@5.6.2)
-      '@percy/cli-snapshot': 1.29.4(typescript@5.6.2)
-      '@percy/cli-upload': 1.29.4(typescript@5.6.2)
+      '@percy/cli-app': 1.29.4(typescript@5.6.3)
+      '@percy/cli-build': 1.29.4(typescript@5.6.3)
+      '@percy/cli-command': 1.29.4(typescript@5.6.3)
+      '@percy/cli-config': 1.29.4(typescript@5.6.3)
+      '@percy/cli-exec': 1.29.4(typescript@5.6.3)
+      '@percy/cli-snapshot': 1.29.4(typescript@5.6.3)
+      '@percy/cli-upload': 1.29.4(typescript@5.6.3)
       '@percy/client': 1.29.4
       '@percy/logger': 1.29.4
     transitivePeerDependencies:
@@ -10641,22 +10641,22 @@ snapshots:
       '@percy/logger': 1.29.4
       pako: 2.1.0
 
-  '@percy/config@1.29.4(typescript@5.6.2)':
+  '@percy/config@1.29.4(typescript@5.6.3)':
     dependencies:
       '@percy/logger': 1.29.4
       ajv: 8.17.1
-      cosmiconfig: 8.3.6(typescript@5.6.2)
+      cosmiconfig: 8.3.6(typescript@5.6.3)
       yaml: 2.5.1
     transitivePeerDependencies:
       - typescript
 
-  '@percy/core@1.29.4(typescript@5.6.2)':
+  '@percy/core@1.29.4(typescript@5.6.3)':
     dependencies:
       '@percy/client': 1.29.4
-      '@percy/config': 1.29.4(typescript@5.6.2)
+      '@percy/config': 1.29.4(typescript@5.6.3)
       '@percy/dom': 1.29.4
       '@percy/logger': 1.29.4
-      '@percy/webdriver-utils': 1.29.4(typescript@5.6.2)
+      '@percy/webdriver-utils': 1.29.4(typescript@5.6.3)
       content-disposition: 0.5.4
       cross-spawn: 7.0.3
       extract-zip: 2.0.1
@@ -10695,9 +10695,9 @@ snapshots:
 
   '@percy/sdk-utils@1.29.4': {}
 
-  '@percy/webdriver-utils@1.29.4(typescript@5.6.2)':
+  '@percy/webdriver-utils@1.29.4(typescript@5.6.3)':
     dependencies:
-      '@percy/config': 1.29.4(typescript@5.6.2)
+      '@percy/config': 1.29.4(typescript@5.6.3)
       '@percy/sdk-utils': 1.29.4
     transitivePeerDependencies:
       - typescript
@@ -10871,21 +10871,21 @@ snapshots:
   '@types/ember@4.0.11':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.25.7)
-      '@types/ember__array': 4.0.10
+      '@types/ember__array': 4.0.10(@babel/core@7.25.7)
       '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12
+      '@types/ember__controller': 4.0.12(@babel/core@7.25.7)
       '@types/ember__debug': 4.0.8(@babel/core@7.25.7)
-      '@types/ember__engine': 4.0.11
+      '@types/ember__engine': 4.0.11(@babel/core@7.25.7)
       '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
       '@types/ember__polyfills': 4.0.6
       '@types/ember__routing': 4.0.22
       '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9
+      '@types/ember__service': 4.0.9(@babel/core@7.25.7)
       '@types/ember__string': 3.0.15
       '@types/ember__template': 4.0.7
       '@types/ember__test': 4.0.6(@babel/core@7.25.7)
-      '@types/ember__utils': 4.0.7
+      '@types/ember__utils': 4.0.7(@babel/core@7.25.7)
       '@types/rsvp': 4.0.9
 
   '@types/ember@4.0.11(@babel/core@7.25.7)':
@@ -10921,8 +10921,8 @@ snapshots:
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.25.7)
       '@types/ember': 4.0.11
-      '@types/ember__engine': 4.0.11
-      '@types/ember__object': 4.0.12
+      '@types/ember__engine': 4.0.11(@babel/core@7.25.7)
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
       '@types/ember__owner': 4.0.9
       '@types/ember__routing': 4.0.22
     transitivePeerDependencies:
@@ -10933,15 +10933,10 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
 
-  '@types/ember__array@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12
-
   '@types/ember__array@4.0.10(@babel/core@7.25.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.7)
-      '@types/ember__object': 4.0.12
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -10954,12 +10949,12 @@ snapshots:
   '@types/ember__component@4.0.22':
     dependencies:
       '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
 
   '@types/ember__component@4.0.22(@babel/core@7.25.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.7)
-      '@types/ember__object': 4.0.12
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -10967,10 +10962,6 @@ snapshots:
   '@types/ember__controller@3.16.14':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__controller@4.0.12':
-    dependencies:
-      '@types/ember__object': 4.0.12
 
   '@types/ember__controller@4.0.12(@babel/core@7.25.7)':
     dependencies:
@@ -10996,11 +10987,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
 
-  '@types/ember__engine@4.0.11':
-    dependencies:
-      '@types/ember__object': 4.0.12
-      '@types/ember__owner': 4.0.9
-
   '@types/ember__engine@4.0.11(@babel/core@7.25.7)':
     dependencies:
       '@types/ember__object': 4.0.12(@babel/core@7.25.7)
@@ -11015,11 +11001,6 @@ snapshots:
 
   '@types/ember__object@3.12.13':
     dependencies:
-      '@types/rsvp': 4.0.9
-
-  '@types/ember__object@4.0.12':
-    dependencies:
-      '@types/ember': 4.0.11
       '@types/rsvp': 4.0.9
 
   '@types/ember__object@4.0.12(@babel/core@7.25.7)':
@@ -11046,16 +11027,16 @@ snapshots:
   '@types/ember__routing@4.0.22':
     dependencies:
       '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12
-      '@types/ember__object': 4.0.12
-      '@types/ember__service': 4.0.9
+      '@types/ember__controller': 4.0.12(@babel/core@7.25.7)
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
+      '@types/ember__service': 4.0.9(@babel/core@7.25.7)
 
   '@types/ember__routing@4.0.22(@babel/core@7.25.7)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.25.7)
-      '@types/ember__controller': 4.0.12
-      '@types/ember__object': 4.0.12
-      '@types/ember__service': 4.0.9
+      '@types/ember__controller': 4.0.12(@babel/core@7.25.7)
+      '@types/ember__object': 4.0.12(@babel/core@7.25.7)
+      '@types/ember__service': 4.0.9(@babel/core@7.25.7)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11076,10 +11057,6 @@ snapshots:
   '@types/ember__service@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__service@4.0.9':
-    dependencies:
-      '@types/ember__object': 4.0.12
 
   '@types/ember__service@4.0.9(@babel/core@7.25.7)':
     dependencies:
@@ -11110,10 +11087,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.25.7)':
     dependencies:
@@ -12990,14 +12963,14 @@ snapshots:
     dependencies:
       layout-base: 2.0.1
 
-  cosmiconfig@8.3.6(typescript@5.6.2):
+  cosmiconfig@8.3.6(typescript@5.6.3):
     dependencies:
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.6.2
+      typescript: 5.6.3
 
   create-ecdh@4.0.4:
     dependencies:
@@ -19213,7 +19186,7 @@ snapshots:
 
   typescript-memoize@1.1.1: {}
 
-  typescript@5.6.2: {}
+  typescript@5.6.3: {}
 
   uc.micro@1.0.6: {}
 
