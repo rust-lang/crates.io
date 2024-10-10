@@ -157,7 +157,7 @@ fn list_by_semver(
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
-    let (data, total) = if let Some(options) = options {
+    let (data, total, release_tracks) = if let Some(options) = options {
         // Since versions will only increase in the future and both sorting and pagination need to
         // happen on the app server, implementing it with fetching only the data needed for sorting
         // and pagination, then making another query for the data to respond with, would minimize
@@ -168,18 +168,26 @@ fn list_by_semver(
         let mut sorted_versions = IndexMap::new();
         for result in versions::table
             .filter(versions::crate_id.eq(crate_id))
-            .select((versions::id, versions::num))
-            .load_iter::<(i32, String), DefaultLoadingMode>(conn)?
+            .select((versions::id, versions::num, versions::yanked))
+            .load_iter::<(i32, String, bool), DefaultLoadingMode>(conn)?
         {
-            let (id, num) = result?;
-            sorted_versions.insert(id, (num, None));
+            let (id, num, yanked) = result?;
+            let semver = semver::Version::parse(&num).ok();
+            sorted_versions.insert(id, (semver, yanked, None));
         }
-        sorted_versions.sort_by_cached_key(|_, (num, _)| Reverse(semver::Version::parse(num).ok()));
+        sorted_versions
+            .sort_unstable_by(|_, (semver_a, _, _), _, (semver_b, _, _)| semver_b.cmp(semver_a));
 
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
+        let release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
+            sorted_versions
+                .values()
+                .filter(|(_, yanked, _)| !yanked)
+                .filter_map(|(semver, _, _)| semver.as_ref()),
+        ));
         let mut idx = Some(0);
         if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
             idx = sorted_versions
@@ -201,19 +209,24 @@ fn list_by_semver(
                 .load_iter::<(Version, Option<User>), DefaultLoadingMode>(conn)?
             {
                 let row = result?;
-                sorted_versions.insert(row.0.id, (row.0.num.to_owned(), Some(row)));
+                // The versions are already sorted, and we only need to enrich the fetched rows into them.
+                // Therefore, other values can now be safely ignored.
+                sorted_versions
+                    .entry(row.0.id)
+                    .and_modify(|entry| *entry = (None, false, Some(row)));
             }
 
             let len = sorted_versions.len();
             (
                 sorted_versions
                     .into_values()
-                    .filter_map(|(_, v)| v)
+                    .filter_map(|(_, _, v)| v)
                     .collect(),
                 len,
+                release_tracks,
             )
         } else {
-            (vec![], 0)
+            (vec![], 0, release_tracks)
         }
     } else {
         let mut data: Vec<(Version, Option<User>)> = versions::table
@@ -223,7 +236,7 @@ fn list_by_semver(
             .load(conn)?;
         data.sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
         let total = data.len();
-        (data, total)
+        (data, total, None)
     };
 
     let mut next_page = None;
@@ -237,7 +250,7 @@ fn list_by_semver(
         meta: ResponseMeta {
             total: total as i64,
             next_page,
-            release_tracks: None,
+            release_tracks,
         },
     })
 }
