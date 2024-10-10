@@ -5,8 +5,8 @@ use crate::{
     schema::{crate_owners, crates, users},
 };
 
-use crate::tasks::spawn_blocking;
 use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -21,22 +21,21 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    spawn_blocking(move || {
-        let conn = &mut db::oneoff_connection()?;
-        transfer(opts, conn)?;
-        Ok(())
-    })
-    .await
+    let mut conn = db::oneoff_async_connection().await?;
+    transfer(opts, &mut conn).await?;
+    Ok(())
 }
 
-fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
+async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     let from: User = users::table
         .filter(users::gh_login.eq(opts.from_user))
-        .first(conn)?;
+        .first(conn)
+        .await?;
 
     let to: User = users::table
         .filter(users::gh_login.eq(opts.to_user))
-        .first(conn)?;
+        .first(conn)
+        .await?;
 
     if from.gh_id != to.gh_id {
         println!("====================================================");
@@ -47,7 +46,7 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
-        if !dialoguer::confirm("continue?")? {
+        if !dialoguer::async_confirm("continue?").await? {
             return Ok(());
         }
     }
@@ -56,7 +55,7 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         "Are you sure you want to transfer crates from {} to {}?",
         from.gh_login, to.gh_login
     );
-    if !dialoguer::confirm(&prompt)? {
+    if !dialoguer::async_confirm(&prompt).await? {
         return Ok(());
     }
 
@@ -65,27 +64,30 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         .filter(crate_owners::owner_kind.eq(OwnerKind::User));
     let crates: Vec<Crate> = Crate::all()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
-        .load(conn)?;
+        .load(conn)
+        .await?;
 
     for krate in crates {
         let num_owners: i64 = crate_owners::table
             .count()
             .filter(crate_owners::deleted.eq(false))
             .filter(crate_owners::crate_id.eq(krate.id))
-            .get_result(conn)?;
+            .get_result(conn)
+            .await?;
 
         if num_owners != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
     }
 
-    if !dialoguer::confirm("commit?")? {
+    if !dialoguer::async_confirm("commit?").await? {
         return Ok(());
     }
 
     diesel::update(crate_owners)
         .set(crate_owners::owner_id.eq(to.id))
-        .execute(conn)?;
+        .execute(conn)
+        .await?;
 
     Ok(())
 }
