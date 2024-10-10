@@ -68,8 +68,13 @@ fn transfer(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         .load(conn)?;
 
     for krate in crates {
-        let owners = krate.owners(conn)?;
-        if owners.len() != 1 {
+        let num_owners: i64 = crate_owners::table
+            .count()
+            .filter(crate_owners::deleted.eq(false))
+            .filter(crate_owners::crate_id.eq(krate.id))
+            .get_result(conn)?;
+
+        if num_owners != 1 {
             println!("warning: not exactly one owner for {}", krate.name);
         }
     }
