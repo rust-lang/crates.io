@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.89"
-async-compression = { version = "=0.4.13", features = ["gzip", "tokio", "zstd"] }
+async-compression = { version = "=0.4.14", features = ["gzip", "tokio", "zstd"] }
 chrono = { version = "=0.4.38", features = ["serde"] }
 derive_deref = "=1.1.1"
 percent-encoding = "=2.3.1"
