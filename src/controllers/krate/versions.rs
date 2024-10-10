@@ -3,10 +3,11 @@
 use axum::extract::Path;
 use axum::Json;
 use diesel::connection::DefaultLoadingMode;
+use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use serde_json::Value;
 use std::cmp::Reverse;
 
@@ -95,6 +96,7 @@ fn list_by_date(
         .select((versions::all_columns, users::all_columns.nullable()))
         .into_boxed();
 
+    let mut release_tracks = None;
     if let Some(options) = options {
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
@@ -109,6 +111,23 @@ fn list_by_date(
             )
         }
         query = query.limit(options.per_page);
+
+        let mut sorted_versions = IndexSet::new();
+        for result in versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .filter(not(versions::yanked))
+            .select(versions::num)
+            .load_iter::<String, DefaultLoadingMode>(conn)?
+        {
+            let Ok(semver) = semver::Version::parse(&result?) else {
+                continue;
+            };
+            sorted_versions.insert(semver);
+        }
+        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+        release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
+            sorted_versions.iter(),
+        ));
     }
 
     query = query.order((versions::created_at.desc(), versions::id.desc()));
@@ -136,7 +155,7 @@ fn list_by_date(
         meta: ResponseMeta {
             total,
             next_page,
-            release_tracks: None,
+            release_tracks,
         },
     })
 }
