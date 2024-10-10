@@ -62,27 +62,29 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         entry.1.push(login);
     }
 
+    println!("Deleting the following crates:");
+    println!();
+    for name in &crate_names {
+        match existing_crates.get(name) {
+            Some((id, owners)) => {
+                let owners = owners.join(", ");
+                println!(" - {name} (id={id}, owners={owners})");
+            }
+            None => println!(" - {name} (⚠️ crate not found)"),
+        }
+    }
+    println!();
+
+    if !opts.yes
+        && !dialoguer::async_confirm("Do you want to permanently delete these crates?").await?
+    {
+        return Ok(());
+    }
+
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        println!("Deleting the following crates:");
-        println!();
-        for name in &crate_names {
-            match existing_crates.get(name) {
-                Some((id, owners)) => {
-                    let owners = owners.join(", ");
-                    println!(" - {name} (id={id}, owners={owners})");
-                }
-                None => println!(" - {name} (⚠️ crate not found)"),
-            }
-        }
-        println!();
-
-        if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?")? {
-            return Ok(());
-        }
 
         for name in &crate_names {
             if let Some((id, _)) = existing_crates.get(name) {
