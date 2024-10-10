@@ -7,6 +7,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::collections::HashMap;
 
 #[derive(clap::Parser, Debug)]
@@ -26,9 +27,12 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    let conn = db::oneoff_async_connection()
+        .await
+        .context("Failed to establish database connection")?;
+
     spawn_blocking(move || {
-        let conn =
-            &mut db::oneoff_connection().context("Failed to establish database connection")?;
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let mut crate_names = opts.crate_names;
         crate_names.sort();
