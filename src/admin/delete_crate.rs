@@ -5,8 +5,8 @@ use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
-use diesel::prelude::*;
 use diesel::sql_types::Text;
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use std::collections::HashMap;
 
@@ -27,39 +27,45 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = db::oneoff_async_connection()
+    let mut conn = db::oneoff_async_connection()
         .await
         .context("Failed to establish database connection")?;
 
+    let mut crate_names = opts.crate_names;
+    crate_names.sort();
+
+    let query_result = {
+        use diesel_async::RunQueryDsl;
+
+        crates::table
+            .select((
+                crates::name,
+                crates::id,
+                sql::<Text>(
+                    "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+                ),
+            ))
+            .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
+            .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
+            .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
+            .filter(crates::name.eq_any(&crate_names))
+            .load::<(String, i32, String)>(&mut conn).await
+            .context("Failed to look up crate name from the database")
+    }?;
+
+    let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
+    for (name, id, login) in query_result {
+        let entry = existing_crates
+            .entry(name)
+            .or_insert_with(|| (id, Vec::new()));
+
+        entry.1.push(login);
+    }
+
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let mut crate_names = opts.crate_names;
-        crate_names.sort();
-
-        let query_result = crates::table
-        .select((
-            crates::name,
-            crates::id,
-            sql::<Text>(
-                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
-            ),
-        ))
-        .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
-        .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
-        .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
-        .filter(crates::name.eq_any(&crate_names))
-        .load::<(String, i32, String)>(conn)
-        .context("Failed to look up crate name from the database")?;
-
-        let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
-        for (name, id, login) in query_result {
-            let entry = existing_crates
-                .entry(name)
-                .or_insert_with(|| (id, Vec::new()));
-
-            entry.1.push(login);
-        }
 
         println!("Deleting the following crates:");
         println!();
