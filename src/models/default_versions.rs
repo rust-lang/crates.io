@@ -59,7 +59,7 @@ pub fn update_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResul
 
 /// Verifies that the default version for the specified crate is up-to-date.
 #[instrument(skip(conn))]
-pub fn verify_default_version(crate_id: i32, conn: &mut PgConnection) -> QueryResult<()> {
+pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
     let calculated = calculate_default_version(crate_id, conn)?;
 
     let saved = default_versions::table
