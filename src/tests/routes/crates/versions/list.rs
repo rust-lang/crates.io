@@ -86,9 +86,6 @@ async fn test_sorting() {
             .expect_build(conn);
     });
 
-    // Sort by semver
-    let url = "/api/v1/crates/foo_versions/versions?sort=semver";
-    let json: AllVersions = anon.get(url).await.good();
     let expects = [
         "2.0.0-alpha",
         "1.0.0",
@@ -100,19 +97,29 @@ async fn test_sorting() {
         "1.0.0-alpha.1",
         "1.0.0-alpha",
     ];
+    let release_tracks = Some(json!({"1": {"highest": "1.0.0"}}));
+
+    // Sort by semver
+    let url = "/api/v1/crates/foo_versions/versions?sort=semver";
+    let json: AllVersions = anon.get(url).await.good();
     for (num, expect) in nums(&json.versions).iter().zip(expects) {
         assert_eq!(num, expect);
     }
-    let (resp, calls) = page_with_seek(&anon, url).await;
-    for (json, expect) in resp.iter().zip(expects) {
-        assert_eq!(json.versions[0].num, expect);
-        assert_eq!(json.meta.total as usize, expects.len());
-        assert_eq!(
-            json.meta.release_tracks,
-            Some(json!({"1": {"highest": "1.0.0"}}))
-        );
+    for (url, release_tracks) in [
+        (url, None),
+        (
+            &format!("{url}&include=release_tracks"),
+            release_tracks.as_ref(),
+        ),
+    ] {
+        let (resp, calls) = page_with_seek(&anon, url).await;
+        for (json, expect) in resp.iter().zip(expects) {
+            assert_eq!(json.versions[0].num, expect);
+            assert_eq!(json.meta.total as usize, expects.len());
+            assert_eq!(json.meta.release_tracks.as_ref(), release_tracks);
+        }
+        assert_eq!(calls as usize, expects.len() + 1);
     }
-    assert_eq!(calls as usize, expects.len() + 1);
 
     // Sort by date
     let url = "/api/v1/crates/foo_versions/versions?sort=date";
@@ -121,16 +128,21 @@ async fn test_sorting() {
     for (num, expect) in nums(&json.versions).iter().zip(&expects) {
         assert_eq!(num, *expect);
     }
-    let (resp, calls) = page_with_seek(&anon, url).await;
-    for (json, expect) in resp.iter().zip(&expects) {
-        assert_eq!(json.versions[0].num, *expect);
-        assert_eq!(json.meta.total as usize, expects.len());
-        assert_eq!(
-            json.meta.release_tracks,
-            Some(json!({"1": {"highest": "1.0.0"}}))
-        );
+    for (url, release_tracks) in [
+        (url, None),
+        (
+            &format!("{url}&include=release_tracks"),
+            release_tracks.as_ref(),
+        ),
+    ] {
+        let (resp, calls) = page_with_seek(&anon, url).await;
+        for (json, expect) in resp.iter().zip(&expects) {
+            assert_eq!(json.versions[0].num, *expect);
+            assert_eq!(json.meta.total as usize, expects.len());
+            assert_eq!(json.meta.release_tracks.as_ref(), release_tracks);
+        }
+        assert_eq!(calls as usize, expects.len() + 1);
     }
-    assert_eq!(calls as usize, expects.len() + 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -167,10 +179,10 @@ async fn test_seek_based_pagination_semver_sorting() {
         .good();
     assert_eq!(nums(&json.versions), expects);
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     let json: VersionList = anon
-        .get_with_query(url, "per_page=1&sort=semver")
+        .get_with_query(url, "per_page=1&sort=semver&include=release_tracks")
         .await
         .good();
     assert_eq!(nums(&json.versions), expects[0..1]);
@@ -192,7 +204,7 @@ async fn test_seek_based_pagination_semver_sorting() {
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     // per_page euqal to the number of remain versions
     let json: VersionList = anon
@@ -202,7 +214,7 @@ async fn test_seek_based_pagination_semver_sorting() {
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_some());
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     // A decodable seek value, MTAwCg (100), but doesn't actually exist
     let json: VersionList = anon
@@ -212,7 +224,7 @@ async fn test_seek_based_pagination_semver_sorting() {
     assert_eq!(json.versions.len(), 0);
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total, 0);
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -249,10 +261,10 @@ async fn test_seek_based_pagination_date_sorting() {
         .good();
     assert_eq!(nums(&json.versions), expects);
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     let json: VersionList = anon
-        .get_with_query(url, "per_page=1&sort=date")
+        .get_with_query(url, "per_page=1&sort=date&include=release_tracks")
         .await
         .good();
     assert_eq!(nums(&json.versions), expects[0..1]);
@@ -274,7 +286,7 @@ async fn test_seek_based_pagination_date_sorting() {
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     // per_page euqal to the number of remain versions
     let json: VersionList = anon
@@ -284,7 +296,7 @@ async fn test_seek_based_pagination_date_sorting() {
     assert_eq!(nums(&json.versions), expects[1..]);
     assert!(json.meta.next_page.is_some());
     assert_eq!(json.meta.total as usize, expects.len());
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 
     // A decodable seek value, WzE3Mjg1NjE5OTI3MzQ2NzMsNV0K ([1728561992734673,5]), but doesn't actually exist
     let json: VersionList = anon
@@ -297,7 +309,7 @@ async fn test_seek_based_pagination_date_sorting() {
     assert_eq!(json.versions.len(), 0);
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total, 0);
-    assert_eq!(json.meta.release_tracks, release_tracks);
+    assert_eq!(json.meta.release_tracks, None);
 }
 
 #[tokio::test(flavor = "multi_thread")]

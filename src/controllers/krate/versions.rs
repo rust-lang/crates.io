@@ -10,6 +10,7 @@ use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
 use serde_json::Value;
 use std::cmp::Reverse;
+use std::str::FromStr;
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
@@ -17,7 +18,7 @@ use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::{crates, users, versions};
 use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
@@ -49,11 +50,18 @@ pub async fn versions(
             );
         }
 
+        let include = req
+            .query()
+            .get("include")
+            .map(|mode| ShowIncludeMode::from_str(mode))
+            .transpose()?
+            .unwrap_or_default();
+
         // Sort by semver by default
         let versions_and_publishers = match params.get("sort").map(|s| s.to_lowercase()).as_deref()
         {
-            Some("date") => list_by_date(crate_id, pagination.as_ref(), &req, conn)?,
-            _ => list_by_semver(crate_id, pagination.as_ref(), &req, conn)?,
+            Some("date") => list_by_date(crate_id, pagination.as_ref(), include, &req, conn)?,
+            _ => list_by_semver(crate_id, pagination.as_ref(), include, &req, conn)?,
         };
 
         let versions = versions_and_publishers
@@ -85,6 +93,7 @@ pub async fn versions(
 fn list_by_date(
     crate_id: i32,
     options: Option<&PaginationOptions>,
+    include: ShowIncludeMode,
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
@@ -112,22 +121,24 @@ fn list_by_date(
         }
         query = query.limit(options.per_page);
 
-        let mut sorted_versions = IndexSet::new();
-        for result in versions::table
-            .filter(versions::crate_id.eq(crate_id))
-            .filter(not(versions::yanked))
-            .select(versions::num)
-            .load_iter::<String, DefaultLoadingMode>(conn)?
-        {
-            let Ok(semver) = semver::Version::parse(&result?) else {
-                continue;
-            };
-            sorted_versions.insert(semver);
+        if include.release_tracks {
+            let mut sorted_versions = IndexSet::new();
+            for result in versions::table
+                .filter(versions::crate_id.eq(crate_id))
+                .filter(not(versions::yanked))
+                .select(versions::num)
+                .load_iter::<String, DefaultLoadingMode>(conn)?
+            {
+                let Ok(semver) = semver::Version::parse(&result?) else {
+                    continue;
+                };
+                sorted_versions.insert(semver);
+            }
+            sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+            release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
+                sorted_versions.iter(),
+            ));
         }
-        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
-        release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
-            sorted_versions.iter(),
-        ));
     }
 
     query = query.order((versions::created_at.desc(), versions::id.desc()));
@@ -171,6 +182,7 @@ fn list_by_date(
 fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,
+    include: ShowIncludeMode,
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
@@ -201,12 +213,16 @@ fn list_by_semver(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
-        let release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
-            sorted_versions
-                .values()
-                .filter(|(_, yanked, _)| !yanked)
-                .filter_map(|(semver, _, _)| semver.as_ref()),
-        ));
+
+        let release_tracks = include.release_tracks.then(|| {
+            ReleaseTracks::from_sorted_semver_iter(
+                sorted_versions
+                    .values()
+                    .filter(|(_, yanked, _)| !yanked)
+                    .filter_map(|(semver, _, _)| semver.as_ref()),
+            )
+        });
+
         let mut idx = Some(0);
         if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
             idx = sorted_versions
@@ -409,6 +425,34 @@ impl serde::Serialize for ReleaseTrackName {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 struct ReleaseTrackDetails {
     highest: semver::Version,
+}
+
+#[derive(Debug, Default)]
+struct ShowIncludeMode {
+    release_tracks: bool,
+}
+
+impl ShowIncludeMode {
+    const INVALID_COMPONENT: &'static str =
+        "invalid component for ?include= (expected 'release_tracks')";
+}
+
+impl FromStr for ShowIncludeMode {
+    type Err = BoxedAppError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut mode = Self {
+            release_tracks: false,
+        };
+        for component in s.split(',') {
+            match component {
+                "" => {}
+                "release_tracks" => mode.release_tracks = true,
+                _ => return Err(bad_request(Self::INVALID_COMPONENT)),
+            }
+        }
+        Ok(mode)
+    }
 }
 
 #[cfg(test)]
