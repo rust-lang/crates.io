@@ -7,6 +7,8 @@ use crate::worker::jobs;
 use crate::worker::jobs::UpdateDefaultVersion;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -24,24 +26,22 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    spawn_blocking(move || {
-        let mut conn = db::oneoff_connection()?;
-        conn.transaction(|conn| yank(opts, conn))?;
-        Ok(())
-    })
-    .await
+    let mut conn = db::oneoff_async_connection().await?;
+    conn.transaction(|conn| yank(opts, conn))?;
+    Ok(())
 }
 
-fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
+async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     let Opts {
         crate_name,
         version,
         yes,
     } = opts;
-    let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
+    let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
     let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&version))
-        .first(conn)?;
+        .first(conn)
+        .await?;
 
     if v.yanked {
         println!("Version {version} of crate {crate_name} is already yanked");
@@ -53,7 +53,7 @@ fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
             "Are you sure you want to yank {crate_name}#{version} ({})?",
             v.id
         );
-        if !dialoguer::confirm(&prompt)? {
+        if !dialoguer::async_confirm(&prompt).await? {
             return Ok(());
         }
     }
@@ -61,11 +61,17 @@ fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
     println!("yanking version {} ({})", v.num, v.id);
     diesel::update(&v)
         .set(versions::yanked.eq(true))
-        .execute(conn)?;
+        .execute(conn)
+        .await?;
 
-    jobs::enqueue_sync_to_index(&krate.name, conn)?;
+    spawn_blocking(move || {
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-    UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+        jobs::enqueue_sync_to_index(&krate.name, conn)?;
 
-    Ok(())
+        UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+
+        Ok(())
+    })
+    .await
 }
