@@ -97,8 +97,11 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             };
 
             info!("{name}: Enqueuing index sync jobs…");
-            if let Err(error) = jobs::enqueue_sync_to_index(name, conn) {
-                warn!("{name}: Failed to enqueue index sync jobs: {error}");
+            if let Err(error) = jobs::SyncToGitIndex::new(name).enqueue(conn) {
+                warn!("{name}: Failed to enqueue SyncToGitIndex job: {error}");
+            }
+            if let Err(error) = jobs::SyncToSparseIndex::new(name).enqueue(conn) {
+                warn!("{name}: Failed to enqueue SyncToSparseIndex job: {error}");
             }
 
             info!("{name}: Enqueuing DeleteCrateFromStorage job…");

@@ -442,7 +442,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 ))
                 .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-            jobs::enqueue_sync_to_index(&krate.name, conn)?;
+            jobs::SyncToGitIndex::new(&krate.name).enqueue(conn)?;
+            jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
 
             SendPublishNotificationsJob::new(version.id).enqueue(conn)?;
 

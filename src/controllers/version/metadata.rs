@@ -29,7 +29,7 @@ use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
-use crate::worker::jobs::{self, UpdateDefaultVersion};
+use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 
 use super::version_and_crate;
 
@@ -233,7 +233,8 @@ pub fn perform_version_yank_update(
     };
     insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
 
-    jobs::enqueue_sync_to_index(&krate.name, conn)?;
+    SyncToGitIndex::new(&krate.name).enqueue(conn)?;
+    SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
     UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
 
     Ok(())

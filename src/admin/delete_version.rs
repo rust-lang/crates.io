@@ -5,6 +5,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::versions};
 use anyhow::Context;
+use crates_io_worker::BackgroundJob;
 use diesel::{Connection, ExpressionMethods, QueryDsl};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 
@@ -102,8 +103,11 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         })?;
 
         info!(%crate_name, "Enqueuing index sync jobs");
-        if let Err(error) = jobs::enqueue_sync_to_index(crate_name, conn) {
-            warn!(%crate_name, ?error, "Failed to enqueue index sync jobs");
+        if let Err(error) = jobs::SyncToGitIndex::new(crate_name).enqueue(conn) {
+            warn!(%crate_name, ?error, "Failed to enqueue SyncToGitIndex job");
+        }
+        if let Err(error) = jobs::SyncToSparseIndex::new(crate_name).enqueue(conn) {
+            warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
         }
 
         Ok(opts)

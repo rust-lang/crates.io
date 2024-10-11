@@ -3,8 +3,7 @@ use crate::db;
 use crate::models::{Crate, Version};
 use crate::schema::versions;
 use crate::tasks::spawn_blocking;
-use crate::worker::jobs;
-use crate::worker::jobs::UpdateDefaultVersion;
+use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 
@@ -63,8 +62,8 @@ fn yank(opts: Opts, conn: &mut PgConnection) -> anyhow::Result<()> {
         .set(versions::yanked.eq(true))
         .execute(conn)?;
 
-    jobs::enqueue_sync_to_index(&krate.name, conn)?;
-
+    SyncToGitIndex::new(&krate.name).enqueue(conn)?;
+    SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
     UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
 
     Ok(())
