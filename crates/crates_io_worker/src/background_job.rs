@@ -39,20 +39,13 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Execute the task. This method should define its logic.
     fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
+    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
     fn enqueue(
         &self,
         conn: &mut impl LoadConnection<Backend = Pg>,
     ) -> Result<Option<i64>, EnqueueError> {
-        self.enqueue_with_priority(conn, Self::PRIORITY)
-    }
-
-    #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
-    fn enqueue_with_priority(
-        &self,
-        conn: &mut impl LoadConnection<Backend = Pg>,
-        priority: i16,
-    ) -> Result<Option<i64>, EnqueueError> {
         let data = serde_json::to_value(self)?;
+        let priority = Self::PRIORITY;
 
         if Self::DEDUPLICATED {
             Ok(enqueue_deduplicated(conn, Self::JOB_NAME, &data, priority)?)
