@@ -1200,11 +1200,13 @@ name = "crates_io_worker"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "claims",
  "crates_io_test_db",
  "deadpool-diesel",
  "diesel",
  "diesel-async",
  "futures-util",
+ "insta",
  "sentry-core",
  "serde",
  "serde_json",

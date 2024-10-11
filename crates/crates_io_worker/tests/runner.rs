@@ -1,3 +1,4 @@
+use claims::{assert_none, assert_some};
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, Runner};
@@ -5,9 +6,19 @@ use diesel::prelude::*;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::AsyncPgConnection;
+use insta::assert_compact_json_snapshot;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 use tokio::sync::Barrier;
+
+fn all_jobs(conn: &mut PgConnection) -> Vec<(String, Value)> {
+    background_jobs::table
+        .select((background_jobs::job_type, background_jobs::data))
+        .get_results(conn)
+        .unwrap()
+}
 
 fn job_exists(id: i64, conn: &mut PgConnection) -> bool {
     background_jobs::table
@@ -63,7 +74,7 @@ async fn jobs_are_locked_when_fetched() {
     let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
 
     let mut conn = test_database.connect();
-    let job_id = TestJob.enqueue(&mut conn).unwrap();
+    let job_id = TestJob.enqueue(&mut conn).unwrap().unwrap();
 
     assert!(job_exists(job_id, &mut conn));
     assert!(!job_is_locked(job_id, &mut conn));
@@ -193,7 +204,7 @@ async fn panicking_in_jobs_updates_retry_counter() {
 
     let mut conn = test_database.connect();
 
-    let job_id = TestJob.enqueue(&mut conn).unwrap();
+    let job_id = TestJob.enqueue(&mut conn).unwrap().unwrap();
 
     let runner = runner.start();
     runner.wait_for_shutdown().await;
@@ -205,6 +216,85 @@ async fn panicking_in_jobs_updates_retry_counter() {
         .first::<i32>(&mut *conn)
         .unwrap();
     assert_eq!(tries, 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn jobs_can_be_deduplicated() {
+    #[derive(Clone)]
+    struct TestContext {
+        runs: Arc<AtomicU8>,
+        job_started_barrier: Arc<Barrier>,
+        assertions_finished_barrier: Arc<Barrier>,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    struct TestJob {
+        value: String,
+    }
+
+    impl TestJob {
+        fn new(value: impl Into<String>) -> Self {
+            let value = value.into();
+            Self { value }
+        }
+    }
+
+    impl BackgroundJob for TestJob {
+        const JOB_NAME: &'static str = "test";
+        const DEDUPLICATED: bool = true;
+        type Context = TestContext;
+
+        async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
+            let runs = ctx.runs.fetch_add(1, Ordering::SeqCst);
+            if runs == 0 {
+                ctx.job_started_barrier.wait().await;
+                ctx.assertions_finished_barrier.wait().await;
+            }
+            Ok(())
+        }
+    }
+
+    let test_database = TestDatabase::new();
+
+    let test_context = TestContext {
+        runs: Arc::new(AtomicU8::new(0)),
+        job_started_barrier: Arc::new(Barrier::new(2)),
+        assertions_finished_barrier: Arc::new(Barrier::new(2)),
+    };
+
+    let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+
+    let mut conn = test_database.connect();
+
+    // Enqueue first job
+    assert_some!(TestJob::new("foo").enqueue(&mut conn).unwrap());
+    assert_compact_json_snapshot!(all_jobs(&mut conn), @r#"[["test", {"value": "foo"}]]"#);
+
+    // Try to enqueue the same job again, which should be deduplicated
+    assert_none!(TestJob::new("foo").enqueue(&mut conn).unwrap());
+    assert_compact_json_snapshot!(all_jobs(&mut conn), @r#"[["test", {"value": "foo"}]]"#);
+
+    // Start processing the first job
+    let runner = runner.start();
+    test_context.job_started_barrier.wait().await;
+
+    // Enqueue the same job again, which should NOT be deduplicated,
+    // since the first job already still running
+    assert_some!(TestJob::new("foo").enqueue(&mut conn).unwrap());
+    assert_compact_json_snapshot!(all_jobs(&mut conn), @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}]]"#);
+
+    // Try to enqueue the same job again, which should be deduplicated again
+    assert_none!(TestJob::new("foo").enqueue(&mut conn).unwrap());
+    assert_compact_json_snapshot!(all_jobs(&mut conn), @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}]]"#);
+
+    // Enqueue the same job but with different data, which should
+    // NOT be deduplicated
+    assert_some!(TestJob::new("bar").enqueue(&mut conn).unwrap());
+    assert_compact_json_snapshot!(all_jobs(&mut conn), @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}], ["test", {"value": "bar"}]]"#);
+
+    // Resolve the final barrier to finish the test
+    test_context.assertions_finished_barrier.wait().await;
+    runner.wait_for_shutdown().await;
 }
 
 fn runner<Context: Clone + Send + Sync + 'static>(
