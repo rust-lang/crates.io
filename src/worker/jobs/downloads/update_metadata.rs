@@ -14,6 +14,7 @@ pub struct UpdateDownloads;
 
 impl BackgroundJob for UpdateDownloads {
     const JOB_NAME: &'static str = "update_downloads";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

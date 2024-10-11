@@ -10,6 +10,7 @@ pub struct DailyDbMaintenance;
 
 impl BackgroundJob for DailyDbMaintenance {
     const JOB_NAME: &'static str = "daily_db_maintenance";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

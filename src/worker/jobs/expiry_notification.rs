@@ -21,6 +21,7 @@ pub struct SendTokenExpiryNotifications;
 
 impl BackgroundJob for SendTokenExpiryNotifications {
     const JOB_NAME: &'static str = "send_token_expiry_notifications";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

@@ -33,6 +33,7 @@ impl SyncCrateFeed {
 
 impl BackgroundJob for SyncCrateFeed {
     const JOB_NAME: &'static str = "sync_crate_feed";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

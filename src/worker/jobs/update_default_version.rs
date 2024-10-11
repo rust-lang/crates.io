@@ -19,6 +19,7 @@ impl UpdateDefaultVersion {
 impl BackgroundJob for UpdateDefaultVersion {
     const JOB_NAME: &'static str = "update_default_version";
     const PRIORITY: i16 = 80;
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

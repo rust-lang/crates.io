@@ -28,6 +28,7 @@ impl CheckTyposquat {
 
 impl BackgroundJob for CheckTyposquat {
     const JOB_NAME: &'static str = "check_typosquat";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

@@ -18,6 +18,7 @@ pub struct SyncAdmins;
 
 impl BackgroundJob for SyncAdmins {
     const JOB_NAME: &'static str = "sync_admins";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

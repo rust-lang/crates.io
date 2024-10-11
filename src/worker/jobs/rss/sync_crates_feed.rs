@@ -25,6 +25,7 @@ const NUM_ITEMS: i64 = 50;
 
 impl BackgroundJob for SyncCratesFeed {
     const JOB_NAME: &'static str = "sync_crates_feed";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 
