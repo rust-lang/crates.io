@@ -16,6 +16,7 @@ pub struct IndexVersionDownloadsArchive;
 
 impl BackgroundJob for IndexVersionDownloadsArchive {
     const JOB_NAME: &'static str = "index_version_downloads_archive";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

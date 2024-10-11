@@ -19,6 +19,7 @@ impl DeleteCrateFromStorage {
 
 impl BackgroundJob for DeleteCrateFromStorage {
     const JOB_NAME: &'static str = "delete_crate_from_storage";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

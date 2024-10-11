@@ -25,6 +25,7 @@ impl SendPublishNotificationsJob {
 
 impl BackgroundJob for SendPublishNotificationsJob {
     const JOB_NAME: &'static str = "send_publish_notifications";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

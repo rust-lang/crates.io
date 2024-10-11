@@ -16,6 +16,7 @@ pub struct CleanProcessedLogFiles;
 
 impl BackgroundJob for CleanProcessedLogFiles {
     const JOB_NAME: &'static str = "clean_processed_log_files";
+    const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "downloads";
 
     type Context = Arc<Environment>;

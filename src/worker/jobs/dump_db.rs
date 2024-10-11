@@ -14,6 +14,7 @@ pub struct DumpDb;
 
 impl BackgroundJob for DumpDb {
     const JOB_NAME: &'static str = "dump_db";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 

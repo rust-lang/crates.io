@@ -12,6 +12,7 @@ pub struct SquashIndex;
 
 impl BackgroundJob for SquashIndex {
     const JOB_NAME: &'static str = "squash_index";
+    const DEDUPLICATED: bool = true;
     const QUEUE: &'static str = "repository";
 
     type Context = Arc<Environment>;

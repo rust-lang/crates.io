@@ -48,6 +48,7 @@ impl Default for ArchiveVersionDownloads {
 
 impl BackgroundJob for ArchiveVersionDownloads {
     const JOB_NAME: &'static str = "archive_version_downloads";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 
