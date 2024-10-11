@@ -1,9 +1,5 @@
 use crate::util::diesel::Conn;
-use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, EnqueueError};
-use diesel::dsl::{exists, not};
-use diesel::prelude::*;
-use diesel::sql_types::{Int2, Jsonb, Text};
 use std::fmt::Display;
 
 mod archive_version_downloads;
@@ -49,61 +45,10 @@ pub fn enqueue_sync_to_index<T: Display>(
     krate: T,
     conn: &mut impl Conn,
 ) -> Result<(), EnqueueError> {
-    // Returns jobs with matching `job_type`, `data` and `priority`,
-    // skipping ones that are already locked by the background worker.
-    let find_similar_jobs_query =
-        |job_type: &'static str, data: serde_json::Value, priority: i16| {
-            background_jobs::table
-                .select(background_jobs::id)
-                .filter(background_jobs::job_type.eq(job_type))
-                .filter(background_jobs::data.eq(data))
-                .filter(background_jobs::priority.eq(priority))
-                .for_update()
-                .skip_locked()
-        };
+    let krate = krate.to_string();
 
-    // Returns one `job_type, data, priority` row with values from the
-    // passed-in `job`, unless a similar row already exists.
-    let deduplicated_select_query =
-        |job_type: &'static str, data: serde_json::Value, priority: i16| {
-            diesel::select((
-                job_type.into_sql::<Text>(),
-                data.clone().into_sql::<Jsonb>(),
-                priority.into_sql::<Int2>(),
-            ))
-            .filter(not(exists(find_similar_jobs_query(
-                job_type, data, priority,
-            ))))
-        };
-
-    let to_git = deduplicated_select_query(
-        SyncToGitIndex::JOB_NAME,
-        serde_json::to_value(SyncToGitIndex::new(krate.to_string()))?,
-        SyncToGitIndex::PRIORITY,
-    );
-
-    let to_sparse = deduplicated_select_query(
-        SyncToSparseIndex::JOB_NAME,
-        serde_json::to_value(SyncToSparseIndex::new(krate.to_string()))?,
-        SyncToSparseIndex::PRIORITY,
-    );
-
-    // Insert index update background jobs, but only if they do not
-    // already exist.
-    let added_jobs_count = diesel::insert_into(background_jobs::table)
-        .values(to_git.union_all(to_sparse))
-        .into_columns((
-            background_jobs::job_type,
-            background_jobs::data,
-            background_jobs::priority,
-        ))
-        .execute(conn)?;
-
-    // Print a log event if we skipped inserting a job due to deduplication.
-    if added_jobs_count != 2 {
-        let skipped_jobs_count = 2 - added_jobs_count;
-        info!(%skipped_jobs_count, "Skipped adding duplicate jobs to the background worker queue");
-    }
+    SyncToGitIndex::new(krate.clone()).enqueue(conn)?;
+    SyncToSparseIndex::new(krate).enqueue(conn)?;
 
     Ok(())
 }
