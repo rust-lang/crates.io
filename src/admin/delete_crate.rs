@@ -1,5 +1,4 @@
 use crate::schema::{crate_owners, teams, users};
-use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
@@ -7,7 +6,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::sql_types::Text;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::RunQueryDsl;
 use std::collections::HashMap;
 
 #[derive(clap::Parser, Debug)]
@@ -34,24 +33,21 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut crate_names = opts.crate_names;
     crate_names.sort();
 
-    let query_result = {
-        use diesel_async::RunQueryDsl;
-
-        crates::table
-            .select((
-                crates::name,
-                crates::id,
-                sql::<Text>(
-                    "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
-                ),
-            ))
-            .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
-            .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
-            .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
-            .filter(crates::name.eq_any(&crate_names))
-            .load::<(String, i32, String)>(&mut conn).await
-            .context("Failed to look up crate name from the database")
-    }?;
+    let query_result = crates::table
+        .select((
+            crates::name,
+            crates::id,
+            sql::<Text>(
+                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+            ),
+        ))
+        .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
+        .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
+        .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
+        .filter(crates::name.eq_any(&crate_names))
+        .load::<(String, i32, String)>(&mut conn)
+        .await
+        .context("Failed to look up crate name from the database")?;
 
     let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
     for (name, id, login) in query_result {
@@ -81,37 +77,36 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
-
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        for name in &crate_names {
-            if let Some((id, _)) = existing_crates.get(name) {
-                info!("{name}: Deleting crate from the database…");
-                if let Err(error) = diesel::delete(crates::table.find(id)).execute(conn) {
-                    warn!(%id, "{name}: Failed to delete crate from the database: {error}");
-                }
-            } else {
-                info!("{name}: Skipped missing crate");
-            };
-
-            info!("{name}: Enqueuing index sync jobs…");
-            if let Err(error) = jobs::SyncToGitIndex::new(name).enqueue(conn) {
-                warn!("{name}: Failed to enqueue SyncToGitIndex job: {error}");
+    for name in &crate_names {
+        if let Some((id, _)) = existing_crates.get(name) {
+            info!("{name}: Deleting crate from the database…");
+            if let Err(error) = diesel::delete(crates::table.find(id))
+                .execute(&mut conn)
+                .await
+            {
+                warn!(%id, "{name}: Failed to delete crate from the database: {error}");
             }
-            if let Err(error) = jobs::SyncToSparseIndex::new(name).enqueue(conn) {
-                warn!("{name}: Failed to enqueue SyncToSparseIndex job: {error}");
-            }
+        } else {
+            info!("{name}: Skipped missing crate");
+        };
 
-            info!("{name}: Enqueuing DeleteCrateFromStorage job…");
-            let job = jobs::DeleteCrateFromStorage::new(name.into());
-            if let Err(error) = job.enqueue(conn) {
-                warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
-            }
+        info!("{name}: Enqueuing index sync jobs…");
+        let job = jobs::SyncToGitIndex::new(name);
+        if let Err(error) = job.async_enqueue(&mut conn).await {
+            warn!("{name}: Failed to enqueue SyncToGitIndex job: {error}");
         }
 
-        Ok(())
-    })
-    .await
+        let job = jobs::SyncToSparseIndex::new(name);
+        if let Err(error) = job.async_enqueue(&mut conn).await {
+            warn!("{name}: Failed to enqueue SyncToSparseIndex job: {error}");
+        }
+
+        info!("{name}: Enqueuing DeleteCrateFromStorage job…");
+        let job = jobs::DeleteCrateFromStorage::new(name.into());
+        if let Err(error) = job.async_enqueue(&mut conn).await {
+            warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
+        }
+    }
+
+    Ok(())
 }
