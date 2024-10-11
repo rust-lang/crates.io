@@ -2,6 +2,7 @@ use crate::models::Crate;
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::worker::jobs;
+use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use http::StatusCode;
 
@@ -51,7 +52,8 @@ async fn index_smoke_test() {
         let krate: Crate = assert_ok!(Crate::by_name("serde").first(conn));
         assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(conn));
 
-        assert_ok!(jobs::enqueue_sync_to_index("serde", conn));
+        assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(conn));
+        assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(conn));
     });
 
     app.run_pending_background_jobs().await;

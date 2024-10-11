@@ -1,7 +1,3 @@
-use crate::util::diesel::Conn;
-use crates_io_worker::{BackgroundJob, EnqueueError};
-use std::fmt::Display;
-
 mod archive_version_downloads;
 mod daily_db_maintenance;
 mod delete_crate;
@@ -32,23 +28,3 @@ pub use self::send_publish_notifications::SendPublishNotificationsJob;
 pub use self::sync_admins::SyncAdmins;
 pub use self::typosquat::CheckTyposquat;
 pub use self::update_default_version::UpdateDefaultVersion;
-
-/// Enqueue both index sync jobs (git and sparse) for a crate, unless they
-/// already exist in the background job queue.
-///
-/// Note that there are currently no explicit tests for this functionality,
-/// since our test suite only allows us to use a single database connection
-/// and the background worker queue locking only work when using multiple
-/// connections.
-#[instrument(name = "swirl.enqueue", skip_all, fields(message = "sync_to_index", krate = %krate))]
-pub fn enqueue_sync_to_index<T: Display>(
-    krate: T,
-    conn: &mut impl Conn,
-) -> Result<(), EnqueueError> {
-    let krate = krate.to_string();
-
-    SyncToGitIndex::new(krate.clone()).enqueue(conn)?;
-    SyncToSparseIndex::new(krate).enqueue(conn)?;
-
-    Ok(())
-}
