@@ -1,12 +1,12 @@
 use crate::db;
 use crate::schema::{background_jobs, crates};
-use crate::tasks::spawn_blocking;
 use crate::worker::jobs;
 use anyhow::Result;
 use chrono::NaiveDate;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -52,108 +52,122 @@ pub enum Command {
 }
 
 pub async fn run(command: Command) -> Result<()> {
-    spawn_blocking(move || {
-        let conn = &mut db::oneoff_connection()?;
-        println!("Enqueueing background job: {command:?}");
+    let mut conn = db::oneoff_async_connection().await?;
+    println!("Enqueueing background job: {command:?}");
 
-        match command {
-            Command::ArchiveVersionDownloads { before } => {
-                before
-                    .map(jobs::ArchiveVersionDownloads::before)
-                    .unwrap_or_default()
-                    .enqueue(conn)?;
-            }
-            Command::IndexVersionDownloadsArchive => {
-                jobs::IndexVersionDownloadsArchive.enqueue(conn)?;
-            }
-            Command::UpdateDownloads => {
-                let count: i64 = background_jobs::table
-                    .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
-                    .count()
-                    .get_result(conn)?;
+    match command {
+        Command::ArchiveVersionDownloads { before } => {
+            before
+                .map(jobs::ArchiveVersionDownloads::before)
+                .unwrap_or_default()
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::IndexVersionDownloadsArchive => {
+            jobs::IndexVersionDownloadsArchive
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::UpdateDownloads => {
+            let count: i64 = background_jobs::table
+                .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
+                .count()
+                .get_result(&mut conn)
+                .await?;
 
-                if count > 0 {
-                    println!(
+            if count > 0 {
+                println!(
+                    "Did not enqueue {}, existing job already in progress",
+                    jobs::UpdateDownloads::JOB_NAME
+                );
+            } else {
+                jobs::UpdateDownloads.async_enqueue(&mut conn).await?;
+            }
+        }
+        Command::CleanProcessedLogFiles => {
+            jobs::CleanProcessedLogFiles
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::DumpDb => {
+            jobs::DumpDb.async_enqueue(&mut conn).await?;
+        }
+        Command::SyncAdmins { force } => {
+            if !force {
+                // By default, we don't want to enqueue a sync if one is already
+                // in progress. If a sync fails due to e.g. an expired pinned
+                // certificate we don't want to keep adding new jobs to the
+                // queue, since the existing job will be retried until it
+                // succeeds.
+
+                let query = background_jobs::table
+                    .filter(background_jobs::job_type.eq(jobs::SyncAdmins::JOB_NAME));
+
+                if diesel::select(exists(query)).get_result(&mut conn).await? {
+                    info!(
                         "Did not enqueue {}, existing job already in progress",
-                        jobs::UpdateDownloads::JOB_NAME
+                        jobs::SyncAdmins::JOB_NAME
                     );
-                } else {
-                    jobs::UpdateDownloads.enqueue(conn)?;
+                    return Ok(());
                 }
             }
-            Command::CleanProcessedLogFiles => {
-                jobs::CleanProcessedLogFiles.enqueue(conn)?;
-            }
-            Command::DumpDb => {
-                jobs::DumpDb.enqueue(conn)?;
-            }
-            Command::SyncAdmins { force } => {
-                if !force {
-                    // By default, we don't want to enqueue a sync if one is already
-                    // in progress. If a sync fails due to e.g. an expired pinned
-                    // certificate we don't want to keep adding new jobs to the
-                    // queue, since the existing job will be retried until it
-                    // succeeds.
 
-                    let query = background_jobs::table
-                        .filter(background_jobs::job_type.eq(jobs::SyncAdmins::JOB_NAME));
+            jobs::SyncAdmins.async_enqueue(&mut conn).await?;
+        }
+        Command::DailyDbMaintenance => {
+            jobs::DailyDbMaintenance.async_enqueue(&mut conn).await?;
+        }
+        Command::ProcessCdnLogQueue(job) => {
+            job.async_enqueue(&mut conn).await?;
+        }
+        Command::SquashIndex => {
+            jobs::SquashIndex.async_enqueue(&mut conn).await?;
+        }
+        Command::NormalizeIndex { dry_run } => {
+            jobs::NormalizeIndex::new(dry_run)
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::CheckTyposquat { name } => {
+            // The job will fail if the crate doesn't actually exist, so let's check that up front.
+            if crates::table
+                .filter(crates::name.eq(&name))
+                .count()
+                .get_result::<i64>(&mut conn)
+                .await?
+                == 0
+            {
+                anyhow::bail!(
+                    "cannot enqueue a typosquat check for a crate that doesn't exist: {name}"
+                );
+            }
 
-                    if diesel::select(exists(query)).get_result(conn)? {
-                        info!(
-                            "Did not enqueue {}, existing job already in progress",
-                            jobs::SyncAdmins::JOB_NAME
-                        );
-                        return Ok(());
-                    }
-                }
+            jobs::CheckTyposquat::new(&name)
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::SendTokenExpiryNotifications => {
+            jobs::SendTokenExpiryNotifications
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::SyncCratesFeed => {
+            jobs::rss::SyncCratesFeed.async_enqueue(&mut conn).await?;
+        }
+        Command::SyncToGitIndex { name } => {
+            jobs::SyncToGitIndex::new(name)
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::SyncToSparseIndex { name } => {
+            jobs::SyncToSparseIndex::new(name)
+                .async_enqueue(&mut conn)
+                .await?;
+        }
+        Command::SyncUpdatesFeed => {
+            jobs::rss::SyncUpdatesFeed.async_enqueue(&mut conn).await?;
+        }
+    };
 
-                jobs::SyncAdmins.enqueue(conn)?;
-            }
-            Command::DailyDbMaintenance => {
-                jobs::DailyDbMaintenance.enqueue(conn)?;
-            }
-            Command::ProcessCdnLogQueue(job) => {
-                job.enqueue(conn)?;
-            }
-            Command::SquashIndex => {
-                jobs::SquashIndex.enqueue(conn)?;
-            }
-            Command::NormalizeIndex { dry_run } => {
-                jobs::NormalizeIndex::new(dry_run).enqueue(conn)?;
-            }
-            Command::CheckTyposquat { name } => {
-                // The job will fail if the crate doesn't actually exist, so let's check that up front.
-                if crates::table
-                    .filter(crates::name.eq(&name))
-                    .count()
-                    .get_result::<i64>(conn)?
-                    == 0
-                {
-                    anyhow::bail!(
-                        "cannot enqueue a typosquat check for a crate that doesn't exist: {name}"
-                    );
-                }
-
-                jobs::CheckTyposquat::new(&name).enqueue(conn)?;
-            }
-            Command::SendTokenExpiryNotifications => {
-                jobs::SendTokenExpiryNotifications.enqueue(conn)?;
-            }
-            Command::SyncCratesFeed => {
-                jobs::rss::SyncCratesFeed.enqueue(conn)?;
-            }
-            Command::SyncToGitIndex { name } => {
-                jobs::SyncToGitIndex::new(name).enqueue(conn)?;
-            }
-            Command::SyncToSparseIndex { name } => {
-                jobs::SyncToSparseIndex::new(name).enqueue(conn)?;
-            }
-            Command::SyncUpdatesFeed => {
-                jobs::rss::SyncUpdatesFeed.enqueue(conn)?;
-            }
-        };
-
-        Ok(())
-    })
-    .await
+    Ok(())
 }
