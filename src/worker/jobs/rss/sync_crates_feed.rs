@@ -1,12 +1,10 @@
 use crate::schema::crates;
 use crate::storage::FeedId;
-use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use chrono::Duration;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
@@ -34,12 +32,8 @@ impl BackgroundJob for SyncCratesFeed {
         let domain = &ctx.config.domain_name;
 
         info!("Loading latest {NUM_ITEMS} crates from the database…");
-        let conn = ctx.deadpool.get().await?;
-        let new_crates = spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-            Ok::<_, anyhow::Error>(load_new_crates(conn)?)
-        })
-        .await?;
+        let mut conn = ctx.deadpool.get().await?;
+        let new_crates = load_new_crates(&mut conn).await?;
 
         let link = rss::extension::atom::Link {
             href: ctx.storage.feed_url(&feed_id),
@@ -86,14 +80,15 @@ impl BackgroundJob for SyncCratesFeed {
 /// than [`ALWAYS_INCLUDE_AGE`]. If there are less than [`NUM_ITEMS`] crates
 /// then the list will be padded with older crates until [`NUM_ITEMS`] are
 /// returned.
-fn load_new_crates(conn: &mut impl Conn) -> QueryResult<Vec<NewCrate>> {
+async fn load_new_crates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<NewCrate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
     let new_crates = crates::table
         .filter(crates::created_at.gt(threshold_dt))
         .order(crates::created_at.desc())
         .select(NewCrate::as_select())
-        .load(conn)?;
+        .load(conn)
+        .await?;
 
     let num_new_crates = new_crates.len();
     if num_new_crates as i64 >= NUM_ITEMS {
@@ -105,6 +100,7 @@ fn load_new_crates(conn: &mut impl Conn) -> QueryResult<Vec<NewCrate>> {
         .select(NewCrate::as_select())
         .limit(NUM_ITEMS)
         .load(conn)
+        .await
 }
 
 #[derive(Debug, Queryable, Selectable)]
@@ -161,27 +157,28 @@ mod tests {
     use super::*;
     use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
+    use diesel_async::{AsyncConnection, AsyncPgConnection};
     use insta::assert_debug_snapshot;
 
-    #[test]
-    fn test_load_version_updates() {
+    #[tokio::test]
+    async fn test_load_version_updates() {
         crate::util::tracing::init_for_test();
 
         let db = TestDatabase::new();
-        let mut conn = db.connect();
+        let mut conn = AsyncPgConnection::establish(db.url()).await.unwrap();
 
         let now = chrono::Utc::now().naive_utc();
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len(), 0);
 
         // If there are less than NUM_ITEMS crates, they should all be returned
-        create_crate(&mut conn, "foo", now - Duration::days(123));
-        create_crate(&mut conn, "bar", now - Duration::days(110));
-        create_crate(&mut conn, "baz", now - Duration::days(100));
-        create_crate(&mut conn, "qux", now - Duration::days(90));
+        create_crate(&mut conn, "foo", now - Duration::days(123)).await;
+        create_crate(&mut conn, "bar", now - Duration::days(110)).await;
+        create_crate(&mut conn, "baz", now - Duration::days(100)).await;
+        create_crate(&mut conn, "qux", now - Duration::days(90)).await;
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len(), 4);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
@@ -189,10 +186,10 @@ mod tests {
         for i in 1..=NUM_ITEMS {
             let name = format!("crate-{i}");
             let publish_time = now - Duration::days(90) + Duration::hours(i);
-            create_crate(&mut conn, &name, publish_time);
+            create_crate(&mut conn, &name, publish_time).await;
         }
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
@@ -200,15 +197,19 @@ mod tests {
         for i in 1..=(NUM_ITEMS + 10) {
             let name = format!("other-crate-{i}");
             let publish_time = now - Duration::minutes(30) + Duration::seconds(i);
-            create_crate(&mut conn, &name, publish_time);
+            create_crate(&mut conn, &name, publish_time).await;
         }
 
-        let new_crates = assert_ok!(load_new_crates(&mut conn));
+        let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS + 10);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }
 
-    fn create_crate(conn: &mut impl Conn, name: &str, publish_time: NaiveDateTime) -> i32 {
+    async fn create_crate(
+        conn: &mut AsyncPgConnection,
+        name: &str,
+        publish_time: NaiveDateTime,
+    ) -> i32 {
         diesel::insert_into(crates::table)
             .values((
                 crates::name.eq(name),
@@ -217,6 +218,7 @@ mod tests {
             ))
             .returning(crates::id)
             .get_result(conn)
+            .await
             .unwrap()
     }
 }
