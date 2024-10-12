@@ -4,8 +4,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel::RunQueryDsl;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::RunQueryDsl;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
@@ -31,117 +30,119 @@ impl BackgroundJob for SyncAdmins {
             .map(|m| m.github_id)
             .collect::<HashSet<_>>();
 
-        let conn = ctx.deadpool.get().await?;
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let mut conn = ctx.deadpool.get().await?;
 
-            let format_repo_admins = |github_ids: &HashSet<i32>| {
-                repo_admins
-                    .iter()
-                    .filter(|m| github_ids.contains(&m.github_id))
-                    .map(|m| format!("{} (github_id: {})", m.github, m.github_id))
-                    .collect::<Vec<_>>()
-            };
-
-            // Existing admins from the database.
-
-            let database_admins = users::table
-                .left_join(emails::table)
-                .select((users::gh_id, users::gh_login, emails::email.nullable()))
-                .filter(users::is_admin.eq(true))
-                .get_results::<(i32, String, Option<String>)>(conn)?;
-
-            let database_admin_ids = database_admins
+        let format_repo_admins = |github_ids: &HashSet<i32>| {
+            repo_admins
                 .iter()
-                .map(|(gh_id, _, _)| *gh_id)
-                .collect::<HashSet<_>>();
+                .filter(|m| github_ids.contains(&m.github_id))
+                .map(|m| format!("{} (github_id: {})", m.github, m.github_id))
+                .collect::<Vec<_>>()
+        };
 
-            let format_database_admins = |github_ids: &HashSet<i32>| {
-                database_admins
-                    .iter()
-                    .filter(|(gh_id, _, _)| github_ids.contains(gh_id))
-                    .map(|(gh_id, login, _)| format!("{} (github_id: {})", login, gh_id))
-                    .collect::<Vec<_>>()
-            };
+        // Existing admins from the database.
 
-            // New admins from the team repo that don't have admin access yet.
+        let database_admins = users::table
+            .left_join(emails::table)
+            .select((users::gh_id, users::gh_login, emails::email.nullable()))
+            .filter(users::is_admin.eq(true))
+            .get_results::<(i32, String, Option<String>)>(&mut conn)
+            .await?;
 
-            let new_admin_ids = repo_admin_ids
-                .difference(&database_admin_ids)
-                .copied()
-                .collect::<HashSet<_>>();
+        let database_admin_ids = database_admins
+            .iter()
+            .map(|(gh_id, _, _)| *gh_id)
+            .collect::<HashSet<_>>();
 
-            let added_admin_ids = if new_admin_ids.is_empty() {
-                Vec::new()
-            } else {
-                let new_admins = format_repo_admins(&new_admin_ids).join(", ");
-                debug!("Granting admin access: {new_admins}");
+        let format_database_admins = |github_ids: &HashSet<i32>| {
+            database_admins
+                .iter()
+                .filter(|(gh_id, _, _)| github_ids.contains(gh_id))
+                .map(|(gh_id, login, _)| format!("{} (github_id: {})", login, gh_id))
+                .collect::<Vec<_>>()
+        };
 
-                diesel::update(users::table)
-                    .filter(users::gh_id.eq_any(&new_admin_ids))
-                    .set(users::is_admin.eq(true))
-                    .returning(users::gh_id)
-                    .get_results::<i32>(conn)?
-            };
+        // New admins from the team repo that don't have admin access yet.
 
-            // New admins from the team repo that have been granted admin
-            // access now.
+        let new_admin_ids = repo_admin_ids
+            .difference(&database_admin_ids)
+            .copied()
+            .collect::<HashSet<_>>();
 
-            let added_admin_ids = HashSet::from_iter(added_admin_ids);
-            if !added_admin_ids.is_empty() {
-                let added_admins = format_repo_admins(&added_admin_ids).join(", ");
-                info!("Granted admin access: {added_admins}");
-            }
+        let added_admin_ids = if new_admin_ids.is_empty() {
+            Vec::new()
+        } else {
+            let new_admins = format_repo_admins(&new_admin_ids).join(", ");
+            debug!("Granting admin access: {new_admins}");
 
-            // New admins from the team repo that don't have a crates.io
-            // account yet.
+            diesel::update(users::table)
+                .filter(users::gh_id.eq_any(&new_admin_ids))
+                .set(users::is_admin.eq(true))
+                .returning(users::gh_id)
+                .get_results::<i32>(&mut conn)
+                .await?
+        };
 
-            let skipped_new_admin_ids = new_admin_ids
-                .difference(&added_admin_ids)
-                .copied()
-                .collect::<HashSet<_>>();
+        // New admins from the team repo that have been granted admin
+        // access now.
 
-            if !skipped_new_admin_ids.is_empty() {
-                let skipped_new_admins = format_repo_admins(&skipped_new_admin_ids).join(", ");
-                info!("Skipped missing admins: {skipped_new_admins}");
-            }
+        let added_admin_ids = HashSet::from_iter(added_admin_ids);
+        if !added_admin_ids.is_empty() {
+            let added_admins = format_repo_admins(&added_admin_ids).join(", ");
+            info!("Granted admin access: {added_admins}");
+        }
 
-            // Existing admins from the database that are no longer in the
-            // team repo.
+        // New admins from the team repo that don't have a crates.io
+        // account yet.
 
-            let obsolete_admin_ids = database_admin_ids
-                .difference(&repo_admin_ids)
-                .copied()
-                .collect::<HashSet<_>>();
+        let skipped_new_admin_ids = new_admin_ids
+            .difference(&added_admin_ids)
+            .copied()
+            .collect::<HashSet<_>>();
 
-            let removed_admin_ids = if obsolete_admin_ids.is_empty() {
-                Vec::new()
-            } else {
-                let obsolete_admins = format_database_admins(&obsolete_admin_ids).join(", ");
-                debug!("Revoking admin access: {obsolete_admins}");
+        if !skipped_new_admin_ids.is_empty() {
+            let skipped_new_admins = format_repo_admins(&skipped_new_admin_ids).join(", ");
+            info!("Skipped missing admins: {skipped_new_admins}");
+        }
 
-                diesel::update(users::table)
-                    .filter(users::gh_id.eq_any(&obsolete_admin_ids))
-                    .set(users::is_admin.eq(false))
-                    .returning(users::gh_id)
-                    .get_results::<i32>(conn)?
-            };
+        // Existing admins from the database that are no longer in the
+        // team repo.
 
-            let removed_admin_ids = HashSet::from_iter(removed_admin_ids);
-            if !removed_admin_ids.is_empty() {
-                let removed_admins = format_database_admins(&removed_admin_ids).join(", ");
-                info!("Revoked admin access: {removed_admins}");
-            }
+        let obsolete_admin_ids = database_admin_ids
+            .difference(&repo_admin_ids)
+            .copied()
+            .collect::<HashSet<_>>();
 
-            if added_admin_ids.is_empty() && removed_admin_ids.is_empty() {
-                return Ok(());
-            }
+        let removed_admin_ids = if obsolete_admin_ids.is_empty() {
+            Vec::new()
+        } else {
+            let obsolete_admins = format_database_admins(&obsolete_admin_ids).join(", ");
+            debug!("Revoking admin access: {obsolete_admins}");
 
-            let added_admins = format_repo_admins(&added_admin_ids);
-            let removed_admins = format_database_admins(&removed_admin_ids);
+            diesel::update(users::table)
+                .filter(users::gh_id.eq_any(&obsolete_admin_ids))
+                .set(users::is_admin.eq(false))
+                .returning(users::gh_id)
+                .get_results::<i32>(&mut conn)
+                .await?
+        };
 
-            let email = AdminAccountEmail::new(added_admins, removed_admins);
+        let removed_admin_ids = HashSet::from_iter(removed_admin_ids);
+        if !removed_admin_ids.is_empty() {
+            let removed_admins = format_database_admins(&removed_admin_ids).join(", ");
+            info!("Revoked admin access: {removed_admins}");
+        }
 
+        if added_admin_ids.is_empty() && removed_admin_ids.is_empty() {
+            return Ok(());
+        }
+
+        let added_admins = format_repo_admins(&added_admin_ids);
+        let removed_admins = format_database_admins(&removed_admin_ids);
+
+        let email = AdminAccountEmail::new(added_admins, removed_admins);
+
+        spawn_blocking(move || {
             for database_admin in &database_admins {
                 let (_, _, email_address) = database_admin;
                 if let Some(email_address) = email_address {
@@ -159,9 +160,11 @@ impl BackgroundJob for SyncAdmins {
                 }
             }
 
-            Ok(())
+            Ok::<_, anyhow::Error>(())
         })
-        .await
+        .await?;
+
+        Ok(())
     }
 }
 
