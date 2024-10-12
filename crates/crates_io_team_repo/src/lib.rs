@@ -5,10 +5,12 @@
 //! purposes. The [TeamRepoImpl] struct is the actual implementation of
 //! the trait.
 
-use crate::certs;
 use async_trait::async_trait;
 use mockall::automock;
 use reqwest::{Certificate, Client};
+use serde::Deserialize;
+
+mod certs;
 
 #[automock]
 #[async_trait]
@@ -68,7 +70,7 @@ impl TeamRepo for TeamRepoImpl {
 
 #[cfg(test)]
 mod tests {
-    use crate::team_repo::build_client;
+    use crate::build_client;
 
     /// This test is here to make sure that the client is built
     /// correctly without panicking.

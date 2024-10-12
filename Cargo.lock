@@ -1007,6 +1007,7 @@ dependencies = [
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_tarball",
+ "crates_io_team_repo",
  "crates_io_test_db",
  "crates_io_worker",
  "csv",
@@ -1189,6 +1190,17 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "walkdir",
+]
+
+[[package]]
+name = "crates_io_team_repo"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "mockall",
+ "reqwest 0.12.8",
+ "serde",
 ]
 
 [[package]]

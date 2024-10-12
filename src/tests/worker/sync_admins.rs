@@ -1,7 +1,7 @@
 use crate::schema::{emails, users};
-use crate::team_repo::{MockTeamRepo, Permission, Person};
 use crate::tests::util::TestApp;
 use crate::worker::jobs::SyncAdmins;
+use crates_io_team_repo::{MockTeamRepo, Permission, Person};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::{PgConnection, QueryResult, RunQueryDsl};

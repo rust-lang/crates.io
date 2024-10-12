@@ -56,7 +56,6 @@ pub mod sqs;
 pub mod ssh;
 pub mod storage;
 pub mod tasks;
-pub mod team_repo;
 mod test_util;
 #[cfg(test)]
 pub mod tests;
