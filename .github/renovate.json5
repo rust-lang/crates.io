@@ -62,7 +62,7 @@
             groupName: "diesel packages",
         },
         {
-            matchDepNames: ["aws-ip-ranges", "github-meta"],
+            matchDepNames: ["aws-ip-ranges"],
             automerge: true,
         },
         {
