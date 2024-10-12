@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
+use crates_io_index::features::FeaturesMap;
 use derive_builder::Builder;
 use diesel::prelude::*;
 use serde::Deserialize;
 
 use crate::util::errors::{bad_request, AppResult};
 
-use crate::models::feature::FeaturesMap;
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::sql::split_part;

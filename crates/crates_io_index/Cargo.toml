@@ -29,3 +29,4 @@ url = "=2.5.2"
 
 [dev-dependencies]
 claims = "=0.7.1"
+insta = "=1.40.0"

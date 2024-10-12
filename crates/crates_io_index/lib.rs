@@ -5,6 +5,7 @@ extern crate tracing;
 
 mod credentials;
 mod data;
+pub mod features;
 mod repo;
 mod ser;
 #[cfg(feature = "testing")]

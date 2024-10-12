@@ -51,6 +51,7 @@ pub fn split_features(
 mod tests {
     use super::*;
     use insta::{assert_compact_debug_snapshot, assert_debug_snapshot};
+    use serde_json::json;
 
     #[test]
     fn test_split_features_no_deps() {

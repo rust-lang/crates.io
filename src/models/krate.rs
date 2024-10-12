@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use crates_io_index::features::split_features;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
@@ -8,7 +9,6 @@ use secrecy::SecretString;
 use thiserror::Error;
 
 use crate::controllers::helpers::pagination::*;
-use crate::models::feature::split_features;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
