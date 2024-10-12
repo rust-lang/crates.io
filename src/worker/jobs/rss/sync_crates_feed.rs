@@ -158,7 +158,10 @@ mod tests {
     use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
     use diesel_async::{AsyncConnection, AsyncPgConnection};
+    use futures_util::future::join_all;
     use insta::assert_debug_snapshot;
+    use std::borrow::Cow;
+    use std::future::Future;
 
     #[tokio::test]
     async fn test_load_version_updates() {
@@ -173,52 +176,59 @@ mod tests {
         assert_eq!(new_crates.len(), 0);
 
         // If there are less than NUM_ITEMS crates, they should all be returned
-        create_crate(&mut conn, "foo", now - Duration::days(123)).await;
-        create_crate(&mut conn, "bar", now - Duration::days(110)).await;
-        create_crate(&mut conn, "baz", now - Duration::days(100)).await;
-        create_crate(&mut conn, "qux", now - Duration::days(90)).await;
+        let futures = [
+            create_crate(&mut conn, "foo", now - Duration::days(123)),
+            create_crate(&mut conn, "bar", now - Duration::days(110)),
+            create_crate(&mut conn, "baz", now - Duration::days(100)),
+            create_crate(&mut conn, "qux", now - Duration::days(90)),
+        ];
+        join_all(futures).await;
 
         let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len(), 4);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
         // If there are more than NUM_ITEMS crates, only the most recent NUM_ITEMS should be returned
+        let mut futures = Vec::new();
         for i in 1..=NUM_ITEMS {
             let name = format!("crate-{i}");
             let publish_time = now - Duration::days(90) + Duration::hours(i);
-            create_crate(&mut conn, &name, publish_time).await;
+            futures.push(create_crate(&mut conn, name, publish_time));
         }
+        join_all(futures).await;
 
         let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
 
         // But if there are more than NUM_ITEMS crates that are younger than ALWAYS_INCLUDE_AGE, all of them should be returned
+        let mut futures = Vec::new();
         for i in 1..=(NUM_ITEMS + 10) {
             let name = format!("other-crate-{i}");
             let publish_time = now - Duration::minutes(30) + Duration::seconds(i);
-            create_crate(&mut conn, &name, publish_time).await;
+            futures.push(create_crate(&mut conn, name, publish_time));
         }
+        join_all(futures).await;
 
         let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len() as i64, NUM_ITEMS + 10);
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }
 
-    async fn create_crate(
+    fn create_crate(
         conn: &mut AsyncPgConnection,
-        name: &str,
+        name: impl Into<Cow<'static, str>>,
         publish_time: NaiveDateTime,
-    ) -> i32 {
-        diesel::insert_into(crates::table)
+    ) -> impl Future<Output = i32> {
+        let future = diesel::insert_into(crates::table)
             .values((
-                crates::name.eq(name),
+                crates::name.eq(name.into()),
                 crates::created_at.eq(publish_time),
                 crates::updated_at.eq(publish_time),
             ))
             .returning(crates::id)
-            .get_result(conn)
-            .await
-            .unwrap()
+            .get_result(conn);
+
+        async move { future.await.unwrap() }
     }
 }
