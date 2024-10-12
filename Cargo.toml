@@ -94,7 +94,6 @@ quick-xml = "=0.36.2"
 rand = "=0.8.5"
 reqwest = { version = "=0.12.8", features = ["blocking", "gzip", "json"] }
 rss = { version = "=2.0.9", default-features = false, features = ["atom"] }
-scheduled-thread-pool = "=0.2.7"
 secrecy = "=0.10.3"
 semver = { version = "=1.0.23", features = ["serde"] }
 sentry = { version = "=0.34.0", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }

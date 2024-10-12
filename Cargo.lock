@@ -1046,7 +1046,6 @@ dependencies = [
  "regex",
  "reqwest 0.12.8",
  "rss",
- "scheduled-thread-pool",
  "secrecy",
  "semver",
  "sentry",
