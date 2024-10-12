@@ -36,14 +36,6 @@ opt-level = 2
 name = "crates_io"
 doctest = true
 
-[features]
-default = ["slow-tests"]
-
-# The `slow-tests` enables tests that take a long time to finish. It is enabled
-# by default but the test suite can be run via `cargo test --no-default-features`
-# to disable these tests.
-slow-tests = []
-
 [dependencies]
 anyhow = "=1.0.89"
 async-trait = "=0.1.83"
