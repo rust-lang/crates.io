@@ -1,6 +1,6 @@
 # For documentation on how to configure this file,
 # see diesel.rs/guides/configuring-diesel-cli
 [print_schema]
-file = "src/schema.rs"
+file = "crates/crates_io_database/src/schema.rs"
 with_docs = true
-patch_file = "src/schema.patch"
+patch_file = "crates/crates_io_database/src/schema.patch"

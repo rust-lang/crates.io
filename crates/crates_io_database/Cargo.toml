@@ -1,0 +1,12 @@
+[package]
+name = "crates_io_database"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+diesel = "=2.2.4"
+diesel_full_text_search = "=2.2.0"
