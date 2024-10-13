@@ -26,14 +26,14 @@ pub fn split_features(
 
         features = split.0;
 
-        if !split.1.is_empty() {
-            features2.extend(split.1);
-
-            if i == 0 {
-                warn!("Iteration limit reached while splitting features!");
-            }
-        } else {
+        if split.1.is_empty() {
             break;
+        }
+
+        features2.extend(split.1);
+
+        if i == 0 {
+            warn!("Iteration limit reached while splitting features!");
         }
     }
 
