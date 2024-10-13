@@ -1,3 +1,7 @@
+//! This module contains the glue code between our database and the index files
+//! and is used by the corresponding background jobs to generate the
+//! index files.
+
 use crate::models::{Crate, CrateVersions, Dependency, Version};
 use crate::schema::{crates, dependencies};
 use crate::util::diesel::Conn;
