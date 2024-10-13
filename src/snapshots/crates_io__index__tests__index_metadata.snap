@@ -1,5 +1,5 @@
 ---
-source: src/tests/models/krate.rs
+source: src/index.rs
 expression: metadata
 ---
 [
