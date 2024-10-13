@@ -13,7 +13,13 @@ use sentry::Level;
 #[instrument(skip_all, fields(krate.name = ?name))]
 pub fn get_index_data(name: &str, conn: &mut impl Conn) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
-    let Some(krate): Option<Crate> = Crate::by_exact_name(name).first(conn).optional()? else {
+    let krate = crates::table
+        .select(Crate::as_select())
+        .filter(crates::name.eq(name))
+        .first::<Crate>(conn)
+        .optional();
+
+    let Some(krate) = krate? else {
         return Ok(None);
     };
 
