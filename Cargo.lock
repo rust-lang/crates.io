@@ -1122,6 +1122,7 @@ dependencies = [
  "claims",
  "crates_io_env_vars",
  "git2",
+ "insta",
  "secrecy",
  "serde",
  "serde_json",

@@ -1,5 +1,5 @@
 ---
-source: src/models/feature.rs
+source: crates/crates_io_index/features.rs
 expression: split_features(features)
 ---
 (
