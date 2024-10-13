@@ -17,9 +17,7 @@ pub fn split_features(
         features
             .into_iter()
             .partition::<FeaturesMap, _>(|(_k, vals)| {
-                !vals
-                    .iter()
-                    .any(|v| v.starts_with("dep:") || v.contains("?/"))
+                !vals.iter().map(String::as_ref).any(has_features2_syntax)
             });
 
     // Then, we recursively move features from `features` to `features2` if they
@@ -45,6 +43,10 @@ pub fn split_features(
     }
 
     (features, features2)
+}
+
+fn has_features2_syntax(s: &str) -> bool {
+    s.starts_with("dep:") || s.contains("?/")
 }
 
 #[cfg(test)]
