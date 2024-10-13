@@ -1,5 +1,5 @@
+use crate::features::FeaturesMap;
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Crate {
@@ -7,7 +7,7 @@ pub struct Crate {
     pub vers: String,
     pub deps: Vec<Dependency>,
     pub cksum: String,
-    pub features: BTreeMap<String, Vec<String>>,
+    pub features: FeaturesMap,
     /// This field contains features with new, extended syntax. Specifically,
     /// namespaced features (`dep:`) and weak dependencies (`pkg?/feat`).
     ///
@@ -18,7 +18,7 @@ pub struct Crate {
     /// will fail to load due to not being able to parse the new syntax, even
     /// with a `Cargo.lock` file.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub features2: Option<BTreeMap<String, Vec<String>>>,
+    pub features2: Option<FeaturesMap>,
     pub yanked: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub links: Option<String>,
