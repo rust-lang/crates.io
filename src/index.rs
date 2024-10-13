@@ -4,19 +4,23 @@
 
 use crate::models::{Crate, CrateVersions, Dependency, Version};
 use crate::schema::{crates, dependencies};
-use crate::util::diesel::Conn;
 use anyhow::Context;
 use crates_io_index::features::split_features;
 use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use sentry::Level;
 
 #[instrument(skip_all, fields(krate.name = ?name))]
-pub fn get_index_data(name: &str, conn: &mut impl Conn) -> anyhow::Result<Option<String>> {
+pub async fn get_index_data(
+    name: &str,
+    conn: &mut AsyncPgConnection,
+) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
     let krate = crates::table
         .select(Crate::as_select())
         .filter(crates::name.eq(name))
         .first::<Crate>(conn)
+        .await
         .optional();
 
     let Some(krate) = krate? else {
@@ -24,7 +28,9 @@ pub fn get_index_data(name: &str, conn: &mut impl Conn) -> anyhow::Result<Option
     };
 
     debug!("Gathering remaining index data");
-    let crates = index_metadata(&krate, conn).context("Failed to gather index metadata")?;
+    let crates = index_metadata(&krate, conn)
+        .await
+        .context("Failed to gather index metadata")?;
 
     // This can sometimes happen when we delete versions upon owner request
     // but don't realize that the crate is now left with no versions at all.
@@ -49,11 +55,11 @@ pub fn get_index_data(name: &str, conn: &mut impl Conn) -> anyhow::Result<Option
 }
 
 /// Gather all the necessary data to write an index metadata file
-pub fn index_metadata(
+pub async fn index_metadata(
     krate: &Crate,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> QueryResult<Vec<crates_io_index::Crate>> {
-    let mut versions: Vec<Version> = krate.all_versions().load(conn)?;
+    let mut versions: Vec<Version> = krate.all_versions().load(conn).await?;
 
     // We sort by `created_at` by default, but since tests run within a
     // single database transaction the versions will all have the same
@@ -63,7 +69,8 @@ pub fn index_metadata(
     let deps: Vec<(Dependency, String)> = Dependency::belonging_to(&versions)
         .inner_join(crates::table)
         .select((dependencies::all_columns, crates::name))
-        .load(conn)?;
+        .load(conn)
+        .await?;
 
     let deps = deps.grouped_by(&versions);
 
@@ -133,12 +140,14 @@ mod tests {
     use crate::tests::builders::{CrateBuilder, VersionBuilder};
     use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
     use insta::assert_json_snapshot;
 
-    #[test]
-    fn test_index_metadata() {
+    #[tokio::test]
+    async fn test_index_metadata() {
         let test_db = TestDatabase::new();
         let mut conn = test_db.connect();
+        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
 
         let user_id = diesel::insert_into(users::table)
             .values((
@@ -148,7 +157,8 @@ mod tests {
                 users::gh_access_token.eq("some random token"),
             ))
             .returning(users::id)
-            .get_result::<i32>(&mut conn)
+            .get_result::<i32>(&mut async_conn)
+            .await
             .unwrap();
 
         let created_at_1 = Utc::now()
@@ -165,7 +175,7 @@ mod tests {
             .version(VersionBuilder::new("0.1.0"))
             .expect_build(&mut conn);
 
-        let metadata = index_metadata(&fooo, &mut conn).unwrap();
+        let metadata = index_metadata(&fooo, &mut async_conn).await.unwrap();
         assert_json_snapshot!(metadata);
 
         let bar = CrateBuilder::new("bar", user_id)
@@ -183,7 +193,7 @@ mod tests {
             .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
             .expect_build(&mut conn);
 
-        let metadata = index_metadata(&bar, &mut conn).unwrap();
+        let metadata = index_metadata(&bar, &mut async_conn).await.unwrap();
         assert_json_snapshot!(metadata);
     }
 }
