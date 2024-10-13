@@ -6,7 +6,9 @@ pub type FeaturesMap = BTreeMap<String, Vec<String>>;
 /// values.
 ///
 /// See <https://rust-lang.github.io/rfcs/3143-cargo-weak-namespaced-features.html>.
-pub fn split_features(features: FeaturesMap) -> (FeaturesMap, FeaturesMap) {
+pub fn split_features(
+    features: impl IntoIterator<Item = (String, Vec<String>)>,
+) -> (FeaturesMap, FeaturesMap) {
     const ITERATION_LIMIT: usize = 100;
 
     // First, we partition the features into two groups: those that use the new
