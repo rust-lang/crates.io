@@ -1,8 +1,7 @@
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
-use diesel::{sql_query, RunQueryDsl};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel::sql_query;
+use diesel_async::RunQueryDsl;
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
@@ -24,15 +23,13 @@ impl BackgroundJob for DailyDbMaintenance {
     /// archive daily download counts and drop historical data, we can drop this task and rely on
     /// auto-vacuum again.
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
-        let conn = env.deadpool.get().await?;
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let mut conn = env.deadpool.get().await?;
 
-            info!("Running VACUUM on version_downloads table");
-            sql_query("VACUUM version_downloads;").execute(conn)?;
-            info!("Finished running VACUUM on version_downloads table");
-            Ok(())
-        })
-        .await
+        info!("Running VACUUM on version_downloads table");
+        sql_query("VACUUM version_downloads;")
+            .execute(&mut conn)
+            .await?;
+        info!("Finished running VACUUM on version_downloads table");
+        Ok(())
     }
 }
