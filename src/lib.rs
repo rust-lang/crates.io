@@ -42,6 +42,7 @@ pub mod email;
 pub mod external_urls;
 pub mod fastly;
 pub mod headers;
+pub mod index;
 mod licenses;
 pub mod metrics;
 pub mod middleware;
