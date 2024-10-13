@@ -1,3 +1,4 @@
+use crate::index::index_metadata;
 use crate::schema::users;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::insta::assert_json_snapshot;
@@ -6,7 +7,7 @@ use crates_io_test_db::TestDatabase;
 use diesel::{ExpressionMethods, RunQueryDsl};
 
 #[test]
-fn index_metadata() {
+fn test_index_metadata() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.connect();
 
@@ -35,7 +36,7 @@ fn index_metadata() {
         .version(VersionBuilder::new("0.1.0"))
         .expect_build(&mut conn);
 
-    let metadata = fooo.index_metadata(&mut conn).unwrap();
+    let metadata = index_metadata(&fooo, &mut conn).unwrap();
     assert_json_snapshot!(metadata);
 
     let bar = CrateBuilder::new("bar", user_id)
@@ -53,6 +54,6 @@ fn index_metadata() {
         .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
         .expect_build(&mut conn);
 
-    let metadata = bar.index_metadata(&mut conn).unwrap();
+    let metadata = index_metadata(&bar, &mut conn).unwrap();
     assert_json_snapshot!(metadata);
 }
