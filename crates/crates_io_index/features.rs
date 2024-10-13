@@ -13,21 +13,16 @@ pub fn split_features(
 
     // First, we partition the features into two groups: those that use the new
     // features syntax (`features2`) and those that don't (`features`).
-    let (mut features, mut features2) =
-        features
-            .into_iter()
-            .partition::<FeaturesMap, _>(|(_k, vals)| {
-                !vals.iter().map(String::as_ref).any(has_features2_syntax)
-            });
+    let (mut features, mut features2): (FeaturesMap, FeaturesMap) = features
+        .into_iter()
+        .partition(|(_k, vals)| !vals.iter().map(String::as_ref).any(has_features2_syntax));
 
     // Then, we recursively move features from `features` to `features2` if they
     // depend on features in `features2`.
     for i in (0..ITERATION_LIMIT).rev() {
         let split = features
             .into_iter()
-            .partition::<FeaturesMap, _>(|(_k, vals)| {
-                !vals.iter().any(|v| features2.contains_key(v))
-            });
+            .partition(|(_k, vals)| !vals.iter().any(|v| features2.contains_key(v)));
 
         features = split.0;
 
