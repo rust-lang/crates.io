@@ -7,8 +7,8 @@ use crate::{
         EncodableOwner, EncodableVersion, GoodCrate,
     },
 };
-use std::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::tests::util::github::next_gh_id;
 use diesel::prelude::*;
 
 mod account_lock;
@@ -86,11 +86,9 @@ pub struct OkBool {
     ok: bool,
 }
 
-static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
-
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
-        gh_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        gh_id: next_gh_id(),
         gh_login: login,
         name: None,
         gh_avatar: None,
@@ -100,8 +98,8 @@ fn new_user(login: &str) -> NewUser<'_> {
 
 fn new_team(login: &str) -> NewTeam<'_> {
     NewTeam {
-        org_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
-        github_id: NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32,
+        org_id: next_gh_id(),
+        github_id: next_gh_id(),
         login,
         name: None,
         avatar: None,

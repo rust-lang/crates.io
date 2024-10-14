@@ -5,6 +5,13 @@ use crates_io_github::{
     GitHubTeam, GitHubTeamMembership, GithubUser,
 };
 use oauth2::AccessToken;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
+
+pub fn next_gh_id() -> i32 {
+    NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32
+}
 
 pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
     orgs: &[MockOrg {

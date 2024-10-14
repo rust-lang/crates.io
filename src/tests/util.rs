@@ -41,7 +41,7 @@ use std::net::SocketAddr;
 use tower::ServiceExt;
 
 mod chaosproxy;
-mod github;
+pub mod github;
 pub mod insta;
 pub mod matchers;
 mod mock_request;
