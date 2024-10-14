@@ -105,14 +105,15 @@ fn batch_update(batch_size: i64, conn: &mut impl Conn) -> QueryResult<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::email::Emails;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
-    use crate::schema::{crate_downloads, crates, versions};
+    use crate::schema::{crate_downloads, crates, users, versions};
     use crate::test_util::test_db_connection;
 
     fn user(conn: &mut impl Conn) -> User {
-        NewUser::new(2, "login", None, None, "access_token")
-            .create_or_update(None, &Emails::new_in_memory(), conn)
+        let user = NewUser::new(2, "login", None, None, "access_token");
+        diesel::insert_into(users::table)
+            .values(user)
+            .get_result(conn)
             .unwrap()
     }
 
