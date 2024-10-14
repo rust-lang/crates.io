@@ -5,19 +5,14 @@ use crate::{
     models::{
         Crate, CrateOwner, NewCrate, NewTeam, NewUser, NewVersion, Owner, OwnerKind, User, Version,
     },
-    schema::{crate_downloads, crate_owners},
-    Emails,
+    schema::{crate_downloads, crate_owners, users},
 };
 
-pub struct Faker {
-    emails: Emails,
-}
+pub struct Faker {}
 
 impl Faker {
     pub fn new() -> Self {
-        Self {
-            emails: Emails::new_in_memory(),
-        }
+        Self {}
     }
 
     pub fn add_crate_to_team(
@@ -91,13 +86,11 @@ impl Faker {
         ))
     }
 
-    pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> anyhow::Result<User> {
-        Ok(
-            NewUser::new(next_gh_id(), login, None, None, "token").create_or_update(
-                None,
-                &self.emails,
-                conn,
-            )?,
-        )
+    pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> QueryResult<User> {
+        let user = NewUser::new(next_gh_id(), login, None, None, "token");
+
+        diesel::insert_into(users::table)
+            .values(user)
+            .get_result(conn)
     }
 }
