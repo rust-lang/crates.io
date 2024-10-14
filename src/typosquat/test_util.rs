@@ -1,5 +1,6 @@
 use diesel::{prelude::*, PgConnection};
 
+use crate::tests::util::github::next_gh_id;
 use crate::{
     models::{
         Crate, CrateOwner, NewCrate, NewTeam, NewUser, NewVersion, Owner, OwnerKind, User, Version,
@@ -10,14 +11,12 @@ use crate::{
 
 pub struct Faker {
     emails: Emails,
-    id: i32,
 }
 
 impl Faker {
     pub fn new() -> Self {
         Self {
             emails: Emails::new_in_memory(),
-            id: Default::default(),
         }
     }
 
@@ -83,8 +82,8 @@ impl Faker {
         Ok(Owner::Team(
             NewTeam::new(
                 &format!("github:{org}:{team}"),
-                self.next_id(),
-                self.next_id(),
+                next_gh_id(),
+                next_gh_id(),
                 Some(team.to_string()),
                 None,
             )
@@ -94,16 +93,11 @@ impl Faker {
 
     pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> anyhow::Result<User> {
         Ok(
-            NewUser::new(self.next_id(), login, None, None, "token").create_or_update(
+            NewUser::new(next_gh_id(), login, None, None, "token").create_or_update(
                 None,
                 &self.emails,
                 conn,
             )?,
         )
-    }
-
-    fn next_id(&mut self) -> i32 {
-        self.id += 1;
-        self.id
     }
 }

@@ -41,7 +41,7 @@ use std::net::SocketAddr;
 use tower::ServiceExt;
 
 mod chaosproxy;
-mod github;
+pub mod github;
 pub mod insta;
 pub mod matchers;
 mod mock_request;
@@ -85,6 +85,7 @@ pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String 
 /// A collection of helper methods for the 3 authentication types
 ///
 /// Helper methods go through public APIs, and should not modify the database directly
+#[allow(async_fn_in_trait)]
 pub trait RequestHelper {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest;
     fn app(&self) -> &TestApp;
