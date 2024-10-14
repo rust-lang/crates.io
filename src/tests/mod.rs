@@ -32,7 +32,7 @@ mod team;
 mod token;
 mod unhealthy_database;
 mod user;
-mod util;
+pub mod util;
 mod version;
 mod worker;
 
