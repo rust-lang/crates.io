@@ -82,6 +82,10 @@ impl Version {
 pub struct NewVersion<'a> {
     crate_id: i32,
     num: &'a str,
+    #[builder(default)]
+    created_at: Option<&'a NaiveDateTime>,
+    #[builder(default, setter(strip_option))]
+    yanked: Option<bool>,
     #[builder(
         default = "serde_json::Value::Object(Default::default())",
         setter(custom)
