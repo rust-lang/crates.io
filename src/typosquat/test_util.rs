@@ -8,15 +8,10 @@ use crate::{
     schema::{crate_downloads, crate_owners, users},
 };
 
-pub struct Faker {}
-
-impl Faker {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub mod faker {
+    use super::*;
 
     pub fn add_crate_to_team(
-        &mut self,
         conn: &mut PgConnection,
         user: &User,
         krate: &Crate,
@@ -38,7 +33,6 @@ impl Faker {
     }
 
     pub fn crate_and_version(
-        &mut self,
         conn: &mut PgConnection,
         name: &str,
         description: &str,
@@ -68,12 +62,7 @@ impl Faker {
         Ok((krate, version))
     }
 
-    pub fn team(
-        &mut self,
-        conn: &mut PgConnection,
-        org: &str,
-        team: &str,
-    ) -> anyhow::Result<Owner> {
+    pub fn team(conn: &mut PgConnection, org: &str, team: &str) -> anyhow::Result<Owner> {
         Ok(Owner::Team(
             NewTeam::new(
                 &format!("github:{org}:{team}"),
@@ -86,7 +75,7 @@ impl Faker {
         ))
     }
 
-    pub fn user(&mut self, conn: &mut PgConnection, login: &str) -> QueryResult<User> {
+    pub fn user(conn: &mut PgConnection, login: &str) -> QueryResult<User> {
         let user = NewUser::new(next_gh_id(), login, None, None, "token");
 
         diesel::insert_into(users::table)
