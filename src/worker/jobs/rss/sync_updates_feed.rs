@@ -174,7 +174,10 @@ mod tests {
     use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
     use diesel_async::AsyncConnection;
+    use futures_util::future::join_all;
     use insta::assert_debug_snapshot;
+    use std::borrow::Cow;
+    use std::future::Future;
 
     #[tokio::test]
     async fn test_load_version_updates() {
@@ -191,32 +194,39 @@ mod tests {
         let foo = create_crate(&mut conn, "foo").await;
 
         // If there are less than NUM_ITEMS versions, they should all be returned
-        create_version(&mut conn, foo, "1.0.0", now - Duration::days(123)).await;
-        create_version(&mut conn, foo, "1.0.1", now - Duration::days(110)).await;
-        create_version(&mut conn, foo, "1.1.0", now - Duration::days(100)).await;
-        create_version(&mut conn, foo, "1.2.0", now - Duration::days(90)).await;
+        let futures = [
+            create_version(&mut conn, foo, "1.0.0", now - Duration::days(123)),
+            create_version(&mut conn, foo, "1.0.1", now - Duration::days(110)),
+            create_version(&mut conn, foo, "1.1.0", now - Duration::days(100)),
+            create_version(&mut conn, foo, "1.2.0", now - Duration::days(90)),
+        ];
+        join_all(futures).await;
 
         let updates = assert_ok!(load_version_updates(&mut conn).await);
         assert_eq!(updates.len(), 4);
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
 
         // If there are more than NUM_ITEMS versions, only the most recent NUM_ITEMS should be returned
+        let mut futures = Vec::new();
         for i in 1..=NUM_ITEMS {
             let version = format!("1.2.{i}");
             let publish_time = now - Duration::days(90) + Duration::hours(i);
-            create_version(&mut conn, foo, &version, publish_time).await;
+            futures.push(create_version(&mut conn, foo, version, publish_time));
         }
+        join_all(futures).await;
 
         let updates = assert_ok!(load_version_updates(&mut conn).await);
         assert_eq!(updates.len() as i64, NUM_ITEMS);
         assert_debug_snapshot!(updates.iter().map(|u| &u.version).collect::<Vec<_>>());
 
         // But if there are more than NUM_ITEMS versions that are younger than ALWAYS_INCLUDE_AGE, all of them should be returned
+        let mut futures = Vec::new();
         for i in 1..=(NUM_ITEMS + 10) {
             let version = format!("1.3.{i}");
             let publish_time = now - Duration::minutes(30) + Duration::seconds(i);
-            create_version(&mut conn, foo, &version, publish_time).await;
+            futures.push(create_version(&mut conn, foo, version, publish_time));
         }
+        join_all(futures).await;
 
         let updates = assert_ok!(load_version_updates(&mut conn).await);
         assert_eq!(updates.len() as i64, NUM_ITEMS + 10);
@@ -232,23 +242,23 @@ mod tests {
             .unwrap()
     }
 
-    async fn create_version(
+    fn create_version(
         conn: &mut AsyncPgConnection,
         crate_id: i32,
-        version: &str,
+        version: impl Into<Cow<'static, str>>,
         publish_time: NaiveDateTime,
-    ) -> i32 {
-        diesel::insert_into(versions::table)
+    ) -> impl Future<Output = i32> {
+        let future = diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
-                versions::num.eq(version),
+                versions::num.eq(version.into()),
                 versions::created_at.eq(publish_time),
                 versions::updated_at.eq(publish_time),
                 versions::checksum.eq("checksum"),
             ))
             .returning(versions::id)
-            .get_result(conn)
-            .await
-            .unwrap()
+            .get_result(conn);
+
+        async move { future.await.unwrap() }
     }
 }
