@@ -163,7 +163,7 @@ impl From<crate::models::Owner> for Owner {
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::test_db_connection, typosquat::test_util::Faker};
+    use crate::{test_util::test_db_connection, typosquat::test_util::faker};
     use thiserror::Error;
 
     use super::*;
@@ -172,21 +172,19 @@ mod tests {
     fn top_crates() -> Result<(), Error> {
         let (_test_db, mut conn) = test_db_connection();
 
-        let mut faker = Faker::new();
-
         // Set up two users.
-        let user_a = faker.user(&mut conn, "a")?;
-        let user_b = faker.user(&mut conn, "b")?;
+        let user_a = faker::user(&mut conn, "a")?;
+        let user_b = faker::user(&mut conn, "b")?;
 
         // Set up three crates with various ownership schemes.
-        let _top_a = faker.crate_and_version(&mut conn, "a", "Hello", &user_a, 2)?;
-        let top_b = faker.crate_and_version(&mut conn, "b", "Yes, this is dog", &user_b, 1)?;
-        let not_top_c = faker.crate_and_version(&mut conn, "c", "Unpopular", &user_a, 0)?;
+        let _top_a = faker::crate_and_version(&mut conn, "a", "Hello", &user_a, 2)?;
+        let top_b = faker::crate_and_version(&mut conn, "b", "Yes, this is dog", &user_b, 1)?;
+        let not_top_c = faker::crate_and_version(&mut conn, "c", "Unpopular", &user_a, 0)?;
 
         // Let's set up a team that owns both b and c, but not a.
-        let not_the_a_team = faker.team(&mut conn, "org", "team")?;
-        faker.add_crate_to_team(&mut conn, &user_b, &top_b.0, &not_the_a_team)?;
-        faker.add_crate_to_team(&mut conn, &user_b, &not_top_c.0, &not_the_a_team)?;
+        let not_the_a_team = faker::team(&mut conn, "org", "team")?;
+        faker::add_crate_to_team(&mut conn, &user_b, &top_b.0, &not_the_a_team)?;
+        faker::add_crate_to_team(&mut conn, &user_b, &not_top_c.0, &not_the_a_team)?;
 
         let top_crates = TopCrates::new(&mut conn, 2)?;
 
