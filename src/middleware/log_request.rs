@@ -1,7 +1,6 @@
 //! Log all requests in a format similar to Heroku's router, but with additional
 //! information that we care about like User-Agent
 
-use crate::ci::CiService;
 use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
@@ -36,7 +35,6 @@ pub struct RequestMetadata {
     real_ip: Extension<RealIp>,
     user_agent: Option<TypedHeader<UserAgent>>,
     request_id: Option<TypedHeader<XRequestId>>,
-    ci_service: Option<CiService>,
 }
 
 pub async fn log_requests(
@@ -87,7 +85,6 @@ pub async fn log_requests(
         http.status_code = status.as_u16(),
         cause = response.extensions().get::<CauseField>().map(|e| e.0.as_str()).unwrap_or_default(),
         error.message = response.extensions().get::<ErrorField>().map(|e| e.0.as_str()).unwrap_or_default(),
-        ci = %request_metadata.ci_service.map(|ci| ci.to_string()).unwrap_or_default(),
         %custom_metadata,
         "{method} {url} → {status} ({duration:?})",
     );

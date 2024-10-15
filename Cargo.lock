@@ -1020,7 +1020,6 @@ dependencies = [
  "dotenvy",
  "flate2",
  "futures-util",
- "github-meta",
  "googletest",
  "hex",
  "http 1.1.0",
@@ -1996,16 +1995,6 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "url",
-]
-
-[[package]]
-name = "github-meta"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a52c4a8e54d97193744f7968c46eed307569d6e6ab8062441a40d45e4856261e"
-dependencies = [
- "serde",
- "serde_json",
 ]
 
 [[package]]
