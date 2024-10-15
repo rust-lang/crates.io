@@ -4,7 +4,9 @@ use crate::config::{
 };
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::User;
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crate::schema::users;
 use crate::storage::StorageConfig;
 use crate::team_repo::MockTeamRepo;
 use crate::tests::util::chaosproxy::ChaosProxy;
@@ -126,8 +128,9 @@ impl TestApp {
         let user = self.db(|conn| {
             let email = format!("{username}@example.com");
 
-            let user = crate::tests::new_user(username)
-                .create_or_update(None, &self.0.app.emails, conn)
+            let user: User = diesel::insert_into(users::table)
+                .values(crate::tests::new_user(username))
+                .get_result(conn)
                 .unwrap();
             diesel::insert_into(emails::table)
                 .values((
