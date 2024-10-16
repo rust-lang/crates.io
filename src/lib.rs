@@ -19,6 +19,7 @@ extern crate serde_json;
 extern crate tracing;
 
 pub use crate::{app::App, email::Emails};
+pub use crates_io_database::schema;
 use std::sync::Arc;
 
 use crate::app::AppState;
@@ -49,7 +50,6 @@ pub mod models;
 pub mod rate_limiter;
 mod real_ip;
 mod router;
-pub mod schema;
 pub mod sentry;
 pub mod sql;
 pub mod sqs;

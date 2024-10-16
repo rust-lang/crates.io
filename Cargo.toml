@@ -49,6 +49,7 @@ base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.5", features = ["serde"] }
 cargo-manifest = "=0.15.2"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
+crates_io_database = { path = "crates/crates_io_database" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_github = { path = "crates/crates_io_github" }
 crates_io_index = { path = "crates/crates_io_index" }
