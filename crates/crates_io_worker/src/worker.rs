@@ -42,8 +42,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                     sleep(self.poll_interval).await;
                 }
                 Err(error) => {
-                    let error = format!("{error:#}");
-                    error!(error, "Failed to run job");
+                    error!("Failed to run job: {error}");
                     sleep(self.poll_interval).await;
                 }
             }
@@ -99,8 +98,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         storage::delete_successful_job(conn, job_id)?
                     }
                     Err(error) => {
-                        let error = format!("{error:#}");
-                        warn!(error, "Failed to run job");
+                        warn!("Failed to run job: {error}");
                         storage::update_failed_job(conn, job_id);
                     }
                 }
