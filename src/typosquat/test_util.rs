@@ -68,7 +68,7 @@ pub mod faker {
                 &format!("github:{org}:{team}"),
                 next_gh_id(),
                 next_gh_id(),
-                Some(team.to_string()),
+                Some(team),
                 None,
             )
             .create_or_update(conn)?,

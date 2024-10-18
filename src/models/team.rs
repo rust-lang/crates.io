@@ -39,8 +39,8 @@ pub struct Team {
 pub struct NewTeam<'a> {
     pub login: &'a str,
     pub github_id: i32,
-    pub name: Option<String>,
-    pub avatar: Option<String>,
+    pub name: Option<&'a str>,
+    pub avatar: Option<&'a str>,
     pub org_id: i32,
 }
 
@@ -49,8 +49,8 @@ impl<'a> NewTeam<'a> {
         login: &'a str,
         org_id: i32,
         github_id: i32,
-        name: Option<String>,
-        avatar: Option<String>,
+        name: Option<&'a str>,
+        avatar: Option<&'a str>,
     ) -> Self {
         NewTeam {
             login,
@@ -174,8 +174,8 @@ impl Team {
             &login.to_lowercase(),
             org_id,
             team.id,
-            team.name,
-            org.avatar_url,
+            team.name.as_deref(),
+            org.avatar_url.as_deref(),
         )
         .create_or_update(conn)
         .map_err(Into::into)
