@@ -25,10 +25,9 @@ async fn serve<P: AsRef<Path>>(path: P, request: Request, next: Next) -> Respons
         *static_req.headers_mut() = request.headers().clone();
 
         let serve_dir = ServeDir::new(path).precompressed_br().precompressed_gzip();
-        if let Ok(response) = serve_dir.oneshot(static_req).await {
-            if response.status() != StatusCode::NOT_FOUND {
-                return response.map(axum::body::Body::new);
-            }
+        let Ok(response) = serve_dir.oneshot(static_req).await;
+        if response.status() != StatusCode::NOT_FOUND {
+            return response.map(axum::body::Body::new);
         }
     }
 
