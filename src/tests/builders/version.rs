@@ -99,14 +99,16 @@ impl VersionBuilder {
     ) -> AppResult<Version> {
         use diesel::{insert_into, update};
 
-        let new_version = NewVersion::builder(crate_id, self.num.to_string())
+        let version = self.num.to_string();
+
+        let new_version = NewVersion::builder(crate_id, &version)
             .features(&self.features)?
-            .license(self.license)
+            .license(self.license.as_deref())
             .size(self.size)
             .published_by(published_by)
-            .checksum(self.checksum)
-            .links(self.links)
-            .rust_version(self.rust_version)
+            .checksum(&self.checksum)
+            .links(self.links.as_deref())
+            .rust_version(self.rust_version.as_deref())
             .build()
             .map_err(|error| internal(error.to_string()))?;
 

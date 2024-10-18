@@ -79,32 +79,31 @@ impl Version {
 
 #[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
-pub struct NewVersion {
+pub struct NewVersion<'a> {
     crate_id: i32,
-    num: String,
+    num: &'a str,
     #[builder(
         default = "serde_json::Value::Object(Default::default())",
         setter(custom)
     )]
     features: serde_json::Value,
     #[builder(default)]
-    license: Option<String>,
+    license: Option<&'a str>,
     #[builder(default, setter(name = "size"))]
     crate_size: i32,
     published_by: i32,
-    #[builder(setter(into))]
-    checksum: String,
+    checksum: &'a str,
     #[builder(default)]
-    links: Option<String>,
+    links: Option<&'a str>,
     #[builder(default)]
-    rust_version: Option<String>,
+    rust_version: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     pub has_lib: Option<bool>,
     #[builder(default, setter(strip_option))]
-    pub bin_names: Option<Vec<String>>,
+    pub bin_names: Option<&'a [&'a str]>,
 }
 
-impl NewVersionBuilder {
+impl NewVersionBuilder<'_> {
     pub fn features(
         &mut self,
         features: &BTreeMap<String, Vec<String>>,
@@ -118,15 +117,14 @@ impl NewVersionBuilder {
         const DUMMY_CHECKSUM: &str =
             "0000000000000000000000000000000000000000000000000000000000000000";
 
-        self.checksum = Some(DUMMY_CHECKSUM.to_string());
-        self
+        self.checksum(DUMMY_CHECKSUM)
     }
 }
 
-impl NewVersion {
-    pub fn builder(crate_id: i32, version: impl Into<String>) -> NewVersionBuilder {
+impl NewVersion<'_> {
+    pub fn builder(crate_id: i32, version: &str) -> NewVersionBuilder<'_> {
         let mut builder = NewVersionBuilder::default();
-        builder.crate_id(crate_id).num(version.into());
+        builder.crate_id(crate_id).num(version);
         builder
     }
 
@@ -135,7 +133,7 @@ impl NewVersion {
         use diesel::{insert_into, select};
 
         conn.transaction(|conn| {
-            let num_no_build = strip_build_metadata(&self.num);
+            let num_no_build = strip_build_metadata(self.num);
 
             let already_uploaded = versions::table
                 .filter(versions::crate_id.eq(self.crate_id))
