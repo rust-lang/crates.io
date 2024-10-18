@@ -3,12 +3,14 @@
 use axum::extract::Path;
 use axum::Json;
 use diesel::connection::DefaultLoadingMode;
+use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use serde_json::Value;
 use std::cmp::Reverse;
+use std::str::FromStr;
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
@@ -16,7 +18,7 @@ use crate::models::{Crate, User, Version, VersionOwnerAction};
 use crate::schema::{crates, users, versions};
 use crate::tasks::spawn_blocking;
 use crate::util::diesel::Conn;
-use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
@@ -48,11 +50,18 @@ pub async fn versions(
             );
         }
 
+        let include = req
+            .query()
+            .get("include")
+            .map(|mode| ShowIncludeMode::from_str(mode))
+            .transpose()?
+            .unwrap_or_default();
+
         // Sort by semver by default
         let versions_and_publishers = match params.get("sort").map(|s| s.to_lowercase()).as_deref()
         {
-            Some("date") => list_by_date(crate_id, pagination.as_ref(), &req, conn)?,
-            _ => list_by_semver(crate_id, pagination.as_ref(), &req, conn)?,
+            Some("date") => list_by_date(crate_id, pagination.as_ref(), include, &req, conn)?,
+            _ => list_by_semver(crate_id, pagination.as_ref(), include, &req, conn)?,
         };
 
         let versions = versions_and_publishers
@@ -84,6 +93,7 @@ pub async fn versions(
 fn list_by_date(
     crate_id: i32,
     options: Option<&PaginationOptions>,
+    include: ShowIncludeMode,
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
@@ -95,6 +105,7 @@ fn list_by_date(
         .select((versions::all_columns, users::all_columns.nullable()))
         .into_boxed();
 
+    let mut release_tracks = None;
     if let Some(options) = options {
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
@@ -109,6 +120,25 @@ fn list_by_date(
             )
         }
         query = query.limit(options.per_page);
+
+        if include.release_tracks {
+            let mut sorted_versions = IndexSet::new();
+            for result in versions::table
+                .filter(versions::crate_id.eq(crate_id))
+                .filter(not(versions::yanked))
+                .select(versions::num)
+                .load_iter::<String, DefaultLoadingMode>(conn)?
+            {
+                let Ok(semver) = semver::Version::parse(&result?) else {
+                    continue;
+                };
+                sorted_versions.insert(semver);
+            }
+            sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+            release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
+                sorted_versions.iter(),
+            ));
+        }
     }
 
     query = query.order((versions::created_at.desc(), versions::id.desc()));
@@ -133,7 +163,11 @@ fn list_by_date(
 
     Ok(PaginatedVersionsAndPublishers {
         data,
-        meta: ResponseMeta { total, next_page },
+        meta: ResponseMeta {
+            total,
+            next_page,
+            release_tracks,
+        },
     })
 }
 
@@ -148,12 +182,13 @@ fn list_by_date(
 fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,
+    include: ShowIncludeMode,
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
-    let (data, total) = if let Some(options) = options {
+    let (data, total, release_tracks) = if let Some(options) = options {
         // Since versions will only increase in the future and both sorting and pagination need to
         // happen on the app server, implementing it with fetching only the data needed for sorting
         // and pagination, then making another query for the data to respond with, would minimize
@@ -164,18 +199,30 @@ fn list_by_semver(
         let mut sorted_versions = IndexMap::new();
         for result in versions::table
             .filter(versions::crate_id.eq(crate_id))
-            .select((versions::id, versions::num))
-            .load_iter::<(i32, String), DefaultLoadingMode>(conn)?
+            .select((versions::id, versions::num, versions::yanked))
+            .load_iter::<(i32, String, bool), DefaultLoadingMode>(conn)?
         {
-            let (id, num) = result?;
-            sorted_versions.insert(id, (num, None));
+            let (id, num, yanked) = result?;
+            let semver = semver::Version::parse(&num).ok();
+            sorted_versions.insert(id, (semver, yanked, None));
         }
-        sorted_versions.sort_by_cached_key(|_, (num, _)| Reverse(semver::Version::parse(num).ok()));
+        sorted_versions
+            .sort_unstable_by(|_, (semver_a, _, _), _, (semver_b, _, _)| semver_b.cmp(semver_a));
 
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
+
+        let release_tracks = include.release_tracks.then(|| {
+            ReleaseTracks::from_sorted_semver_iter(
+                sorted_versions
+                    .values()
+                    .filter(|(_, yanked, _)| !yanked)
+                    .filter_map(|(semver, _, _)| semver.as_ref()),
+            )
+        });
+
         let mut idx = Some(0);
         if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
             idx = sorted_versions
@@ -197,19 +244,24 @@ fn list_by_semver(
                 .load_iter::<(Version, Option<User>), DefaultLoadingMode>(conn)?
             {
                 let row = result?;
-                sorted_versions.insert(row.0.id, (row.0.num.to_owned(), Some(row)));
+                // The versions are already sorted, and we only need to enrich the fetched rows into them.
+                // Therefore, other values can now be safely ignored.
+                sorted_versions
+                    .entry(row.0.id)
+                    .and_modify(|entry| *entry = (None, false, Some(row)));
             }
 
             let len = sorted_versions.len();
             (
                 sorted_versions
                     .into_values()
-                    .filter_map(|(_, v)| v)
+                    .filter_map(|(_, _, v)| v)
                     .collect(),
                 len,
+                release_tracks,
             )
         } else {
-            (vec![], 0)
+            (vec![], 0, release_tracks)
         }
     } else {
         let mut data: Vec<(Version, Option<User>)> = versions::table
@@ -219,7 +271,7 @@ fn list_by_semver(
             .load(conn)?;
         data.sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
         let total = data.len();
-        (data, total)
+        (data, total, None)
     };
 
     let mut next_page = None;
@@ -233,6 +285,7 @@ fn list_by_semver(
         meta: ResponseMeta {
             total: total as i64,
             next_page,
+            release_tracks,
         },
     })
 }
@@ -302,4 +355,208 @@ struct PaginatedVersionsAndPublishers {
 struct ResponseMeta {
     total: i64,
     next_page: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    release_tracks: Option<ReleaseTracks>,
+}
+
+#[derive(Debug, Eq, PartialEq, Serialize)]
+struct ReleaseTracks(IndexMap<ReleaseTrackName, ReleaseTrackDetails>);
+
+impl ReleaseTracks {
+    // Return the release tracks based on a sorted semver versions iterator (in descending order).
+    // **Remember to** filter out yanked versions manually before calling this function.
+    pub fn from_sorted_semver_iter<'a, I>(versions: I) -> Self
+    where
+        I: Iterator<Item = &'a semver::Version>,
+    {
+        let mut map = IndexMap::new();
+        for num in versions.filter(|num| num.pre.is_empty()) {
+            let key = ReleaseTrackName::from_semver(num);
+            let prev = map.last();
+            if prev.filter(|&(k, _)| *k == key).is_none() {
+                map.insert(
+                    key,
+                    ReleaseTrackDetails {
+                        highest: num.clone(),
+                    },
+                );
+            }
+        }
+
+        Self(map)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+enum ReleaseTrackName {
+    Minor(u64),
+    Major(u64),
+}
+
+impl ReleaseTrackName {
+    pub fn from_semver(version: &semver::Version) -> Self {
+        if version.major == 0 {
+            Self::Minor(version.minor)
+        } else {
+            Self::Major(version.major)
+        }
+    }
+}
+
+impl std::fmt::Display for ReleaseTrackName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Minor(minor) => write!(f, "0.{minor}"),
+            Self::Major(major) => write!(f, "{major}"),
+        }
+    }
+}
+
+impl serde::Serialize for ReleaseTrackName {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        Self: std::fmt::Display,
+    {
+        serializer.collect_str(self)
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+struct ReleaseTrackDetails {
+    highest: semver::Version,
+}
+
+#[derive(Debug, Default)]
+struct ShowIncludeMode {
+    release_tracks: bool,
+}
+
+impl ShowIncludeMode {
+    const INVALID_COMPONENT: &'static str =
+        "invalid component for ?include= (expected 'release_tracks')";
+}
+
+impl FromStr for ShowIncludeMode {
+    type Err = BoxedAppError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut mode = Self {
+            release_tracks: false,
+        };
+        for component in s.split(',') {
+            match component {
+                "" => {}
+                "release_tracks" => mode.release_tracks = true,
+                _ => return Err(bad_request(Self::INVALID_COMPONENT)),
+            }
+        }
+        Ok(mode)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks};
+    use indexmap::IndexMap;
+
+    #[track_caller]
+    fn version(str: &str) -> semver::Version {
+        semver::Version::parse(str).unwrap()
+    }
+
+    #[test]
+    fn release_tracks_empty() {
+        let versions = [];
+        assert_eq!(
+            ReleaseTracks::from_sorted_semver_iter(versions.into_iter()),
+            ReleaseTracks(IndexMap::new())
+        );
+    }
+
+    #[test]
+    fn release_tracks_prerelease() {
+        let versions = [version("1.0.0-beta.5")];
+        assert_eq!(
+            ReleaseTracks::from_sorted_semver_iter(versions.iter()),
+            ReleaseTracks(IndexMap::new())
+        );
+    }
+
+    #[test]
+    fn release_tracks_multiple() {
+        let versions = [
+            "100.1.1",
+            "100.1.0",
+            "1.3.5",
+            "1.2.5",
+            "1.1.5",
+            "0.4.0-rc.1",
+            "0.3.23",
+            "0.3.22",
+            "0.3.21-pre.0",
+            "0.3.20",
+            "0.3.3",
+            "0.3.2",
+            "0.3.1",
+            "0.3.0",
+            "0.2.1",
+            "0.2.0",
+            "0.1.2",
+            "0.1.1",
+        ]
+        .map(version);
+
+        let release_tracks = ReleaseTracks::from_sorted_semver_iter(versions.iter());
+        assert_eq!(
+            release_tracks,
+            ReleaseTracks(IndexMap::from([
+                (
+                    ReleaseTrackName::Major(100),
+                    ReleaseTrackDetails {
+                        highest: version("100.1.1")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Major(1),
+                    ReleaseTrackDetails {
+                        highest: version("1.3.5")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Minor(3),
+                    ReleaseTrackDetails {
+                        highest: version("0.3.23")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Minor(2),
+                    ReleaseTrackDetails {
+                        highest: version("0.2.1")
+                    }
+                ),
+                (
+                    ReleaseTrackName::Minor(1),
+                    ReleaseTrackDetails {
+                        highest: version("0.1.2")
+                    }
+                ),
+            ]))
+        );
+
+        let json = serde_json::from_str::<serde_json::Value>(
+            &serde_json::to_string(&release_tracks).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            json,
+            json!({
+                "100": { "highest": "100.1.1" },
+                "1": { "highest": "1.3.5" },
+                "0.3": { "highest": "0.3.23" },
+                "0.2": { "highest": "0.2.1" },
+                "0.1": { "highest": "0.1.2" }
+            })
+        );
+    }
 }
