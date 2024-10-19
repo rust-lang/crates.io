@@ -1,12 +1,12 @@
 use crate::cloudfront::CloudFront;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
-use crate::team_repo::TeamRepo;
 use crate::typosquat;
 use crate::util::diesel::Conn;
 use crate::Emails;
 use anyhow::Context;
 use crates_io_index::{Repository, RepositoryConfig};
+use crates_io_team_repo::TeamRepo;
 use derive_builder::Builder;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
