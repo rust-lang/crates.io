@@ -351,9 +351,9 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // the `name` field is required for `bin` targets, so we can ignore `None` values via
             // `filter_map()` here.
             let bin_names = tarball_info.manifest.bin
-                .into_iter()
-                .filter_map(|bin| bin.name.clone())
-                .collect();
+                .iter()
+                .filter_map(|bin| bin.name.as_deref())
+                .collect::<Vec<_>>();
 
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
@@ -361,16 +361,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Persist the new version of this crate
             let version = NewVersion::builder(krate.id, &version_string)
                 .features(&features)?
-                .license(license)
+                .license(license.as_deref())
                 // Downcast is okay because the file length must be less than the max upload size
                 // to get here, and max upload sizes are way less than i32 max
                 .size(content_length as i32)
                 .published_by(user.id)
-                .checksum(hex_cksum)
-                .links(package.links)
-                .rust_version(rust_version)
+                .checksum(&hex_cksum)
+                .links(package.links.as_deref())
+                .rust_version(rust_version.as_deref())
                 .has_lib(tarball_info.manifest.lib.is_some())
-                .bin_names(bin_names)
+                .bin_names(bin_names.as_slice())
                 .build()
                 .map_err(|error| internal(error.to_string()))?
                 .save(conn, &verified_email_address)?;
