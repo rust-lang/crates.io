@@ -34,16 +34,17 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         .load(&mut conn)
         .await?;
 
-    let top_downloaded_versions: Vec<(i32,)> = VersionDownload::belonging_to(&versions)
+    let top_downloaded_versions: Vec<i32> = VersionDownload::belonging_to(&versions)
+        .filter(version_downloads::date.gt(date(now - 90.days())))
         .group_by(version_downloads::version_id)
-        .select((version_downloads::version_id,))
+        .select(version_downloads::version_id)
         .order(sum(version_downloads::downloads).desc())
         .limit(5)
         .load(&mut conn)
         .await?;
     let (top_five, rest): (Vec<_>, Vec<_>) = versions
         .iter()
-        .partition(|v| top_downloaded_versions.contains(&(v.id,)));
+        .partition(|v| top_downloaded_versions.contains(&v.id));
 
     let downloads = VersionDownload::belonging_to(&top_five)
         .filter(version_downloads::date.gt(date(now - 90.days())))
