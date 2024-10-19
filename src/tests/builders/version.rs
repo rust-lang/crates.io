@@ -1,6 +1,6 @@
 use crate::{
     models::{Crate, NewVersion, Version},
-    schema::{dependencies, versions},
+    schema::dependencies,
     util::errors::AppResult,
 };
 use std::collections::BTreeMap;
@@ -97,7 +97,7 @@ impl VersionBuilder {
         published_by: i32,
         connection: &mut PgConnection,
     ) -> AppResult<Version> {
-        use diesel::{insert_into, update};
+        use diesel::insert_into;
 
         let version = self.num.to_string();
 
@@ -109,22 +109,12 @@ impl VersionBuilder {
             .checksum(&self.checksum)
             .links(self.links.as_deref())
             .rust_version(self.rust_version.as_deref())
+            .yanked(self.yanked)
+            .created_at(self.created_at.as_ref())
             .build()
             .map_err(|error| internal(error.to_string()))?;
 
-        let mut vers = new_version.save(connection, "someone@example.com")?;
-
-        if self.yanked {
-            vers = update(&vers)
-                .set(versions::yanked.eq(true))
-                .get_result(connection)?;
-        }
-
-        if let Some(created_at) = self.created_at {
-            vers = update(&vers)
-                .set(versions::created_at.eq(created_at))
-                .get_result(connection)?;
-        }
+        let vers = new_version.save(connection, "someone@example.com")?;
 
         let new_deps = self
             .dependencies
