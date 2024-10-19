@@ -14,7 +14,6 @@ use axum::Json;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde_json::Value;
-use std::cmp;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
 pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
@@ -30,15 +29,23 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         .optional()?
         .ok_or_else(|| crate_not_found(&crate_name))?;
 
-    let mut versions: Vec<Version> = versions::table
+    let versions: Vec<Version> = versions::table
         .filter(versions::crate_id.eq(crate_id))
         .load(&mut conn)
         .await?;
 
-    versions.sort_by_cached_key(|version| cmp::Reverse(semver::Version::parse(&version.num).ok()));
-    let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
+    let top_downloaded_versions: Vec<(i32,)> = VersionDownload::belonging_to(&versions)
+        .group_by(version_downloads::version_id)
+        .select((version_downloads::version_id,))
+        .order(sum(version_downloads::downloads).desc())
+        .limit(5)
+        .load(&mut conn)
+        .await?;
+    let (top_five, rest): (Vec<_>, Vec<_>) = versions
+        .iter()
+        .partition(|v| top_downloaded_versions.contains(&(v.id,)));
 
-    let downloads = VersionDownload::belonging_to(latest_five)
+    let downloads = VersionDownload::belonging_to(&top_five)
         .filter(version_downloads::date.gt(date(now - 90.days())))
         .order((
             version_downloads::date.asc(),
@@ -51,7 +58,7 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         .collect::<Vec<EncodableVersionDownload>>();
 
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-    let extra: Vec<ExtraDownload> = VersionDownload::belonging_to(rest)
+    let extra: Vec<ExtraDownload> = VersionDownload::belonging_to(&rest)
         .select((
             to_char(version_downloads::date, "YYYY-MM-DD"),
             sum_downloads,
