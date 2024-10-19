@@ -1,15 +1,12 @@
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::worker::Environment;
 use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel::{ExpressionMethods, RunQueryDsl};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::deadpool::Pool;
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use object_store::ObjectStore;
 use secrecy::{ExposeSecret, SecretString};
@@ -222,15 +219,11 @@ async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow
 
 /// Delete version downloads for the given dates from the database.
 async fn delete(db_pool: &Pool<AsyncPgConnection>, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
-    let conn = db_pool.get().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        delete_inner(conn, dates)
-    })
-    .await
+    let mut conn = db_pool.get().await?;
+    delete_inner(&mut conn, dates).await
 }
 
-fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+async fn delete_inner(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     // Delete version downloads for the given dates in chunks to avoid running
     // into the maximum query parameter limit.
     const CHUNK_SIZE: usize = 5000;
@@ -238,7 +231,7 @@ fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<(
     info!("Deleting old version downloads for {} dates…", dates.len());
     for chunk in dates.chunks(CHUNK_SIZE) {
         let subset = version_downloads::table.filter(version_downloads::date.eq_any(chunk));
-        match diesel::delete(subset).execute(conn) {
+        match diesel::delete(subset).execute(conn).await {
             Ok(num_deleted_rows) => {
                 info!("Deleted {num_deleted_rows} rows from `version_downloads`");
             }
@@ -252,14 +245,12 @@ fn delete_inner(conn: &mut impl Conn, dates: Vec<NaiveDate>) -> anyhow::Result<(
 }
 
 async fn enqueue_index_job(db_pool: &Pool<AsyncPgConnection>) -> anyhow::Result<()> {
-    let conn = db_pool.get().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        super::IndexVersionDownloadsArchive
-            .enqueue(conn)
-            .context("Failed to enqueue IndexVersionDownloadsArchive job")
-    })
-    .await?;
+    let mut conn = db_pool.get().await?;
+
+    super::IndexVersionDownloadsArchive
+        .async_enqueue(&mut conn)
+        .await
+        .context("Failed to enqueue IndexVersionDownloadsArchive job")?;
 
     Ok(())
 }
@@ -270,13 +261,14 @@ mod tests {
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
     use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+    use diesel_async::AsyncConnection;
     use insta::assert_snapshot;
 
     #[tokio::test]
     async fn test_export() {
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
-        prepare_database(&mut conn);
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        prepare_database(&mut conn).await;
 
         let tempdir = tempdir().unwrap();
         let csv_path = tempdir.path().join(FILE_NAME);
@@ -377,8 +369,8 @@ mod tests {
     #[tokio::test]
     async fn test_delete() {
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
-        prepare_database(&mut conn);
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        prepare_database(&mut conn).await;
 
         let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(test_db.url());
         let db_pool = Pool::builder(manager).build().unwrap();
@@ -388,31 +380,33 @@ mod tests {
         let row_count: i64 = version_downloads::table
             .count()
             .get_result(&mut conn)
+            .await
             .unwrap();
         assert_eq!(row_count, 4);
     }
 
-    fn prepare_database(conn: &mut impl Conn) {
-        let c1 = create_crate(conn, "foo");
-        let v1 = create_version(conn, c1, "1.0.0");
-        let v2 = create_version(conn, c1, "2.0.0");
-        insert_downloads(conn, v1, "2021-01-01", 100);
-        insert_downloads(conn, v1, "2021-01-02", 200);
-        insert_downloads(conn, v1, "2021-01-03", 300);
-        insert_downloads(conn, v2, "2021-01-01", 400);
-        insert_downloads(conn, v2, "2021-01-02", 500);
-        insert_downloads(conn, v2, "2021-01-03", 600);
+    async fn prepare_database(conn: &mut AsyncPgConnection) {
+        let c1 = create_crate(conn, "foo").await;
+        let v1 = create_version(conn, c1, "1.0.0").await;
+        let v2 = create_version(conn, c1, "2.0.0").await;
+        insert_downloads(conn, v1, "2021-01-01", 100).await;
+        insert_downloads(conn, v1, "2021-01-02", 200).await;
+        insert_downloads(conn, v1, "2021-01-03", 300).await;
+        insert_downloads(conn, v2, "2021-01-01", 400).await;
+        insert_downloads(conn, v2, "2021-01-02", 500).await;
+        insert_downloads(conn, v2, "2021-01-03", 600).await;
     }
 
-    fn create_crate(conn: &mut impl Conn, name: &str) -> i32 {
+    async fn create_crate(conn: &mut AsyncPgConnection, name: &str) -> i32 {
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
             .get_result(conn)
+            .await
             .unwrap()
     }
 
-    fn create_version(conn: &mut impl Conn, crate_id: i32, num: &str) -> i32 {
+    async fn create_version(conn: &mut AsyncPgConnection, crate_id: i32, num: &str) -> i32 {
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -421,10 +415,16 @@ mod tests {
             ))
             .returning(versions::id)
             .get_result(conn)
+            .await
             .unwrap()
     }
 
-    fn insert_downloads(conn: &mut impl Conn, version_id: i32, date: &str, downloads: i32) {
+    async fn insert_downloads(
+        conn: &mut AsyncPgConnection,
+        version_id: i32,
+        date: &str,
+        downloads: i32,
+    ) {
         let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
 
         diesel::insert_into(version_downloads::table)
@@ -434,6 +434,7 @@ mod tests {
                 version_downloads::downloads.eq(downloads),
             ))
             .execute(conn)
+            .await
             .unwrap();
     }
 }
