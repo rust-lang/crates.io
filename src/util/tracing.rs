@@ -29,8 +29,9 @@ fn init_with_default_level(level: LevelFilter) {
         .unwrap_or_default();
 
     let log_layer = match log_format.as_deref() {
-        Some("json") => tracing_subscriber::fmt::layer()
-            .json()
+        Some("json") => json_subscriber::fmt::layer()
+            .flatten_event(true)
+            .with_flat_span_list(true)
             .with_filter(env_filter)
             .boxed(),
         _ => tracing_subscriber::fmt::layer()

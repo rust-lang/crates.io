@@ -1031,6 +1031,7 @@ dependencies = [
  "indicatif",
  "insta",
  "ipnetwork",
+ "json-subscriber",
  "lettre",
  "minijinja",
  "mockall",
@@ -2730,6 +2731,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a88f1bda2bd75b0452a14784937d796722fdebfe50df998aeb3f0b7603019a9"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "json-subscriber"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25b067109fbfeef7ae9403847119f28bc7b0470c08b80e9069411df90fe56a5b"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-core",
+ "tracing-serde",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
