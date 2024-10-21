@@ -79,6 +79,7 @@ hyper = { version = "=1.5.0", features = ["client", "http1"] }
 indexmap = { version = "=2.6.0", features = ["serde"] }
 indicatif = "=0.17.8"
 ipnetwork = "=0.20.0"
+json-subscriber = "=0.2.1"
 tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.11.9", default-features = false, features = ["file-transport", "smtp-transport", "native-tls", "hostname", "builder"] }
 minijinja = "=2.3.1"
