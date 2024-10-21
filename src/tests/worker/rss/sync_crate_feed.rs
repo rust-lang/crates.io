@@ -10,18 +10,17 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_crate_feed() {
     let (app, _) = TestApp::full().empty();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        create_version(conn, "foo", "0.1.0", "2024-06-20T10:13:54Z");
-        create_version(conn, "foo", "0.1.1", "2024-06-20T12:45:12Z");
-        create_version(conn, "foo", "1.0.0", "2024-06-21T17:01:33Z");
-        create_version(conn, "bar", "3.0.0-beta.1", "2024-06-21T17:03:45Z");
-        create_version(conn, "foo", "1.1.0", "2024-06-22T08:30:01Z");
-        create_version(conn, "foo", "1.2.0", "2024-06-22T15:57:19Z");
+    create_version(&mut conn, "foo", "0.1.0", "2024-06-20T10:13:54Z");
+    create_version(&mut conn, "foo", "0.1.1", "2024-06-20T12:45:12Z");
+    create_version(&mut conn, "foo", "1.0.0", "2024-06-21T17:01:33Z");
+    create_version(&mut conn, "bar", "3.0.0-beta.1", "2024-06-21T17:03:45Z");
+    create_version(&mut conn, "foo", "1.1.0", "2024-06-22T08:30:01Z");
+    create_version(&mut conn, "foo", "1.2.0", "2024-06-22T15:57:19Z");
 
-        let job = jobs::rss::SyncCrateFeed::new("foo".to_string());
-        job.enqueue(conn).unwrap();
-    });
+    let job = jobs::rss::SyncCrateFeed::new("foo".to_string());
+    job.enqueue(&mut conn).unwrap();
 
     app.run_pending_background_jobs().await;
 

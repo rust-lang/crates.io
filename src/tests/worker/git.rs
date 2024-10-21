@@ -9,6 +9,7 @@ use http::StatusCode;
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
     let (app, _, _, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
     let upstream = app.upstream_index();
 
     // Add a new crate
@@ -46,15 +47,13 @@ async fn index_smoke_test() {
 
     // Delete the crate
 
-    app.db(|conn| {
-        use crate::schema::crates;
+    use crate::schema::crates;
 
-        let krate: Crate = assert_ok!(Crate::by_name("serde").first(conn));
-        assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(conn));
+    let krate: Crate = assert_ok!(Crate::by_name("serde").first(&mut conn));
+    assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(&mut conn));
 
-        assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(conn));
-        assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(conn));
-    });
+    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&mut conn));
+    assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(&mut conn));
 
     app.run_pending_background_jobs().await;
     assert_ok_eq!(

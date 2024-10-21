@@ -126,6 +126,7 @@ impl MockAnonymousUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_owner() {
     let (app, _, _, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner", "1.0.0");
@@ -138,7 +139,7 @@ async fn new_crate_owner() {
     assert_snapshot!(app.emails_snapshot());
 
     // accept invitation for user to be added as owner
-    let krate: Crate = app.db(|conn| Crate::by_name("foo_owner").first(conn).unwrap());
+    let krate: Crate = Crate::by_name("foo_owner").first(&mut conn).unwrap();
     user2
         .accept_ownership_invitation("foo_owner", krate.id)
         .await;
@@ -178,10 +179,10 @@ async fn create_and_add_owner(
 #[tokio::test(flavor = "multi_thread")]
 async fn owners_can_remove_self() {
     let (app, _, user, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let username = &user.as_model().gh_login;
 
-    let krate = app
-        .db(|conn| CrateBuilder::new("owners_selfremove", user.as_model().id).expect_build(conn));
+    let krate = CrateBuilder::new("owners_selfremove", user.as_model().id).expect_build(&mut conn);
 
     // Deleting yourself when you're the only owner isn't allowed.
     let response = token
@@ -211,10 +212,10 @@ async fn owners_can_remove_self() {
 #[tokio::test(flavor = "multi_thread")]
 async fn modify_multiple_owners() {
     let (app, _, user, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let username = &user.as_model().gh_login;
 
-    let krate =
-        app.db(|conn| CrateBuilder::new("owners_multiple", user.as_model().id).expect_build(conn));
+    let krate = CrateBuilder::new("owners_multiple", user.as_model().id).expect_build(&mut conn);
 
     let user2 = create_and_add_owner(&app, &token, "user2", &krate).await;
     let user3 = create_and_add_owner(&app, &token, "user3", &krate).await;
@@ -227,7 +228,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
-    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
+    assert_eq!(krate.owners(&mut conn).unwrap().len(), 3);
 
     // Deleting two owners at once is allowed.
     let response = token
@@ -235,7 +236,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
-    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
+    assert_eq!(krate.owners(&mut conn).unwrap().len(), 1);
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token
@@ -243,7 +244,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
-    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 1);
+    assert_eq!(krate.owners(&mut conn).unwrap().len(), 1);
 
     // Adding multiple users at once succeeds.
     let response = token
@@ -261,7 +262,7 @@ async fn modify_multiple_owners() {
         .accept_ownership_invitation(&krate.name, krate.id)
         .await;
 
-    assert_eq!(app.db(|conn| krate.owners(conn).unwrap()).len(), 3);
+    assert_eq!(krate.owners(&mut conn).unwrap().len(), 3);
 }
 
 /// Testing the crate ownership between two crates and one team.
@@ -273,19 +274,16 @@ async fn modify_multiple_owners() {
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_two_crates() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let (krate_owned_by_team, team) = app.db(|conn| {
-        let t = new_team("team_foo").create_or_update(conn).unwrap();
-        let krate = CrateBuilder::new("foo", user.id).expect_build(conn);
-        add_team_to_crate(&t, &krate, user, conn).unwrap();
-        (krate, t)
-    });
+    let team = new_team("team_foo").create_or_update(&mut conn).unwrap();
+    let krate_owned_by_team = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
+    add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn).unwrap();
 
     let user2 = app.db_new_user("user_bar");
     let user2 = user2.as_model();
-    let krate_not_owned_by_team =
-        app.db(|conn| CrateBuilder::new("bar", user2.id).expect_build(conn));
+    let krate_not_owned_by_team = CrateBuilder::new("bar", user2.id).expect_build(&mut conn);
 
     let json = anon.search(&format!("user_id={}", user2.id)).await;
     assert_eq!(json.crates[0].name, krate_not_owned_by_team.name);
@@ -307,16 +305,14 @@ async fn check_ownership_two_crates() {
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_one_crate() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let team = app.db(|conn| {
-        let t = new_team("github:test_org:team_sloth")
-            .create_or_update(conn)
-            .unwrap();
-        let krate = CrateBuilder::new("best_crate", user.id).expect_build(conn);
-        add_team_to_crate(&t, &krate, user, conn).unwrap();
-        t
-    });
+    let team = new_team("github:test_org:team_sloth")
+        .create_or_update(&mut conn)
+        .unwrap();
+    let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
+    add_team_to_crate(&team, &krate, user, &mut conn).unwrap();
 
     let json: TeamResponse = anon
         .get("/api/v1/crates/best_crate/owner_team")
@@ -338,16 +334,14 @@ async fn check_ownership_one_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_existing_team() {
     let (app, _, user, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let _team = app.db(|conn| {
-        let t = new_team("github:test_org:bananas")
-            .create_or_update(conn)
-            .unwrap();
-        let krate = CrateBuilder::new("best_crate", user.id).expect_build(conn);
-        add_team_to_crate(&t, &krate, user, conn).unwrap();
-        t
-    });
+    let t = new_team("github:test_org:bananas")
+        .create_or_update(&mut conn)
+        .unwrap();
+    let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
+    add_team_to_crate(&t, &krate, user, &mut conn).unwrap();
 
     let ret = token
         .add_named_owner("best_crate", "github:test_org:bananas")
@@ -362,12 +356,11 @@ async fn add_existing_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn deleted_ownership_isnt_in_owner_user() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
-        krate.owner_remove(conn, &user.gh_login).unwrap();
-    });
+    let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(&mut conn);
+    krate.owner_remove(&mut conn, &user.gh_login).unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")
@@ -415,9 +408,10 @@ async fn api_token_cannot_list_invitations_v1() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_v1() {
     let (app, _, owner, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
 
-    let krate = app.db(|conn| CrateBuilder::new("invited_crate", owner.id).expect_build(conn));
+    let krate = CrateBuilder::new("invited_crate", owner.id).expect_build(&mut conn);
 
     let user = app.db_new_user("invited_user");
     token
@@ -451,12 +445,13 @@ async fn invitations_list_v1() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_does_not_include_expired_invites_v1() {
     let (app, _, owner, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
 
     let user = app.db_new_user("invited_user");
 
-    let krate1 = app.db(|conn| CrateBuilder::new("invited_crate_1", owner.id).expect_build(conn));
-    let krate2 = app.db(|conn| CrateBuilder::new("invited_crate_2", owner.id).expect_build(conn));
+    let krate1 = CrateBuilder::new("invited_crate_1", owner.id).expect_build(&mut conn);
+    let krate2 = CrateBuilder::new("invited_crate_2", owner.id).expect_build(&mut conn);
     token
         .add_named_owner("invited_crate_1", "invited_user")
         .await
@@ -497,9 +492,11 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
     let invited_user = app.db_new_user("user_bar");
-    let krate = app.db(|conn| CrateBuilder::new("accept_invitation", owner.id).expect_build(conn));
+
+    let krate = CrateBuilder::new("accept_invitation", owner.id).expect_build(&mut conn);
 
     // Invite a new owner
     owner_token
@@ -528,9 +525,11 @@ async fn test_accept_invitation() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_decline_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
     let invited_user = app.db_new_user("user_bar");
-    let krate = app.db(|conn| CrateBuilder::new("decline_invitation", owner.id).expect_build(conn));
+
+    let krate = CrateBuilder::new("decline_invitation", owner.id).expect_build(&mut conn);
 
     // Invite a new owner
     owner_token
@@ -555,9 +554,12 @@ async fn test_decline_invitation() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_invitation_by_mail() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
+
     let owner = owner.as_model();
     let invited_user = app.db_new_user("user_bar");
-    let _krate = app.db(|conn| CrateBuilder::new("accept_invitation", owner.id).expect_build(conn));
+
+    CrateBuilder::new("accept_invitation", owner.id).expect_build(&mut conn);
 
     // Invite a new owner
     owner_token
@@ -586,24 +588,26 @@ async fn test_accept_invitation_by_mail() {
 pub fn expire_invitation(app: &TestApp, crate_id: i32) {
     use crate::schema::crate_owner_invitations;
 
-    app.db(|conn| {
-        let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
-        let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
+    let mut conn = app.db_conn();
 
-        diesel::update(crate_owner_invitations::table)
-            .set(crate_owner_invitations::created_at.eq(created_at))
-            .filter(crate_owner_invitations::crate_id.eq(crate_id))
-            .execute(conn)
-            .expect("failed to override the creation time");
-    });
+    let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
+    let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
+
+    diesel::update(crate_owner_invitations::table)
+        .set(crate_owner_invitations::created_at.eq(created_at))
+        .filter(crate_owner_invitations::crate_id.eq(crate_id))
+        .execute(&mut conn)
+        .expect("failed to override the creation time");
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_expired_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
     let invited_user = app.db_new_user("demo_user");
-    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+
+    let krate = CrateBuilder::new("demo_crate", owner.id).expect_build(&mut conn);
 
     // Invite a new user
     owner_token
@@ -639,9 +643,11 @@ async fn test_accept_expired_invitation() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_decline_expired_invitation() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
     let invited_user = app.db_new_user("demo_user");
-    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+
+    let krate = CrateBuilder::new("demo_crate", owner.id).expect_build(&mut conn);
 
     // Invite a new user
     owner_token
@@ -665,9 +671,11 @@ async fn test_decline_expired_invitation() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_accept_expired_invitation_by_mail() {
     let (app, anon, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
+
     let owner = owner.as_model();
     let _invited_user = app.db_new_user("demo_user");
-    let krate = app.db(|conn| CrateBuilder::new("demo_crate", owner.id).expect_build(conn));
+    let krate = CrateBuilder::new("demo_crate", owner.id).expect_build(&mut conn);
 
     // Invite a new owner
     owner_token
@@ -708,24 +716,24 @@ async fn inactive_users_dont_get_invitations() {
     use crate::models::NewUser;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
 
     // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
-    app.db(|conn| {
-        NewUser {
-            gh_id: -1,
-            gh_login: invited_gh_login,
-            name: None,
-            gh_avatar: None,
-            gh_access_token: "some random token",
-        }
-        .create_or_update(None, &app.as_inner().emails, conn)
-        .unwrap();
-        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
-    });
+    NewUser {
+        gh_id: -1,
+        gh_login: invited_gh_login,
+        name: None,
+        gh_avatar: None,
+        gh_access_token: "some random token",
+    }
+    .create_or_update(None, &app.as_inner().emails, &mut conn)
+    .unwrap();
+
+    CrateBuilder::new(krate_name, owner.id).expect_build(&mut conn);
 
     let invited_user = app.db_new_user(invited_gh_login);
 
@@ -741,6 +749,7 @@ async fn inactive_users_dont_get_invitations() {
 #[tokio::test(flavor = "multi_thread")]
 async fn highest_gh_id_is_most_recent_account_we_know_of() {
     let (app, _, owner, owner_token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let owner = owner.as_model();
 
     // An inactive user with a lower gh_id and an active user with a higher gh_id both exist
@@ -752,9 +761,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
 
     let invited_user = app.db_new_user(invited_gh_login);
 
-    app.db(|conn| {
-        CrateBuilder::new(krate_name, owner.id).expect_build(conn);
-    });
+    CrateBuilder::new(krate_name, owner.id).expect_build(&mut conn);
 
     owner_token
         .add_named_owner(krate_name, "user_bar")

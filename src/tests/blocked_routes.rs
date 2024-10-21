@@ -10,11 +10,11 @@ async fn test_non_blocked_download_route() {
         })
         .with_user();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.as_model().id)
-            .version(VersionBuilder::new("1.0.0"))
-            .expect_build(conn);
-    });
+    let mut conn = app.db_conn();
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .version(VersionBuilder::new("1.0.0"))
+        .expect_build(&mut conn);
 
     let status = anon
         .get::<()>("/api/v1/crates/foo/1.0.0/download")
@@ -34,11 +34,11 @@ async fn test_blocked_download_route() {
         })
         .with_user();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.as_model().id)
-            .version(VersionBuilder::new("1.0.0"))
-            .expect_build(conn);
-    });
+    let mut conn = app.db_conn();
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .version(VersionBuilder::new("1.0.0"))
+        .expect_build(&mut conn);
 
     let status = anon
         .get::<()>("/api/v1/crates/foo/1.0.0/download")

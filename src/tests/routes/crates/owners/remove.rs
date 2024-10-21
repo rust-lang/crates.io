@@ -6,8 +6,10 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_invalid_json() {
     let (app, _, user) = TestApp::full().with_user();
+    let mut conn = app.db_conn();
+
     app.db_new_user("bar");
-    app.db(|conn| CrateBuilder::new("foo", user.as_model().id).expect_build(conn));
+    CrateBuilder::new("foo", user.as_model().id).expect_build(&mut conn);
 
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
@@ -52,8 +54,9 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_user() {
     let (app, _, cookie) = TestApp::full().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
+    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
 
     let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
     let response = cookie
@@ -66,8 +69,9 @@ async fn test_unknown_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_team() {
     let (app, _, cookie) = TestApp::full().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| CrateBuilder::new("foo", cookie.as_model().id).expect_build(conn));
+    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
 
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
     let response = cookie

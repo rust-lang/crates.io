@@ -7,11 +7,10 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn features_version_2() {
     let (app, _, user, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        // Insert a crate directly into the database so that foo_new can depend on it
-        CrateBuilder::new("bar", user.as_model().id).expect_build(conn);
-    });
+    // Insert a crate directly into the database so that foo_new can depend on it
+    CrateBuilder::new("bar", user.as_model().id).expect_build(&mut conn);
 
     let dependency = DependencyBuilder::new("bar");
 
@@ -124,11 +123,11 @@ async fn too_many_features_with_custom_limit() {
         })
         .with_token();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.as_model().id)
-            .max_features(4)
-            .expect_build(conn)
-    });
+    let mut conn = app.db_conn();
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .max_features(4)
+        .expect_build(&mut conn);
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("one", &[])
@@ -181,11 +180,11 @@ async fn too_many_enabled_features_with_custom_limit() {
         })
         .with_token();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.as_model().id)
-            .max_features(4)
-            .expect_build(conn)
-    });
+    let mut conn = app.db_conn();
+
+    CrateBuilder::new("foo", user.as_model().id)
+        .max_features(4)
+        .expect_build(&mut conn);
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);

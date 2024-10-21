@@ -12,11 +12,12 @@ struct GoodKeyword {
 async fn show() {
     let url = "/api/v1/keywords/foo";
     let (app, anon) = TestApp::init().empty();
+    let mut conn = app.db_conn();
+
     anon.get(url).await.assert_not_found();
 
-    app.db(|conn| {
-        Keyword::find_or_create_all(conn, &["foo"]).unwrap();
-    });
+    Keyword::find_or_create_all(&mut conn, &["foo"]).unwrap();
+
     let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "foo");
 }
@@ -25,11 +26,12 @@ async fn show() {
 async fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
     let (app, anon) = TestApp::init().empty();
+    let mut conn = app.db_conn();
+
     anon.get(url).await.assert_not_found();
 
-    app.db(|conn| {
-        Keyword::find_or_create_all(conn, &["UPPER"]).unwrap();
-    });
+    Keyword::find_or_create_all(&mut conn, &["UPPER"]).unwrap();
+
     let json: GoodKeyword = anon.get(url).await.good();
     assert_eq!(json.keyword.keyword.as_str(), "upper");
 }
@@ -37,6 +39,7 @@ async fn uppercase() {
 #[tokio::test(flavor = "multi_thread")]
 async fn update_crate() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
     async fn cnt(kw: &str, client: &impl RequestHelper) -> usize {
@@ -44,44 +47,30 @@ async fn update_crate() {
         json.keyword.crates_cnt as usize
     }
 
-    let krate = app.db(|conn| {
-        Keyword::find_or_create_all(conn, &["kw1", "kw2"]).unwrap();
-        CrateBuilder::new("fookey", user.id).expect_build(conn)
-    });
+    Keyword::find_or_create_all(&mut conn, &["kw1", "kw2"]).unwrap();
+    let krate = CrateBuilder::new("fookey", user.id).expect_build(&mut conn);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &[]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &[]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &["kw1"]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &["kw1"]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 1);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &["kw2"]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &["kw2"]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 1);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &[]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &[]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &["kw1", "kw2"]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &["kw1", "kw2"]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 1);
     assert_eq!(cnt("kw2", &anon).await, 1);
 
-    app.db(|conn| {
-        Keyword::update_crate(conn, &krate, &[]).unwrap();
-    });
+    Keyword::update_crate(&mut conn, &krate, &[]).unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 }

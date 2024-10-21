@@ -9,6 +9,7 @@ use insta::assert_snapshot;
 async fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
 
     anon.get(url).await.assert_forbidden();
     user.get::<EncodableMe>(url).await.good();
@@ -17,11 +18,9 @@ async fn using_token_updates_last_used_at() {
     // Use the token once
     token.search("following=1").await;
 
-    let token: ApiToken = app.db(|conn| {
-        assert_ok!(ApiToken::belonging_to(user.as_model())
-            .select(ApiToken::as_select())
-            .first(conn))
-    });
+    let token: ApiToken = assert_ok!(ApiToken::belonging_to(user.as_model())
+        .select(ApiToken::as_select())
+        .first(&mut conn));
     assert_some!(token.last_used_at);
 
     // Would check that it updates the timestamp here, but the timestamp is

@@ -64,13 +64,12 @@ pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo_download", user.id)
-            .version(VersionBuilder::new("1.0.0"))
-            .expect_build(conn);
-    });
+    CrateBuilder::new("foo_download", user.id)
+        .version(VersionBuilder::new("1.0.0"))
+        .expect_build(&mut conn);
 
     // TODO: test the with_json code path
     download(&anon, "foo_download/1.0.0").await;
@@ -79,7 +78,7 @@ async fn test_download() {
     assert_dl_count(&anon, "foo_download/1.0.0", None, 0).await;
     assert_dl_count(&anon, "foo_download", None, 0).await;
 
-    app.db(|conn| save_version_downloads("foo_download", "1.0.0", 1, conn));
+    save_version_downloads("foo_download", "1.0.0", 1, &mut conn);
 
     // Now that the counters are persisted the download counts show up.
     assert_dl_count(&anon, "foo_download/1.0.0", None, 1).await;
@@ -100,12 +99,11 @@ async fn test_download() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download_with_counting_via_cdn() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.as_model().id)
-            .version(VersionBuilder::new("1.0.0"))
-            .expect_build(conn);
-    });
+    CrateBuilder::new("foo", user.as_model().id)
+        .version(VersionBuilder::new("1.0.0"))
+        .expect_build(&mut conn);
 
     download(&anon, "foo/1.0.0").await;
 
@@ -116,24 +114,21 @@ async fn test_download_with_counting_via_cdn() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        let user_id = cookie.as_model().id;
-        CrateBuilder::new("foo", user_id)
-            .version("1.0.0")
-            .version("1.1.0")
-            .expect_build(conn);
-    });
+    let user_id = cookie.as_model().id;
+    CrateBuilder::new("foo", user_id)
+        .version("1.0.0")
+        .version("1.1.0")
+        .expect_build(&mut conn);
 
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.1.0").await;
 
-    app.db(|conn| {
-        save_version_downloads("foo", "1.0.0", 3, conn);
-        save_version_downloads("foo", "1.1.0", 1, conn);
-    });
+    save_version_downloads("foo", "1.0.0", 3, &mut conn);
+    save_version_downloads("foo", "1.1.0", 1, &mut conn);
 
     let response = anon.get::<()>("/api/v1/crates/foo/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -159,24 +154,21 @@ async fn test_crate_downloads() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_version_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        let user_id = cookie.as_model().id;
-        CrateBuilder::new("foo", user_id)
-            .version("1.0.0")
-            .version("1.1.0")
-            .expect_build(conn);
-    });
+    let user_id = cookie.as_model().id;
+    CrateBuilder::new("foo", user_id)
+        .version("1.0.0")
+        .version("1.1.0")
+        .expect_build(&mut conn);
 
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.1.0").await;
 
-    app.db(|conn| {
-        save_version_downloads("foo", "1.0.0", 3, conn);
-        save_version_downloads("foo", "1.1.0", 1, conn);
-    });
+    save_version_downloads("foo", "1.0.0", 3, &mut conn);
+    save_version_downloads("foo", "1.1.0", 1, &mut conn);
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);

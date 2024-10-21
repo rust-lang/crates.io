@@ -17,12 +17,11 @@ static PATH_DATE_RE: LazyLock<Regex> =
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump_db_job() {
     let (app, _, _, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        CrateBuilder::new("test-crate", token.as_model().user_id).expect_build(conn);
+    CrateBuilder::new("test-crate", token.as_model().user_id).expect_build(&mut conn);
 
-        DumpDb.enqueue(conn).unwrap();
-    });
+    DumpDb.enqueue(&mut conn).unwrap();
 
     app.run_pending_background_jobs().await;
 

@@ -7,19 +7,19 @@ const URL: &str = "/api/v1/me";
 const LOCK_REASON: &str = "test lock reason";
 
 fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
-    app.db(|conn| {
-        use crate::schema::users;
-        use diesel::prelude::*;
+    use crate::schema::users;
+    use diesel::prelude::*;
 
-        diesel::update(users::table)
-            .set((
-                users::account_lock_reason.eq(LOCK_REASON),
-                users::account_lock_until.eq(until),
-            ))
-            .filter(users::id.eq(user_id))
-            .execute(conn)
-            .unwrap();
-    });
+    let mut conn = app.db_conn();
+
+    diesel::update(users::table)
+        .set((
+            users::account_lock_reason.eq(LOCK_REASON),
+            users::account_lock_until.eq(until),
+        ))
+        .filter(users::id.eq(user_id))
+        .execute(&mut conn)
+        .unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -9,6 +9,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
     let (app, anon, _, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
@@ -17,12 +18,10 @@ async fn new_wrong_token() {
     assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
 
     // Try to publish with the wrong token (by changing the token in the database)
-    app.db(|conn| {
-        diesel::update(api_tokens::table)
-            .set(api_tokens::token.eq(b"bad" as &[u8]))
-            .execute(conn)
-            .unwrap();
-    });
+    diesel::update(api_tokens::table)
+        .set(api_tokens::token.eq(b"bad" as &[u8]))
+        .execute(&mut conn)
+        .unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
@@ -35,11 +34,10 @@ async fn new_wrong_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_wrong_user() {
     let (app, _, user) = TestApp::full().with_user();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        // Create the foo_wrong crate with one user
-        CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(conn);
-    });
+    // Create the foo_wrong crate with one user
+    CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&mut conn);
 
     // Then try to publish with a different user
     let another_user = app.db_new_user("another").db_new_token("bar");

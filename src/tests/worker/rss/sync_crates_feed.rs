@@ -10,25 +10,24 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_crates_feed() {
     let (app, _) = TestApp::full().empty();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        create_crate(
-            conn,
-            "foo",
-            Some("something something foo"),
-            "2024-06-20T10:13:54Z",
-        );
-        create_crate(conn, "bar", None, "2024-06-20T12:45:12Z");
-        create_crate(
-            conn,
-            "baz",
-            Some("does it handle XML? <item>"),
-            "2024-06-21T17:01:33Z",
-        );
-        create_crate(conn, "quux", None, "2024-06-21T17:03:45Z");
+    create_crate(
+        &mut conn,
+        "foo",
+        Some("something something foo"),
+        "2024-06-20T10:13:54Z",
+    );
+    create_crate(&mut conn, "bar", None, "2024-06-20T12:45:12Z");
+    create_crate(
+        &mut conn,
+        "baz",
+        Some("does it handle XML? <item>"),
+        "2024-06-21T17:01:33Z",
+    );
+    create_crate(&mut conn, "quux", None, "2024-06-21T17:03:45Z");
 
-        jobs::rss::SyncCratesFeed.enqueue(conn).unwrap();
-    });
+    jobs::rss::SyncCratesFeed.enqueue(&mut conn).unwrap();
 
     app.run_pending_background_jobs().await;
 

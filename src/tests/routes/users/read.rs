@@ -23,32 +23,31 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_latest_user_case_insensitively() {
     let (app, anon) = TestApp::init().empty();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        // Please do not delete or modify the setup of this test in order to get it to pass.
-        // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
-        // available for anyone to take. We need to support having multiple user accounts
-        // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
-        // should be used for uniquely identifying GitHub accounts whenever possible. For the
-        // crates.io/user/:username pages, the best we can do is show the last crates.io account
-        // created with that username.
-        assert_ok!(NewUser::new(
-            1,
-            "foobar",
-            Some("I was first then deleted my github account"),
-            None,
-            "bar"
-        )
-        .create_or_update(None, &app.as_inner().emails, conn));
-        assert_ok!(NewUser::new(
-            2,
-            "FOOBAR",
-            Some("I was second, I took the foobar username on github"),
-            None,
-            "bar"
-        )
-        .create_or_update(None, &app.as_inner().emails, conn));
-    });
+    // Please do not delete or modify the setup of this test in order to get it to pass.
+    // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
+    // available for anyone to take. We need to support having multiple user accounts
+    // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
+    // should be used for uniquely identifying GitHub accounts whenever possible. For the
+    // crates.io/user/:username pages, the best we can do is show the last crates.io account
+    // created with that username.
+    assert_ok!(NewUser::new(
+        1,
+        "foobar",
+        Some("I was first then deleted my github account"),
+        None,
+        "bar"
+    )
+    .create_or_update(None, &app.as_inner().emails, &mut conn));
+    assert_ok!(NewUser::new(
+        2,
+        "FOOBAR",
+        Some("I was second, I took the foobar username on github"),
+        None,
+        "bar"
+    )
+    .create_or_update(None, &app.as_inner().emails, &mut conn));
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(

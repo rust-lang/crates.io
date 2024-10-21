@@ -13,17 +13,18 @@ use std::sync::LazyLock;
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
     let (app, anon) = TestApp::init().empty();
+    let mut conn = app.db_conn();
+
     for json in search_both(&anon, "").await {
         assert_eq!(json.crates.len(), 0);
         assert_eq!(json.meta.total, 0);
     }
 
-    let krate = app.db(|conn| {
-        let u = new_user("foo")
-            .create_or_update(None, &app.as_inner().emails, conn)
-            .unwrap();
-        CrateBuilder::new("fooindex", u.id).expect_build(conn)
-    });
+    let u = new_user("foo")
+        .create_or_update(None, &app.as_inner().emails, &mut conn)
+        .unwrap();
+
+    let krate = CrateBuilder::new("fooindex", u.id).expect_build(&mut conn);
 
     for json in search_both(&anon, "").await {
         assert_eq!(json.crates.len(), 1);
@@ -37,29 +38,27 @@ async fn index() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let (krate, krate2) = app.db(|conn| {
-        let krate = CrateBuilder::new("foo_index_queries", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
+    let krate = CrateBuilder::new("foo_index_queries", user.id)
+        .readme("readme")
+        .description("description")
+        .keyword("kw1")
+        .expect_build(&mut conn);
 
-        let krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", user.id)
-            .keyword("KW1")
-            .expect_build(conn);
+    let krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", user.id)
+        .keyword("KW1")
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("foo", user.id)
-            .keyword("kw3")
-            .expect_build(conn);
+    CrateBuilder::new("foo", user.id)
+        .keyword("kw3")
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("two-keywords", user.id)
-            .keyword("kw1")
-            .keyword("kw3")
-            .expect_build(conn);
-        (krate, krate2)
-    });
+    CrateBuilder::new("two-keywords", user.id)
+        .keyword("kw1")
+        .keyword("kw3")
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "q=baz").await {
         assert_eq!(json.crates.len(), 0);
@@ -153,16 +152,16 @@ async fn index_queries() {
         assert_eq!(json.meta.total, 0);
     }
 
-    app.db(|conn| {
-        new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(conn)
-            .unwrap();
-        new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
-            .create_or_update(conn)
-            .unwrap();
-        Category::update_crate(conn, &krate, &["cat1"]).unwrap();
-        Category::update_crate(conn, &krate2, &["cat1::bar"]).unwrap();
-    });
+    new_category("Category 1", "cat1", "Category 1 crates")
+        .create_or_update(&mut conn)
+        .unwrap();
+
+    new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
+        .create_or_update(&mut conn)
+        .unwrap();
+
+    Category::update_crate(&mut conn, &krate, &["cat1"]).unwrap();
+    Category::update_crate(&mut conn, &krate2, &["cat1::bar"]).unwrap();
 
     for cl in search_both(&anon, "category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
@@ -198,13 +197,14 @@ async fn index_queries() {
 #[tokio::test(flavor = "multi_thread")]
 async fn search_includes_crates_where_name_is_stopword() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("which", user.id).expect_build(conn);
-        CrateBuilder::new("should_be_excluded", user.id)
-            .readme("crate which does things")
-            .expect_build(conn);
-    });
+
+    CrateBuilder::new("which", user.id).expect_build(&mut conn);
+    CrateBuilder::new("should_be_excluded", user.id)
+        .readme("crate which does things")
+        .expect_build(&mut conn);
+
     for json in search_both(&anon, "q=which").await {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
@@ -214,25 +214,24 @@ async fn search_includes_crates_where_name_is_stopword() {
 #[tokio::test(flavor = "multi_thread")]
 async fn exact_match_first_on_queries() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo_exact", user.id)
-            .description("bar_exact baz_exact")
-            .expect_build(conn);
+    CrateBuilder::new("foo_exact", user.id)
+        .description("bar_exact baz_exact")
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("bar-exact", user.id)
-            .description("foo_exact baz_exact foo-exact baz_exact")
-            .expect_build(conn);
+    CrateBuilder::new("bar-exact", user.id)
+        .description("foo_exact baz_exact foo-exact baz_exact")
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("baz_exact", user.id)
-            .description("foo-exact bar_exact foo-exact bar_exact foo_exact bar_exact")
-            .expect_build(conn);
+    CrateBuilder::new("baz_exact", user.id)
+        .description("foo-exact bar_exact foo-exact bar_exact foo_exact bar_exact")
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("other_exact", user.id)
-            .description("other_exact")
-            .expect_build(conn);
-    });
+    CrateBuilder::new("other_exact", user.id)
+        .description("other_exact")
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "q=foo-exact").await {
         assert_eq!(json.meta.total, 3);
@@ -260,62 +259,62 @@ async fn exact_match_first_on_queries() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
     // To test that the unique ordering of seed-based pagination is correct, we need to
     // set some columns to the same value.
-    app.db(|conn| {
-        let krate1 = CrateBuilder::new("foo_sort", user.id)
-            .description("bar_sort baz_sort const")
-            .downloads(50)
-            .recent_downloads(50)
-            .expect_build(conn);
 
-        let krate2 = CrateBuilder::new("bar_sort", user.id)
-            .description("foo_sort baz_sort foo_sort baz_sort const")
-            .downloads(3333)
-            .recent_downloads(0)
-            .expect_build(conn);
+    let krate1 = CrateBuilder::new("foo_sort", user.id)
+        .description("bar_sort baz_sort const")
+        .downloads(50)
+        .recent_downloads(50)
+        .expect_build(&mut conn);
 
-        let krate3 = CrateBuilder::new("baz_sort", user.id)
-            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
-            .downloads(100_000)
-            .recent_downloads(50)
-            .expect_build(conn);
+    let krate2 = CrateBuilder::new("bar_sort", user.id)
+        .description("foo_sort baz_sort foo_sort baz_sort const")
+        .downloads(3333)
+        .recent_downloads(0)
+        .expect_build(&mut conn);
 
-        let krate4 = CrateBuilder::new("other_sort", user.id)
-            .description("other_sort const")
-            .downloads(100_000)
-            .expect_build(conn);
+    let krate3 = CrateBuilder::new("baz_sort", user.id)
+        .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+        .downloads(100_000)
+        .recent_downloads(50)
+        .expect_build(&mut conn);
 
-        // Set the created at column for each crate
-        update(&krate1)
-            .set(crates::created_at.eq(now - 4.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate2)
-            .set(crates::created_at.eq(now - 1.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
-            .set(crates::created_at.eq(now - 3.weeks()))
-            .execute(conn)
-            .unwrap();
+    let krate4 = CrateBuilder::new("other_sort", user.id)
+        .description("other_sort const")
+        .downloads(100_000)
+        .expect_build(&mut conn);
 
-        // Set the updated at column for each crate
-        update(&krate1)
-            .set(crates::updated_at.eq(now - 3.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
-            .set(crates::updated_at.eq(now - 5.days()))
-            .execute(conn)
-            .unwrap();
-        update(&krate4)
-            .set(crates::updated_at.eq(now))
-            .execute(conn)
-            .unwrap();
-    });
+    // Set the created at column for each crate
+    update(&krate1)
+        .set(crates::created_at.eq(now - 4.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate2)
+        .set(crates::created_at.eq(now - 1.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
+        .set(crates::created_at.eq(now - 3.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+
+    // Set the updated at column for each crate
+    update(&krate1)
+        .set(crates::updated_at.eq(now - 3.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
+        .set(crates::updated_at.eq(now - 5.days()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate4)
+        .set(crates::updated_at.eq(now))
+        .execute(&mut conn)
+        .unwrap();
 
     // Sort by downloads
     for json in search_both(&anon, "sort=downloads").await {
@@ -480,68 +479,67 @@ async fn index_sorting() {
 #[allow(clippy::cognitive_complexity)]
 async fn ignore_exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        let krate1 = CrateBuilder::new("foo_sort", user.id)
-            .description("bar_sort baz_sort const")
-            .downloads(50)
-            .recent_downloads(50)
-            .expect_build(conn);
+    let krate1 = CrateBuilder::new("foo_sort", user.id)
+        .description("bar_sort baz_sort const")
+        .downloads(50)
+        .recent_downloads(50)
+        .expect_build(&mut conn);
 
-        let krate2 = CrateBuilder::new("bar_sort", user.id)
-            .description("foo_sort baz_sort foo_sort baz_sort const")
-            .downloads(3333)
-            .recent_downloads(0)
-            .expect_build(conn);
+    let krate2 = CrateBuilder::new("bar_sort", user.id)
+        .description("foo_sort baz_sort foo_sort baz_sort const")
+        .downloads(3333)
+        .recent_downloads(0)
+        .expect_build(&mut conn);
 
-        let krate3 = CrateBuilder::new("baz_sort", user.id)
-            .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
-            .downloads(100_000)
-            .recent_downloads(10)
-            .expect_build(conn);
+    let krate3 = CrateBuilder::new("baz_sort", user.id)
+        .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+        .downloads(100_000)
+        .recent_downloads(10)
+        .expect_build(&mut conn);
 
-        let krate4 = CrateBuilder::new("other_sort", user.id)
-            .description("other_sort const")
-            .downloads(999_999)
-            .expect_build(conn);
+    let krate4 = CrateBuilder::new("other_sort", user.id)
+        .description("other_sort const")
+        .downloads(999_999)
+        .expect_build(&mut conn);
 
-        // Set the created at column for each crate
-        update(&krate1)
-            .set(crates::created_at.eq(now - 4.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate2)
-            .set(crates::created_at.eq(now - 1.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate3)
-            .set(crates::created_at.eq(now - 2.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate4)
-            .set(crates::created_at.eq(now - 3.weeks()))
-            .execute(conn)
-            .unwrap();
+    // Set the created at column for each crate
+    update(&krate1)
+        .set(crates::created_at.eq(now - 4.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate2)
+        .set(crates::created_at.eq(now - 1.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate3)
+        .set(crates::created_at.eq(now - 2.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate4)
+        .set(crates::created_at.eq(now - 3.weeks()))
+        .execute(&mut conn)
+        .unwrap();
 
-        // Set the updated at column for each crate
-        update(&krate1)
-            .set(crates::updated_at.eq(now - 3.weeks()))
-            .execute(conn)
-            .unwrap();
-        update(&krate2)
-            .set(crates::updated_at.eq(now - 5.days()))
-            .execute(conn)
-            .unwrap();
-        update(&krate3)
-            .set(crates::updated_at.eq(now - 10.seconds()))
-            .execute(conn)
-            .unwrap();
-        update(&krate4)
-            .set(crates::updated_at.eq(now))
-            .execute(conn)
-            .unwrap();
-    });
+    // Set the updated at column for each crate
+    update(&krate1)
+        .set(crates::updated_at.eq(now - 3.weeks()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate2)
+        .set(crates::updated_at.eq(now - 5.days()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate3)
+        .set(crates::updated_at.eq(now - 10.seconds()))
+        .execute(&mut conn)
+        .unwrap();
+    update(&krate4)
+        .set(crates::updated_at.eq(now))
+        .execute(&mut conn)
+        .unwrap();
 
     // Sort by downloads, order always the same no matter the crate name query
     for json in search_both(&anon, "q=foo_sort&sort=downloads").await {
@@ -611,14 +609,13 @@ async fn ignore_exact_match_on_queries_with_sort() {
 #[tokio::test(flavor = "multi_thread")]
 async fn multiple_ids() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.id).expect_build(conn);
-        CrateBuilder::new("bar", user.id).expect_build(conn);
-        CrateBuilder::new("baz", user.id).expect_build(conn);
-        CrateBuilder::new("other", user.id).expect_build(conn);
-    });
+    CrateBuilder::new("foo", user.id).expect_build(&mut conn);
+    CrateBuilder::new("bar", user.id).expect_build(&mut conn);
+    CrateBuilder::new("baz", user.id).expect_build(&mut conn);
+    CrateBuilder::new("other", user.id).expect_build(&mut conn);
 
     for json in search_both(
         &anon,
@@ -636,35 +633,36 @@ async fn multiple_ids() {
 #[tokio::test(flavor = "multi_thread")]
 async fn loose_search_order() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let ordered = app.db(|conn| {
-        // exact match should be first
-        let one = CrateBuilder::new("temp", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        // temp_udp should match second because of _
-        let two = CrateBuilder::new("temp_utp", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        // evalrs should match 3rd because of readme
-        let three = CrateBuilder::new("evalrs", user.id)
-            .readme("evalrs_temp evalrs_temp evalrs_temp")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        // tempfile should appear 4th
-        let four = CrateBuilder::new("tempfile", user.id)
-            .readme("readme")
-            .description("description")
-            .keyword("kw1")
-            .expect_build(conn);
-        vec![one, two, three, four]
-    });
+    // exact match should be first
+    let one = CrateBuilder::new("temp", user.id)
+        .readme("readme")
+        .description("description")
+        .keyword("kw1")
+        .expect_build(&mut conn);
+    // temp_udp should match second because of _
+    let two = CrateBuilder::new("temp_utp", user.id)
+        .readme("readme")
+        .description("description")
+        .keyword("kw1")
+        .expect_build(&mut conn);
+    // evalrs should match 3rd because of readme
+    let three = CrateBuilder::new("evalrs", user.id)
+        .readme("evalrs_temp evalrs_temp evalrs_temp")
+        .description("description")
+        .keyword("kw1")
+        .expect_build(&mut conn);
+    // tempfile should appear 4th
+    let four = CrateBuilder::new("tempfile", user.id)
+        .readme("readme")
+        .description("description")
+        .keyword("kw1")
+        .expect_build(&mut conn);
+
+    let ordered = vec![one, two, three, four];
+
     for search_temp in search_both(&anon, "q=temp").await {
         assert_eq!(search_temp.meta.total, 4);
         assert_eq!(search_temp.crates.len(), 4);
@@ -682,29 +680,28 @@ async fn loose_search_order() {
 #[tokio::test(flavor = "multi_thread")]
 async fn index_include_yanked() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("unyanked", user.id)
-            .version(VersionBuilder::new("1.0.0"))
-            .version(VersionBuilder::new("2.0.0"))
-            .expect_build(conn);
+    CrateBuilder::new("unyanked", user.id)
+        .version(VersionBuilder::new("1.0.0"))
+        .version(VersionBuilder::new("2.0.0"))
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("newest_yanked", user.id)
-            .version(VersionBuilder::new("1.0.0"))
-            .version(VersionBuilder::new("2.0.0").yanked(true))
-            .expect_build(conn);
+    CrateBuilder::new("newest_yanked", user.id)
+        .version(VersionBuilder::new("1.0.0"))
+        .version(VersionBuilder::new("2.0.0").yanked(true))
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("oldest_yanked", user.id)
-            .version(VersionBuilder::new("1.0.0").yanked(true))
-            .version(VersionBuilder::new("2.0.0"))
-            .expect_build(conn);
+    CrateBuilder::new("oldest_yanked", user.id)
+        .version(VersionBuilder::new("1.0.0").yanked(true))
+        .version(VersionBuilder::new("2.0.0"))
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("all_yanked", user.id)
-            .version(VersionBuilder::new("1.0.0").yanked(true))
-            .version(VersionBuilder::new("2.0.0").yanked(true))
-            .expect_build(conn);
-    });
+    CrateBuilder::new("all_yanked", user.id)
+        .version(VersionBuilder::new("1.0.0").yanked(true))
+        .version(VersionBuilder::new("2.0.0").yanked(true))
+        .expect_build(&mut conn);
 
     // Include fully yanked (all versions were yanked) crates
     for json in search_both(&anon, "include_yanked=yes&sort=alphabetical").await {
@@ -727,15 +724,14 @@ async fn index_include_yanked() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_are_not_considered_for_max_version() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo_yanked_version", user.id)
-            .description("foo")
-            .version("1.0.0")
-            .version(VersionBuilder::new("1.1.0").yanked(true))
-            .expect_build(conn);
-    });
+    CrateBuilder::new("foo_yanked_version", user.id)
+        .description("foo")
+        .version("1.0.0")
+        .version(VersionBuilder::new("1.1.0").yanked(true))
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
@@ -746,18 +742,17 @@ async fn yanked_versions_are_not_considered_for_max_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn max_stable_version() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", user.id)
-            .description("foo")
-            .version("0.3.0")
-            .version("1.0.0")
-            .version(VersionBuilder::new("1.1.0").yanked(true))
-            .version("2.0.0-beta.1")
-            .version("0.3.1")
-            .expect_build(conn);
-    });
+    CrateBuilder::new("foo", user.id)
+        .description("foo")
+        .version("0.3.0")
+        .version("1.0.0")
+        .version(VersionBuilder::new("1.1.0").yanked(true))
+        .version("2.0.0-beta.1")
+        .version("0.3.1")
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
@@ -774,22 +769,21 @@ async fn max_stable_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_recent_download_count() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        // More than 90 days ago
-        CrateBuilder::new("green_ball", user.id)
-            .description("For fetching")
-            .downloads(10)
-            .recent_downloads(0)
-            .expect_build(conn);
+    // More than 90 days ago
+    CrateBuilder::new("green_ball", user.id)
+        .description("For fetching")
+        .downloads(10)
+        .recent_downloads(0)
+        .expect_build(&mut conn);
 
-        CrateBuilder::new("sweet_potato_snack", user.id)
-            .description("For when better than usual")
-            .downloads(5)
-            .recent_downloads(2)
-            .expect_build(conn);
-    });
+    CrateBuilder::new("sweet_potato_snack", user.id)
+        .description("For when better than usual")
+        .downloads(5)
+        .recent_downloads(2)
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 2);
@@ -811,16 +805,15 @@ async fn test_recent_download_count() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_zero_downloads() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        // More than 90 days ago
-        CrateBuilder::new("green_ball", user.id)
-            .description("For fetching")
-            .downloads(0)
-            .recent_downloads(0)
-            .expect_build(conn);
-    });
+    // More than 90 days ago
+    CrateBuilder::new("green_ball", user.id)
+        .description("For fetching")
+        .downloads(0)
+        .recent_downloads(0)
+        .expect_build(&mut conn);
 
     for json in search_both(&anon, "sort=recent-downloads").await {
         assert_eq!(json.meta.total, 1);
@@ -836,26 +829,23 @@ async fn test_zero_downloads() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    let (green_crate, potato_crate) = app.db(|conn| {
-        // More than 90 days ago
-        let green_crate = CrateBuilder::new("green_ball", user.id)
-            .description("For fetching")
-            .keyword("dog")
-            .downloads(10)
-            .recent_downloads(10)
-            .expect_build(conn);
+    // More than 90 days ago
+    let green_crate = CrateBuilder::new("green_ball", user.id)
+        .description("For fetching")
+        .keyword("dog")
+        .downloads(10)
+        .recent_downloads(10)
+        .expect_build(&mut conn);
 
-        let potato_crate = CrateBuilder::new("sweet_potato_snack", user.id)
-            .description("For when better than usual")
-            .keyword("dog")
-            .downloads(20)
-            .recent_downloads(0)
-            .expect_build(conn);
-
-        (green_crate, potato_crate)
-    });
+    let potato_crate = CrateBuilder::new("sweet_potato_snack", user.id)
+        .description("For when better than usual")
+        .keyword("dog")
+        .downloads(20)
+        .recent_downloads(0)
+        .expect_build(&mut conn);
 
     // test that index for keywords is sorted by recent_downloads
     // by default
@@ -872,13 +862,11 @@ async fn test_default_sort_recent() {
         assert_eq!(json.crates[1].downloads, 20);
     }
 
-    app.db(|conn| {
-        new_category("Animal", "animal", "animal crates")
-            .create_or_update(conn)
-            .unwrap();
-        Category::update_crate(conn, &green_crate, &["animal"]).unwrap();
-        Category::update_crate(conn, &potato_crate, &["animal"]).unwrap();
-    });
+    new_category("Animal", "animal", "animal crates")
+        .create_or_update(&mut conn)
+        .unwrap();
+    Category::update_crate(&mut conn, &green_crate, &["animal"]).unwrap();
+    Category::update_crate(&mut conn, &potato_crate, &["animal"]).unwrap();
 
     // test that index for categories is sorted by recent_downloads
     // by default
@@ -899,13 +887,12 @@ async fn test_default_sort_recent() {
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_links_included_if_applicable() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
-    });
+    CrateBuilder::new("pagination_links_1", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_2", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_3", user.id).expect_build(&mut conn);
 
     // This uses a filter (`page=n`) to disable seek-based pagination, as seek-based pagination
     // does not return page numbers.
@@ -942,13 +929,12 @@ async fn pagination_links_included_if_applicable() {
 #[tokio::test(flavor = "multi_thread")]
 async fn seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
-    });
+    CrateBuilder::new("pagination_links_1", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_2", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_3", user.id).expect_build(&mut conn);
 
     let mut url = Some("?per_page=1".to_string());
     let mut results = Vec::new();
@@ -991,13 +977,12 @@ async fn seek_based_pagination() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pages_work_even_with_seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
-    });
+    CrateBuilder::new("pagination_links_1", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_2", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_3", user.id).expect_build(&mut conn);
 
     // The next_page returned by the request is seek-based
     let first = anon.search("per_page=1").await;
@@ -1033,13 +1018,12 @@ async fn invalid_seek_parameter() {
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_parameters_only_accept_integers() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        CrateBuilder::new("pagination_links_1", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_2", user.id).expect_build(conn);
-        CrateBuilder::new("pagination_links_3", user.id).expect_build(conn);
-    });
+    CrateBuilder::new("pagination_links_1", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_2", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_3", user.id).expect_build(&mut conn);
 
     let response = anon
         .get_with_query::<()>("/api/v1/crates", "page=1&per_page=100%22%EF%BC%8Cexception")
@@ -1057,10 +1041,10 @@ async fn pagination_parameters_only_accept_integers() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let id = user.as_model().id;
-    app.db(|conn| {
-        CrateBuilder::new("foo_my_packages", id).expect_build(conn);
-    });
+
+    CrateBuilder::new("foo_my_packages", id).expect_build(&mut conn);
 
     for response in search_both_by_user_id(&user, id).await {
         assert_eq!(response.crates.len(), 1);
@@ -1071,12 +1055,11 @@ async fn crates_by_user_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id_not_including_deleted_owners() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
-    app.db(|conn| {
-        let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(conn);
-        krate.owner_remove(conn, "foo").unwrap();
-    });
+    let krate = CrateBuilder::new("foo_my_packages", user.id).expect_build(&mut conn);
+    krate.owner_remove(&mut conn, "foo").unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);

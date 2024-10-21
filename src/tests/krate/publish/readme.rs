@@ -71,14 +71,13 @@ async fn new_krate_with_readme_and_plus_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_after_removing_documentation() {
     let (app, anon, user, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
     let user = user.as_model();
 
     // 1. Start with a crate with no documentation
-    app.db(|conn| {
-        CrateBuilder::new("docscrate", user.id)
-            .version("0.2.0")
-            .expect_build(conn);
-    });
+    CrateBuilder::new("docscrate", user.id)
+        .version("0.2.0")
+        .expect_build(&mut conn);
 
     // Verify that crates start without any documentation so the next assertion can *prove*
     // that it was the one that added the documentation
