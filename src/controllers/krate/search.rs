@@ -185,7 +185,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 pagination,
                 filter_params.make_query(&req, conn)?.count(),
             );
-            let data: Paginated<(Crate, bool, i64, Option<i64>, f32)> =
+            let data: Paginated<Record> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
 
@@ -202,7 +202,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                 pagination,
                 filter_params.make_query(&req, conn)?.count(),
             );
-            let data: Paginated<(Crate, bool, i64, Option<i64>, f32)> =
+            let data: Paginated<Record> =
                 info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates")
                     .in_scope(|| query.load(conn))?;
             (
@@ -571,6 +571,7 @@ impl<'a> FilterParams<'a> {
 }
 
 mod seek {
+    use super::Record;
     use crate::controllers::helpers::pagination::seek;
     use crate::models::Crate;
     use chrono::naive::serde::ts_microseconds;
@@ -611,10 +612,7 @@ mod seek {
     );
 
     impl Seek {
-        pub(crate) fn to_payload(
-            &self,
-            record: &(Crate, bool, i64, Option<i64>, f32),
-        ) -> SeekPayload {
+        pub(crate) fn to_payload(&self, record: &Record) -> SeekPayload {
             let (
                 Crate {
                     id,
@@ -648,15 +646,16 @@ mod seek {
     }
 }
 
+type Record = (Crate, bool, i64, Option<i64>, f32);
+
+type QuerySource = LeftJoinQuerySource<
+    InnerJoinQuerySource<crates::table, crate_downloads::table>,
+    recent_crate_downloads::table,
+>;
+
 type BoxedCondition<'a> = Box<
-    dyn BoxableExpression<
-            LeftJoinQuerySource<
-                InnerJoinQuerySource<crates::table, crate_downloads::table>,
-                recent_crate_downloads::table,
-            >,
-            diesel::pg::Pg,
-            SqlType = diesel::sql_types::Nullable<Bool>,
-        > + 'a,
+    dyn BoxableExpression<QuerySource, diesel::pg::Pg, SqlType = diesel::sql_types::Nullable<Bool>>
+        + 'a,
 >;
 
 diesel::infix_operator!(Contains, "@>");
