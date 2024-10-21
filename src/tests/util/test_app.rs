@@ -109,15 +109,6 @@ impl TestApp {
         Self::init().with_git_index().with_job_runner()
     }
 
-    /// Obtain the database connection and pass it to the closure
-    ///
-    /// Within each test, the connection pool only has 1 connection so it is necessary to drop the
-    /// connection before making any API calls.  Once the closure returns, the connection is
-    /// dropped, ensuring it is returned to the pool and available for any future API calls.
-    pub fn db<T, F: FnOnce(&mut PgConnection) -> T>(&self, f: F) -> T {
-        f(&mut self.db_conn())
-    }
-
     /// Obtain a database connection.
     pub fn db_conn(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
         self.0.test_database.connect()
