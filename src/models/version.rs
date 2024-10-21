@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
+use bon::Builder;
 use chrono::NaiveDateTime;
 use crates_io_index::features::FeaturesMap;
-use derive_builder::Builder;
 use diesel::prelude::*;
 use serde::Deserialize;
 
@@ -80,58 +80,26 @@ impl Version {
 #[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = versions, check_for_backend(diesel::pg::Pg))]
 pub struct NewVersion<'a> {
+    #[builder(start_fn)]
     crate_id: i32,
+    #[builder(start_fn)]
     num: &'a str,
-    #[builder(default)]
     created_at: Option<&'a NaiveDateTime>,
-    #[builder(default, setter(strip_option))]
     yanked: Option<bool>,
-    #[builder(
-        default = "serde_json::Value::Object(Default::default())",
-        setter(custom)
-    )]
+    #[builder(default = serde_json::Value::Object(Default::default()))]
     features: serde_json::Value,
-    #[builder(default)]
     license: Option<&'a str>,
-    #[builder(default, setter(name = "size"))]
+    #[builder(default, name = "size")]
     crate_size: i32,
     published_by: i32,
     checksum: &'a str,
-    #[builder(default)]
     links: Option<&'a str>,
-    #[builder(default)]
     rust_version: Option<&'a str>,
-    #[builder(default, setter(strip_option))]
     pub has_lib: Option<bool>,
-    #[builder(default, setter(strip_option))]
     pub bin_names: Option<&'a [&'a str]>,
 }
 
-impl NewVersionBuilder<'_> {
-    pub fn features(
-        &mut self,
-        features: &BTreeMap<String, Vec<String>>,
-    ) -> serde_json::Result<&mut Self> {
-        self.features = Some(serde_json::to_value(features)?);
-        Ok(self)
-    }
-
-    /// Set the `checksum` field to a basic dummy value.
-    pub fn dummy_checksum(&mut self) -> &mut Self {
-        const DUMMY_CHECKSUM: &str =
-            "0000000000000000000000000000000000000000000000000000000000000000";
-
-        self.checksum(DUMMY_CHECKSUM)
-    }
-}
-
 impl NewVersion<'_> {
-    pub fn builder(crate_id: i32, version: &str) -> NewVersionBuilder<'_> {
-        let mut builder = NewVersionBuilder::default();
-        builder.crate_id(crate_id).num(version);
-        builder
-    }
-
     pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> AppResult<Version> {
         use diesel::dsl::exists;
         use diesel::{insert_into, select};

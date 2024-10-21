@@ -306,8 +306,7 @@ impl TestAppBuilder {
                 .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
                 .team_repo(Box::new(self.team_repo))
-                .build()
-                .unwrap();
+                .build();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
                 .shutdown_when_queue_empty()

@@ -126,9 +126,8 @@ mod tests {
 
         let version = NewVersion::builder(krate.id, "1.0.0")
             .published_by(user_id)
-            .dummy_checksum()
-            .build()
-            .unwrap();
+            .checksum("0000000000000000000000000000000000000000000000000000000000000000")
+            .build();
 
         let version = version.save(conn, "someone@example.com").unwrap();
         (krate, version)

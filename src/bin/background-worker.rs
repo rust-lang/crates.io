@@ -28,7 +28,6 @@ use crates_io_worker::Runner;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use object_store::prefix::PrefixStore;
-use object_store::ObjectStore;
 use reqwest::Client;
 use secrecy::ExposeSecret;
 use std::sync::Arc;
@@ -74,7 +73,7 @@ fn main() -> anyhow::Result<()> {
     let storage = Arc::new(Storage::from_config(&config.storage));
 
     let downloads_archive_store = PrefixStore::new(storage.as_inner(), "archive/version-downloads");
-    let downloads_archive_store: Box<dyn ObjectStore> = Box::new(downloads_archive_store);
+    let downloads_archive_store = Box::new(downloads_archive_store);
 
     let client = Client::builder()
         .timeout(Duration::from_secs(45))
@@ -92,14 +91,14 @@ fn main() -> anyhow::Result<()> {
     let environment = Environment::builder()
         .config(Arc::new(config))
         .repository_config(repository_config)
-        .cloudfront(cloudfront)
-        .fastly(fastly)
+        .maybe_cloudfront(cloudfront)
+        .maybe_fastly(fastly)
         .storage(storage)
-        .downloads_archive_store(Some(downloads_archive_store))
+        .downloads_archive_store(downloads_archive_store)
         .deadpool(deadpool.clone())
         .emails(emails)
         .team_repo(Box::new(team_repo))
-        .build()?;
+        .build();
 
     let environment = Arc::new(environment);
 

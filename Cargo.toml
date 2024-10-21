@@ -47,6 +47,7 @@ axum = { version = "=0.7.7", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.9.4", features = ["cookie-signed", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.5", features = ["serde"] }
+bon = "=2.3.0"
 cargo-manifest = "=0.15.2"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
 crates_io_database = { path = "crates/crates_io_database" }
@@ -62,7 +63,6 @@ chrono = { version = "=0.4.38", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.20", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
-derive_builder = "=0.20.2"
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
 diesel = { version = "=2.2.4", features = ["postgres", "serde_json", "chrono", "numeric"] }

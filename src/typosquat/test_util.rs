@@ -53,9 +53,8 @@ pub mod faker {
 
         let version = NewVersion::builder(krate.id, "1.0.0")
             .published_by(user.id)
-            .dummy_checksum()
+            .checksum("0000000000000000000000000000000000000000000000000000000000000000")
             .build()
-            .unwrap()
             .save(conn, "someone@example.com")
             .unwrap();
 
