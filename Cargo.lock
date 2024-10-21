@@ -1036,7 +1036,6 @@ dependencies = [
  "crates_io_worker",
  "csv",
  "deadpool-diesel",
- "derive_builder",
  "derive_deref",
  "dialoguer",
  "diesel",
