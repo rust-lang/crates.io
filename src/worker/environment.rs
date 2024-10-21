@@ -5,9 +5,9 @@ use crate::typosquat;
 use crate::util::diesel::Conn;
 use crate::Emails;
 use anyhow::Context;
+use bon::Builder;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_team_repo::TeamRepo;
-use derive_builder::Builder;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
 use object_store::ObjectStore;
@@ -17,34 +17,26 @@ use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 #[derive(Builder)]
-#[builder(pattern = "owned")]
 pub struct Environment {
     pub config: Arc<crate::config::Server>,
 
     repository_config: RepositoryConfig,
-    #[builder(default, setter(skip))]
+    #[builder(skip)]
     repository: Mutex<Option<Repository>>,
-    #[builder(default)]
     cloudfront: Option<CloudFront>,
-    #[builder(default)]
     fastly: Option<Fastly>,
     pub storage: Arc<Storage>,
-    #[builder(default)]
     pub downloads_archive_store: Option<Box<dyn ObjectStore>>,
     pub deadpool: Pool<AsyncPgConnection>,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
-    #[builder(default, setter(skip))]
+    #[builder(skip)]
     typosquat_cache: OnceLock<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
 impl Environment {
-    pub fn builder() -> EnvironmentBuilder {
-        EnvironmentBuilder::default()
-    }
-
     #[instrument(skip_all)]
     pub fn lock_index(&self) -> anyhow::Result<RepositoryLock<'_>> {
         let mut repo = self.repository.lock();
