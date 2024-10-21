@@ -19,10 +19,12 @@ use crates_io_test_db::TestDatabase;
 use crates_io_worker::Runner;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::PgConnection;
+use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
 use std::collections::HashSet;
+use std::ops::DerefMut;
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -112,6 +114,12 @@ impl TestApp {
     /// Obtain a database connection.
     pub fn db_conn(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
         self.0.test_database.connect()
+    }
+
+    /// Obtain an async database connection from the primary database pool.
+    pub async fn async_db_conn(&self) -> impl DerefMut<Target = AsyncPgConnection> {
+        let result = self.as_inner().primary_database.get().await;
+        result.expect("Failed to get database connection")
     }
 
     /// Create a new user with a verified email address in the database
