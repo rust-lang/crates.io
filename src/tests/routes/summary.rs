@@ -4,7 +4,8 @@ use crate::tests::new_category;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use chrono::Utc;
-use diesel::{update, Connection, ExpressionMethods, RunQueryDsl};
+use crates_io_database::schema::categories;
+use diesel::{insert_into, update, Connection, ExpressionMethods, RunQueryDsl};
 
 #[derive(Deserialize)]
 struct SummaryResponse {
@@ -34,8 +35,9 @@ async fn summary_new_crates() {
         let now_ = Utc::now().naive_utc();
         let now_plus_two = now_ + chrono::Duration::seconds(2);
 
-        new_category("Category 1", "cat1", "Category 1 crates")
-            .create_or_update(conn)
+        insert_into(categories::table)
+            .values(new_category("Category 1", "cat1", "Category 1 crates"))
+            .execute(conn)
             .unwrap();
 
         CrateBuilder::new("some_downloads", user.id)

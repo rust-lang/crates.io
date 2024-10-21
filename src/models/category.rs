@@ -131,18 +131,6 @@ pub struct NewCategory<'a> {
     pub description: &'a str,
 }
 
-impl<'a> NewCategory<'a> {
-    /// Inserts the category into the database, or updates an existing one.
-    pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Category> {
-        insert_into(categories::table)
-            .values(self)
-            .on_conflict(categories::slug)
-            .do_update()
-            .set(self)
-            .get_result(conn)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

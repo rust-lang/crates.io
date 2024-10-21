@@ -2,6 +2,8 @@ use crate::models::Category;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::new_category;
 use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
+use crates_io_database::schema::categories;
+use diesel::{insert_into, RunQueryDsl};
 use insta::assert_json_snapshot;
 use serde_json::Value;
 
@@ -16,10 +18,14 @@ async fn show() {
     anon.get(url).await.assert_not_found();
 
     // Create a category and a subcategory
-    assert_ok!(new_category("Foo Bar", "foo-bar", "Foo Bar crates").create_or_update(&mut conn));
-    assert_ok!(
-        new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates").create_or_update(&mut conn)
-    );
+    let cats = vec![
+        new_category("Foo Bar", "foo-bar", "Foo Bar crates"),
+        new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates"),
+    ];
+
+    assert_ok!(insert_into(categories::table)
+        .values(cats)
+        .execute(&mut conn));
 
     // The category and its subcategories should be in the json
     let json: Value = anon.get(url).await.good();
@@ -41,10 +47,14 @@ async fn update_crate() {
     let mut conn = app.db_conn();
     let user = user.as_model();
 
-    assert_ok!(new_category("cat1", "cat1", "Category 1 crates").create_or_update(&mut conn));
-    assert_ok!(
-        new_category("Category 2", "category-2", "Category 2 crates").create_or_update(&mut conn)
-    );
+    let cats = vec![
+        new_category("cat1", "cat1", "Category 1 crates"),
+        new_category("Category 2", "category-2", "Category 2 crates"),
+    ];
+
+    assert_ok!(insert_into(categories::table)
+        .values(cats)
+        .execute(&mut conn));
 
     let krate = CrateBuilder::new("foo_crate", user.id).expect_build(&mut conn);
 
@@ -97,7 +107,10 @@ async fn update_crate() {
     assert_eq!(count(&anon, "category-2").await, 0);
 
     // Add a category and its subcategory
-    assert_ok!(new_category("cat1::bar", "cat1::bar", "bar crates").create_or_update(&mut conn));
+    assert_ok!(insert_into(categories::table)
+        .values(new_category("cat1::bar", "cat1::bar", "bar crates"))
+        .execute(&mut conn));
+
     Category::update_crate(&mut conn, &krate, &["cat1", "cat1::bar"]).unwrap();
 
     assert_eq!(count(&anon, "cat1").await, 1);
