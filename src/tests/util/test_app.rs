@@ -131,23 +131,24 @@ impl TestApp {
         use crate::schema::emails;
         use diesel::prelude::*;
 
-        let user = self.db(|conn| {
-            let email = format!("{username}@example.com");
+        let mut conn = self.db_conn();
 
-            let user: User = diesel::insert_into(users::table)
-                .values(crate::tests::new_user(username))
-                .get_result(conn)
-                .unwrap();
-            diesel::insert_into(emails::table)
-                .values((
-                    emails::user_id.eq(user.id),
-                    emails::email.eq(email),
-                    emails::verified.eq(true),
-                ))
-                .execute(conn)
-                .unwrap();
-            user
-        });
+        let email = format!("{username}@example.com");
+
+        let user: User = diesel::insert_into(users::table)
+            .values(crate::tests::new_user(username))
+            .get_result(&mut conn)
+            .unwrap();
+
+        diesel::insert_into(emails::table)
+            .values((
+                emails::user_id.eq(user.id),
+                emails::email.eq(email),
+                emails::verified.eq(true),
+            ))
+            .execute(&mut conn)
+            .unwrap();
+
         MockCookieUser {
             app: self.clone(),
             user,
