@@ -1,5 +1,5 @@
 ---
-source: src/tests/dump_db.rs
+source: crates/crates_io_database_dump/src/lib.rs
 expression: content
 ---
 BEGIN;

@@ -51,6 +51,7 @@ bon = "=2.3.0"
 cargo-manifest = "=0.15.2"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
 crates_io_database = { path = "crates/crates_io_database" }
+crates_io_database_dump = { path = "crates/crates_io_database_dump" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_github = { path = "crates/crates_io_github" }
 crates_io_index = { path = "crates/crates_io_index" }
@@ -116,7 +117,6 @@ tracing-subscriber = { version = "=0.3.18", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.2"
 unicode-xid = "=0.2.6"
-zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 bytes = "=1.8.0"
@@ -129,3 +129,4 @@ googletest = "=0.12.0"
 insta = { version = "=1.40.0", features = ["glob", "json", "redactions"] }
 regex = "=1.11.0"
 tokio = "=1.40.0"
+zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }

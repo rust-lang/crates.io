@@ -1,10 +1,11 @@
+use serde::Deserialize;
 use std::collections::{BTreeMap, VecDeque};
 
 /// An enum indicating whether a column is included in the database dumps.
 /// Public columns are included, private are not.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub(super) enum ColumnVisibility {
+pub enum ColumnVisibility {
     Private,
     Public,
 }
@@ -16,7 +17,7 @@ pub(super) enum ColumnVisibility {
 /// used in a `WHERE` clause to filter the rows of the table. The `columns`
 /// field maps column names to their respective visibilities.
 #[derive(Clone, Debug, Default, Deserialize)]
-pub(super) struct TableConfig {
+pub struct TableConfig {
     #[serde(default)]
     pub dependencies: Vec<String>,
     pub filter: Option<String>,
@@ -28,17 +29,17 @@ pub(super) struct TableConfig {
 /// Maps table names to the respective configurations. Used to load `dump_db.toml`.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(transparent)]
-pub(super) struct VisibilityConfig(pub BTreeMap<String, TableConfig>);
+pub struct VisibilityConfig(pub BTreeMap<String, TableConfig>);
 
 impl VisibilityConfig {
-    pub(super) fn get() -> Self {
+    pub fn get() -> Self {
         toml::from_str(include_str!("dump-db.toml")).unwrap()
     }
 
     /// Sort the tables in a way that dependencies come before dependent tables.
     ///
     /// Returns a vector of table names.
-    pub(super) fn topological_sort(&self) -> Vec<&str> {
+    pub fn topological_sort(&self) -> Vec<&str> {
         let mut num_deps = BTreeMap::new();
         let mut rev_deps: BTreeMap<_, Vec<_>> = BTreeMap::new();
         for (table, config) in self.0.iter() {

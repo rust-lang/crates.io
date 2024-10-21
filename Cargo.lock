@@ -1026,6 +1026,7 @@ dependencies = [
  "cookie",
  "crates_io_cdn_logs",
  "crates_io_database",
+ "crates_io_database_dump",
  "crates_io_env_vars",
  "crates_io_github",
  "crates_io_index",
@@ -1122,6 +1123,26 @@ version = "0.0.0"
 dependencies = [
  "diesel",
  "diesel_full_text_search",
+]
+
+[[package]]
+name = "crates_io_database_dump"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "crates_io_test_db",
+ "diesel",
+ "flate2",
+ "insta",
+ "minijinja",
+ "serde",
+ "serde_json",
+ "tar",
+ "tempfile",
+ "toml",
+ "tracing",
+ "zip",
 ]
 
 [[package]]
