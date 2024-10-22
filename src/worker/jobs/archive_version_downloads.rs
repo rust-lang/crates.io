@@ -5,7 +5,6 @@ use anyhow::{anyhow, Context};
 use chrono::{NaiveDate, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use object_store::ObjectStore;
@@ -63,10 +62,12 @@ impl BackgroundJob for ArchiveVersionDownloads {
         export(&env.config.db.primary.url, &csv_path, &self.before).await?;
         let dates = spawn_blocking(move || split(csv_path)).await?;
         let uploaded_dates = upload(downloads_archive_store, tempdir.path(), dates).await?;
-        delete(&env.deadpool, uploaded_dates).await?;
+
+        let mut conn = env.deadpool.get().await?;
+        delete(&mut conn, uploaded_dates).await?;
 
         // Queue up the job to regenerate the archive index.
-        enqueue_index_job(&env.deadpool).await?;
+        enqueue_index_job(&mut conn).await?;
 
         info!("Finished archiving old version downloads");
         Ok(())
@@ -218,12 +219,7 @@ async fn upload_file(store: &impl ObjectStore, path: impl AsRef<Path>) -> anyhow
 }
 
 /// Delete version downloads for the given dates from the database.
-async fn delete(db_pool: &Pool<AsyncPgConnection>, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
-    let mut conn = db_pool.get().await?;
-    delete_inner(&mut conn, dates).await
-}
-
-async fn delete_inner(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
+async fn delete(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::Result<()> {
     // Delete version downloads for the given dates in chunks to avoid running
     // into the maximum query parameter limit.
     const CHUNK_SIZE: usize = 5000;
@@ -244,11 +240,9 @@ async fn delete_inner(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> an
     Ok(())
 }
 
-async fn enqueue_index_job(db_pool: &Pool<AsyncPgConnection>) -> anyhow::Result<()> {
-    let mut conn = db_pool.get().await?;
-
+async fn enqueue_index_job(conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
     super::IndexVersionDownloadsArchive
-        .async_enqueue(&mut conn)
+        .async_enqueue(conn)
         .await
         .context("Failed to enqueue IndexVersionDownloadsArchive job")?;
 
@@ -260,7 +254,6 @@ mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
-    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use diesel_async::AsyncConnection;
     use insta::assert_snapshot;
 
@@ -372,10 +365,8 @@ mod tests {
         let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
         prepare_database(&mut conn).await;
 
-        let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(test_db.url());
-        let db_pool = Pool::builder(manager).build().unwrap();
         let dates = vec![NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()];
-        delete(&db_pool, dates).await.unwrap();
+        delete(&mut conn, dates).await.unwrap();
 
         let row_count: i64 = version_downloads::table
             .count()
