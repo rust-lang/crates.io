@@ -10,3 +10,6 @@ workspace = true
 [dependencies]
 diesel = "=2.2.4"
 diesel_full_text_search = "=2.2.0"
+
+[dev-dependencies]
+crates_io_test_db = { path = "../crates_io_test_db" }
