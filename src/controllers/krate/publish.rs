@@ -23,8 +23,8 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::models::{
-    insert_version_owner_action, Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion,
-    Rights, VersionAction,
+    default_versions::Version as DefaultVersion, insert_version_owner_action, Category, Crate,
+    DependencyKind, Keyword, NewCrate, NewVersion, Rights, VersionAction,
 };
 
 use crate::licenses::parse_license_expr;
@@ -64,7 +64,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
     Crate::validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
 
-    let version = match semver::Version::parse(&metadata.vers) {
+    let semver = match semver::Version::parse(&metadata.vers) {
         Ok(parsed) => parsed,
         Err(_) => {
             return Err(bad_request(format_args!(
@@ -75,7 +75,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     };
 
     // Convert the version back to a string to deal with any inconsistencies
-    let version_string = version.to_string();
+    let version_string = semver.to_string();
 
     let request_log = req.request_log();
     request_log.add("crate_name", &*metadata.name);
@@ -385,17 +385,46 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             // Link this new version to all dependencies
             add_dependencies(conn, &deps, version.id)?;
 
-            // Insert the default version if it doesn't already exist. Compared
-            // to only using a background job, this prevents us from getting
-            // into a situation where a crate exists in the `crates` table but
-            // doesn't have a default version in the `default_versions` table.
-            let inserted_default_versions = diesel::insert_into(default_versions::table)
-                .values((
-                    default_versions::crate_id.eq(krate.id),
-                    default_versions::version_id.eq(version.id),
-                ))
-                .on_conflict_do_nothing()
-                .execute(conn)?;
+            let existing_default_version = default_versions::table
+                .inner_join(versions::table)
+                .filter(default_versions::crate_id.eq(krate.id))
+                .select(DefaultVersion::as_select())
+                .first(conn)
+                .optional()?;
+
+            // Upsert the `default_value` determined by the existing `default_value` and the
+            // published version. Note that this could potentially write an outdated version
+            // (although this should not happen regularly), as we might be comparing to an
+            // outdated value.
+            //
+            // Compared to only using a background job, this prevents us from getting into a
+            // situation where a crate exists in the `crates` table but doesn't have a default
+            // version in the `default_versions` table.
+            if let Some(existing_default_version) = existing_default_version {
+                let published_default_version = DefaultVersion {
+                    id: version.id,
+                    num: semver,
+                    yanked: false,
+                };
+
+                if existing_default_version < published_default_version {
+                    diesel::update(default_versions::table)
+                        .filter(default_versions::crate_id.eq(krate.id))
+                        .set(default_versions::version_id.eq(version.id))
+                        .execute(conn)?;
+                }
+
+                // Update the default version asynchronously in a background job
+                // to ensure correctness and eventual consistency.
+                UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+            } else {
+                diesel::insert_into(default_versions::table)
+                    .values((
+                        default_versions::crate_id.eq(krate.id),
+                        default_versions::version_id.eq(version.id),
+                    ))
+                    .execute(conn)?;
+            }
 
             // Update all keywords for this crate
             Keyword::update_crate(conn, &krate, &keywords)?;
@@ -445,12 +474,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
 
             SendPublishNotificationsJob::new(version.id).enqueue(conn)?;
-
-            // If this is a new version for an existing crate it is sufficient
-            // to update the default version asynchronously in a background job.
-            if inserted_default_versions == 0 {
-                UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
-            }
 
             // Experiment: check new crates for potential typosquatting.
             if existing_crate.is_none() {

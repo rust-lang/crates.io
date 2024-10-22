@@ -15,11 +15,11 @@ use diesel::prelude::*;
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Selectable)]
 #[diesel(table_name = versions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-struct Version {
-    id: i32,
+pub struct Version {
+    pub id: i32,
     #[diesel(deserialize_as = SemverVersion)]
-    num: semver::Version,
-    yanked: bool,
+    pub num: semver::Version,
+    pub yanked: bool,
 }
 
 impl Version {
