@@ -6,11 +6,12 @@ use insta::assert_snapshot;
 const URL: &str = "/api/v1/me";
 const LOCK_REASON: &str = "test lock reason";
 
-fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
+async fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
     use crate::schema::users;
     use diesel::prelude::*;
+    use diesel_async::RunQueryDsl;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     diesel::update(users::table)
         .set((
@@ -19,13 +20,14 @@ fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>) {
         ))
         .filter(users::id.eq(user_id))
         .execute(&mut conn)
+        .await
         .unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn account_locked_indefinitely() {
     let (app, _anon, user) = TestApp::init().with_user();
-    lock_account(&app, user.as_model().id, None);
+    lock_account(&app, user.as_model().id, None).await;
 
     let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -40,7 +42,7 @@ async fn account_locked_with_future_expiry() {
         .naive_utc();
 
     let (app, _anon, user) = TestApp::init().with_user();
-    lock_account(&app, user.as_model().id, Some(until));
+    lock_account(&app, user.as_model().id, Some(until)).await;
 
     let response = user.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -52,7 +54,7 @@ async fn expired_account_lock() {
     let until = Utc::now().naive_utc() - Duration::days(1);
 
     let (app, _anon, user) = TestApp::init().with_user();
-    lock_account(&app, user.as_model().id, Some(until));
+    lock_account(&app, user.as_model().id, Some(until)).await;
 
     user.get::<serde_json::Value>(URL).await.good();
 }

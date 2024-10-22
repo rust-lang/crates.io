@@ -3,7 +3,8 @@ use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{NaiveDateTime, Utc};
-use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel::ExpressionMethods;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::assert_snapshot;
 use std::thread;
@@ -15,7 +16,7 @@ async fn publish_new_crate_ratelimit_hit() {
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 
@@ -29,6 +30,7 @@ async fn publish_new_crate_ratelimit_hit() {
             publish_limit_buckets::last_refill.eq(far_future),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to set fake ratelimit");
 
     let crate_to_publish = PublishBuilder::new("rate_limited", "1.0.0");
@@ -49,7 +51,7 @@ async fn publish_new_crate_ratelimit_expires() {
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 
@@ -63,6 +65,7 @@ async fn publish_new_crate_ratelimit_expires() {
             publish_limit_buckets::last_refill.eq(just_now),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to set fake ratelimit");
 
     let crate_to_publish = PublishBuilder::new("rate_limited", "1.0.0");
@@ -91,7 +94,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
         )
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Add an override so our user gets *2* new tokens (expires, y'know, sometime)
     diesel::insert_into(publish_rate_overrides::table)
@@ -102,6 +105,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
             publish_rate_overrides::action.eq(LimitedAction::PublishNew),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to add ratelimit override");
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
@@ -167,7 +171,7 @@ async fn publish_new_crate_expired_override_ignored() {
         )
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Add an override so our user gets *2* new tokens (expires, y'know, sometime)
     let just_now = Utc::now().naive_utc() - Duration::from_secs(1);
@@ -179,6 +183,7 @@ async fn publish_new_crate_expired_override_ignored() {
             publish_rate_overrides::action.eq(LimitedAction::PublishNew),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to add ratelimit override");
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");

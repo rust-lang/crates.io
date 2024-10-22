@@ -3,6 +3,7 @@ use crate::tests::{RequestHelper, TestApp};
 use crate::util::token::HashedToken;
 use crate::{models::ApiToken, schema::api_tokens};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -19,16 +20,19 @@ static GITHUB_PUBLIC_KEY_SIGNATURE: &str = "MEUCIFLZzeK++IhS+y276SRk2Pe5LfDrfvTX
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_revokes_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, token.as_model().name);
 
@@ -37,6 +41,7 @@ async fn github_secret_alert_revokes_token() {
     diesel::update(api_tokens::table)
         .set(api_tokens::token.eq(hashed_token))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let mut request = anon.post_request(URL);
@@ -48,16 +53,22 @@ async fn github_secret_alert_revokes_token() {
     assert_json_snapshot!(response.json());
 
     // Ensure that the token was revoked
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, empty());
 
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(true))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(true))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
 
     // Ensure exactly one email was sent
@@ -67,16 +78,19 @@ async fn github_secret_alert_revokes_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_revoked_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, token.as_model().name);
 
@@ -88,6 +102,7 @@ async fn github_secret_alert_for_revoked_token() {
             api_tokens::revoked.eq(true),
         ))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let mut request = anon.post_request(URL);
@@ -99,16 +114,22 @@ async fn github_secret_alert_for_revoked_token() {
     assert_json_snapshot!(response.json());
 
     // Ensure that the token is still revoked
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, empty());
 
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(true))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(true))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
 
     // Ensure still no emails were sent
@@ -118,16 +139,19 @@ async fn github_secret_alert_for_revoked_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_unknown_token() {
     let (app, anon, user, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().len(), 0);
 
     // Ensure that the token currently exists in the database
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, token.as_model().name);
 
@@ -140,10 +164,13 @@ async fn github_secret_alert_for_unknown_token() {
     assert_json_snapshot!(response.json());
 
     // Ensure that the token was not revoked
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .filter(api_tokens::revoked.eq(false))
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .filter(api_tokens::revoked.eq(false))
+            .load(&mut conn)
+            .await
+    );
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, token.as_model().name);
 

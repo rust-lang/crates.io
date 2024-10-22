@@ -1,7 +1,8 @@
 use crate::schema::versions_published_by;
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel::{QueryDsl, RunQueryDsl};
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -9,7 +10,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate() {
     let (app, _, user) = TestApp::full().with_user();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = user.publish_crate(crate_to_publish).await;
@@ -33,6 +34,7 @@ async fn new_krate() {
     let email: String = versions_published_by::table
         .select(versions_published_by::email)
         .first(&mut conn)
+        .await
         .unwrap();
     assert_eq!(email, "foo@example.com");
 

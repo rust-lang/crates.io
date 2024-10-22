@@ -1,17 +1,19 @@
 use crate::schema::emails;
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel::{delete, update, ExpressionMethods, RunQueryDsl};
+use diesel::{delete, update, ExpressionMethods};
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
+
 use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_without_any_email_fails() {
     let (app, _, _, token) = TestApp::full().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    delete(emails::table).execute(&mut conn).unwrap();
+    delete(emails::table).execute(&mut conn).await.unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo_no_email", "1.0.0");
 
@@ -25,11 +27,12 @@ async fn new_krate_without_any_email_fails() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_unverified_email_fails() {
     let (app, _, _, token) = TestApp::full().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     update(emails::table)
         .set((emails::verified.eq(false),))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo_unverified_email", "1.0.0");

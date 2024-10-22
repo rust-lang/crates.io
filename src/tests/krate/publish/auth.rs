@@ -1,7 +1,8 @@
 use crate::schema::api_tokens;
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel::ExpressionMethods;
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_snapshot;
@@ -9,7 +10,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
     let (app, anon, _, token) = TestApp::full().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Try to publish without a token
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
@@ -21,6 +22,7 @@ async fn new_wrong_token() {
     diesel::update(api_tokens::table)
         .set(api_tokens::token.eq(b"bad" as &[u8]))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
