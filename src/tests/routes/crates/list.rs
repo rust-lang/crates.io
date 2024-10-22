@@ -3,6 +3,7 @@ use crate::schema::crates;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::{new_category, new_user};
+use crates_io_database::schema::categories;
 use diesel::{dsl::*, prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
@@ -152,12 +153,14 @@ async fn index_queries() {
         assert_eq!(json.meta.total, 0);
     }
 
-    new_category("Category 1", "cat1", "Category 1 crates")
-        .create_or_update(&mut conn)
-        .unwrap();
+    let cats = vec![
+        new_category("Category 1", "cat1", "Category 1 crates"),
+        new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates"),
+    ];
 
-    new_category("Category 1::Ba'r", "cat1::bar", "Ba'r crates")
-        .create_or_update(&mut conn)
+    insert_into(categories::table)
+        .values(cats)
+        .execute(&mut conn)
         .unwrap();
 
     Category::update_crate(&mut conn, &krate, &["cat1"]).unwrap();
@@ -862,9 +865,11 @@ async fn test_default_sort_recent() {
         assert_eq!(json.crates[1].downloads, 20);
     }
 
-    new_category("Animal", "animal", "animal crates")
-        .create_or_update(&mut conn)
+    insert_into(categories::table)
+        .values(new_category("Animal", "animal", "animal crates"))
+        .execute(&mut conn)
         .unwrap();
+
     Category::update_crate(&mut conn, &green_crate, &["animal"]).unwrap();
     Category::update_crate(&mut conn, &potato_crate, &["animal"]).unwrap();
 
