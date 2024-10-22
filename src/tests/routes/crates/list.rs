@@ -163,8 +163,8 @@ async fn index_queries() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::update_crate(&mut conn, &krate, &["cat1"]).unwrap();
-    Category::update_crate(&mut conn, &krate2, &["cat1::bar"]).unwrap();
+    Category::update_crate(&mut conn, krate.id, &["cat1"]).unwrap();
+    Category::update_crate(&mut conn, krate2.id, &["cat1::bar"]).unwrap();
 
     for cl in search_both(&anon, "category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
@@ -870,8 +870,8 @@ async fn test_default_sort_recent() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::update_crate(&mut conn, &green_crate, &["animal"]).unwrap();
-    Category::update_crate(&mut conn, &potato_crate, &["animal"]).unwrap();
+    Category::update_crate(&mut conn, green_crate.id, &["animal"]).unwrap();
+    Category::update_crate(&mut conn, potato_crate.id, &["animal"]).unwrap();
 
     // test that index for categories is sorted by recent_downloads
     // by default

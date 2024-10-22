@@ -431,7 +431,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             // Update all categories for this crate, collecting any invalid categories
             // in order to be able to return an error to the user.
-            let unknown_categories = Category::update_crate(conn, &krate, &categories)?;
+            let unknown_categories = Category::update_crate(conn, krate.id, &categories)?;
             if !unknown_categories.is_empty() {
                 let unknown_categories = unknown_categories.join(", ");
                 let domain = &app.config.domain_name;
