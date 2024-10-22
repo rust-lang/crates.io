@@ -108,6 +108,8 @@ pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResul
 }
 
 fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<Version> {
+    use diesel::result::Error::NotFound;
+
     debug!("Loading all versions for the crate…");
     let versions = versions::table
         .filter(versions::crate_id.eq(crate_id))
@@ -116,13 +118,7 @@ fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult
 
     debug!("Found {} versions", versions.len());
 
-    find_default_version(&versions)
-        .cloned()
-        .ok_or(diesel::result::Error::NotFound)
-}
-
-fn find_default_version(versions: &[Version]) -> Option<&Version> {
-    versions.iter().max()
+    versions.into_iter().max().ok_or(NotFound)
 }
 
 #[cfg(test)]
@@ -140,14 +136,10 @@ mod tests {
 
     #[test]
     fn test_find_default_version() {
-        let check = |versions, expected| {
-            let default_version = assert_some!(find_default_version(versions));
+        fn check(versions: &[Version], expected: &str) {
+            let default_version = assert_some!(versions.iter().max());
             assert_eq!(default_version.num.to_string(), expected);
-        };
-
-        // No versions
-        let versions = vec![];
-        assert_none!(find_default_version(&versions));
+        }
 
         // Only a single version
         let versions = vec![v("1.0.0", false)];
