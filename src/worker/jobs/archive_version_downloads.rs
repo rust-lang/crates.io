@@ -1,3 +1,4 @@
+use super::IndexVersionDownloadsArchive;
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
@@ -67,7 +68,10 @@ impl BackgroundJob for ArchiveVersionDownloads {
         delete(&mut conn, uploaded_dates).await?;
 
         // Queue up the job to regenerate the archive index.
-        enqueue_index_job(&mut conn).await?;
+        IndexVersionDownloadsArchive
+            .async_enqueue(&mut conn)
+            .await
+            .context("Failed to enqueue IndexVersionDownloadsArchive job")?;
 
         info!("Finished archiving old version downloads");
         Ok(())
@@ -236,15 +240,6 @@ async fn delete(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::
             }
         }
     }
-
-    Ok(())
-}
-
-async fn enqueue_index_job(conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
-    super::IndexVersionDownloadsArchive
-        .async_enqueue(conn)
-        .await
-        .context("Failed to enqueue IndexVersionDownloadsArchive job")?;
 
     Ok(())
 }
