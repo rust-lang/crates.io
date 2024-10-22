@@ -8,7 +8,11 @@ use diesel::prelude::*;
 /// This struct is used to load all versions of a crate from the database,
 /// without loading all the additional data unnecessary for default version
 /// resolution.
-#[derive(Clone, Debug, Queryable, Selectable)]
+///
+/// It implements [Ord] in a way that sorts versions by the criteria specified
+/// in the [update_default_version] function documentation. The default version
+/// will be the "maximum" element in a sorted list of versions.
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Selectable)]
 #[diesel(table_name = versions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 struct Version {
@@ -22,6 +26,22 @@ impl Version {
     /// Returns `true` if the version contains a pre-release identifier.
     fn is_prerelease(&self) -> bool {
         !self.num.pre.is_empty()
+    }
+
+    fn ord_tuple(&self) -> (bool, bool, &semver::Version, i32) {
+        (!self.yanked, !self.is_prerelease(), &self.num, self.id)
+    }
+}
+
+impl PartialOrd for Version {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Version {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.ord_tuple().cmp(&other.ord_tuple())
     }
 }
 
@@ -88,6 +108,8 @@ pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResul
 }
 
 fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<Version> {
+    use diesel::result::Error::NotFound;
+
     debug!("Loading all versions for the crate…");
     let versions = versions::table
         .filter(versions::crate_id.eq(crate_id))
@@ -96,19 +118,7 @@ fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult
 
     debug!("Found {} versions", versions.len());
 
-    find_default_version(&versions)
-        .cloned()
-        .ok_or(diesel::result::Error::NotFound)
-}
-
-fn find_default_version(versions: &[Version]) -> Option<&Version> {
-    highest(versions, |v| !v.is_prerelease() && !v.yanked)
-        .or_else(|| highest(versions, |v| !v.yanked))
-        .or_else(|| highest(versions, |_| true))
-}
-
-fn highest(versions: &[Version], filter: impl FnMut(&&Version) -> bool) -> Option<&Version> {
-    versions.iter().filter(filter).max_by_key(|v| &v.num)
+    versions.into_iter().max().ok_or(NotFound)
 }
 
 #[cfg(test)]
@@ -116,6 +126,8 @@ mod tests {
     use super::*;
     use crate::schema::crates;
     use crate::test_util::test_db_connection;
+    use insta::assert_snapshot;
+    use std::fmt::Write;
 
     fn v(num: &str, yanked: bool) -> Version {
         let num = semver::Version::parse(num).unwrap();
@@ -124,14 +136,10 @@ mod tests {
 
     #[test]
     fn test_find_default_version() {
-        let check = |versions, expected| {
-            let default_version = assert_some!(find_default_version(versions));
+        fn check(versions: &[Version], expected: &str) {
+            let default_version = assert_some!(versions.iter().max());
             assert_eq!(default_version.num.to_string(), expected);
-        };
-
-        // No versions
-        let versions = vec![];
-        assert_none!(find_default_version(&versions));
+        }
 
         // Only a single version
         let versions = vec![v("1.0.0", false)];
@@ -177,6 +185,51 @@ mod tests {
             v("1.0.0-beta.3", true),
         ];
         check(&versions, "1.0.0-beta.3");
+    }
+
+    #[test]
+    fn test_ord() {
+        let mut versions = vec![
+            v("1.0.0", false),
+            v("1.0.0-beta.1", false),
+            v("1.0.0-beta.2", false),
+            v("1.0.0-beta.3", false),
+            v("1.0.1", true),
+            v("1.0.2", false),
+            v("1.1.0", false),
+            v("1.1.1-beta.1", true),
+            v("1.1.1", true),
+            v("1.0.3", false),
+            v("2.0.0-beta.1", false),
+        ];
+
+        versions.sort();
+
+        assert_snapshot!(format_versions(&versions), @r#"
+        1.1.1-beta.1 (yanked)
+        1.0.1 (yanked)
+        1.1.1 (yanked)
+        1.0.0-beta.1
+        1.0.0-beta.2
+        1.0.0-beta.3
+        2.0.0-beta.1
+        1.0.0
+        1.0.2
+        1.0.3
+        1.1.0
+        "#);
+    }
+
+    fn format_versions(versions: &[Version]) -> String {
+        let mut buf = String::with_capacity(versions.len() * 20);
+        for v in versions {
+            write!(buf, "{}", v.num).unwrap();
+            if v.yanked {
+                buf.push_str(" (yanked)");
+            }
+            buf.push('\n');
+        }
+        buf
     }
 
     fn create_crate(name: &str, conn: &mut impl Conn) -> i32 {
