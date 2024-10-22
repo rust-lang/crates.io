@@ -20,7 +20,7 @@ pub mod helpers;
 mod action;
 pub mod category;
 mod crate_owner_invitation;
-mod default_versions;
+pub mod default_versions;
 pub mod dependency;
 mod download;
 mod email;
