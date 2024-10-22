@@ -160,7 +160,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if !self.keywords.is_empty() {
-            Keyword::update_crate(connection, &krate, &self.keywords)?;
+            Keyword::update_crate(connection, krate.id, &self.keywords)?;
         }
 
         if let Some(updated_at) = self.updated_at {
