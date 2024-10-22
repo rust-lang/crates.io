@@ -26,7 +26,6 @@ mod owners;
 mod pagination;
 mod read_only_mode;
 mod routes;
-mod schema_details;
 mod server;
 mod team;
 mod token;

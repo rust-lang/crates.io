@@ -1121,6 +1121,7 @@ dependencies = [
 name = "crates_io_database"
 version = "0.0.0"
 dependencies = [
+ "crates_io_test_db",
  "diesel",
  "diesel_full_text_search",
 ]
