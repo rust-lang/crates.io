@@ -13,13 +13,12 @@ async fn diesel_not_found_results_in_404() {
 #[tokio::test(flavor = "multi_thread")]
 async fn disallow_api_token_auth_for_get_crate_following_status() {
     let (app, _, _, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let api_token = token.as_model();
 
     let a_crate = "a_crate";
 
-    app.db(|conn| {
-        CrateBuilder::new(a_crate, api_token.user_id).expect_build(conn);
-    });
+    CrateBuilder::new(a_crate, api_token.user_id).expect_build(&mut conn);
 
     // Token auth on GET for get following status is disallowed
     token

@@ -27,62 +27,62 @@ async fn summary_doesnt_die() {
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_new_crates() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        let _: anyhow::Result<()> = conn.transaction(|conn| {
-            let now_ = Utc::now().naive_utc();
-            let now_plus_two = now_ + chrono::Duration::seconds(2);
 
-            new_category("Category 1", "cat1", "Category 1 crates")
-                .create_or_update(conn)
-                .unwrap();
+    let _: anyhow::Result<()> = conn.transaction(|conn| {
+        let now_ = Utc::now().naive_utc();
+        let now_plus_two = now_ + chrono::Duration::seconds(2);
 
-            CrateBuilder::new("some_downloads", user.id)
-                .version(VersionBuilder::new("0.1.0"))
-                .description("description")
-                .keyword("popular")
-                .category("cat1")
-                .downloads(20)
-                .recent_downloads(10)
-                .expect_build(conn);
+        new_category("Category 1", "cat1", "Category 1 crates")
+            .create_or_update(conn)
+            .unwrap();
 
-            CrateBuilder::new("most_recent_downloads", user.id)
-                .version(VersionBuilder::new("0.2.0"))
-                .keyword("popular")
-                .category("cat1")
-                .downloads(5000)
-                .recent_downloads(50)
-                .expect_build(conn);
+        CrateBuilder::new("some_downloads", user.id)
+            .version(VersionBuilder::new("0.1.0"))
+            .description("description")
+            .keyword("popular")
+            .category("cat1")
+            .downloads(20)
+            .recent_downloads(10)
+            .expect_build(conn);
 
-            CrateBuilder::new("just_updated", user.id)
-                .version(VersionBuilder::new("0.1.0"))
-                .version(VersionBuilder::new("0.1.2"))
-                // update 'just_updated' krate. Others won't appear because updated_at == created_at.
-                .updated_at(now_)
-                .expect_build(conn);
+        CrateBuilder::new("most_recent_downloads", user.id)
+            .version(VersionBuilder::new("0.2.0"))
+            .keyword("popular")
+            .category("cat1")
+            .downloads(5000)
+            .recent_downloads(50)
+            .expect_build(conn);
 
-            CrateBuilder::new("just_updated_patch", user.id)
-                .version(VersionBuilder::new("0.1.0"))
-                .version(VersionBuilder::new("0.2.0"))
-                // Add a patch version be newer than the other versions, including the higher one.
-                .version(VersionBuilder::new("0.1.1").created_at(now_plus_two))
-                .updated_at(now_plus_two)
-                .expect_build(conn);
+        CrateBuilder::new("just_updated", user.id)
+            .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.1.2"))
+            // update 'just_updated' krate. Others won't appear because updated_at == created_at.
+            .updated_at(now_)
+            .expect_build(conn);
 
-            CrateBuilder::new("with_downloads", user.id)
-                .version(VersionBuilder::new("0.3.0"))
-                .keyword("popular")
-                .downloads(1000)
-                .expect_build(conn);
+        CrateBuilder::new("just_updated_patch", user.id)
+            .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.2.0"))
+            // Add a patch version be newer than the other versions, including the higher one.
+            .version(VersionBuilder::new("0.1.1").created_at(now_plus_two))
+            .updated_at(now_plus_two)
+            .expect_build(conn);
 
-            // set total_downloads global value for `num_downloads` prop
-            update(metadata::table)
-                .set(metadata::total_downloads.eq(6000))
-                .execute(conn)
-                .unwrap();
+        CrateBuilder::new("with_downloads", user.id)
+            .version(VersionBuilder::new("0.3.0"))
+            .keyword("popular")
+            .downloads(1000)
+            .expect_build(conn);
 
-            Ok(())
-        });
+        // set total_downloads global value for `num_downloads` prop
+        update(metadata::table)
+            .set(metadata::total_downloads.eq(6000))
+            .execute(conn)
+            .unwrap();
+
+        Ok(())
     });
 
     let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
@@ -124,25 +124,26 @@ async fn excluded_crate_id() {
             ];
         })
         .with_user();
-    let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("some_downloads", user.id)
-            .version(VersionBuilder::new("0.1.0"))
-            .description("description")
-            .keyword("popular")
-            .category("cat1")
-            .downloads(20)
-            .recent_downloads(10)
-            .expect_build(conn);
 
-        CrateBuilder::new("most_recent_downloads", user.id)
-            .version(VersionBuilder::new("0.2.0"))
-            .keyword("popular")
-            .category("cat1")
-            .downloads(5000)
-            .recent_downloads(50)
-            .expect_build(conn);
-    });
+    let mut conn = app.db_conn();
+    let user = user.as_model();
+
+    CrateBuilder::new("some_downloads", user.id)
+        .version(VersionBuilder::new("0.1.0"))
+        .description("description")
+        .keyword("popular")
+        .category("cat1")
+        .downloads(20)
+        .recent_downloads(10)
+        .expect_build(&mut conn);
+
+    CrateBuilder::new("most_recent_downloads", user.id)
+        .version(VersionBuilder::new("0.2.0"))
+        .keyword("popular")
+        .category("cat1")
+        .downloads(5000)
+        .recent_downloads(50)
+        .expect_build(&mut conn);
 
     let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
 

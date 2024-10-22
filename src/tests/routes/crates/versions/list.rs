@@ -10,22 +10,23 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn versions() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_versions", user.id)
-            .version("0.5.1")
-            .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
-            .version("0.5.0")
-            .expect_build(conn);
-        // Make version 1.0.0 mimic a version published before we started recording who published
-        // versions
-        let none: Option<i32> = None;
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0"))
-            .set(versions::published_by.eq(none))
-            .execute(conn)
-            .unwrap();
-    });
+
+    CrateBuilder::new("foo_versions", user.id)
+        .version("0.5.1")
+        .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
+        .version("0.5.0")
+        .expect_build(&mut conn);
+
+    // Make version 1.0.0 mimic a version published before we started recording who published
+    // versions
+    let none: Option<i32> = None;
+    update(versions::table)
+        .filter(versions::num.eq("1.0.0"))
+        .set(versions::published_by.eq(none))
+        .execute(&mut conn)
+        .unwrap();
 
     let response = anon.get::<()>("/api/v1/crates/foo_versions/versions").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -47,6 +48,8 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
+
     let user = user.as_model();
     let versions = [
         "1.0.0-alpha",
@@ -59,32 +62,31 @@ async fn test_sorting() {
         "1.0.0-rc.1",
         "1.0.0",
     ];
-    app.db(|conn| {
-        let mut builder = CrateBuilder::new("foo_versions", user.id);
-        for version in versions {
-            builder = builder.version(version);
-        }
-        builder.expect_build(conn);
-        // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
-        // but 1.0.0-alpha.beta owns larger id number
-        let versions_aliased = diesel::alias!(versions as versions_aliased);
-        let created_at_by_num = |num: &str| {
-            versions_aliased
-                .filter(versions_aliased.field(versions::num).eq(num.to_owned()))
-                .select(versions_aliased.field(versions::created_at))
-                .single_value()
-        };
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0-beta.2"))
-            .set(versions::created_at.eq(created_at_by_num("1.0.0-alpha.beta").assume_not_null()))
-            .execute(conn)
-            .unwrap();
 
-        // An additional crate to guarantee the accuracy of the response dataset and its total
-        CrateBuilder::new("bar_versions", user.id)
-            .version("0.0.1")
-            .expect_build(conn);
-    });
+    let mut builder = CrateBuilder::new("foo_versions", user.id);
+    for version in versions {
+        builder = builder.version(version);
+    }
+    builder.expect_build(&mut conn);
+    // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
+    // but 1.0.0-alpha.beta owns larger id number
+    let versions_aliased = diesel::alias!(versions as versions_aliased);
+    let created_at_by_num = |num: &str| {
+        versions_aliased
+            .filter(versions_aliased.field(versions::num).eq(num.to_owned()))
+            .select(versions_aliased.field(versions::created_at))
+            .single_value()
+    };
+    update(versions::table)
+        .filter(versions::num.eq("1.0.0-beta.2"))
+        .set(versions::created_at.eq(created_at_by_num("1.0.0-alpha.beta").assume_not_null()))
+        .execute(&mut conn)
+        .unwrap();
+
+    // An additional crate to guarantee the accuracy of the response dataset and its total
+    CrateBuilder::new("bar_versions", user.id)
+        .version("0.0.1")
+        .expect_build(&mut conn);
 
     let expects = [
         "2.0.0-alpha",
@@ -148,22 +150,23 @@ async fn test_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_semver_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_versions", user.id)
-            .version(VersionBuilder::new("0.5.1").yanked(true))
-            .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
-            .version("0.5.0")
-            .expect_build(conn);
-        // Make version 1.0.0 mimic a version published before we started recording who published
-        // versions
-        let none: Option<i32> = None;
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0"))
-            .set(versions::published_by.eq(none))
-            .execute(conn)
-            .unwrap();
-    });
+
+    CrateBuilder::new("foo_versions", user.id)
+        .version(VersionBuilder::new("0.5.1").yanked(true))
+        .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
+        .version("0.5.0")
+        .expect_build(&mut conn);
+
+    // Make version 1.0.0 mimic a version published before we started recording who published
+    // versions
+    let none: Option<i32> = None;
+    update(versions::table)
+        .filter(versions::num.eq("1.0.0"))
+        .set(versions::published_by.eq(none))
+        .execute(&mut conn)
+        .unwrap();
 
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["1.0.0", "0.5.1", "0.5.0"];
@@ -230,22 +233,23 @@ async fn test_seek_based_pagination_semver_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_date_sorting() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_versions", user.id)
-            .version(VersionBuilder::new("0.5.1").yanked(true))
-            .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
-            .version("0.5.0")
-            .expect_build(conn);
-        // Make version 1.0.0 mimic a version published before we started recording who published
-        // versions
-        let none: Option<i32> = None;
-        update(versions::table)
-            .filter(versions::num.eq("1.0.0"))
-            .set(versions::published_by.eq(none))
-            .execute(conn)
-            .unwrap();
-    });
+
+    CrateBuilder::new("foo_versions", user.id)
+        .version(VersionBuilder::new("0.5.1").yanked(true))
+        .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
+        .version("0.5.0")
+        .expect_build(&mut conn);
+
+    // Make version 1.0.0 mimic a version published before we started recording who published
+    // versions
+    let none: Option<i32> = None;
+    update(versions::table)
+        .filter(versions::num.eq("1.0.0"))
+        .set(versions::published_by.eq(none))
+        .execute(&mut conn)
+        .unwrap();
 
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["0.5.0", "1.0.0", "0.5.1"];
@@ -315,10 +319,10 @@ async fn test_seek_based_pagination_date_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
     let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let user = user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_versions", user.id).expect_build(conn);
-    });
+
+    CrateBuilder::new("foo_versions", user.id).expect_build(&mut conn);
 
     let url = "/api/v1/crates/foo_versions/versions";
     // Sort by semver

@@ -53,13 +53,12 @@ async fn http_error_with_unhealthy_database() {
 #[tokio::test(flavor = "multi_thread")]
 async fn download_requests_with_unhealthy_database_succeed() {
     let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        CrateBuilder::new("foo", token.as_model().user_id)
-            .version("1.0.0")
-            .build(conn)
-            .unwrap();
-    });
+    CrateBuilder::new("foo", token.as_model().user_id)
+        .version("1.0.0")
+        .build(&mut conn)
+        .unwrap();
 
     app.primary_db_chaosproxy().break_networking().unwrap();
 

@@ -28,13 +28,11 @@ async fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvita
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list() {
     let (app, _, owner, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
 
-    let (crate1, crate2) = app.db(|conn| {
-        (
-            CrateBuilder::new("crate_1", owner.as_model().id).expect_build(conn),
-            CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
-        )
-    });
+    let crate1 = CrateBuilder::new("crate_1", owner.as_model().id).expect_build(&mut conn);
+    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id).expect_build(&mut conn);
+
     let user1 = app.db_new_user("user_1");
     let user2 = app.db_new_user("user_2");
     token.add_named_owner("crate_1", "user_1").await.good();
@@ -167,14 +165,12 @@ async fn invitation_list() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_does_not_include_expired_invites() {
     let (app, _, owner, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let user = app.db_new_user("invited_user");
 
-    let (crate1, crate2) = app.db(|conn| {
-        (
-            CrateBuilder::new("crate_1", owner.as_model().id).expect_build(conn),
-            CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
-        )
-    });
+    let crate1 = CrateBuilder::new("crate_1", owner.as_model().id).expect_build(&mut conn);
+    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id).expect_build(&mut conn);
+
     token
         .add_named_owner("crate_1", "invited_user")
         .await
@@ -213,14 +209,12 @@ async fn invitations_list_does_not_include_expired_invites() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_paginated() {
     let (app, _, owner, token) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let user = app.db_new_user("invited_user");
 
-    let (crate1, crate2) = app.db(|conn| {
-        (
-            CrateBuilder::new("crate_1", owner.as_model().id).expect_build(conn),
-            CrateBuilder::new("crate_2", owner.as_model().id).expect_build(conn),
-        )
-    });
+    let crate1 = CrateBuilder::new("crate_1", owner.as_model().id).expect_build(&mut conn);
+    let crate2 = CrateBuilder::new("crate_2", owner.as_model().id).expect_build(&mut conn);
+
     token
         .add_named_owner("crate_1", "invited_user")
         .await
@@ -331,11 +325,11 @@ async fn invitation_list_other_users() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list_other_crates() {
     let (app, _, owner, _) = TestApp::init().with_token();
+    let mut conn = app.db_conn();
     let other_user = app.db_new_user("other");
-    app.db(|conn| {
-        CrateBuilder::new("crate_1", owner.as_model().id).expect_build(conn);
-        CrateBuilder::new("crate_2", other_user.as_model().id).expect_build(conn);
-    });
+
+    CrateBuilder::new("crate_1", owner.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("crate_2", other_user.as_model().id).expect_build(&mut conn);
 
     // Retrieving our own invitations work.
     let resp = owner

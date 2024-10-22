@@ -26,21 +26,15 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
-    let my_crates = app.db(|conn| {
-        vec![
-            CrateBuilder::new("test_package", user.as_model().id).expect_build(conn),
-            CrateBuilder::new("another_package", user.as_model().id).expect_build(conn),
-        ]
-    });
-
-    let a_id = my_crates.first().unwrap().id;
-    let b_id = my_crates.get(1).unwrap().id;
+    let a = CrateBuilder::new("test_package", user.as_model().id).expect_build(&mut conn);
+    let b = CrateBuilder::new("another_package", user.as_model().id).expect_build(&mut conn);
 
     // Update crate_a: email_notifications = false
     // crate_a should be false, crate_b should be true
     user.update_email_notifications(vec![EmailNotificationsUpdate {
-        id: a_id,
+        id: a.id,
         email_notifications: false,
     }])
     .await;
@@ -50,14 +44,14 @@ async fn test_update_email_notifications() {
         !json
             .owned_crates
             .iter()
-            .find(|c| c.id == a_id)
+            .find(|c| c.id == a.id)
             .unwrap()
             .email_notifications
     );
     assert!(
         json.owned_crates
             .iter()
-            .find(|c| c.id == b_id)
+            .find(|c| c.id == b.id)
             .unwrap()
             .email_notifications
     );
@@ -65,7 +59,7 @@ async fn test_update_email_notifications() {
     // Update crate_b: email_notifications = false
     // Both should be false now
     user.update_email_notifications(vec![EmailNotificationsUpdate {
-        id: b_id,
+        id: b.id,
         email_notifications: false,
     }])
     .await;
@@ -75,7 +69,7 @@ async fn test_update_email_notifications() {
         !json
             .owned_crates
             .iter()
-            .find(|c| c.id == a_id)
+            .find(|c| c.id == a.id)
             .unwrap()
             .email_notifications
     );
@@ -83,7 +77,7 @@ async fn test_update_email_notifications() {
         !json
             .owned_crates
             .iter()
-            .find(|c| c.id == b_id)
+            .find(|c| c.id == b.id)
             .unwrap()
             .email_notifications
     );
@@ -92,11 +86,11 @@ async fn test_update_email_notifications() {
     // Both should be true
     user.update_email_notifications(vec![
         EmailNotificationsUpdate {
-            id: a_id,
+            id: a.id,
             email_notifications: true,
         },
         EmailNotificationsUpdate {
-            id: b_id,
+            id: b.id,
             email_notifications: true,
         },
     ])
@@ -113,13 +107,13 @@ async fn test_update_email_notifications() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
-    let not_my_crate = app.db(|conn| {
-        let u = new_user("arbitrary_username")
-            .create_or_update(None, &app.as_inner().emails, conn)
-            .unwrap();
-        CrateBuilder::new("test_package", u.id).expect_build(conn)
-    });
+    let u = new_user("arbitrary_username")
+        .create_or_update(None, &app.as_inner().emails, &mut conn)
+        .unwrap();
+
+    let not_my_crate = CrateBuilder::new("test_package", u.id).expect_build(&mut conn);
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: not_my_crate.id,
@@ -127,13 +121,10 @@ async fn test_update_email_notifications_not_owned() {
     }])
     .await;
 
-    let email_notifications: bool = app
-        .db(|conn| {
-            crate_owners::table
-                .select(crate_owners::email_notifications)
-                .filter(crate_owners::crate_id.eq(not_my_crate.id))
-                .first(conn)
-        })
+    let email_notifications: bool = crate_owners::table
+        .select(crate_owners::email_notifications)
+        .filter(crate_owners::crate_id.eq(not_my_crate.id))
+        .first(&mut conn)
         .unwrap();
 
     // There should be no change to the `email_notifications` value for a crate not belonging to me

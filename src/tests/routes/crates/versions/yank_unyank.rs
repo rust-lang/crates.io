@@ -63,14 +63,14 @@ impl<T: RequestHelper> YankRequestHelper for T {
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_by_a_non_owner_fails() {
     let (app, _, _, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
     let another_user = app.db_new_user("bar");
     let another_user = another_user.as_model();
-    app.db(|conn| {
-        CrateBuilder::new("foo_not", another_user.id)
-            .version("1.0.0")
-            .expect_build(conn);
-    });
+
+    CrateBuilder::new("foo_not", another_user.id)
+        .version("1.0.0")
+        .expect_build(&mut conn);
 
     let response = token.yank("foo_not", "1.0.0").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -144,15 +144,15 @@ mod auth {
     }
 
     fn is_yanked(app: &TestApp) -> bool {
-        app.db(|conn| {
-            versions::table
-                .inner_join(crates::table)
-                .select(versions::yanked)
-                .filter(crates::name.eq(CRATE_NAME))
-                .filter(versions::num.eq(CRATE_VERSION))
-                .get_result(conn)
-                .unwrap()
-        })
+        let mut conn = app.db_conn();
+
+        versions::table
+            .inner_join(crates::table)
+            .select(versions::yanked)
+            .filter(crates::name.eq(CRATE_NAME))
+            .filter(versions::num.eq(CRATE_VERSION))
+            .get_result(&mut conn)
+            .unwrap()
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -365,15 +365,14 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn admin() {
         let (app, _, _) = prepare().await;
+        let mut conn = app.db_conn();
 
         let admin = app.db_new_user("admin");
 
-        app.db(|conn| {
-            diesel::update(admin.as_model())
-                .set(users::is_admin.eq(true))
-                .execute(conn)
-                .unwrap();
-        });
+        diesel::update(admin.as_model())
+            .set(users::is_admin.eq(true))
+            .execute(&mut conn)
+            .unwrap();
 
         let response = admin.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);

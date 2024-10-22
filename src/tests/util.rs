@@ -299,17 +299,18 @@ impl MockCookieUser {
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
     ) -> MockTokenUser {
-        let token = self.app.db(|conn| {
-            ApiToken::insert_with_scopes(
-                conn,
-                self.user.id,
-                name,
-                crate_scopes,
-                endpoint_scopes,
-                expired_at,
-            )
-            .unwrap()
-        });
+        let mut conn = self.app().db_conn();
+
+        let token = ApiToken::insert_with_scopes(
+            &mut conn,
+            self.user.id,
+            name,
+            crate_scopes,
+            endpoint_scopes,
+            expired_at,
+        )
+        .unwrap();
+
         MockTokenUser {
             app: self.app.clone(),
             token,

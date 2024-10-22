@@ -9,6 +9,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate() {
     let (app, _, user) = TestApp::full().with_user();
+    let mut conn = app.db_conn();
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = user.publish_crate(crate_to_publish).await;
@@ -29,13 +30,11 @@ async fn new_krate() {
     rss/updates.xml
     "###);
 
-    app.db(|conn| {
-        let email: String = versions_published_by::table
-            .select(versions_published_by::email)
-            .first(conn)
-            .unwrap();
-        assert_eq!(email, "foo@example.com");
-    });
+    let email: String = versions_published_by::table
+        .select(versions_published_by::email)
+        .first(&mut conn)
+        .unwrap();
+    assert_eq!(email, "foo@example.com");
 
     assert_snapshot!(app.emails_snapshot());
 }
@@ -114,13 +113,12 @@ async fn new_krate_twice() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_duplicate_version() {
     let (app, _, user, token) = TestApp::full().with_token();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        // Insert a crate directly into the database and then we'll try to publish the same version
-        CrateBuilder::new("foo_dupe", user.as_model().id)
-            .version("1.0.0")
-            .expect_build(conn);
-    });
+    // Insert a crate directly into the database and then we'll try to publish the same version
+    CrateBuilder::new("foo_dupe", user.as_model().id)
+        .version("1.0.0")
+        .expect_build(&mut conn);
 
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;

@@ -22,20 +22,21 @@ async fn test_sync_admins_job() {
         .returning(move |_| Ok(mock_response.clone()));
 
     let (app, _) = TestApp::full().with_team_repo(team_repo).empty();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| create_user("existing-admin", 1, true, conn).unwrap());
-    app.db(|conn| create_user("obsolete-admin", 2, true, conn).unwrap());
-    app.db(|conn| create_user("new-admin", 3, false, conn).unwrap());
-    app.db(|conn| create_user("unrelated-user", 42, false, conn).unwrap());
+    create_user("existing-admin", 1, true, &mut conn).unwrap();
+    create_user("obsolete-admin", 2, true, &mut conn).unwrap();
+    create_user("new-admin", 3, false, &mut conn).unwrap();
+    create_user("unrelated-user", 42, false, &mut conn).unwrap();
 
-    let admins = app.db(|conn| get_admins(conn).unwrap());
+    let admins = get_admins(&mut conn).unwrap();
     let expected_admins = vec![("existing-admin".into(), 1), ("obsolete-admin".into(), 2)];
     assert_eq!(admins, expected_admins);
 
-    app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
+    SyncAdmins.enqueue(&mut conn).unwrap();
     app.run_pending_background_jobs().await;
 
-    let admins = app.db(|conn| get_admins(conn).unwrap());
+    let admins = get_admins(&mut conn).unwrap();
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
     assert_eq!(admins, expected_admins);
 
@@ -43,7 +44,7 @@ async fn test_sync_admins_job() {
 
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
-    app.db(|conn| SyncAdmins.enqueue(conn).unwrap());
+    SyncAdmins.enqueue(&mut conn).unwrap();
     app.run_pending_background_jobs().await;
 
     assert_eq!(app.emails().len(), 2);

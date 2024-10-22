@@ -82,20 +82,21 @@ async fn yank_ratelimit_hit() {
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
 
+    let mut conn = app.db_conn();
+
     // Set up the database so it'll think we've massively rate-limited ourselves.
-    app.db(|conn| {
-        // Ratelimit bucket should next refill in about a year
-        let far_future = Utc::now().naive_utc() + Duration::from_secs(60 * 60 * 24 * 365);
-        diesel::insert_into(publish_limit_buckets::table)
-            .values((
-                publish_limit_buckets::user_id.eq(token.as_model().user_id),
-                publish_limit_buckets::action.eq(LimitedAction::YankUnyank),
-                publish_limit_buckets::tokens.eq(0),
-                publish_limit_buckets::last_refill.eq(far_future),
-            ))
-            .execute(conn)
-            .expect("Failed to set fake ratelimit")
-    });
+
+    // Ratelimit bucket should next refill in about a year
+    let far_future = Utc::now().naive_utc() + Duration::from_secs(60 * 60 * 24 * 365);
+    diesel::insert_into(publish_limit_buckets::table)
+        .values((
+            publish_limit_buckets::user_id.eq(token.as_model().user_id),
+            publish_limit_buckets::action.eq(LimitedAction::YankUnyank),
+            publish_limit_buckets::tokens.eq(0),
+            publish_limit_buckets::last_refill.eq(far_future),
+        ))
+        .execute(&mut conn)
+        .expect("Failed to set fake ratelimit");
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("yankable", "1.0.0");
@@ -116,20 +117,21 @@ async fn yank_ratelimit_expires() {
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
 
+    let mut conn = app.db_conn();
+
     // Set up the database so it'll think we've massively ratelimited ourselves
-    app.db(|conn| {
-        // Ratelimit bucket should next refill right now!
-        let just_now = Utc::now().naive_utc() - Duration::from_millis(500);
-        diesel::insert_into(publish_limit_buckets::table)
-            .values((
-                publish_limit_buckets::user_id.eq(token.as_model().user_id),
-                publish_limit_buckets::action.eq(LimitedAction::YankUnyank),
-                publish_limit_buckets::tokens.eq(0),
-                publish_limit_buckets::last_refill.eq(just_now),
-            ))
-            .execute(conn)
-            .expect("Failed to set fake ratelimit")
-    });
+
+    // Ratelimit bucket should next refill right now!
+    let just_now = Utc::now().naive_utc() - Duration::from_millis(500);
+    diesel::insert_into(publish_limit_buckets::table)
+        .values((
+            publish_limit_buckets::user_id.eq(token.as_model().user_id),
+            publish_limit_buckets::action.eq(LimitedAction::YankUnyank),
+            publish_limit_buckets::tokens.eq(0),
+            publish_limit_buckets::last_refill.eq(just_now),
+        ))
+        .execute(&mut conn)
+        .expect("Failed to set fake ratelimit");
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("yankable", "1.0.0");

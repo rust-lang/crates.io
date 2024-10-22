@@ -71,11 +71,10 @@ fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstrain
     use diesel::sql_query;
 
     let (app, _) = TestApp::init().empty();
+    let mut conn = app.db_conn();
 
-    app.db(|conn| {
-        sql_query(include_str!("load_foreign_key_constraints.sql"))
-            .bind::<Text, _>(column_name)
-            .load(conn)
-            .unwrap()
-    })
+    sql_query(include_str!("load_foreign_key_constraints.sql"))
+        .bind::<Text, _>(column_name)
+        .load(&mut conn)
+        .unwrap()
 }

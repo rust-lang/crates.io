@@ -41,12 +41,13 @@ async fn create_token_no_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_exceeded_tokens_per_user() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
     let id = user.as_model().id;
-    app.db(|conn| {
-        for i in 0..1000 {
-            assert_ok!(ApiToken::insert(conn, id, &format!("token {i}")));
-        }
-    });
+
+    for i in 0..1000 {
+        assert_ok!(ApiToken::insert(&mut conn, id, &format!("token {i}")));
+    }
+
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"maximum tokens per user is: 500"}]}"#);
@@ -56,6 +57,7 @@ async fn create_token_exceeded_tokens_per_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_success() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -66,11 +68,10 @@ async fn create_token_success() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> = app.db(|conn| {
-        assert_ok!(ApiToken::belonging_to(user.as_model())
-            .select(ApiToken::as_select())
-            .load(conn))
-    });
+    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+        .select(ApiToken::as_select())
+        .load(&mut conn));
+
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
@@ -119,6 +120,7 @@ async fn cannot_create_token_with_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_scopes() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
     let json = json!({
         "api_token": {
@@ -139,11 +141,10 @@ async fn create_token_with_scopes() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> = app.db(|conn| {
-        assert_ok!(ApiToken::belonging_to(user.as_model())
-            .select(ApiToken::as_select())
-            .load(conn))
-    });
+    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+        .select(ApiToken::as_select())
+        .load(&mut conn));
+
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
@@ -166,6 +167,7 @@ async fn create_token_with_scopes() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_null_scopes() {
     let (app, _, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
 
     let json = json!({
         "api_token": {
@@ -186,11 +188,10 @@ async fn create_token_with_null_scopes() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    let tokens: Vec<ApiToken> = app.db(|conn| {
-        assert_ok!(ApiToken::belonging_to(user.as_model())
-            .select(ApiToken::as_select())
-            .load(conn))
-    });
+    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
+        .select(ApiToken::as_select())
+        .load(&mut conn));
+
     assert_that!(tokens, len(eq(1)));
     assert_eq!(tokens[0].name, "bar");
     assert!(!tokens[0].revoked);
