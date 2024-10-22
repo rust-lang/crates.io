@@ -1,9 +1,8 @@
+use crate::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
 use anyhow::Context;
+use serde::Serialize;
 use std::{fs::File, path::Path};
-
-use crate::worker::jobs::dump_db::configuration::{
-    ColumnVisibility, TableConfig, VisibilityConfig,
-};
+use tracing::debug;
 
 pub fn gen_scripts(export_script: &Path, import_script: &Path) -> anyhow::Result<()> {
     let config = VisibilityConfig::get();
@@ -119,7 +118,7 @@ impl VisibilityConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
     use diesel::prelude::*;
     use std::collections::HashSet;
     use std::iter::FromIterator;
@@ -128,8 +127,10 @@ mod tests {
     /// test database.
     #[test]
     fn check_visibility_config() {
-        let (_test_db, conn) = &mut test_db_connection();
-        let db_columns = HashSet::<Column>::from_iter(get_db_columns(conn));
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.connect();
+
+        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&mut conn));
         let vis_columns = VisibilityConfig::get()
             .0
             .iter()
@@ -167,6 +168,8 @@ mod tests {
     }
 
     mod information_schema {
+        use diesel::table;
+
         table! {
             information_schema.columns (table_schema, table_name, column_name) {
                 table_schema -> Text,

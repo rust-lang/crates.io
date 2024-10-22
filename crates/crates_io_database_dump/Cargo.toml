@@ -1,0 +1,26 @@
+[package]
+name = "crates_io_database_dump"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = "=1.0.90"
+chrono = { version = "=0.4.38", default-features = false, features = ["clock", "serde"] }
+flate2 = "=1.0.34"
+minijinja = "=2.3.1"
+serde = { version = "=1.0.210", features = ["derive"] }
+serde_json = "=1.0.132"
+tar = "=0.4.42"
+tempfile = "=3.13.0"
+toml = "=0.8.19"
+tracing = "=0.1.40"
+zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+crates_io_test_db = { path = "../crates_io_test_db" }
+diesel = "=2.2.4"
+insta = { version = "=1.40.0", features = ["glob"] }

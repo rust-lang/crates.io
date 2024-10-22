@@ -1,8 +1,7 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::TestApp;
-use crate::worker::jobs::{dump_db, DumpDb};
+use crate::worker::jobs::DumpDb;
 use bytes::Buf;
-use crates_io_test_db::TestDatabase;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};
@@ -105,41 +104,4 @@ fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
         .map(|entry| entry.unwrap().path().unwrap().display().to_string())
         .map(|path| PATH_DATE_RE.replace(&path, "YYYY-MM-DD-HHMMSS").to_string())
         .collect()
-}
-
-#[test]
-fn dump_db_and_reimport_dump() {
-    crate::util::tracing::init_for_test();
-
-    let db_one = TestDatabase::new();
-
-    // TODO prefill database with some data
-
-    let directory = dump_db::DumpDirectory::create().unwrap();
-    directory.populate(db_one.url()).unwrap();
-
-    let db_two = TestDatabase::empty();
-
-    let schema_script = directory.path().join("schema.sql");
-    dump_db::run_psql(&schema_script, db_two.url()).unwrap();
-
-    let import_script = directory.path().join("import.sql");
-    dump_db::run_psql(&import_script, db_two.url()).unwrap();
-
-    // TODO: Consistency checks on the re-imported data?
-}
-
-#[test]
-fn test_sql_scripts() {
-    crate::util::tracing::init_for_test();
-
-    let db = TestDatabase::new();
-
-    let directory = dump_db::DumpDirectory::create().unwrap();
-    directory.populate(db.url()).unwrap();
-
-    insta::glob!(directory.path(), "{import,export}.sql", |path| {
-        let content = std::fs::read_to_string(path).unwrap();
-        assert_snapshot!(content);
-    });
 }
