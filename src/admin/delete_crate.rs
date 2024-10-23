@@ -1,13 +1,16 @@
-use crate::schema::{crate_owners, teams, users};
+use crate::schema::crate_downloads;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
+use colored::Colorize;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
-use diesel::sql_types::Text;
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
+use diesel::sql_types::{Array, BigInt, Text};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use futures_util::TryStreamExt;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -33,39 +36,60 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut crate_names = opts.crate_names;
     crate_names.sort();
 
-    let query_result = crates::table
+    let existing_crates = crates::table
+        .inner_join(crate_downloads::table)
+        .filter(crates::name.eq_any(&crate_names))
         .select((
             crates::name,
             crates::id,
-            sql::<Text>(
-                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+            crate_downloads::downloads,
+            sql::<Array<Text>>(
+                r#"
+                ARRAY(
+                    SELECT
+                        CASE WHEN crate_owners.owner_kind = 1 THEN
+                            teams.login
+                        ELSE
+                            users.gh_login
+                        END
+                    FROM crate_owners
+                    LEFT JOIN teams ON teams.id = crate_owners.owner_id
+                    LEFT JOIN users ON users.id = crate_owners.owner_id
+                    WHERE crate_owners.crate_id = crates.id
+                )
+                "#,
+            ),
+            sql::<BigInt>(
+                // This is an incorrect reverse dependencies query, since it
+                // includes the `dependencies` rows for all versions, not just
+                // the "default version" per crate. However, it's good enough
+                // for our purposes here.
+                r#"
+                (
+                    SELECT COUNT(*)
+                    FROM dependencies
+                    WHERE dependencies.crate_id = crates.id
+                )
+                "#,
             ),
         ))
-        .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
-        .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
-        .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
-        .filter(crates::name.eq_any(&crate_names))
-        .load::<(String, i32, String)>(&mut conn)
+        .load_stream::<(String, i32, i64, Vec<String>, i64)>(&mut conn)
         .await
-        .context("Failed to look up crate name from the database")?;
-
-    let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
-    for (name, id, login) in query_result {
-        let entry = existing_crates
-            .entry(name)
-            .or_insert_with(|| (id, Vec::new()));
-
-        entry.1.push(login);
-    }
+        .context("Failed to look up crate name from the database")?
+        .try_fold(
+            HashMap::new(),
+            |mut map, (name, id, downloads, owners, rev_deps)| {
+                map.insert(name, CrateInfo::new(id, downloads, owners, rev_deps));
+                futures_util::future::ready(Ok(map))
+            },
+        )
+        .await?;
 
     println!("Deleting the following crates:");
     println!();
     for name in &crate_names {
         match existing_crates.get(name) {
-            Some((id, owners)) => {
-                let owners = owners.join(", ");
-                println!(" - {name} (id={id}, owners={owners})");
-            }
+            Some(info) => println!(" - {} ({info})", name.bold()),
             None => println!(" - {name} (⚠️ crate not found)"),
         }
     }
@@ -78,7 +102,9 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     for name in &crate_names {
-        if let Some((id, _)) = existing_crates.get(name) {
+        if let Some(crate_info) = existing_crates.get(name) {
+            let id = crate_info.id;
+
             info!("{name}: Deleting crate from the database…");
             if let Err(error) = diesel::delete(crates::table.find(id))
                 .execute(&mut conn)
@@ -109,4 +135,42 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct CrateInfo {
+    id: i32,
+    downloads: i64,
+    owners: Vec<String>,
+    rev_deps: i64,
+}
+
+impl CrateInfo {
+    pub fn new(id: i32, downloads: i64, owners: Vec<String>, rev_deps: i64) -> Self {
+        Self {
+            id,
+            downloads,
+            owners,
+            rev_deps,
+        }
+    }
+}
+
+impl Display for CrateInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let id = self.id;
+        let owners = self.owners.join(", ");
+
+        write!(f, "id={id}, owners={owners}")?;
+        if self.downloads > 5000 {
+            let downloads = format!("downloads={}", self.downloads).bright_red().bold();
+            write!(f, ", {downloads}")?;
+        }
+        if self.rev_deps > 0 {
+            let rev_deps = format!("rev_deps={}", self.rev_deps).bright_red().bold();
+            write!(f, ", {rev_deps}")?;
+        }
+
+        Ok(())
+    }
 }
