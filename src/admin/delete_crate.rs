@@ -1,4 +1,4 @@
-use crate::schema::{crate_owners, teams, users};
+use crate::schema::{crate_downloads, crate_owners, teams, users};
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
@@ -36,26 +36,28 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     crate_names.sort();
 
     let query_result = crates::table
-        .select((
-            crates::name,
-            crates::id,
-            sql::<Text>(
-                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
-            ),
-        ))
+        .inner_join(crate_downloads::table)
         .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
         .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
         .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
         .filter(crates::name.eq_any(&crate_names))
-        .load::<(String, i32, String)>(&mut conn)
+        .select((
+            crates::name,
+            crates::id,
+            crate_downloads::downloads,
+            sql::<Text>(
+                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+            ),
+        ))
+        .load::<(String, i32, i64, String)>(&mut conn)
         .await
         .context("Failed to look up crate name from the database")?;
 
     let mut existing_crates: HashMap<String, CrateInfo> = HashMap::new();
-    for (name, id, login) in query_result {
+    for (name, id, downloads, login) in query_result {
         let entry = existing_crates
             .entry(name)
-            .or_insert_with(|| CrateInfo::new(id));
+            .or_insert_with(|| CrateInfo::new(id, downloads));
 
         entry.owners.push(login);
     }
@@ -115,13 +117,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 #[derive(Debug, Clone)]
 struct CrateInfo {
     id: i32,
+    downloads: i64,
     owners: Vec<String>,
 }
 
 impl CrateInfo {
-    pub fn new(id: i32) -> Self {
-        let owners = Vec::with_capacity(1);
-        Self { id, owners }
+    pub fn new(id: i32, downloads: i64) -> Self {
+        Self {
+            id,
+            downloads,
+            owners: Vec::with_capacity(1),
+        }
     }
 }
 
@@ -129,6 +135,13 @@ impl Display for CrateInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let id = self.id;
         let owners = self.owners.join(", ");
-        write!(f, "id={id}, owners={owners}")
+
+        write!(f, "id={id}, owners={owners}")?;
+        if self.downloads > 5000 {
+            let downloads = format!("downloads={}", self.downloads).bright_red().bold();
+            write!(f, ", {downloads}")?;
+        }
+
+        Ok(())
     }
 }
