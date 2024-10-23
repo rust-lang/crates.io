@@ -8,6 +8,7 @@ use diesel::sql_types::Text;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
 use diesel_async::RunQueryDsl;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -49,23 +50,20 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .await
         .context("Failed to look up crate name from the database")?;
 
-    let mut existing_crates: HashMap<String, (i32, Vec<String>)> = HashMap::new();
+    let mut existing_crates: HashMap<String, CrateInfo> = HashMap::new();
     for (name, id, login) in query_result {
         let entry = existing_crates
             .entry(name)
-            .or_insert_with(|| (id, Vec::new()));
+            .or_insert_with(|| CrateInfo::new(id));
 
-        entry.1.push(login);
+        entry.owners.push(login);
     }
 
     println!("Deleting the following crates:");
     println!();
     for name in &crate_names {
         match existing_crates.get(name) {
-            Some((id, owners)) => {
-                let owners = owners.join(", ");
-                println!(" - {name} (id={id}, owners={owners})");
-            }
+            Some(info) => println!(" - {name} ({info})"),
             None => println!(" - {name} (⚠️ crate not found)"),
         }
     }
@@ -78,7 +76,9 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     for name in &crate_names {
-        if let Some((id, _)) = existing_crates.get(name) {
+        if let Some(crate_info) = existing_crates.get(name) {
+            let id = crate_info.id;
+
             info!("{name}: Deleting crate from the database…");
             if let Err(error) = diesel::delete(crates::table.find(id))
                 .execute(&mut conn)
@@ -109,4 +109,25 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct CrateInfo {
+    id: i32,
+    owners: Vec<String>,
+}
+
+impl CrateInfo {
+    pub fn new(id: i32) -> Self {
+        let owners = Vec::with_capacity(1);
+        Self { id, owners }
+    }
+}
+
+impl Display for CrateInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let id = self.id;
+        let owners = self.owners.join(", ");
+        write!(f, "id={id}, owners={owners}")
+    }
 }
