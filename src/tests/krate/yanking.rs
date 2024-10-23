@@ -5,7 +5,8 @@ use crate::tests::routes::crates::versions::yank_unyank::YankRequestHelper;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::VersionResponse;
 use chrono::Utc;
-use diesel::{ExpressionMethods, RunQueryDsl};
+use diesel::ExpressionMethods;
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -82,7 +83,7 @@ async fn yank_ratelimit_hit() {
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Set up the database so it'll think we've massively rate-limited ourselves.
 
@@ -96,6 +97,7 @@ async fn yank_ratelimit_hit() {
             publish_limit_buckets::last_refill.eq(far_future),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to set fake ratelimit");
 
     // Upload a new crate
@@ -117,7 +119,7 @@ async fn yank_ratelimit_expires() {
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
         .with_token();
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 
@@ -131,6 +133,7 @@ async fn yank_ratelimit_expires() {
             publish_limit_buckets::last_refill.eq(just_now),
         ))
         .execute(&mut conn)
+        .await
         .expect("Failed to set fake ratelimit");
 
     // Upload a new crate

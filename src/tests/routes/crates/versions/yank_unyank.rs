@@ -129,6 +129,7 @@ mod auth {
     use crate::tests::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
     use diesel::prelude::*;
+    use diesel_async::RunQueryDsl;
     use insta::assert_snapshot;
 
     const CRATE_NAME: &str = "fyk";
@@ -143,8 +144,8 @@ mod auth {
         (app, anon, cookie)
     }
 
-    fn is_yanked(app: &TestApp) -> bool {
-        let mut conn = app.db_conn();
+    async fn is_yanked(app: &TestApp) -> bool {
+        let mut conn = app.async_db_conn().await;
 
         versions::table
             .inner_join(crates::table)
@@ -152,6 +153,7 @@ mod auth {
             .filter(crates::name.eq(CRATE_NAME))
             .filter(versions::num.eq(CRATE_VERSION))
             .get_result(&mut conn)
+            .await
             .unwrap()
     }
 
@@ -162,12 +164,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -177,12 +179,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -193,12 +195,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -212,12 +214,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -231,12 +233,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -248,12 +250,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -269,12 +271,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -290,12 +292,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -312,12 +314,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -333,12 +335,12 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -354,34 +356,35 @@ mod auth {
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn admin() {
         let (app, _, _) = prepare().await;
-        let mut conn = app.db_conn();
+        let mut conn = app.async_db_conn().await;
 
         let admin = app.db_new_user("admin");
 
         diesel::update(admin.as_model())
             .set(users::is_admin.eq(true))
             .execute(&mut conn)
+            .await
             .unwrap();
 
         let response = admin.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(is_yanked(&app));
+        assert!(is_yanked(&app).await);
 
         let response = admin.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.json(), json!({ "ok": true }));
-        assert!(!is_yanked(&app));
+        assert!(!is_yanked(&app).await);
     }
 }

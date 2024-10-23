@@ -2,6 +2,7 @@ use crate::models::ApiToken;
 use crate::schema::api_tokens;
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 #[derive(Deserialize)]
 pub struct RevokedResponse {}
@@ -15,15 +16,18 @@ async fn revoke_token_non_existing() {
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_doesnt_revoke_other_users_token() {
     let (app, _, user1, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user1 = user1.as_model();
     let token = token.as_model();
     let user2 = app.db_new_user("baz");
 
     // List tokens for first user contains the token
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1)
-        .select(ApiToken::as_select())
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user1)
+            .select(ApiToken::as_select())
+            .load(&mut conn)
+            .await
+    );
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, token.name);
 
@@ -34,9 +38,12 @@ async fn revoke_token_doesnt_revoke_other_users_token() {
         .good();
 
     // List tokens for first user still contains the token
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user1)
-        .select(ApiToken::as_select())
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user1)
+            .select(ApiToken::as_select())
+            .load(&mut conn)
+            .await
+    );
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, token.name);
 }
@@ -44,12 +51,15 @@ async fn revoke_token_doesnt_revoke_other_users_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_success() {
     let (app, _, user, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // List tokens contains the token
-    let tokens: Vec<ApiToken> = assert_ok!(ApiToken::belonging_to(user.as_model())
-        .select(ApiToken::as_select())
-        .load(&mut conn));
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(&mut conn)
+            .await
+    );
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].name, token.as_model().name);
 
@@ -63,6 +73,7 @@ async fn revoke_token_success() {
     let count = ApiToken::belonging_to(user.as_model())
         .filter(api_tokens::revoked.eq(false))
         .count()
-        .get_result(&mut conn);
+        .get_result(&mut conn)
+        .await;
     assert_eq!(count, Ok(0));
 }

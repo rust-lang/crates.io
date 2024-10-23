@@ -4,12 +4,13 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crate::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
     let (app, _, _, token) = TestApp::full().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let upstream = app.upstream_index();
 
     // Add a new crate
@@ -49,11 +50,23 @@ async fn index_smoke_test() {
 
     use crate::schema::crates;
 
-    let krate: Crate = assert_ok!(Crate::by_name("serde").first(&mut conn));
-    assert_ok!(diesel::delete(crates::table.find(krate.id)).execute(&mut conn));
+    let krate: Crate = assert_ok!(Crate::by_name("serde").first(&mut conn).await);
+    assert_ok!(
+        diesel::delete(crates::table.find(krate.id))
+            .execute(&mut conn)
+            .await
+    );
 
-    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&mut conn));
-    assert_ok!(jobs::SyncToSparseIndex::new("serde").enqueue(&mut conn));
+    assert_ok!(
+        jobs::SyncToGitIndex::new("serde")
+            .async_enqueue(&mut conn)
+            .await
+    );
+    assert_ok!(
+        jobs::SyncToSparseIndex::new("serde")
+            .async_enqueue(&mut conn)
+            .await
+    );
 
     app.run_pending_background_jobs().await;
     assert_ok_eq!(
