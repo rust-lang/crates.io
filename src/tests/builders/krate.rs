@@ -156,11 +156,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if !self.categories.is_empty() {
-            Category::update_crate(connection, &krate, &self.categories)?;
+            Category::update_crate(connection, krate.id, &self.categories)?;
         }
 
         if !self.keywords.is_empty() {
-            Keyword::update_crate(connection, &krate, &self.keywords)?;
+            Keyword::update_crate(connection, krate.id, &self.keywords)?;
         }
 
         if let Some(updated_at) = self.updated_at {

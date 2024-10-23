@@ -44,7 +44,7 @@ impl Category {
 
     pub fn update_crate(
         conn: &mut impl Conn,
-        krate: &Crate,
+        crate_id: i32,
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
         conn.transaction(|conn| {
@@ -60,14 +60,18 @@ impl Category {
                 .iter()
                 .map(|c| CrateCategory {
                     category_id: c.id,
-                    crate_id: krate.id,
+                    crate_id,
                 })
                 .collect::<Vec<_>>();
 
-            delete(CrateCategory::belonging_to(krate)).execute(conn)?;
+            delete(crates_categories::table)
+                .filter(crates_categories::crate_id.eq(crate_id))
+                .execute(conn)?;
+
             insert_into(crates_categories::table)
                 .values(&crate_categories)
                 .execute(conn)?;
+
             Ok(invalid_categories)
         })
     }

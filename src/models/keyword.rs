@@ -61,20 +61,26 @@ impl Keyword {
             && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
-    pub fn update_crate(conn: &mut impl Conn, krate: &Crate, keywords: &[&str]) -> QueryResult<()> {
+    pub fn update_crate(conn: &mut impl Conn, crate_id: i32, keywords: &[&str]) -> QueryResult<()> {
         conn.transaction(|conn| {
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
-            diesel::delete(CrateKeyword::belonging_to(krate)).execute(conn)?;
+
+            diesel::delete(crates_keywords::table)
+                .filter(crates_keywords::crate_id.eq(crate_id))
+                .execute(conn)?;
+
             let crate_keywords = keywords
                 .into_iter()
                 .map(|kw| CrateKeyword {
-                    crate_id: krate.id,
+                    crate_id,
                     keyword_id: kw.id,
                 })
                 .collect::<Vec<_>>();
+
             diesel::insert_into(crates_keywords::table)
                 .values(&crate_keywords)
                 .execute(conn)?;
+
             Ok(())
         })
     }
