@@ -208,6 +208,8 @@ pub struct EncodableCrate {
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i64,
     pub recent_downloads: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_version: Option<String>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
     pub newest_version: String, // Most recently updated version, which may not be max
@@ -224,6 +226,7 @@ impl EncodableCrate {
     #[allow(clippy::too_many_arguments)]
     pub fn from(
         krate: Crate,
+        default_version: Option<&str>,
         top_versions: Option<&TopVersions>,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
@@ -253,6 +256,8 @@ impl EncodableCrate {
         let homepage = remove_blocked_urls(homepage);
         let documentation = remove_blocked_urls(documentation);
         let repository = remove_blocked_urls(repository);
+
+        let default_version = default_version.map(ToString::to_string);
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
@@ -289,6 +294,7 @@ impl EncodableCrate {
             keywords: keyword_ids,
             categories: category_ids,
             badges,
+            default_version,
             max_version,
             newest_version,
             max_stable_version,
@@ -310,6 +316,7 @@ impl EncodableCrate {
 
     pub fn from_minimal(
         krate: Crate,
+        default_version: Option<&str>,
         top_versions: Option<&TopVersions>,
         badges: Option<Vec<()>>,
         exact_match: bool,
@@ -318,6 +325,7 @@ impl EncodableCrate {
     ) -> Self {
         Self::from(
             krate,
+            default_version,
             top_versions,
             None,
             None,
@@ -800,6 +808,7 @@ mod tests {
                 .unwrap(),
             downloads: 0,
             recent_downloads: None,
+            default_version: None,
             max_version: "".to_string(),
             newest_version: "".to_string(),
             max_stable_version: None,

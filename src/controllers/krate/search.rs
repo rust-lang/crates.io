@@ -228,6 +228,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .map(|(max_version, (krate, perfect_match, total, recent, _))| {
                 EncodableCrate::from_minimal(
                     krate,
+                    None,
                     Some(&max_version),
                     Some(vec![]),
                     perfect_match,

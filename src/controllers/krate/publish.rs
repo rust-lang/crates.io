@@ -505,7 +505,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             Ok(Json(GoodCrate {
-                krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, downloads, None),
+                krate: EncodableCrate::from_minimal(
+                    krate,
+                    None,
+                    Some(&top_versions),
+                    None,
+                    false,
+                    downloads,
+                    None,
+                ),
                 warnings,
             }))
         })

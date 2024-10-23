@@ -37,6 +37,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 .map(|(top_versions, (krate, total, recent))| {
                     Ok(EncodableCrate::from_minimal(
                         krate,
+                        None,
                         Some(&top_versions),
                         None,
                         false,

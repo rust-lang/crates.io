@@ -120,6 +120,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
 
         let encodable_crate = EncodableCrate::from(
             krate.clone(),
+            None,
             top_versions.as_ref(),
             ids,
             kws.as_deref(),
