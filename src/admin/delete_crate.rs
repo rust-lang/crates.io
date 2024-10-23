@@ -1,13 +1,14 @@
-use crate::schema::{crate_downloads, crate_owners, teams, users};
+use crate::schema::crate_downloads;
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
 use colored::Colorize;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
-use diesel::sql_types::Text;
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl};
+use diesel::sql_types::{Array, Text};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use futures_util::TryStreamExt;
 use std::collections::HashMap;
 use std::fmt::Display;
 
@@ -35,32 +36,38 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut crate_names = opts.crate_names;
     crate_names.sort();
 
-    let query_result = crates::table
+    let existing_crates = crates::table
         .inner_join(crate_downloads::table)
-        .left_join(crate_owners::table.on(crate_owners::crate_id.eq(crates::id)))
-        .left_join(teams::table.on(teams::id.eq(crate_owners::owner_id)))
-        .left_join(users::table.on(users::id.eq(crate_owners::owner_id)))
         .filter(crates::name.eq_any(&crate_names))
         .select((
             crates::name,
             crates::id,
             crate_downloads::downloads,
-            sql::<Text>(
-                "CASE WHEN crate_owners.owner_kind = 1 THEN teams.login ELSE users.gh_login END",
+            sql::<Array<Text>>(
+                r#"
+                ARRAY(
+                    SELECT
+                        CASE WHEN crate_owners.owner_kind = 1 THEN
+                            teams.login
+                        ELSE
+                            users.gh_login
+                        END
+                    FROM crate_owners
+                    LEFT JOIN teams ON teams.id = crate_owners.owner_id
+                    LEFT JOIN users ON users.id = crate_owners.owner_id
+                    WHERE crate_owners.crate_id = crates.id
+                )
+                "#,
             ),
         ))
-        .load::<(String, i32, i64, String)>(&mut conn)
+        .load_stream::<(String, i32, i64, Vec<String>)>(&mut conn)
         .await
-        .context("Failed to look up crate name from the database")?;
-
-    let mut existing_crates: HashMap<String, CrateInfo> = HashMap::new();
-    for (name, id, downloads, login) in query_result {
-        let entry = existing_crates
-            .entry(name)
-            .or_insert_with(|| CrateInfo::new(id, downloads));
-
-        entry.owners.push(login);
-    }
+        .context("Failed to look up crate name from the database")?
+        .try_fold(HashMap::new(), |mut map, (name, id, downloads, owners)| {
+            map.insert(name, CrateInfo::new(id, downloads, owners));
+            futures_util::future::ready(Ok(map))
+        })
+        .await?;
 
     println!("Deleting the following crates:");
     println!();
@@ -122,11 +129,11 @@ struct CrateInfo {
 }
 
 impl CrateInfo {
-    pub fn new(id: i32, downloads: i64) -> Self {
+    pub fn new(id: i32, downloads: i64, owners: Vec<String>) -> Self {
         Self {
             id,
             downloads,
-            owners: Vec::with_capacity(1),
+            owners,
         }
     }
 }
