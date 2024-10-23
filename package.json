@@ -119,7 +119,7 @@
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-ember": "12.2.1",
     "eslint-plugin-ember-concurrency": "0.5.1",
-    "eslint-plugin-import-helpers": "1.3.1",
+    "eslint-plugin-import-helpers": "2.0.1",
     "eslint-plugin-prettier": "5.2.1",
     "eslint-plugin-qunit": "8.1.2",
     "eslint-plugin-qunit-dom": "0.2.0",
