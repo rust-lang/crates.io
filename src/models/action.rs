@@ -65,7 +65,7 @@ impl VersionOwnerAction {
 
     pub fn for_versions(
         conn: &mut impl Conn,
-        versions: &[Version],
+        versions: &[&Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)

@@ -85,10 +85,11 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .pages_pagination(PaginationOptions::builder().gather(&req)?);
         let data: Paginated<(Version, String, Option<User>)> = query.load(conn)?;
         let more = data.next_page_params().is_some();
-        let versions = data.iter().map(|(v, _, _)| v).cloned().collect::<Vec<_>>();
+        let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
+        let actions = VersionOwnerAction::for_versions(conn, &versions)?;
         let data = data
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
+            .zip(actions)
             .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
 
         let versions = data

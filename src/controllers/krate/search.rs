@@ -214,15 +214,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             )
         };
 
-        let perfect_matches = data.iter().map(|&(_, b, _, _, _)| b).collect::<Vec<_>>();
-        let downloads = data
-            .iter()
-            .map(|&(_, _, total, recent, _)| (total, recent.unwrap_or(0)))
-            .collect::<Vec<_>>();
-        let crates = data
-            .into_iter()
-            .map(|(c, _, _, _, _)| c)
-            .collect::<Vec<_>>();
+        let crates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
 
         let versions: Vec<Version> = info_span!("db.query", message = "SELECT ... FROM versions")
             .in_scope(|| crates.versions().load(conn))?;
@@ -232,17 +224,15 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .map(TopVersions::from_versions);
 
         let crates = versions
-            .zip(crates)
-            .zip(perfect_matches)
-            .zip(downloads)
-            .map(|(((max_version, krate), perfect_match), (total, recent))| {
+            .zip(data)
+            .map(|(max_version, (krate, perfect_match, total, recent, _))| {
                 EncodableCrate::from_minimal(
                     krate,
                     Some(&max_version),
                     Some(vec![]),
                     perfect_match,
                     total,
-                    Some(recent),
+                    Some(recent.unwrap_or(0)),
                 )
             })
             .collect::<Vec<_>>();

@@ -68,12 +68,12 @@ pub async fn versions(
             .data
             .iter()
             .map(|(v, _)| v)
-            .cloned()
             .collect::<Vec<_>>();
+        let actions = VersionOwnerAction::for_versions(conn, &versions)?;
         let versions = versions_and_publishers
             .data
             .into_iter()
-            .zip(VersionOwnerAction::for_versions(conn, &versions)?)
+            .zip(actions)
             .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
             .collect::<Vec<_>>();
 
