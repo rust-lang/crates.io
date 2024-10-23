@@ -494,6 +494,12 @@ impl CrateVersions for [Crate] {
     }
 }
 
+impl CrateVersions for [&Crate] {
+    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
+        Version::belonging_to(self).into_boxed()
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, thiserror::Error)]
 pub enum InvalidFeature {
     #[error("feature cannot be empty")]

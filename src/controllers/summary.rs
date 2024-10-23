@@ -27,21 +27,14 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             conn: &mut impl Conn,
             data: Vec<(Crate, i64, Option<i64>)>,
         ) -> AppResult<Vec<EncodableCrate>> {
-            let downloads = data
-                .iter()
-                .map(|&(_, total, recent)| (total, recent))
-                .collect::<Vec<_>>();
-
-            let krates = data.into_iter().map(|(c, _, _)| c).collect::<Vec<_>>();
-
+            let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
             let versions: Vec<Version> = krates.versions().load(conn)?;
             versions
                 .grouped_by(&krates)
                 .into_iter()
                 .map(TopVersions::from_versions)
-                .zip(krates)
-                .zip(downloads)
-                .map(|((top_versions, krate), (total, recent))| {
+                .zip(data)
+                .map(|(top_versions, (krate, total, recent))| {
                     Ok(EncodableCrate::from_minimal(
                         krate,
                         Some(&top_versions),
