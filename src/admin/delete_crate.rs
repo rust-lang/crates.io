@@ -5,7 +5,7 @@ use anyhow::Context;
 use colored::Colorize;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
-use diesel::sql_types::{Array, Text};
+use diesel::sql_types::{Array, BigInt, Text};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
@@ -59,14 +59,30 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 )
                 "#,
             ),
+            sql::<BigInt>(
+                // This is an incorrect reverse dependencies query, since it
+                // includes the `dependencies` rows for all versions, not just
+                // the "default version" per crate. However, it's good enough
+                // for our purposes here.
+                r#"
+                (
+                    SELECT COUNT(*)
+                    FROM dependencies
+                    WHERE dependencies.crate_id = crates.id
+                )
+                "#,
+            ),
         ))
-        .load_stream::<(String, i32, i64, Vec<String>)>(&mut conn)
+        .load_stream::<(String, i32, i64, Vec<String>, i64)>(&mut conn)
         .await
         .context("Failed to look up crate name from the database")?
-        .try_fold(HashMap::new(), |mut map, (name, id, downloads, owners)| {
-            map.insert(name, CrateInfo::new(id, downloads, owners));
-            futures_util::future::ready(Ok(map))
-        })
+        .try_fold(
+            HashMap::new(),
+            |mut map, (name, id, downloads, owners, rev_deps)| {
+                map.insert(name, CrateInfo::new(id, downloads, owners, rev_deps));
+                futures_util::future::ready(Ok(map))
+            },
+        )
         .await?;
 
     println!("Deleting the following crates:");
@@ -126,14 +142,16 @@ struct CrateInfo {
     id: i32,
     downloads: i64,
     owners: Vec<String>,
+    rev_deps: i64,
 }
 
 impl CrateInfo {
-    pub fn new(id: i32, downloads: i64, owners: Vec<String>) -> Self {
+    pub fn new(id: i32, downloads: i64, owners: Vec<String>, rev_deps: i64) -> Self {
         Self {
             id,
             downloads,
             owners,
+            rev_deps,
         }
     }
 }
@@ -147,6 +165,10 @@ impl Display for CrateInfo {
         if self.downloads > 5000 {
             let downloads = format!("downloads={}", self.downloads).bright_red().bold();
             write!(f, ", {downloads}")?;
+        }
+        if self.rev_deps > 0 {
+            let rev_deps = format!("rev_deps={}", self.rev_deps).bright_red().bold();
+            write!(f, ", {rev_deps}")?;
         }
 
         Ok(())
