@@ -2,6 +2,7 @@ use crate::schema::{crate_owners, teams, users};
 use crate::worker::jobs;
 use crate::{admin::dialoguer, db, schema::crates};
 use anyhow::Context;
+use colored::Colorize;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::sql_types::Text;
@@ -63,7 +64,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     println!();
     for name in &crate_names {
         match existing_crates.get(name) {
-            Some(info) => println!(" - {name} ({info})"),
+            Some(info) => println!(" - {} ({info})", name.bold()),
             None => println!(" - {name} (⚠️ crate not found)"),
         }
     }
