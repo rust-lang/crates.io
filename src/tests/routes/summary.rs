@@ -51,6 +51,7 @@ async fn summary_new_crates() {
 
         CrateBuilder::new("most_recent_downloads", user.id)
             .version(VersionBuilder::new("0.2.0"))
+            .version(VersionBuilder::new("0.2.1").yanked(true))
             .keyword("popular")
             .category("cat1")
             .downloads(5000)
@@ -59,6 +60,7 @@ async fn summary_new_crates() {
 
         CrateBuilder::new("just_updated", user.id)
             .version(VersionBuilder::new("0.1.0"))
+            .version(VersionBuilder::new("0.1.1").yanked(true))
             .version(VersionBuilder::new("0.1.2"))
             // update 'just_updated' krate. Others won't appear because updated_at == created_at.
             .updated_at(now_)
@@ -67,6 +69,7 @@ async fn summary_new_crates() {
         CrateBuilder::new("just_updated_patch", user.id)
             .version(VersionBuilder::new("0.1.0"))
             .version(VersionBuilder::new("0.2.0"))
+            .version(VersionBuilder::new("0.2.1").yanked(true))
             // Add a patch version be newer than the other versions, including the higher one.
             .version(VersionBuilder::new("0.1.1").created_at(now_plus_two))
             .updated_at(now_plus_two)
@@ -74,6 +77,7 @@ async fn summary_new_crates() {
 
         CrateBuilder::new("with_downloads", user.id)
             .version(VersionBuilder::new("0.3.0"))
+            .version(VersionBuilder::new("0.3.1").yanked(true))
             .keyword("popular")
             .downloads(1000)
             .expect_build(conn);
@@ -92,11 +96,19 @@ async fn summary_new_crates() {
     assert_eq!(json.num_crates, 5);
     assert_eq!(json.num_downloads, 6000);
     assert_eq!(json.most_downloaded[0].name, "most_recent_downloads");
+    assert_eq!(
+        json.most_downloaded[0].default_version,
+        Some("0.2.0".into())
+    );
     assert_eq!(json.most_downloaded[0].downloads, 5000);
     assert_eq!(json.most_downloaded[0].recent_downloads, Some(50));
     assert_eq!(
         json.most_recently_downloaded[0].name,
         "most_recent_downloads"
+    );
+    assert_eq!(
+        json.most_recently_downloaded[0].default_version,
+        Some("0.2.0".into())
     );
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(50));
     assert_eq!(json.popular_keywords[0].keyword, "popular");
@@ -104,13 +116,17 @@ async fn summary_new_crates() {
     assert_eq!(json.just_updated.len(), 2);
 
     assert_eq!(json.just_updated[0].name, "just_updated_patch");
+    assert_eq!(json.just_updated[0].default_version, Some("0.2.0".into()));
     assert_eq!(json.just_updated[0].max_version, "0.2.0");
     assert_eq!(json.just_updated[0].newest_version, "0.1.1");
 
     assert_eq!(json.just_updated[1].name, "just_updated");
+    assert_eq!(json.just_updated[1].default_version, Some("0.1.2".into()));
     assert_eq!(json.just_updated[1].max_version, "0.1.2");
     assert_eq!(json.just_updated[1].newest_version, "0.1.2");
 
+    assert_eq!(json.new_crates[0].name, "with_downloads");
+    assert_eq!(json.new_crates[0].default_version, Some("0.3.0".into()));
     assert_eq!(json.new_crates.len(), 5);
 }
 
@@ -132,6 +148,7 @@ async fn excluded_crate_id() {
 
     CrateBuilder::new("some_downloads", user.id)
         .version(VersionBuilder::new("0.1.0"))
+        .version(VersionBuilder::new("0.2.0").yanked(true))
         .description("description")
         .keyword("popular")
         .category("cat1")
@@ -151,9 +168,17 @@ async fn excluded_crate_id() {
 
     assert_eq!(json.most_downloaded.len(), 1);
     assert_eq!(json.most_downloaded[0].name, "some_downloads");
+    assert_eq!(
+        json.most_downloaded[0].default_version,
+        Some("0.1.0".into())
+    );
     assert_eq!(json.most_downloaded[0].downloads, 20);
 
     assert_eq!(json.most_recently_downloaded.len(), 1);
     assert_eq!(json.most_recently_downloaded[0].name, "some_downloads");
+    assert_eq!(
+        json.most_recently_downloaded[0].default_version,
+        Some("0.1.0".into())
+    );
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(10));
 }
