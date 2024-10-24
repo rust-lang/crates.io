@@ -38,7 +38,7 @@ pub mod faker {
         description: &str,
         user: &User,
         downloads: i32,
-    ) -> anyhow::Result<(Crate, Version)> {
+    ) -> anyhow::Result<Crate> {
         let krate = NewCrate {
             name,
             description: Some(description),
@@ -51,14 +51,14 @@ pub mod faker {
             .set(crate_downloads::downloads.eq(downloads as i64))
             .execute(conn)?;
 
-        let version = NewVersion::builder(krate.id, "1.0.0")
+        NewVersion::builder(krate.id, "1.0.0")
             .published_by(user.id)
             .checksum("0000000000000000000000000000000000000000000000000000000000000000")
             .build()
             .save(conn, "someone@example.com")
             .unwrap();
 
-        Ok((krate, version))
+        Ok(krate)
     }
 
     pub fn team(conn: &mut PgConnection, org: &str, team: &str) -> anyhow::Result<Owner> {
