@@ -263,6 +263,7 @@ mod tests {
                 versions::created_at.eq(publish_time),
                 versions::updated_at.eq(publish_time),
                 versions::checksum.eq("checksum"),
+                versions::crate_size.eq(0),
             ))
             .returning(versions::id)
             .get_result(conn);

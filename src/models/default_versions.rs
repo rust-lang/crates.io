@@ -256,6 +256,7 @@ mod tests {
                 versions::num.eq(num),
                 versions::num_no_build.eq(num),
                 versions::checksum.eq(""),
+                versions::crate_size.eq(0),
             ))
             .execute(conn)
             .unwrap();

@@ -521,6 +521,7 @@ mod tests {
                 versions::num.eq(version),
                 versions::num_no_build.eq(version),
                 versions::checksum.eq("checksum"),
+                versions::crate_size.eq(0),
             ))
             .execute(conn)
             .await
