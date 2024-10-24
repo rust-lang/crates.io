@@ -258,6 +258,10 @@ impl EncodableCrate {
         let repository = remove_blocked_urls(repository);
 
         let default_version = default_version.map(ToString::to_string);
+        if default_version.is_none() {
+            let message = format!("Crate `{name}` has no default version");
+            sentry::capture_message(&message, sentry::Level::Info);
+        }
 
         let max_version = top_versions
             .and_then(|v| v.highest.as_ref())
