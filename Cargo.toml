@@ -128,6 +128,6 @@ claims = "=0.7.1"
 diesel = { version = "=2.2.4", features = ["r2d2"] }
 googletest = "=0.12.0"
 insta = { version = "=1.40.0", features = ["glob", "json", "redactions"] }
-regex = "=1.11.0"
+regex = "=1.11.1"
 tokio = "=1.41.0"
 zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
