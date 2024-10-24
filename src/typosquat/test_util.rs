@@ -2,14 +2,14 @@ use diesel::{prelude::*, PgConnection};
 
 use crate::tests::util::github::next_gh_id;
 use crate::{
-    models::{
-        Crate, CrateOwner, NewCrate, NewTeam, NewUser, NewVersion, Owner, OwnerKind, User, Version,
-    },
-    schema::{crate_downloads, crate_owners, users},
+    models::{Crate, CrateOwner, NewTeam, NewUser, Owner, OwnerKind, User},
+    schema::{crate_owners, users},
 };
 
 pub mod faker {
     use super::*;
+    use crate::tests::builders::CrateBuilder;
+    use anyhow::anyhow;
 
     pub fn add_crate_to_team(
         conn: &mut PgConnection,
@@ -38,27 +38,13 @@ pub mod faker {
         description: &str,
         user: &User,
         downloads: i32,
-    ) -> anyhow::Result<(Crate, Version)> {
-        let krate = NewCrate {
-            name,
-            description: Some(description),
-            ..Default::default()
-        }
-        .create(conn, user.id)?;
-
-        diesel::update(crate_downloads::table)
-            .filter(crate_downloads::crate_id.eq(krate.id))
-            .set(crate_downloads::downloads.eq(downloads as i64))
-            .execute(conn)?;
-
-        let version = NewVersion::builder(krate.id, "1.0.0")
-            .published_by(user.id)
-            .checksum("0000000000000000000000000000000000000000000000000000000000000000")
-            .build()
-            .save(conn, "someone@example.com")
-            .unwrap();
-
-        Ok((krate, version))
+    ) -> anyhow::Result<Crate> {
+        CrateBuilder::new(name, user.id)
+            .description(description)
+            .downloads(downloads)
+            .version("1.0.0")
+            .build(conn)
+            .map_err(|err| anyhow!(err.to_string()))
     }
 
     pub fn team(conn: &mut PgConnection, org: &str, team: &str) -> anyhow::Result<Owner> {

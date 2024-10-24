@@ -183,8 +183,8 @@ mod tests {
 
         // Let's set up a team that owns both b and c, but not a.
         let not_the_a_team = faker::team(&mut conn, "org", "team")?;
-        faker::add_crate_to_team(&mut conn, &user_b, &top_b.0, &not_the_a_team)?;
-        faker::add_crate_to_team(&mut conn, &user_b, &not_top_c.0, &not_the_a_team)?;
+        faker::add_crate_to_team(&mut conn, &user_b, &top_b, &not_the_a_team)?;
+        faker::add_crate_to_team(&mut conn, &user_b, &not_top_c, &not_the_a_team)?;
 
         let top_crates = TopCrates::new(&mut conn, 2)?;
 

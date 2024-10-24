@@ -141,14 +141,14 @@ mod tests {
 
         // Now we'll create new crates: one problematic, one not so.
         let other_user = faker::user(&mut conn, "b")?;
-        let (angel, _version) = faker::crate_and_version(
+        let angel = faker::crate_and_version(
             &mut conn,
             "innocent-crate",
             "I'm just a simple, innocent crate",
             &other_user,
             0,
         )?;
-        let (demon, _version) = faker::crate_and_version(
+        let demon = faker::crate_and_version(
             &mut conn,
             "mycrate",
             "I'm even more innocent, obviously",
