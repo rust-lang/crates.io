@@ -713,6 +713,12 @@ async fn index_include_yanked() {
         assert_eq!(json.crates[1].name, "newest_yanked");
         assert_eq!(json.crates[2].name, "oldest_yanked");
         assert_eq!(json.crates[3].name, "unyanked");
+        assert_eq!(
+            default_versions_iter(&json.crates)
+                .flatten()
+                .collect::<Vec<_>>(),
+            ["2.0.0", "1.0.0", "2.0.0", "2.0.0",]
+        );
     }
 
     // Do not include fully yanked (all versions were yanked) crates
@@ -721,6 +727,12 @@ async fn index_include_yanked() {
         assert_eq!(json.crates[0].name, "newest_yanked");
         assert_eq!(json.crates[1].name, "oldest_yanked");
         assert_eq!(json.crates[2].name, "unyanked");
+        assert_eq!(
+            default_versions_iter(&json.crates)
+                .flatten()
+                .collect::<Vec<_>>(),
+            ["1.0.0", "2.0.0", "2.0.0",]
+        );
     }
 }
 
@@ -738,6 +750,7 @@ async fn yanked_versions_are_not_considered_for_max_version() {
 
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
+        assert_eq!(json.crates[0].default_version, Some("1.0.0".into()));
         assert_eq!(json.crates[0].max_version, "1.0.0");
     }
 }
@@ -759,6 +772,7 @@ async fn max_stable_version() {
 
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
+        assert_eq!(json.crates[0].default_version, Some("1.0.0".into()));
         assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
     }
 }
@@ -929,6 +943,9 @@ async fn pagination_links_included_if_applicable() {
         .iter()
         .all(|w| *w == 3));
     assert_eq!(page4.meta.total, 0);
+    for p in [page1, page2, page3, page4] {
+        assert!(default_versions_iter(&p.crates).all(Option::is_some));
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -960,6 +977,7 @@ async fn seek_based_pagination() {
             assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url);
             assert_eq!(resp.meta.total, 3);
+            assert!(default_versions_iter(&resp.crates).all(Option::is_some));
         } else {
             assert_that!(resp.crates, empty());
             assert_eq!(resp.meta.total, 0);
@@ -993,11 +1011,13 @@ async fn test_pages_work_even_with_seek_based_pagination() {
     let first = anon.search("per_page=1").await;
     assert!(first.meta.next_page.unwrap().contains("seek="));
     assert_eq!(first.meta.total, 3);
+    assert!(default_versions_iter(&first.crates).all(Option::is_some));
 
     // Calling with page=2 will revert to offset-based pagination
     let second = anon.search("page=2&per_page=1").await;
     assert!(second.meta.next_page.unwrap().contains("page=3"));
     assert_eq!(second.meta.total, 3);
+    assert!(default_versions_iter(&second.crates).all(Option::is_some));
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -1096,6 +1116,8 @@ async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::tests::
         .as_deref()
         .unwrap_or("seek=")
         .contains("seek="));
+    assert!(default_versions_iter(&offset.crates).all(Option::is_some));
+    assert!(default_versions_iter(&seek.crates).all(Option::is_some));
     [offset, seek]
 }
 
@@ -1126,6 +1148,7 @@ async fn page_with_seek<U: RequestHelper>(
             assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url.to_owned());
             assert_ne!(resp.meta.total, 0);
+            assert!(default_versions_iter(&resp.crates).all(Option::is_some));
         } else {
             assert_that!(resp.crates, empty());
             assert_eq!(resp.meta.total, 0);
@@ -1133,4 +1156,10 @@ async fn page_with_seek<U: RequestHelper>(
         results.push(resp);
     }
     (results, calls)
+}
+
+fn default_versions_iter(
+    crates: &[crate::tests::EncodableCrate],
+) -> impl Iterator<Item = &Option<String>> {
+    crates.iter().map(|c| &c.default_version)
 }

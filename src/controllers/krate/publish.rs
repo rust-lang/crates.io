@@ -392,6 +392,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .first(conn)
                 .optional()?;
 
+            let mut default_version = None;
             // Upsert the `default_value` determined by the existing `default_value` and the
             // published version. Note that this could potentially write an outdated version
             // (although this should not happen regularly), as we might be comparing to an
@@ -412,6 +413,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         .filter(default_versions::crate_id.eq(krate.id))
                         .set(default_versions::version_id.eq(version.id))
                         .execute(conn)?;
+                } else {
+                    default_version = Some(existing_default_version.num.to_string());
                 }
 
                 // Update the default version asynchronously in a background job
@@ -505,7 +508,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             };
 
             Ok(Json(GoodCrate {
-                krate: EncodableCrate::from_minimal(krate, Some(&top_versions), None, false, downloads, None),
+                krate: EncodableCrate::from_minimal(
+                    krate,
+                    default_version.or(Some(version_string)).as_deref(),
+                    Some(&top_versions),
+                    None,
+                    false,
+                    downloads,
+                    None,
+                ),
                 warnings,
             }))
         })
