@@ -6,8 +6,6 @@ use crates_io_index::features::FeaturesMap;
 use diesel::prelude::*;
 use serde::Deserialize;
 
-use crate::util::errors::{bad_request, AppResult};
-
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
 use crate::util::diesel::Conn;
@@ -85,7 +83,7 @@ pub struct NewVersion<'a> {
     #[builder(start_fn)]
     num: &'a str,
     #[builder(default = strip_build_metadata(num))]
-    num_no_build: &'a str,
+    pub num_no_build: &'a str,
     created_at: Option<&'a NaiveDateTime>,
     yanked: Option<bool>,
     #[builder(default = serde_json::Value::Object(Default::default()))]
@@ -102,21 +100,11 @@ pub struct NewVersion<'a> {
 }
 
 impl NewVersion<'_> {
-    pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> AppResult<Version> {
+    pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> QueryResult<Version> {
         use diesel::insert_into;
 
         conn.transaction(|conn| {
-            let version: Version = match insert_into(versions::table).values(self).get_result(conn)
-            {
-                Err(error) if is_unique_violation(&error) => {
-                    return Err(bad_request(format_args!(
-                        "crate version `{}` is already uploaded",
-                        self.num_no_build
-                    )));
-                }
-                Err(error) => return Err(error.into()),
-                Ok(version) => version,
-            };
+            let version: Version = insert_into(versions::table).values(self).get_result(conn)?;
 
             insert_into(versions_published_by::table)
                 .values((
@@ -134,11 +122,6 @@ fn strip_build_metadata(version: &str) -> &str {
         .split_once('+')
         .map(|parts| parts.0)
         .unwrap_or(version)
-}
-
-fn is_unique_violation(error: &diesel::result::Error) -> bool {
-    use diesel::result::{DatabaseErrorKind::UniqueViolation, Error};
-    matches!(error, Error::DatabaseError(UniqueViolation, _))
 }
 
 /// The highest version (semver order) and the most recently updated version.
