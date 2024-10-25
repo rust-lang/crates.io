@@ -10,7 +10,6 @@ use crate::util::errors::{bad_request, AppResult};
 
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
-use crate::sql::split_part;
 use crate::util::diesel::Conn;
 
 // Queryable has a custom implementation below
@@ -104,24 +103,20 @@ pub struct NewVersion<'a> {
 
 impl NewVersion<'_> {
     pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> AppResult<Version> {
-        use diesel::dsl::exists;
-        use diesel::{insert_into, select};
+        use diesel::insert_into;
 
         conn.transaction(|conn| {
-            let num_no_build = strip_build_metadata(self.num);
-
-            let already_uploaded = versions::table
-                .filter(versions::crate_id.eq(self.crate_id))
-                .filter(split_part(versions::num, "+", 1).eq(num_no_build));
-
-            if select(exists(already_uploaded)).get_result(conn)? {
-                return Err(bad_request(format_args!(
-                    "crate version `{}` is already uploaded",
-                    num_no_build
-                )));
-            }
-
-            let version: Version = insert_into(versions::table).values(self).get_result(conn)?;
+            let version: Version = match insert_into(versions::table).values(self).get_result(conn)
+            {
+                Err(error) if is_unique_violation(&error) => {
+                    return Err(bad_request(format_args!(
+                        "crate version `{}` is already uploaded",
+                        self.num_no_build
+                    )));
+                }
+                Err(error) => return Err(error.into()),
+                Ok(version) => version,
+            };
 
             insert_into(versions_published_by::table)
                 .values((
@@ -139,6 +134,11 @@ fn strip_build_metadata(version: &str) -> &str {
         .split_once('+')
         .map(|parts| parts.0)
         .unwrap_or(version)
+}
+
+fn is_unique_violation(error: &diesel::result::Error) -> bool {
+    use diesel::result::{DatabaseErrorKind::UniqueViolation, Error};
+    matches!(error, Error::DatabaseError(UniqueViolation, _))
 }
 
 /// The highest version (semver order) and the most recently updated version.
