@@ -87,6 +87,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             crate_downloads::downloads,
             recent_crate_downloads::downloads.nullable(),
             0_f32.into_sql::<Float>(),
+            versions::num.nullable(),
         );
 
         let mut seek: Option<Seek> = None;
@@ -94,6 +95,8 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .make_query(&req, conn)?
             .inner_join(crate_downloads::table)
             .left_join(recent_crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
             .select(selection);
 
         if let Some(q_string) = &filter_params.q_string {
@@ -113,6 +116,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         crate_downloads::downloads,
                         recent_crate_downloads::downloads.nullable(),
                         rank.clone(),
+                        versions::num.nullable(),
                     ));
                     seek = Some(Seek::Relevance);
                     query = query.then_order_by(rank.desc())
@@ -123,6 +127,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         crate_downloads::downloads,
                         recent_crate_downloads::downloads.nullable(),
                         0_f32.into_sql::<Float>(),
+                        versions::num.nullable(),
                     ));
                     seek = Some(Seek::Query);
                 }
@@ -225,16 +230,19 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
         let crates = versions
             .zip(data)
-            .map(|(max_version, (krate, perfect_match, total, recent, _))| {
-                EncodableCrate::from_minimal(
-                    krate,
-                    Some(&max_version),
-                    Some(vec![]),
-                    perfect_match,
-                    total,
-                    Some(recent.unwrap_or(0)),
-                )
-            })
+            .map(
+                |(max_version, (krate, perfect_match, total, recent, _, default_version))| {
+                    EncodableCrate::from_minimal(
+                        krate,
+                        default_version.as_deref(),
+                        Some(&max_version),
+                        Some(vec![]),
+                        perfect_match,
+                        total,
+                        Some(recent.unwrap_or(0)),
+                    )
+                },
+            )
             .collect::<Vec<_>>();
 
         Ok(Json(json!({
@@ -614,6 +622,7 @@ mod seek {
                 downloads,
                 recent_downloads,
                 rank,
+                _,
             ) = *record;
 
             match *self {
@@ -636,11 +645,18 @@ mod seek {
     }
 }
 
-type Record = (Crate, bool, i64, Option<i64>, f32);
+type Record = (Crate, bool, i64, Option<i64>, f32, Option<String>);
 
 type QuerySource = LeftJoinQuerySource<
-    InnerJoinQuerySource<crates::table, crate_downloads::table>,
-    recent_crate_downloads::table,
+    LeftJoinQuerySource<
+        LeftJoinQuerySource<
+            InnerJoinQuerySource<crates::table, crate_downloads::table>,
+            recent_crate_downloads::table,
+        >,
+        default_versions::table,
+    >,
+    versions::table,
+    diesel::dsl::Eq<default_versions::version_id, versions::id>,
 >;
 
 type BoxedCondition<'a> = Box<

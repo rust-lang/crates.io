@@ -7,6 +7,7 @@ expression: response.json()
     "badges": null,
     "categories": null,
     "created_at": "[datetime]",
+    "default_version": "1.0.0+foo",
     "description": "description",
     "documentation": null,
     "downloads": 0,

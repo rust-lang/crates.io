@@ -112,6 +112,37 @@ async fn new_krate_twice() {
     "###);
 }
 
+// This is similar to the `new_krate_twice` case, but the versions are published in reverse order.
+// The primary purpose is to verify that the `default_version` we provide is as expected.
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_twice_alt() {
+    let (app, _, _, token) = TestApp::full().with_token();
+
+    let crate_to_publish =
+        PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
+    token.publish_crate(crate_to_publish).await.good();
+
+    let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    let crates = app.crates_from_index_head("foo_twice");
+    assert_json_snapshot!(crates);
+
+    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    crates/foo_twice/foo_twice-0.99.0.crate
+    crates/foo_twice/foo_twice-2.0.0.crate
+    index/fo/o_/foo_twice
+    rss/crates.xml
+    rss/crates/foo_twice.xml
+    rss/updates.xml
+    "###);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_duplicate_version() {
     let (app, _, user, token) = TestApp::full().with_token();
