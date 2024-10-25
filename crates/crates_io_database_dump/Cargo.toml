@@ -11,7 +11,7 @@ workspace = true
 anyhow = "=1.0.91"
 chrono = { version = "=0.4.38", default-features = false, features = ["clock", "serde"] }
 flate2 = "=1.0.34"
-minijinja = "=2.3.1"
+minijinja = "=2.4.0"
 serde = { version = "=1.0.213", features = ["derive"] }
 serde_json = "=1.0.132"
 tar = "=0.4.42"
