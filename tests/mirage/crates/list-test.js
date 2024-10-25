@@ -44,6 +44,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
           badges: [],
           categories: [],
           created_at: '2010-06-16T21:30:45Z',
+          default_version: '1.0.0',
           description: 'This is the description for the crate called "rand"',
           documentation: null,
           downloads: 0,

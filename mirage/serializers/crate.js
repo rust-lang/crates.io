@@ -53,10 +53,17 @@ export default BaseSerializer.extend({
   _adjust(hash) {
     let versions = this.schema.versions.where({ crateId: hash.id });
     assert(`crate \`${hash.name}\` has no associated versions`, versions.length !== 0);
-    versions = versions.filter(it => !it.yanked);
 
-    let versionNums = versions.models.map(it => it.num);
+    let versionsByNum = Object.fromEntries(versions.models.map(it => [it.num, it]));
+    let versionNums = Object.keys(versionsByNum);
     semverSort(versionNums, { loose: true });
+    hash.default_version =
+      versionNums.find(it => !prerelease(it, { loose: true }) && !versionsByNum[it].yanked) ??
+      versionNums.find(it => !versionsByNum[it].yanked) ??
+      versionNums[0];
+
+    versions = versions.filter(it => !it.yanked);
+    versionNums = versionNums.filter(it => !versionsByNum[it].yanked);
     hash.max_version = versionNums[0] ?? '0.0.0';
     hash.max_stable_version = versionNums.find(it => !prerelease(it, { loose: true })) ?? null;
 
