@@ -202,7 +202,7 @@ pub struct EncodableCrate {
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
-    pub badges: Option<Vec<()>>,
+    pub badges: [(); 0],
     #[serde(with = "rfc3339")]
     pub created_at: NaiveDateTime,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
@@ -230,7 +230,6 @@ impl EncodableCrate {
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
         categories: Option<&[Category]>,
-        badges: Option<Vec<()>>,
         exact_match: bool,
         downloads: i64,
         recent_downloads: Option<i64>,
@@ -251,7 +250,6 @@ impl EncodableCrate {
         };
         let keyword_ids = keywords.map(|kws| kws.iter().map(|kw| kw.keyword.clone()).collect());
         let category_ids = categories.map(|cats| cats.iter().map(|cat| cat.slug.clone()).collect());
-        let badges = badges.map(|_| vec![]);
         let homepage = remove_blocked_urls(homepage);
         let documentation = remove_blocked_urls(documentation);
         let repository = remove_blocked_urls(repository);
@@ -296,7 +294,7 @@ impl EncodableCrate {
             versions,
             keywords: keyword_ids,
             categories: category_ids,
-            badges,
+            badges: [],
             default_version,
             max_version,
             newest_version,
@@ -321,7 +319,6 @@ impl EncodableCrate {
         krate: Crate,
         default_version: Option<&str>,
         top_versions: Option<&TopVersions>,
-        badges: Option<Vec<()>>,
         exact_match: bool,
         downloads: i64,
         recent_downloads: Option<i64>,
@@ -333,7 +330,6 @@ impl EncodableCrate {
             None,
             None,
             None,
-            badges,
             exact_match,
             downloads,
             recent_downloads,
@@ -804,7 +800,7 @@ mod tests {
             versions: None,
             keywords: None,
             categories: None,
-            badges: None,
+            badges: [],
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 12)

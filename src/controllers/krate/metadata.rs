@@ -117,8 +117,6 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             None
         };
 
-        let badges = if include.badges { Some(vec![]) } else { None };
-
         let top_versions = if include.versions {
             Some(krate.top_versions(conn)?)
         } else {
@@ -132,7 +130,6 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             ids,
             kws.as_deref(),
             cats.as_deref(),
-            badges,
             false,
             downloads,
             recent_downloads,

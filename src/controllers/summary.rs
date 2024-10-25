@@ -41,7 +41,6 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                         krate,
                         default_version.as_deref(),
                         Some(&top_versions),
-                        None,
                         false,
                         total,
                         recent,

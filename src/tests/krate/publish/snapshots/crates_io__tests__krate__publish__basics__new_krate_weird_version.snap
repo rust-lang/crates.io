@@ -4,7 +4,7 @@ expression: response.json()
 ---
 {
   "crate": {
-    "badges": null,
+    "badges": [],
     "categories": null,
     "created_at": "[datetime]",
     "default_version": "0.0.0-pre",
