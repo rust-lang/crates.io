@@ -989,6 +989,8 @@ diesel::table! {
         bin_names -> Nullable<Array<Nullable<Text>>>,
         /// message associated with a yanked version
         yank_message -> Nullable<Text>,
+        /// This is the same as `num` without the optional "build metadata" part (except for some versions that were published before we started validating this).
+        num_no_build -> Nullable<Varchar>,
     }
 }
 
