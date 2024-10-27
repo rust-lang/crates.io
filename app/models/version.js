@@ -166,22 +166,42 @@ export default class Version extends Model {
   }
 
   yankTask = keepLatestTask(async () => {
-    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}/yank`, { method: 'DELETE' });
+    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: {
+          yanked: true,
+        },
+      }),
+    });
     if (!response.ok) {
       throw new Error(`Yank request for ${this.crateName} v${this.num} failed`);
     }
     this.set('yanked', true);
 
-    return await response.text();
+    return await response.json();
   });
 
   unyankTask = keepLatestTask(async () => {
-    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}/unyank`, { method: 'PUT' });
+    let response = await fetch(`/api/v1/crates/${this.crate.id}/${this.num}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: {
+          yanked: false,
+        },
+      }),
+    });
     if (!response.ok) {
       throw new Error(`Unyank request for ${this.crateName} v${this.num} failed`);
     }
     this.set('yanked', false);
 
-    return await response.text();
+    return await response.json();
   });
 }
