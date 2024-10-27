@@ -236,7 +236,6 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         krate,
                         default_version.as_deref(),
                         Some(&max_version),
-                        Some(vec![]),
                         perfect_match,
                         total,
                         Some(recent.unwrap_or(0)),

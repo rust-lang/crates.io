@@ -512,7 +512,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                     krate,
                     default_version.or(Some(version_string)).as_deref(),
                     Some(&top_versions),
-                    None,
                     false,
                     downloads,
                     None,
