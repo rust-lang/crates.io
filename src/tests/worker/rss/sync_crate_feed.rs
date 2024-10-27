@@ -69,6 +69,7 @@ async fn create_version(
         .values((
             versions::crate_id.eq(crate_id),
             versions::num.eq(version),
+            versions::num_no_build.eq(version),
             versions::created_at.eq(publish_time),
             versions::updated_at.eq(publish_time),
             versions::checksum.eq("checksum"),

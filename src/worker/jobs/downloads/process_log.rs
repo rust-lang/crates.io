@@ -511,6 +511,7 @@ mod tests {
             .values((
                 versions::crate_id.eq(crate_id),
                 versions::num.eq(version),
+                versions::num_no_build.eq(version),
                 versions::checksum.eq("checksum"),
             ))
             .execute(conn)

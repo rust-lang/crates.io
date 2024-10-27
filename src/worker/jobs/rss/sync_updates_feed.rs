@@ -248,10 +248,12 @@ mod tests {
         version: impl Into<Cow<'static, str>>,
         publish_time: NaiveDateTime,
     ) -> impl Future<Output = i32> {
+        let version = version.into();
         let future = diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
-                versions::num.eq(version.into()),
+                versions::num.eq(version.clone()),
+                versions::num_no_build.eq(version),
                 versions::created_at.eq(publish_time),
                 versions::updated_at.eq(publish_time),
                 versions::checksum.eq("checksum"),

@@ -34,7 +34,7 @@ pub struct Version {
     pub has_lib: Option<bool>,
     pub bin_names: Option<Vec<Option<String>>>,
     pub yank_message: Option<String>,
-    pub num_no_build: Option<String>,
+    pub num_no_build: String,
 }
 
 impl Version {
@@ -85,6 +85,8 @@ pub struct NewVersion<'a> {
     crate_id: i32,
     #[builder(start_fn)]
     num: &'a str,
+    #[builder(default = strip_build_metadata(num))]
+    num_no_build: &'a str,
     created_at: Option<&'a NaiveDateTime>,
     yanked: Option<bool>,
     #[builder(default = serde_json::Value::Object(Default::default()))]
