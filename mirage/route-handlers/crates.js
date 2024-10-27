@@ -264,6 +264,28 @@ export function register(server) {
     return { ok: true, msg: 'owners successfully removed' };
   });
 
+  server.patch('/api/v1/crates/:name/:version', (schema, request) => {
+    const { name, version: versionNum } = request.params;
+    const crate = schema.crates.findBy({ name });
+    if (!crate) {
+      return notFound();
+    }
+
+    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    if (!version) {
+      return notFound();
+    }
+
+    const body = JSON.parse(request.requestBody);
+    version.yanked = body.version.yanked;
+    version.yank_message = body.version.yank_message;
+    version.save();
+
+    return {
+      version,
+    };
+  });
+
   server.delete('/api/v1/crates/:name/:version/yank', (schema, request) => {
     let { user } = getSession(schema);
     if (!user) {
