@@ -7,8 +7,8 @@
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, CrateVersions, Keyword, RecentCrateDownloads,
-    User, Version, VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, CrateName, CrateVersions, Keyword,
+    RecentCrateDownloads, User, Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::tasks::spawn_blocking;
@@ -63,7 +63,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
                 .all_versions()
                 .left_outer_join(users::table)
-                .select((versions::all_columns, users::all_columns.nullable()))
+                .select(<(Version, Option<User>)>::as_select())
                 .load(conn)?;
             versions_and_publishers.sort_by_cached_key(|(version, _)| {
                 Reverse(semver::Version::parse(&version.num).ok())
@@ -92,7 +92,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             Some(
                 CrateKeyword::belonging_to(&krate)
                     .inner_join(keywords::table)
-                    .select(keywords::all_columns)
+                    .select(Keyword::as_select())
                     .load(conn)?,
             )
         } else {
@@ -102,7 +102,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             Some(
                 CrateCategory::belonging_to(&krate)
                     .inner_join(categories::table)
-                    .select(categories::all_columns)
+                    .select(Category::as_select())
                     .load(conn)?,
             )
         } else {
@@ -260,15 +260,11 @@ pub async fn reverse_dependencies(
 
         let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
 
-        let versions_and_publishers: Vec<(Version, String, Option<User>)> = versions::table
+        let versions_and_publishers: Vec<(Version, CrateName, Option<User>)> = versions::table
             .filter(versions::id.eq_any(version_ids))
             .inner_join(crates::table)
             .left_outer_join(users::table)
-            .select((
-                versions::all_columns,
-                crates::name,
-                users::all_columns.nullable(),
-            ))
+            .select(<(Version, CrateName, Option<User>)>::as_select())
             .load(conn)?;
         let versions = versions_and_publishers
             .iter()
@@ -279,7 +275,7 @@ pub async fn reverse_dependencies(
             .into_iter()
             .zip(actions)
             .map(|((version, krate_name, published_by), actions)| {
-                EncodableVersion::from(version, &krate_name, published_by, actions)
+                EncodableVersion::from(version, &krate_name.name, published_by, actions)
             })
             .collect::<Vec<_>>();
 

@@ -100,7 +100,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             let versions: Vec<(Version, String)> = versions::table
                 .inner_join(crates::table)
                 .filter(versions::id.eq_any(version_ids_chunk))
-                .select((versions::all_columns, crates::name))
+                .select((Version::as_select(), crates::name))
                 .load(conn)
                 .context("error loading versions")?;
 

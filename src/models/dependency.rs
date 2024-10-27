@@ -5,7 +5,7 @@ use crate::schema::*;
 use crate::sql::pg_enum;
 use crates_io_index::DependencyKind as IndexDependencyKind;
 
-#[derive(Identifiable, Associations, Debug, Queryable, QueryableByName)]
+#[derive(Identifiable, Associations, Debug, Queryable, QueryableByName, Selectable)]
 #[diesel(
     table_name = dependencies,
     check_for_backend(diesel::pg::Pg),

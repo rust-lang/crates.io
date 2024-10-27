@@ -6,7 +6,7 @@ use crate::schema::*;
 use crate::sql::lower;
 use crate::util::diesel::Conn;
 
-#[derive(Clone, Identifiable, Queryable, Debug)]
+#[derive(Clone, Identifiable, Queryable, Debug, Selectable)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,

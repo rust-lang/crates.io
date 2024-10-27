@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::controllers::helpers::{ok_true, Paginate};
+use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::tasks::spawn_blocking;
@@ -31,7 +32,7 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
                 .find(user_id)
                 .left_join(emails::table)
                 .select((
-                    users::all_columns,
+                    User::as_select(),
                     emails::verified.nullable(),
                     emails::email.nullable(),
                     emails::token_generated_at.nullable().is_not_null(),
@@ -77,13 +78,9 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             .left_outer_join(users::table)
             .filter(crates::id.eq_any(followed_crates))
             .order(versions::created_at.desc())
-            .select((
-                versions::all_columns,
-                crates::name,
-                users::all_columns.nullable(),
-            ))
+            .select(<(Version, CrateName, Option<User>)>::as_select())
             .pages_pagination(PaginationOptions::builder().gather(&req)?);
-        let data: Paginated<(Version, String, Option<User>)> = query.load(conn)?;
+        let data: Paginated<(Version, CrateName, Option<User>)> = query.load(conn)?;
         let more = data.next_page_params().is_some();
         let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
         let actions = VersionOwnerAction::for_versions(conn, &versions)?;
@@ -95,7 +92,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let versions = data
             .into_iter()
             .map(|(version, crate_name, published_by, actions)| {
-                EncodableVersion::from(version, &crate_name, published_by, actions)
+                EncodableVersion::from(version, &crate_name.name, published_by, actions)
             })
             .collect::<Vec<_>>();
 

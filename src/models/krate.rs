@@ -34,6 +34,12 @@ pub struct RecentCrateDownloads {
     pub downloads: i32,
 }
 
+#[derive(Debug, Clone, Queryable, Selectable)]
+#[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
+pub struct CrateName {
+    pub name: String,
+}
+
 #[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName, Selectable)]
 #[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 pub struct Crate {
@@ -338,14 +344,14 @@ impl Crate {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
-            .select(users::all_columns)
+            .select(User::as_select())
             .load(conn)?
             .into_iter()
             .map(Owner::User);
         let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(teams::table)
-            .select(teams::all_columns)
+            .select(Team::as_select())
             .load(conn)?
             .into_iter()
             .map(Owner::Team);

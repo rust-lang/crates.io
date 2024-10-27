@@ -15,7 +15,7 @@ use crate::util::diesel::Conn;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
-#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug)]
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Selectable)]
 pub struct Team {
     /// Unique table id
     pub id: i32,
@@ -200,7 +200,7 @@ impl Team {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)
-            .select(teams::all_columns)
+            .select(Team::as_select())
             .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
             .load(conn)?
             .into_iter()
