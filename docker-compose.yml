@@ -53,9 +53,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    environment:
-      PROXY_BACKEND: http://backend:8888
-    entrypoint: pnpm start
+    entrypoint: pnpm start:docker
     links:
       - backend
     ports:
