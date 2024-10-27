@@ -13,7 +13,7 @@ use crate::sql::lower;
 use crate::util::diesel::Conn;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset)]
+#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
 pub struct User {
     pub id: i32,
     pub gh_access_token: String,
@@ -43,7 +43,7 @@ impl User {
     pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
-            .select(users::all_columns)
+            .select(User::as_select())
             .filter(crate_owners::crate_id.eq(krate.id))
             .load(conn)?
             .into_iter()

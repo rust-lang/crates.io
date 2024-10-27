@@ -5,7 +5,7 @@ use crate::models::Crate;
 use crate::schema::*;
 use crate::util::diesel::Conn;
 
-#[derive(Clone, Identifiable, Queryable, QueryableByName, Debug)]
+#[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
 pub struct Category {
     pub id: i32,

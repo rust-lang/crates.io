@@ -102,7 +102,7 @@ fn list_by_date(
     let mut query = versions::table
         .filter(versions::crate_id.eq(crate_id))
         .left_outer_join(users::table)
-        .select((versions::all_columns, users::all_columns.nullable()))
+        .select(<(Version, Option<User>)>::as_select())
         .into_boxed();
 
     let mut release_tracks = None;
@@ -239,7 +239,7 @@ fn list_by_semver(
             for result in versions::table
                 .filter(versions::crate_id.eq(crate_id))
                 .left_outer_join(users::table)
-                .select((versions::all_columns, users::all_columns.nullable()))
+                .select(<(Version, Option<User>)>::as_select())
                 .filter(versions::id.eq_any(ids))
                 .load_iter::<(Version, Option<User>), DefaultLoadingMode>(conn)?
             {
@@ -267,7 +267,7 @@ fn list_by_semver(
         let mut data: Vec<(Version, Option<User>)> = versions::table
             .filter(versions::crate_id.eq(crate_id))
             .left_outer_join(users::table)
-            .select((versions::all_columns, users::all_columns.nullable()))
+            .select(<(Version, Option<User>)>::as_select())
             .load(conn)?;
         data.sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
         let total = data.len();

@@ -3,7 +3,7 @@
 //! index files.
 
 use crate::models::{Crate, CrateVersions, Dependency, Version};
-use crate::schema::{crates, dependencies};
+use crate::schema::crates;
 use anyhow::Context;
 use crates_io_index::features::split_features;
 use diesel::prelude::*;
@@ -68,7 +68,7 @@ pub async fn index_metadata(
 
     let deps: Vec<(Dependency, String)> = Dependency::belonging_to(&versions)
         .inner_join(crates::table)
-        .select((dependencies::all_columns, crates::name))
+        .select((Dependency::as_select(), crates::name))
         .load(conn)
         .await?;
 

@@ -11,7 +11,7 @@ use crate::schema::*;
 use crate::util::diesel::Conn;
 
 // Queryable has a custom implementation below
-#[derive(Clone, Identifiable, Associations, Debug, Queryable)]
+#[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
 #[diesel(belongs_to(Crate))]
 pub struct Version {
     pub id: i32,
@@ -39,7 +39,7 @@ impl Version {
     pub fn dependencies(&self, conn: &mut impl Conn) -> QueryResult<Vec<(Dependency, String)>> {
         Dependency::belonging_to(self)
             .inner_join(crates::table)
-            .select((dependencies::all_columns, crates::name))
+            .select((Dependency::as_select(), crates::name))
             .order((dependencies::optional, crates::name))
             .load(conn)
     }
