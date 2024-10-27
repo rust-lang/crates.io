@@ -6,11 +6,8 @@ use crates_io_index::features::FeaturesMap;
 use diesel::prelude::*;
 use serde::Deserialize;
 
-use crate::util::errors::{bad_request, AppResult};
-
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
-use crate::sql::split_part;
 use crate::util::diesel::Conn;
 
 // Queryable has a custom implementation below
@@ -86,7 +83,7 @@ pub struct NewVersion<'a> {
     #[builder(start_fn)]
     num: &'a str,
     #[builder(default = strip_build_metadata(num))]
-    num_no_build: &'a str,
+    pub num_no_build: &'a str,
     created_at: Option<&'a NaiveDateTime>,
     yanked: Option<bool>,
     #[builder(default = serde_json::Value::Object(Default::default()))]
@@ -103,24 +100,10 @@ pub struct NewVersion<'a> {
 }
 
 impl NewVersion<'_> {
-    pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> AppResult<Version> {
-        use diesel::dsl::exists;
-        use diesel::{insert_into, select};
+    pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> QueryResult<Version> {
+        use diesel::insert_into;
 
         conn.transaction(|conn| {
-            let num_no_build = strip_build_metadata(self.num);
-
-            let already_uploaded = versions::table
-                .filter(versions::crate_id.eq(self.crate_id))
-                .filter(split_part(versions::num, "+", 1).eq(num_no_build));
-
-            if select(exists(already_uploaded)).get_result(conn)? {
-                return Err(bad_request(format_args!(
-                    "crate version `{}` is already uploaded",
-                    num_no_build
-                )));
-            }
-
             let version: Version = insert_into(versions::table).values(self).get_result(conn)?;
 
             insert_into(versions_published_by::table)

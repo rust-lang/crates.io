@@ -359,7 +359,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
             // Persist the new version of this crate
-            let version = NewVersion::builder(krate.id, &version_string)
+            let new_version = NewVersion::builder(krate.id, &version_string)
                 .features(serde_json::to_value(&features)?)
                 .maybe_license(license.as_deref())
                 // Downcast is okay because the file length must be less than the max upload size
@@ -371,8 +371,18 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .maybe_rust_version(rust_version.as_deref())
                 .has_lib(tarball_info.manifest.lib.is_some())
                 .bin_names(bin_names.as_slice())
-                .build()
-                .save(conn, &verified_email_address)?;
+                .build();
+
+            let version = match new_version.save(conn, &verified_email_address) {
+                Err(diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, _)) => {
+                    return Err(bad_request(format_args!(
+                        "crate version `{}` is already uploaded",
+                        new_version.num_no_build
+                    )));
+                },
+                Err(error) => return Err(error.into()),
+                Ok(version) => version,
+            };
 
             insert_version_owner_action(
                 conn,
