@@ -373,16 +373,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .bin_names(bin_names.as_slice())
                 .build();
 
-            let version = match new_version.save(conn, &verified_email_address) {
-                Err(diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, _)) => {
-                    return Err(bad_request(format_args!(
+            let version = new_version.save(conn, &verified_email_address).map_err(|error| {
+                use diesel::result::{Error, DatabaseErrorKind};
+                match error {
+                    Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => bad_request(format_args!(
                         "crate version `{}` is already uploaded",
                         new_version.num_no_build
-                    )));
-                },
-                Err(error) => return Err(error.into()),
-                Ok(version) => version,
-            };
+                    )),
+                    error => error.into(),
+                }
+            })?;
 
             insert_version_owner_action(
                 conn,
