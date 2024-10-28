@@ -1081,7 +1081,7 @@ dependencies = [
  "quick-xml 0.37.0",
  "rand",
  "regex",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "rss",
  "secrecy",
  "semver",
@@ -1173,7 +1173,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "oauth2",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "serde",
  "thiserror",
  "tracing",
@@ -1216,7 +1216,7 @@ dependencies = [
  "bytes",
  "clap",
  "crates_io_index",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "secrecy",
  "semver",
  "serde",
@@ -1256,7 +1256,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "mockall",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "serde",
  "tokio",
 ]
@@ -3241,7 +3241,7 @@ dependencies = [
  "percent-encoding",
  "quick-xml 0.36.2",
  "rand",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "ring",
  "serde",
  "serde_json",
@@ -3974,9 +3974,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.8"
+version = "0.12.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f713147fbe92361e52392c73b8c9e48c04c6625bce969ef54dc901e58e042a7b"
+checksum = "a77c62af46e79de0a562e1a9849205ffcb7fc1238876e9bd743357570e04046f"
 dependencies = [
  "async-compression",
  "base64 0.22.1",
@@ -4316,7 +4316,7 @@ checksum = "5484316556650182f03b43d4c746ce0e3e48074a21e2f51244b648b6542e1066"
 dependencies = [
  "httpdate",
  "native-tls",
- "reqwest 0.12.8",
+ "reqwest 0.12.9",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
