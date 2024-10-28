@@ -6,9 +6,11 @@
 
 use axum::extract::Path;
 use axum::Json;
+use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, PgExpressionMethods, QueryDsl, RunQueryDsl,
+    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, PgExpressionMethods, QueryDsl,
+    RunQueryDsl, SelectableHelper,
 };
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
@@ -21,7 +23,8 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::EndpointScope;
 use crate::models::{
-    insert_version_owner_action, Crate, Rights, Version, VersionAction, VersionOwnerAction,
+    insert_version_owner_action, Crate, Dependency, Rights, Version, VersionAction,
+    VersionOwnerAction,
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
@@ -63,8 +66,11 @@ pub async fn dependencies(
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let deps = version.dependencies(conn)?;
-        let deps = deps
+        let deps = Dependency::belonging_to(&version)
+            .inner_join(crates::table)
+            .select((Dependency::as_select(), crates::name))
+            .order((dependencies::optional, crates::name))
+            .load::<(Dependency, String)>(conn)?
             .into_iter()
             .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
             .collect::<Vec<_>>();
