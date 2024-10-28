@@ -229,7 +229,7 @@ dependencies = [
  "derive_builder",
  "diligent-date-parser",
  "never",
- "quick-xml",
+ "quick-xml 0.36.2",
 ]
 
 [[package]]
@@ -1078,7 +1078,7 @@ dependencies = [
  "paste",
  "postgres-native-tls",
  "prometheus",
- "quick-xml",
+ "quick-xml 0.37.0",
  "rand",
  "regex",
  "reqwest 0.12.8",
@@ -3239,7 +3239,7 @@ dependencies = [
  "md-5",
  "parking_lot",
  "percent-encoding",
- "quick-xml",
+ "quick-xml 0.36.2",
  "rand",
  "reqwest 0.12.8",
  "ring",
@@ -3740,6 +3740,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffbfb3ddf5364c9cfcd65549a1e7b801d0e8d1b14c1a1590a6408aa93cfbfa84"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "quinn"
 version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4047,7 +4056,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27e92048f840d98c6d6dd870af9101610ea9ff413f11f1bcebf4f4c31d96d957"
 dependencies = [
  "atom_syndication",
- "quick-xml",
+ "quick-xml 0.36.2",
 ]
 
 [[package]]
