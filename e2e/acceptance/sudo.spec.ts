@@ -112,8 +112,22 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await yankButton.click();
 
+    // Verify backend state after yanking
+    const yankedVersion = await page.evaluate(() => {
+      const crate = server.schema['crates'].findBy({ name: 'foo' });
+      return server.schema['versions'].findBy({ crateId: crate.id, num: '0.1.0', yanked: true });
+    });
+    expect(yankedVersion, 'The version should be yanked').toBeTruthy();
+
     await expect(unyankButton).toBeVisible();
     await unyankButton.click();
+
+    // Verify backend state after unyanking
+    const unyankedVersion = await page.evaluate(() => {
+      const crate = server.schema['crates'].findBy({ name: 'foo' });
+      return server.schema['versions'].findBy({ crateId: crate.id, num: '0.1.0', yanked: false });
+    });
+    expect(unyankedVersion, 'The version should be unyanked').toBeTruthy();
 
     await expect(yankButton).toBeVisible();
   });
