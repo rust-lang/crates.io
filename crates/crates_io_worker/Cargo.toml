@@ -23,5 +23,5 @@ tracing = "=0.1.40"
 [dev-dependencies]
 claims = "=0.7.1"
 crates_io_test_db = { path = "../crates_io_test_db" }
-insta = { version = "=1.40.0", features = ["json"] }
+insta = { version = "=1.41.0", features = ["json"] }
 tokio = { version = "=1.41.0", features = ["macros", "rt", "rt-multi-thread", "sync"]}

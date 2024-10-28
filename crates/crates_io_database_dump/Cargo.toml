@@ -23,4 +23,4 @@ zip = { version = "=2.2.0", default-features = false, features = ["deflate"] }
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
 diesel = "=2.2.4"
-insta = { version = "=1.40.0", features = ["glob"] }
+insta = { version = "=1.41.0", features = ["glob"] }
