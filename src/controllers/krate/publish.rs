@@ -376,10 +376,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             let version = new_version.save(conn, &verified_email_address).map_err(|error| {
                 use diesel::result::{Error, DatabaseErrorKind};
                 match error {
-                    Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => bad_request(format_args!(
-                        "crate version `{}` is already uploaded",
-                        new_version.num_no_build
-                    )),
+                    Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
+                        duplicate_version_error(new_version.num_no_build),
                     error => error.into(),
                 }
             })?;
@@ -618,6 +616,10 @@ fn missing_metadata_error_message(missing: &[&str]) -> String {
          more information on configuring these fields",
         missing.join(", ")
     )
+}
+
+fn duplicate_version_error(version: &str) -> BoxedAppError {
+    bad_request(format!("crate version `{version}` is already uploaded"))
 }
 
 fn validate_rust_version(value: &str) -> AppResult<()> {
