@@ -1,5 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::{self, *};
+use diesel::{
+    delete, dsl, insert_into, sql_query, ExpressionMethods, QueryDsl, QueryResult,
+    TextExpressionMethods,
+};
+use diesel_async::AsyncPgConnection;
 
 use crate::models::Crate;
 use crate::schema::*;
@@ -47,6 +51,7 @@ impl Category {
         crate_id: i32,
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
+        use diesel::RunQueryDsl;
         conn.transaction(|conn| {
             let categories: Vec<Category> = categories::table
                 .filter(categories::slug.eq_any(slugs))
@@ -77,6 +82,7 @@ impl Category {
     }
 
     pub fn count_toplevel(conn: &mut impl Conn) -> QueryResult<i64> {
+        use diesel::RunQueryDsl;
         categories::table
             .filter(categories::category.not_like("%::%"))
             .count()
@@ -90,6 +96,7 @@ impl Category {
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Int8;
+        use diesel::RunQueryDsl;
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -104,24 +111,31 @@ impl Category {
             .load(conn)
     }
 
-    pub fn subcategories(&self, conn: &mut impl Conn) -> QueryResult<Vec<Category>> {
+    pub async fn subcategories(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
+        use diesel_async::RunQueryDsl;
 
         sql_query(include_str!("../subcategories.sql"))
             .bind::<Text, _>(&self.category)
             .load(conn)
+            .await
     }
 
     /// Gathers the parent categories from the top-level Category to the direct parent of this Category.
     /// Returns categories as a Vector in order of traversal, not including this Category.
     /// The intention is to be able to have slugs or parent categories arrayed in order, to
     /// offer the frontend, for examples, slugs to create links to each parent category in turn.
-    pub fn parent_categories(&self, conn: &mut impl Conn) -> QueryResult<Vec<Category>> {
+    pub async fn parent_categories(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
+        use diesel_async::RunQueryDsl;
 
         sql_query(include_str!("../parent_categories.sql"))
             .bind::<Text, _>(&self.slug)
             .load(conn)
+            .await
     }
 }
 
@@ -139,10 +153,13 @@ pub struct NewCategory<'a> {
 mod tests {
     use super::*;
     use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
 
     #[test]
     fn category_toplevel_excludes_subcategories() {
         use self::categories;
+        use diesel::RunQueryDsl;
         let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
@@ -174,6 +191,7 @@ mod tests {
     #[test]
     fn category_toplevel_orders_by_crates_cnt_when_sort_given() {
         use self::categories;
+        use diesel::RunQueryDsl;
 
         let new_cat = |category, slug, crates_cnt| {
             (
@@ -209,6 +227,7 @@ mod tests {
     #[test]
     fn category_toplevel_applies_limit_and_offset() {
         use self::categories;
+        use diesel::RunQueryDsl;
         let (_test_db, conn) = &mut test_db_connection();
         insert_into(categories::table)
             .values(&vec![
@@ -244,6 +263,7 @@ mod tests {
     #[test]
     fn category_toplevel_includes_subcategories_in_crate_cnt() {
         use self::categories;
+        use diesel::RunQueryDsl;
 
         let new_cat = |category, slug, crates_cnt| {
             (
@@ -282,6 +302,7 @@ mod tests {
     #[test]
     fn category_toplevel_applies_limit_and_offset_after_grouping() {
         use self::categories;
+        use diesel::RunQueryDsl;
 
         let new_cat = |category, slug, crates_cnt| {
             (
@@ -321,9 +342,10 @@ mod tests {
         assert_eq!(expected, cats);
     }
 
-    #[test]
-    fn category_parent_categories_includes_path_to_node_with_count() {
+    #[tokio::test]
+    async fn category_parent_categories_includes_path_to_node_with_count() {
         use self::categories;
+        use diesel_async::RunQueryDsl;
 
         let new_cat = |category, slug, crates_cnt| {
             (
@@ -333,7 +355,9 @@ mod tests {
             )
         };
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+
         insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
@@ -345,12 +369,17 @@ mod tests {
                 new_cat("Cat 2::Sub 2", "cat2::sub2", 5),
                 new_cat("Cat 3", "cat3", 200),
             ])
-            .execute(conn)
+            .execute(&mut conn)
+            .await
             .unwrap();
 
-        let cat: Category = Category::by_slug("cat1::sub1").first(conn).unwrap();
-        let subcats = cat.subcategories(conn).unwrap();
-        let parents = cat.parent_categories(conn).unwrap();
+        let cat: Category = Category::by_slug("cat1::sub1")
+            .first(&mut conn)
+            .await
+            .unwrap();
+
+        let subcats = cat.subcategories(&mut conn).await.unwrap();
+        let parents = cat.parent_categories(&mut conn).await.unwrap();
 
         assert_eq!(parents.len(), 1);
         assert_eq!(parents[0].slug, "cat1");

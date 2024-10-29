@@ -8,7 +8,7 @@ use crate::util::RequestUtils;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
 use axum::extract::Path;
 use axum::Json;
-use diesel::prelude::*;
+use diesel::QueryDsl;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use serde_json::Value;
@@ -48,41 +48,43 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /categories/:category_id` route.
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    use diesel_async::RunQueryDsl;
 
-        let cat: Category = Category::by_slug(&slug).first(conn)?;
-        let subcats = cat
-            .subcategories(conn)?
-            .into_iter()
-            .map(Category::into)
-            .collect();
-        let parents = cat
-            .parent_categories(conn)?
-            .into_iter()
-            .map(Category::into)
-            .collect();
+    let mut conn = state.db_read().await?;
 
-        let cat = EncodableCategory::from(cat);
-        let cat_with_subcats = EncodableCategoryWithSubcategories {
-            id: cat.id,
-            category: cat.category,
-            slug: cat.slug,
-            description: cat.description,
-            created_at: cat.created_at,
-            crates_cnt: cat.crates_cnt,
-            subcategories: subcats,
-            parent_categories: parents,
-        };
+    let cat: Category = Category::by_slug(&slug).first(&mut conn).await?;
+    let subcats = cat
+        .subcategories(&mut conn)
+        .await?
+        .into_iter()
+        .map(Category::into)
+        .collect();
+    let parents = cat
+        .parent_categories(&mut conn)
+        .await?
+        .into_iter()
+        .map(Category::into)
+        .collect();
 
-        Ok(Json(json!({ "category": cat_with_subcats })))
-    })
-    .await
+    let cat = EncodableCategory::from(cat);
+    let cat_with_subcats = EncodableCategoryWithSubcategories {
+        id: cat.id,
+        category: cat.category,
+        slug: cat.slug,
+        description: cat.description,
+        created_at: cat.created_at,
+        crates_cnt: cat.crates_cnt,
+        subcategories: subcats,
+        parent_categories: parents,
+    };
+
+    Ok(Json(json!({ "category": cat_with_subcats })))
 }
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
+    use diesel::RunQueryDsl;
+
     let conn = state.db_read().await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
