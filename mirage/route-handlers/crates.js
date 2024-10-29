@@ -264,6 +264,32 @@ export function register(server) {
     return { ok: true, msg: 'owners successfully removed' };
   });
 
+  server.patch('/api/v1/crates/:name/:version', function (schema, request) {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    const { name, version: versionNum } = request.params;
+    const crate = schema.crates.findBy({ name });
+    if (!crate) {
+      return notFound();
+    }
+
+    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    if (!version) {
+      return notFound();
+    }
+
+    const body = JSON.parse(request.requestBody);
+    version.update({
+      yanked: body.version.yanked,
+      yank_message: body.version.yanked ? body.version.yank_message || null : null,
+    });
+
+    return this.serialize(version);
+  });
+
   server.delete('/api/v1/crates/:name/:version/yank', (schema, request) => {
     let { user } = getSession(schema);
     if (!user) {
@@ -303,7 +329,7 @@ export function register(server) {
       return notFound();
     }
 
-    version.update({ yanked: false });
+    version.update({ yanked: false, yank_message: null });
 
     return { ok: true };
   });
