@@ -282,9 +282,10 @@ export function register(server) {
     }
 
     const body = JSON.parse(request.requestBody);
-    version.yanked = body.version.yanked;
-    version.yank_message = body.version.yank_message;
-    version.save();
+    version.update({
+      yanked: body.version.yanked,
+      yank_message: body.version.yank_message,
+    });
 
     return this.serialize(version);
   });
