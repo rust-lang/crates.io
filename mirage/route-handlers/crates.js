@@ -283,7 +283,7 @@ export function register(server) {
     version.yanked = true;
     version.save();
 
-    return {};
+    return { ok: true };
   });
 
   server.put('/api/v1/crates/:name/:version/unyank', (schema, request) => {
@@ -305,7 +305,7 @@ export function register(server) {
     version.yanked = false;
     version.save();
 
-    return {};
+    return { ok: true };
   });
 
   server.get('/api/v1/crates/:name/:version/readme', (schema, request) => {
