@@ -9,6 +9,7 @@ export default Factory.extend({
   updated_at: '2017-02-24T12:34:56Z',
 
   yanked: false,
+  yank_message: null,
   license: i => LICENSES[i % LICENSES.length],
 
   downloads: i => (((i + 13) * 42) % 13) * 1234,
