@@ -74,7 +74,7 @@
     "@playwright/test": "1.48.2",
     "@sinonjs/fake-timers": "13.0.5",
     "@types/ember": "4.0.11",
-    "@types/node": "20.17.3",
+    "@types/node": "22.8.4",
     "@types/sinonjs__fake-timers": "8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
@@ -159,13 +159,13 @@
     }
   },
   "engines": {
-    "node": "20.18.0",
+    "node": "22.11.0",
     "pnpm": "9.12.3"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "20.18.0"
+    "node": "22.11.0"
   }
 }
