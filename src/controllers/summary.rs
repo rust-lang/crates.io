@@ -14,7 +14,14 @@ use serde_json::Value;
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
-    let conn = state.db_read().await?;
+    let mut conn = state.db_read().await?;
+
+    let popular_categories = Category::toplevel(&mut conn, "crates", 10, 0)
+        .await?
+        .into_iter()
+        .map(Category::into)
+        .collect::<Vec<EncodableCategory>>();
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
@@ -115,11 +122,6 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .into_iter()
             .map(Keyword::into)
             .collect::<Vec<EncodableKeyword>>();
-
-        let popular_categories = Category::toplevel(conn, "crates", 10, 0)?
-            .into_iter()
-            .map(Category::into)
-            .collect::<Vec<EncodableCategory>>();
 
         Ok(Json(json!({
             "num_downloads": num_downloads,
