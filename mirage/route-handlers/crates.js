@@ -284,7 +284,7 @@ export function register(server) {
     const body = JSON.parse(request.requestBody);
     version.update({
       yanked: body.version.yanked,
-      yank_message: body.version.yank_message,
+      yank_message: body.version.yanked ? body.version.yank_message || null : null,
     });
 
     return this.serialize(version);
@@ -329,7 +329,7 @@ export function register(server) {
       return notFound();
     }
 
-    version.update({ yanked: false });
+    version.update({ yanked: false, yank_message: null });
 
     return { ok: true };
   });

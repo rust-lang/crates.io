@@ -39,8 +39,9 @@ module('Mirage | PUT /api/v1/crates/:crateId/unyank', function (hooks) {
 
   test('unyanks the version', async function (assert) {
     let crate = this.server.create('crate', { name: 'foo' });
-    let version = this.server.create('version', { crate, num: '1.0.0', yanked: true });
+    let version = this.server.create('version', { crate, num: '1.0.0', yanked: true, yank_message: 'some reason' });
     assert.true(version.yanked);
+    assert.strictEqual(version.yank_message, 'some reason');
 
     let user = this.server.create('user');
     this.authenticateAs(user);
@@ -51,5 +52,6 @@ module('Mirage | PUT /api/v1/crates/:crateId/unyank', function (hooks) {
 
     user.reload();
     assert.false(version.yanked);
+    assert.strictEqual(version.yank_message, null);
   });
 });
