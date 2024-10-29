@@ -65,7 +65,7 @@
     "@embroider/compat": "3.6.5",
     "@embroider/core": "3.4.19",
     "@embroider/webpack": "4.0.8",
-    "@glimmer/component": "1.1.2",
+    "@glimmer/component": "2.0.0",
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.6.0",
     "@percy/cli": "1.30.1",
