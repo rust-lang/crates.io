@@ -13,6 +13,7 @@ export default BaseSerializer.extend({
     'num',
     'updated_at',
     'yanked',
+    'yank_message',
     'license',
     'crate_size',
     'rust_version',

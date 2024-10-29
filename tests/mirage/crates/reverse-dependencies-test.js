@@ -92,6 +92,7 @@ module('Mirage | GET /api/v1/crates/:id/reverse_dependencies', function (hooks) 
           rust_version: null,
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
+          yank_message: null,
         },
         {
           id: '2',
@@ -111,6 +112,7 @@ module('Mirage | GET /api/v1/crates/:id/reverse_dependencies', function (hooks) 
           rust_version: null,
           updated_at: '2017-02-24T12:34:56Z',
           yanked: false,
+          yank_message: null,
         },
       ],
       meta: {
