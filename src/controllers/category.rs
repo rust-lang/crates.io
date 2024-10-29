@@ -83,25 +83,22 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Json<V
 
 /// Handles the `GET /category_slugs` route.
 pub async fn slugs(state: AppState) -> AppResult<Json<Value>> {
-    use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
-    let conn = state.db_read().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_read().await?;
 
-        let slugs: Vec<Slug> = categories::table
-            .select((categories::slug, categories::slug, categories::description))
-            .order(categories::slug)
-            .load(conn)?;
+    let slugs: Vec<Slug> = categories::table
+        .select((categories::slug, categories::slug, categories::description))
+        .order(categories::slug)
+        .load(&mut conn)
+        .await?;
 
-        #[derive(Serialize, Queryable)]
-        struct Slug {
-            id: String,
-            slug: String,
-            description: String,
-        }
+    #[derive(Serialize, Queryable)]
+    struct Slug {
+        id: String,
+        slug: String,
+        description: String,
+    }
 
-        Ok(Json(json!({ "category_slugs": slugs })))
-    })
-    .await
+    Ok(Json(json!({ "category_slugs": slugs })))
 }
