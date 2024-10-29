@@ -3,14 +3,13 @@ use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
 use crate::{storage, BackgroundJob};
 use anyhow::anyhow;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
 use futures_util::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::task::{spawn_blocking, JoinHandle};
+use tokio::task::JoinHandle;
 use tracing::{info, info_span, warn, Instrument};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
@@ -97,19 +96,14 @@ impl<Context: Clone + Send + Sync + 'static> Runner<Context> {
     /// This function is intended for use in tests and will return an error if
     /// any jobs have failed.
     pub async fn check_for_failed_jobs(&self) -> anyhow::Result<()> {
-        let conn = self.connection_pool.get().await?;
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let mut conn = self.connection_pool.get().await?;
 
-            let failed_jobs = storage::failed_job_count(conn)?;
-            if failed_jobs == 0 {
-                Ok(())
-            } else {
-                Err(anyhow!("{failed_jobs} jobs failed"))
-            }
-        })
-        .await
-        .map_err(|err| anyhow!(err.to_string()))?
+        let failed_jobs = storage::failed_job_count(&mut conn).await?;
+        if failed_jobs == 0 {
+            Ok(())
+        } else {
+            Err(anyhow!("{failed_jobs} jobs failed"))
+        }
     }
 }
 

@@ -3,16 +3,14 @@ use crate::storage;
 use crate::util::{try_to_extract_panic_info, with_sentry_transaction};
 use anyhow::anyhow;
 use diesel::prelude::*;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::deadpool::Pool;
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use futures_util::FutureExt;
 use sentry_core::{Hub, SentryFutureExt};
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::runtime::Handle;
-use tokio::task::spawn_blocking;
 use tokio::time::sleep;
 use tracing::{debug, error, info_span, warn};
 
@@ -58,15 +56,15 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
     async fn run_next_job(&self) -> anyhow::Result<Option<i64>> {
         let context = self.context.clone();
         let job_registry = self.job_registry.clone();
-        let conn = self.connection_pool.get().await?;
+        let mut conn = self.connection_pool.get().await?;
 
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-            let job_types = job_registry.job_types();
-            conn.transaction(|conn| {
+        let job_types = job_registry.job_types();
+        conn.transaction(|conn| {
+            async move {
                 debug!("Looking for next background worker job…");
-                let Some(job) = storage::find_next_unlocked_job(conn, &job_types).optional()?
+                let Some(job) = storage::find_next_unlocked_job(conn, &job_types)
+                    .await
+                    .optional()?
                 else {
                     return Ok(None);
                 };
@@ -90,23 +88,21 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         .and_then(std::convert::identity)
                 });
 
-                let result = Handle::current().block_on(future.bind_hub(Hub::current()));
-
-                match result {
+                match future.bind_hub(Hub::current()).await {
                     Ok(_) => {
                         debug!("Deleting successful job…");
-                        storage::delete_successful_job(conn, job_id)?
+                        storage::delete_successful_job(conn, job_id).await?
                     }
                     Err(error) => {
                         warn!("Failed to run job: {error}");
-                        storage::update_failed_job(conn, job_id);
+                        storage::update_failed_job(conn, job_id).await;
                     }
                 }
 
                 Ok(Some(job_id))
-            })
+            }
+            .scope_boxed()
         })
         .await
-        .map_err(|err| anyhow!(err.to_string()))?
     }
 }
