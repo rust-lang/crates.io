@@ -264,7 +264,7 @@ export function register(server) {
     return { ok: true, msg: 'owners successfully removed' };
   });
 
-  server.patch('/api/v1/crates/:name/:version', (schema, request) => {
+  server.patch('/api/v1/crates/:name/:version', function (schema, request) {
     const { name, version: versionNum } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
@@ -281,9 +281,7 @@ export function register(server) {
     version.yank_message = body.version.yank_message;
     version.save();
 
-    return {
-      version,
-    };
+    return this.serialize(version);
   });
 
   server.delete('/api/v1/crates/:name/:version/yank', (schema, request) => {
