@@ -280,8 +280,8 @@ export function register(server) {
     if (!version) {
       return notFound();
     }
-    version.yanked = true;
-    version.save();
+
+    version.update({ yanked: true });
 
     return { ok: true };
   });
@@ -302,8 +302,8 @@ export function register(server) {
     if (!version) {
       return notFound();
     }
-    version.yanked = false;
-    version.save();
+
+    version.update({ yanked: false });
 
     return { ok: true };
   });
