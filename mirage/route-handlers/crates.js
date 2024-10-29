@@ -265,6 +265,11 @@ export function register(server) {
   });
 
   server.delete('/api/v1/crates/:name/:version/yank', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     const { name, version: versionNum } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
@@ -282,6 +287,11 @@ export function register(server) {
   });
 
   server.put('/api/v1/crates/:name/:version/unyank', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     const { name, version: versionNum } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
