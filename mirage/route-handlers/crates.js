@@ -242,13 +242,27 @@ export function register(server) {
     const body = JSON.parse(request.requestBody);
 
     let users = [];
+    let teams = [];
     for (let login of body.owners) {
-      let user = schema.users.findBy({ login });
-      if (!user) {
-        return new Response(404, {}, { errors: [{ detail: `could not find user with login \`${login}\`` }] });
-      }
+      if (login.includes(':')) {
+        let team = schema.teams.findBy({ login });
+        if (!team) {
+          return new Response(404, {}, { errors: [{ detail: `could not find team with login \`${login}\`` }] });
+        }
 
-      users.push(user);
+        teams.push(team);
+      } else {
+        let user = schema.users.findBy({ login });
+        if (!user) {
+          return new Response(404, {}, { errors: [{ detail: `could not find user with login \`${login}\`` }] });
+        }
+
+        users.push(user);
+      }
+    }
+
+    for (let team of teams) {
+      schema.crateOwnerships.create({ crate, team });
     }
 
     for (let invitee of users) {
