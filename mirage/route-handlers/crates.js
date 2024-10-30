@@ -243,6 +243,7 @@ export function register(server) {
 
     let users = [];
     let teams = [];
+    let msgs = [];
     for (let login of body.owners) {
       if (login.includes(':')) {
         let team = schema.teams.findBy({ login });
@@ -251,6 +252,7 @@ export function register(server) {
         }
 
         teams.push(team);
+        msgs.push(`team ${login} has been added as an owner of crate ${crate.name}`);
       } else {
         let user = schema.users.findBy({ login });
         if (!user) {
@@ -258,6 +260,7 @@ export function register(server) {
         }
 
         users.push(user);
+        msgs.push(`user ${login} has been invited to be an owner of crate ${crate.name}`);
       }
     }
 
@@ -269,7 +272,8 @@ export function register(server) {
       schema.crateOwnerInvitations.create({ crate, inviter: user, invitee });
     }
 
-    return { ok: true };
+    let msg = msgs.join(',');
+    return { ok: true, msg };
   });
 
   server.delete('/api/v1/crates/:name/owners', (schema, request) => {

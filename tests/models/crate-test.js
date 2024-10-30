@@ -25,7 +25,7 @@ module('Model | Crate', function (hooks) {
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
       let result = await crateRecord.inviteOwner(user2.login);
-      assert.deepEqual(result, { ok: true });
+      assert.deepEqual(result, { ok: true, msg: 'user user-2 has been invited to be an owner of crate crate-0' });
     });
 
     test('error handling', async function (assert) {

@@ -40,7 +40,10 @@ module('Mirage | PUT /api/v1/crates/:name/owners', function (hooks) {
     let body = JSON.stringify({ owners: [user2.login] });
     let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
     assert.strictEqual(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true });
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      msg: 'user user-2 has been invited to be an owner of crate foo',
+    });
 
     let owners = this.server.schema.crateOwnerships.where({ crateId: crate.id });
     assert.strictEqual(owners.length, 1);
@@ -64,7 +67,10 @@ module('Mirage | PUT /api/v1/crates/:name/owners', function (hooks) {
     let body = JSON.stringify({ owners: [team.login] });
     let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
     assert.strictEqual(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true });
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      msg: 'team github:rust-lang:team-1 has been added as an owner of crate foo',
+    });
 
     let owners = this.server.schema.crateOwnerships.where({ crateId: crate.id });
     assert.strictEqual(owners.length, 2);
@@ -91,7 +97,10 @@ module('Mirage | PUT /api/v1/crates/:name/owners', function (hooks) {
     let body = JSON.stringify({ owners: [user2.login, team.login, user3.login] });
     let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
     assert.strictEqual(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true });
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      msg: 'user user-2 has been invited to be an owner of crate foo,team github:rust-lang:team-1 has been added as an owner of crate foo,user user-3 has been invited to be an owner of crate foo',
+    });
 
     let owners = this.server.schema.crateOwnerships.where({ crateId: crate.id });
     assert.strictEqual(owners.length, 2);
