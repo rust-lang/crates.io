@@ -3,6 +3,7 @@ import { setupApplicationTest as upstreamSetupApplicationTest } from 'ember-quni
 import { setupSentryMock } from './sentry';
 import setupMirage from './setup-mirage';
 
+export { default as setupMirage } from './setup-mirage';
 export { setupTest, setupRenderingTest } from 'ember-qunit';
 
 // see http://emberjs.github.io/rfcs/0637-customizable-test-setups.html

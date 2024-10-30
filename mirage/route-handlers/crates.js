@@ -227,6 +227,11 @@ export function register(server) {
   });
 
   server.put('/api/v1/crates/:name/owners', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
 
@@ -235,17 +240,48 @@ export function register(server) {
     }
 
     const body = JSON.parse(request.requestBody);
-    const [ownerId] = body.owners;
-    const user = schema.users.findBy({ login: ownerId });
 
-    if (!user) {
-      return { errors: [{ detail: `could not find user with login \`${ownerId}\`` }] };
+    let users = [];
+    let teams = [];
+    let msgs = [];
+    for (let login of body.owners) {
+      if (login.includes(':')) {
+        let team = schema.teams.findBy({ login });
+        if (!team) {
+          return new Response(404, {}, { errors: [{ detail: `could not find team with login \`${login}\`` }] });
+        }
+
+        teams.push(team);
+        msgs.push(`team ${login} has been added as an owner of crate ${crate.name}`);
+      } else {
+        let user = schema.users.findBy({ login });
+        if (!user) {
+          return new Response(404, {}, { errors: [{ detail: `could not find user with login \`${login}\`` }] });
+        }
+
+        users.push(user);
+        msgs.push(`user ${login} has been invited to be an owner of crate ${crate.name}`);
+      }
     }
 
-    return { ok: true };
+    for (let team of teams) {
+      schema.crateOwnerships.create({ crate, team });
+    }
+
+    for (let invitee of users) {
+      schema.crateOwnerInvitations.create({ crate, inviter: user, invitee });
+    }
+
+    let msg = msgs.join(',');
+    return { ok: true, msg };
   });
 
   server.delete('/api/v1/crates/:name/owners', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
 
