@@ -247,6 +247,8 @@ export function register(server) {
       return { errors: [{ detail: `could not find user with login \`${ownerId}\`` }] };
     }
 
+    schema.crateOwnerInvitations.create({ crate, inviter: user, invitee });
+
     return { ok: true };
   });
 
