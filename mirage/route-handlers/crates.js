@@ -240,14 +240,20 @@ export function register(server) {
     }
 
     const body = JSON.parse(request.requestBody);
-    const [ownerId] = body.owners;
-    const invitee = schema.users.findBy({ login: ownerId });
 
-    if (!invitee) {
-      return { errors: [{ detail: `could not find user with login \`${ownerId}\`` }] };
+    let users = [];
+    for (let login of body.owners) {
+      let user = schema.users.findBy({ login });
+      if (!user) {
+        return new Response(404, {}, { errors: [{ detail: `could not find user with login \`${login}\`` }] });
+      }
+
+      users.push(user);
     }
 
-    schema.crateOwnerInvitations.create({ crate, inviter: user, invitee });
+    for (let invitee of users) {
+      schema.crateOwnerInvitations.create({ crate, inviter: user, invitee });
+    }
 
     return { ok: true };
   });
