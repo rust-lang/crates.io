@@ -15,17 +15,23 @@ module('Model | Crate', function (hooks) {
   module('inviteOwner()', function () {
     test('happy path', async function (assert) {
       let user = this.server.create('user');
+      this.authenticateAs(user);
 
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
+      let user2 = this.server.create('user');
+
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
-      let result = await crateRecord.inviteOwner(user.login);
+      let result = await crateRecord.inviteOwner(user2.login);
       assert.deepEqual(result, { ok: true });
     });
 
     test('error handling', async function (assert) {
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
@@ -41,17 +47,23 @@ module('Model | Crate', function (hooks) {
   module('removeOwner()', function () {
     test('happy path', async function (assert) {
       let user = this.server.create('user');
+      this.authenticateAs(user);
 
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 
+      let user2 = this.server.create('user');
+
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
-      let result = await crateRecord.removeOwner(user.login);
+      let result = await crateRecord.removeOwner(user2.login);
       assert.deepEqual(result, { ok: true, msg: 'owners successfully removed' });
     });
 
     test('error handling', async function (assert) {
+      let user = this.server.create('user');
+      this.authenticateAs(user);
+
       let crate = this.server.create('crate');
       this.server.create('version', { crate });
 

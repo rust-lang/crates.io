@@ -227,6 +227,11 @@ export function register(server) {
   });
 
   server.put('/api/v1/crates/:name/owners', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
 
@@ -236,9 +241,9 @@ export function register(server) {
 
     const body = JSON.parse(request.requestBody);
     const [ownerId] = body.owners;
-    const user = schema.users.findBy({ login: ownerId });
+    const invitee = schema.users.findBy({ login: ownerId });
 
-    if (!user) {
+    if (!invitee) {
       return { errors: [{ detail: `could not find user with login \`${ownerId}\`` }] };
     }
 
@@ -246,6 +251,11 @@ export function register(server) {
   });
 
   server.delete('/api/v1/crates/:name/owners', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
 
