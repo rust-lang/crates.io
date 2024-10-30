@@ -61,4 +61,21 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
+
+  test('add a team owner', async function (assert) {
+    prepare(this);
+
+    this.server.create('user', { name: 'iain8' });
+    this.server.create('team', { org: 'rust-lang', name: 'crates-io' });
+
+    await visit('/crates/nanomsg/settings');
+    await fillIn('input[name="username"]', 'github:rust-lang:crates-io');
+    await click('[data-test-save-button]');
+
+    assert
+      .dom('[data-test-notification-message="success"]')
+      .hasText('Team github:rust-lang:crates-io was added as a crate owner');
+    assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 3 });
+    assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
+  });
 });

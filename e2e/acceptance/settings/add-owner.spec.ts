@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ mirage }) => {
@@ -50,6 +50,23 @@ test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () =>
       'An invite has been sent to iain8',
     );
     await expect(page.locator('[data-test-owners] [data-test-owner-team]')).toHaveCount(2);
+    await expect(page.locator('[data-test-owners] [data-test-owner-user]')).toHaveCount(2);
+  });
+
+  test('add a team owner', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
+      server.create('user', { name: 'iain8' });
+      server.create('team', { org: 'rust-lang', name: 'crates-io' });
+    });
+
+    await page.goto('/crates/nanomsg/settings');
+    await page.fill('input[name="username"]', 'github:rust-lang:crates-io');
+    await page.click('[data-test-save-button]');
+
+    await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(
+      'Team github:rust-lang:crates-io was added as a crate owner',
+    );
+    await expect(page.locator('[data-test-owners] [data-test-owner-team]')).toHaveCount(3);
     await expect(page.locator('[data-test-owners] [data-test-owner-user]')).toHaveCount(2);
   });
 });
