@@ -14,7 +14,12 @@ export default class CrateSettingsController extends Controller {
 
     try {
       await this.crate.inviteOwner(username);
-      this.notifications.success(`An invite has been sent to ${username}`);
+      if (username.includes(':')) {
+        this.notifications.success(`Team ${username} was added as a crate owner`);
+        this.crate.owner_team.reload();
+      } else {
+        this.notifications.success(`An invite has been sent to ${username}`);
+      }
     } catch (error) {
       let detail = error.errors?.[0]?.detail;
       if (detail && !detail.startsWith('{')) {
