@@ -11,7 +11,7 @@ workspace = true
 builder = []
 
 [dependencies]
-cargo-manifest = "=0.15.2"
+cargo-manifest = "=0.16.0"
 flate2 = "=1.0.34"
 serde = { version = "=1.0.214", features = ["derive"] }
 serde_json = "=1.0.132"
