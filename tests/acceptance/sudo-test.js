@@ -104,8 +104,13 @@ module('Acceptance | sudo', function (hooks) {
     await click('[data-test-version-yank-button="0.1.0"]');
 
     await waitFor('[data-test-version-unyank-button="0.1.0"]');
+    const crate = this.server.schema.crates.findBy({ name: 'foo' });
+    const version = this.server.schema.versions.findBy({ crateId: crate.id, num: '0.1.0' });
+    assert.true(version.yanked, 'The version should be yanked');
     assert.dom('[data-test-version-unyank-button="0.1.0"]').exists();
     await click('[data-test-version-unyank-button="0.1.0"]');
+    const updatedVersion = this.server.schema.versions.findBy({ crateId: crate.id, num: '0.1.0' });
+    assert.false(updatedVersion.yanked, 'The version should be unyanked');
 
     await waitFor('[data-test-version-yank-button="0.1.0"]');
     assert.dom('[data-test-version-yank-button="0.1.0"]').exists();
