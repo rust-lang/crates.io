@@ -156,7 +156,7 @@ importers:
         version: 2.1.0
       ember-cli-mirage:
         specifier: 3.0.4
-        version: 3.0.4(@ember-data/model@4.12.8)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-data@4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(webpack@5.95.0))(ember-qunit@8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(miragejs@0.1.48)(webpack@5.95.0)
+        version: 3.0.4(@ember-data/model@4.12.8)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-data@4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(webpack@5.95.0))(ember-qunit@8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(miragejs@0.1.48)(webpack@5.95.0)
       ember-cli-notifications:
         specifier: 9.0.0
         version: 9.0.0
@@ -183,7 +183,7 @@ importers:
         version: 0.1.1
       ember-exam:
         specifier: 9.0.0
-        version: 9.0.0(ember-qunit@8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)(webpack@5.95.0)
+        version: 9.0.0(ember-qunit@8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)(webpack@5.95.0)
       ember-fetch:
         specifier: 8.1.2
         version: 8.1.2
@@ -203,8 +203,8 @@ importers:
         specifier: 8.2.3
         version: 8.2.3(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
       ember-qunit:
-        specifier: 8.1.0
-        version: 8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
+        specifier: 8.1.1
+        version: 8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
       ember-resolver:
         specifier: 13.0.2
         version: 13.0.2(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
@@ -4298,8 +4298,8 @@ packages:
     peerDependencies:
       ember-source: '>= 3.28.0'
 
-  ember-qunit@8.1.0:
-    resolution: {integrity: sha512-55/xqvVQwhiNcnh/tCzWyvlYzrYqwDY0/cIPyDQbAxGKtkUt9jCfRUGllfyOofC6LX0fL/0fIi+5e9sg1m6vXw==}
+  ember-qunit@8.1.1:
+    resolution: {integrity: sha512-nT+6s74j3BKNn+QQY/hINC3Xw3kn0NF0cU9zlgVQmCBWoyis1J24xWrY2LFOMThPmF6lHqcrUb5JwvBD4BXEXg==}
     peerDependencies:
       '@ember/test-helpers': '>=3.0.3'
       ember-source: '>=4.0.0'
@@ -13921,7 +13921,7 @@ snapshots:
 
   ember-cli-lodash-subset@2.0.1: {}
 
-  ember-cli-mirage@3.0.4(@ember-data/model@4.12.8)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-data@4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(webpack@5.95.0))(ember-qunit@8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(miragejs@0.1.48)(webpack@5.95.0):
+  ember-cli-mirage@3.0.4(@ember-data/model@4.12.8)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-data@4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(webpack@5.95.0))(ember-qunit@8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(miragejs@0.1.48)(webpack@5.95.0):
     dependencies:
       '@babel/core': 7.26.0(supports-color@8.1.1)
       '@embroider/macros': 1.16.9
@@ -13938,7 +13938,7 @@ snapshots:
       '@ember-data/model': 4.12.8(@babel/core@7.26.0)(@ember-data/debug@4.12.8)(@ember-data/graph@4.12.8)(@ember-data/json-api@4.12.8)(@ember-data/legacy-compat@4.12.8)(@ember-data/store@4.12.8)(@ember-data/tracking@4.12.8)(@ember/string@3.1.1)(ember-inflector@5.0.2(@babel/core@7.26.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
       '@ember/test-helpers': 4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
       ember-data: 4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(webpack@5.95.0)
-      ember-qunit: 8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
+      ember-qunit: 8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -14314,7 +14314,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-exam@9.0.0(ember-qunit@8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)(webpack@5.95.0):
+  ember-exam@9.0.0(ember-qunit@8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)(webpack@5.95.0):
     dependencies:
       '@babel/core': 7.26.0(supports-color@8.1.1)
       chalk: 5.3.0
@@ -14322,7 +14322,7 @@ snapshots:
       debug: 4.3.7(supports-color@8.1.1)
       ember-auto-import: 2.9.0(webpack@5.95.0)
       ember-cli-babel: 8.2.0(@babel/core@7.26.0)
-      ember-qunit: 8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
+      ember-qunit: 8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0)
       ember-source: 5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)
       execa: 8.0.1
       fs-extra: 11.2.0
@@ -14448,7 +14448,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-qunit@8.1.0(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0):
+  ember-qunit@8.1.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))(qunit@2.22.0):
     dependencies:
       '@ember/test-helpers': 4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
       '@embroider/addon-shim': 1.8.9
