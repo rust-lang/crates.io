@@ -37,7 +37,7 @@ name = "crates_io"
 doctest = true
 
 [dependencies]
-anyhow = "=1.0.91"
+anyhow = "=1.0.92"
 async-trait = "=0.1.83"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.887.0"
