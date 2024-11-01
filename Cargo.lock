@@ -1624,9 +1624,9 @@ dependencies = [
 
 [[package]]
 name = "diesel-async"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcb799bb6f8ca6a794462125d7b8983b0c86e6c93a33a9c55934a4a5de4409d3"
+checksum = "4c5c6ec8d5c7b8444d19a47161797cbe361e0fb1ee40c6a8124ec915b64a4125"
 dependencies = [
  "async-trait",
  "deadpool",
