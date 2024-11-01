@@ -209,7 +209,6 @@ pub struct EncodableCrate {
     pub downloads: i64,
     pub recent_downloads: Option<i64>,
     pub default_version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub yanked: Option<bool>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
