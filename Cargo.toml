@@ -68,7 +68,7 @@ deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
 diesel = { version = "=2.2.4", features = ["postgres", "serde_json", "chrono", "numeric"] }
-diesel-async = { version = "=0.5.0", features = ["async-connection-wrapper", "deadpool", "postgres"] }
+diesel-async = { version = "=0.5.1", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 diesel_full_text_search = "=2.2.0"
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
