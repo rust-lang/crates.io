@@ -5,7 +5,7 @@ use crates_io_worker::{BackgroundJob, Runner};
 use diesel::prelude::*;
 use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_compact_json_snapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -75,11 +75,9 @@ async fn jobs_are_locked_when_fetched() {
     };
 
     let pool = pool(test_database.url());
-    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
+    let mut conn = pool.get().await.unwrap();
 
-    let mut conn = AsyncPgConnection::establish(test_database.url())
-        .await
-        .unwrap();
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     let job_id = TestJob.async_enqueue(&mut conn).await.unwrap().unwrap();
 
@@ -123,11 +121,9 @@ async fn jobs_are_deleted_when_successfully_run() {
     let test_database = TestDatabase::new();
 
     let pool = pool(test_database.url());
-    let runner = runner(pool, ()).register_job_type::<TestJob>();
+    let mut conn = pool.get().await.unwrap();
 
-    let mut conn = AsyncPgConnection::establish(test_database.url())
-        .await
-        .unwrap();
+    let runner = runner(pool, ()).register_job_type::<TestJob>();
 
     assert_eq!(remaining_jobs(&mut conn).await, 0);
 
@@ -166,11 +162,9 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     };
 
     let pool = pool(test_database.url());
-    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
+    let mut conn = pool.get().await.unwrap();
 
-    let mut conn = AsyncPgConnection::establish(test_database.url())
-        .await
-        .unwrap();
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     TestJob.async_enqueue(&mut conn).await.unwrap();
 
@@ -219,11 +213,9 @@ async fn panicking_in_jobs_updates_retry_counter() {
     let test_database = TestDatabase::new();
 
     let pool = pool(test_database.url());
-    let runner = runner(pool, ()).register_job_type::<TestJob>();
+    let mut conn = pool.get().await.unwrap();
 
-    let mut conn = AsyncPgConnection::establish(test_database.url())
-        .await
-        .unwrap();
+    let runner = runner(pool, ()).register_job_type::<TestJob>();
 
     let job_id = TestJob.async_enqueue(&mut conn).await.unwrap().unwrap();
 
@@ -285,11 +277,9 @@ async fn jobs_can_be_deduplicated() {
     };
 
     let pool = pool(test_database.url());
-    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
+    let mut conn = pool.get().await.unwrap();
 
-    let mut conn = AsyncPgConnection::establish(test_database.url())
-        .await
-        .unwrap();
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     // Enqueue first job
     assert_some!(TestJob::new("foo").async_enqueue(&mut conn).await.unwrap());
