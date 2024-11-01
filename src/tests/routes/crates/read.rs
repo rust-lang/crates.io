@@ -74,6 +74,34 @@ async fn show_minimal() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn show_all_yanked() {
+    let (app, anon, user) = TestApp::init().with_user();
+    let mut conn = app.db_conn();
+    let user = user.as_model();
+
+    CrateBuilder::new("foo_show", user.id)
+        .description("description")
+        .documentation("https://example.com")
+        .homepage("http://example.com")
+        .version(VersionBuilder::new("1.0.0").yanked(true))
+        .version(VersionBuilder::new("0.5.0").yanked(true))
+        .keyword("kw1")
+        .downloads(20)
+        .recent_downloads(10)
+        .expect_build(&mut conn);
+
+    let response = anon.get::<()>("/api/v1/crates/foo_show").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+        ".keywords[].created_at" => "[datetime]",
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_missing() {
     let (_, anon) = TestApp::init().empty();
 

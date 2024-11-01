@@ -45,19 +45,24 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .transpose()?
             .unwrap_or_default();
 
-        let (krate, downloads, default_version): (Crate, i64, Option<String>) =
-            Crate::by_name(&name)
-                .inner_join(crate_downloads::table)
-                .left_join(default_versions::table)
-                .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-                .select((
-                    Crate::as_select(),
-                    crate_downloads::downloads,
-                    versions::num.nullable(),
-                ))
-                .first(conn)
-                .optional()?
-                .ok_or_else(|| crate_not_found(&name))?;
+        let (krate, downloads, default_version, yanked): (
+            Crate,
+            i64,
+            Option<String>,
+            Option<bool>,
+        ) = Crate::by_name(&name)
+            .inner_join(crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+            .select((
+                Crate::as_select(),
+                crate_downloads::downloads,
+                versions::num.nullable(),
+                versions::yanked.nullable(),
+            ))
+            .first(conn)
+            .optional()?
+            .ok_or_else(|| crate_not_found(&name))?;
 
         let versions_publishers_and_audit_actions = if include.versions {
             let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
@@ -126,7 +131,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
         let encodable_crate = EncodableCrate::from(
             krate.clone(),
             default_version.as_deref(),
-            None,
+            yanked,
             top_versions.as_ref(),
             ids,
             kws.as_deref(),

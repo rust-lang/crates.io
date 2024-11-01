@@ -31,7 +31,8 @@ expression: response.json()
     "recent_downloads": null,
     "repository": null,
     "updated_at": "[datetime]",
-    "versions": null
+    "versions": null,
+    "yanked": false
   },
   "keywords": null,
   "versions": null
