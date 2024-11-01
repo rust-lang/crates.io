@@ -45,7 +45,7 @@ async fn job_is_locked(id: i64, conn: &mut AsyncPgConnection) -> bool {
         .is_none()
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn jobs_are_locked_when_fetched() {
     #[derive(Clone)]
     struct TestContext {
@@ -96,7 +96,7 @@ async fn jobs_are_locked_when_fetched() {
     assert!(!job_exists(job_id, &mut conn).await);
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn jobs_are_deleted_when_successfully_run() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
@@ -135,7 +135,7 @@ async fn jobs_are_deleted_when_successfully_run() {
     assert_eq!(remaining_jobs(&mut conn).await, 0);
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     #[derive(Clone)]
     struct TestContext {
@@ -196,7 +196,7 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
     runner.wait_for_shutdown().await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn panicking_in_jobs_updates_retry_counter() {
     #[derive(Serialize, Deserialize)]
     struct TestJob;
@@ -232,7 +232,7 @@ async fn panicking_in_jobs_updates_retry_counter() {
     assert_eq!(tries, 1);
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn jobs_can_be_deduplicated() {
     #[derive(Clone)]
     struct TestContext {

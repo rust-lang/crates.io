@@ -24,4 +24,4 @@ tracing = "=0.1.40"
 claims = "=0.7.1"
 crates_io_test_db = { path = "../crates_io_test_db" }
 insta = { version = "=1.41.1", features = ["json"] }
-tokio = { version = "=1.41.0", features = ["macros", "rt", "rt-multi-thread", "sync"]}
+tokio = { version = "=1.41.0", features = ["macros", "sync"]}
