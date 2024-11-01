@@ -122,8 +122,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       ember-a11y-testing:
-        specifier: 7.0.1
-        version: 7.0.1(@babel/core@7.26.0)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(qunit@2.22.0)(webpack@5.95.0)
+        specifier: 7.0.2
+        version: 7.0.2(@babel/core@7.26.0)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(qunit@2.22.0)(webpack@5.95.0)
       ember-auto-import:
         specifier: 2.9.0
         version: 2.9.0(webpack@5.95.0)
@@ -3999,8 +3999,8 @@ packages:
   elliptic@6.6.0:
     resolution: {integrity: sha512-dpwoQcLc/2WLQvJvLRHKZ+f9FgOdjnq11rurqwekGQygGPsYSK29OMMD2WalatiqQ+XGFDglTNixpPfI+lpaAA==}
 
-  ember-a11y-testing@7.0.1:
-    resolution: {integrity: sha512-Z1DQvdv+g3zN+/V6vgVYAEbCBZAXVQZKOWIs3+5P4hz+P3skQoZiDcvKcFqJ2TDI+1UvqUnJcEdRd6+C0HGijA==}
+  ember-a11y-testing@7.0.2:
+    resolution: {integrity: sha512-Nv7+WIPkkILYMarLQHiXiHwnRtmtAOq2r4d8DZptKJPrl7mLdD1fM3gwzpbG0mTu81LtDmG+yULD+mBYxzP13A==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
       '@ember/test-helpers': ^3.0.3 || ^4.0.2
@@ -13606,7 +13606,7 @@ snapshots:
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
 
-  ember-a11y-testing@7.0.1(@babel/core@7.26.0)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(qunit@2.22.0)(webpack@5.95.0):
+  ember-a11y-testing@7.0.2(@babel/core@7.26.0)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0)))(qunit@2.22.0)(webpack@5.95.0):
     dependencies:
       '@ember/test-helpers': 4.0.4(@babel/core@7.26.0)(ember-source@5.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.95.0))
       '@ember/test-waiters': 3.1.0
