@@ -317,12 +317,16 @@ async fn jobs_can_be_deduplicated() {
     runner.wait_for_shutdown().await;
 }
 
+fn pool(database_url: &str) -> Pool<AsyncPgConnection> {
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
+    Pool::builder(manager).max_size(4).build().unwrap()
+}
+
 fn runner<Context: Clone + Send + Sync + 'static>(
     database_url: &str,
     context: Context,
 ) -> Runner<Context> {
-    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
-    let deadpool = Pool::builder(manager).max_size(4).build().unwrap();
+    let deadpool = pool(database_url);
 
     Runner::new(deadpool, context)
         .configure_default_queue(|queue| queue.num_workers(2))
