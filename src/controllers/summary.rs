@@ -47,6 +47,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                     Ok(EncodableCrate::from_minimal(
                         krate,
                         default_version.as_deref(),
+                        None,
                         Some(&top_versions),
                         false,
                         total,

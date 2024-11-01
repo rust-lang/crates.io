@@ -209,6 +209,8 @@ pub struct EncodableCrate {
     pub downloads: i64,
     pub recent_downloads: Option<i64>,
     pub default_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub yanked: Option<bool>,
     // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
     pub max_version: String,
     pub newest_version: String, // Most recently updated version, which may not be max
@@ -226,6 +228,7 @@ impl EncodableCrate {
     pub fn from(
         krate: Crate,
         default_version: Option<&str>,
+        yanked: Option<bool>,
         top_versions: Option<&TopVersions>,
         versions: Option<Vec<i32>>,
         keywords: Option<&[Keyword]>,
@@ -296,6 +299,7 @@ impl EncodableCrate {
             categories: category_ids,
             badges: [],
             default_version,
+            yanked,
             max_version,
             newest_version,
             max_stable_version,
@@ -318,6 +322,7 @@ impl EncodableCrate {
     pub fn from_minimal(
         krate: Crate,
         default_version: Option<&str>,
+        yanked: Option<bool>,
         top_versions: Option<&TopVersions>,
         exact_match: bool,
         downloads: i64,
@@ -326,6 +331,7 @@ impl EncodableCrate {
         Self::from(
             krate,
             default_version,
+            yanked,
             top_versions,
             None,
             None,
@@ -808,6 +814,7 @@ mod tests {
             downloads: 0,
             recent_downloads: None,
             default_version: None,
+            yanked: None,
             max_version: "".to_string(),
             newest_version: "".to_string(),
             max_stable_version: None,

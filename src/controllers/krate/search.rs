@@ -235,6 +235,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                     EncodableCrate::from_minimal(
                         krate,
                         default_version.as_deref(),
+                        None,
                         Some(&max_version),
                         perfect_match,
                         total,
