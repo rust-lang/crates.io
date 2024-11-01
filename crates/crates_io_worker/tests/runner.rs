@@ -74,7 +74,8 @@ async fn jobs_are_locked_when_fetched() {
         assertions_finished_barrier: Arc::new(Barrier::new(2)),
     };
 
-    let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+    let pool = pool(test_database.url());
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     let mut conn = AsyncPgConnection::establish(test_database.url())
         .await
@@ -121,7 +122,8 @@ async fn jobs_are_deleted_when_successfully_run() {
 
     let test_database = TestDatabase::new();
 
-    let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
+    let pool = pool(test_database.url());
+    let runner = runner(pool, ()).register_job_type::<TestJob>();
 
     let mut conn = AsyncPgConnection::establish(test_database.url())
         .await
@@ -163,7 +165,8 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() {
         job_started_barrier: Arc::new(Barrier::new(2)),
     };
 
-    let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+    let pool = pool(test_database.url());
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     let mut conn = AsyncPgConnection::establish(test_database.url())
         .await
@@ -215,7 +218,8 @@ async fn panicking_in_jobs_updates_retry_counter() {
 
     let test_database = TestDatabase::new();
 
-    let runner = runner(test_database.url(), ()).register_job_type::<TestJob>();
+    let pool = pool(test_database.url());
+    let runner = runner(pool, ()).register_job_type::<TestJob>();
 
     let mut conn = AsyncPgConnection::establish(test_database.url())
         .await
@@ -280,7 +284,8 @@ async fn jobs_can_be_deduplicated() {
         assertions_finished_barrier: Arc::new(Barrier::new(2)),
     };
 
-    let runner = runner(test_database.url(), test_context.clone()).register_job_type::<TestJob>();
+    let pool = pool(test_database.url());
+    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
     let mut conn = AsyncPgConnection::establish(test_database.url())
         .await
@@ -323,11 +328,9 @@ fn pool(database_url: &str) -> Pool<AsyncPgConnection> {
 }
 
 fn runner<Context: Clone + Send + Sync + 'static>(
-    database_url: &str,
+    deadpool: Pool<AsyncPgConnection>,
     context: Context,
 ) -> Runner<Context> {
-    let deadpool = pool(database_url);
-
     Runner::new(deadpool, context)
         .configure_default_queue(|queue| queue.num_workers(2))
         .shutdown_when_queue_empty()
