@@ -40,7 +40,7 @@ doctest = true
 anyhow = "=1.0.92"
 async-trait = "=0.1.83"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
-aws-ip-ranges = "=0.887.0"
+aws-ip-ranges = "=0.888.0"
 aws-sdk-cloudfront = "=1.50.0"
 aws-sdk-sqs = "=1.48.0"
 axum = { version = "=0.7.7", features = ["macros", "matched-path"] }
