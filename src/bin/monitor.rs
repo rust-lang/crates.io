@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use crates_io::worker::jobs;
-use crates_io::{admin::on_call, db, schema::*};
+use crates_io::{db, pagerduty, schema::*};
 use crates_io_env_vars::{var, var_parsed};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -53,14 +53,14 @@ async fn check_failing_background_jobs(conn: &mut AsyncPgConnection) -> Result<(
     let stalled_job_count = stalled_jobs.len();
 
     let event = if stalled_job_count > 0 {
-        on_call::Event::Trigger {
+        pagerduty::Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
             description: format!(
                 "{stalled_job_count} jobs have been in the queue for more than {max_job_time} minutes"
             ),
         }
     } else {
-        on_call::Event::Resolve {
+        pagerduty::Event::Resolve {
             incident_key: EVENT_KEY.into(),
             description: Some("No stalled background jobs".into()),
         }
@@ -93,7 +93,7 @@ async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {
-            return log_and_trigger_event(on_call::Event::Trigger {
+            return log_and_trigger_event(pagerduty::Event::Trigger {
                 incident_key: Some(EVENT_KEY.into()),
                 description: format!("update_downloads job running for {minutes} minutes"),
             })
@@ -101,7 +101,7 @@ async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<
         }
     };
 
-    log_and_trigger_event(on_call::Event::Resolve {
+    log_and_trigger_event(pagerduty::Event::Resolve {
         incident_key: EVENT_KEY.into(),
         description: Some("No stalled update_downloads job".into()),
     })
@@ -136,12 +136,12 @@ async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<()> {
     }
 
     let event = if let Some(event_description) = event_description {
-        on_call::Event::Trigger {
+        pagerduty::Event::Trigger {
             incident_key: Some(EVENT_KEY.into()),
             description: format!("{event_description}, possible spam attack underway"),
         }
     } else {
-        on_call::Event::Resolve {
+        pagerduty::Event::Resolve {
             incident_key: EVENT_KEY.into(),
             description: Some("No spam crates detected".into()),
         }
@@ -151,12 +151,12 @@ async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<()> {
     Ok(())
 }
 
-async fn log_and_trigger_event(event: on_call::Event) -> Result<()> {
+async fn log_and_trigger_event(event: pagerduty::Event) -> Result<()> {
     match event {
-        on_call::Event::Trigger {
+        pagerduty::Event::Trigger {
             ref description, ..
         } => println!("Paging on-call: {description}"),
-        on_call::Event::Resolve {
+        pagerduty::Event::Resolve {
             description: Some(ref description),
             ..
         } => println!("{description}"),
