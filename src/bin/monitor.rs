@@ -7,19 +7,24 @@
 use anyhow::Result;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
-use crates_io_env_vars::{var, var_parsed};
+use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_pagerduty as pagerduty;
+use crates_io_pagerduty::PagerdutyClient;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let api_token = required_var("PAGERDUTY_API_TOKEN")?.into();
+    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
+    let client = PagerdutyClient::new(api_token, service_key);
+
     let conn = &mut db::oneoff_connection().await?;
 
-    check_failing_background_jobs(conn).await?;
-    check_stalled_update_downloads(conn).await?;
-    check_spam_attack(conn).await?;
+    check_failing_background_jobs(conn, &client).await?;
+    check_stalled_update_downloads(conn, &client).await?;
+    check_spam_attack(conn, &client).await?;
     Ok(())
 }
 
@@ -31,7 +36,10 @@ async fn main() -> Result<()> {
 ///
 /// Within the default 15 minute time, a job should have already had several
 /// failed retry attempts.
-async fn check_failing_background_jobs(conn: &mut AsyncPgConnection) -> Result<()> {
+async fn check_failing_background_jobs(
+    conn: &mut AsyncPgConnection,
+    pagerduty: &PagerdutyClient,
+) -> Result<()> {
     use diesel::dsl::*;
     use diesel::sql_types::Integer;
 
@@ -67,13 +75,16 @@ async fn check_failing_background_jobs(conn: &mut AsyncPgConnection) -> Result<(
         }
     };
 
-    log_and_trigger_event(event).await?;
+    log_and_trigger_event(pagerduty, event).await?;
 
     Ok(())
 }
 
 /// Check for an `update_downloads` job that has run longer than expected
-async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<()> {
+async fn check_stalled_update_downloads(
+    conn: &mut AsyncPgConnection,
+    pagerduty: &PagerdutyClient,
+) -> Result<()> {
     use chrono::{DateTime, NaiveDateTime, Utc};
 
     const EVENT_KEY: &str = "update_downloads_stalled";
@@ -94,23 +105,32 @@ async fn check_stalled_update_downloads(conn: &mut AsyncPgConnection) -> Result<
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {
-            return log_and_trigger_event(pagerduty::Event::Trigger {
-                incident_key: Some(EVENT_KEY.into()),
-                description: format!("update_downloads job running for {minutes} minutes"),
-            })
+            return log_and_trigger_event(
+                pagerduty,
+                pagerduty::Event::Trigger {
+                    incident_key: Some(EVENT_KEY.into()),
+                    description: format!("update_downloads job running for {minutes} minutes"),
+                },
+            )
             .await;
         }
     };
 
-    log_and_trigger_event(pagerduty::Event::Resolve {
-        incident_key: EVENT_KEY.into(),
-        description: Some("No stalled update_downloads job".into()),
-    })
+    log_and_trigger_event(
+        pagerduty,
+        pagerduty::Event::Resolve {
+            incident_key: EVENT_KEY.into(),
+            description: Some("No stalled update_downloads job".into()),
+        },
+    )
     .await
 }
 
 /// Check for known spam patterns
-async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<()> {
+async fn check_spam_attack(
+    conn: &mut AsyncPgConnection,
+    pagerduty: &PagerdutyClient,
+) -> Result<()> {
     use crates_io::sql::canon_crate_name;
 
     const EVENT_KEY: &str = "spam_attack";
@@ -148,11 +168,11 @@ async fn check_spam_attack(conn: &mut AsyncPgConnection) -> Result<()> {
         }
     };
 
-    log_and_trigger_event(event).await?;
+    log_and_trigger_event(pagerduty, event).await?;
     Ok(())
 }
 
-async fn log_and_trigger_event(event: pagerduty::Event) -> Result<()> {
+async fn log_and_trigger_event(pagerduty: &PagerdutyClient, event: pagerduty::Event) -> Result<()> {
     match event {
         pagerduty::Event::Trigger {
             ref description, ..
@@ -163,5 +183,5 @@ async fn log_and_trigger_event(event: pagerduty::Event) -> Result<()> {
         } => println!("{description}"),
         _ => {} // noop
     }
-    event.send().await
+    pagerduty.send(event).await
 }
