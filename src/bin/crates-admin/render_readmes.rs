@@ -13,6 +13,8 @@ use crates_io::tasks::spawn_blocking;
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use std::str::FromStr;
@@ -42,9 +44,13 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
+    let conn = db::oneoff_async_connection()
+        .await
+        .context("Failed to connect to the database")?;
+
+    let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
     spawn_blocking(move || {
         let storage = Arc::new(Storage::from_environment());
-        let conn = &mut db::oneoff_connection()?;
 
         let start_time = Utc::now();
 
@@ -74,7 +80,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             query = query.filter(crates::name.eq(crate_name));
         }
 
-        let version_ids: Vec<i32> = query.load(conn).context("error loading version ids")?;
+        let version_ids: Vec<i32> = query.load(&mut conn).context("error loading version ids")?;
 
         let total_versions = version_ids.len();
         println!("Rendering {total_versions} versions");
@@ -101,12 +107,12 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 .inner_join(crates::table)
                 .filter(versions::id.eq_any(version_ids_chunk))
                 .select((Version::as_select(), crates::name))
-                .load(conn)
+                .load(&mut conn)
                 .context("error loading versions")?;
 
             let mut tasks = Vec::with_capacity(page_size);
             for (version, krate_name) in versions {
-                Version::record_readme_rendering(version.id, conn)
+                Version::record_readme_rendering(version.id, &mut conn)
                     .context("Couldn't record rendering time")?;
 
                 let client = client.clone();
