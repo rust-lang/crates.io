@@ -3,6 +3,8 @@ use crates_io::models::{update_default_version, verify_default_version};
 use crates_io::tasks::spawn_blocking;
 use crates_io::{db, schema::crates};
 use diesel::prelude::*;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
 #[derive(clap::Parser, Debug, Eq, PartialEq)]
@@ -16,14 +18,18 @@ pub enum Command {
 }
 
 pub async fn run(command: Command) -> anyhow::Result<()> {
+    let mut conn = db::oneoff_async_connection()
+        .await
+        .context("Failed to connect to the database")?;
+
+    let crate_ids: Vec<i32> = crates::table
+        .select(crates::id)
+        .load(&mut conn)
+        .await
+        .context("Failed to load crates")?;
+
+    let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
     spawn_blocking(move || {
-        let mut conn = db::oneoff_connection().context("Failed to connect to the database")?;
-
-        let crate_ids: Vec<i32> = crates::table
-            .select(crates::id)
-            .load(&mut conn)
-            .context("Failed to load crates")?;
-
         let pb = ProgressBar::new(crate_ids.len() as u64);
         pb.set_style(ProgressStyle::with_template(
             "{bar:60} ({pos}/{len}, ETA {eta})",
