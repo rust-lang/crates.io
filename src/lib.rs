@@ -46,7 +46,6 @@ mod licenses;
 pub mod metrics;
 pub mod middleware;
 pub mod models;
-pub mod pagerduty;
 pub mod rate_limiter;
 mod real_ip;
 mod router;

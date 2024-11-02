@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::str::FromStr;
 
-use crates_io::pagerduty;
+use crates_io_pagerduty as pagerduty;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum EventType {
@@ -25,13 +25,17 @@ impl FromStr for EventType {
 
 #[derive(clap::Parser, Debug)]
 #[command(name = "test-pagerduty", about = "Send a test event to pagerduty")]
-pub struct Opts {
+struct Opts {
     #[arg(value_enum)]
     event_type: EventType,
     description: Option<String>,
 }
 
-pub async fn run(opts: Opts) -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
+    use clap::Parser;
+
+    let opts = Opts::parse();
     let event = match opts.event_type {
         EventType::Trigger => pagerduty::Event::Trigger {
             incident_key: Some("test".into()),
