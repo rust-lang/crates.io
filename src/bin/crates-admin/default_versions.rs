@@ -1,7 +1,7 @@
-use crate::models::{update_default_version, verify_default_version};
-use crate::tasks::spawn_blocking;
-use crate::{db, schema::crates};
 use anyhow::Context;
+use crates_io::models::{update_default_version, verify_default_version};
+use crates_io::tasks::spawn_blocking;
+use crates_io::{db, schema::crates};
 use diesel::prelude::*;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 

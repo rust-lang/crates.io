@@ -1,5 +1,5 @@
-use crate::tasks::spawn_blocking;
 use ::dialoguer::{theme::Theme, Confirm};
+use crates_io::tasks::spawn_blocking;
 
 pub async fn async_confirm(msg: impl Into<String>) -> anyhow::Result<bool> {
     let msg = msg.into();

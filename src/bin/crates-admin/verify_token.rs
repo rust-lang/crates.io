@@ -1,7 +1,7 @@
-use crate::models::ApiToken;
-use crate::tasks::spawn_blocking;
-use crate::util::token::HashedToken;
-use crate::{db, models::User};
+use crates_io::models::ApiToken;
+use crates_io::tasks::spawn_blocking;
+use crates_io::util::token::HashedToken;
+use crates_io::{db, models::User};
 
 #[derive(clap::Parser, Debug)]
 #[command(

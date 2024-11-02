@@ -1,15 +1,15 @@
-use crate::{
+use anyhow::{anyhow, Context};
+use crates_io::{
     db,
     models::Version,
     schema::{crates, readme_renderings, versions},
 };
-use anyhow::{anyhow, Context};
 use std::path::PathBuf;
 use std::{io::Read, path::Path, sync::Arc, thread};
 
-use crate::storage::Storage;
-use crate::tasks::spawn_blocking;
 use chrono::{NaiveDateTime, Utc};
+use crates_io::storage::Storage;
+use crates_io::tasks::spawn_blocking;
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
@@ -246,6 +246,7 @@ fn find_file_by_path<R: Read>(
 
 #[cfg(test)]
 pub mod tests {
+    use claims::assert_err;
     use crates_io_tarball::TarballBuilder;
 
     use super::render_pkg_readme;
