@@ -4,7 +4,6 @@ pub mod delete_version;
 pub mod dialoguer;
 pub mod enqueue_job;
 pub mod migrate;
-pub mod on_call;
 pub mod populate;
 pub mod render_readmes;
 pub mod test_pagerduty;
