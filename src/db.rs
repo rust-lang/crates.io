@@ -1,5 +1,5 @@
 use crate::certs::CRUNCHY;
-use diesel::{Connection, ConnectionResult, PgConnection, QueryResult};
+use diesel::{ConnectionResult, QueryResult};
 use diesel_async::pooled_connection::deadpool::{Hook, HookError};
 use diesel_async::pooled_connection::ManagerConfig;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -10,18 +10,6 @@ use std::time::Duration;
 use url::Url;
 
 use crate::config;
-
-pub fn oneoff_connection_with_config(
-    config: &config::DatabasePools,
-) -> ConnectionResult<PgConnection> {
-    let url = connection_url(config, config.primary.url.expose_secret());
-    PgConnection::establish(&url)
-}
-
-pub fn oneoff_connection() -> anyhow::Result<PgConnection> {
-    let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
-    oneoff_connection_with_config(&config).map_err(Into::into)
-}
 
 pub async fn oneoff_async_connection_with_config(
     config: &config::DatabasePools,
