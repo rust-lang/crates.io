@@ -1214,9 +1214,11 @@ name = "crates_io_pagerduty"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "clap",
  "crates_io_env_vars",
  "reqwest 0.12.9",
  "serde",
+ "tokio",
 ]
 
 [[package]]
