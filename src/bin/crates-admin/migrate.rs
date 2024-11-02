@@ -39,7 +39,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
     }
 
     // The primary is online, access directly via `DATABASE_URL`.
-    let conn = crates_io::db::oneoff_async_connection()
+    let conn = crates_io::db::oneoff_connection()
         .await
         .context("Failed to connect to the database")?;
 

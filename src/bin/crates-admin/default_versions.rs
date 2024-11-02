@@ -18,7 +18,7 @@ pub enum Command {
 }
 
 pub async fn run(command: Command) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_async_connection()
+    let mut conn = db::oneoff_connection()
         .await
         .context("Failed to connect to the database")?;
 

@@ -11,16 +11,16 @@ use url::Url;
 
 use crate::config;
 
-pub async fn oneoff_async_connection_with_config(
+pub async fn oneoff_connection_with_config(
     config: &config::DatabasePools,
 ) -> ConnectionResult<AsyncPgConnection> {
     let url = connection_url(config, config.primary.url.expose_secret());
     establish_async_connection(&url, config.enforce_tls).await
 }
 
-pub async fn oneoff_async_connection() -> anyhow::Result<AsyncPgConnection> {
+pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
     let config = config::DatabasePools::full_from_environment(&config::Base::from_environment()?)?;
-    Ok(oneoff_async_connection_with_config(&config).await?)
+    Ok(oneoff_connection_with_config(&config).await?)
 }
 
 pub fn connection_url(config: &config::DatabasePools, url: &str) -> String {
