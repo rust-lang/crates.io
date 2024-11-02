@@ -15,7 +15,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let conn = &mut db::oneoff_async_connection().await?;
+    let conn = &mut db::oneoff_connection().await?;
 
     check_failing_background_jobs(conn).await?;
     check_stalled_update_downloads(conn).await?;

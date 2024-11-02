@@ -21,7 +21,7 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_async_connection().await?;
+    let mut conn = db::oneoff_connection().await?;
     transfer(opts, &mut conn).await?;
     Ok(())
 }

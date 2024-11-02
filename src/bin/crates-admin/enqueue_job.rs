@@ -52,7 +52,7 @@ pub enum Command {
 }
 
 pub async fn run(command: Command) -> Result<()> {
-    let mut conn = db::oneoff_async_connection().await?;
+    let mut conn = db::oneoff_connection().await?;
     println!("Enqueueing background job: {command:?}");
 
     match command {

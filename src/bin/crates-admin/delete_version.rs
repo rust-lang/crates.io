@@ -30,7 +30,7 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let mut conn = db::oneoff_async_connection()
+    let mut conn = db::oneoff_connection()
         .await
         .context("Failed to establish database connection")?;
 
