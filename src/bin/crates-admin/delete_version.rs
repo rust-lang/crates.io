@@ -1,10 +1,11 @@
-use crate::models::update_default_version;
-use crate::schema::crates;
-use crate::storage::Storage;
-use crate::tasks::spawn_blocking;
-use crate::worker::jobs;
-use crate::{admin::dialoguer, db, schema::versions};
+use crate::dialoguer;
 use anyhow::Context;
+use crates_io::models::update_default_version;
+use crates_io::schema::crates;
+use crates_io::storage::Storage;
+use crates_io::tasks::spawn_blocking;
+use crates_io::worker::jobs;
+use crates_io::{db, schema::versions};
 use crates_io_worker::BackgroundJob;
 use diesel::{Connection, ExpressionMethods, QueryDsl};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;

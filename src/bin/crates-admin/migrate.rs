@@ -1,10 +1,10 @@
-use crate::tasks::spawn_blocking;
 use anyhow::{anyhow, Error};
+use crates_io::tasks::spawn_blocking;
 use diesel_migrations::{
     embed_migrations, EmbeddedMigrations, HarnessWithOutput, MigrationHarness,
 };
 
-static CATEGORIES_TOML: &str = include_str!("../boot/categories.toml");
+static CATEGORIES_TOML: &str = include_str!("../../boot/categories.toml");
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
@@ -17,8 +17,8 @@ pub struct Opts;
 
 pub async fn run(_opts: Opts) -> Result<(), Error> {
     spawn_blocking(move || {
-        let config = crate::config::DatabasePools::full_from_environment(
-            &crate::config::Base::from_environment()?,
+        let config = crates_io::config::DatabasePools::full_from_environment(
+            &crates_io::config::Base::from_environment()?,
         )?;
 
         // TODO: Refactor logic so that we can also check things from App::new() here.
@@ -38,7 +38,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
         }
 
         // The primary is online, access directly via `DATABASE_URL`.
-        let conn = &mut crate::db::oneoff_connection_with_config(&config)?;
+        let conn = &mut crates_io::db::oneoff_connection_with_config(&config)?;
 
         info!("Migrating the database");
         let mut stdout = std::io::stdout();
@@ -48,7 +48,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
             .map_err(|err| anyhow!("Failed to run migrations: {err}"))?;
 
         info!("Synchronizing crate categories");
-        crate::boot::categories::sync_with_connection(CATEGORIES_TOML, conn)?;
+        crates_io::boot::categories::sync_with_connection(CATEGORIES_TOML, conn)?;
 
         Ok(())
     })

@@ -1,8 +1,9 @@
-use crate::schema::crate_downloads;
-use crate::worker::jobs;
-use crate::{admin::dialoguer, db, schema::crates};
+use crate::dialoguer;
 use anyhow::Context;
 use colored::Colorize;
+use crates_io::schema::crate_downloads;
+use crates_io::worker::jobs;
+use crates_io::{db, schema::crates};
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
 use diesel::sql_types::{Array, BigInt, Text};

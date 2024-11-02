@@ -1,5 +1,5 @@
-use crate::{
-    admin::dialoguer,
+use crate::dialoguer;
+use crates_io::{
     db,
     models::{Crate, OwnerKind, User},
     schema::{crate_owners, crates, users},

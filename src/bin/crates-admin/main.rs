@@ -1,10 +1,19 @@
 #[macro_use]
 extern crate tracing;
 
-use crates_io::admin::{
-    default_versions, delete_crate, delete_version, enqueue_job, migrate, populate, render_readmes,
-    test_pagerduty, transfer_crates, upload_index, verify_token, yank_version,
-};
+mod default_versions;
+mod delete_crate;
+mod delete_version;
+mod dialoguer;
+mod enqueue_job;
+mod migrate;
+mod populate;
+mod render_readmes;
+mod test_pagerduty;
+mod transfer_crates;
+mod upload_index;
+mod verify_token;
+mod yank_version;
 
 #[derive(clap::Parser, Debug)]
 #[command(name = "crates-admin")]

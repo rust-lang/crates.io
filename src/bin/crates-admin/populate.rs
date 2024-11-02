@@ -1,4 +1,4 @@
-use crate::{db, schema::version_downloads};
+use crates_io::{db, schema::version_downloads};
 
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;

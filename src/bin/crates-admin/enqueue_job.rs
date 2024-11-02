@@ -1,8 +1,8 @@
-use crate::db;
-use crate::schema::{background_jobs, crates};
-use crate::worker::jobs;
 use anyhow::Result;
 use chrono::NaiveDate;
+use crates_io::db;
+use crates_io::schema::{background_jobs, crates};
+use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
 use diesel::prelude::*;

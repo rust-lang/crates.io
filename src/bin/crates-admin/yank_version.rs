@@ -1,8 +1,8 @@
-use crate::admin::dialoguer;
-use crate::db;
-use crate::models::{Crate, Version};
-use crate::schema::versions;
-use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
+use crate::dialoguer;
+use crates_io::db;
+use crates_io::models::{Crate, Version};
+use crates_io::schema::versions;
+use crates_io::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;

@@ -1,7 +1,7 @@
-use crate::admin::dialoguer;
-use crate::storage::Storage;
-use crate::tasks::spawn_blocking;
+use crate::dialoguer;
 use anyhow::{anyhow, Context};
+use crates_io::storage::Storage;
+use crates_io::tasks::spawn_blocking;
 use crates_io_index::{Repository, RepositoryConfig};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
