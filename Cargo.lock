@@ -1042,6 +1042,7 @@ dependencies = [
  "crates_io_github",
  "crates_io_index",
  "crates_io_markdown",
+ "crates_io_pagerduty",
  "crates_io_tarball",
  "crates_io_team_repo",
  "crates_io_test_db",
@@ -1206,6 +1207,16 @@ dependencies = [
  "htmlescape",
  "insta",
  "url",
+]
+
+[[package]]
+name = "crates_io_pagerduty"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "crates_io_env_vars",
+ "reqwest 0.12.9",
+ "serde",
 ]
 
 [[package]]

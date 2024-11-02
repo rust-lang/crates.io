@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::str::FromStr;
 
-use crates_io::pagerduty;
+use crates_io_pagerduty as pagerduty;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum EventType {

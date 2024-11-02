@@ -6,8 +6,9 @@
 
 use anyhow::Result;
 use crates_io::worker::jobs;
-use crates_io::{db, pagerduty, schema::*};
+use crates_io::{db, schema::*};
 use crates_io_env_vars::{var, var_parsed};
+use crates_io_pagerduty as pagerduty;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
