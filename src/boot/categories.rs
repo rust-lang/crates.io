@@ -1,6 +1,7 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
+use crate::util::diesel::Conn;
 use anyhow::{Context, Result};
 use diesel::prelude::*;
 
@@ -75,7 +76,7 @@ fn categories_from_toml(
     Ok(result)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &mut PgConnection) -> Result<()> {
+pub fn sync_with_connection(toml_str: &str, conn: &mut impl Conn) -> Result<()> {
     use crate::schema::categories;
     use diesel::pg::upsert::excluded;
 
