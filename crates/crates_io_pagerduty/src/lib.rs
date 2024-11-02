@@ -40,9 +40,9 @@ impl PagerdutyClient {
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub async fn send(&self, event: Event) -> Result<()> {
+    pub async fn send(&self, event: &Event) -> Result<()> {
         let api_token = self.api_token.expose_secret();
-        let service_key = self.service_key.clone();
+        let service_key = &self.service_key;
 
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
@@ -69,10 +69,10 @@ impl PagerdutyClient {
 }
 
 #[derive(serde::Serialize, Debug)]
-struct FullEvent {
-    service_key: String,
+struct FullEvent<'a> {
+    service_key: &'a str,
     #[serde(flatten)]
-    event: Event,
+    event: &'a Event,
 }
 
 #[derive(serde::Deserialize, Debug)]

@@ -58,5 +58,5 @@ async fn main() -> Result<()> {
         },
     };
 
-    client.send(event).await
+    client.send(&event).await
 }

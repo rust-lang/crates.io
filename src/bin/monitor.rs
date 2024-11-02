@@ -183,5 +183,5 @@ async fn log_and_trigger_event(pagerduty: &PagerdutyClient, event: pagerduty::Ev
         } => println!("{description}"),
         _ => {} // noop
     }
-    pagerduty.send(event).await
+    pagerduty.send(&event).await
 }
