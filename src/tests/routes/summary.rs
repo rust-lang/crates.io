@@ -100,7 +100,7 @@ async fn summary_new_crates() {
         json.most_downloaded[0].default_version,
         Some("0.2.0".into())
     );
-    assert_eq!(json.most_downloaded[0].yanked, Some(false));
+    assert!(!json.most_downloaded[0].yanked);
     assert_eq!(json.most_downloaded[0].downloads, 5000);
     assert_eq!(json.most_downloaded[0].recent_downloads, Some(50));
     assert_eq!(
@@ -111,7 +111,7 @@ async fn summary_new_crates() {
         json.most_recently_downloaded[0].default_version,
         Some("0.2.0".into())
     );
-    assert_eq!(json.most_recently_downloaded[0].yanked, Some(false));
+    assert!(!json.most_recently_downloaded[0].yanked);
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(50));
     assert_eq!(json.popular_keywords[0].keyword, "popular");
     assert_eq!(json.popular_categories[0].category, "Category 1");
@@ -119,19 +119,19 @@ async fn summary_new_crates() {
 
     assert_eq!(json.just_updated[0].name, "just_updated_patch");
     assert_eq!(json.just_updated[0].default_version, Some("0.2.0".into()));
-    assert_eq!(json.just_updated[0].yanked, Some(false));
+    assert!(!json.just_updated[0].yanked);
     assert_eq!(json.just_updated[0].max_version, "0.2.0");
     assert_eq!(json.just_updated[0].newest_version, "0.1.1");
 
     assert_eq!(json.just_updated[1].name, "just_updated");
     assert_eq!(json.just_updated[1].default_version, Some("0.1.2".into()));
-    assert_eq!(json.just_updated[1].yanked, Some(false));
+    assert!(!json.just_updated[1].yanked);
     assert_eq!(json.just_updated[1].max_version, "0.1.2");
     assert_eq!(json.just_updated[1].newest_version, "0.1.2");
 
     assert_eq!(json.new_crates[0].name, "with_downloads");
     assert_eq!(json.new_crates[0].default_version, Some("0.3.0".into()));
-    assert_eq!(json.new_crates[0].yanked, Some(false));
+    assert!(!json.new_crates[0].yanked);
     assert_eq!(json.new_crates.len(), 5);
 }
 
@@ -177,7 +177,7 @@ async fn excluded_crate_id() {
         json.most_downloaded[0].default_version,
         Some("0.1.0".into())
     );
-    assert_eq!(json.most_downloaded[0].yanked, Some(false));
+    assert!(!json.most_downloaded[0].yanked);
     assert_eq!(json.most_downloaded[0].downloads, 20);
 
     assert_eq!(json.most_recently_downloaded.len(), 1);
@@ -186,7 +186,7 @@ async fn excluded_crate_id() {
         json.most_recently_downloaded[0].default_version,
         Some("0.1.0".into())
     );
-    assert_eq!(json.most_recently_downloaded[0].yanked, Some(false));
+    assert!(!json.most_recently_downloaded[0].yanked);
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(10));
 }
 
@@ -232,7 +232,7 @@ async fn all_yanked() {
         json.most_downloaded[0].default_version,
         Some("0.2.0".into())
     );
-    assert_eq!(json.most_downloaded[0].yanked, Some(true));
+    assert!(json.most_downloaded[0].yanked);
     assert_eq!(json.most_downloaded[0].downloads, 20);
 
     assert_eq!(json.most_recently_downloaded.len(), 1);
@@ -241,6 +241,6 @@ async fn all_yanked() {
         json.most_recently_downloaded[0].default_version,
         Some("0.2.0".into())
     );
-    assert_eq!(json.most_recently_downloaded[0].yanked, Some(true));
+    assert!(json.most_recently_downloaded[0].yanked);
     assert_eq!(json.most_recently_downloaded[0].recent_downloads, Some(10));
 }
