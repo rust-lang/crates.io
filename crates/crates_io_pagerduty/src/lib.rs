@@ -22,14 +22,14 @@ pub enum Event {
 
 #[derive(Clone, Debug)]
 pub struct PagerdutyClient {
-    api_token: SecretString,
+    authorization: SecretString,
     service_key: String,
 }
 
 impl PagerdutyClient {
     pub fn new(api_token: SecretString, service_key: String) -> Self {
         Self {
-            api_token,
+            authorization: format!("Token token={}", api_token.expose_secret()).into(),
             service_key,
         }
     }
@@ -41,13 +41,12 @@ impl PagerdutyClient {
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
     pub async fn send(&self, event: &Event) -> Result<()> {
-        let api_token = self.api_token.expose_secret();
         let service_key = &self.service_key;
 
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
             .header(header::ACCEPT, "application/vnd.pagerduty+json;version=2")
-            .header(header::AUTHORIZATION, format!("Token token={api_token}"))
+            .header(header::AUTHORIZATION, self.authorization.expose_secret())
             .json(&FullEvent { service_key, event })
             .send()
             .await?;
