@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use crates_io_env_vars::required_var;
 use reqwest::{header, Client, StatusCode as Status};
+use secrecy::{ExposeSecret, SecretString};
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "event_type")]
@@ -20,23 +20,34 @@ pub enum Event {
     },
 }
 
-impl Event {
+#[derive(Clone, Debug)]
+pub struct PagerdutyClient {
+    authorization: SecretString,
+    service_key: String,
+}
+
+impl PagerdutyClient {
+    pub fn new(api_token: SecretString, service_key: String) -> Self {
+        Self {
+            authorization: format!("Token token={}", api_token.expose_secret()).into(),
+            service_key,
+        }
+    }
+}
+
+impl PagerdutyClient {
     /// Sends the event to pagerduty.
     ///
     /// If the variant is `Trigger`, this will page whoever is on call
     /// (potentially waking them up at 3 AM).
-    pub async fn send(self) -> Result<()> {
-        let api_token = required_var("PAGERDUTY_API_TOKEN")?;
-        let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
+    pub async fn send(&self, event: &Event) -> Result<()> {
+        let service_key = &self.service_key;
 
         let response = Client::new()
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
             .header(header::ACCEPT, "application/vnd.pagerduty+json;version=2")
-            .header(header::AUTHORIZATION, format!("Token token={api_token}"))
-            .json(&FullEvent {
-                service_key,
-                event: self,
-            })
+            .header(header::AUTHORIZATION, self.authorization.expose_secret())
+            .json(&FullEvent { service_key, event })
             .send()
             .await?;
 
@@ -57,10 +68,10 @@ impl Event {
 }
 
 #[derive(serde::Serialize, Debug)]
-struct FullEvent {
-    service_key: String,
+struct FullEvent<'a> {
+    service_key: &'a str,
     #[serde(flatten)]
-    event: Event,
+    event: &'a Event,
 }
 
 #[derive(serde::Deserialize, Debug)]

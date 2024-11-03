@@ -1217,6 +1217,7 @@ dependencies = [
  "clap",
  "crates_io_env_vars",
  "reqwest 0.12.9",
+ "secrecy",
  "serde",
  "tokio",
 ]

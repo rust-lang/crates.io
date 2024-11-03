@@ -1,7 +1,9 @@
 use anyhow::Result;
 use std::str::FromStr;
 
+use crates_io_env_vars::required_var;
 use crates_io_pagerduty as pagerduty;
+use pagerduty::PagerdutyClient;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum EventType {
@@ -36,6 +38,11 @@ async fn main() -> Result<()> {
     use clap::Parser;
 
     let opts = Opts::parse();
+
+    let api_token = required_var("PAGERDUTY_API_TOKEN")?.into();
+    let service_key = required_var("PAGERDUTY_INTEGRATION_KEY")?;
+    let client = PagerdutyClient::new(api_token, service_key);
+
     let event = match opts.event_type {
         EventType::Trigger => pagerduty::Event::Trigger {
             incident_key: Some("test".into()),
@@ -50,5 +57,6 @@ async fn main() -> Result<()> {
             description: opts.description,
         },
     };
-    event.send().await
+
+    client.send(&event).await
 }
