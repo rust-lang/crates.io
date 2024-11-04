@@ -13,4 +13,4 @@ diesel = { version = "=2.2.4", features = ["postgres", "r2d2"] }
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
 rand = "=0.8.5"
 tracing = "=0.1.40"
-url = "=2.5.2"
+url = "=2.5.3"
