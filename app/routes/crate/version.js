@@ -31,8 +31,8 @@ export default class VersionRoute extends Route {
         return this.router.replaceWith('catch-all', { transition, title });
       }
     } else {
-      let { defaultVersion } = crate;
-      version = versions.find(version => version.num === defaultVersion);
+      let { default_version } = crate;
+      version = versions.find(version => version.num === default_version);
 
       if (!version) {
         let versionNums = versions.map(it => it.num);

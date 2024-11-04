@@ -10,6 +10,13 @@ export default class Crate extends Model {
   @attr recent_downloads;
   @attr('date') created_at;
   @attr('date') updated_at;
+  /**
+   * This is the default version that will be shown when visiting the crate
+   * details page. Note that this value can be `null`, which may be unexpected.
+   * @type {string | null}
+   */
+  @attr default_version;
+  @attr yanked;
   @attr max_version;
   @attr max_stable_version;
   @attr newest_version;
@@ -26,21 +33,6 @@ export default class Crate extends Model {
   @hasMany('keyword', { async: true, inverse: null }) keywords;
   @hasMany('category', { async: true, inverse: null }) categories;
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
-
-  /**
-   * This is the default version that will be shown when visiting the crate
-   * details page. Note that this can be `undefined` if all versions of the crate
-   * have been yanked.
-   * @return {string}
-   */
-  get defaultVersion() {
-    if (this.max_stable_version) {
-      return this.max_stable_version;
-    }
-    if (this.max_version && this.max_version !== '0.0.0') {
-      return this.max_version;
-    }
-  }
 
   @cached get versionIdsBySemver() {
     let versions = this.versions.toArray() ?? [];
