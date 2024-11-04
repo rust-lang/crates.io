@@ -61,6 +61,7 @@ export default BaseSerializer.extend({
       versionNums.find(it => !prerelease(it, { loose: true }) && !versionsByNum[it].yanked) ??
       versionNums.find(it => !versionsByNum[it].yanked) ??
       versionNums[0];
+    hash.yanked = versionsByNum[hash.default_version]?.yanked ?? false;
 
     versions = versions.filter(it => !it.yanked);
     versionNums = versionNums.filter(it => !versionsByNum[it].yanked);

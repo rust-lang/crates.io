@@ -62,6 +62,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.most_downloaded.length, 10);
@@ -90,6 +91,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.most_recently_downloaded.length, 10);
@@ -118,6 +120,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.new_crates.length, 10);
@@ -146,6 +149,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.num_crates, 20);

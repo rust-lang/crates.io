@@ -64,6 +64,7 @@ module('Mirage | GET /api/v1/crates', function (hooks) {
           repository: null,
           updated_at: '2017-02-24T12:34:56Z',
           versions: ['1', '2'],
+          yanked: false,
         },
       ],
       meta: {
