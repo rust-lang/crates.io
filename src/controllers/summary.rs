@@ -23,8 +23,12 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         .map(Category::into)
         .collect::<Vec<EncodableCategory>>();
 
-    async fn inner(conn: &mut AsyncPgConnection) -> QueryResult<(i64, i64)> {
-        use diesel::QueryDsl;
+    async fn inner(
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<(i64, i64, Vec<Record>, Vec<Record>)> {
+        use diesel::{
+            ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, SelectableHelper,
+        };
         use diesel_async::RunQueryDsl;
 
         let num_crates: i64 = crates::table.count().get_result(conn).await?;
@@ -33,10 +37,40 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .get_result(conn)
             .await?;
 
-        Ok((num_crates, num_downloads))
+        let selection = (
+            Crate::as_select(),
+            crate_downloads::downloads,
+            recent_crate_downloads::downloads.nullable(),
+            versions::num.nullable(),
+            versions::yanked.nullable(),
+        );
+
+        let new_crates = crates::table
+            .inner_join(crate_downloads::table)
+            .left_join(recent_crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+            .order(crates::created_at.desc())
+            .select(selection)
+            .limit(10)
+            .load(conn)
+            .await?;
+        let just_updated = crates::table
+            .inner_join(crate_downloads::table)
+            .left_join(recent_crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+            .filter(crates::updated_at.ne(crates::created_at))
+            .order(crates::updated_at.desc())
+            .select(selection)
+            .limit(10)
+            .load(conn)
+            .await?;
+
+        Ok((num_crates, num_downloads, new_crates, just_updated))
     }
 
-    let (num_crates, num_downloads) = inner(&mut conn).await?;
+    let (num_crates, num_downloads, new_crates, just_updated) = inner(&mut conn).await?;
 
     spawn_blocking(move || {
         use diesel::prelude::*;
@@ -78,26 +112,6 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             versions::num.nullable(),
             versions::yanked.nullable(),
         );
-
-        let new_crates = crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-            .order(crates::created_at.desc())
-            .select(selection)
-            .limit(10)
-            .load(conn)?;
-        let just_updated = crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-            .filter(crates::updated_at.ne(crates::created_at))
-            .order(crates::updated_at.desc())
-            .select(selection)
-            .limit(10)
-            .load(conn)?;
 
         let mut most_downloaded_query = crates::table
             .inner_join(crate_downloads::table)
