@@ -8,8 +8,9 @@ use crate::util::diesel::Conn;
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
-use diesel::prelude::*;
+use diesel::QueryResult;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use serde_json::Value;
 
 /// Handles the `GET /summary` route.
@@ -22,15 +23,26 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         .map(Category::into)
         .collect::<Vec<EncodableCategory>>();
 
+    async fn inner(conn: &mut AsyncPgConnection) -> QueryResult<(i64, i64)> {
+        use diesel::QueryDsl;
+        use diesel_async::RunQueryDsl;
+
+        let num_crates: i64 = crates::table.count().get_result(conn).await?;
+        let num_downloads: i64 = metadata::table
+            .select(metadata::total_downloads)
+            .get_result(conn)
+            .await?;
+
+        Ok((num_crates, num_downloads))
+    }
+
+    let (num_crates, num_downloads) = inner(&mut conn).await?;
+
     spawn_blocking(move || {
+        use diesel::prelude::*;
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let config = &state.config;
-
-        let num_crates: i64 = crates::table.count().get_result(conn)?;
-        let num_downloads: i64 = metadata::table
-            .select(metadata::total_downloads)
-            .get_result(conn)?;
 
         fn encode_crates(
             conn: &mut impl Conn,
