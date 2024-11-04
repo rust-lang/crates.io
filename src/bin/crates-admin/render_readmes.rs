@@ -19,6 +19,7 @@ use flate2::read::GzDecoder;
 use reqwest::{blocking::Client, header};
 use std::str::FromStr;
 use tar::{self, Archive};
+use tokio::runtime::Handle;
 
 const USER_AGENT: &str = "crates-admin";
 
@@ -121,17 +122,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                     println!("[{}-{}] Rendering README...", krate_name, version.num);
                     let readme = get_readme(&storage, &client, &version, &krate_name)?;
                     if !readme.is_empty() {
-                        let rt = tokio::runtime::Builder::new_current_thread()
-                            .enable_all()
-                            .build()
-                            .context("Failed to initialize tokio runtime")?;
-
-                        rt.block_on(storage.upload_readme(
-                            &krate_name,
-                            &version.num,
-                            readme.into(),
-                        ))
-                        .context("Failed to upload rendered README file to S3")?;
+                        Handle::current()
+                            .block_on(storage.upload_readme(
+                                &krate_name,
+                                &version.num,
+                                readme.into(),
+                            ))
+                            .context("Failed to upload rendered README file to S3")?;
                     }
 
                     Ok(())
