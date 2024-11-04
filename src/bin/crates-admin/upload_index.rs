@@ -1,9 +1,10 @@
 use crate::dialoguer;
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use crates_io::storage::Storage;
 use crates_io::tasks::spawn_blocking;
 use crates_io_index::{Repository, RepositoryConfig};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+use tokio::runtime::Handle;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -31,11 +32,6 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             return Ok(());
         }
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .context("Failed to initialize tokio runtime")?;
-
         let pb = ProgressBar::new(files.len() as u64);
         pb.set_style(ProgressStyle::with_template(
             "{bar:60} ({pos}/{len}, ETA {eta})",
@@ -59,7 +55,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             }
 
             let contents = std::fs::read_to_string(&path)?;
-            rt.block_on(storage.sync_index(crate_name, Some(contents)))?;
+            Handle::current().block_on(storage.sync_index(crate_name, Some(contents)))?;
         }
 
         println!(
