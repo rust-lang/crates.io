@@ -25,7 +25,8 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 
     async fn inner(
         conn: &mut AsyncPgConnection,
-    ) -> QueryResult<(i64, i64, Vec<Record>, Vec<Record>)> {
+        config: &crate::config::Server,
+    ) -> QueryResult<(i64, i64, Vec<Record>, Vec<Record>, Vec<Record>, Vec<Record>)> {
         use diesel::{
             ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, SelectableHelper,
         };
@@ -67,16 +68,63 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .load(conn)
             .await?;
 
-        Ok((num_crates, num_downloads, new_crates, just_updated))
+        let mut most_downloaded_query = crates::table
+            .inner_join(crate_downloads::table)
+            .left_join(recent_crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+            .into_boxed();
+        if !config.excluded_crate_names.is_empty() {
+            most_downloaded_query =
+                most_downloaded_query.filter(crates::name.ne_all(&config.excluded_crate_names));
+        }
+        let most_downloaded = most_downloaded_query
+            .then_order_by(crate_downloads::downloads.desc())
+            .select(selection)
+            .limit(10)
+            .load(conn)
+            .await?;
+
+        let mut most_recently_downloaded_query = crates::table
+            .inner_join(crate_downloads::table)
+            .inner_join(recent_crate_downloads::table)
+            .left_join(default_versions::table)
+            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+            .into_boxed();
+        if !config.excluded_crate_names.is_empty() {
+            most_recently_downloaded_query = most_recently_downloaded_query
+                .filter(crates::name.ne_all(&config.excluded_crate_names));
+        }
+        let most_recently_downloaded = most_recently_downloaded_query
+            .then_order_by(recent_crate_downloads::downloads.desc())
+            .select(selection)
+            .limit(10)
+            .load(conn)
+            .await?;
+
+        Ok((
+            num_crates,
+            num_downloads,
+            new_crates,
+            just_updated,
+            most_downloaded,
+            most_recently_downloaded,
+        ))
     }
 
-    let (num_crates, num_downloads, new_crates, just_updated) = inner(&mut conn).await?;
+    let config = &state.config;
+    let (
+        num_crates,
+        num_downloads,
+        new_crates,
+        just_updated,
+        most_downloaded,
+        most_recently_downloaded,
+    ) = inner(&mut conn, config).await?;
 
     spawn_blocking(move || {
         use diesel::prelude::*;
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let config = &state.config;
 
         fn encode_crates(
             conn: &mut impl Conn,
@@ -104,46 +152,6 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 )
                 .collect()
         }
-
-        let selection = (
-            Crate::as_select(),
-            crate_downloads::downloads,
-            recent_crate_downloads::downloads.nullable(),
-            versions::num.nullable(),
-            versions::yanked.nullable(),
-        );
-
-        let mut most_downloaded_query = crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-            .into_boxed();
-        if !config.excluded_crate_names.is_empty() {
-            most_downloaded_query =
-                most_downloaded_query.filter(crates::name.ne_all(&config.excluded_crate_names));
-        }
-        let most_downloaded = most_downloaded_query
-            .then_order_by(crate_downloads::downloads.desc())
-            .select(selection)
-            .limit(10)
-            .load(conn)?;
-
-        let mut most_recently_downloaded_query = crates::table
-            .inner_join(crate_downloads::table)
-            .inner_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-            .into_boxed();
-        if !config.excluded_crate_names.is_empty() {
-            most_recently_downloaded_query = most_recently_downloaded_query
-                .filter(crates::name.ne_all(&config.excluded_crate_names));
-        }
-        let most_recently_downloaded = most_recently_downloaded_query
-            .then_order_by(recent_crate_downloads::downloads.desc())
-            .select(selection)
-            .limit(10)
-            .load(conn)?;
 
         let popular_keywords = keywords::table
             .order(keywords::crates_cnt.desc())
