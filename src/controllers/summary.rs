@@ -3,13 +3,10 @@ use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Versio
 use crate::schema::{
     crate_downloads, crates, default_versions, keywords, metadata, recent_crate_downloads, versions,
 };
-use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
 use diesel::QueryResult;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use serde_json::Value;
 
@@ -26,7 +23,15 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     async fn inner(
         conn: &mut AsyncPgConnection,
         config: &crate::config::Server,
-    ) -> QueryResult<(i64, i64, Vec<Record>, Vec<Record>, Vec<Record>, Vec<Record>)> {
+    ) -> QueryResult<(
+        i64,
+        i64,
+        Vec<Record>,
+        Vec<Record>,
+        Vec<Record>,
+        Vec<Record>,
+        Vec<EncodableKeyword>,
+    )> {
         use diesel::{
             ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, SelectableHelper,
         };
@@ -102,6 +107,15 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             .load(conn)
             .await?;
 
+        let popular_keywords = keywords::table
+            .order(keywords::crates_cnt.desc())
+            .limit(10)
+            .load(conn)
+            .await?
+            .into_iter()
+            .map(Keyword::into)
+            .collect::<Vec<EncodableKeyword>>();
+
         Ok((
             num_crates,
             num_downloads,
@@ -109,6 +123,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             just_updated,
             most_downloaded,
             most_recently_downloaded,
+            popular_keywords,
         ))
     }
 
@@ -120,59 +135,49 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         just_updated,
         most_downloaded,
         most_recently_downloaded,
+        popular_keywords,
     ) = inner(&mut conn, config).await?;
 
-    spawn_blocking(move || {
-        use diesel::prelude::*;
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    async fn encode_crates(
+        conn: &mut AsyncPgConnection,
+        data: Vec<Record>,
+    ) -> AppResult<Vec<EncodableCrate>> {
+        use diesel::GroupedBy;
+        use diesel_async::RunQueryDsl;
 
-        fn encode_crates(
-            conn: &mut impl Conn,
-            data: Vec<Record>,
-        ) -> AppResult<Vec<EncodableCrate>> {
-            let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
-            let versions: Vec<Version> = krates.versions().load(conn)?;
-            versions
-                .grouped_by(&krates)
-                .into_iter()
-                .map(TopVersions::from_versions)
-                .zip(data)
-                .map(
-                    |(top_versions, (krate, total, recent, default_version, yanked))| {
-                        Ok(EncodableCrate::from_minimal(
-                            krate,
-                            default_version.as_deref(),
-                            yanked,
-                            Some(&top_versions),
-                            false,
-                            total,
-                            recent,
-                        ))
-                    },
-                )
-                .collect()
-        }
-
-        let popular_keywords = keywords::table
-            .order(keywords::crates_cnt.desc())
-            .limit(10)
-            .load(conn)?
+        let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
+        let versions: Vec<Version> = krates.versions().load(conn).await?;
+        versions
+            .grouped_by(&krates)
             .into_iter()
-            .map(Keyword::into)
-            .collect::<Vec<EncodableKeyword>>();
+            .map(TopVersions::from_versions)
+            .zip(data)
+            .map(
+                |(top_versions, (krate, total, recent, default_version, yanked))| {
+                    Ok(EncodableCrate::from_minimal(
+                        krate,
+                        default_version.as_deref(),
+                        yanked,
+                        Some(&top_versions),
+                        false,
+                        total,
+                        recent,
+                    ))
+                },
+            )
+            .collect()
+    }
 
-        Ok(Json(json!({
-            "num_downloads": num_downloads,
-            "num_crates": num_crates,
-            "new_crates": encode_crates(conn, new_crates)?,
-            "most_downloaded": encode_crates(conn, most_downloaded)?,
-            "most_recently_downloaded": encode_crates(conn, most_recently_downloaded)?,
-            "just_updated": encode_crates(conn, just_updated)?,
-            "popular_keywords": popular_keywords,
-            "popular_categories": popular_categories,
-        })))
-    })
-    .await
+    Ok(Json(json!({
+        "num_downloads": num_downloads,
+        "num_crates": num_crates,
+        "new_crates": encode_crates(&mut conn, new_crates).await?,
+        "most_downloaded": encode_crates(&mut conn, most_downloaded).await?,
+        "most_recently_downloaded": encode_crates(&mut conn, most_recently_downloaded).await?,
+        "just_updated": encode_crates(&mut conn, just_updated).await?,
+        "popular_keywords": popular_keywords,
+        "popular_categories": popular_categories,
+    })))
 }
 
 type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);
