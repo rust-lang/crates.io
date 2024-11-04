@@ -713,11 +713,18 @@ async fn index_include_yanked() {
         assert_eq!(json.crates[1].name, "newest_yanked");
         assert_eq!(json.crates[2].name, "oldest_yanked");
         assert_eq!(json.crates[3].name, "unyanked");
+
         assert_eq!(
             default_versions_iter(&json.crates)
-                .flatten()
+                .flat_map(|s| s.as_deref())
+                .zip(yanked_iter(&json.crates).cloned())
                 .collect::<Vec<_>>(),
-            ["2.0.0", "1.0.0", "2.0.0", "2.0.0",]
+            [
+                ("2.0.0", true),
+                ("1.0.0", false),
+                ("2.0.0", false),
+                ("2.0.0", false),
+            ]
         );
     }
 
@@ -729,9 +736,10 @@ async fn index_include_yanked() {
         assert_eq!(json.crates[2].name, "unyanked");
         assert_eq!(
             default_versions_iter(&json.crates)
-                .flatten()
+                .flat_map(|s| s.as_deref())
+                .zip(yanked_iter(&json.crates).cloned())
                 .collect::<Vec<_>>(),
-            ["1.0.0", "2.0.0", "2.0.0",]
+            [("1.0.0", false), ("2.0.0", false), ("2.0.0", false),]
         );
     }
 }
@@ -751,6 +759,7 @@ async fn yanked_versions_are_not_considered_for_max_version() {
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].default_version, Some("1.0.0".into()));
+        assert!(!json.crates[0].yanked);
         assert_eq!(json.crates[0].max_version, "1.0.0");
     }
 }
@@ -773,6 +782,7 @@ async fn max_stable_version() {
     for json in search_both(&anon, "q=foo").await {
         assert_eq!(json.meta.total, 1);
         assert_eq!(json.crates[0].default_version, Some("1.0.0".into()));
+        assert!(!json.crates[0].yanked);
         assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
     }
 }
@@ -1162,4 +1172,8 @@ fn default_versions_iter(
     crates: &[crate::tests::EncodableCrate],
 ) -> impl Iterator<Item = &Option<String>> {
     crates.iter().map(|c| &c.default_version)
+}
+
+fn yanked_iter(crates: &[crate::tests::EncodableCrate]) -> impl Iterator<Item = &bool> {
+    crates.iter().map(|c| &c.yanked)
 }

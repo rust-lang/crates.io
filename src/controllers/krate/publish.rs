@@ -519,6 +519,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 krate: EncodableCrate::from_minimal(
                     krate,
                     default_version.or(Some(version_string)).as_deref(),
+                    Some(false),
                     Some(&top_versions),
                     false,
                     downloads,

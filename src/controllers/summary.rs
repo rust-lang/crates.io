@@ -34,7 +34,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
 
         fn encode_crates(
             conn: &mut impl Conn,
-            data: Vec<(Crate, i64, Option<i64>, Option<String>)>,
+            data: Vec<Record>,
         ) -> AppResult<Vec<EncodableCrate>> {
             let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
             let versions: Vec<Version> = krates.versions().load(conn)?;
@@ -43,16 +43,19 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
                 .into_iter()
                 .map(TopVersions::from_versions)
                 .zip(data)
-                .map(|(top_versions, (krate, total, recent, default_version))| {
-                    Ok(EncodableCrate::from_minimal(
-                        krate,
-                        default_version.as_deref(),
-                        Some(&top_versions),
-                        false,
-                        total,
-                        recent,
-                    ))
-                })
+                .map(
+                    |(top_versions, (krate, total, recent, default_version, yanked))| {
+                        Ok(EncodableCrate::from_minimal(
+                            krate,
+                            default_version.as_deref(),
+                            yanked,
+                            Some(&top_versions),
+                            false,
+                            total,
+                            recent,
+                        ))
+                    },
+                )
                 .collect()
         }
 
@@ -61,6 +64,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
             crate_downloads::downloads,
             recent_crate_downloads::downloads.nullable(),
             versions::num.nullable(),
+            versions::yanked.nullable(),
         );
 
         let new_crates = crates::table
@@ -136,3 +140,5 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
     })
     .await
 }
+
+type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);

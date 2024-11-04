@@ -26,19 +26,18 @@ expression: response.json()
       "version_downloads": "/api/v1/crates/foo_show/downloads",
       "versions": null
     },
-    "max_stable_version": "1.0.0",
-    "max_version": "1.0.0",
+    "max_stable_version": null,
+    "max_version": "0.0.0",
     "name": "foo_show",
-    "newest_version": "0.5.1",
+    "newest_version": "0.0.0",
     "recent_downloads": 10,
     "repository": null,
     "updated_at": "[datetime]",
     "versions": [
       1,
-      3,
       2
     ],
-    "yanked": false
+    "yanked": true
   },
   "keywords": [
     {
@@ -69,33 +68,6 @@ expression: response.json()
         "version_downloads": "/api/v1/crates/foo_show/1.0.0/downloads"
       },
       "num": "1.0.0",
-      "published_by": null,
-      "readme_path": "/api/v1/crates/foo_show/1.0.0/readme",
-      "rust_version": null,
-      "updated_at": "[datetime]",
-      "yank_message": null,
-      "yanked": false
-    },
-    {
-      "audit_actions": [],
-      "bin_names": null,
-      "checksum": "                                                                ",
-      "crate": "foo_show",
-      "crate_size": 0,
-      "created_at": "[datetime]",
-      "dl_path": "/api/v1/crates/foo_show/0.5.1/download",
-      "downloads": 0,
-      "features": {},
-      "has_lib": null,
-      "id": 3,
-      "lib_links": null,
-      "license": null,
-      "links": {
-        "authors": "/api/v1/crates/foo_show/0.5.1/authors",
-        "dependencies": "/api/v1/crates/foo_show/0.5.1/dependencies",
-        "version_downloads": "/api/v1/crates/foo_show/0.5.1/downloads"
-      },
-      "num": "0.5.1",
       "published_by": {
         "avatar": null,
         "id": 1,
@@ -103,11 +75,11 @@ expression: response.json()
         "name": null,
         "url": "https://github.com/foo"
       },
-      "readme_path": "/api/v1/crates/foo_show/0.5.1/readme",
+      "readme_path": "/api/v1/crates/foo_show/1.0.0/readme",
       "rust_version": null,
       "updated_at": "[datetime]",
       "yank_message": null,
-      "yanked": false
+      "yanked": true
     },
     {
       "audit_actions": [],
@@ -140,7 +112,7 @@ expression: response.json()
       "rust_version": null,
       "updated_at": "[datetime]",
       "yank_message": null,
-      "yanked": false
+      "yanked": true
     }
   ]
 }

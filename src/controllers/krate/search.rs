@@ -88,6 +88,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             recent_crate_downloads::downloads.nullable(),
             0_f32.into_sql::<Float>(),
             versions::num.nullable(),
+            versions::yanked.nullable(),
         );
 
         let mut seek: Option<Seek> = None;
@@ -117,6 +118,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         recent_crate_downloads::downloads.nullable(),
                         rank.clone(),
                         versions::num.nullable(),
+                        versions::yanked.nullable(),
                     ));
                     seek = Some(Seek::Relevance);
                     query = query.then_order_by(rank.desc())
@@ -128,6 +130,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
                         recent_crate_downloads::downloads.nullable(),
                         0_f32.into_sql::<Float>(),
                         versions::num.nullable(),
+                        versions::yanked.nullable(),
                     ));
                     seek = Some(Seek::Query);
                 }
@@ -231,10 +234,14 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let crates = versions
             .zip(data)
             .map(
-                |(max_version, (krate, perfect_match, total, recent, _, default_version))| {
+                |(
+                    max_version,
+                    (krate, perfect_match, total, recent, _, default_version, yanked),
+                )| {
                     EncodableCrate::from_minimal(
                         krate,
                         default_version.as_deref(),
+                        yanked,
                         Some(&max_version),
                         perfect_match,
                         total,
@@ -621,7 +628,7 @@ mod seek {
                 downloads,
                 recent_downloads,
                 rank,
-                _,
+                ..,
             ) = *record;
 
             match *self {
@@ -644,7 +651,15 @@ mod seek {
     }
 }
 
-type Record = (Crate, bool, i64, Option<i64>, f32, Option<String>);
+type Record = (
+    Crate,
+    bool,
+    i64,
+    Option<i64>,
+    f32,
+    Option<String>,
+    Option<bool>,
+);
 
 type QuerySource = LeftJoinQuerySource<
     LeftJoinQuerySource<
