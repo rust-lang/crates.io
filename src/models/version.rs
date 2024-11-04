@@ -126,6 +126,8 @@ fn strip_build_metadata(version: &str) -> &str {
 
 /// The highest version (semver order) and the most recently updated version.
 /// Typically used for a single crate.
+/// Note: `TopVersion` itself does not guarantee whether versions are yanked or not,
+/// this must be guaranteed by the input versions.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TopVersions {
     /// The "highest" version in terms of semver

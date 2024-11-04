@@ -331,7 +331,8 @@ impl Crate {
     }
 
     /// Return both the newest (most recently updated) and
-    /// highest version (in semver order) for the current crate.
+    /// highest version (in semver order) for the current crate,
+    /// where all top versions are not yanked.
     pub fn top_versions(&self, conn: &mut impl Conn) -> QueryResult<TopVersions> {
         Ok(TopVersions::from_date_version_pairs(
             self.versions()
@@ -475,10 +476,12 @@ impl From<BoxedAppError> for OwnerAddError {
 }
 
 pub trait CrateVersions {
+    /// Return all non-yanked versions of a crate.
     fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
         self.all_versions().filter(versions::yanked.eq(false))
     }
 
+    /// Return all versions of a crate, including yanked ones.
     fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
 }
 
