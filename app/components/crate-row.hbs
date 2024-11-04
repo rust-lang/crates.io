@@ -6,10 +6,10 @@
           {{@crate.name}}
         </a>
       {{/let}}
-      {{#if @crate.defaultVersion}}
-        <span local-class="version" data-test-version>v{{@crate.defaultVersion}}</span>
+      {{#if (and @crate.default_version (not @crate.yanked))}}
+        <span local-class="version" data-test-version>v{{@crate.default_version}}</span>
         <CopyButton
-          @copyText='{{@crate.name}} = "{{@crate.defaultVersion}}"'
+          @copyText='{{@crate.name}} = "{{@crate.default_version}}"'
           title="Copy Cargo.toml snippet to clipboard"
           local-class="copy-button"
           data-test-copy-toml-button

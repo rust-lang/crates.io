@@ -8,8 +8,8 @@ export default class VersionRoute extends Route {
     let crate = this.modelFor('crate');
     let versions = await crate.get('versions');
 
-    let { defaultVersion } = crate;
-    let version = versions.find(version => version.num === defaultVersion) ?? versions.lastObject;
+    let { default_version } = crate;
+    let version = versions.find(version => version.num === default_version) ?? versions.lastObject;
 
     this.router.replaceWith('crate.version-dependencies', crate, version.num);
   }
