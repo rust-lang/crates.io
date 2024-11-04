@@ -42,6 +42,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       badges: [],
       categories: [],
       created_at: '2010-06-16T21:30:45Z',
+      default_version: '1.0.0',
       description: 'This is the description for the crate called "crate-0"',
       documentation: null,
       downloads: 0,
@@ -61,6 +62,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.most_downloaded.length, 10);
@@ -69,6 +71,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       badges: [],
       categories: [],
       created_at: '2010-06-16T21:30:45Z',
+      default_version: '1.0.4',
       description: 'This is the description for the crate called "crate-4"',
       documentation: null,
       downloads: 148_140,
@@ -88,6 +91,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.most_recently_downloaded.length, 10);
@@ -96,6 +100,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       badges: [],
       categories: [],
       created_at: '2010-06-16T21:30:45Z',
+      default_version: '1.0.0',
       description: 'This is the description for the crate called "crate-0"',
       documentation: null,
       downloads: 0,
@@ -115,6 +120,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.new_crates.length, 10);
@@ -123,6 +129,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       badges: [],
       categories: [],
       created_at: '2010-06-16T21:30:45Z',
+      default_version: '1.0.0',
       description: 'This is the description for the crate called "crate-0"',
       documentation: null,
       downloads: 0,
@@ -142,6 +149,7 @@ module('Mirage | GET /api/v1/summary', function (hooks) {
       repository: null,
       updated_at: '2017-02-24T12:34:56Z',
       versions: null,
+      yanked: false,
     });
 
     assert.strictEqual(responsePayload.num_crates, 20);
