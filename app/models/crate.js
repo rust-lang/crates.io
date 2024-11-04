@@ -13,7 +13,7 @@ export default class Crate extends Model {
   /**
    * This is the default version that will be shown when visiting the crate
    * details page. Note that this value can be `null`, which may be unexpected.
-   * @return {string}
+   * @type {string | null}
    */
   @attr default_version;
   @attr yanked;
