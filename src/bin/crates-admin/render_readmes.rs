@@ -10,9 +10,9 @@ use std::{io::Read, path::Path, sync::Arc, thread};
 use chrono::{NaiveDateTime, Utc};
 use crates_io::storage::Storage;
 use crates_io::tasks::spawn_blocking;
+use crates_io::util::diesel::prelude::*;
 use crates_io_markdown::text_to_html;
 use crates_io_tarball::{Manifest, StringOrBool};
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use flate2::read::GzDecoder;
@@ -51,6 +51,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
     let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let storage = Arc::new(Storage::from_environment());
 
         let start_time = Utc::now();

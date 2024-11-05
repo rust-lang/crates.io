@@ -1,9 +1,9 @@
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 use crate::sql::pg_enum;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 
 pg_enum! {
     pub enum VersionAction {
@@ -50,10 +50,13 @@ pub struct VersionOwnerAction {
 
 impl VersionOwnerAction {
     pub fn all(conn: &mut impl Conn) -> QueryResult<Vec<Self>> {
+        use diesel::RunQueryDsl;
+
         version_owner_actions::table.load(conn)
     }
 
     pub fn by_version(conn: &mut impl Conn, version: &Version) -> QueryResult<Vec<(Self, User)>> {
+        use diesel::RunQueryDsl;
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
@@ -67,6 +70,8 @@ impl VersionOwnerAction {
         conn: &mut impl Conn,
         versions: &[&Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
+        use diesel::RunQueryDsl;
+
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)
             .order(version_owner_actions::dsl::id)
@@ -82,6 +87,7 @@ pub fn insert_version_owner_action(
     api_token_id_: Option<i32>,
     action_: VersionAction,
 ) -> QueryResult<VersionOwnerAction> {
+    use diesel::RunQueryDsl;
     use version_owner_actions::dsl::{action, api_token_id, user_id, version_id};
 
     diesel::insert_into(version_owner_actions::table)

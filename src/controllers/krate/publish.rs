@@ -2,6 +2,7 @@
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
+use crate::util::diesel::prelude::*;
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
@@ -12,7 +13,6 @@ use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use hex::ToHex;
 use http::StatusCode;
@@ -83,6 +83,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         // this query should only be used for the endpoint scope calculation
@@ -536,6 +538,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 /// the last 24 hours.
 fn count_versions_published_today(crate_id: i32, conn: &mut impl Conn) -> QueryResult<i64> {
     use diesel::dsl::{now, IntervalDsl};
+    use diesel::RunQueryDsl;
 
     versions::table
         .filter(versions::crate_id.eq(crate_id))
@@ -585,6 +588,8 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
 }
 
 fn is_reserved_name(name: &str, conn: &mut impl Conn) -> QueryResult<bool> {
+    use diesel::RunQueryDsl;
+
     select(exists(reserved_crate_names::table.filter(
         canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
     )))
@@ -754,6 +759,7 @@ pub fn add_dependencies(
     version_id: i32,
 ) -> AppResult<()> {
     use diesel::insert_into;
+    use diesel::RunQueryDsl;
 
     let crate_ids = crates::table
         .select((crates::name, crates::id))

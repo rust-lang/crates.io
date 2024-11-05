@@ -12,6 +12,7 @@ use crate::models::{
 };
 use crate::schema::*;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
 use crate::util::{redirect, RequestUtils};
 use crate::views::{
@@ -20,7 +21,6 @@ use crate::views::{
 use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use serde_json::Value;
@@ -36,6 +36,8 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let include = req
@@ -249,6 +251,8 @@ pub async fn reverse_dependencies(
 ) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let pagination_options = PaginationOptions::builder().gather(&req)?;

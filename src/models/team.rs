@@ -1,4 +1,3 @@
-use diesel::prelude::*;
 use http::StatusCode;
 
 use crate::app::App;
@@ -11,6 +10,7 @@ use tokio::runtime::Handle;
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
 use crate::sql::lower;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 
 /// For now, just a Github Team. Can be upgraded to other teams
@@ -63,6 +63,7 @@ impl<'a> NewTeam<'a> {
 
     pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Team> {
         use diesel::insert_into;
+        use diesel::RunQueryDsl;
 
         insert_into(teams::table)
             .values(self)
@@ -75,6 +76,8 @@ impl<'a> NewTeam<'a> {
 
 impl Team {
     pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<Self> {
+        use diesel::RunQueryDsl;
+
         teams::table
             .filter(lower(teams::login).eq(&login.to_lowercase()))
             .first(conn)
@@ -197,6 +200,8 @@ impl Team {
     }
 
     pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
+        use diesel::RunQueryDsl;
+
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

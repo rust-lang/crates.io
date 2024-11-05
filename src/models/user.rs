@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use secrecy::SecretString;
 
 use crate::app::App;
@@ -10,6 +9,7 @@ use crate::util::errors::AppResult;
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::sql::lower;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 
 /// The model representing a row in the `users` database table.
@@ -29,10 +29,14 @@ pub struct User {
 
 impl User {
     pub fn find(conn: &mut impl Conn, id: i32) -> QueryResult<User> {
+        use diesel::RunQueryDsl;
+
         users::table.find(id).first(conn)
     }
 
     pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<User> {
+        use diesel::RunQueryDsl;
+
         users::table
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
@@ -41,6 +45,8 @@ impl User {
     }
 
     pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
+        use diesel::RunQueryDsl;
+
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(User::as_select())
@@ -82,6 +88,8 @@ impl User {
     /// Queries the database for the verified emails
     /// belonging to a given user
     pub fn verified_email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
+        use diesel::RunQueryDsl;
+
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
@@ -91,6 +99,8 @@ impl User {
 
     /// Queries for the email belonging to a particular user
     pub fn email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
+        use diesel::RunQueryDsl;
+
         Email::belonging_to(self)
             .select(emails::email)
             .first(conn)
@@ -137,6 +147,7 @@ impl<'a> NewUser<'a> {
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
+        use diesel::RunQueryDsl;
 
         conn.transaction(|conn| {
             let user: User = insert_into(users::table)

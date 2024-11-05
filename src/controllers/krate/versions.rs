@@ -1,10 +1,10 @@
 //! Endpoint for versions of a crate
 
+use crate::util::diesel::prelude::*;
 use axum::extract::Path;
 use axum::Json;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::not;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
@@ -30,6 +30,8 @@ pub async fn versions(
 ) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let crate_id: i32 = Crate::by_name(&crate_name)
@@ -97,6 +99,7 @@ fn list_by_date(
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
+    use diesel::RunQueryDsl;
     use seek::*;
 
     let mut query = versions::table
@@ -186,6 +189,7 @@ fn list_by_semver(
     req: &Parts,
     conn: &mut impl Conn,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
+    use diesel::RunQueryDsl;
     use seek::*;
 
     let (data, total, release_tracks) = if let Some(options) = options {

@@ -4,12 +4,12 @@ use crate::controllers::helpers::ok_true;
 use crate::models::{Email, NewEmail};
 use crate::schema::{emails, users};
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
 use diesel::dsl::sql;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use lettre::Address;
@@ -35,6 +35,8 @@ pub async fn update_user(
 ) -> AppResult<Response> {
     let conn = state.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&req, conn)?;
@@ -120,6 +122,8 @@ pub async fn regenerate_token_and_send(
 ) -> AppResult<Response> {
     let conn = state.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&req, conn)?;

@@ -1,10 +1,10 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{NaiveDateTime, Utc};
 use diesel::dsl::IntervalDsl;
-use diesel::prelude::*;
 use diesel::sql_types::Interval;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -108,6 +108,8 @@ impl RateLimiter {
         now: NaiveDateTime,
         conn: &mut impl Conn,
     ) -> QueryResult<Bucket> {
+        use diesel::RunQueryDsl;
+
         let config = self.config_for_action(performed_action);
         let refill_rate = (config.rate.as_millis() as i64).milliseconds();
 
@@ -522,6 +524,8 @@ mod tests {
 
     #[test]
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
+        use diesel::RunQueryDsl;
+
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -552,6 +556,8 @@ mod tests {
 
     #[test]
     fn overrides_can_expire() -> QueryResult<()> {
+        use diesel::RunQueryDsl;
+
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
 
@@ -599,6 +605,8 @@ mod tests {
 
     #[test]
     fn override_is_different_for_each_action() -> QueryResult<()> {
+        use diesel::RunQueryDsl;
+
         let (_test_db, conn) = &mut test_db_connection();
         let now = now();
         let user_id = new_user(conn, "user")?;
@@ -653,6 +661,8 @@ mod tests {
         tokens: i32,
         now: NaiveDateTime,
     ) -> QueryResult<Bucket> {
+        use diesel::RunQueryDsl;
+
         diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
                 user_id: new_user(conn, "new_user")?,
