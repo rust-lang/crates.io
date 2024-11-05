@@ -2,7 +2,7 @@
 //! and is used by the corresponding background jobs to generate the
 //! index files.
 
-use crate::models::{Crate, CrateVersions, Dependency, Version};
+use crate::models::{Crate, Dependency, Version};
 use crate::schema::crates;
 use anyhow::Context;
 use crates_io_index::features::split_features;
@@ -59,7 +59,7 @@ pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<Vec<crates_io_index::Crate>> {
-    let mut versions: Vec<Version> = krate.all_versions().load(conn).await?;
+    let mut versions: Vec<Version> = Version::belonging_to(krate).load(conn).await?;
 
     // We sort by `created_at` by default, but since tests run within a
     // single database transaction the versions will all have the same

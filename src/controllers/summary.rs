@@ -1,12 +1,15 @@
 use crate::app::AppState;
-use crate::models::{Category, Crate, CrateVersions, Keyword, TopVersions, Version};
+use crate::models::{Category, Crate, Keyword, TopVersions, Version};
 use crate::schema::{
     crate_downloads, crates, default_versions, keywords, metadata, recent_crate_downloads, versions,
 };
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum::Json;
-use diesel::{ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::{
+    BelongingToDsl, ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl,
+    SelectableHelper,
+};
 use diesel_async::AsyncPgConnection;
 use diesel_async::RunQueryDsl;
 use serde_json::Value;
@@ -35,7 +38,11 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         use diesel_async::RunQueryDsl;
 
         let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
-        let versions: Vec<Version> = krates.versions().load(conn).await?;
+        let versions: Vec<Version> = Version::belonging_to(&krates)
+            .filter(versions::yanked.eq(false))
+            .load(conn)
+            .await?;
+
         versions
             .grouped_by(&krates)
             .into_iter()
