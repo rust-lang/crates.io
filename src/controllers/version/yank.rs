@@ -52,10 +52,10 @@ async fn modify_yank(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        let (mut version, krate) = version_and_crate(conn, &crate_name, &version)?;
         perform_version_yank_update(&state, &req, conn, &mut version, &krate, Some(yanked), None)?;
         ok_true()
     })

@@ -58,11 +58,11 @@ pub async fn dependencies(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_read().await?;
+    let mut conn = state.db_read().await?;
+    let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let (version, _) = version_and_crate(conn, &crate_name, &version)?;
         let deps = version.dependencies(conn)?;
         let deps = deps
             .into_iter()
@@ -97,11 +97,11 @@ pub async fn show(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_read().await?;
+    let mut conn = state.db_read().await?;
+    let (version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let (version, krate) = version_and_crate(conn, &crate_name, &version)?;
         let published_by = version.published_by(conn);
         let actions = VersionOwnerAction::by_version(conn, &version)?;
 
@@ -124,10 +124,10 @@ pub async fn update(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        let (mut version, krate) = version_and_crate(conn, &crate_name, &version)?;
 
         validate_yank_update(&update_request.version, &version)?;
         perform_version_yank_update(
