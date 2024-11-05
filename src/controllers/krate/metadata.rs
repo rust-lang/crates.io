@@ -7,8 +7,8 @@
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, CrateName, CrateVersions, Keyword,
-    RecentCrateDownloads, User, Version, VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, CrateName, Keyword, RecentCrateDownloads, User,
+    Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::tasks::spawn_blocking;
@@ -67,11 +67,11 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .ok_or_else(|| crate_not_found(&name))?;
 
         let versions_publishers_and_audit_actions = if include.versions {
-            let mut versions_and_publishers: Vec<(Version, Option<User>)> = krate
-                .all_versions()
-                .left_outer_join(users::table)
-                .select(<(Version, Option<User>)>::as_select())
-                .load(conn)?;
+            let mut versions_and_publishers: Vec<(Version, Option<User>)> =
+                Version::belonging_to(&krate)
+                    .left_outer_join(users::table)
+                    .select(<(Version, Option<User>)>::as_select())
+                    .load(conn)?;
             versions_and_publishers.sort_by_cached_key(|(version, _)| {
                 Reverse(semver::Version::parse(&version.num).ok())
             });

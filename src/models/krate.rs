@@ -198,7 +198,7 @@ impl Crate {
     pub fn find_version(&self, conn: &mut impl Conn, version: &str) -> AppResult<Version> {
         use diesel::RunQueryDsl;
 
-        self.all_versions()
+        Version::belonging_to(self)
             .filter(versions::num.eq(version))
             .first(conn)
             .optional()?
@@ -342,7 +342,8 @@ impl Crate {
         use diesel::RunQueryDsl;
 
         Ok(TopVersions::from_date_version_pairs(
-            self.versions()
+            Version::belonging_to(self)
+                .filter(versions::yanked.eq(false))
                 .select((versions::created_at, versions::num))
                 .load(conn)?,
         ))
@@ -485,40 +486,6 @@ pub enum OwnerAddError {
 impl From<BoxedAppError> for OwnerAddError {
     fn from(value: BoxedAppError) -> Self {
         Self::AppError(value)
-    }
-}
-
-pub trait CrateVersions {
-    /// Return all non-yanked versions of a crate.
-    fn versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        self.all_versions().filter(versions::yanked.eq(false))
-    }
-
-    /// Return all versions of a crate, including yanked ones.
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg>;
-}
-
-impl CrateVersions for Crate {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        Version::belonging_to(self).into_boxed()
-    }
-}
-
-impl CrateVersions for Vec<Crate> {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        self.as_slice().all_versions()
-    }
-}
-
-impl CrateVersions for [Crate] {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        Version::belonging_to(self).into_boxed()
-    }
-}
-
-impl CrateVersions for [&Crate] {
-    fn all_versions(&self) -> versions::BoxedQuery<'_, Pg> {
-        Version::belonging_to(self).into_boxed()
     }
 }
 

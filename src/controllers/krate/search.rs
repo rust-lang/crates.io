@@ -13,7 +13,7 @@ use std::cell::OnceCell;
 
 use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
-use crate::models::{Crate, CrateOwner, CrateVersions, OwnerKind, TopVersions, Version};
+use crate::models::{Crate, CrateOwner, OwnerKind, TopVersions, Version};
 use crate::schema::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::views::EncodableCrate;
@@ -227,7 +227,11 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
         let crates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
 
         let versions: Vec<Version> = info_span!("db.query", message = "SELECT ... FROM versions")
-            .in_scope(|| crates.versions().load(conn))?;
+            .in_scope(|| {
+            Version::belonging_to(&crates)
+                .filter(versions::yanked.eq(false))
+                .load(conn)
+        })?;
         let versions = versions
             .grouped_by(&crates)
             .into_iter()
