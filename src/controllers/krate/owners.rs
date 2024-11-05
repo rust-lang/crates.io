@@ -3,13 +3,13 @@
 use crate::models::{krate::NewOwnerInvite, token::EndpointScope};
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, models::krate::OwnerAddError};
 use crate::{auth::AuthCheck, email::Email};
 use axum::extract::Path;
 use axum::Json;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
@@ -21,6 +21,8 @@ use tokio::runtime::Handle;
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let krate: Crate = Crate::by_name(&crate_name)
@@ -43,6 +45,8 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let krate: Crate = Crate::by_name(&crate_name)
@@ -64,6 +68,8 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let krate: Crate = Crate::by_name(&crate_name)
@@ -126,6 +132,8 @@ async fn modify_owners(
 
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default()

@@ -1,9 +1,9 @@
 //! Endpoint for searching and discovery functionality
 
 use crate::auth::AuthCheck;
+use crate::util::diesel::prelude::*;
 use axum::Json;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
-use diesel::prelude::*;
 use diesel::sql_types::{Array, Bool, Text};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_full_text_search::*;
@@ -49,6 +49,8 @@ use crate::util::RequestUtils;
 pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         use diesel::sql_types::Float;

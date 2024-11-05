@@ -1,11 +1,11 @@
 mod scopes;
 
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
@@ -46,6 +46,8 @@ impl ApiToken {
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
     ) -> QueryResult<CreatedApiToken> {
+        use diesel::RunQueryDsl;
+
         let token = PlainToken::generate();
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
@@ -67,6 +69,7 @@ impl ApiToken {
     }
 
     pub fn find_by_api_token(conn: &mut impl Conn, token: &HashedToken) -> QueryResult<ApiToken> {
+        use diesel::RunQueryDsl;
         use diesel::{dsl::now, update};
 
         let tokens = api_tokens::table

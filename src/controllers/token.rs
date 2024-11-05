@@ -7,6 +7,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, AppResult};
 use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
@@ -14,7 +15,6 @@ use axum::Json;
 use chrono::NaiveDateTime;
 use diesel::data_types::PgInterval;
 use diesel::dsl::{now, IntervalDsl};
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
@@ -43,6 +43,8 @@ pub async fn list(
 ) -> AppResult<Json<Value>> {
     let conn = app.db_read_prefer_primary().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::only_cookie().check(&req, conn)?;
@@ -92,6 +94,8 @@ pub async fn new(
 
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&parts, conn)?;
@@ -173,6 +177,8 @@ pub async fn new(
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&req, conn)?;
@@ -191,6 +197,8 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<J
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&req, conn)?;
@@ -208,6 +216,8 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let auth = AuthCheck::default().check(&req, conn)?;

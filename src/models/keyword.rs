@@ -1,9 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 
 use crate::models::Crate;
 use crate::schema::*;
 use crate::sql::lower;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 
 #[derive(Clone, Identifiable, Queryable, Debug, Selectable)]
@@ -29,12 +29,16 @@ pub struct CrateKeyword {
 
 impl Keyword {
     pub fn find_by_keyword(conn: &mut impl Conn, name: &str) -> QueryResult<Keyword> {
+        use diesel::RunQueryDsl;
+
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
             .first(conn)
     }
 
     pub fn find_or_create_all(conn: &mut impl Conn, names: &[&str]) -> QueryResult<Vec<Keyword>> {
+        use diesel::RunQueryDsl;
+
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
         let new_keywords: Vec<_> = lowercase_names
@@ -63,6 +67,8 @@ impl Keyword {
 
     pub fn update_crate(conn: &mut impl Conn, crate_id: i32, keywords: &[&str]) -> QueryResult<()> {
         conn.transaction(|conn| {
+            use diesel::RunQueryDsl;
+
             let keywords = Keyword::find_or_create_all(conn, keywords)?;
 
             diesel::delete(crates_keywords::table)
@@ -93,6 +99,8 @@ mod tests {
 
     #[test]
     fn dont_associate_with_non_lowercased_keywords() {
+        use diesel::RunQueryDsl;
+
         let (_test_db, conn) = &mut test_db_connection();
         // The code should be preventing lowercased keywords from existing,
         // but if one happens to sneak in there, don't associate crates with it.

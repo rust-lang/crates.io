@@ -11,7 +11,8 @@ fn version_and_crate(
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
-    use diesel::prelude::*;
+    use crate::util::diesel::prelude::*;
+    use diesel::RunQueryDsl;
 
     let krate: Crate = Crate::by_name(crate_name)
         .first(conn)

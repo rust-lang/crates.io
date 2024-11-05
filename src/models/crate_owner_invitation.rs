@@ -1,11 +1,11 @@
 use chrono::{NaiveDateTime, Utc};
-use diesel::prelude::*;
 use http::StatusCode;
 use secrecy::SecretString;
 
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::errors::{custom, AppResult};
 
@@ -36,6 +36,8 @@ impl CrateOwnerInvitation {
         conn: &mut impl Conn,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
+        use diesel::RunQueryDsl;
+
         #[derive(Insertable, Clone, Copy, Debug)]
         #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
         struct NewRecord {
@@ -86,18 +88,24 @@ impl CrateOwnerInvitation {
     }
 
     pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut impl Conn) -> QueryResult<Self> {
+        use diesel::RunQueryDsl;
+
         crate_owner_invitations::table
             .find((user_id, crate_id))
             .first::<Self>(conn)
     }
 
     pub fn find_by_token(token: &str, conn: &mut impl Conn) -> QueryResult<Self> {
+        use diesel::RunQueryDsl;
+
         crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
             .first::<Self>(conn)
     }
 
     pub fn accept(self, conn: &mut impl Conn, config: &config::Server) -> AppResult<()> {
+        use diesel::RunQueryDsl;
+
         if self.is_expired(config) {
             let crate_name: String = crates::table
                 .find(self.crate_id)
@@ -133,6 +141,8 @@ impl CrateOwnerInvitation {
     }
 
     pub fn decline(self, conn: &mut impl Conn) -> QueryResult<()> {
+        use diesel::RunQueryDsl;
+
         // The check to prevent declining expired invitations is *explicitly* missing. We do not
         // care if an expired invitation is declined, as that just removes the invitation from the
         // database.

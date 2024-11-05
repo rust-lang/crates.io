@@ -2,7 +2,6 @@ use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
-use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
 use secrecy::SecretString;
 use thiserror::Error;
@@ -16,6 +15,7 @@ use crate::models::{
 };
 use crate::schema::*;
 use crate::sql::canon_crate_name;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::errors::{version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
@@ -108,6 +108,7 @@ pub struct NewCrate<'a> {
 impl<'a> NewCrate<'a> {
     pub fn update(&self, conn: &mut impl Conn) -> QueryResult<Crate> {
         use diesel::update;
+        use diesel::RunQueryDsl;
 
         update(crates::table)
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
@@ -123,6 +124,8 @@ impl<'a> NewCrate<'a> {
     }
 
     pub fn create(&self, conn: &mut impl Conn, user_id: i32) -> QueryResult<Crate> {
+        use diesel::RunQueryDsl;
+
         conn.transaction(|conn| {
             let krate: Crate = diesel::insert_into(crates::table)
                 .values(self)
@@ -193,6 +196,8 @@ impl Crate {
     }
 
     pub fn find_version(&self, conn: &mut impl Conn, version: &str) -> AppResult<Version> {
+        use diesel::RunQueryDsl;
+
         self.all_versions()
             .filter(versions::num.eq(version))
             .first(conn)
@@ -334,6 +339,8 @@ impl Crate {
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
     pub fn top_versions(&self, conn: &mut impl Conn) -> QueryResult<TopVersions> {
+        use diesel::RunQueryDsl;
+
         Ok(TopVersions::from_date_version_pairs(
             self.versions()
                 .select((versions::created_at, versions::num))
@@ -342,6 +349,8 @@ impl Crate {
     }
 
     pub fn owners(&self, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
+        use diesel::RunQueryDsl;
+
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .inner_join(users::table)
@@ -370,6 +379,7 @@ impl Crate {
         login: &str,
     ) -> Result<NewOwnerInvite, OwnerAddError> {
         use diesel::insert_into;
+        use diesel::RunQueryDsl;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
         match owner {
@@ -410,6 +420,8 @@ impl Crate {
     }
 
     pub fn owner_remove(&self, conn: &mut impl Conn, login: &str) -> AppResult<()> {
+        use diesel::RunQueryDsl;
+
         let owner = Owner::find_by_login(conn, login)?;
 
         let target = crate_owners::table.find((self.id(), owner.id(), owner.kind()));
@@ -428,6 +440,7 @@ impl Crate {
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
+        use diesel::RunQueryDsl;
 
         let offset = options.offset().unwrap_or_default();
         let rows: Vec<WithCount<ReverseDependency>> =

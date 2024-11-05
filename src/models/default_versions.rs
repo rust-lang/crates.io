@@ -1,7 +1,7 @@
 use crate::schema::{default_versions, versions};
 use crate::sql::SemverVersion;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
-use diesel::prelude::*;
 
 /// A subset of the columns of the `versions` table.
 ///
@@ -57,6 +57,8 @@ impl Ord for Version {
 /// The default version is then written to the `default_versions` table.
 #[instrument(skip(conn))]
 pub fn update_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
+    use diesel::RunQueryDsl;
+
     let default_version = calculate_default_version(crate_id, conn)?;
 
     debug!(
@@ -80,6 +82,8 @@ pub fn update_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResul
 /// Verifies that the default version for the specified crate is up-to-date.
 #[instrument(skip(conn))]
 pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
+    use diesel::RunQueryDsl;
+
     let calculated = calculate_default_version(crate_id, conn)?;
 
     let saved = default_versions::table
@@ -109,6 +113,7 @@ pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResul
 
 fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<Version> {
     use diesel::result::Error::NotFound;
+    use diesel::RunQueryDsl;
 
     debug!("Loading all versions for the crate…");
     let versions = versions::table
@@ -233,6 +238,8 @@ mod tests {
     }
 
     fn create_crate(name: &str, conn: &mut impl Conn) -> i32 {
+        use diesel::RunQueryDsl;
+
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -241,6 +248,8 @@ mod tests {
     }
 
     fn create_version(crate_id: i32, num: &str, conn: &mut impl Conn) {
+        use diesel::RunQueryDsl;
+
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -253,6 +262,8 @@ mod tests {
     }
 
     fn get_default_version(crate_id: i32, conn: &mut impl Conn) -> String {
+        use diesel::RunQueryDsl;
+
         default_versions::table
             .inner_join(versions::table)
             .select(versions::num)

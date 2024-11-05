@@ -3,11 +3,11 @@ use std::collections::BTreeMap;
 use bon::Builder;
 use chrono::NaiveDateTime;
 use crates_io_index::features::FeaturesMap;
-use diesel::prelude::*;
 use serde::Deserialize;
 
 use crate::models::{Crate, Dependency, User};
 use crate::schema::*;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 
 // Queryable has a custom implementation below
@@ -37,6 +37,8 @@ pub struct Version {
 impl Version {
     /// Returns (dependency, crate dependency name)
     pub fn dependencies(&self, conn: &mut impl Conn) -> QueryResult<Vec<(Dependency, String)>> {
+        use diesel::RunQueryDsl;
+
         Dependency::belonging_to(self)
             .inner_join(crates::table)
             .select((Dependency::as_select(), crates::name))
@@ -46,6 +48,7 @@ impl Version {
 
     pub fn record_readme_rendering(version_id: i32, conn: &mut impl Conn) -> QueryResult<usize> {
         use diesel::dsl::now;
+        use diesel::RunQueryDsl;
 
         diesel::insert_into(readme_renderings::table)
             .values(readme_renderings::version_id.eq(version_id))
@@ -58,6 +61,8 @@ impl Version {
     /// Gets the User who ran `cargo publish` for this version, if recorded.
     /// Not for use when you have a group of versions you need the publishers for.
     pub fn published_by(&self, conn: &mut impl Conn) -> Option<User> {
+        use diesel::RunQueryDsl;
+
         match self.published_by {
             Some(pb) => users::table.find(pb).first(conn).ok(),
             None => None,
@@ -102,6 +107,7 @@ pub struct NewVersion<'a> {
 impl NewVersion<'_> {
     pub fn save(&self, conn: &mut impl Conn, published_by_email: &str) -> QueryResult<Version> {
         use diesel::insert_into;
+        use diesel::RunQueryDsl;
 
         conn.transaction(|conn| {
             let version: Version = insert_into(versions::table).values(self).get_result(conn)?;

@@ -1,8 +1,8 @@
 use crate::auth::AuthCheck;
+use crate::util::diesel::prelude::*;
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use serde_json::Value;
@@ -23,6 +23,8 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let conn = app.db_read_prefer_primary().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
@@ -108,6 +110,8 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     let conn = state.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         use diesel::update;
@@ -143,6 +147,8 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         use diesel::pg::upsert::excluded;

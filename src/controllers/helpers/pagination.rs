@@ -7,9 +7,9 @@ use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::{HeaderMapExt, RequestUtils};
 
+use crate::util::diesel::prelude::*;
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
-use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
@@ -272,7 +272,7 @@ impl<T: Query> Query for PaginatedQuery<T> {
     type SqlType = (T::SqlType, BigInt);
 }
 
-impl<T, DB> RunQueryDsl<DB> for PaginatedQuery<T> {}
+impl<T, DB> diesel::RunQueryDsl<DB> for PaginatedQuery<T> {}
 
 impl<T> QueryFragment<Pg> for PaginatedQuery<T>
 where
@@ -366,7 +366,7 @@ impl<
     type SqlType = (T::SqlType, BigInt);
 }
 
-impl<T, C, DB> RunQueryDsl<DB> for PaginatedQueryWithCountSubq<T, C> {}
+impl<T, C, DB> diesel::RunQueryDsl<DB> for PaginatedQueryWithCountSubq<T, C> {}
 
 impl<T, C> QueryFragment<Pg> for PaginatedQueryWithCountSubq<T, C>
 where

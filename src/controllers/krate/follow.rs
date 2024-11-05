@@ -6,17 +6,19 @@ use crate::controllers::helpers::ok_true;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::errors::{crate_not_found, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use serde_json::Value;
 
 fn follow_target(crate_name: &str, conn: &mut impl Conn, user_id: i32) -> AppResult<Follow> {
+    use diesel::RunQueryDsl;
+
     let crate_id = Crate::by_name(crate_name)
         .select(crates::id)
         .first(conn)
@@ -34,6 +36,8 @@ pub async fn follow(
 ) -> AppResult<Response> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
@@ -56,6 +60,8 @@ pub async fn unfollow(
 ) -> AppResult<Response> {
     let conn = app.db_write().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let user_id = AuthCheck::default().check(&req, conn)?.user_id();
@@ -75,6 +81,8 @@ pub async fn following(
 ) -> AppResult<Json<Value>> {
     let conn = app.db_read_prefer_primary().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         use diesel::dsl::exists;

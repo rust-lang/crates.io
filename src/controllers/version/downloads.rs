@@ -7,6 +7,7 @@ use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::errors::{version_not_found, AppResult};
 use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
@@ -14,7 +15,6 @@ use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use chrono::{Duration, NaiveDate, Utc};
-use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use serde_json::Value;
@@ -47,6 +47,8 @@ pub async fn downloads(
 
     let conn = app.db_read().await?;
     spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let (version, _) = version_and_crate(conn, &crate_name, &version)?;
