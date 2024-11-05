@@ -51,13 +51,8 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 
 /// Handles the `GET /keywords/:keyword_id` route.
 pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<Json<Value>> {
-    let conn = state.db_read().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_read().await?;
+    let kw = Keyword::find_by_keyword(&mut conn, &name).await?;
 
-        let kw = Keyword::find_by_keyword(conn, &name)?;
-
-        Ok(Json(json!({ "keyword": EncodableKeyword::from(kw) })))
-    })
-    .await
+    Ok(Json(json!({ "keyword": EncodableKeyword::from(kw) })))
 }

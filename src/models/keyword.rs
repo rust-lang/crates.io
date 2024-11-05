@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use diesel_async::AsyncPgConnection;
 
 use crate::models::Crate;
 use crate::schema::*;
@@ -28,12 +29,13 @@ pub struct CrateKeyword {
 }
 
 impl Keyword {
-    pub fn find_by_keyword(conn: &mut impl Conn, name: &str) -> QueryResult<Keyword> {
-        use diesel::RunQueryDsl;
+    pub async fn find_by_keyword(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
+        use diesel_async::RunQueryDsl;
 
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
             .first(conn)
+            .await
     }
 
     pub fn find_or_create_all(conn: &mut impl Conn, names: &[&str]) -> QueryResult<Vec<Keyword>> {
