@@ -96,34 +96,24 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         .load(&mut conn)
         .await?;
 
-    let mut most_downloaded_query = crates::table
+    let most_downloaded = crates::table
         .inner_join(crate_downloads::table)
         .left_join(recent_crate_downloads::table)
         .left_join(default_versions::table)
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-        .into_boxed();
-    if !config.excluded_crate_names.is_empty() {
-        most_downloaded_query =
-            most_downloaded_query.filter(crates::name.ne_all(&config.excluded_crate_names));
-    }
-    let most_downloaded = most_downloaded_query
+        .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(crate_downloads::downloads.desc())
         .select(selection)
         .limit(10)
         .load(&mut conn)
         .await?;
 
-    let mut most_recently_downloaded_query = crates::table
+    let most_recently_downloaded = crates::table
         .inner_join(crate_downloads::table)
         .inner_join(recent_crate_downloads::table)
         .left_join(default_versions::table)
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-        .into_boxed();
-    if !config.excluded_crate_names.is_empty() {
-        most_recently_downloaded_query = most_recently_downloaded_query
-            .filter(crates::name.ne_all(&config.excluded_crate_names));
-    }
-    let most_recently_downloaded = most_recently_downloaded_query
+        .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(recent_crate_downloads::downloads.desc())
         .select(selection)
         .limit(10)
