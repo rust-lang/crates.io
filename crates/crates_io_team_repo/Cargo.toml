@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.92"
+anyhow = "=1.0.93"
 async-trait = "=0.1.83"
 mockall = "=0.13.0"
 reqwest = { version = "=0.12.9", features = ["gzip", "json"] }
