@@ -1,6 +1,7 @@
 mod scopes;
 
 use chrono::NaiveDateTime;
+use diesel_async::AsyncPgConnection;
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
@@ -91,6 +92,43 @@ impl ApiToken {
         })
         .or_else(|_| tokens.select(ApiToken::as_select()).first(conn))
         .map_err(Into::into)
+    }
+
+    pub async fn async_find_by_api_token(
+        conn: &mut AsyncPgConnection,
+        token: &HashedToken,
+    ) -> QueryResult<ApiToken> {
+        use diesel::{dsl::now, update};
+        use diesel_async::scoped_futures::ScopedFutureExt;
+        use diesel_async::{AsyncConnection, RunQueryDsl};
+
+        let tokens = api_tokens::table
+            .filter(api_tokens::revoked.eq(false))
+            .filter(
+                api_tokens::expired_at
+                    .is_null()
+                    .or(api_tokens::expired_at.gt(now)),
+            )
+            .filter(api_tokens::token.eq(token));
+
+        // If the database is in read only mode, we can't update last_used_at.
+        // Try updating in a new transaction, if that fails, fall back to reading
+        let token = conn
+            .transaction(|conn| {
+                async move {
+                    update(tokens)
+                        .set(api_tokens::last_used_at.eq(now.nullable()))
+                        .returning(ApiToken::as_returning())
+                        .get_result(conn)
+                        .await
+                }
+                .scope_boxed()
+            })
+            .await;
+        let Ok(_) = token else {
+            return tokens.select(ApiToken::as_select()).first(conn).await;
+        };
+        token
     }
 }
 
