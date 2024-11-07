@@ -21,13 +21,15 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
-    let conn = app.db_read_prefer_primary().await?;
+    let mut conn = app.db_read_prefer_primary().await?;
+    let user_id = AuthCheck::only_cookie()
+        .async_check(&req, &mut conn)
+        .await?
+        .user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
 
         let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
             users::table
@@ -67,11 +69,13 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_read_prefer_primary().await?;
+    let mut conn = app.db_read_prefer_primary().await?;
+    let auth = AuthCheck::only_cookie()
+        .async_check(&req, &mut conn)
+        .await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
         let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
@@ -145,15 +149,17 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
         .map(|c| (c.id, c.email_notifications))
         .collect();
 
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let user_id = AuthCheck::default()
+        .async_check(&parts, &mut conn)
+        .await?
+        .user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         use diesel::pg::upsert::excluded;
-
-        let user_id = AuthCheck::default().check(&parts, conn)?.user_id();
 
         // Build inserts from existing crates belonging to the current user
         let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
