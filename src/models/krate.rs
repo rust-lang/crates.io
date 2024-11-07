@@ -3,6 +3,7 @@ use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::sql_types::{Bool, Text};
+use diesel_async::AsyncPgConnection;
 use secrecy::SecretString;
 use thiserror::Error;
 
@@ -195,12 +196,17 @@ impl Crate {
         crates::table.select(Self::as_select())
     }
 
-    pub fn find_version(&self, conn: &mut impl Conn, version: &str) -> AppResult<Version> {
-        use diesel::RunQueryDsl;
+    pub async fn find_version(
+        &self,
+        conn: &mut AsyncPgConnection,
+        version: &str,
+    ) -> AppResult<Version> {
+        use diesel_async::RunQueryDsl;
 
         Version::belonging_to(self)
             .filter(versions::num.eq(version))
             .first(conn)
+            .await
             .optional()?
             .ok_or_else(|| version_not_found(&self.name, version))
     }

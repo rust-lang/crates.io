@@ -45,13 +45,12 @@ pub async fn downloads(
         return Err(version_not_found(&crate_name, &version));
     }
 
-    let conn = app.db_read().await?;
+    let mut conn = app.db_read().await?;
+    let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let (version, _) = version_and_crate(conn, &crate_name, &version)?;
 
         let cutoff_end_date = req
             .query()
