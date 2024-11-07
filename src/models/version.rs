@@ -54,12 +54,12 @@ impl Version {
 
     /// Gets the User who ran `cargo publish` for this version, if recorded.
     /// Not for use when you have a group of versions you need the publishers for.
-    pub fn published_by(&self, conn: &mut impl Conn) -> Option<User> {
+    pub fn published_by(&self, conn: &mut impl Conn) -> QueryResult<Option<User>> {
         use diesel::RunQueryDsl;
 
         match self.published_by {
-            Some(pb) => users::table.find(pb).first(conn).ok(),
-            None => None,
+            Some(pb) => users::table.find(pb).first(conn).optional(),
+            None => Ok(None),
         }
     }
 
