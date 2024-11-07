@@ -27,11 +27,13 @@ use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_read().await?;
+    let mut conn = app.db_read().await?;
+    let auth = AuthCheck::only_cookie()
+        .async_check(&req, &mut conn)
+        .await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user_id = auth.user_id();
 
         let PrivateListResponse {
@@ -69,11 +71,12 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
-    let conn = app.db_read().await?;
+    let mut conn = app.db_read().await?;
+    let auth = AuthCheck::only_cookie()
+        .async_check(&req, &mut conn)
+        .await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let auth = AuthCheck::only_cookie().check(&req, conn)?;
 
         let filter = if let Some(crate_name) = req.query().get("crate_name") {
             ListFilter::CrateName(crate_name.clone())
@@ -284,11 +287,11 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
 
     let crate_invite = crate_invite.crate_owner_invite;
 
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let auth = AuthCheck::default().async_check(&parts, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&parts, conn)?;
         let user_id = auth.user_id();
 
         let config = &state.config;
