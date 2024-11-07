@@ -104,7 +104,7 @@ pub async fn show(
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let published_by = version.published_by(conn);
+        let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
 
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
@@ -142,7 +142,7 @@ pub async fn update(
             update_request.version.yank_message,
         )?;
 
-        let published_by = version.published_by(conn);
+        let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
         let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
         Ok(Json(json!({ "version": updated_version })))
