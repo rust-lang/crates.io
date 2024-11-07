@@ -41,13 +41,15 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = app.db_read_prefer_primary().await?;
+    let mut conn = app.db_read_prefer_primary().await?;
+    let auth = AuthCheck::only_cookie()
+        .async_check(&req, &mut conn)
+        .await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::only_cookie().check(&req, conn)?;
         let user = auth.user();
 
         let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
@@ -92,13 +94,13 @@ pub async fn new(
         return Err(bad_request("name must have a value"));
     }
 
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let auth = AuthCheck::default().async_check(&parts, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&parts, conn)?;
         if auth.api_token_id().is_some() {
             return Err(bad_request(
                 "cannot use an API token to create a new API token",
@@ -175,13 +177,13 @@ pub async fn new(
 
 /// Handles the `GET /me/tokens/:id` route.
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
         let token = ApiToken::belonging_to(user)
             .find(id)
@@ -195,13 +197,13 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<J
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
         diesel::update(ApiToken::belonging_to(user).find(id))
             .set(api_tokens::revoked.eq(true))
@@ -214,13 +216,13 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
         let api_token_id = auth
             .api_token_id()
             .ok_or_else(|| bad_request("token not provided"))?;
