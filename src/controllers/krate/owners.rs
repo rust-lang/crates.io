@@ -130,16 +130,16 @@ async fn modify_owners(
         ));
     }
 
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::ChangeOwners)
+        .for_crate(&crate_name)
+        .async_check(&parts, &mut conn)
+        .await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let auth = AuthCheck::default()
-            .with_endpoint_scope(EndpointScope::ChangeOwners)
-            .for_crate(&crate_name)
-            .check(&parts, conn)?;
 
         let user = auth.user();
 
