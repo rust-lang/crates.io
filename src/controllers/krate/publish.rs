@@ -81,17 +81,17 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     request_log.add("crate_name", &*metadata.name);
     request_log.add("crate_version", &version_string);
 
-    let conn = app.db_write().await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let mut conn = app.db_write().await?;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let (existing_crate, auth) = {
+        use diesel_async::RunQueryDsl;
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
         // `publish-update` to be used.
         let existing_crate: Option<Crate> = Crate::by_name(&metadata.name)
-            .first::<Crate>(conn)
+            .first::<Crate>(&mut conn)
+            .await
             .optional()?;
 
         let endpoint_scope = match existing_crate {
@@ -102,7 +102,15 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
             .for_crate(&metadata.name)
-            .check(&req, conn)?;
+            .async_check(&req, &mut conn)
+            .await?;
+        (existing_crate, auth)
+    };
+
+    spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let api_token_id = auth.api_token_id();
         let user = auth.user();
