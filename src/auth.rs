@@ -4,7 +4,6 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
-use crate::util::diesel::Conn;
 use crate::util::errors::{
     account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
@@ -56,43 +55,6 @@ impl AuthCheck {
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
         }
-    }
-
-    #[instrument(name = "auth.check", skip_all)]
-    pub fn check(&self, parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
-        let auth = authenticate(parts, conn)?;
-
-        if let Some(token) = auth.api_token() {
-            if !self.allow_token {
-                let error_message =
-                    "API Token authentication was explicitly disallowed for this API";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this action can only be performed on the crates.io website",
-                ));
-            }
-
-            if !self.endpoint_scope_matches(token.endpoint_scopes.as_ref()) {
-                let error_message = "Endpoint scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
-
-            if !self.crate_scope_matches(token.crate_scopes.as_ref()) {
-                let error_message = "Crate scope mismatch";
-                parts.request_log().add("cause", error_message);
-
-                return Err(forbidden(
-                    "this token does not have the required permissions to perform this action",
-                ));
-            }
-        }
-
-        Ok(auth)
     }
 
     #[instrument(name = "auth.async_check", skip_all)]
@@ -210,32 +172,6 @@ impl Authentication {
 }
 
 #[instrument(skip_all)]
-fn authenticate_via_cookie(
-    parts: &Parts,
-    conn: &mut impl Conn,
-) -> AppResult<Option<CookieAuthentication>> {
-    let user_id_from_session = parts
-        .session()
-        .get("user_id")
-        .and_then(|s| s.parse::<i32>().ok());
-
-    let Some(id) = user_id_from_session else {
-        return Ok(None);
-    };
-
-    let user = User::find(conn, id).map_err(|err| {
-        parts.request_log().add("cause", err);
-        internal("user_id from cookie not found in database")
-    })?;
-
-    ensure_not_locked(&user)?;
-
-    parts.request_log().add("uid", id);
-
-    Ok(Some(CookieAuthentication { user }))
-}
-
-#[instrument(skip_all)]
 async fn async_authenticate_via_cookie(
     parts: &Parts,
     conn: &mut AsyncPgConnection,
@@ -259,43 +195,6 @@ async fn async_authenticate_via_cookie(
     parts.request_log().add("uid", id);
 
     Ok(Some(CookieAuthentication { user }))
-}
-
-#[instrument(skip_all)]
-fn authenticate_via_token(
-    parts: &Parts,
-    conn: &mut impl Conn,
-) -> AppResult<Option<TokenAuthentication>> {
-    let maybe_authorization = parts
-        .headers()
-        .get(header::AUTHORIZATION)
-        .and_then(|h| h.to_str().ok());
-
-    let Some(header_value) = maybe_authorization else {
-        return Ok(None);
-    };
-
-    let token =
-        HashedToken::parse(header_value).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
-
-    let token = ApiToken::find_by_api_token(conn, &token).map_err(|e| {
-        let cause = format!("invalid token caused by {e}");
-        parts.request_log().add("cause", cause);
-
-        forbidden("authentication failed")
-    })?;
-
-    let user = User::find(conn, token.user_id).map_err(|err| {
-        parts.request_log().add("cause", err);
-        internal("user_id from token not found in database")
-    })?;
-
-    ensure_not_locked(&user)?;
-
-    parts.request_log().add("uid", token.user_id);
-    parts.request_log().add("tokenid", token.id);
-
-    Ok(Some(TokenAuthentication { user, token }))
 }
 
 #[instrument(skip_all)]
@@ -335,29 +234,6 @@ async fn async_authenticate_via_token(
     parts.request_log().add("tokenid", token.id);
 
     Ok(Some(TokenAuthentication { user, token }))
-}
-
-#[instrument(skip_all)]
-fn authenticate(parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
-    controllers::util::verify_origin(parts)?;
-
-    match authenticate_via_cookie(parts, conn) {
-        Ok(None) => {}
-        Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
-        Err(err) => return Err(err),
-    }
-
-    match authenticate_via_token(parts, conn) {
-        Ok(None) => {}
-        Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
-        Err(err) => return Err(err),
-    }
-
-    // Unable to authenticate the user
-    let cause = "no cookie session or auth header found";
-    parts.request_log().add("cause", cause);
-
-    return Err(forbidden("this action requires authentication"));
 }
 
 #[instrument(skip_all)]
