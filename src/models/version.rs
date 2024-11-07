@@ -5,7 +5,7 @@ use chrono::NaiveDateTime;
 use crates_io_index::features::FeaturesMap;
 use serde::Deserialize;
 
-use crate::models::{Crate, Dependency, User};
+use crate::models::{Crate, User};
 use crate::schema::*;
 use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
@@ -35,17 +35,6 @@ pub struct Version {
 }
 
 impl Version {
-    /// Returns (dependency, crate dependency name)
-    pub fn dependencies(&self, conn: &mut impl Conn) -> QueryResult<Vec<(Dependency, String)>> {
-        use diesel::RunQueryDsl;
-
-        Dependency::belonging_to(self)
-            .inner_join(crates::table)
-            .select((Dependency::as_select(), crates::name))
-            .order((dependencies::optional, crates::name))
-            .load(conn)
-    }
-
     pub fn record_readme_rendering(version_id: i32, conn: &mut impl Conn) -> QueryResult<usize> {
         use diesel::dsl::now;
         use diesel::RunQueryDsl;
