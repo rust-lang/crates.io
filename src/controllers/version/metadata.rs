@@ -8,10 +8,6 @@ use axum::extract::Path;
 use axum::Json;
 use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
-use diesel::{
-    BelongingToDsl, BoolExpressionMethods, ExpressionMethods, PgExpressionMethods, QueryDsl,
-    RunQueryDsl, SelectableHelper,
-};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
@@ -29,6 +25,7 @@ use crate::models::{
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::tasks::spawn_blocking;
+use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
@@ -57,27 +54,26 @@ pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<Json<Value>> {
+    use diesel_async::RunQueryDsl;
+
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
 
     let mut conn = state.db_read().await?;
     let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let deps = Dependency::belonging_to(&version)
-            .inner_join(crates::table)
-            .select((Dependency::as_select(), crates::name))
-            .order((dependencies::optional, crates::name))
-            .load::<(Dependency, String)>(conn)?
-            .into_iter()
-            .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
-            .collect::<Vec<_>>();
+    let deps = Dependency::belonging_to(&version)
+        .inner_join(crates::table)
+        .select((Dependency::as_select(), crates::name))
+        .order((dependencies::optional, crates::name))
+        .load::<(Dependency, String)>(&mut conn)
+        .await?
+        .into_iter()
+        .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
+        .collect::<Vec<_>>();
 
-        Ok(Json(json!({ "dependencies": deps })))
-    })
-    .await
+    Ok(Json(json!({ "dependencies": deps })))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
@@ -179,6 +175,8 @@ pub fn perform_version_yank_update(
     yanked: Option<bool>,
     yank_message: Option<String>,
 ) -> AppResult<()> {
+    use diesel::RunQueryDsl;
+
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(&krate.name)
