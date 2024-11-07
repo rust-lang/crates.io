@@ -41,29 +41,25 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
+    use diesel_async::RunQueryDsl;
+
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let user = auth.user();
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
+        .select(ApiToken::as_select())
+        .filter(api_tokens::revoked.eq(false))
+        .filter(
+            api_tokens::expired_at.is_null().or(api_tokens::expired_at
+                .assume_not_null()
+                .gt(now - params.expired_days_interval())),
+        )
+        .order(api_tokens::id.desc())
+        .load(&mut conn)
+        .await?;
 
-        let user = auth.user();
-
-        let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
-            .select(ApiToken::as_select())
-            .filter(api_tokens::revoked.eq(false))
-            .filter(
-                api_tokens::expired_at.is_null().or(api_tokens::expired_at
-                    .assume_not_null()
-                    .gt(now - params.expired_days_interval())),
-            )
-            .order(api_tokens::id.desc())
-            .load(conn)?;
-
-        Ok(Json(json!({ "api_tokens": tokens })))
-    })
-    .await
+    Ok(Json(json!({ "api_tokens": tokens })))
 }
 
 /// The incoming serialization format for the `ApiToken` model.
@@ -175,63 +171,51 @@ pub async fn new(
 
 /// Handles the `GET /me/tokens/:id` route.
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+    use diesel_async::RunQueryDsl;
+
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let user = auth.user();
+    let token = ApiToken::belonging_to(user)
+        .find(id)
+        .select(ApiToken::as_select())
+        .first(&mut conn)
+        .await?;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let user = auth.user();
-        let token = ApiToken::belonging_to(user)
-            .find(id)
-            .select(ApiToken::as_select())
-            .first(conn)?;
-
-        Ok(Json(json!({ "api_token": token })))
-    })
-    .await
+    Ok(Json(json!({ "api_token": token })))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+    use diesel_async::RunQueryDsl;
+
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let user = auth.user();
+    diesel::update(ApiToken::belonging_to(user).find(id))
+        .set(api_tokens::revoked.eq(true))
+        .execute(&mut conn)
+        .await?;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let user = auth.user();
-        diesel::update(ApiToken::belonging_to(user).find(id))
-            .set(api_tokens::revoked.eq(true))
-            .execute(conn)?;
-
-        Ok(Json(json!({})))
-    })
-    .await
+    Ok(Json(json!({})))
 }
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
+    use diesel_async::RunQueryDsl;
+
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let api_token_id = auth
+        .api_token_id()
+        .ok_or_else(|| bad_request("token not provided"))?;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
+        .set(api_tokens::revoked.eq(true))
+        .execute(&mut conn)
+        .await?;
 
-        let api_token_id = auth
-            .api_token_id()
-            .ok_or_else(|| bad_request("token not provided"))?;
-
-        diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
-            .set(api_tokens::revoked.eq(true))
-            .execute(conn)?;
-
-        Ok(StatusCode::NO_CONTENT.into_response())
-    })
-    .await
+    Ok(StatusCode::NO_CONTENT.into_response())
 }
 
 struct NewTokenEmail<'a> {
