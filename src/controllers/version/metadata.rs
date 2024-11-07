@@ -9,6 +9,7 @@ use axum::Json;
 use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::StatusCode;
 use serde::Deserialize;
@@ -128,11 +129,11 @@ pub async fn update(
 
     let mut conn = state.db_write().await?;
     let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    validate_yank_update(&update_request.version, &version)?;
+    let auth = authenticate(&req, &mut conn, &krate.name).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        validate_yank_update(&update_request.version, &version)?;
-        let auth = authenticate(&req, conn, &krate.name)?;
         perform_version_yank_update(
             &state,
             conn,
@@ -167,11 +168,16 @@ fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppRe
     Ok(())
 }
 
-pub fn authenticate(req: &Parts, conn: &mut impl Conn, name: &str) -> AppResult<Authentication> {
+pub async fn authenticate(
+    req: &Parts,
+    conn: &mut AsyncPgConnection,
+    name: &str,
+) -> AppResult<Authentication> {
     AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(name)
-        .check(req, conn)
+        .async_check(req, conn)
+        .await
 }
 
 pub fn perform_version_yank_update(

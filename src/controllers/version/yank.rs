@@ -54,9 +54,9 @@ async fn modify_yank(
 
     let mut conn = state.db_write().await?;
     let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let auth = authenticate(&req, &mut conn, &crate_name).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        let auth = authenticate(&req, conn, &crate_name)?;
         perform_version_yank_update(
             &state,
             conn,
