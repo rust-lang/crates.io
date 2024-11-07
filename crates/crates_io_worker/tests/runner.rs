@@ -277,7 +277,9 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
     let pool = pool(test_database.url())?;
     let mut conn = pool.get().await?;
 
-    let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
+    let runner = Runner::new(pool, test_context.clone())
+        .register_job_type::<TestJob>()
+        .shutdown_when_queue_empty();
 
     // Enqueue first job
     assert_some!(TestJob::new("foo").async_enqueue(&mut conn).await?);
