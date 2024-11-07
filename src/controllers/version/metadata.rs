@@ -16,7 +16,7 @@ use serde_json::Value;
 use tokio::runtime::Handle;
 
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{AuthCheck, Authentication};
 use crate::models::token::EndpointScope;
 use crate::models::{
     insert_version_owner_action, Crate, Dependency, Rights, Version, VersionAction,
@@ -132,12 +132,13 @@ pub async fn update(
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         validate_yank_update(&update_request.version, &version)?;
+        let auth = authenticate(&req, conn, &krate.name)?;
         perform_version_yank_update(
             &state,
-            &req,
             conn,
             &mut version,
             &krate,
+            &auth,
             update_request.version.yanked,
             update_request.version.yank_message,
         )?;
@@ -166,21 +167,23 @@ fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppRe
     Ok(())
 }
 
+pub fn authenticate(req: &Parts, conn: &mut impl Conn, name: &str) -> AppResult<Authentication> {
+    AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::Yank)
+        .for_crate(name)
+        .check(req, conn)
+}
+
 pub fn perform_version_yank_update(
     state: &AppState,
-    req: &Parts,
     conn: &mut impl Conn,
     version: &mut Version,
     krate: &Crate,
+    auth: &Authentication,
     yanked: Option<bool>,
     yank_message: Option<String>,
 ) -> AppResult<()> {
     use diesel::RunQueryDsl;
-
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(EndpointScope::Yank)
-        .for_crate(&krate.name)
-        .check(req, conn)?;
 
     state
         .rate_limiter
