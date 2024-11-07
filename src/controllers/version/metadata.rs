@@ -176,7 +176,7 @@ pub async fn authenticate(
     AuthCheck::default()
         .with_endpoint_scope(EndpointScope::Yank)
         .for_crate(name)
-        .async_check(req, conn)
+        .check(req, conn)
         .await
 }
 

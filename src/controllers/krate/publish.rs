@@ -102,7 +102,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let auth = AuthCheck::default()
             .with_endpoint_scope(endpoint_scope)
             .for_crate(&metadata.name)
-            .async_check(&req, &mut conn)
+            .check(&req, &mut conn)
             .await?;
         (existing_crate, auth)
     };

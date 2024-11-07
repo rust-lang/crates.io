@@ -42,9 +42,7 @@ pub async fn list(
     req: Parts,
 ) -> AppResult<Json<Value>> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let auth = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
-        .await?;
+    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -95,7 +93,7 @@ pub async fn new(
     }
 
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().async_check(&parts, &mut conn).await?;
+    let auth = AuthCheck::default().check(&parts, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -178,7 +176,7 @@ pub async fn new(
 /// Handles the `GET /me/tokens/:id` route.
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -198,7 +196,7 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<J
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -217,7 +215,7 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 

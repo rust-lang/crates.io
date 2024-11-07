@@ -35,10 +35,7 @@ pub async fn follow(
     req: Parts,
 ) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
-    let user_id = AuthCheck::default()
-        .async_check(&req, &mut conn)
-        .await?
-        .user_id();
+    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -62,10 +59,7 @@ pub async fn unfollow(
     req: Parts,
 ) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
-    let user_id = AuthCheck::default()
-        .async_check(&req, &mut conn)
-        .await?
-        .user_id();
+    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -87,7 +81,7 @@ pub async fn following(
 ) -> AppResult<Json<Value>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
+        .check(&req, &mut conn)
         .await?
         .user_id();
     spawn_blocking(move || {

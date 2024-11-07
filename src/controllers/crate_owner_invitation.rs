@@ -28,9 +28,7 @@ use tokio::runtime::Handle;
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let mut conn = app.db_read().await?;
-    let auth = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
-        .await?;
+    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
@@ -72,9 +70,7 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
-    let auth = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
-        .await?;
+    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
@@ -288,7 +284,7 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().async_check(&parts, &mut conn).await?;
+    let auth = AuthCheck::default().check(&parts, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 

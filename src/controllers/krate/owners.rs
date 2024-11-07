@@ -134,7 +134,7 @@ async fn modify_owners(
     let auth = AuthCheck::default()
         .with_endpoint_scope(EndpointScope::ChangeOwners)
         .for_crate(&crate_name)
-        .async_check(&parts, &mut conn)
+        .check(&parts, &mut conn)
         .await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;

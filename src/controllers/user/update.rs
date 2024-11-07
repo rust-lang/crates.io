@@ -34,7 +34,7 @@ pub async fn update_user(
     Json(user_update): Json<UserUpdate>,
 ) -> AppResult<Response> {
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -121,7 +121,7 @@ pub async fn regenerate_token_and_send(
     req: Parts,
 ) -> AppResult<Response> {
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().async_check(&req, &mut conn).await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 

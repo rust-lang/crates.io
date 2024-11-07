@@ -310,7 +310,7 @@ impl<'a> FilterParams<'a> {
         }
 
         let user_id = Handle::current()
-            .block_on(AuthCheck::default().async_check(req, conn))?
+            .block_on(AuthCheck::default().check(req, conn))?
             .user_id();
 
         // This should not fail, because of the `get()` check above

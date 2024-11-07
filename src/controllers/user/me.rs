@@ -23,7 +23,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
+        .check(&req, &mut conn)
         .await?
         .user_id();
     spawn_blocking(move || {
@@ -70,9 +70,7 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 /// Handles the `GET /me/updates` route.
 pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let auth = AuthCheck::only_cookie()
-        .async_check(&req, &mut conn)
-        .await?;
+    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
@@ -151,7 +149,7 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
 
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default()
-        .async_check(&parts, &mut conn)
+        .check(&parts, &mut conn)
         .await?
         .user_id();
     spawn_blocking(move || {

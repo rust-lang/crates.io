@@ -57,13 +57,13 @@ impl AuthCheck {
         }
     }
 
-    #[instrument(name = "auth.async_check", skip_all)]
-    pub async fn async_check(
+    #[instrument(name = "auth.check", skip_all)]
+    pub async fn check(
         &self,
         parts: &Parts,
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
-        let auth = async_authenticate(parts, conn).await?;
+        let auth = authenticate(parts, conn).await?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -172,7 +172,7 @@ impl Authentication {
 }
 
 #[instrument(skip_all)]
-async fn async_authenticate_via_cookie(
+async fn authenticate_via_cookie(
     parts: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<CookieAuthentication>> {
@@ -198,7 +198,7 @@ async fn async_authenticate_via_cookie(
 }
 
 #[instrument(skip_all)]
-async fn async_authenticate_via_token(
+async fn authenticate_via_token(
     parts: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<TokenAuthentication>> {
@@ -237,19 +237,16 @@ async fn async_authenticate_via_token(
 }
 
 #[instrument(skip_all)]
-async fn async_authenticate(
-    parts: &Parts,
-    conn: &mut AsyncPgConnection,
-) -> AppResult<Authentication> {
+async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<Authentication> {
     controllers::util::verify_origin(parts)?;
 
-    match async_authenticate_via_cookie(parts, conn).await {
+    match authenticate_via_cookie(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
         Err(err) => return Err(err),
     }
 
-    match async_authenticate_via_token(parts, conn).await {
+    match authenticate_via_token(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
         Err(err) => return Err(err),
