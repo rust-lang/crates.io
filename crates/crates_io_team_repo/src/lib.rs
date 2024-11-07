@@ -6,13 +6,12 @@
 //! the trait.
 
 use async_trait::async_trait;
-use mockall::automock;
 use reqwest::{Certificate, Client};
 use serde::Deserialize;
 
 mod certs;
 
-#[automock]
+#[cfg_attr(feature = "mock", mockall::automock)]
 #[async_trait]
 pub trait TeamRepo {
     async fn get_permission(&self, name: &str) -> anyhow::Result<Permission>;

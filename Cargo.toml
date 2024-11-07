@@ -124,6 +124,7 @@ unicode-xid = "=0.2.6"
 bytes = "=1.8.0"
 crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
+crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.7.1"
 diesel = { version = "=2.2.4", features = ["r2d2"] }
