@@ -25,6 +25,19 @@
       <article aria-label="Readme" data-test-readme>
         <RenderedHtml @html={{this.readme}} local-class="readme" />
       </article>
+    {{else if this.loadReadmeTask.last.error}}
+      <div local-class="readme-error" data-test-readme-error>
+        Failed to load <code>README</code> file for {{this.crate.name}} v{{this.currentVersion.num}}
+
+        <button
+          type="button"
+          local-class="retry-button"
+          data-test-retry-button
+          {{on "click" (perform this.loadReadmeTask)}}
+        >
+          Retry
+        </button>
+      </div>
     {{else}}
       <div local-class="no-readme" data-test-no-readme>
         {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file

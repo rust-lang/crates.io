@@ -43,7 +43,7 @@ export default class CrateVersionController extends Controller {
       : await version.loadReadmeTask.perform();
 
     // If the README contains `language-mermaid` we ensure that the `mermaid` library has loaded before we continue
-    if (readme.includes('language-mermaid') && !this.mermaid.loadTask.lastSuccessful?.value) {
+    if (readme && readme.includes('language-mermaid') && !this.mermaid.loadTask.lastSuccessful?.value) {
       try {
         await this.mermaid.loadTask.perform();
       } catch (error) {

@@ -1,4 +1,5 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { Response } from 'miragejs';
 
 const README_HTML = `
 <p><strong>Serde is a framework for <em>ser</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
@@ -111,5 +112,30 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/serde');
     await expect(page.locator('[data-test-no-readme]')).toBeVisible();
+  });
+
+  test('it shows an error message and retry button if loading fails', async ({ page, mirage }) => {
+    await page.exposeBinding('resp200', () => new Response(200, { 'Content-Type': 'text/html' }, 'foo'));
+
+    await mirage.addHook(server => {
+      let crate = server.create('crate', { name: 'serde' });
+      server.create('version', { crate, num: '1.0.0' });
+
+      server.logging = true;
+      // Simulate a server error when fetching the README
+      server.get('/api/v1/crates/:name/:version/readme', {}, 500);
+    });
+
+    await page.goto('/crates/serde');
+    await expect(page.locator('[data-test-readme-error]')).toBeVisible();
+    await expect(page.locator('[data-test-retry-button]')).toBeVisible();
+
+    await page.evaluate(() => {
+      // Simulate a successful response when fetching the README
+      server.get('/api/v1/crates/:name/:version/readme', {});
+    });
+
+    await page.click('[data-test-retry-button]');
+    await expect(page.locator('[data-test-readme]')).toHaveText('{}');
   });
 });

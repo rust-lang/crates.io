@@ -25,7 +25,7 @@
     }
 }
 
-.no-readme {
+.no-readme, .readme-error {
     padding: var(--space-l) var(--space-s);
     text-align: center;
     font-size: 20px;
@@ -37,6 +37,13 @@
         font-size: 18px;
         font-weight: 500;
     }
+}
+
+.retry-button {
+    composes: yellow-button from '../shared/buttons.module.css';
+    display: block;
+    text-align: center;
+    margin: var(--space-s) auto 0;
 }
 
 .placeholder-title {
