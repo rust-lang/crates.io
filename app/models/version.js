@@ -122,6 +122,10 @@ export default class Version extends Model {
   loadReadmeTask = keepLatestTask(async () => {
     if (this.readme_path) {
       let response = await fetch(this.readme_path);
+      if (response.status === 404 || response.status === 403) {
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`README request for ${this.crateName} v${this.num} failed`);
       }

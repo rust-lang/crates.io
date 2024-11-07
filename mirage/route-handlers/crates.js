@@ -374,12 +374,12 @@ export function register(server) {
     const { name, version: versionNum } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
-      return new Response(404, { 'Content-Type': 'text/html' }, '');
+      return new Response(403, { 'Content-Type': 'text/html' }, '');
     }
 
     const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
     if (!version || !version.readme) {
-      return new Response(404, { 'Content-Type': 'text/html' }, '');
+      return new Response(403, { 'Content-Type': 'text/html' }, '');
     }
 
     return new Response(200, { 'Content-Type': 'text/html' }, version.readme);
