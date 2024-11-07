@@ -11,6 +11,11 @@ async fn record_rerendered_readme_time() {
     let c = CrateBuilder::new("foo_authors", user.id).expect_build(&mut conn);
     let version = VersionBuilder::new("1.0.0").expect_build(c.id, user.id, &mut conn);
 
-    Version::record_readme_rendering(version.id, &mut conn).unwrap();
-    Version::record_readme_rendering(version.id, &mut conn).unwrap();
+    let mut conn = app.async_db_conn().await;
+    Version::record_readme_rendering(version.id, &mut conn)
+        .await
+        .unwrap();
+    Version::record_readme_rendering(version.id, &mut conn)
+        .await
+        .unwrap();
 }

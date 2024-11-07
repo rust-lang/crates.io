@@ -5,9 +5,9 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::AsyncConnection;
 use std::sync::Arc;
-use tokio::runtime::Handle;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
@@ -46,6 +46,7 @@ impl BackgroundJob for RenderAndUploadReadme {
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         use crate::schema::*;
         use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
 
         info!(version_id = ?self.version_id, "Rendering README");
 
@@ -64,26 +65,25 @@ impl BackgroundJob for RenderAndUploadReadme {
             return Ok(());
         }
 
-        let conn = env.deadpool.get().await?;
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-            conn.transaction(|conn| {
-                Version::record_readme_rendering(job.version_id, conn)?;
+        let mut conn = env.deadpool.get().await?;
+        conn.transaction(|conn| {
+            async move {
+                Version::record_readme_rendering(job.version_id, conn).await?;
                 let (crate_name, vers): (String, String) = versions::table
                     .find(job.version_id)
                     .inner_join(crates::table)
                     .select((crates::name, versions::num))
-                    .first(conn)?;
+                    .first(conn)
+                    .await?;
 
                 tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
                 let bytes = rendered.into();
-                let future = env.storage.upload_readme(&crate_name, &vers, bytes);
-                Handle::current().block_on(future)?;
+                env.storage.upload_readme(&crate_name, &vers, bytes).await?;
 
                 Ok(())
-            })
+            }
+            .scope_boxed()
         })
         .await
     }
