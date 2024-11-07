@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use bon::Builder;
 use chrono::NaiveDateTime;
 use crates_io_index::features::FeaturesMap;
+use diesel_async::AsyncPgConnection;
 use serde::Deserialize;
 
 use crate::models::{Crate, User};
@@ -35,9 +36,12 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn record_readme_rendering(version_id: i32, conn: &mut impl Conn) -> QueryResult<usize> {
+    pub async fn record_readme_rendering(
+        version_id: i32,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<usize> {
         use diesel::dsl::now;
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         diesel::insert_into(readme_renderings::table)
             .values(readme_renderings::version_id.eq(version_id))
@@ -45,6 +49,7 @@ impl Version {
             .do_update()
             .set(readme_renderings::rendered_at.eq(now))
             .execute(conn)
+            .await
     }
 
     /// Gets the User who ran `cargo publish` for this version, if recorded.
