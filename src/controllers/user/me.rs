@@ -21,50 +21,47 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
+    use diesel_async::RunQueryDsl;
+
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
         .await?
         .user_id();
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
+        users::table
+            .find(user_id)
+            .left_join(emails::table)
+            .select((
+                User::as_select(),
+                emails::verified.nullable(),
+                emails::email.nullable(),
+                emails::token_generated_at.nullable().is_not_null(),
+            ))
+            .first(&mut conn)
+            .await?;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
+        .inner_join(crates::table)
+        .filter(crate_owners::owner_id.eq(user_id))
+        .select((crates::id, crates::name, crate_owners::email_notifications))
+        .order(crates::name.asc())
+        .load(&mut conn)
+        .await?
+        .into_iter()
+        .map(|(id, name, email_notifications)| OwnedCrate {
+            id,
+            name,
+            email_notifications,
+        })
+        .collect();
 
-        let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
-            users::table
-                .find(user_id)
-                .left_join(emails::table)
-                .select((
-                    User::as_select(),
-                    emails::verified.nullable(),
-                    emails::email.nullable(),
-                    emails::token_generated_at.nullable().is_not_null(),
-                ))
-                .first(conn)?;
-
-        let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
-            .inner_join(crates::table)
-            .filter(crate_owners::owner_id.eq(user_id))
-            .select((crates::id, crates::name, crate_owners::email_notifications))
-            .order(crates::name.asc())
-            .load(conn)?
-            .into_iter()
-            .map(|(id, name, email_notifications)| OwnedCrate {
-                id,
-                name,
-                email_notifications,
-            })
-            .collect();
-
-        let verified = verified.unwrap_or(false);
-        let verification_sent = verified || verification_sent;
-        Ok(Json(EncodableMe {
-            user: EncodablePrivateUser::from(user, email, verified, verification_sent),
-            owned_crates,
-        }))
-    })
-    .await
+    let verified = verified.unwrap_or(false);
+    let verification_sent = verified || verification_sent;
+    Ok(Json(EncodableMe {
+        user: EncodablePrivateUser::from(user, email, verified, verification_sent),
+        owned_crates,
+    }))
 }
 
 /// Handles the `GET /me/updates` route.
@@ -110,29 +107,28 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
 
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
-    let conn = state.db_write().await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    use diesel::update;
+    use diesel_async::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_write().await?;
 
-        use diesel::update;
+    let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
+        .set(emails::verified.eq(true))
+        .execute(&mut conn)
+        .await?;
 
-        let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
-            .set(emails::verified.eq(true))
-            .execute(conn)?;
+    if updated_rows == 0 {
+        return Err(bad_request("Email belonging to token not found."));
+    }
 
-        if updated_rows == 0 {
-            return Err(bad_request("Email belonging to token not found."));
-        }
-
-        ok_true()
-    })
-    .await
+    ok_true()
 }
 
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
+    use diesel::pg::upsert::excluded;
+    use diesel_async::RunQueryDsl;
+
     let (parts, body) = req.0.into_parts();
 
     #[derive(Deserialize)]
@@ -152,51 +148,45 @@ pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> App
         .check(&parts, &mut conn)
         .await?
         .user_id();
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    // Build inserts from existing crates belonging to the current user
+    let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
+        .filter(crate_owners::owner_id.eq(user_id))
+        .select((
+            crate_owners::crate_id,
+            crate_owners::owner_id,
+            crate_owners::owner_kind,
+            crate_owners::email_notifications,
+        ))
+        .load(&mut conn)
+        .await?
+        .into_iter()
+        // Remove records whose `email_notifications` will not change from their current value
+        .map(
+            |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
+                let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
+                (
+                    crate_owners::crate_id.eq(c_id),
+                    crate_owners::owner_id.eq(o_id),
+                    crate_owners::owner_kind.eq(o_kind),
+                    crate_owners::email_notifications.eq(current_e_notifications),
+                )
+            },
+        )
+        .collect::<Vec<_>>();
 
-        use diesel::pg::upsert::excluded;
+    // Upsert crate owners; this should only actually execute updates
+    diesel::insert_into(crate_owners::table)
+        .values(&to_insert)
+        .on_conflict((
+            crate_owners::crate_id,
+            crate_owners::owner_id,
+            crate_owners::owner_kind,
+        ))
+        .do_update()
+        .set(crate_owners::email_notifications.eq(excluded(crate_owners::email_notifications)))
+        .execute(&mut conn)
+        .await?;
 
-        // Build inserts from existing crates belonging to the current user
-        let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)
-            .filter(crate_owners::owner_id.eq(user_id))
-            .select((
-                crate_owners::crate_id,
-                crate_owners::owner_id,
-                crate_owners::owner_kind,
-                crate_owners::email_notifications,
-            ))
-            .load(conn)?
-            .into_iter()
-            // Remove records whose `email_notifications` will not change from their current value
-            .map(
-                |(c_id, o_id, o_kind, e_notifications): (i32, i32, i32, bool)| {
-                    let current_e_notifications = *updates.get(&c_id).unwrap_or(&e_notifications);
-                    (
-                        crate_owners::crate_id.eq(c_id),
-                        crate_owners::owner_id.eq(o_id),
-                        crate_owners::owner_kind.eq(o_kind),
-                        crate_owners::email_notifications.eq(current_e_notifications),
-                    )
-                },
-            )
-            .collect::<Vec<_>>();
-
-        // Upsert crate owners; this should only actually execute updates
-        diesel::insert_into(crate_owners::table)
-            .values(&to_insert)
-            .on_conflict((
-                crate_owners::crate_id,
-                crate_owners::owner_id,
-                crate_owners::owner_kind,
-            ))
-            .do_update()
-            .set(crate_owners::email_notifications.eq(excluded(crate_owners::email_notifications)))
-            .execute(conn)?;
-
-        ok_true()
-    })
-    .await
+    ok_true()
 }
