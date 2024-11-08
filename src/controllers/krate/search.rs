@@ -6,10 +6,12 @@ use axum::Json;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
 use diesel::sql_types::{Array, Bool, Text};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use diesel_full_text_search::*;
 use http::request::Parts;
 use serde_json::Value;
 use std::cell::OnceCell;
+use tokio::runtime::Handle;
 
 use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
@@ -22,7 +24,6 @@ use crate::controllers::helpers::pagination::{Page, Paginated, PaginationOptions
 use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
 use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::util::RequestUtils;
 
 /// Handles the `GET /crates` route.
@@ -303,12 +304,14 @@ impl<'a> FilterParams<'a> {
             .as_deref()
     }
 
-    fn authed_user_id(&self, req: &Parts, conn: &mut impl Conn) -> AppResult<i32> {
+    fn authed_user_id(&self, req: &Parts, conn: &mut AsyncPgConnection) -> AppResult<i32> {
         if let Some(val) = self._auth_user_id.get() {
             return Ok(*val);
         }
 
-        let user_id = AuthCheck::default().check(req, conn)?.user_id();
+        let user_id = Handle::current()
+            .block_on(AuthCheck::default().check(req, conn))?
+            .user_id();
 
         // This should not fail, because of the `get()` check above
         let _ = self._auth_user_id.set(user_id);
@@ -319,7 +322,7 @@ impl<'a> FilterParams<'a> {
     fn make_query(
         &'a self,
         req: &Parts,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
     ) -> AppResult<crates::BoxedQuery<'a, diesel::pg::Pg>> {
         let mut query = crates::table.into_boxed();
 

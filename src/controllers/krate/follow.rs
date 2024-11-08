@@ -34,13 +34,13 @@ pub async fn follow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         diesel::insert_into(follows::table)
             .values(&follow)
@@ -58,13 +58,13 @@ pub async fn unfollow(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = app.db_write().await?;
+    let mut conn = app.db_write().await?;
+    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let user_id = AuthCheck::default().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         diesel::delete(&follow).execute(conn)?;
 
@@ -79,7 +79,11 @@ pub async fn following(
     Path(crate_name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = app.db_read_prefer_primary().await?;
+    let mut conn = app.db_read_prefer_primary().await?;
+    let user_id = AuthCheck::only_cookie()
+        .check(&req, &mut conn)
+        .await?
+        .user_id();
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -87,7 +91,6 @@ pub async fn following(
 
         use diesel::dsl::exists;
 
-        let user_id = AuthCheck::only_cookie().check(&req, conn)?.user_id();
         let follow = follow_target(&crate_name, conn, user_id)?;
         let following =
             diesel::select(exists(follows::table.find(follow.id()))).get_result::<bool>(conn)?;

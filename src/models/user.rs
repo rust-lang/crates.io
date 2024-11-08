@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use diesel_async::AsyncPgConnection;
 use secrecy::SecretString;
 
 use crate::app::App;
@@ -32,6 +33,12 @@ impl User {
         use diesel::RunQueryDsl;
 
         users::table.find(id).first(conn)
+    }
+
+    pub async fn async_find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
+        use diesel_async::RunQueryDsl;
+
+        users::table.find(id).first(conn).await
     }
 
     pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<User> {

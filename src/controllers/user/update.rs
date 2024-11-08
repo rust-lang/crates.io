@@ -33,13 +33,13 @@ pub async fn update_user(
     req: Parts,
     Json(user_update): Json<UserUpdate>,
 ) -> AppResult<Response> {
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
 
         // need to check if current user matches user to be updated
@@ -120,13 +120,13 @@ pub async fn regenerate_token_and_send(
     Path(param_user_id): Path<i32>,
     req: Parts,
 ) -> AppResult<Response> {
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let auth = AuthCheck::default().check(&req, &mut conn).await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let auth = AuthCheck::default().check(&req, conn)?;
         let user = auth.user();
 
         // need to check if current user matches user to be updated

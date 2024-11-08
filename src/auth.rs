@@ -4,12 +4,12 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
-use crate::util::diesel::Conn;
 use crate::util::errors::{
     account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
 };
 use crate::util::token::HashedToken;
 use chrono::Utc;
+use diesel_async::AsyncPgConnection;
 use http::header;
 use http::request::Parts;
 
@@ -58,8 +58,12 @@ impl AuthCheck {
     }
 
     #[instrument(name = "auth.check", skip_all)]
-    pub fn check(&self, parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
-        let auth = authenticate(parts, conn)?;
+    pub async fn check(
+        &self,
+        parts: &Parts,
+        conn: &mut AsyncPgConnection,
+    ) -> AppResult<Authentication> {
+        let auth = authenticate(parts, conn).await?;
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
@@ -168,9 +172,9 @@ impl Authentication {
 }
 
 #[instrument(skip_all)]
-fn authenticate_via_cookie(
+async fn authenticate_via_cookie(
     parts: &Parts,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<CookieAuthentication>> {
     let user_id_from_session = parts
         .session()
@@ -181,7 +185,7 @@ fn authenticate_via_cookie(
         return Ok(None);
     };
 
-    let user = User::find(conn, id).map_err(|err| {
+    let user = User::async_find(conn, id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from cookie not found in database")
     })?;
@@ -194,9 +198,9 @@ fn authenticate_via_cookie(
 }
 
 #[instrument(skip_all)]
-fn authenticate_via_token(
+async fn authenticate_via_token(
     parts: &Parts,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<TokenAuthentication>> {
     let maybe_authorization = parts
         .headers()
@@ -210,14 +214,16 @@ fn authenticate_via_token(
     let token =
         HashedToken::parse(header_value).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
 
-    let token = ApiToken::find_by_api_token(conn, &token).map_err(|e| {
-        let cause = format!("invalid token caused by {e}");
-        parts.request_log().add("cause", cause);
+    let token = ApiToken::async_find_by_api_token(conn, &token)
+        .await
+        .map_err(|e| {
+            let cause = format!("invalid token caused by {e}");
+            parts.request_log().add("cause", cause);
 
-        forbidden("authentication failed")
-    })?;
+            forbidden("authentication failed")
+        })?;
 
-    let user = User::find(conn, token.user_id).map_err(|err| {
+    let user = User::async_find(conn, token.user_id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from token not found in database")
     })?;
@@ -231,16 +237,16 @@ fn authenticate_via_token(
 }
 
 #[instrument(skip_all)]
-fn authenticate(parts: &Parts, conn: &mut impl Conn) -> AppResult<Authentication> {
+async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<Authentication> {
     controllers::util::verify_origin(parts)?;
 
-    match authenticate_via_cookie(parts, conn) {
+    match authenticate_via_cookie(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
         Err(err) => return Err(err),
     }
 
-    match authenticate_via_token(parts, conn) {
+    match authenticate_via_token(parts, conn).await {
         Ok(None) => {}
         Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
         Err(err) => return Err(err),
