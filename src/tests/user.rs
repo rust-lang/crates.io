@@ -160,10 +160,7 @@ async fn test_confirm_user_email() {
     // email directly into the database and we want to test the verification flow here.
     let email = "potato2@example.com";
 
-    let u = NewUser {
-        ..new_user("arbitrary_username")
-    };
-    let u = u
+    let u = new_user("arbitrary_username")
         .create_or_update(Some(email), &app.as_inner().emails, &mut conn)
         .unwrap();
     let user = MockCookieUser::new(&app, u);
@@ -197,10 +194,7 @@ async fn test_existing_user_email() {
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
     let email = "potahto@example.com";
-    let u = NewUser {
-        ..new_user("arbitrary_username")
-    };
-    let u = u
+    let u = new_user("arbitrary_username")
         .create_or_update(Some(email), &app.as_inner().emails, &mut conn)
         .unwrap();
     update(Email::belonging_to(&u))
