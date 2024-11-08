@@ -41,25 +41,22 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
-    let conn = state.db_read().await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_read().await?;
+    let krate: Crate = Crate::by_name(&crate_name)
+        .first(&mut conn)
+        .await
+        .optional()?
+        .ok_or_else(|| crate_not_found(&crate_name))?;
 
-        let krate: Crate = Crate::by_name(&crate_name)
-            .first(conn)
-            .optional()?
-            .ok_or_else(|| crate_not_found(&crate_name))?;
+    let owners = Team::owning(&krate, &mut conn)
+        .await?
+        .into_iter()
+        .map(Owner::into)
+        .collect::<Vec<EncodableOwner>>();
 
-        let owners = Team::owning(&krate, conn)?
-            .into_iter()
-            .map(Owner::into)
-            .collect::<Vec<EncodableOwner>>();
-
-        Ok(Json(json!({ "teams": owners })))
-    })
-    .await
+    Ok(Json(json!({ "teams": owners })))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
