@@ -4,6 +4,7 @@ use super::metadata::{authenticate, perform_version_yank_update};
 use super::version_and_crate;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;
+use crate::rate_limiter::LimitedAction;
 use crate::tasks::spawn_blocking;
 use crate::util::errors::{version_not_found, AppResult};
 use axum::extract::Path;
@@ -55,6 +56,12 @@ async fn modify_yank(
     let mut conn = state.db_write().await?;
     let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     let auth = authenticate(&req, &mut conn, &crate_name).await?;
+
+    state
+        .rate_limiter
+        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
+        .await?;
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
         perform_version_yank_update(

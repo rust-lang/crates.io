@@ -132,6 +132,12 @@ pub async fn update(
     let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     validate_yank_update(&update_request.version, &version)?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
+
+    state
+        .rate_limiter
+        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
+        .await?;
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
@@ -191,10 +197,6 @@ pub fn perform_version_yank_update(
     yank_message: Option<String>,
 ) -> AppResult<()> {
     use diesel::RunQueryDsl;
-
-    state
-        .rate_limiter
-        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, conn)?;
 
     let api_token_id = auth.api_token_id();
     let user = auth.user();
