@@ -101,12 +101,13 @@ impl CrateOwnerInvitation {
             .await
     }
 
-    pub fn find_by_token(token: &str, conn: &mut impl Conn) -> QueryResult<Self> {
-        use diesel::RunQueryDsl;
+    pub async fn find_by_token(token: &str, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
+        use diesel_async::RunQueryDsl;
 
         crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
             .first::<Self>(conn)
+            .await
     }
 
     pub fn accept(self, conn: &mut impl Conn, config: &config::Server) -> AppResult<()> {

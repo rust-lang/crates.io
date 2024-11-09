@@ -311,13 +311,13 @@ pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
-    let conn = state.db_write().await?;
+    let mut conn = state.db_write().await?;
+    let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
         let config = &state.config;
 
-        let invitation = CrateOwnerInvitation::find_by_token(&token, conn)?;
         let crate_id = invitation.crate_id;
         invitation.accept(conn, config)?;
 
