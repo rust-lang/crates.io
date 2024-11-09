@@ -284,15 +284,17 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().check(&parts, &mut conn).await?;
+    let user_id = AuthCheck::default()
+        .check(&parts, &mut conn)
+        .await?
+        .user_id();
+    let invitation =
+        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &mut conn).await?;
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let user_id = auth.user_id();
-
         let config = &state.config;
 
-        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
         if crate_invite.accepted {
             invitation.accept(conn, config)?;
         } else {

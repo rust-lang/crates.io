@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime, Utc};
+use diesel_async::AsyncPgConnection;
 use http::StatusCode;
 use secrecy::SecretString;
 
@@ -87,12 +88,17 @@ impl CrateOwnerInvitation {
         })
     }
 
-    pub fn find_by_id(user_id: i32, crate_id: i32, conn: &mut impl Conn) -> QueryResult<Self> {
-        use diesel::RunQueryDsl;
+    pub async fn find_by_id(
+        user_id: i32,
+        crate_id: i32,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Self> {
+        use diesel_async::RunQueryDsl;
 
         crate_owner_invitations::table
             .find((user_id, crate_id))
             .first::<Self>(conn)
+            .await
     }
 
     pub fn find_by_token(token: &str, conn: &mut impl Conn) -> QueryResult<Self> {
