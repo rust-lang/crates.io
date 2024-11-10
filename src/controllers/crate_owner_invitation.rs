@@ -284,24 +284,22 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().check(&parts, &mut conn).await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let user_id = AuthCheck::default()
+        .check(&parts, &mut conn)
+        .await?
+        .user_id();
+    let invitation =
+        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &mut conn).await?;
 
-        let user_id = auth.user_id();
+    let config = &state.config;
 
-        let config = &state.config;
+    if crate_invite.accepted {
+        invitation.accept(&mut conn, config).await?;
+    } else {
+        invitation.decline(&mut conn).await?;
+    }
 
-        let invitation = CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, conn)?;
-        if crate_invite.accepted {
-            invitation.accept(conn, config)?;
-        } else {
-            invitation.decline(conn)?;
-        }
-
-        Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
-    })
-    .await
+    Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
@@ -309,22 +307,18 @@ pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<Json<Value>> {
-    let conn = state.db_write().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_write().await?;
+    let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
 
-        let config = &state.config;
+    let config = &state.config;
 
-        let invitation = CrateOwnerInvitation::find_by_token(&token, conn)?;
-        let crate_id = invitation.crate_id;
-        invitation.accept(conn, config)?;
+    let crate_id = invitation.crate_id;
+    invitation.accept(&mut conn, config).await?;
 
-        Ok(Json(json!({
-            "crate_owner_invitation": {
-                "crate_id": crate_id,
-                "accepted": true,
-            },
-        })))
-    })
-    .await
+    Ok(Json(json!({
+        "crate_owner_invitation": {
+            "crate_id": crate_id,
+            "accepted": true,
+        },
+    })))
 }
