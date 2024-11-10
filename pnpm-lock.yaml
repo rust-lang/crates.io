@@ -293,8 +293,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0
       qunit-dom:
-        specifier: 3.2.1
-        version: 3.2.1
+        specifier: 3.3.0
+        version: 3.3.0
       tracked-built-ins:
         specifier: 3.3.0
         version: 3.3.0
@@ -7170,8 +7170,8 @@ packages:
     resolution: {integrity: sha512-uHg5kcjyEGX85Rh9mimWoXsqeGmJZxfNLqmVxA5O2xJW+JAlQ0r0JFA07lHqlOQcegs5CAhvioKUXpjicDra6g==}
     engines: {node: 10.* || 12.* || >= 14.*}
 
-  qunit-dom@3.2.1:
-    resolution: {integrity: sha512-+qSm8zQ7hPA9NijmTDVsUFNGEFP/K+DTymjlsU01O3NhkGtb9rsZRztJXwaiAlmVSX4vSzjydPxpZCRhpWIq4A==}
+  qunit-dom@3.3.0:
+    resolution: {integrity: sha512-sGPhNbZ/3gPbH3rp7PxnzqXuh6cyN/AG/vO/X9k0IYlsoBLi83MU6PdtSw/KiWLV8X/32jxD6fbeP9vjNAY4Dw==}
 
   qunit-theme-ember@1.0.0:
     resolution: {integrity: sha512-vdMVVo6ecdCkWttMTKeyq1ZTLGHcA6zdze2zhguNuc3ritlJMhOXY5RDseqazOwqZVfCg3rtlmL3fMUyIzUyFQ==}
@@ -10948,26 +10948,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.26.0)
-      '@types/ember__array': 4.0.10
-      '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__debug': 4.0.8(@babel/core@7.26.0)
-      '@types/ember__engine': 4.0.11(@babel/core@7.26.0)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9(@babel/core@7.26.0)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.26.0)
-      '@types/ember__utils': 4.0.7
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.26.0)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.26.0)
@@ -11000,11 +10980,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.26.0)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.26.0)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.26.0)
       '@types/ember__engine': 4.0.11(@babel/core@7.26.0)
       '@types/ember__object': 4.0.12(@babel/core@7.26.0)
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22
+      '@types/ember__routing': 4.0.22(@babel/core@7.26.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11012,11 +10992,6 @@ snapshots:
   '@types/ember__array@3.16.11':
     dependencies:
       '@types/ember__object': 3.12.13
-
-  '@types/ember__array@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
 
   '@types/ember__array@4.0.10(@babel/core@7.26.0)':
     dependencies:
@@ -11030,11 +11005,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.32
-
-  '@types/ember__component@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
 
   '@types/ember__component@4.0.22(@babel/core@7.26.0)':
     dependencies:
@@ -11109,13 +11079,6 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
-  '@types/ember__routing@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__controller': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__service': 4.0.9(@babel/core@7.26.0)
-
   '@types/ember__routing@4.0.22(@babel/core@7.26.0)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.26.0)
@@ -11127,10 +11090,6 @@ snapshots:
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
-
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.26.0)':
     dependencies:
@@ -11172,10 +11131,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.26.0)':
     dependencies:
@@ -18011,7 +17966,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  qunit-dom@3.2.1:
+  qunit-dom@3.3.0:
     dependencies:
       dom-element-descriptors: 0.5.1
 
