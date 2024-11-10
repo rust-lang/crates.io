@@ -89,13 +89,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     println!("Rendering {total_versions} versions");
 
     let page_size = opts.page_size;
-
-    let total_pages = total_versions / page_size;
-    let total_pages = if total_versions % page_size == 0 {
-        total_pages
-    } else {
-        total_pages + 1
-    };
+    let total_pages = total_versions.div_ceil(page_size);
 
     let client = Client::new();
 
