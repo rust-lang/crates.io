@@ -1,3 +1,4 @@
+use diesel_async::AsyncPgConnection;
 use http::StatusCode;
 
 use crate::app::App;
@@ -199,15 +200,16 @@ impl Team {
         }
     }
 
-    pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
-        use diesel::RunQueryDsl;
+    pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+        use diesel_async::RunQueryDsl;
 
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)
             .select(Team::as_select())
             .filter(crate_owners::owner_kind.eq(OwnerKind::Team))
-            .load(conn)?
+            .load(conn)
+            .await?
             .into_iter()
             .map(Owner::Team);
 
