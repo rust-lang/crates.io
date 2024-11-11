@@ -355,6 +355,30 @@ impl Crate {
         ))
     }
 
+    pub async fn async_owners(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+        use diesel_async::RunQueryDsl;
+
+        let users = CrateOwner::by_owner_kind(OwnerKind::User)
+            .filter(crate_owners::crate_id.eq(self.id))
+            .inner_join(users::table)
+            .select(User::as_select())
+            .load(conn)
+            .await?
+            .into_iter()
+            .map(Owner::User);
+
+        let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
+            .filter(crate_owners::crate_id.eq(self.id))
+            .inner_join(teams::table)
+            .select(Team::as_select())
+            .load(conn)
+            .await?
+            .into_iter()
+            .map(Owner::Team);
+
+        Ok(users.chain(teams).collect())
+    }
+
     pub fn owners(&self, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         use diesel::RunQueryDsl;
 
