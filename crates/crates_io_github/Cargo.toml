@@ -12,7 +12,7 @@ anyhow = "=1.0.93"
 async-trait = "=0.1.83"
 oauth2 = { version = "=4.4.2", default-features = false }
 reqwest = { version = "=0.12.9", features = ["json"] }
-serde = { version = "=1.0.214", features = ["derive"] }
+serde = { version = "=1.0.215", features = ["derive"] }
 thiserror = "=2.0.3"
 tracing = "=0.1.40"
 
