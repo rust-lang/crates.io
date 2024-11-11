@@ -12,7 +12,7 @@ export default class TeamRoute extends Route {
     sort: { refreshModel: true },
   };
 
-  async model(params) {
+  async model(params, transition) {
     const { team_id } = params;
 
     try {
@@ -25,11 +25,12 @@ export default class TeamRoute extends Route {
       return { crates, team };
     } catch (error) {
       if (error instanceof NotFoundError) {
-        this.notifications.error(`Team '${params.team_id}' does not exist`);
-        return this.router.replaceWith('index');
+        let title = `${team_id}: Team not found`;
+        this.router.replaceWith('catch-all', { transition, error, title });
+      } else {
+        let title = `${team_id}: Failed to load team data`;
+        this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
-
-      throw error;
     }
   }
 }

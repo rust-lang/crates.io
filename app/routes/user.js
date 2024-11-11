@@ -12,7 +12,7 @@ export default class UserRoute extends Route {
     sort: { refreshModel: true },
   };
 
-  async model(params) {
+  async model(params, transition) {
     const { user_id } = params;
     try {
       let user = await this.store.queryRecord('user', { user_id });
@@ -24,11 +24,12 @@ export default class UserRoute extends Route {
       return { crates, user };
     } catch (error) {
       if (error instanceof NotFoundError) {
-        this.notifications.error(`User '${params.user_id}' does not exist`);
-        return this.router.replaceWith('index');
+        let title = `${user_id}: User not found`;
+        this.router.replaceWith('catch-all', { transition, error, title });
+      } else {
+        let title = `${user_id}: Failed to load user data`;
+        this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
-
-      throw error;
     }
   }
 }
