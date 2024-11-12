@@ -1,7 +1,9 @@
 use crate::dialoguer;
 use anyhow::Context;
+use chrono::{NaiveDateTime, Utc};
 use colored::Colorize;
-use crates_io::schema::crate_downloads;
+use crates_io::models::NewDeletedCrate;
+use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
 use crates_io_worker::BackgroundJob;
@@ -9,7 +11,8 @@ use diesel::dsl::sql;
 use diesel::expression::SqlLiteral;
 use diesel::prelude::*;
 use diesel::sql_types::{Array, BigInt, Text};
-use diesel_async::RunQueryDsl;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use std::fmt::Display;
 
 #[derive(clap::Parser, Debug)]
@@ -58,17 +61,27 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    let now = Utc::now();
+
     for name in &crate_names {
         if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
             let id = crate_info.id;
 
+            let created_at = crate_info.created_at.and_utc();
+            let deleted_crate = NewDeletedCrate::builder(name)
+                .created_at(&created_at)
+                .deleted_at(&now)
+                .available_at(&now)
+                .build();
+
             info!("{name}: Deleting crate from the database…");
-            if let Err(error) = diesel::delete(crates::table.find(id))
-                .execute(&mut conn)
-                .await
-            {
+            let result = conn
+                .transaction(|conn| delete_from_database(conn, id, deleted_crate).scope_boxed())
+                .await;
+
+            if let Err(error) = result {
                 warn!(%id, "{name}: Failed to delete crate from the database: {error}");
-            }
+            };
         } else {
             info!("{name}: Skipped missing crate");
         };
@@ -94,12 +107,31 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     Ok(())
 }
 
+async fn delete_from_database(
+    conn: &mut AsyncPgConnection,
+    crate_id: i32,
+    deleted_crate: NewDeletedCrate<'_>,
+) -> anyhow::Result<()> {
+    diesel::delete(crates::table.find(crate_id))
+        .execute(conn)
+        .await?;
+
+    diesel::insert_into(deleted_crates::table)
+        .values(deleted_crate)
+        .execute(conn)
+        .await?;
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, Queryable, Selectable)]
 struct CrateInfo {
     #[diesel(select_expression = crates::columns::name)]
     name: String,
     #[diesel(select_expression = crates::columns::id)]
     id: i32,
+    #[diesel(select_expression = crates::columns::created_at)]
+    created_at: NaiveDateTime,
     #[diesel(select_expression = crate_downloads::columns::downloads)]
     downloads: i64,
     #[diesel(select_expression = owners_subquery())]
