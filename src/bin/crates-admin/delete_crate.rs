@@ -2,7 +2,7 @@ use crate::dialoguer;
 use anyhow::Context;
 use chrono::{NaiveDateTime, Utc};
 use colored::Colorize;
-use crates_io::models::NewDeletedCrate;
+use crates_io::models::{NewDeletedCrate, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
@@ -29,6 +29,10 @@ pub struct Opts {
     /// Don't ask for confirmation: yes, we are sure. Best for scripting.
     #[arg(short, long)]
     yes: bool,
+
+    /// Your GitHub username.
+    #[arg(long)]
+    deleted_by: String,
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
@@ -46,6 +50,10 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .load::<CrateInfo>(&mut conn)
         .await
         .context("Failed to look up crate name from the database")?;
+
+    let deleted_by = User::async_find_by_login(&mut conn, &opts.deleted_by)
+        .await
+        .context("Failed to look up `--deleted-by` user from the database")?;
 
     println!("Deleting the following crates:");
     println!();
@@ -71,6 +79,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             let deleted_crate = NewDeletedCrate::builder(name)
                 .created_at(&created_at)
                 .deleted_at(&now)
+                .deleted_by(deleted_by.id)
                 .available_at(&now)
                 .build();
 

@@ -51,6 +51,20 @@ impl User {
             .first(conn)
     }
 
+    pub async fn async_find_by_login(
+        conn: &mut AsyncPgConnection,
+        login: &str,
+    ) -> QueryResult<User> {
+        use diesel_async::RunQueryDsl;
+
+        users::table
+            .filter(lower(users::gh_login).eq(login.to_lowercase()))
+            .filter(users::gh_id.ne(-1))
+            .order(users::gh_id.desc())
+            .first(conn)
+            .await
+    }
+
     pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
         use diesel::RunQueryDsl;
 
