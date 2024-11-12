@@ -2,6 +2,7 @@ pub use self::action::{insert_version_owner_action, VersionAction, VersionOwnerA
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
 pub use self::default_versions::{update_default_version, verify_default_version};
+pub use self::deleted_crate::NewDeletedCrate;
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
 pub use self::download::VersionDownload;
 pub use self::email::{Email, NewEmail};
@@ -21,6 +22,7 @@ mod action;
 pub mod category;
 mod crate_owner_invitation;
 pub mod default_versions;
+mod deleted_crate;
 pub mod dependency;
 mod download;
 mod email;
