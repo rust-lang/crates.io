@@ -33,6 +33,10 @@ pub struct Opts {
     /// Your GitHub username.
     #[arg(long)]
     deleted_by: String,
+
+    /// An optional message explaining why the crate was deleted.
+    #[arg(long)]
+    message: Option<String>,
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
@@ -80,6 +84,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 .created_at(&created_at)
                 .deleted_at(&now)
                 .deleted_by(deleted_by.id)
+                .maybe_message(opts.message.as_deref())
                 .available_at(&now)
                 .build();
 
