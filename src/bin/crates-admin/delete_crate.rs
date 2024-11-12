@@ -6,8 +6,9 @@ use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::sql;
+use diesel::expression::SqlLiteral;
+use diesel::prelude::*;
 use diesel::sql_types::{Array, BigInt, Text};
-use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use futures_util::TryStreamExt;
 use std::collections::HashMap;
@@ -40,50 +41,14 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let existing_crates = crates::table
         .inner_join(crate_downloads::table)
         .filter(crates::name.eq_any(&crate_names))
-        .select((
-            crates::name,
-            crates::id,
-            crate_downloads::downloads,
-            sql::<Array<Text>>(
-                r#"
-                ARRAY(
-                    SELECT
-                        CASE WHEN crate_owners.owner_kind = 1 THEN
-                            teams.login
-                        ELSE
-                            users.gh_login
-                        END
-                    FROM crate_owners
-                    LEFT JOIN teams ON teams.id = crate_owners.owner_id
-                    LEFT JOIN users ON users.id = crate_owners.owner_id
-                    WHERE crate_owners.crate_id = crates.id
-                )
-                "#,
-            ),
-            sql::<BigInt>(
-                // This is an incorrect reverse dependencies query, since it
-                // includes the `dependencies` rows for all versions, not just
-                // the "default version" per crate. However, it's good enough
-                // for our purposes here.
-                r#"
-                (
-                    SELECT COUNT(*)
-                    FROM dependencies
-                    WHERE dependencies.crate_id = crates.id
-                )
-                "#,
-            ),
-        ))
-        .load_stream::<(String, i32, i64, Vec<String>, i64)>(&mut conn)
+        .select(CrateInfo::as_select())
+        .load_stream::<CrateInfo>(&mut conn)
         .await
         .context("Failed to look up crate name from the database")?
-        .try_fold(
-            HashMap::new(),
-            |mut map, (name, id, downloads, owners, rev_deps)| {
-                map.insert(name, CrateInfo::new(id, downloads, owners, rev_deps));
-                futures_util::future::ready(Ok(map))
-            },
-        )
+        .try_fold(HashMap::new(), |mut map, info| {
+            map.insert(info.name.clone(), info);
+            futures_util::future::ready(Ok(map))
+        })
         .await?;
 
     println!("Deleting the following crates:");
@@ -138,23 +103,18 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Queryable, Selectable)]
 struct CrateInfo {
+    #[diesel(select_expression = crates::columns::name)]
+    name: String,
+    #[diesel(select_expression = crates::columns::id)]
     id: i32,
+    #[diesel(select_expression = crate_downloads::columns::downloads)]
     downloads: i64,
+    #[diesel(select_expression = owners_subquery())]
     owners: Vec<String>,
+    #[diesel(select_expression = rev_deps_subquery())]
     rev_deps: i64,
-}
-
-impl CrateInfo {
-    pub fn new(id: i32, downloads: i64, owners: Vec<String>, rev_deps: i64) -> Self {
-        Self {
-            id,
-            downloads,
-            owners,
-            rev_deps,
-        }
-    }
 }
 
 impl Display for CrateInfo {
@@ -174,4 +134,40 @@ impl Display for CrateInfo {
 
         Ok(())
     }
+}
+
+/// A subquery that returns the owners of a crate as an array of strings.
+#[diesel::dsl::auto_type]
+fn owners_subquery() -> SqlLiteral<Array<Text>> {
+    sql(r#"
+        ARRAY(
+            SELECT
+                CASE WHEN crate_owners.owner_kind = 1 THEN
+                    teams.login
+                ELSE
+                    users.gh_login
+                END
+            FROM crate_owners
+            LEFT JOIN teams ON teams.id = crate_owners.owner_id
+            LEFT JOIN users ON users.id = crate_owners.owner_id
+            WHERE crate_owners.crate_id = crates.id
+        )
+    "#)
+}
+
+/// A subquery that returns the number of reverse dependencies of a crate.
+///
+/// **Warning:** this is an incorrect reverse dependencies query, since it
+/// includes the `dependencies` rows for all versions, not just the
+/// "default version" per crate. However, it's good enough for our
+/// purposes here.
+#[diesel::dsl::auto_type]
+fn rev_deps_subquery() -> SqlLiteral<BigInt> {
+    sql(r#"
+       (
+            SELECT COUNT(*)
+            FROM dependencies
+            WHERE dependencies.crate_id = crates.id
+        )
+    "#)
 }
