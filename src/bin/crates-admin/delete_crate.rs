@@ -10,8 +10,6 @@ use diesel::expression::SqlLiteral;
 use diesel::prelude::*;
 use diesel::sql_types::{Array, BigInt, Text};
 use diesel_async::RunQueryDsl;
-use futures_util::TryStreamExt;
-use std::collections::HashMap;
 use std::fmt::Display;
 
 #[derive(clap::Parser, Debug)]
@@ -42,19 +40,14 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         .inner_join(crate_downloads::table)
         .filter(crates::name.eq_any(&crate_names))
         .select(CrateInfo::as_select())
-        .load_stream::<CrateInfo>(&mut conn)
+        .load::<CrateInfo>(&mut conn)
         .await
-        .context("Failed to look up crate name from the database")?
-        .try_fold(HashMap::new(), |mut map, info| {
-            map.insert(info.name.clone(), info);
-            futures_util::future::ready(Ok(map))
-        })
-        .await?;
+        .context("Failed to look up crate name from the database")?;
 
     println!("Deleting the following crates:");
     println!();
     for name in &crate_names {
-        match existing_crates.get(name) {
+        match existing_crates.iter().find(|info| info.name == *name) {
             Some(info) => println!(" - {} ({info})", name.bold()),
             None => println!(" - {name} (⚠️ crate not found)"),
         }
@@ -68,7 +61,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     for name in &crate_names {
-        if let Some(crate_info) = existing_crates.get(name) {
+        if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
             let id = crate_info.id;
 
             info!("{name}: Deleting crate from the database…");
