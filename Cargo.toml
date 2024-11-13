@@ -47,7 +47,7 @@ axum = { version = "=0.7.7", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.9.4", features = ["cookie-signed", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.6", features = ["serde"] }
-bon = "=2.3.0"
+bon = "=3.0.0"
 cargo-manifest = "=0.16.0"
 colored = "=2.1.0"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
