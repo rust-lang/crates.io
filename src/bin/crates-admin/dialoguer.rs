@@ -1,12 +1,12 @@
 use ::dialoguer::{theme::Theme, Confirm};
 use crates_io::tasks::spawn_blocking;
 
-pub async fn async_confirm(msg: impl Into<String>) -> anyhow::Result<bool> {
+pub async fn confirm(msg: impl Into<String>) -> anyhow::Result<bool> {
     let msg = msg.into();
-    spawn_blocking(move || confirm(msg).map_err(anyhow::Error::from)).await
+    spawn_blocking(move || sync_confirm(msg).map_err(anyhow::Error::from)).await
 }
 
-pub fn confirm(msg: impl Into<String>) -> dialoguer::Result<bool> {
+fn sync_confirm(msg: impl Into<String>) -> dialoguer::Result<bool> {
     Confirm::with_theme(&CustomTheme)
         .with_prompt(msg)
         .default(false)

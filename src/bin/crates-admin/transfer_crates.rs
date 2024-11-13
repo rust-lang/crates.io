@@ -46,7 +46,7 @@ async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()
         println!("from: {:?}", from.gh_id);
         println!("to:   {:?}", to.gh_id);
 
-        if !dialoguer::async_confirm("continue?").await? {
+        if !dialoguer::confirm("continue?").await? {
             return Ok(());
         }
     }
@@ -55,7 +55,7 @@ async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()
         "Are you sure you want to transfer crates from {} to {}?",
         from.gh_login, to.gh_login
     );
-    if !dialoguer::async_confirm(&prompt).await? {
+    if !dialoguer::confirm(&prompt).await? {
         return Ok(());
     }
 
@@ -80,7 +80,7 @@ async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()
         }
     }
 
-    if !dialoguer::async_confirm("commit?").await? {
+    if !dialoguer::confirm("commit?").await? {
         return Ok(());
     }
 
