@@ -55,7 +55,7 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
             "Are you sure you want to yank {crate_name}#{version} ({})?",
             v.id
         );
-        if !dialoguer::async_confirm(&prompt).await? {
+        if !dialoguer::confirm(&prompt).await? {
             return Ok(());
         }
     }

@@ -32,7 +32,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     })
     .await?;
 
-    if !dialoguer::async_confirm("continue with upload?").await? {
+    if !dialoguer::confirm("continue with upload?").await? {
         return Ok(());
     }
 

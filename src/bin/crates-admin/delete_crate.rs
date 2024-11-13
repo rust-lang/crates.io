@@ -54,9 +54,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
     println!();
 
-    if !opts.yes
-        && !dialoguer::async_confirm("Do you want to permanently delete these crates?").await?
-    {
+    if !opts.yes && !dialoguer::confirm("Do you want to permanently delete these crates?").await? {
         return Ok(());
     }
 
