@@ -1,6 +1,7 @@
 ---
 source: src/tests/krate/publish/basics.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "crate": {

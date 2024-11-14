@@ -210,7 +210,7 @@ mod tests {
 
         versions.sort();
 
-        assert_snapshot!(format_versions(&versions), @r#"
+        assert_snapshot!(format_versions(&versions), @r"
         1.1.1-beta.1 (yanked)
         1.0.1 (yanked)
         1.1.1 (yanked)
@@ -222,7 +222,7 @@ mod tests {
         1.0.2
         1.0.3
         1.1.0
-        "#);
+        ");
     }
 
     fn format_versions(versions: &[Version]) -> String {

@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/me/tokens/get.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "api_token": {

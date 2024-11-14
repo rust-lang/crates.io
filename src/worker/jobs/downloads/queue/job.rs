@@ -308,7 +308,7 @@ mod tests {
         assert_ok!(run(&queue, 100, &connection_pool).await);
 
         assert_snapshot!(deleted_handles.lock().join(","), @"1,2,3,4,5,6,7,8,9,10,11");
-        assert_snapshot!(open_jobs(&mut connection_pool.get().await.unwrap()).await, @r###"
+        assert_snapshot!(open_jobs(&mut connection_pool.get().await.unwrap()).await, @r"
         us-west-1 | bucket | path1
         us-west-1 | bucket | path2
         us-west-1 | bucket | path3
@@ -320,7 +320,7 @@ mod tests {
         us-west-1 | bucket | path9
         us-west-1 | bucket | path10
         us-west-1 | bucket | path11
-        "###);
+        ");
     }
 
     #[tokio::test]

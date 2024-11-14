@@ -97,7 +97,7 @@ mod tests {
         let url = format!("/api/v1/users/{}/resend", user.as_model().id);
         let response = user.put::<()>(&url, "").await;
         assert_eq!(response.status(), StatusCode::OK);
-        assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+        assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
         assert_snapshot!(app.emails_snapshot());
     }

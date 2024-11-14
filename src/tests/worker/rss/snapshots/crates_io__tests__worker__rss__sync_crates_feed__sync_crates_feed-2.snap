@@ -1,6 +1,7 @@
 ---
 source: src/tests/worker/rss/sync_crates_feed.rs
 expression: content
+snapshot_kind: text
 ---
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:crates="https://crates.io/">

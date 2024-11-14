@@ -163,12 +163,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
         assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
         assert!(!is_yanked(&app).await);
     }
 
@@ -232,12 +232,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
         assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
         assert!(!is_yanked(&app).await);
     }
 
@@ -270,12 +270,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
     }
 
@@ -334,12 +334,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
     }
 
@@ -355,12 +355,12 @@ mod auth {
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
 
         let response = client.unyank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
-        assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
         assert!(!is_yanked(&app).await);
     }
 

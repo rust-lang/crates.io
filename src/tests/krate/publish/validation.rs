@@ -95,7 +95,7 @@ async fn long_description() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"The `description` is too long. A maximum of 1000 characters are currently allowed."}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The `description` is too long. A maximum of 1000 characters are currently allowed."}]}"#);
 
     assert_that!(app.stored_files().await, empty());
 }
@@ -108,7 +108,7 @@ async fn invalid_license() {
         .publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"unknown or invalid license expression; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers\nNote: If you have a non-standard license that is not listed by SPDX, use the license-file field to specify the path to a file containing the text of the license.\nSee https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.\nMIT AND foobar\n        ^^^^^^ unknown term"}]}"##);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown or invalid license expression; see http://opensource.org/licenses for options, and http://spdx.org/licenses/ for their identifiers\nNote: If you have a non-standard license that is not listed by SPDX, use the license-file field to specify the path to a file containing the text of the license.\nSee https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.\nMIT AND foobar\n        ^^^^^^ unknown term"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 

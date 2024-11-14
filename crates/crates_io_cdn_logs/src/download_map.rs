@@ -79,31 +79,31 @@ mod tests {
 
         // Add an entry to the map
         add(&mut downloads, "xmas", "2.0.0", "2023-12-25");
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2023-12-25  xmas@2.0.0 .. 1
         }
-        "###);
+        ");
 
         // Add the same entry again
         add(&mut downloads, "xmas", "2.0.0", "2023-12-25");
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2023-12-25  xmas@2.0.0 .. 2
         }
-        "###);
+        ");
 
         // Add other entries
         add(&mut downloads, "foo", "2.0.0", "2023-12-25");
         add(&mut downloads, "xmas", "1.0.0", "2023-12-25");
         add(&mut downloads, "xmas", "2.0.0", "2023-12-26");
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2023-12-25  foo@2.0.0 .. 1
             2023-12-25  xmas@1.0.0 .. 1
             2023-12-25  xmas@2.0.0 .. 2
             2023-12-26  xmas@2.0.0 .. 1
         }
-        "###);
+        ");
     }
 }

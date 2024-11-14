@@ -1,5 +1,6 @@
 ---
 source: src/worker/jobs/index_version_downloads_archive/mod.rs
 expression: "std::str::from_utf8(&index)?"
+snapshot_kind: text
 ---
 [{"name":"2024-08-01.csv","size":138},{"name":"2024-07-31.csv","size":123},{"name":"2024-07-30.csv","size":124},{"name":"2024-07-29.csv","size":234}]

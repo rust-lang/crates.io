@@ -55,7 +55,7 @@ async fn test_ignore_empty() {
     let payload = json!({"user": {}});
     let response = user.put::<()>(&url, payload.to_string()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+    assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -67,7 +67,7 @@ async fn test_ignore_nulls() {
     let payload = json!({"user": { "email": null }});
     let response = user.put::<()>(&url, payload.to_string()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+    assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 }
 
 /// Check to make sure that neither other signed in users nor anonymous users can edit another
@@ -97,7 +97,7 @@ async fn test_other_users_cannot_change_my_email() {
         )
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -107,7 +107,7 @@ async fn test_invalid_email_address() {
 
     let response = user.update_email_more_control(model.id, Some("foo")).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"invalid email address"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid email address"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -118,5 +118,5 @@ async fn test_invalid_json() {
     let url = format!("/api/v1/users/{}", model.id);
     let response = user.put::<()>(&url, r#"{ "user": foo }"#).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: user: expected ident at line 1 column 12"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: user: expected ident at line 1 column 12"}]}"#);
 }

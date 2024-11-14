@@ -234,5 +234,5 @@ async fn test_unknown_crate() {
         .get::<()>("/api/v1/crates/unknown/reverse_dependencies")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }

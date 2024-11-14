@@ -257,7 +257,7 @@ async fn new_krate_with_wildcard_dependency() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"wildcard (`*`) dependency constraints are not allowed on crates.io. Crate with this problem: `foo_wild` See https://doc.rust-lang.org/cargo/faq.html#can-libraries-use--as-a-version-for-their-dependencies for more information"}]}"##);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"wildcard (`*`) dependency constraints are not allowed on crates.io. Crate with this problem: `foo_wild` See https://doc.rust-lang.org/cargo/faq.html#can-libraries-use--as-a-version-for-their-dependencies for more information"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
 
@@ -330,7 +330,7 @@ async fn test_dep_limit() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io only allows a maximum number of 1 dependencies.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"#);
 
     let crate_to_publish =
         PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("dep-a"));

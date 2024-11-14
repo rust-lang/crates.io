@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/read.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "categories": [],

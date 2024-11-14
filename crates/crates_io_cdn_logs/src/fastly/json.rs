@@ -72,7 +72,7 @@ mod tests {
     fn test_parse() {
         let input = r#"{"bytes":null,"date_time":"2024-01-16T16:03:04.44007323Z","ip":"45.79.107.220","method":"GET","status":403,"url":"https://static.staging.crates.io/?1705420437","version":"1"}"#;
         let output = assert_ok!(serde_json::from_str::<LogLine<'_>>(input));
-        assert_debug_snapshot!(output, @r###"
+        assert_debug_snapshot!(output, @r#"
         V1(
             LogLineV1 {
                 date_time: 2024-01-16T16:03:04.440073230Z,
@@ -81,7 +81,7 @@ mod tests {
                 status: 403,
             },
         )
-        "###);
+        "#);
 
         assert_eq!(
             output.date_time().to_string(),

@@ -376,15 +376,15 @@ async fn test_unknown_crate() {
 
     let response = user.get::<()>("/api/v1/crates/unknown/owners").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 
     let response = user.get::<()>("/api/v1/crates/unknown/owner_team").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 
     let response = user.get::<()>("/api/v1/crates/unknown/owner_user").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

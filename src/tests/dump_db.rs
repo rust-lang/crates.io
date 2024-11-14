@@ -24,10 +24,10 @@ async fn test_dump_db_job() {
 
     app.run_pending_background_jobs().await;
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     db-dump.tar.gz
     db-dump.zip
-    "###);
+    ");
 
     let path = object_store::path::Path::parse("db-dump.tar.gz").unwrap();
     let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
@@ -37,7 +37,7 @@ async fn test_dump_db_job() {
     let mut tar = Archive::new(gz);
 
     let paths = tar_paths(&mut tar);
-    assert_debug_snapshot!(paths, @r###"
+    assert_debug_snapshot!(paths, @r#"
     [
         "YYYY-MM-DD-HHMMSS",
         "YYYY-MM-DD-HHMMSS/README.md",
@@ -62,7 +62,7 @@ async fn test_dump_db_job() {
         "YYYY-MM-DD-HHMMSS/data/dependencies.csv",
         "YYYY-MM-DD-HHMMSS/data/version_downloads.csv",
     ]
-    "###);
+    "#);
 
     let path = object_store::path::Path::parse("db-dump.zip").unwrap();
     let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
@@ -70,7 +70,7 @@ async fn test_dump_db_job() {
 
     let archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
     let zip_paths = archive.file_names().collect::<Vec<_>>();
-    assert_debug_snapshot!(zip_paths, @r###"
+    assert_debug_snapshot!(zip_paths, @r#"
     [
         "README.md",
         "export.sql",
@@ -94,7 +94,7 @@ async fn test_dump_db_job() {
         "data/dependencies.csv",
         "data/version_downloads.csv",
     ]
-    "###);
+    "#);
 }
 
 fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {

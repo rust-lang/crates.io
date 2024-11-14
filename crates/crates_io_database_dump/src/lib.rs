@@ -260,7 +260,7 @@ mod tests {
             .map(|entry| entry.unwrap().path().unwrap().display().to_string())
             .collect::<Vec<_>>();
 
-        assert_debug_snapshot!(paths, @r###"
+        assert_debug_snapshot!(paths, @r#"
         [
             "0000-00-00",
             "0000-00-00/README.md",
@@ -269,14 +269,14 @@ mod tests {
             "0000-00-00/data/users.csv",
             "0000-00-00/data/crate_owners.csv",
         ]
-        "###);
+        "#);
 
         let file = File::open(archives.zip.path()).unwrap();
         let reader = BufReader::new(file);
 
         let archive = zip::ZipArchive::new(reader).unwrap();
         let zip_paths = archive.file_names().collect::<Vec<_>>();
-        assert_debug_snapshot!(zip_paths, @r###"
+        assert_debug_snapshot!(zip_paths, @r#"
         [
             "README.md",
             "data/",
@@ -284,7 +284,7 @@ mod tests {
             "data/users.csv",
             "data/crate_owners.csv",
         ]
-        "###);
+        "#);
     }
 
     #[test]

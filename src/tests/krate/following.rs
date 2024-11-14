@@ -41,19 +41,19 @@ async fn test_unauthenticated_requests() {
         .get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"))
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     let response = anon
         .put::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"), b"" as &[u8])
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     let response = anon
         .delete::<()>(&format!("/api/v1/crates/{CRATE_NAME}/follow"))
         .await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -96,19 +96,19 @@ async fn test_unknown_crate() {
         .get::<()>("/api/v1/crates/unknown-crate/following")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"#);
 
     let response = user
         .put::<()>("/api/v1/crates/unknown-crate/follow", b"" as &[u8])
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"#);
 
     let response = user
         .delete::<()>("/api/v1/crates/unknown-crate/follow")
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown-crate` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

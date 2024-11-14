@@ -13,7 +13,7 @@ async fn anonymous_user_unauthorized() {
     let response: Response<()> = anon.get(URL).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -24,7 +24,7 @@ async fn token_auth_cannot_find_token() {
     let response: Response<()> = anon.run(request).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
 }
 
 // Ensure that an unexpected authentication error is available for logging.  The user would see

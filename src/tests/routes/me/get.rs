@@ -24,7 +24,7 @@ async fn me() {
 
     let response = anon.get::<()>("/api/v1/me").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     let response = user.get::<()>("/api/v1/me").await;
     assert_eq!(response.status(), StatusCode::OK);

@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/downloads.rs
 expression: json
+snapshot_kind: text
 ---
 {
   "version_downloads": [

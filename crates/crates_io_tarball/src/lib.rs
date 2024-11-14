@@ -318,10 +318,10 @@ mod tests {
         };
 
         let err = assert_err!(process("CARGO.TOML"));
-        assert_snapshot!(err, @r###"Cargo.toml manifest is incorrectly cased: "CARGO.TOML""###);
+        assert_snapshot!(err, @r#"Cargo.toml manifest is incorrectly cased: "CARGO.TOML""#);
 
         let err = assert_err!(process("Cargo.Toml"));
-        assert_snapshot!(err, @r###"Cargo.toml manifest is incorrectly cased: "Cargo.Toml""###);
+        assert_snapshot!(err, @r#"Cargo.toml manifest is incorrectly cased: "Cargo.Toml""#);
     }
 
     #[test]
@@ -338,13 +338,13 @@ mod tests {
         };
 
         let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]));
-        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
+        assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"#);
 
         let err = assert_err!(process(vec!["Cargo.toml", "Cargo.Toml"]));
-        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.Toml", "foo-0.0.1/Cargo.toml"]"###);
+        assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.Toml", "foo-0.0.1/Cargo.toml"]"#);
 
         let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]));
-        assert_snapshot!(err, @r###"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"###);
+        assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"#);
     }
 
     #[test]

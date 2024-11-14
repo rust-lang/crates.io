@@ -16,7 +16,7 @@ async fn new_wrong_token() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = anon.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     // Try to publish with the wrong token (by changing the token in the database)
     diesel::update(api_tokens::table)
@@ -28,7 +28,7 @@ async fn new_wrong_token() {
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"authentication failed"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
     assert_that!(app.stored_files().await, empty());
     assert_that!(app.emails(), empty());
 }

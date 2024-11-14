@@ -1,6 +1,7 @@
 ---
 source: src/tests/krate/publish/basics.rs
 expression: app.emails_snapshot()
+snapshot_kind: text
 ---
 To: foo@example.com
 From: crates.io <noreply@crates.io>

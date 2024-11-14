@@ -140,7 +140,7 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -160,7 +160,7 @@ async fn owner_change_via_publish_token() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = token.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -178,7 +178,7 @@ async fn owner_change_without_auth() {
     let body = serde_json::to_vec(&body).unwrap();
     let response = anon.put::<()>(&url, body).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"this action requires authentication"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -194,7 +194,7 @@ async fn test_owner_change_with_legacy_field() {
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_snapshot!(response.text(), @r###"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"###);
+    assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -211,7 +211,7 @@ async fn test_owner_change_with_invalid_json() {
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"#);
 
     // `owners` is not an array
     let input = r#"{"owners": "foo"}"#;
@@ -219,7 +219,7 @@ async fn test_owner_change_with_invalid_json() {
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"#);
 
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
@@ -227,7 +227,7 @@ async fn test_owner_change_with_invalid_json() {
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -299,7 +299,7 @@ async fn test_unknown_crate() {
 
     let response = user.put::<()>("/api/v1/crates/unknown/owners", body).await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -312,7 +312,7 @@ async fn test_unknown_user() {
     let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
     let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -325,7 +325,7 @@ async fn test_unknown_team() {
     let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
     let response = cookie.put::<()>("/api/v1/crates/foo/owners", body).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find the github team unknown/unknown. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find the github team unknown/unknown. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

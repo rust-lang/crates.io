@@ -42,7 +42,7 @@ async fn test_unknown_crate() {
 
     let response = anon.get::<()>("/api/v1/crates/unknown/versions").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

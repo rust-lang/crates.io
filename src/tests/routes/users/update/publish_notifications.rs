@@ -21,7 +21,7 @@ async fn test_unsubscribe_and_resubscribe() {
     let payload = json!({"user": { "publish_notifications": false }});
     let response = cookie.put::<()>(&user_url, payload.to_string()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+    assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
     // Assert that the user gets an unsubscribe email
     assert_snapshot!(app.emails_snapshot());
@@ -38,7 +38,7 @@ async fn test_unsubscribe_and_resubscribe() {
     let payload = json!({"user": { "publish_notifications": true }});
     let response = cookie.put::<()>(&user_url, payload.to_string()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    assert_snapshot!(response.text(), @r###"{"ok":true}"###);
+    assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
     // Publish the same crate again to check that the user doesn't get a publish email
     let pb = PublishBuilder::new("foo", "1.2.0");

@@ -1,6 +1,7 @@
 ---
 source: crates/crates_io_tarball/src/lib.rs
 expression: tarball_info.manifest.example
+snapshot_kind: text
 ---
 [
     Product {

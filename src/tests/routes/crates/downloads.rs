@@ -142,7 +142,7 @@ async fn test_crate_downloads() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
-        @r###"{"errors":[{"detail":"crate `bar` does not exist"}]}"###
+        @r#"{"errors":[{"detail":"crate `bar` does not exist"}]}"#
     );
 
     // check non-canonical crate name
@@ -182,7 +182,7 @@ async fn test_version_downloads() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
-        @r###"{"errors":[{"detail":"crate `bar` does not exist"}]}"###
+        @r#"{"errors":[{"detail":"crate `bar` does not exist"}]}"#
     );
 
     // check non-canonical crate name
@@ -195,7 +195,7 @@ async fn test_version_downloads() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
-        @r###"{"errors":[{"detail":"crate `foo` does not have a version `2.0.0`"}]}"###
+        @r#"{"errors":[{"detail":"crate `foo` does not have a version `2.0.0`"}]}"#
     );
 
     // check invalid version
@@ -205,6 +205,6 @@ async fn test_version_downloads() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(
         response.text(),
-        @r###"{"errors":[{"detail":"crate `foo` does not have a version `invalid-version`"}]}"###
+        @r#"{"errors":[{"detail":"crate `foo` does not have a version `invalid-version`"}]}"#
     );
 }

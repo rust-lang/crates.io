@@ -17,7 +17,7 @@ async fn test_owner_change_with_invalid_json() {
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"#);
 
     // `owners` is not an array
     let input = r#"{"owners": "foo"}"#;
@@ -25,7 +25,7 @@ async fn test_owner_change_with_invalid_json() {
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"#);
 
     // missing `owners` and/or `users` fields
     let input = r#"{}"#;
@@ -33,7 +33,7 @@ async fn test_owner_change_with_invalid_json() {
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -48,7 +48,7 @@ async fn test_unknown_crate() {
         .delete_with_body::<()>("/api/v1/crates/unknown/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `unknown` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -63,7 +63,7 @@ async fn test_unknown_user() {
         .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find user with login `unknown`"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -78,5 +78,5 @@ async fn test_unknown_team() {
         .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"could not find team with login `github:unknown:unknown`"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find team with login `github:unknown:unknown`"}]}"#);
 }
