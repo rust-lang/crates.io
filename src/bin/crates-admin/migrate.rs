@@ -47,8 +47,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
 
     spawn_blocking(move || {
         info!("Migrating the database");
-        let mut harness = HarnessWithOutput::write_to_stdout(&mut conn);
-        harness
+        HarnessWithOutput::write_to_stdout(&mut conn)
             .run_pending_migrations(MIGRATIONS)
             .map_err(|err| anyhow!("Failed to run migrations: {err}"))?;
 
