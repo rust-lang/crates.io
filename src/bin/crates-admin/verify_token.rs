@@ -1,10 +1,7 @@
 use anyhow::Context;
 use crates_io::models::ApiToken;
-use crates_io::tasks::spawn_blocking;
 use crates_io::util::token::HashedToken;
 use crates_io::{db, models::User};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use diesel_async::AsyncPgConnection;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -19,18 +16,13 @@ pub struct Opts {
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
-    let conn = db::oneoff_connection()
+    let mut conn = db::oneoff_connection()
         .await
         .context("Failed to connect to the database")?;
 
-    let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
-
-    spawn_blocking(move || {
-        let token = HashedToken::parse(&opts.api_token)?;
-        let token = ApiToken::find_by_api_token(&mut conn, &token)?;
-        let user = User::find(&mut conn, token.user_id)?;
-        println!("The token belongs to user {}", user.gh_login);
-        Ok(())
-    })
-    .await
+    let token = HashedToken::parse(&opts.api_token)?;
+    let token = ApiToken::async_find_by_api_token(&mut conn, &token).await?;
+    let user = User::async_find(&mut conn, token.user_id).await?;
+    println!("The token belongs to user {}", user.gh_login);
+    Ok(())
 }
