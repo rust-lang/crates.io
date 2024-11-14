@@ -1011,6 +1011,8 @@ diesel::table! {
         yank_message -> Nullable<Text>,
         /// This is the same as `num` without the optional "build metadata" part (except for some versions that were published before we started validating this).
         num_no_build -> Varchar,
+        /// The declared Rust Edition required to compile this version of the crate.
+        edition -> Nullable<Text>,
     }
 }
 

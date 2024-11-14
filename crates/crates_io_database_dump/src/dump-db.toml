@@ -246,6 +246,7 @@ rust_version = "public"
 has_lib = "public"
 bin_names = "public"
 yank_message = "private"
+edition = "public"
 
 [versions_published_by.columns]
 version_id = "private"
