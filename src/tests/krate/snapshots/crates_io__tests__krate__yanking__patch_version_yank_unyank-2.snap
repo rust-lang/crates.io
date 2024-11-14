@@ -58,6 +58,7 @@ snapshot_kind: text
     "checksum": "ddfc395ab340f413ee1d1ed0afce51a7c9df1c99c551fed5aef76edd4abe4048",
     "rust_version": null,
     "has_lib": false,
-    "bin_names": []
+    "bin_names": [],
+    "edition": null
   }
 }

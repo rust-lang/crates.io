@@ -5,6 +5,7 @@ mod build_metadata;
 mod categories;
 mod deleted_crates;
 mod dependencies;
+mod edition;
 mod emails;
 mod features;
 mod git;

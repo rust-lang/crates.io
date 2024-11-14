@@ -13,6 +13,7 @@ snapshot_kind: text
     "created_at": "[datetime]",
     "dl_path": "/api/v1/crates/foo_vers_show_no_pb/1.0.0/download",
     "downloads": 0,
+    "edition": null,
     "features": {},
     "has_lib": null,
     "id": "[id]",

@@ -586,6 +586,7 @@ pub struct EncodableVersion {
     pub rust_version: Option<String>,
     pub has_lib: Option<bool>,
     pub bin_names: Option<Vec<Option<String>>>,
+    pub edition: Option<String>,
 }
 
 impl EncodableVersion {
@@ -611,6 +612,7 @@ impl EncodableVersion {
             rust_version,
             has_lib,
             bin_names,
+            edition,
             ..
         } = version;
 
@@ -640,6 +642,7 @@ impl EncodableVersion {
             rust_version,
             has_lib,
             bin_names,
+            edition,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -769,6 +772,7 @@ mod tests {
             has_lib: None,
             bin_names: None,
             published_by: None,
+            edition: None,
             audit_actions: vec![EncodableAuditAction {
                 action: "publish".to_string(),
                 user: EncodablePublicUser {
