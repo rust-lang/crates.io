@@ -47,8 +47,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
 
     spawn_blocking(move || {
         info!("Migrating the database");
-        let mut stdout = std::io::stdout();
-        let mut harness = HarnessWithOutput::new(&mut conn, &mut stdout);
+        let mut harness = HarnessWithOutput::write_to_stdout(&mut conn);
         harness
             .run_pending_migrations(MIGRATIONS)
             .map_err(|err| anyhow!("Failed to run migrations: {err}"))?;
