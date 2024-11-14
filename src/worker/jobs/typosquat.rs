@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
 use crates_io_worker::BackgroundJob;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use typomania::Package;
 
 use crate::email::Email;
-use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::{
     typosquat::{Cache, Crate},
     worker::Environment,
@@ -36,22 +34,23 @@ impl BackgroundJob for CheckTyposquat {
     async fn run(&self, env: Self::Context) -> anyhow::Result<()> {
         let crate_name = self.name.clone();
 
-        let conn = env.deadpool.get().await?;
-        spawn_blocking(move || {
-            let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+        let mut conn = env.deadpool.get().await?;
 
-            let cache = env.typosquat_cache(conn)?;
-            check(&env.emails, cache, conn, &crate_name)
-        })
-        .await
+        let cache = env.typosquat_cache(&mut conn).await?;
+        check(&env.emails, cache, &mut conn, &crate_name).await
     }
 }
 
-fn check(emails: &Emails, cache: &Cache, conn: &mut impl Conn, name: &str) -> anyhow::Result<()> {
+async fn check(
+    emails: &Emails,
+    cache: &Cache,
+    conn: &mut AsyncPgConnection,
+    name: &str,
+) -> anyhow::Result<()> {
     if let Some(harness) = cache.get_harness() {
         info!(name, "Checking new crate for potential typosquatting");
 
-        let krate: Box<dyn Package> = Box::new(Crate::from_name(conn, name)?);
+        let krate: Box<dyn Package> = Box::new(Crate::from_name(conn, name).await?);
         let squats = harness.check_package(name, krate)?;
         if !squats.is_empty() {
             // Well, well, well. For now, the only action we'll take is to e-mail people who
@@ -65,7 +64,7 @@ fn check(emails: &Emails, cache: &Cache, conn: &mut impl Conn, name: &str) -> an
             };
 
             for recipient in cache.iter_emails() {
-                if let Err(error) = emails.send(recipient, email.clone()) {
+                if let Err(error) = emails.async_send(recipient, email.clone()).await {
                     error!(
                         ?error,
                         ?recipient,
@@ -125,6 +124,7 @@ mod tests {
     use super::*;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
     use lettre::Address;
 
     #[tokio::test]
@@ -138,7 +138,8 @@ mod tests {
         faker::crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100)?;
 
         // Prime the cache so it only includes the crate we just created.
-        let cache = Cache::new(vec!["admin@example.com".to_string()], &mut conn)?;
+        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let cache = Cache::new(vec!["admin@example.com".to_string()], &mut async_conn).await?;
         let cache = Arc::new(cache);
 
         // Now we'll create new crates: one problematic, one not so.
@@ -159,24 +160,11 @@ mod tests {
         )?;
 
         // Run the check with a crate that shouldn't cause problems.
-        let mut conn = spawn_blocking({
-            let emails = emails.clone();
-            let cache = cache.clone();
-            move || {
-                check(&emails, &cache, &mut conn, &angel.name)?;
-                Ok::<_, anyhow::Error>(conn)
-            }
-        })
-        .await?;
+        check(&emails, &cache, &mut async_conn, &angel.name).await?;
         assert!(emails.mails_in_memory().await.unwrap().is_empty());
 
         // Now run the check with a less innocent crate.
-        spawn_blocking({
-            let emails = emails.clone();
-            let cache = cache.clone();
-            move || check(&emails, &cache, &mut conn, &demon.name)
-        })
-        .await?;
+        check(&emails, &cache, &mut async_conn, &demon.name).await?;
         let sent_mail = emails.mails_in_memory().await.unwrap();
         assert!(!sent_mail.is_empty());
         let sent = sent_mail.into_iter().next().unwrap();

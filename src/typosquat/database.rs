@@ -5,8 +5,9 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
 };
 
-use crate::util::diesel::Conn;
-use diesel::{connection::DefaultLoadingMode, QueryResult};
+use crate::util::diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::TryStreamExt;
 use typomania::{AuthorSet, Corpus, Package};
 
 /// A corpus of the current top crates on crates.io, as determined by their download counts, along
@@ -18,12 +19,11 @@ pub struct TopCrates {
 
 impl TopCrates {
     /// Retrieves the `num` top crates from the database.
-    pub fn new(conn: &mut impl Conn, num: i64) -> QueryResult<Self> {
+    pub async fn new(conn: &mut AsyncPgConnection, num: i64) -> QueryResult<Self> {
         use crate::{
             models,
             schema::{crate_downloads, crate_owners},
         };
-        use diesel::prelude::*;
 
         // We have to build up a data structure that contains the top crates, their owners in some
         // form that is easily compared, and that can be indexed by the crate name.
@@ -42,31 +42,34 @@ impl TopCrates {
         // Once we have the results of those queries, we can glom it all together into one happy
         // data structure.
 
-        let mut crates: BTreeMap<i32, (String, Crate)> = BTreeMap::new();
-        for result in models::Crate::all()
+        let crates: BTreeMap<i32, (String, Crate)> = BTreeMap::new();
+        let crates = models::Crate::all()
             .inner_join(crate_downloads::table)
             .order(crate_downloads::downloads.desc())
             .limit(num)
-            .load_iter::<models::Crate, DefaultLoadingMode>(conn)?
-        {
-            let krate = result?;
-            crates.insert(
-                krate.id,
-                (
-                    krate.name,
-                    Crate {
-                        owners: HashSet::new(),
-                    },
-                ),
-            );
-        }
+            .load_stream::<models::Crate>(conn)
+            .await?
+            .try_fold(crates, |mut crates, krate| {
+                crates.insert(
+                    krate.id,
+                    (
+                        krate.name,
+                        Crate {
+                            owners: HashSet::new(),
+                        },
+                    ),
+                );
+
+                futures_util::future::ready(Ok(crates))
+            })
+            .await?;
 
         // This query might require more low level knowledge of crate_owners than we really want
         // outside of the models module. It would probably make more sense in the long term to have
         // this live in the Owner type, but for now I want to keep the typosquatting logic as
         // self-contained as possible in case we decide not to go ahead with this in the longer
         // term.
-        for result in crate_owners::table
+        let crates = crate_owners::table
             .filter(crate_owners::deleted.eq(false))
             .filter(crate_owners::crate_id.eq_any(crates.keys().cloned().collect::<Vec<_>>()))
             .select((
@@ -74,13 +77,16 @@ impl TopCrates {
                 crate_owners::owner_id,
                 crate_owners::owner_kind,
             ))
-            .load_iter::<(i32, i32, i32), DefaultLoadingMode>(conn)?
-        {
-            let (crate_id, owner_id, owner_kind) = result?;
-            crates.entry(crate_id).and_modify(|(_name, krate)| {
-                krate.owners.insert(Owner::new(owner_id, owner_kind));
-            });
-        }
+            .load_stream::<(i32, i32, i32)>(conn)
+            .await?
+            .try_fold(crates, |mut crates, (crate_id, owner_id, owner_kind)| {
+                crates.entry(crate_id).and_modify(|(_name, krate)| {
+                    krate.owners.insert(Owner::new(owner_id, owner_kind));
+                });
+
+                futures_util::future::ready(Ok(crates))
+            })
+            .await?;
 
         Ok(Self {
             crates: crates.into_values().collect(),
@@ -104,12 +110,16 @@ pub struct Crate {
 
 impl Crate {
     /// Hydrates a crate and its owners from the database given the crate name.
-    pub fn from_name(conn: &mut impl Conn, name: &str) -> QueryResult<Self> {
+    pub async fn from_name(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Self> {
         use crate::models;
-        use diesel::prelude::*;
 
-        let krate = models::Crate::by_exact_name(name).first(conn)?;
-        let owners = krate.owners(conn)?.into_iter().map(Owner::from).collect();
+        let krate = models::Crate::by_exact_name(name).first(conn).await?;
+        let owners = krate
+            .async_owners(conn)
+            .await?
+            .into_iter()
+            .map(Owner::from)
+            .collect();
 
         Ok(Self { owners })
     }
@@ -166,10 +176,11 @@ mod tests {
     use super::*;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
     use thiserror::Error;
 
-    #[test]
-    fn top_crates() -> Result<(), Error> {
+    #[tokio::test]
+    async fn top_crates() -> Result<(), Error> {
         let test_db = TestDatabase::new();
         let mut conn = test_db.connect();
 
@@ -187,7 +198,8 @@ mod tests {
         faker::add_crate_to_team(&mut conn, &user_b, &top_b, &not_the_a_team)?;
         faker::add_crate_to_team(&mut conn, &user_b, &not_top_c, &not_the_a_team)?;
 
-        let top_crates = TopCrates::new(&mut conn, 2)?;
+        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let top_crates = TopCrates::new(&mut async_conn, 2).await?;
 
         // Let's ensure the top crates include what we expect (which is a and b, since we asked for
         // 2 crates and they're the most downloaded).
@@ -201,7 +213,7 @@ mod tests {
         assert!(!pkg_a.shared_authors(pkg_b.authors()));
 
         // Now let's go get package c and pretend it's a new package.
-        let pkg_c = Crate::from_name(&mut conn, "c")?;
+        let pkg_c = Crate::from_name(&mut async_conn, "c").await?;
 
         // c _does_ have an author in common with a.
         assert!(pkg_a.shared_authors(pkg_c.authors()));
@@ -227,5 +239,8 @@ mod tests {
 
         #[error(transparent)]
         Diesel(#[from] diesel::result::Error),
+
+        #[error(transparent)]
+        Connection(#[from] ConnectionError),
     }
 }
