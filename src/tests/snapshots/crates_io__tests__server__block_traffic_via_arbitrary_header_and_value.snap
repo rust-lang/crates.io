@@ -1,6 +1,7 @@
 ---
 source: src/tests/server.rs
 expression: resp.json()
+snapshot_kind: text
 ---
 {
   "errors": [

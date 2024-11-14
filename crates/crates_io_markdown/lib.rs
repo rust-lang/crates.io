@@ -327,45 +327,43 @@ mod tests {
     #[test]
     fn text_with_script_tag() {
         let text = "foo_readme\n\n<script>alert('Hello World')</script>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r"
         <p>foo_readme</p>
         &lt;script&gt;alert('Hello World')&lt;/script&gt;
-        "###);
+        ");
     }
 
     #[test]
     fn text_with_iframe_tag() {
         let text = "foo_readme\n\n<iframe>alert('Hello World')</iframe>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r"
         <p>foo_readme</p>
         &lt;iframe&gt;alert('Hello World')&lt;/iframe&gt;
-        "###);
+        ");
     }
 
     #[test]
     fn text_with_unknown_tag() {
         let text = "foo_readme\n\n<unknown>alert('Hello World')</unknown>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r"
         <p>foo_readme</p>
         <p>alert('Hello World')</p>
-        "###);
+        ");
     }
 
     #[test]
     fn text_with_kbd_tag() {
         let text = "foo_readme\n\nHello <kbd>alert('Hello World')</kbd>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r"
         <p>foo_readme</p>
         <p>Hello <kbd>alert('Hello World')</kbd></p>
-        "###);
+        ");
     }
 
     #[test]
     fn text_with_inline_javascript() {
         let text = r#"foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" onclick="window.alert('Got you')">Crate page</a>"#;
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <p>foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" rel="nofollow noopener noreferrer">Crate page</a></p>
-        "###);
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"<p>foo_readme\n\n<a href="https://crates.io/crates/cargo-registry" rel="nofollow noopener noreferrer">Crate page</a></p>"#);
     }
 
     // See https://github.com/kivikakk/comrak/issues/37. This panic happened
@@ -373,73 +371,69 @@ mod tests {
     #[test]
     fn text_with_fancy_single_quotes() {
         let text = "wb’";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <p>wb’</p>
-        "###);
+        assert_snapshot!(markdown_to_html(text, None, ""), @"<p>wb’</p>");
     }
 
     #[test]
     fn code_block_with_syntax_highlighting() {
         let code_block = "```rust\nprintln!(\"Hello World\");\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-rust">println!("Hello World");
         </code></pre>
-        "###);
+        "#);
     }
 
     #[test]
     fn code_block_with_mermaid_highlighting() {
         let code_block = "```mermaid\ngraph LR\nA --> C\nC --> A\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-mermaid">graph LR
         A --&gt; C
         C --&gt; A
         </code></pre>
-        "###);
+        "#);
     }
 
     #[test]
     fn code_block_with_syntax_highlighting_even_if_annot_has_no_run() {
         let code_block = "```rust, no_run\nprintln!(\"Hello World\");\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-rust">println!("Hello World");
         </code></pre>
-        "###);
+        "#);
     }
 
     #[test]
     fn code_block_with_syntax_highlighting_with_aliases() {
         let code_block = "```rs, no_run\nprintln!(\"Hello World\");\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-rs">println!("Hello World");
         </code></pre>
-        "###);
+        "#);
 
         let code_block = "```markup, no_run\n<hello>World</hello>\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-markup">&lt;hello&gt;World&lt;/hello&gt;
         </code></pre>
-        "###);
+        "#);
 
         let code_block = "```clike, no_run\nint main() { }\n```";
-        assert_snapshot!(markdown_to_html(code_block, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(code_block, None, ""), @r#"
         <pre><code class="language-clike">int main() { }
         </code></pre>
-        "###);
+        "#);
     }
 
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <p>Hello World!</p>
-        "###);
+        assert_snapshot!(markdown_to_html(text, None, ""), @"<p>Hello World!</p>");
     }
 
     #[test]
     fn text_with_footnote() {
         let text = "Hello World![^1]\n\n[^1]: Hello Ferris, actually!";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
         <p>Hello World!<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup></p>
         <section class="footnotes">
         <ol>
@@ -448,7 +442,7 @@ mod tests {
         </li>
         </ol>
         </section>
-        "###);
+        "##);
     }
 
     #[test]
@@ -467,7 +461,7 @@ There can also be some text in between!
 
     Add as many paragraphs as you like."#;
 
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
         <p>Here's a simple footnote,<sup><a href="#user-content-fn-1" id="user-content-fnref-1" rel="nofollow noopener noreferrer">1</a></sup> and here's a longer one.<sup><a href="#user-content-fn-bignote" id="user-content-fnref-bignote" rel="nofollow noopener noreferrer">2</a></sup></p>
         <p>There can also be some text in between!</p>
         <section class="footnotes">
@@ -483,7 +477,7 @@ There can also be some text in between!
         </li>
         </ol>
         </section>
-        "###);
+        "##);
     }
 
     #[test]
@@ -573,22 +567,16 @@ There can also be some text in between!
         let text =
             "[![crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
-        assert_snapshot!(markdown_to_html(text, Some(repository), ""), @r###"
-        <p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="crates.io"></a></p>
-        "###);
+        assert_snapshot!(markdown_to_html(text, Some(repository), ""), @r#"<p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="crates.io"></a></p>"#);
     }
 
     #[test]
     fn rustdoc_links() {
         let repository = "https://github.com/foo/bar/";
 
-        assert_snapshot!(markdown_to_html("[stylish](::stylish)", Some(repository), ""), @r###"
-        <p><a rel="nofollow noopener noreferrer">stylish</a></p>
-        "###);
+        assert_snapshot!(markdown_to_html("[stylish](::stylish)", Some(repository), ""), @r#"<p><a rel="nofollow noopener noreferrer">stylish</a></p>"#);
 
-        assert_snapshot!(markdown_to_html("[Display](stylish::Display)", Some(repository), ""), @r###"
-        <p><a rel="nofollow noopener noreferrer">Display</a></p>
-        "###);
+        assert_snapshot!(markdown_to_html("[Display](stylish::Display)", Some(repository), ""), @r#"<p><a rel="nofollow noopener noreferrer">Display</a></p>"#);
     }
 
     #[test]
@@ -607,21 +595,11 @@ There can also be some text in between!
             );
         }
 
-        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
-        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
-        "###);
-        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
-        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
-        "###);
-        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None), @r###"
-        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
-        "###);
-        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")), @r###"
-        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
-        "###);
-        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r###"
-        <p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>
-        "###);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "readme.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s/readme.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), None), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs/")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
+        assert_snapshot!(text_to_html("*[lobster](docs/lobster)*", "s1/s2/readme.md", Some("https://github.com/rust-lang/test"), Some("path/in/vcs")), @r#"<p><em><a href="https://github.com/rust-lang/test/blob/HEAD/path/in/vcs/s1/s2/docs/lobster" rel="nofollow noopener noreferrer">lobster</a></em></p>"#);
     }
 
     #[test]
@@ -637,46 +615,42 @@ There can also be some text in between!
     #[test]
     fn header_has_tags() {
         let text = "# My crate\n\nHello, world!\n";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
         <h1><a href="#my-crate" id="user-content-my-crate" rel="nofollow noopener noreferrer"></a>My crate</h1>
         <p>Hello, world!</p>
-        "###);
+        "##);
     }
 
     #[test]
     fn manual_anchor_is_sanitized() {
         let text =
             "<h1><a href=\"#my-crate\" id=\"my-crate\"></a>My crate</h1>\n<p>Hello, world!</p>\n";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
         <h1><a href="#my-crate" id="user-content-my-crate" rel="nofollow noopener noreferrer"></a>My crate</h1>
         <p>Hello, world!</p>
-        "###);
+        "##);
     }
 
     #[test]
     fn tables_with_rowspan_and_colspan() {
         let text = "<table><tr><th rowspan=\"1\" colspan=\"2\">Target</th></tr></table>\n";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <table><tbody><tr><th rowspan="1" colspan="2">Target</th></tr></tbody></table>
-        "###);
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"<table><tbody><tr><th rowspan="1" colspan="2">Target</th></tr></tbody></table>"#);
     }
 
     #[test]
     fn text_alignment() {
         let text = "<h1 align=\"center\">foo-bar</h1>\n<h5 align=\"center\">Hello World!</h5>\n";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
         <h1 align="center">foo-bar</h1>
         <h5 align="center">Hello World!</h5>
-        "###);
+        "#);
     }
 
     #[test]
     fn image_alignment() {
         let text =
             "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
-        <p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>
-        "###);
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"<p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>"#);
     }
 
     #[test]
@@ -687,11 +661,11 @@ There can also be some text in between!
     <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
 </picture>
         "#;
-        assert_snapshot!(markdown_to_html(text, None, ""), @r###"
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
         <picture>
             <source media="(prefers-color-scheme: dark)" srcset="https://test.crates.io/logo_dark.svg">
             <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
         </picture>
-        "###);
+        "#);
     }
 }

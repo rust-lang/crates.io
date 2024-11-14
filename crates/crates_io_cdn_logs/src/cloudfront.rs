@@ -135,7 +135,7 @@ mod tests {
         let mut cursor = Cursor::new(include_bytes!("../test_data/cloudfront/basic.log"));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  bindgen@0.65.1 .. 1
             2024-01-16  cumulus-primitives-core@0.4.0 .. 1
@@ -157,7 +157,7 @@ mod tests {
             2024-01-17  smallvec@1.10.0 .. 1
             2024-01-17  tar@0.4.38 .. 1
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -169,11 +169,11 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-17  zstd-sys@2.0.8+zstd.1.5.5 .. 3
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -185,11 +185,11 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  bindgen@0.65.1 .. 2
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -201,11 +201,11 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  bindgen@0.65.1 .. 1
         }
-        "###);
+        ");
     }
 
     #[tokio::test]

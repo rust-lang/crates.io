@@ -15,14 +15,14 @@ async fn new_krate_with_readme() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_readme/foo_readme-1.0.0.crate
     index/fo/o_/foo_readme
     readmes/foo_readme/foo_readme-1.0.0.html
     rss/crates.xml
     rss/crates/foo_readme.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -37,13 +37,13 @@ async fn new_krate_with_empty_readme() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_readme/foo_readme-1.0.0.crate
     index/fo/o_/foo_readme
     rss/crates.xml
     rss/crates/foo_readme.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -58,14 +58,14 @@ async fn new_krate_with_readme_and_plus_version() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_readme/foo_readme-1.0.0+foo.crate
     index/fo/o_/foo_readme
     readmes/foo_readme/foo_readme-1.0.0+foo.html
     rss/crates.xml
     rss/crates/foo_readme.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]

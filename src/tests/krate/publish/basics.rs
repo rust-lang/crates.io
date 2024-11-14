@@ -23,13 +23,13 @@ async fn new_krate() {
     let crates = app.crates_from_index_head("foo_new");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
     rss/crates.xml
     rss/crates/foo_new.xml
     rss/updates.xml
-    "###);
+    ");
 
     let email: String = versions_published_by::table
         .select(versions_published_by::email)
@@ -53,13 +53,13 @@ async fn new_krate_with_token() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_new/foo_new-1.0.0.crate
     index/fo/o_/foo_new
     rss/crates.xml
     rss/crates/foo_new.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -74,13 +74,13 @@ async fn new_krate_weird_version() {
         ".crate.updated_at" => "[datetime]",
     });
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_weird/foo_weird-0.0.0-pre.crate
     index/fo/o_/foo_weird
     rss/crates.xml
     rss/crates/foo_weird.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -102,14 +102,14 @@ async fn new_krate_twice() {
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_twice/foo_twice-0.99.0.crate
     crates/foo_twice/foo_twice-2.0.0.crate
     index/fo/o_/foo_twice
     rss/crates.xml
     rss/crates/foo_twice.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 // This is similar to the `new_krate_twice` case, but the versions are published in reverse order.
@@ -133,14 +133,14 @@ async fn new_krate_twice_alt() {
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_twice/foo_twice-0.99.0.crate
     crates/foo_twice/foo_twice-2.0.0.crate
     index/fo/o_/foo_twice
     rss/crates.xml
     rss/crates/foo_twice.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/reverse_dependencies.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "dependencies": [],

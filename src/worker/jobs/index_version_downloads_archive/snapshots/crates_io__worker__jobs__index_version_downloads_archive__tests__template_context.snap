@@ -1,6 +1,7 @@
 ---
 source: src/worker/jobs/index_version_downloads_archive/mod.rs
-expression: context.to_html()?
+expression: files.to_html()?
+snapshot_kind: text
 ---
 <!DOCTYPE HTML>
 <html>

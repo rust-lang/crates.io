@@ -96,7 +96,7 @@ mod tests {
         let mut cursor = Cursor::new(include_bytes!("../../test_data/fastly/basic.log"));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  strsim@0.10.0 .. 1
             2024-01-16  tikv-jemalloc-sys@0.5.2+5.3.0-patched .. 1
@@ -121,7 +121,7 @@ mod tests {
             2024-01-17  xz2@0.1.7 .. 1
             2024-01-17  zstd-safe@7.0.0 .. 1
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -133,11 +133,11 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  tikv-jemalloc-sys@0.5.2+5.3.0-patched .. 2
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -149,11 +149,11 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  strsim@0.10.0 .. 2
         }
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -165,10 +165,10 @@ mod tests {
         ));
         let downloads = assert_ok!(count_downloads(&mut cursor).await);
 
-        assert_debug_snapshot!(downloads, @r###"
+        assert_debug_snapshot!(downloads, @r"
         DownloadsMap {
             2024-01-16  strsim@0.10.0 .. 1
         }
-        "###);
+        ");
     }
 }

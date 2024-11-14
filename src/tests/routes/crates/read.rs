@@ -107,7 +107,7 @@ async fn test_missing() {
 
     let response = anon.get::<()>("/api/v1/crates/missing").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crate `missing` does not exist"}]}"###);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `missing` does not exist"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -49,13 +49,13 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo/foo-1.1.0.crate
     index/3/f/foo
     rss/crates.xml
     rss/crates/foo.xml
     rss/updates.xml
-    "###);
+    ");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -143,10 +143,10 @@ async fn new_krate_too_big_but_whitelisted() {
 
     token.publish_crate(crate_to_publish).await.good();
 
-    assert_snapshot!(app.stored_files().await.join("\n"), @r###"
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
     crates/foo_whitelist/foo_whitelist-1.1.0.crate
     index/fo/o_/foo_whitelist
     rss/crates/foo_whitelist.xml
     rss/updates.xml
-    "###);
+    ");
 }

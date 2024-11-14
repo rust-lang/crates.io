@@ -185,13 +185,13 @@ mod tests {
     async fn test_success_responses() {
         let (parts, bytes) = request("/api/ok").await.unwrap();
         assert_eq!(parts.status, StatusCode::OK);
-        assert_debug_snapshot!(parts.headers, @r###"
+        assert_debug_snapshot!(parts.headers, @r#"
         {
             "content-type": "text/plain; charset=utf-8",
             "content-length": "18",
         }
-        "###);
-        assert_debug_snapshot!(bytes, @r###"b"Everything is okay""###);
+        "#);
+        assert_debug_snapshot!(bytes, @r#"b"Everything is okay""#);
     }
 
     /// Check that 4xx text responses **are** converted to JSON, but only
@@ -200,23 +200,23 @@ mod tests {
     async fn test_client_errors() {
         let (parts, bytes) = request("/api/teapot").await.unwrap();
         assert_eq!(parts.status, StatusCode::IM_A_TEAPOT);
-        assert_debug_snapshot!(parts.headers, @r###"
+        assert_debug_snapshot!(parts.headers, @r#"
         {
             "content-type": "application/json",
             "content-length": "38",
         }
-        "###);
-        assert_debug_snapshot!(bytes, @r###"b"{\"errors\":[{\"detail\":\"I'm a teapot\"}]}""###);
+        "#);
+        assert_debug_snapshot!(bytes, @r#"b"{\"errors\":[{\"detail\":\"I'm a teapot\"}]}""#);
 
         let (parts, bytes) = request("/teapot").await.unwrap();
         assert_eq!(parts.status, StatusCode::IM_A_TEAPOT);
-        assert_debug_snapshot!(parts.headers, @r###"
+        assert_debug_snapshot!(parts.headers, @r#"
         {
             "content-type": "text/plain; charset=utf-8",
             "content-length": "12",
         }
-        "###);
-        assert_debug_snapshot!(bytes, @r###"b"I'm a teapot""###);
+        "#);
+        assert_debug_snapshot!(bytes, @r#"b"I'm a teapot""#);
     }
 
     /// Check that 5xx text responses **are** converted to JSON, but only
@@ -225,23 +225,23 @@ mod tests {
     async fn test_server_errors() {
         let (parts, bytes) = request("/api/500").await.unwrap();
         assert_eq!(parts.status, StatusCode::INTERNAL_SERVER_ERROR);
-        assert_debug_snapshot!(parts.headers, @r###"
+        assert_debug_snapshot!(parts.headers, @r#"
         {
             "content-type": "application/json",
             "content-length": "47",
         }
-        "###);
-        assert_debug_snapshot!(bytes, @r###"b"{\"errors\":[{\"detail\":\"Internal Server Error\"}]}""###);
+        "#);
+        assert_debug_snapshot!(bytes, @r#"b"{\"errors\":[{\"detail\":\"Internal Server Error\"}]}""#);
 
         let (parts, bytes) = request("/500").await.unwrap();
         assert_eq!(parts.status, StatusCode::INTERNAL_SERVER_ERROR);
-        assert_debug_snapshot!(parts.headers, @r###"
+        assert_debug_snapshot!(parts.headers, @r#"
         {
             "content-type": "text/plain; charset=utf-8",
             "content-length": "21",
         }
-        "###);
-        assert_debug_snapshot!(bytes, @r###"b"Internal Server Error""###);
+        "#);
+        assert_debug_snapshot!(bytes, @r#"b"Internal Server Error""#);
     }
 
     #[tokio::test]

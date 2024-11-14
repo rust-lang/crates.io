@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/versions/list.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "versions": [

@@ -304,11 +304,11 @@ mod tests {
 
         let csv_path = tempdir.path().join("2021-01-02.csv");
         let content = std::fs::read_to_string(csv_path).unwrap();
-        assert_snapshot!(content, @r###"
+        assert_snapshot!(content, @r"
         version_id,downloads
         1,200
         2,500
-        "###);
+        ");
     }
 
     #[tokio::test]
@@ -335,20 +335,20 @@ mod tests {
         let store_path = object_store::path::Path::from("2021-01-01.csv");
         let result = store.get(&store_path).await.unwrap();
         let bytes = result.bytes().await.unwrap();
-        assert_snapshot!(std::str::from_utf8(&bytes).unwrap(), @r###"
+        assert_snapshot!(std::str::from_utf8(&bytes).unwrap(), @r"
         version_id,downloads
         1,100
         2,400
-        "###);
+        ");
 
         let store_path = object_store::path::Path::from("2021-01-02.csv");
         let result = store.get(&store_path).await.unwrap();
         let bytes = result.bytes().await.unwrap();
-        assert_snapshot!(std::str::from_utf8(&bytes).unwrap(), @r###"
+        assert_snapshot!(std::str::from_utf8(&bytes).unwrap(), @r"
         version_id,downloads
         1,200
         2,500
-        "###);
+        ");
 
         let store_path = object_store::path::Path::from("2021-01-03.csv");
         assert_err!(store.get(&store_path).await);

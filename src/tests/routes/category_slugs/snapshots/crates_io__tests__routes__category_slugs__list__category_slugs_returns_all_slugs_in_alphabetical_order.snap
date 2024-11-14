@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/category_slugs/list.rs
 expression: response
+snapshot_kind: text
 ---
 {
   "category_slugs": [

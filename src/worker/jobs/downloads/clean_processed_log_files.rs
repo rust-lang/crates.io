@@ -64,7 +64,7 @@ mod tests {
             ("future-file", now + one_hour * 7 * 24),
         ];
         insert(&mut conn, inserts).await;
-        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r###"
+        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r#"
         [
             "very-old-file",
             "old-file",
@@ -72,16 +72,16 @@ mod tests {
             "brand-new-file",
             "future-file",
         ]
-        "###);
+        "#);
 
         run(&mut conn).await.unwrap();
-        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r###"
+        assert_debug_snapshot!(paths_in_table(&mut conn).await, @r#"
         [
             "newish-file",
             "brand-new-file",
             "future-file",
         ]
-        "###);
+        "#);
     }
 
     /// Insert a list of paths and times into the `processed_log_files` table.

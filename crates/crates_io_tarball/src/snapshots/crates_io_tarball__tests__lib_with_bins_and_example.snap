@@ -1,6 +1,7 @@
 ---
 source: crates/crates_io_tarball/src/lib.rs
 expression: lib
+snapshot_kind: text
 ---
 Product {
     path: Some(

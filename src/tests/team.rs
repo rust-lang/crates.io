@@ -77,7 +77,7 @@ async fn add_nonexistent_team() {
         .add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r##"{"errors":[{"detail":"could not find the github team test-org/this-does-not-exist. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"##);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find the github team test-org/this-does-not-exist. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"#);
 }
 
 /// Test adding a renamed team
