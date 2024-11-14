@@ -45,17 +45,19 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
 
     let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
 
-    spawn_blocking(move || {
-        info!("Migrating the database");
+    info!("Migrating the database");
+    let mut conn = spawn_blocking(move || {
         HarnessWithOutput::write_to_stdout(&mut conn)
             .run_pending_migrations(MIGRATIONS)
             .map_err(|e| anyhow!(e))
             .context("Failed to run migrations")?;
 
-        info!("Synchronizing crate categories");
-        crates_io::boot::categories::sync_with_connection(CATEGORIES_TOML, &mut conn)?;
-
-        Ok(())
+        Ok::<_, Error>(conn)
     })
-    .await
+    .await?;
+
+    info!("Synchronizing crate categories");
+    crates_io::boot::categories::sync_with_connection(CATEGORIES_TOML, &mut conn).await?;
+
+    Ok(())
 }
