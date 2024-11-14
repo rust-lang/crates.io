@@ -97,6 +97,7 @@ pub struct NewVersion<'a> {
     rust_version: Option<&'a str>,
     pub has_lib: Option<bool>,
     pub bin_names: Option<&'a [&'a str]>,
+    edition: Option<&'a str>,
 }
 
 impl NewVersion<'_> {
