@@ -4,6 +4,7 @@ use crate::sql::pg_enum;
 use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
 use chrono::NaiveDateTime;
+use diesel_async::AsyncPgConnection;
 
 pg_enum! {
     pub enum VersionAction {
@@ -76,6 +77,20 @@ impl VersionOwnerAction {
             .inner_join(users::table)
             .order(version_owner_actions::dsl::id)
             .load(conn)?
+            .grouped_by(versions))
+    }
+
+    pub async fn async_for_versions(
+        conn: &mut AsyncPgConnection,
+        versions: &[&Version],
+    ) -> QueryResult<Vec<Vec<(Self, User)>>> {
+        use diesel_async::RunQueryDsl;
+
+        Ok(Self::belonging_to(versions)
+            .inner_join(users::table)
+            .order(version_owner_actions::dsl::id)
+            .load(conn)
+            .await?
             .grouped_by(versions))
     }
 }
