@@ -249,51 +249,55 @@ pub async fn reverse_dependencies(
     Path(name): Path<String>,
     req: Parts,
 ) -> AppResult<Json<Value>> {
-    let conn = app.db_read().await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = app.db_read().await?;
 
-        let pagination_options = PaginationOptions::builder().gather(&req)?;
+    let pagination_options = PaginationOptions::builder().gather(&req)?;
 
-        let krate: Crate = Crate::by_name(&name)
-            .first(conn)
-            .optional()?
-            .ok_or_else(|| crate_not_found(&name))?;
+    let krate: Crate = Crate::by_name(&name)
+        .first(&mut conn)
+        .await
+        .optional()?
+        .ok_or_else(|| crate_not_found(&name))?;
 
-        let (rev_deps, total) = krate.reverse_dependencies(conn, pagination_options)?;
-        let rev_deps: Vec<_> = rev_deps
-            .into_iter()
-            .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
-            .collect();
+    let (rev_deps, total) = krate
+        .reverse_dependencies(&mut conn, pagination_options)
+        .await?;
 
-        let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
+    let rev_deps: Vec<_> = rev_deps
+        .into_iter()
+        .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
+        .collect();
 
-        let versions_and_publishers: Vec<(Version, CrateName, Option<User>)> = versions::table
-            .filter(versions::id.eq_any(version_ids))
-            .inner_join(crates::table)
-            .left_outer_join(users::table)
-            .select(<(Version, CrateName, Option<User>)>::as_select())
-            .load(conn)?;
-        let versions = versions_and_publishers
-            .iter()
-            .map(|(v, ..)| v)
-            .collect::<Vec<_>>();
-        let actions = VersionOwnerAction::for_versions(conn, &versions)?;
-        let versions = versions_and_publishers
-            .into_iter()
-            .zip(actions)
-            .map(|((version, krate_name, published_by), actions)| {
-                EncodableVersion::from(version, &krate_name.name, published_by, actions)
-            })
-            .collect::<Vec<_>>();
+    let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
 
-        Ok(Json(json!({
-            "dependencies": rev_deps,
-            "versions": versions,
-            "meta": { "total": total },
-        })))
-    })
-    .await
+    let versions_and_publishers: Vec<(Version, CrateName, Option<User>)> = versions::table
+        .filter(versions::id.eq_any(version_ids))
+        .inner_join(crates::table)
+        .left_outer_join(users::table)
+        .select(<(Version, CrateName, Option<User>)>::as_select())
+        .load(&mut conn)
+        .await?;
+
+    let versions = versions_and_publishers
+        .iter()
+        .map(|(v, ..)| v)
+        .collect::<Vec<_>>();
+
+    let actions = VersionOwnerAction::async_for_versions(&mut conn, &versions).await?;
+
+    let versions = versions_and_publishers
+        .into_iter()
+        .zip(actions)
+        .map(|((version, krate_name, published_by), actions)| {
+            EncodableVersion::from(version, &krate_name.name, published_by, actions)
+        })
+        .collect::<Vec<_>>();
+
+    Ok(Json(json!({
+        "dependencies": rev_deps,
+        "versions": versions,
+        "meta": { "total": total },
+    })))
 }
