@@ -270,13 +270,14 @@ async fn remove_nonexistent_team() {
         .execute(&mut conn)
         .expect("couldn't insert nonexistent team");
 
-    token
+    let response = token
         .remove_named_owner(
             "foo_remove_nonexistent",
             "github:test-org:this-does-not-exist",
         )
-        .await
-        .good();
+        .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:test-org:this-does-not-exist`"}]}"#);
 }
 
 /// Test trying to publish a crate we don't own

@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
-use diesel::sql_types::{Bool, Text};
+use diesel::sql_types::{Bool, Integer, Text};
 use diesel_async::AsyncPgConnection;
 use secrecy::SecretString;
 use thiserror::Error;
@@ -18,7 +18,7 @@ use crate::schema::*;
 use crate::sql::canon_crate_name;
 use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
-use crate::util::errors::{version_not_found, AppResult};
+use crate::util::errors::{bad_request, version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
 
 use super::Team;
@@ -457,12 +457,44 @@ impl Crate {
     pub fn owner_remove(&self, conn: &mut impl Conn, login: &str) -> AppResult<()> {
         use diesel::RunQueryDsl;
 
-        let owner = Owner::find_by_login(conn, login)?;
+        let query = diesel::sql_query(
+            r#"WITH crate_owners_with_login AS (
+                SELECT
+                    crate_owners.*,
+                    CASE WHEN crate_owners.owner_kind = 1 THEN
+                         teams.login
+                    ELSE
+                         users.gh_login
+                    END AS login
+                FROM crate_owners
+                LEFT JOIN teams
+                    ON crate_owners.owner_id = teams.id
+                    AND crate_owners.owner_kind = 1
+                LEFT JOIN users
+                    ON crate_owners.owner_id = users.id
+                    AND crate_owners.owner_kind = 0
+                WHERE crate_owners.crate_id = $1
+                    AND crate_owners.deleted = false
+            )
+            UPDATE crate_owners
+            SET deleted = true
+            FROM crate_owners_with_login
+            WHERE crate_owners.crate_id = crate_owners_with_login.crate_id
+                AND crate_owners.owner_id = crate_owners_with_login.owner_id
+                AND crate_owners.owner_kind = crate_owners_with_login.owner_kind
+                AND lower(crate_owners_with_login.login) = lower($2);"#,
+        );
 
-        let target = crate_owners::table.find((self.id(), owner.id(), owner.kind()));
-        diesel::update(target)
-            .set(crate_owners::deleted.eq(true))
+        let num_updated_rows = query
+            .bind::<Integer, _>(self.id)
+            .bind::<Text, _>(login)
             .execute(conn)?;
+
+        if num_updated_rows == 0 {
+            let error = format!("could not find owner with login `{login}`");
+            return Err(bad_request(error));
+        }
+
         Ok(())
     }
 
