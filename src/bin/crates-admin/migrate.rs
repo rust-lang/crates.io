@@ -49,7 +49,8 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
         info!("Migrating the database");
         HarnessWithOutput::write_to_stdout(&mut conn)
             .run_pending_migrations(MIGRATIONS)
-            .map_err(|err| anyhow!("Failed to run migrations: {err}"))?;
+            .map_err(|e| anyhow!(e))
+            .context("Failed to run migrations")?;
 
         info!("Synchronizing crate categories");
         crates_io::boot::categories::sync_with_connection(CATEGORIES_TOML, &mut conn)?;
