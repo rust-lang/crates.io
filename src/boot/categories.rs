@@ -1,9 +1,12 @@
 // Sync available crate categories from `src/categories.toml`.
 // Runs when the server is started.
 
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use anyhow::{Context, Result};
+use crates_io_database::schema::categories;
+use diesel::pg::upsert::excluded;
+use diesel::prelude::*;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 #[derive(Debug)]
 struct Category {
@@ -76,11 +79,7 @@ fn categories_from_toml(
     Ok(result)
 }
 
-pub fn sync_with_connection(toml_str: &str, conn: &mut impl Conn) -> Result<()> {
-    use crate::schema::categories;
-    use diesel::pg::upsert::excluded;
-    use diesel::RunQueryDsl;
-
+pub async fn sync_with_connection(toml_str: &str, conn: &mut AsyncPgConnection) -> Result<()> {
     let toml: toml::value::Table =
         toml::from_str(toml_str).context("Could not parse categories toml")?;
 
@@ -97,20 +96,27 @@ pub fn sync_with_connection(toml_str: &str, conn: &mut impl Conn) -> Result<()> 
         .collect::<Vec<_>>();
 
     conn.transaction(|conn| {
-        let slugs: Vec<String> = diesel::insert_into(categories::table)
-            .values(&to_insert)
-            .on_conflict(categories::slug)
-            .do_update()
-            .set((
-                categories::category.eq(excluded(categories::category)),
-                categories::description.eq(excluded(categories::description)),
-            ))
-            .returning(categories::slug)
-            .get_results(conn)?;
+        async move {
+            let slugs: Vec<String> = diesel::insert_into(categories::table)
+                .values(&to_insert)
+                .on_conflict(categories::slug)
+                .do_update()
+                .set((
+                    categories::category.eq(excluded(categories::category)),
+                    categories::description.eq(excluded(categories::description)),
+                ))
+                .returning(categories::slug)
+                .get_results(conn)
+                .await?;
 
-        diesel::delete(categories::table)
-            .filter(categories::slug.ne_all(slugs))
-            .execute(conn)?;
-        Ok(())
+            diesel::delete(categories::table)
+                .filter(categories::slug.ne_all(slugs))
+                .execute(conn)
+                .await?;
+
+            Ok(())
+        }
+        .scope_boxed()
     })
+    .await
 }
