@@ -464,14 +464,14 @@ impl Crate {
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
     #[instrument(skip_all, fields(krate.name = %self.name))]
-    pub(crate) fn reverse_dependencies(
+    pub(crate) async fn reverse_dependencies(
         &self,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         options: PaginationOptions,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         let offset = options.offset().unwrap_or_default();
         let rows: Vec<WithCount<ReverseDependency>> =
@@ -479,7 +479,8 @@ impl Crate {
                 .bind::<Integer, _>(self.id)
                 .bind::<BigInt, _>(offset)
                 .bind::<BigInt, _>(options.per_page)
-                .load(conn)?;
+                .load(conn)
+                .await?;
 
         Ok(rows.records_and_total())
     }
