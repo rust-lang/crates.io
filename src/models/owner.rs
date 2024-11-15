@@ -79,26 +79,6 @@ impl Owner {
         }
     }
 
-    /// Finds the owner by name. Never recreates a team, to ensure that
-    /// organizations that were deleted after they were added can still be
-    /// removed.
-    ///
-    /// May be a user's GH login or a full team name. This is case
-    /// sensitive.
-    pub fn find_by_login(conn: &mut impl Conn, name: &str) -> AppResult<Owner> {
-        if name.contains(':') {
-            Team::find_by_login(conn, name)
-                .optional()?
-                .map(Owner::Team)
-                .ok_or_else(|| bad_request(format_args!("could not find team with login `{name}`")))
-        } else {
-            User::find_by_login(conn, name)
-                .optional()?
-                .map(Owner::User)
-                .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))
-        }
-    }
-
     pub fn kind(&self) -> i32 {
         match self {
             Owner::User(_) => OwnerKind::User as i32,

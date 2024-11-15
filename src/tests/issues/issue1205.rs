@@ -41,7 +41,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
         .remove_named_owner(CRATE_NAME, "github:rustaudio:owners")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find team with login `github:rustaudio:owners`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:rustaudio:owners`"}]}"#);
 
     Ok(())
 }
