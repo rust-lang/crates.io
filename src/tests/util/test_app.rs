@@ -9,7 +9,7 @@ use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::schema::users;
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;
-use crate::tests::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
 use crates_io_index::testing::UpstreamIndex;
@@ -494,7 +494,7 @@ fn build_app(config: config::Server) -> (Arc<App>, axum::Router) {
 
     // Use a custom mock for the GitHub client, allowing to define the GitHub users and
     // organizations without actually having to create GitHub accounts.
-    let github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
+    let github = Box::new(MOCK_GITHUB_DATA.as_mock_client());
 
     let app = App::new(config, emails, github);
 
