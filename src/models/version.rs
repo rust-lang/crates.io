@@ -24,7 +24,7 @@ pub struct Version {
     pub features: serde_json::Value,
     pub yanked: bool,
     pub license: Option<String>,
-    pub crate_size: Option<i32>,
+    pub crate_size: i32,
     pub published_by: Option<i32>,
     pub checksum: String,
     pub links: Option<String>,

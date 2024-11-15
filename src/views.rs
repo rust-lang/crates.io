@@ -579,7 +579,7 @@ pub struct EncodableVersion {
     // NOTE: Used by shields.io, altering `license` requires a PR with shields.io
     pub license: Option<String>,
     pub links: EncodableVersionLinks,
-    pub crate_size: Option<i32>,
+    pub crate_size: i32,
     pub published_by: Option<EncodablePublicUser>,
     pub audit_actions: Vec<EncodableAuditAction>,
     pub checksum: String,
@@ -763,7 +763,7 @@ mod tests {
                 version_downloads: "".to_string(),
                 authors: "".to_string(),
             },
-            crate_size: Some(1234),
+            crate_size: 1234,
             checksum: String::new(),
             rust_version: None,
             has_lib: None,
