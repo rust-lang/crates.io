@@ -1,5 +1,5 @@
 use crate::tests::builders::CrateBuilder;
-use crate::tests::util::TestApp;
+use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use http::StatusCode;
 use insta::assert_snapshot;
