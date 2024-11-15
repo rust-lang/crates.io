@@ -1,5 +1,8 @@
+use crate::models::{CrateOwner, OwnerKind};
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
+use crates_io_database::schema::crate_owners;
+use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use http::StatusCode;
 use insta::assert_snapshot;
 
@@ -70,4 +73,84 @@ async fn test_unknown_team() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find team with login `github:unknown:unknown`"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remove_uppercase_user() {
+    use diesel::RunQueryDsl;
+
+    let (app, _, cookie) = TestApp::full().with_user();
+    let user2 = app.db_new_user("user2");
+    let mut conn = app.db_conn();
+
+    let krate = CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+
+    diesel::insert_into(crate_owners::table)
+        .values(CrateOwner {
+            crate_id: krate.id,
+            owner_id: user2.as_model().id,
+            created_by: cookie.as_model().id,
+            owner_kind: OwnerKind::User,
+            email_notifications: true,
+        })
+        .execute(&mut conn)
+        .unwrap();
+
+    let response = cookie.remove_named_owner("foo", "USER2").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remove_uppercase_team() {
+    use mockall::predicate::*;
+
+    let mut github_mock = MockGitHubClient::new();
+
+    github_mock
+        .expect_team_by_name()
+        .with(eq("org"), eq("team"), always())
+        .returning(|_, _, _| {
+            Ok(GitHubTeam {
+                id: 2,
+                name: Some("team".to_string()),
+                organization: GitHubOrganization {
+                    id: 1,
+                    avatar_url: None,
+                },
+            })
+        });
+
+    github_mock
+        .expect_org_by_name()
+        .with(eq("org"), always())
+        .returning(|_, _| {
+            Ok(GitHubOrganization {
+                id: 1,
+                avatar_url: None,
+            })
+        });
+
+    github_mock
+        .expect_team_membership()
+        .with(eq(1), eq(2), eq("foo"), always())
+        .returning(|_, _, _, _| {
+            Ok(GitHubTeamMembership {
+                state: "active".to_string(),
+            })
+        });
+
+    let (app, _, cookie) = TestApp::full().with_github(github_mock).with_user();
+    let mut conn = app.db_conn();
+
+    CrateBuilder::new("crate42", cookie.as_model().id).expect_build(&mut conn);
+
+    let response = cookie.add_named_owner("crate42", "github:org:team").await;
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let response = cookie
+        .remove_named_owner("crate42", "github:ORG:TEAM")
+        .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
