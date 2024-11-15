@@ -2,6 +2,7 @@ use crate::models::token::{CrateScope, EndpointScope};
 use crate::tests::builders::CrateBuilder;
 use crate::tests::owners::expire_invitation;
 use crate::tests::util::{RequestHelper, TestApp};
+use crate::tests::OwnerResp;
 use http::StatusCode;
 use insta::assert_snapshot;
 
@@ -19,12 +20,6 @@ async fn test_cargo_invite_owners() {
     #[derive(Serialize)]
     struct OwnerReq {
         owners: Option<Vec<String>>,
-    }
-    #[derive(Deserialize, Debug)]
-    struct OwnerResp {
-        // server must include `ok: true` to support old cargo clients
-        ok: bool,
-        msg: String,
     }
 
     let body = serde_json::to_string(&OwnerReq {
