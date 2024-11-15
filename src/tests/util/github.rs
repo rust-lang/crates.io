@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use crates_io_github::{
-    GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubPublicKey, GitHubTeam,
-    GitHubTeamMembership, GithubUser, MockGitHubClient,
+    GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
+    GithubUser, MockGitHubClient,
 };
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -49,14 +49,6 @@ pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
             email: "owner@example.com",
         },
     ],
-    // Test key from https://docs.github.com/en/developers/overview/secret-scanning-partner-program#create-a-secret-alert-service
-    public_keys: &[
-        MockPublicKey {
-            key_identifier: "f9525bf080f75b3506ca1ead061add62b8633a346606dc5fe544e29231c6ee0d",
-            key: "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsz9ugWDj5jK5ELBK42ynytbo38gP\nHzZFI03Exwz8Lh/tCfL3YxwMdLjB+bMznsanlhK0RwcGP3IDb34kQDIo3Q==\n-----END PUBLIC KEY-----",
-            is_current: true,
-        },
-    ],
 };
 
 impl MockData {
@@ -79,9 +71,6 @@ impl MockData {
 
         mock.expect_org_membership()
             .returning(|org_id, username, _auth| self.org_membership(org_id, username));
-
-        mock.expect_public_keys()
-            .returning(|_username, _password| self.public_keys());
 
         mock
     }
@@ -178,10 +167,6 @@ impl MockData {
             Err(not_found())
         }
     }
-
-    fn public_keys(&self) -> Result<Vec<GitHubPublicKey>, GitHubError> {
-        Ok(self.public_keys.iter().map(Into::into).collect())
-    }
 }
 
 fn not_found() -> GitHubError {
@@ -191,7 +176,6 @@ fn not_found() -> GitHubError {
 pub(crate) struct MockData {
     orgs: &'static [MockOrg],
     users: &'static [MockUser],
-    public_keys: &'static [MockPublicKey],
 }
 
 struct MockUser {
@@ -212,20 +196,4 @@ struct MockTeam {
     id: i32,
     name: &'static str,
     members: &'static [&'static str],
-}
-
-struct MockPublicKey {
-    key_identifier: &'static str,
-    key: &'static str,
-    is_current: bool,
-}
-
-impl From<&'static MockPublicKey> for GitHubPublicKey {
-    fn from(k: &'static MockPublicKey) -> Self {
-        Self {
-            key_identifier: k.key_identifier.to_string(),
-            key: k.key.to_string(),
-            is_current: k.is_current,
-        }
-    }
 }

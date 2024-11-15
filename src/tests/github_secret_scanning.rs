@@ -2,6 +2,7 @@ use crate::tests::util::MockRequestExt;
 use crate::tests::{RequestHelper, TestApp};
 use crate::util::token::HashedToken;
 use crate::{models::ApiToken, schema::api_tokens};
+use crates_io_github::{GitHubPublicKey, MockGitHubClient};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
@@ -13,13 +14,34 @@ static URL: &str = "/api/github/secret-scanning/verify";
 // Test request and signature from https://docs.github.com/en/developers/overview/secret-scanning-partner-program#create-a-secret-alert-service
 static GITHUB_ALERT: &[u8] =
     br#"[{"token":"some_token","type":"some_type","url":"some_url","source":"some_source"}]"#;
+
 static GITHUB_PUBLIC_KEY_IDENTIFIER: &str =
     "f9525bf080f75b3506ca1ead061add62b8633a346606dc5fe544e29231c6ee0d";
+
+/// Test key from https://docs.github.com/en/developers/overview/secret-scanning-partner-program#create-a-secret-alert-service
+static GITHUB_PUBLIC_KEY: &str = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsz9ugWDj5jK5ELBK42ynytbo38gP\nHzZFI03Exwz8Lh/tCfL3YxwMdLjB+bMznsanlhK0RwcGP3IDb34kQDIo3Q==\n-----END PUBLIC KEY-----";
+
 static GITHUB_PUBLIC_KEY_SIGNATURE: &str = "MEUCIFLZzeK++IhS+y276SRk2Pe5LfDrfvTXu6iwKKcFGCrvAiEAhHN2kDOhy2I6eGkOFmxNkOJ+L2y8oQ9A2T9GGJo6WJY=";
+
+fn github_mock() -> MockGitHubClient {
+    let mut mock = MockGitHubClient::new();
+
+    mock.expect_public_keys().returning(|_, _| {
+        let key = GitHubPublicKey {
+            key_identifier: GITHUB_PUBLIC_KEY_IDENTIFIER.to_string(),
+            key: GITHUB_PUBLIC_KEY.to_string(),
+            is_current: true,
+        };
+
+        Ok(vec![key])
+    });
+
+    mock
+}
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_revokes_token() {
-    let (app, anon, user, token) = TestApp::init().with_token();
+    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -77,7 +99,7 @@ async fn github_secret_alert_revokes_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_revoked_token() {
-    let (app, anon, user, token) = TestApp::init().with_token();
+    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -138,7 +160,7 @@ async fn github_secret_alert_for_revoked_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_unknown_token() {
-    let (app, anon, user, token) = TestApp::init().with_token();
+    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -180,7 +202,7 @@ async fn github_secret_alert_for_unknown_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_invalid_signature_fails() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().with_github(github_mock()).empty();
 
     // No headers or request body
     let request = anon.post_request(URL);
