@@ -41,12 +41,7 @@ async fn test_unknown_crate() {
     let (app, _, user) = TestApp::full().with_user();
     app.db_new_user("bar");
 
-    let body = json!({ "owners": ["bar"] });
-    let body = serde_json::to_vec(&body).unwrap();
-
-    let response = user
-        .delete_with_body::<()>("/api/v1/crates/unknown/owners", body)
-        .await;
+    let response = user.remove_named_owner("unknown", "bar").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
@@ -58,10 +53,7 @@ async fn test_unknown_user() {
 
     CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
 
-    let body = serde_json::to_vec(&json!({ "owners": ["unknown"] })).unwrap();
-    let response = cookie
-        .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
-        .await;
+    let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
@@ -73,9 +65,8 @@ async fn test_unknown_team() {
 
     CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
 
-    let body = serde_json::to_vec(&json!({ "owners": ["github:unknown:unknown"] })).unwrap();
     let response = cookie
-        .delete_with_body::<()>("/api/v1/crates/foo/owners", body)
+        .remove_named_owner("foo", "github:unknown:unknown")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find team with login `github:unknown:unknown`"}]}"#);
