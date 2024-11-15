@@ -1,10 +1,8 @@
 use anyhow::anyhow;
-use async_trait::async_trait;
 use crates_io_github::{
-    GitHubClient, GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubPublicKey,
-    GitHubTeam, GitHubTeamMembership, GithubUser,
+    GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
+    GithubUser, MockGitHubClient,
 };
-use oauth2::AccessToken;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(0);
@@ -51,30 +49,34 @@ pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
             email: "owner@example.com",
         },
     ],
-    // Test key from https://docs.github.com/en/developers/overview/secret-scanning-partner-program#create-a-secret-alert-service
-    public_keys: &[
-        MockPublicKey {
-            key_identifier: "f9525bf080f75b3506ca1ead061add62b8633a346606dc5fe544e29231c6ee0d",
-            key: "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsz9ugWDj5jK5ELBK42ynytbo38gP\nHzZFI03Exwz8Lh/tCfL3YxwMdLjB+bMznsanlhK0RwcGP3IDb34kQDIo3Q==\n-----END PUBLIC KEY-----",
-            is_current: true,
-        },
-    ],
 };
 
-pub(crate) struct MockGitHubClient {
-    data: &'static MockData,
-}
+impl MockData {
+    pub fn as_mock_client(&'static self) -> MockGitHubClient {
+        let mut mock = MockGitHubClient::new();
 
-impl MockGitHubClient {
-    pub(crate) fn new(data: &'static MockData) -> Self {
-        Self { data }
+        mock.expect_current_user()
+            .returning(|_auth| self.current_user());
+
+        mock.expect_org_by_name()
+            .returning(|org_name, _auth| self.org_by_name(org_name));
+
+        mock.expect_team_by_name()
+            .returning(|org_name, team_name, _auth| self.team_by_name(org_name, team_name));
+
+        mock.expect_team_membership()
+            .returning(|org_id, team_id, username, _auth| {
+                self.team_membership(org_id, team_id, username)
+            });
+
+        mock.expect_org_membership()
+            .returning(|org_id, username, _auth| self.org_membership(org_id, username));
+
+        mock
     }
-}
 
-#[async_trait]
-impl GitHubClient for MockGitHubClient {
-    async fn current_user(&self, _auth: &AccessToken) -> Result<GithubUser, GitHubError> {
-        let user = &self.data.users[0];
+    fn current_user(&self) -> Result<GithubUser, GitHubError> {
+        let user = &self.users[0];
         Ok(GithubUser {
             id: user.id,
             login: user.login.into(),
@@ -84,13 +86,8 @@ impl GitHubClient for MockGitHubClient {
         })
     }
 
-    async fn org_by_name(
-        &self,
-        org_name: &str,
-        _auth: &AccessToken,
-    ) -> Result<GitHubOrganization, GitHubError> {
+    fn org_by_name(&self, org_name: &str) -> Result<GitHubOrganization, GitHubError> {
         let org = self
-            .data
             .orgs
             .iter()
             .find(|org| org.name == org_name.to_lowercase())
@@ -101,14 +98,8 @@ impl GitHubClient for MockGitHubClient {
         })
     }
 
-    async fn team_by_name(
-        &self,
-        org_name: &str,
-        team_name: &str,
-        auth: &AccessToken,
-    ) -> Result<GitHubTeam, GitHubError> {
+    fn team_by_name(&self, org_name: &str, team_name: &str) -> Result<GitHubTeam, GitHubError> {
         let team = self
-            .data
             .orgs
             .iter()
             .find(|org| org.name == org_name.to_lowercase())
@@ -120,19 +111,17 @@ impl GitHubClient for MockGitHubClient {
         Ok(GitHubTeam {
             id: team.id,
             name: Some(team.name.into()),
-            organization: self.org_by_name(org_name, auth).await?,
+            organization: self.org_by_name(org_name)?,
         })
     }
 
-    async fn team_membership(
+    fn team_membership(
         &self,
         org_id: i32,
         team_id: i32,
         username: &str,
-        _auth: &AccessToken,
     ) -> Result<GitHubTeamMembership, GitHubError> {
         let team = self
-            .data
             .orgs
             .iter()
             .find(|org| org.id == org_id)
@@ -150,14 +139,12 @@ impl GitHubClient for MockGitHubClient {
         }
     }
 
-    async fn org_membership(
+    fn org_membership(
         &self,
         org_id: i32,
         username: &str,
-        _auth: &AccessToken,
     ) -> Result<GitHubOrgMembership, GitHubError> {
         let org = self
-            .data
             .orgs
             .iter()
             .find(|org| org.id == org_id)
@@ -180,14 +167,6 @@ impl GitHubClient for MockGitHubClient {
             Err(not_found())
         }
     }
-
-    async fn public_keys(
-        &self,
-        _username: &str,
-        _password: &str,
-    ) -> Result<Vec<GitHubPublicKey>, GitHubError> {
-        Ok(self.data.public_keys.iter().map(Into::into).collect())
-    }
 }
 
 fn not_found() -> GitHubError {
@@ -197,7 +176,6 @@ fn not_found() -> GitHubError {
 pub(crate) struct MockData {
     orgs: &'static [MockOrg],
     users: &'static [MockUser],
-    public_keys: &'static [MockPublicKey],
 }
 
 struct MockUser {
@@ -218,20 +196,4 @@ struct MockTeam {
     id: i32,
     name: &'static str,
     members: &'static [&'static str],
-}
-
-struct MockPublicKey {
-    key_identifier: &'static str,
-    key: &'static str,
-    is_current: bool,
-}
-
-impl From<&'static MockPublicKey> for GitHubPublicKey {
-    fn from(k: &'static MockPublicKey) -> Self {
-        Self {
-            key_identifier: k.key_identifier.to_string(),
-            key: k.key.to_string(),
-            is_current: k.is_current,
-        }
-    }
 }

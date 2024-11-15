@@ -9,9 +9,10 @@ use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::schema::users;
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;
-use crate::tests::util::github::{MockGitHubClient, MOCK_GITHUB_DATA};
+use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
+use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_team_repo::MockTeamRepo;
@@ -103,6 +104,7 @@ impl TestApp {
             build_job_runner: false,
             use_chaos_proxy: false,
             team_repo: MockTeamRepo::new(),
+            github: None,
         }
     }
 
@@ -252,6 +254,7 @@ pub struct TestAppBuilder {
     build_job_runner: bool,
     use_chaos_proxy: bool,
     team_repo: MockTeamRepo,
+    github: Option<MockGitHubClient>,
 }
 
 impl TestAppBuilder {
@@ -296,7 +299,7 @@ impl TestAppBuilder {
             (primary_proxy, replica_proxy)
         };
 
-        let (app, router) = build_app(self.config);
+        let (app, router) = build_app(self.config, self.github);
 
         let runner = if self.build_job_runner {
             let index = self
@@ -397,6 +400,11 @@ impl TestAppBuilder {
         self
     }
 
+    pub fn with_github(mut self, github: MockGitHubClient) -> Self {
+        self.github = Some(github);
+        self
+    }
+
     pub fn with_team_repo(mut self, team_repo: MockTeamRepo) -> Self {
         self.team_repo = team_repo;
         self
@@ -487,14 +495,13 @@ fn simple_config() -> config::Server {
     }
 }
 
-fn build_app(config: config::Server) -> (Arc<App>, axum::Router) {
+fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<App>, axum::Router) {
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     let emails = Emails::new_in_memory();
 
-    // Use a custom mock for the GitHub client, allowing to define the GitHub users and
-    // organizations without actually having to create GitHub accounts.
-    let github = Box::new(MockGitHubClient::new(&MOCK_GITHUB_DATA));
+    let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
+    let github = Box::new(github);
 
     let app = App::new(config, emails, github);
 
