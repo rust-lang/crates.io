@@ -22,7 +22,7 @@
 use crate::middleware::session;
 use crate::models::{ApiToken, CreatedApiToken, User};
 use crate::tests::{
-    CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OkBool,
+    CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
     OwnersResponse, VersionResponse,
 };
 
@@ -221,6 +221,33 @@ pub trait RequestHelper {
         let url = "/api/v1/categories";
         self.get(url).await.good()
     }
+
+    /// Add to the specified crate the specified owners.
+    async fn add_named_owners<T>(&self, krate_name: &str, owners: &[T]) -> Response<OwnerResp>
+    where
+        T: serde::Serialize,
+    {
+        let url = format!("/api/v1/crates/{krate_name}/owners");
+        let body = json!({ "owners": owners }).to_string();
+        self.put(&url, body).await
+    }
+
+    /// Add a single owner to the specified crate.
+    async fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OwnerResp> {
+        self.add_named_owners(krate_name, &[owner]).await
+    }
+
+    /// Remove from the specified crate the specified owners.
+    async fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OwnerResp> {
+        let url = format!("/api/v1/crates/{krate_name}/owners");
+        let body = json!({ "owners": owners }).to_string();
+        self.delete_with_body(&url, body).await
+    }
+
+    /// Remove a single owner to the specified crate.
+    async fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OwnerResp> {
+        self.remove_named_owners(krate_name, &[owner]).await
+    }
 }
 
 fn req(method: Method, path: &str) -> MockRequest {
@@ -344,32 +371,5 @@ impl MockTokenUser {
 
     pub fn plaintext(&self) -> &PlainToken {
         &self.token.plaintext
-    }
-
-    /// Add to the specified crate the specified owners.
-    pub async fn add_named_owners<T>(&self, krate_name: &str, owners: &[T]) -> Response<OkBool>
-    where
-        T: serde::Serialize,
-    {
-        let url = format!("/api/v1/crates/{krate_name}/owners");
-        let body = json!({ "owners": owners }).to_string();
-        self.put(&url, body).await
-    }
-
-    /// Add a single owner to the specified crate.
-    pub async fn add_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        self.add_named_owners(krate_name, &[owner]).await
-    }
-
-    /// Remove from the specified crate the specified owners.
-    pub async fn remove_named_owners(&self, krate_name: &str, owners: &[&str]) -> Response<OkBool> {
-        let url = format!("/api/v1/crates/{krate_name}/owners");
-        let body = json!({ "owners": owners }).to_string();
-        self.delete_with_body(&url, body).await
-    }
-
-    /// Remove a single owner to the specified crate.
-    pub async fn remove_named_owner(&self, krate_name: &str, owner: &str) -> Response<OkBool> {
-        self.remove_named_owners(krate_name, &[owner]).await
     }
 }

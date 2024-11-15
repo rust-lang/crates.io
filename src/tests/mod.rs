@@ -86,6 +86,13 @@ pub struct OkBool {
     ok: bool,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct OwnerResp {
+    // server must include `ok: true` to support old cargo clients
+    ok: bool,
+    msg: String,
+}
+
 fn new_user(login: &str) -> NewUser<'_> {
     NewUser {
         gh_id: next_gh_id(),
