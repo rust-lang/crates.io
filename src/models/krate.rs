@@ -360,6 +360,7 @@ impl Crate {
 
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
+            .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(users::table)
             .select(User::as_select())
             .load(conn)
@@ -369,6 +370,7 @@ impl Crate {
 
         let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
             .filter(crate_owners::crate_id.eq(self.id))
+            .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(teams::table)
             .select(Team::as_select())
             .load(conn)
@@ -384,6 +386,7 @@ impl Crate {
 
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
+            .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(users::table)
             .select(User::as_select())
             .load(conn)?
@@ -391,6 +394,7 @@ impl Crate {
             .map(Owner::User);
         let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
             .filter(crate_owners::crate_id.eq(self.id))
+            .order((crate_owners::owner_id, crate_owners::owner_kind))
             .inner_join(teams::table)
             .select(Team::as_select())
             .load(conn)?
