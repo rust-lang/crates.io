@@ -16,6 +16,7 @@ use serde::Deserialize;
 
 type Result<T> = std::result::Result<T, GitHubError>;
 
+#[cfg_attr(feature = "mock", mockall::automock)]
 #[async_trait]
 pub trait GitHubClient: Send + Sync {
     async fn current_user(&self, auth: &AccessToken) -> Result<GithubUser>;

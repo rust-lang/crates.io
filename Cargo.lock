@@ -1181,6 +1181,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "mockall",
  "oauth2",
  "reqwest 0.12.9",
  "serde",

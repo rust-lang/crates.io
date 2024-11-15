@@ -122,6 +122,7 @@ unicode-xid = "=0.2.6"
 
 [dev-dependencies]
 bytes = "=1.8.0"
+crates_io_github = { path = "crates/crates_io_github", features = ["mock"] }
 crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
 crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"] }
