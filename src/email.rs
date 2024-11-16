@@ -122,6 +122,15 @@ impl Emails {
             .block_on(self.backend.send(email))
             .map_err(EmailError::TransportError)
     }
+
+    pub async fn async_send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
+        let email = self.build_message(recipient, email)?;
+
+        self.backend
+            .send(email)
+            .await
+            .map_err(EmailError::TransportError)
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -168,7 +177,6 @@ pub struct StoredEmail {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tasks::spawn_blocking;
 
     struct TestEmail;
 
@@ -184,23 +192,17 @@ mod tests {
 
     #[tokio::test]
     async fn sending_to_invalid_email_fails() {
-        let fut = spawn_blocking(|| {
-            let emails = Emails::new_in_memory();
+        let emails = Emails::new_in_memory();
 
-            let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
-            emails.send(address, TestEmail).map_err(anyhow::Error::from)
-        });
-        assert_err!(fut.await);
+        let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
+        assert_err!(emails.async_send(address, TestEmail).await);
     }
 
     #[tokio::test]
     async fn sending_to_valid_email_succeeds() {
-        let fut = spawn_blocking(|| {
-            let emails = Emails::new_in_memory();
+        let emails = Emails::new_in_memory();
 
-            let address = "someone@example.com";
-            emails.send(address, TestEmail).map_err(anyhow::Error::from)
-        });
-        assert_ok!(fut.await);
+        let address = "someone@example.com";
+        assert_ok!(emails.async_send(address, TestEmail).await);
     }
 }
