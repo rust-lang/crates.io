@@ -3,11 +3,10 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::QueryResult;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use tokio::runtime::Handle;
 
 use crate::app::AppState;
 use crate::email::Emails;
@@ -16,7 +15,7 @@ use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::tasks::spawn_blocking;
-use crate::util::diesel::{is_read_only_error, Conn};
+use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
@@ -90,54 +89,48 @@ pub async fn authorize(
     session: SessionExtension,
     req: Parts,
 ) -> AppResult<Json<EncodableMe>> {
+    // Make sure that the state we just got matches the session state that we
+    // should have issued earlier.
+    let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
+    if !session_state.is_some_and(|state| query.state.secret() == state.secret()) {
+        return Err(bad_request("invalid state parameter"));
+    }
+
+    // Fetch the access token from GitHub using the code we just got
     let app_clone = app.clone();
     let request_log = req.request_log().clone();
-
-    let conn = app.db_write().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        // Make sure that the state we just got matches the session state that we
-        // should have issued earlier.
-        let session_state = session.remove("github_oauth_state").map(CsrfToken::new);
-        if !session_state.is_some_and(|state| query.state.secret() == state.secret()) {
-            return Err(bad_request("invalid state parameter"));
-        }
-
-        // Fetch the access token from GitHub using the code we just got
-        let token = app
+    let token = spawn_blocking(move || {
+        app_clone
             .github_oauth
             .exchange_code(query.code)
             .request(http_client)
             .map_err(|err| {
                 request_log.add("cause", err);
                 server_error("Error obtaining token")
-            })?;
-
-        let token = token.access_token();
-
-        // Fetch the user info from GitHub using the access token we just got and create a user record
-        let ghuser = Handle::current().block_on(app.github.current_user(token))?;
-        let user = save_user_to_database(&ghuser, token.secret(), &app.emails, conn)?;
-
-        // Log in by setting a cookie and the middleware authentication
-        session.insert("user_id".to_string(), user.id.to_string());
-
-        Ok(())
+            })
     })
     .await?;
 
-    super::me::me(app_clone, req).await
+    let token = token.access_token();
+
+    // Fetch the user info from GitHub using the access token we just got and create a user record
+    let ghuser = app.github.current_user(token).await?;
+
+    let mut conn = app.db_write().await?;
+    let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &mut conn).await?;
+
+    // Log in by setting a cookie and the middleware authentication
+    session.insert("user_id".to_string(), user.id.to_string());
+
+    super::me::me(app, req).await
 }
 
-fn save_user_to_database(
+async fn save_user_to_database(
     user: &GithubUser,
     access_token: &str,
     emails: &Emails,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> AppResult<User> {
-    use diesel::prelude::*;
-
     let new_user = NewUser::new(
         user.id,
         &user.login,
@@ -146,23 +139,30 @@ fn save_user_to_database(
         access_token,
     );
 
-    match new_user.create_or_update(user.email.as_deref(), emails, conn) {
+    match new_user
+        .create_or_update(user.email.as_deref(), emails, conn)
+        .await
+    {
         Ok(user) => Ok(user),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
-            find_user_by_gh_id(conn, user.id)?.ok_or_else(|| error.into())
+            find_user_by_gh_id(conn, user.id)
+                .await?
+                .ok_or_else(|| error.into())
         }
         Err(error) => Err(error.into()),
     }
 }
 
-fn find_user_by_gh_id(conn: &mut impl Conn, gh_id: i32) -> QueryResult<Option<User>> {
+async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
     use diesel::prelude::*;
+    use diesel_async::RunQueryDsl;
 
     users::table
         .filter(users::gh_id.eq(gh_id))
         .first(conn)
+        .await
         .optional()
 }
 
@@ -175,12 +175,16 @@ pub async fn logout(session: SessionExtension) -> Json<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
 
-    #[test]
-    fn gh_user_with_invalid_email_doesnt_fail() {
+    #[tokio::test]
+    async fn gh_user_with_invalid_email_doesnt_fail() {
         let emails = Emails::new_in_memory();
-        let (_test_db, conn) = &mut test_db_connection();
+
+        let test_db = TestDatabase::new();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+
         let gh_user = GithubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
             name: Some("My Name".into()),
@@ -188,7 +192,7 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, conn);
+        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, &mut conn).await;
 
         assert!(
             result.is_ok(),

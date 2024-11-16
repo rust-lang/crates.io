@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use secrecy::SecretString;
 
 use crate::app::App;
@@ -171,66 +172,72 @@ impl<'a> NewUser<'a> {
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub fn create_or_update(
+    pub async fn create_or_update(
         &self,
         email: Option<&'a str>,
         emails: &Emails,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
     ) -> QueryResult<User> {
         use diesel::dsl::sql;
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         conn.transaction(|conn| {
-            let user: User = insert_into(users::table)
-                .values(self)
-                // We need the `WHERE gh_id > 0` condition here because `gh_id` set
-                // to `-1` indicates that we were unable to find a GitHub ID for
-                // the associated GitHub login at the time that we backfilled
-                // GitHub IDs. Therefore, there are multiple records in production
-                // that have a `gh_id` of `-1` so we need to exclude those when
-                // considering uniqueness of `gh_id` values. The `> 0` condition isn't
-                // necessary for most fields in the database to be used as a conflict
-                // target :)
-                .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
-                .do_update()
-                .set((
-                    users::gh_login.eq(excluded(users::gh_login)),
-                    users::name.eq(excluded(users::name)),
-                    users::gh_avatar.eq(excluded(users::gh_avatar)),
-                    users::gh_access_token.eq(excluded(users::gh_access_token)),
-                ))
-                .get_result(conn)?;
+            async move {
+                let user: User = insert_into(users::table)
+                    .values(self)
+                    // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+                    // to `-1` indicates that we were unable to find a GitHub ID for
+                    // the associated GitHub login at the time that we backfilled
+                    // GitHub IDs. Therefore, there are multiple records in production
+                    // that have a `gh_id` of `-1` so we need to exclude those when
+                    // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+                    // necessary for most fields in the database to be used as a conflict
+                    // target :)
+                    .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
+                    .do_update()
+                    .set((
+                        users::gh_login.eq(excluded(users::gh_login)),
+                        users::name.eq(excluded(users::name)),
+                        users::gh_avatar.eq(excluded(users::gh_avatar)),
+                        users::gh_access_token.eq(excluded(users::gh_access_token)),
+                    ))
+                    .get_result(conn)
+                    .await?;
 
-            // To send the user an account verification email
-            if let Some(user_email) = email {
-                let new_email = NewEmail {
-                    user_id: user.id,
-                    email: user_email,
-                };
-
-                let token = insert_into(emails::table)
-                    .values(&new_email)
-                    .on_conflict_do_nothing()
-                    .returning(emails::token)
-                    .get_result::<String>(conn)
-                    .optional()?
-                    .map(SecretString::from);
-
-                if let Some(token) = token {
-                    // Swallows any error. Some users might insert an invalid email address here.
-                    let email = UserConfirmEmail {
-                        user_name: &user.gh_login,
-                        domain: &emails.domain,
-                        token,
+                // To send the user an account verification email
+                if let Some(user_email) = email {
+                    let new_email = NewEmail {
+                        user_id: user.id,
+                        email: user_email,
                     };
-                    let _ = emails.send(user_email, email);
-                }
-            }
 
-            Ok(user)
+                    let token = insert_into(emails::table)
+                        .values(&new_email)
+                        .on_conflict_do_nothing()
+                        .returning(emails::token)
+                        .get_result::<String>(conn)
+                        .await
+                        .optional()?
+                        .map(SecretString::from);
+
+                    if let Some(token) = token {
+                        // Swallows any error. Some users might insert an invalid email address here.
+                        let email = UserConfirmEmail {
+                            user_name: &user.gh_login,
+                            domain: &emails.domain,
+                            token,
+                        };
+                        let _ = emails.async_send(user_email, email).await;
+                    }
+                }
+
+                Ok(user)
+            }
+            .scope_boxed()
         })
+        .await
     }
 }
