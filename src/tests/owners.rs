@@ -12,6 +12,7 @@ use crate::{
     },
 };
 
+use crate::schema::users;
 use chrono::{Duration, Utc};
 use diesel::prelude::*;
 use http::StatusCode;
@@ -724,15 +725,18 @@ async fn inactive_users_dont_get_invitations() {
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
-    NewUser {
+    let user = NewUser {
         gh_id: -1,
         gh_login: invited_gh_login,
         name: None,
         gh_avatar: None,
         gh_access_token: "some random token",
-    }
-    .create_or_update(None, &app.as_inner().emails, &mut conn)
-    .unwrap();
+    };
+
+    diesel::insert_into(users::table)
+        .values(user)
+        .execute(&mut conn)
+        .unwrap();
 
     CrateBuilder::new(krate_name, owner.id).expect_build(&mut conn);
 
