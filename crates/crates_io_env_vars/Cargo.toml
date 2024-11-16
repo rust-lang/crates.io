@@ -12,4 +12,4 @@ anyhow = "=1.0.93"
 dotenvy = "=0.15.7"
 
 [dev-dependencies]
-claims = "=0.7.1"
+claims = "=0.8.0"
