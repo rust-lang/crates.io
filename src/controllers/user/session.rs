@@ -138,24 +138,23 @@ fn save_user_to_database(
 ) -> AppResult<User> {
     use diesel::prelude::*;
 
-    NewUser::new(
+    let new_user = NewUser::new(
         user.id,
         &user.login,
         user.name.as_deref(),
         user.avatar_url.as_deref(),
         access_token,
-    )
-    .create_or_update(user.email.as_deref(), emails, conn)
-    .or_else(|e| {
-        // If we're in read only mode, we can't update their details
-        // just look for an existing user
-        if is_read_only_error(&e) {
-            find_user_by_gh_id(conn, user.id)?.ok_or(e)
-        } else {
-            Err(e)
+    );
+
+    match new_user.create_or_update(user.email.as_deref(), emails, conn) {
+        Ok(user) => Ok(user),
+        Err(error) if is_read_only_error(&error) => {
+            // If we're in read only mode, we can't update their details
+            // just look for an existing user
+            find_user_by_gh_id(conn, user.id)?.ok_or_else(|| error.into())
         }
-    })
-    .map_err(Into::into)
+        Err(error) => Err(error.into()),
+    }
 }
 
 fn find_user_by_gh_id(conn: &mut impl Conn, gh_id: i32) -> QueryResult<Option<User>> {
