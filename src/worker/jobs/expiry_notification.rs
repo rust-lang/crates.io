@@ -167,7 +167,6 @@ The crates.io team"#,
 mod tests {
     use super::*;
     use crate::models::NewUser;
-    use crate::tasks::spawn_blocking;
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
     use diesel::dsl::IntervalDsl;
@@ -176,20 +175,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_expiry_notification() -> anyhow::Result<()> {
-        let emails = Emails::new_in_memory();
-
         let test_db = TestDatabase::new();
         let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
 
         // Set up a user and a token that is about to expire.
-        let mut sync_conn = test_db.connect();
-        let user = spawn_blocking(move || {
-            let user = NewUser::new(0, "a", None, None, "token");
-            let emails = Emails::new_in_memory();
-            let user = user.create_or_update(Some("testuser@test.com"), &emails, &mut sync_conn)?;
-            Ok::<_, anyhow::Error>(user)
-        })
-        .await?;
+        let user = NewUser::new(0, "a", None, None, "token");
+        let emails = Emails::new_in_memory();
+        let user = user
+            .create_or_update(Some("testuser@test.com"), &emails, &mut conn)
+            .await?;
 
         let token = PlainToken::generate();
 
@@ -219,6 +213,8 @@ mod tests {
                 .get_result(&mut conn)
                 .await?;
         }
+
+        let emails = Emails::new_in_memory();
 
         // Check that the token is about to expire.
         check(&emails, &mut conn).await?;

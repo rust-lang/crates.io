@@ -1,5 +1,4 @@
 use crate::models::{ApiToken, Email, NewUser, User};
-use crate::tasks::spawn_blocking;
 use crate::tests::{
     new_user,
     util::{MockCookieUser, RequestHelper},
@@ -7,6 +6,7 @@ use crate::tests::{
 };
 use crate::util::token::HashedToken;
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use secrecy::ExposeSecret;
 use serde_json::json;
@@ -23,21 +23,20 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn updating_existing_user_doesnt_change_api_token() {
     let (app, _, user, token) = TestApp::init().with_token();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
     // Reuse gh_id but use new gh_login and gh_access_token
     assert_ok!(
-        NewUser::new(gh_id, "bar", None, None, "bar_token").create_or_update(
-            None,
-            &app.as_inner().emails,
-            &mut conn
-        )
+        NewUser::new(gh_id, "bar", None, None, "bar_token")
+            .create_or_update(None, &app.as_inner().emails, &mut conn)
+            .await
     );
 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token.expose_secret()));
+    let mut conn = app.db_conn();
     let api_token = assert_ok!(ApiToken::find_by_api_token(&mut conn, &hashed_token));
     let user = assert_ok!(User::find(&mut conn, api_token.user_id));
 
@@ -57,15 +56,16 @@ async fn updating_existing_user_doesnt_change_api_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_without_email_does_not_overwrite_email() {
     let (app, _) = TestApp::init().empty();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub with an account that has no email.
     // Because faking GitHub is terrible, call what GithubUser::save_to_database does directly.
     // Don't use app.db_new_user because it adds a verified email.
-    let u = new_user("arbitrary_username");
-    let u = u
+    let u = new_user("arbitrary_username")
         .create_or_update(None, &app.as_inner().emails, &mut conn)
+        .await
         .unwrap();
+
     let user_without_github_email = MockCookieUser::new(&app, u);
     let user_without_github_email_model = user_without_github_email.as_model();
 
@@ -87,6 +87,7 @@ async fn github_without_email_does_not_overwrite_email() {
     };
     let u = u
         .create_or_update(None, &app.as_inner().emails, &mut conn)
+        .await
         .unwrap();
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -101,12 +102,14 @@ async fn github_with_email_does_not_overwrite_email() {
     use crate::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
+
     let model = user.as_model();
 
     let original_email: String = Email::belonging_to(model)
         .select(emails::email)
         .first(&mut conn)
+        .await
         .unwrap();
 
     let new_github_email = "new-email-in-github@example.com";
@@ -121,12 +124,10 @@ async fn github_with_email_does_not_overwrite_email() {
         // the rest of the fields are arbitrary
         ..new_user("arbitrary_username")
     };
-    let u = spawn_blocking(move || {
-        let u = u.create_or_update(Some(new_github_email), &emails, &mut conn)?;
-        Ok::<_, anyhow::Error>(u)
-    })
-    .await
-    .unwrap();
+    let u = u
+        .create_or_update(Some(new_github_email), &emails, &mut conn)
+        .await
+        .unwrap();
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
@@ -162,19 +163,17 @@ async fn test_confirm_user_email() {
     use crate::schema::emails;
 
     let (app, _) = TestApp::init().empty();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
     let email = "potato2@example.com";
 
     let emails = app.as_inner().emails.clone();
-    let (u, mut conn) = spawn_blocking(move || {
-        let u = new_user("arbitrary_username").create_or_update(Some(email), &emails, &mut conn)?;
-        Ok::<_, anyhow::Error>((u, conn))
-    })
-    .await
-    .unwrap();
+    let u = new_user("arbitrary_username")
+        .create_or_update(Some(email), &emails, &mut conn)
+        .await
+        .unwrap();
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -182,6 +181,7 @@ async fn test_confirm_user_email() {
     let email_token: String = Email::belonging_to(user_model)
         .select(emails::token)
         .first(&mut conn)
+        .await
         .unwrap();
 
     user.confirm_email(&email_token).await;
@@ -202,25 +202,24 @@ async fn test_existing_user_email() {
     use diesel::update;
 
     let (app, _) = TestApp::init().empty();
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
     let email = "potahto@example.com";
 
     let emails = app.as_inner().emails.clone();
-    let (u, mut conn) = spawn_blocking(move || {
-        let u = new_user("arbitrary_username").create_or_update(Some(email), &emails, &mut conn)?;
-        Ok::<_, anyhow::Error>((u, conn))
-    })
-    .await
-    .unwrap();
+    let u = new_user("arbitrary_username")
+        .create_or_update(Some(email), &emails, &mut conn)
+        .await
+        .unwrap();
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
         // `NULL` in the `token_generated_at` column.
         .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
         .execute(&mut conn)
+        .await
         .unwrap();
     let user = MockCookieUser::new(&app, u);
 
