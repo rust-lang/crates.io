@@ -2,9 +2,7 @@ use crate::app::AppState;
 use crate::email::Email;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, AppResult, BoxedAppError};
 use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
@@ -12,7 +10,7 @@ use axum::body::Bytes;
 use axum::Json;
 use base64::{engine::general_purpose, Engine};
 use crates_io_github::GitHubPublicKey;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use http::HeaderMap;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
@@ -129,12 +127,12 @@ struct GitHubSecretAlert {
 }
 
 /// Revokes an API token and notifies the token owner
-fn alert_revoke_token(
+async fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
-    use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
     let hashed_token = HashedToken::hash(&alert.token);
 
@@ -143,6 +141,7 @@ fn alert_revoke_token(
         .select(ApiToken::as_select())
         .filter(api_tokens::token.eq(hashed_token))
         .get_result::<ApiToken>(conn)
+        .await
         .optional()?;
 
     let Some(token) = token else {
@@ -160,14 +159,15 @@ fn alert_revoke_token(
 
     diesel::update(&token)
         .set(api_tokens::revoked.eq(true))
-        .execute(conn)?;
+        .execute(conn)
+        .await?;
 
     warn!(
         token_id = %token.id, user_id = %token.user_id,
         "Active API token received and revoked (true positive)",
     );
 
-    if let Err(error) = send_notification_email(&token, alert, state, conn) {
+    if let Err(error) = send_notification_email(&token, alert, state, conn).await {
         warn!(
             token_id = %token.id, user_id = %token.user_id, ?error,
             "Failed to send email notification",
@@ -177,14 +177,17 @@ fn alert_revoke_token(
     Ok(GitHubSecretAlertFeedbackLabel::TruePositive)
 }
 
-fn send_notification_email(
+async fn send_notification_email(
     token: &ApiToken,
     alert: &GitHubSecretAlert,
     state: &AppState,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> anyhow::Result<()> {
-    let user = User::find(conn, token.user_id).context("Failed to find user")?;
-    let Some(recipient) = user.email(conn)? else {
+    let user = User::async_find(conn, token.user_id)
+        .await
+        .context("Failed to find user")?;
+
+    let Some(recipient) = user.async_email(conn).await? else {
         return Err(anyhow!("No address found"));
     };
 
@@ -196,7 +199,7 @@ fn send_notification_email(
         url: &alert.url,
     };
 
-    state.emails.send(&recipient, email)?;
+    state.emails.async_send(&recipient, email).await?;
 
     Ok(())
 }
@@ -268,25 +271,19 @@ pub async fn verify(
     let alerts: Vec<GitHubSecretAlert> = json::from_slice(&body)
         .map_err(|e| bad_request(format!("invalid secret alert request: {e:?}")))?;
 
-    let conn = state.db_write().await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = state.db_write().await?;
 
-        let feedback = alerts
-            .into_iter()
-            .map(|alert| {
-                let label = alert_revoke_token(&state, &alert, conn)?;
-                Ok(GitHubSecretAlertFeedback {
-                    token_raw: alert.token,
-                    token_type: alert.r#type,
-                    label,
-                })
-            })
-            .collect::<QueryResult<_>>()?;
+    let mut feedback = Vec::with_capacity(alerts.len());
+    for alert in alerts {
+        let label = alert_revoke_token(&state, &alert, &mut conn).await?;
+        feedback.push(GitHubSecretAlertFeedback {
+            token_raw: alert.token,
+            token_type: alert.r#type,
+            label,
+        });
+    }
 
-        Ok(Json(feedback))
-    })
-    .await
+    Ok(Json(feedback))
 }
 
 #[cfg(test)]
