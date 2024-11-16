@@ -5,7 +5,7 @@ use axum_extra::response::ErasedJson;
 use diesel::QueryResult;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
-use oauth2::reqwest::http_client;
+use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 
 use crate::app::AppState;
@@ -14,7 +14,6 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
@@ -97,19 +96,15 @@ pub async fn authorize(
     }
 
     // Fetch the access token from GitHub using the code we just got
-    let app_clone = app.clone();
-    let request_log = req.request_log().clone();
-    let token = spawn_blocking(move || {
-        app_clone
-            .github_oauth
-            .exchange_code(query.code)
-            .request(http_client)
-            .map_err(|err| {
-                request_log.add("cause", err);
-                server_error("Error obtaining token")
-            })
-    })
-    .await?;
+    let token = app
+        .github_oauth
+        .exchange_code(query.code)
+        .request_async(async_http_client)
+        .await
+        .map_err(|err| {
+            req.request_log().add("cause", err);
+            server_error("Error obtaining token")
+        })?;
 
     let token = token.access_token();
 
