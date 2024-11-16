@@ -113,6 +113,17 @@ impl User {
             .first(conn)
             .optional()
     }
+
+    /// Queries for the email belonging to a particular user
+    pub async fn async_email(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<String>> {
+        use diesel_async::RunQueryDsl;
+
+        Email::belonging_to(self)
+            .select(emails::email)
+            .first(conn)
+            .await
+            .optional()
+    }
 }
 
 /// Represents a new user record insertable to the `users` table
