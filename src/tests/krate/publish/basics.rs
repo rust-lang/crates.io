@@ -38,7 +38,7 @@ async fn new_krate() {
         .unwrap();
     assert_eq!(email, "foo@example.com");
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]

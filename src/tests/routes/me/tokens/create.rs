@@ -83,7 +83,7 @@ async fn create_token_success() {
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -168,7 +168,7 @@ async fn create_token_with_scopes() {
         Some(vec![EndpointScope::PublishUpdate])
     );
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -209,7 +209,7 @@ async fn create_token_with_null_scopes() {
     assert_eq!(tokens[0].crate_scopes, None);
     assert_eq!(tokens[0].endpoint_scopes, None);
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -276,5 +276,5 @@ async fn create_token_with_expiry_date() {
         ".api_token.token" => insta::api_token_redaction(),
     });
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }

@@ -99,6 +99,6 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
-        assert_snapshot!(app.emails_snapshot());
+        assert_snapshot!(app.emails_snapshot().await);
     }
 }

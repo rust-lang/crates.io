@@ -94,7 +94,7 @@ async fn github_secret_alert_revokes_token() {
     assert_that!(tokens, len(eq(1)));
 
     // Ensure exactly one email was sent
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -348,7 +348,7 @@ async fn publish_owned() {
         .await
         .good();
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 /// Test trying to change owners (when only on an owning team)

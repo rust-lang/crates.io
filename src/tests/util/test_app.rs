@@ -184,7 +184,7 @@ impl TestApp {
         emails.into_iter().map(|(_, email)| email).collect()
     }
 
-    pub fn emails_snapshot(&self) -> String {
+    pub async fn emails_snapshot(&self) -> String {
         static EMAIL_HEADER_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
 
