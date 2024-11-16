@@ -21,7 +21,7 @@ snapshot_kind: text
         <item>
             <title>New crate created: baz</title>
             <link>https://crates.io/crates/baz</link>
-            <description><![CDATA[does it handle XML? &lt;item&gt;]]></description>
+            <description><![CDATA[does it handle XML? <item>]]></description>
             <guid>https://crates.io/crates/baz</guid>
             <pubDate>Fri, 21 Jun 2024 17:01:33 +0000</pubDate>
             <crates:name>baz</crates:name>

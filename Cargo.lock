@@ -1087,7 +1087,6 @@ dependencies = [
  "paste",
  "postgres-native-tls",
  "prometheus",
- "quick-xml 0.37.0",
  "rand",
  "regex",
  "reqwest 0.12.9",
