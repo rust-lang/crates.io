@@ -137,7 +137,7 @@ async fn new_crate_owner() {
     let user2 = app.db_new_user("Bar");
     token.add_named_owner("foo_owner", "BAR").await.good();
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 
     // accept invitation for user to be added as owner
     let krate: Crate = Crate::by_name("foo_owner").first(&mut conn).unwrap();
@@ -159,7 +159,7 @@ async fn new_crate_owner() {
         .await
         .good();
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 async fn create_and_add_owner(
@@ -221,7 +221,7 @@ async fn modify_multiple_owners() {
     let user2 = create_and_add_owner(&app, &token, "user2", &krate).await;
     let user3 = create_and_add_owner(&app, &token, "user3", &krate).await;
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 
     // Deleting all owners is not allowed.
     let response = token
@@ -254,7 +254,7 @@ async fn modify_multiple_owners() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple","ok":true}"#);
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 
     user2
         .accept_ownership_invitation(&krate.name, krate.id)
@@ -569,7 +569,7 @@ async fn test_accept_invitation_by_mail() {
         .good();
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.emails());
+    let invite_token = extract_token_from_invite_email(&app.emails().await);
 
     // Accept the invitation anonymously with a token
     anon.accept_ownership_invitation_by_token(&invite_token)
@@ -688,7 +688,7 @@ async fn test_accept_expired_invitation_by_mail() {
     expire_invitation(&app, krate.id);
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.emails());
+    let invite_token = extract_token_from_invite_email(&app.emails().await);
 
     // Try to accept the invitation, and ensure it fails.
     let resp = anon

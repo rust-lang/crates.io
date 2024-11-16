@@ -47,14 +47,14 @@ async fn test_sync_admins_job() {
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
     assert_eq!(admins, expected_admins);
 
-    assert_snapshot!(app.emails_snapshot());
+    assert_snapshot!(app.emails_snapshot().await);
 
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
     SyncAdmins.async_enqueue(&mut conn).await.unwrap();
     app.run_pending_background_jobs().await;
 
-    assert_eq!(app.emails().len(), 2);
+    assert_eq!(app.emails().await.len(), 2);
 }
 
 fn mock_permission(people: Vec<Person>) -> Permission {

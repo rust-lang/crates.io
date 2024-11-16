@@ -179,12 +179,12 @@ impl TestApp {
             .collect()
     }
 
-    pub fn emails(&self) -> Vec<String> {
-        let emails = self.as_inner().emails.mails_in_memory().unwrap();
+    pub async fn emails(&self) -> Vec<String> {
+        let emails = self.as_inner().emails.mails_in_memory().await.unwrap();
         emails.into_iter().map(|(_, email)| email).collect()
     }
 
-    pub fn emails_snapshot(&self) -> String {
+    pub async fn emails_snapshot(&self) -> String {
         static EMAIL_HEADER_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"(Message-ID|Date): [^\r\n]+\r\n").unwrap());
 
@@ -200,6 +200,7 @@ impl TestApp {
         static SEPARATOR: &str = "\n----------------------------------------\n\n";
 
         self.emails()
+            .await
             .into_iter()
             .map(|email| {
                 let email = EMAIL_HEADER_REGEX.replace_all(&email, "");

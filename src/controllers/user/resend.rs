@@ -3,7 +3,6 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::Email;
-use crate::tasks::spawn_blocking;
 use crate::util::errors::AppResult;
 use crate::util::errors::{bad_request, BoxedAppError};
 use axum::extract::Path;
@@ -38,19 +37,17 @@ pub async fn regenerate_token_and_send(
                 .optional()?
                 .ok_or_else(|| bad_request("Email could not be found"))?;
 
-            spawn_blocking(move || {
-                let email1 = UserConfirmEmail {
-                    user_name: &auth.user().gh_login,
-                    domain: &state.emails.domain,
-                    token: email.token,
-                };
+            let email1 = UserConfirmEmail {
+                user_name: &auth.user().gh_login,
+                domain: &state.emails.domain,
+                token: email.token,
+            };
 
-                state
-                    .emails
-                    .send(&email.email, email1)
-                    .map_err(BoxedAppError::from)
-            })
-            .await
+            state
+                .emails
+                .async_send(&email.email, email1)
+                .await
+                .map_err(BoxedAppError::from)
         }
         .scope_boxed()
     })
@@ -74,7 +71,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
-        assert_eq!(app.emails().len(), 0);
+        assert_eq!(app.emails().await.len(), 0);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -87,7 +84,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
-        assert_eq!(app.emails().len(), 0);
+        assert_eq!(app.emails().await.len(), 0);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -99,6 +96,6 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
-        assert_snapshot!(app.emails_snapshot());
+        assert_snapshot!(app.emails_snapshot().await);
     }
 }

@@ -1,6 +1,5 @@
 use crate::email::Email;
 use crate::schema::{emails, users};
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -142,27 +141,22 @@ impl BackgroundJob for SyncAdmins {
 
         let email = AdminAccountEmail::new(added_admins, removed_admins);
 
-        spawn_blocking(move || {
-            for database_admin in &database_admins {
-                let (_, _, email_address) = database_admin;
-                if let Some(email_address) = email_address {
-                    if let Err(error) = ctx.emails.send(email_address, email.clone()) {
-                        warn!(
-                            "Failed to send email to admin {} ({}, github_id: {}): {}",
-                            database_admin.1, email_address, database_admin.0, error
-                        );
-                    }
-                } else {
+        for database_admin in &database_admins {
+            let (_, _, email_address) = database_admin;
+            if let Some(email_address) = email_address {
+                if let Err(error) = ctx.emails.async_send(email_address, email.clone()).await {
                     warn!(
-                        "No email address found for admin {} (github_id: {})",
-                        database_admin.1, database_admin.0
+                        "Failed to send email to admin {} ({}, github_id: {}): {}",
+                        database_admin.1, email_address, database_admin.0, error
                     );
                 }
+            } else {
+                warn!(
+                    "No email address found for admin {} (github_id: {})",
+                    database_admin.1, database_admin.0
+                );
             }
-
-            Ok::<_, anyhow::Error>(())
-        })
-        .await?;
+        }
 
         Ok(())
     }

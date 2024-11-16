@@ -30,7 +30,7 @@ async fn new_wrong_token() {
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
     assert_that!(app.stored_files().await, empty());
-    assert_that!(app.emails(), empty());
+    assert_that!(app.emails().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -50,5 +50,5 @@ async fn new_krate_wrong_user() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 
     assert_that!(app.stored_files().await, empty());
-    assert_that!(app.emails(), empty());
+    assert_that!(app.emails().await, empty());
 }

@@ -21,7 +21,7 @@ async fn new_krate_without_any_email_fails() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address."}]}"#);
     assert_that!(app.stored_files().await, empty());
-    assert_that!(app.emails(), empty());
+    assert_that!(app.emails().await, empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -41,5 +41,5 @@ async fn new_krate_with_unverified_email_fails() {
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"A verified email address is required to publish crates to crates.io. Visit https://crates.io/settings/profile to set and verify your email address."}]}"#);
     assert_that!(app.stored_files().await, empty());
-    assert_that!(app.emails(), empty());
+    assert_that!(app.emails().await, empty());
 }
