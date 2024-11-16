@@ -1,4 +1,4 @@
-use crate::schema::crate_owners;
+use crate::schema::{crate_owners, users};
 use crate::tests::builders::CrateBuilder;
 use crate::tests::new_user;
 use crate::tests::util::{RequestHelper, TestApp};
@@ -110,11 +110,13 @@ async fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user();
     let mut conn = app.db_conn();
 
-    let u = new_user("arbitrary_username")
-        .create_or_update(None, &app.as_inner().emails, &mut conn)
+    let user_id = diesel::insert_into(users::table)
+        .values(new_user("arbitrary_username"))
+        .returning(users::id)
+        .get_result(&mut conn)
         .unwrap();
 
-    let not_my_crate = CrateBuilder::new("test_package", u.id).expect_build(&mut conn);
+    let not_my_crate = CrateBuilder::new("test_package", user_id).expect_build(&mut conn);
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: not_my_crate.id,
