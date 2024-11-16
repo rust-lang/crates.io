@@ -15,8 +15,8 @@ use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
-use crate::util::errors::{bad_request, server_error, AppResult, BoxedAppError, ReadOnlyMode};
+use crate::util::diesel::{is_read_only_error, Conn};
+use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 
@@ -145,11 +145,10 @@ fn save_user_to_database(
         access_token,
     )
     .create_or_update(user.email.as_deref(), emails, conn)
-    .map_err(Into::into)
-    .or_else(|e: BoxedAppError| {
+    .or_else(|e| {
         // If we're in read only mode, we can't update their details
         // just look for an existing user
-        if e.is::<ReadOnlyMode>() {
+        if is_read_only_error(&e) {
             users::table
                 .filter(users::gh_id.eq(user.id))
                 .first(conn)
@@ -159,6 +158,7 @@ fn save_user_to_database(
             Err(e)
         }
     })
+    .map_err(Into::into)
 }
 
 /// Handles the `DELETE /api/private/session` route.
