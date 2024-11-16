@@ -2,6 +2,7 @@ use axum::extract::{FromRequestParts, Query};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use diesel::QueryResult;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use oauth2::reqwest::http_client;
@@ -149,16 +150,21 @@ fn save_user_to_database(
         // If we're in read only mode, we can't update their details
         // just look for an existing user
         if is_read_only_error(&e) {
-            users::table
-                .filter(users::gh_id.eq(user.id))
-                .first(conn)
-                .optional()?
-                .ok_or(e)
+            find_user_by_gh_id(conn, user.id)?.ok_or(e)
         } else {
             Err(e)
         }
     })
     .map_err(Into::into)
+}
+
+fn find_user_by_gh_id(conn: &mut impl Conn, gh_id: i32) -> QueryResult<Option<User>> {
+    use diesel::prelude::*;
+
+    users::table
+        .filter(users::gh_id.eq(gh_id))
+        .first(conn)
+        .optional()
 }
 
 /// Handles the `DELETE /api/private/session` route.
