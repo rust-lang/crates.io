@@ -10,15 +10,16 @@ use crate::{app::AppState, models::krate::OwnerAddError};
 use crate::{auth::AuthCheck, email::Email};
 use axum::extract::Path;
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
 use secrecy::{ExposeSecret, SecretString};
-use serde_json::Value;
 use tokio::runtime::Handle;
 
 /// Handles the `GET /crates/:crate_id/owners` route.
-pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = state.db_read().await?;
@@ -36,11 +37,11 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "users": owners })))
+    Ok(json!({ "users": owners }))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
-pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = state.db_read().await?;
@@ -56,11 +57,11 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(Json(json!({ "teams": owners })))
+    Ok(json!({ "teams": owners }))
 }
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
-pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
@@ -77,7 +78,7 @@ pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppR
             .map(Owner::into)
             .collect::<Vec<EncodableOwner>>();
 
-        Ok(Json(json!({ "users": owners })))
+        Ok(json!({ "users": owners }))
     })
     .await
 }
@@ -88,7 +89,7 @@ pub async fn add_owners(
     Path(crate_name): Path<String>,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     modify_owners(app, crate_name, parts, body, true).await
 }
 
@@ -98,7 +99,7 @@ pub async fn remove_owners(
     Path(crate_name): Path<String>,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     modify_owners(app, crate_name, parts, body, false).await
 }
 
@@ -114,7 +115,7 @@ async fn modify_owners(
     parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     let logins = body.owners;
 
     // Bound the number of invites processed per request to limit the cost of
@@ -243,7 +244,7 @@ async fn modify_owners(
             }
         }
 
-        Ok(Json(json!({ "ok": true, "msg": comma_sep_msg })))
+        Ok(json!({ "msg": comma_sep_msg, "ok": true }))
     })
     .await
 }

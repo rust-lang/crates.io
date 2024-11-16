@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use axum::response::IntoResponse;
-use axum::Json;
+use axum_extra::json;
 
 /// Returns the JSON representation of the current deployed commit sha.
 ///
@@ -12,9 +12,9 @@ pub async fn show_deployed_sha(state: AppState) -> impl IntoResponse {
     let deployed_sha =
         dotenvy::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
 
-    Json(json!({
+    json!({
         "deployed_sha": &deployed_sha[..],
         "commit": &deployed_sha[..],
         "read_only": read_only,
-    }))
+    })
 }

@@ -3,9 +3,10 @@ use crate::util::diesel::prelude::*;
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::app::AppState;
@@ -65,7 +66,7 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 }
 
 /// Handles the `GET /me/updates` route.
-pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
@@ -97,10 +98,10 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             })
             .collect::<Vec<_>>();
 
-        Ok(Json(json!({
+        Ok(json!({
             "versions": versions,
             "meta": { "more": more },
-        })))
+        }))
     })
     .await
 }

@@ -1,9 +1,9 @@
 use axum::extract::Path;
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use serde_json::Value;
 
 use crate::app::AppState;
 use crate::models::{CrateOwner, OwnerKind, User};
@@ -13,7 +13,7 @@ use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
 
 /// Handles the `GET /users/:user_id` route.
-pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use crate::schema::users::dsl::{gh_login, id, users};
@@ -25,11 +25,11 @@ pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<J
         .first(&mut conn)
         .await?;
 
-    Ok(Json(json!({ "user": EncodablePublicUser::from(user) })))
+    Ok(json!({ "user": EncodablePublicUser::from(user) }))
 }
 
 /// Handles the `GET /users/:user_id/stats` route.
-pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<Json<Value>> {
+pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use diesel::dsl::sum;
@@ -45,5 +45,5 @@ pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<Json<
         .map(|d| d.to_u64().unwrap_or(u64::MAX))
         .unwrap_or(0);
 
-    Ok(Json(json!({ "total_downloads": data })))
+    Ok(json!({ "total_downloads": data }))
 }

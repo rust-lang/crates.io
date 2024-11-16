@@ -5,17 +5,17 @@ use crate::schema::{
 };
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel::{
     BelongingToDsl, ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl,
     SelectableHelper,
 };
 use diesel_async::AsyncPgConnection;
 use diesel_async::RunQueryDsl;
-use serde_json::Value;
 
 /// Handles the `GET /summary` route.
-pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
+pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     let popular_categories = Category::toplevel(&mut conn, "crates", 10, 0)
@@ -129,7 +129,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         .map(Keyword::into)
         .collect::<Vec<EncodableKeyword>>();
 
-    Ok(Json(json!({
+    Ok(json!({
         "num_downloads": num_downloads,
         "num_crates": num_crates,
         "new_crates": encode_crates(&mut conn, new_crates).await?,
@@ -138,7 +138,7 @@ pub async fn summary(state: AppState) -> AppResult<Json<Value>> {
         "just_updated": encode_crates(&mut conn, just_updated).await?,
         "popular_keywords": popular_keywords,
         "popular_categories": popular_categories,
-    })))
+    }))
 }
 
 type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);

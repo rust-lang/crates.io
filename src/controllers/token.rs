@@ -12,13 +12,14 @@ use crate::util::errors::{bad_request, AppResult};
 use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use chrono::NaiveDateTime;
 use diesel::data_types::PgInterval;
 use diesel::dsl::{now, IntervalDsl};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use http::StatusCode;
-use serde_json::Value;
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -40,7 +41,7 @@ pub async fn list(
     app: AppState,
     Query(params): Query<GetParams>,
     req: Parts,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = app.db_read_prefer_primary().await?;
@@ -59,7 +60,7 @@ pub async fn list(
         .load(&mut conn)
         .await?;
 
-    Ok(Json(json!({ "api_tokens": tokens })))
+    Ok(json!({ "api_tokens": tokens }))
 }
 
 /// The incoming serialization format for the `ApiToken` model.
@@ -83,7 +84,7 @@ pub async fn new(
     app: AppState,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     if new.api_token.name.is_empty() {
         return Err(bad_request("name must have a value"));
     }
@@ -164,13 +165,13 @@ pub async fn new(
 
         let api_token = EncodableApiTokenWithToken::from(api_token);
 
-        Ok(Json(json!({ "api_token": api_token })))
+        Ok(json!({ "api_token": api_token }))
     })
     .await
 }
 
 /// Handles the `GET /me/tokens/:id` route.
-pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = app.db_write().await?;
@@ -182,11 +183,11 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<J
         .first(&mut conn)
         .await?;
 
-    Ok(Json(json!({ "api_token": token })))
+    Ok(json!({ "api_token": token }))
 }
 
 /// Handles the `DELETE /me/tokens/:id` route.
-pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = app.db_write().await?;
@@ -197,7 +198,7 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
         .execute(&mut conn)
         .await?;
 
-    Ok(Json(json!({})))
+    Ok(json!({}))
 }
 
 /// Handles the `DELETE /tokens/current` route.

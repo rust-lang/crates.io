@@ -1,6 +1,7 @@
 use crate::tests::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde_json::json;
 
 mod publish_notifications;
 

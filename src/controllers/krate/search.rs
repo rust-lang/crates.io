@@ -2,14 +2,14 @@
 
 use crate::auth::AuthCheck;
 use crate::util::diesel::prelude::*;
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
 use diesel::sql_types::{Array, Bool, Text};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use diesel_full_text_search::*;
 use http::request::Parts;
-use serde_json::Value;
 use std::cell::OnceCell;
 use tokio::runtime::Handle;
 
@@ -47,7 +47,7 @@ use crate::util::RequestUtils;
 /// caused the break. In the future, we should look at splitting this
 /// function out to cover the different use cases, and create unit tests
 /// for them.
-pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let conn = app.db_read().await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
@@ -258,14 +258,14 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             )
             .collect::<Vec<_>>();
 
-        Ok(Json(json!({
+        Ok(json!({
             "crates": crates,
             "meta": {
                 "total": total,
                 "next_page": next_page,
                 "prev_page": prev_page,
             },
-        })))
+        }))
     })
     .await
 }

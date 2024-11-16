@@ -6,6 +6,8 @@
 
 use axum::extract::Path;
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
@@ -13,7 +15,6 @@ use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::StatusCode;
 use serde::Deserialize;
-use serde_json::Value;
 use tokio::runtime::Handle;
 
 use crate::app::AppState;
@@ -54,7 +55,7 @@ pub struct VersionUpdateRequest {
 pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     if semver::Version::parse(&version).is_err() {
@@ -74,18 +75,18 @@ pub async fn dependencies(
         .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
         .collect::<Vec<_>>();
 
-    Ok(Json(json!({ "dependencies": deps })))
+    Ok(json!({ "dependencies": deps }))
 }
 
 /// Handles the `GET /crates/:crate_id/:version/authors` route.
-pub async fn authors() -> Json<Value> {
+pub async fn authors() -> ErasedJson {
     // Currently we return the empty list.
     // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
 
-    Json(json!({
+    json!({
         "users": [],
         "meta": { "names": [] },
-    }))
+    })
 }
 
 /// Handles the `GET /crates/:crate/:version` route.
@@ -95,7 +96,7 @@ pub async fn authors() -> Json<Value> {
 pub async fn show(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
@@ -109,7 +110,7 @@ pub async fn show(
         let actions = VersionOwnerAction::by_version(conn, &version)?;
 
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-        Ok(Json(json!({ "version": version })))
+        Ok(json!({ "version": version }))
     })
     .await
 }
@@ -122,7 +123,7 @@ pub async fn update(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
@@ -147,7 +148,7 @@ pub async fn update(
         let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
         let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
-        Ok(Json(json!({ "version": updated_version })))
+        Ok(json!({ "version": updated_version }))
     })
     .await
 }

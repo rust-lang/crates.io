@@ -232,6 +232,7 @@ mod tests {
     use diesel_async::RunQueryDsl;
     use insta::assert_snapshot;
     use parking_lot::Mutex;
+    use serde_json::json;
 
     #[tokio::test]
     async fn test_process_cdn_log_queue() {

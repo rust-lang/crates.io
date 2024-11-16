@@ -4,6 +4,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{MockCookieUser, RequestHelper, TestApp};
 use crate::views::{EncodableCrateOwnerInvitation, EncodablePublicUser};
 use http::StatusCode;
+use serde_json::json;
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct CrateOwnerInvitationsResponse {

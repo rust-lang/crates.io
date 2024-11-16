@@ -20,20 +20,20 @@ use crate::views::{
 };
 use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use serde_json::Value;
 use std::cmp::Reverse;
 use std::str::FromStr;
 
 /// Handles the `GET /crates/new` special case.
-pub async fn show_new(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     show(app, Path("new".to_string()), req).await
 }
 
 /// Handles the `GET /crates/:crate_id` route.
-pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<Json<Value>> {
+pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<ErasedJson> {
     let conn = app.db_read().await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
@@ -157,12 +157,12 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
                 .map(Category::into)
                 .collect::<Vec<EncodableCategory>>()
         });
-        Ok(Json(json!({
+        Ok(json!({
             "crate": encodable_crate,
             "versions": encodable_versions,
             "keywords": encodable_keywords,
             "categories": encodable_cats,
-        })))
+        }))
     })
     .await
 }
@@ -237,7 +237,7 @@ pub async fn readme(
 ) -> Response {
     let redirect_url = app.storage.readme_location(&crate_name, &version);
     if req.wants_json() {
-        Json(json!({ "url": redirect_url })).into_response()
+        json!({ "url": redirect_url }).into_response()
     } else {
         redirect(redirect_url)
     }
@@ -248,7 +248,7 @@ pub async fn reverse_dependencies(
     app: AppState,
     Path(name): Path<String>,
     req: Parts,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
     let mut conn = app.db_read().await?;
@@ -295,9 +295,9 @@ pub async fn reverse_dependencies(
         })
         .collect::<Vec<_>>();
 
-    Ok(Json(json!({
+    Ok(json!({
         "dependencies": rev_deps,
         "versions": versions,
         "meta": { "total": total },
-    })))
+    }))
 }
