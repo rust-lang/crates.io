@@ -1,7 +1,6 @@
 use crate::email::Email;
 use crate::models::OwnerKind;
 use crate::schema::{crate_owners, crates, emails, users, versions};
-use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use anyhow::anyhow;
 use chrono::{NaiveDateTime, SecondsFormat};
@@ -69,68 +68,66 @@ impl BackgroundJob for SendPublishNotificationsJob {
 
         // Sending emails is currently a blocking operation, so we have to use
         // `spawn_blocking()` to run it in a separate thread.
-        spawn_blocking(move || {
-            let results = recipients
-                .into_iter()
-                .map(|(ref recipient, email_address)| {
-                    let krate = &publish_details.krate;
-                    let version = &publish_details.version;
+        let mut results = Vec::with_capacity(recipients.len());
 
-                    let publisher_info = match &publish_details.publisher {
-                        Some(publisher) if publisher == recipient => &format!(
-                            " by your account (https://{domain}/users/{publisher})",
-                            domain = ctx.config.domain_name
-                        ),
-                        Some(publisher) => &format!(
-                            " by {publisher} (https://{domain}/users/{publisher})",
-                            domain = ctx.config.domain_name
-                        ),
-                        None => "",
-                    };
+        for (ref recipient, email_address) in recipients {
+            let krate = &publish_details.krate;
+            let version = &publish_details.version;
 
-                    let email = PublishNotificationEmail {
-                        recipient,
-                        krate,
-                        version,
-                        publish_time: &publish_time,
-                        publisher_info,
-                    };
+            let publisher_info = match &publish_details.publisher {
+                Some(publisher) if publisher == recipient => &format!(
+                    " by your account (https://{domain}/users/{publisher})",
+                    domain = ctx.config.domain_name
+                ),
+                Some(publisher) => &format!(
+                    " by {publisher} (https://{domain}/users/{publisher})",
+                    domain = ctx.config.domain_name
+                ),
+                None => "",
+            };
 
-                    debug!("Sending publish notification for {krate}@{version} to {email_address}…");
-                    ctx.emails.send(&email_address, email).inspect_err(|err| {
-                        warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
-                    })
-                })
-                .collect::<Vec<_>>();
+            let email = PublishNotificationEmail {
+                recipient,
+                krate,
+                version,
+                publish_time: &publish_time,
+                publisher_info,
+            };
 
-            let num_sent = results.iter().filter(|result| result.is_ok()).count();
+            debug!("Sending publish notification for {krate}@{version} to {email_address}…");
+            let result = ctx.emails.async_send(&email_address, email).await.inspect_err(|err| {
+                warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
+            });
 
-            // Check if *none* of the emails succeeded to send, in which case we
-            // consider the job failed and worth retrying.
-            if num_sent == 0 {
-                warn!(
-                    "Failed to send publish notifications for {}@{}",
-                    publish_details.krate, publish_details.version
-                );
+            results.push(result);
+        }
 
-                return Err(anyhow!("Failed to send publish notifications"));
-            }
+        let num_sent = results.iter().filter(|result| result.is_ok()).count();
 
-            if num_sent == num_recipients {
-                info!(
-                    "Sent {num_sent} publish notifications for {}@{}",
-                    publish_details.krate, publish_details.version
-                );
-            } else {
-                warn!(
-                    "Sent only {num_sent} of {num_recipients} publish notifications for {}@{}",
-                    publish_details.krate, publish_details.version
-                );
-            }
+        // Check if *none* of the emails succeeded to send, in which case we
+        // consider the job failed and worth retrying.
+        if num_sent == 0 {
+            warn!(
+                "Failed to send publish notifications for {}@{}",
+                publish_details.krate, publish_details.version
+            );
 
-            Ok(())
-        })
-        .await
+            return Err(anyhow!("Failed to send publish notifications"));
+        }
+
+        if num_sent == num_recipients {
+            info!(
+                "Sent {num_sent} publish notifications for {}@{}",
+                publish_details.krate, publish_details.version
+            );
+        } else {
+            warn!(
+                "Sent only {num_sent} of {num_recipients} publish notifications for {}@{}",
+                publish_details.krate, publish_details.version
+            );
+        }
+
+        Ok(())
     }
 }
 
