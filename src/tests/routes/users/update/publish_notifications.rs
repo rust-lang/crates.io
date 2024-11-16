@@ -2,6 +2,7 @@ use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unsubscribe_and_resubscribe() {

@@ -10,14 +10,14 @@ use crate::sql::to_char;
 use crate::util::errors::{crate_not_found, AppResult};
 use crate::views::EncodableVersionDownload;
 use axum::extract::Path;
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use serde_json::Value;
 use std::cmp;
 
 /// Handles the `GET /crates/:crate_id/downloads` route.
-pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<Json<Value>> {
+pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     use diesel::dsl::*;
@@ -68,10 +68,10 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
         downloads: i64,
     }
 
-    Ok(Json(json!({
+    Ok(json!({
         "version_downloads": downloads,
         "meta": {
             "extra_downloads": extra,
         },
-    })))
+    }))
 }

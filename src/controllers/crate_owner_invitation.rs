@@ -15,18 +15,19 @@ use crate::views::{
 };
 use axum::extract::Path;
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use chrono::{Duration, Utc};
 use diesel::pg::Pg;
 use diesel::sql_types::Bool;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use indexmap::IndexMap;
-use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
-pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
+pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     spawn_blocking(move || {
@@ -59,10 +60,10 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<Json<Value>> {
             })
             .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-        Ok(Json(json!({
+        Ok(json!({
             "crate_owner_invitations": crate_owner_invitations,
             "users": users,
-        })))
+        }))
     })
     .await
 }
@@ -275,7 +276,7 @@ struct OwnerInvitation {
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
-pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json<Value>> {
+pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<ErasedJson> {
     let (parts, body) = req.0.into_parts();
 
     let crate_invite: OwnerInvitation =
@@ -299,14 +300,14 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Json
         invitation.decline(&mut conn).await?;
     }
 
-    Ok(Json(json!({ "crate_owner_invitation": crate_invite })))
+    Ok(json!({ "crate_owner_invitation": crate_invite }))
 }
 
 /// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
 pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     let mut conn = state.db_write().await?;
     let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
 
@@ -315,10 +316,10 @@ pub async fn handle_invite_with_token(
     let crate_id = invitation.crate_id;
     invitation.accept(&mut conn, config).await?;
 
-    Ok(Json(json!({
+    Ok(json!({
         "crate_owner_invitation": {
             "crate_id": crate_id,
             "accepted": true,
         },
-    })))
+    }))
 }

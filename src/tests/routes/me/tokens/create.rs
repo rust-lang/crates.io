@@ -7,7 +7,7 @@ use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_snapshot;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 

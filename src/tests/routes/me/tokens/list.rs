@@ -5,6 +5,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_logged_out() {

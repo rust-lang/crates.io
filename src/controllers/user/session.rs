@@ -1,10 +1,11 @@
 use axum::extract::{FromRequestParts, Query};
 use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use oauth2::reqwest::http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use serde_json::Value;
 use tokio::runtime::Handle;
 
 use crate::app::AppState;
@@ -34,7 +35,7 @@ use crates_io_github::GithubUser;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
-pub async fn begin(app: AppState, session: SessionExtension) -> Json<Value> {
+pub async fn begin(app: AppState, session: SessionExtension) -> ErasedJson {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -44,7 +45,7 @@ pub async fn begin(app: AppState, session: SessionExtension) -> Json<Value> {
     let state = state.secret().to_string();
     session.insert("github_oauth_state".to_string(), state.clone());
 
-    Json(json!({ "url": url.to_string(), "state": state }))
+    json!({ "url": url.to_string(), "state": state })
 }
 
 #[derive(Clone, Debug, Deserialize, FromRequestParts)]

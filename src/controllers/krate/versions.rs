@@ -2,13 +2,13 @@
 
 use crate::util::diesel::prelude::*;
 use axum::extract::Path;
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::not;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
-use serde_json::Value;
 use std::cmp::Reverse;
 use std::str::FromStr;
 
@@ -27,7 +27,7 @@ pub async fn versions(
     state: AppState,
     Path(crate_name): Path<String>,
     req: Parts,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     let conn = state.db_read().await?;
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
@@ -79,10 +79,10 @@ pub async fn versions(
             .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
             .collect::<Vec<_>>();
 
-        Ok(Json(match pagination {
+        Ok(match pagination {
             Some(_) => json!({ "versions": versions, "meta": versions_and_publishers.meta }),
             None => json!({ "versions": versions }),
-        }))
+        })
     })
     .await
 }
@@ -463,6 +463,7 @@ impl FromStr for ShowIncludeMode {
 mod tests {
     use super::{ReleaseTrackDetails, ReleaseTrackName, ReleaseTracks};
     use indexmap::IndexMap;
+    use serde_json::json;
 
     #[track_caller]
     fn version(str: &str) -> semver::Version {

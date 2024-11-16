@@ -8,11 +8,11 @@ use crate::schema::*;
 use crate::util::errors::{crate_not_found, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
-use serde_json::Value;
 
 async fn follow_target(
     crate_name: &str,
@@ -66,7 +66,7 @@ pub async fn following(
     app: AppState,
     Path(crate_name): Path<String>,
     req: Parts,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     use diesel::dsl::exists;
 
     let mut conn = app.db_read_prefer_primary().await?;
@@ -80,5 +80,5 @@ pub async fn following(
         .get_result::<bool>(&mut conn)
         .await?;
 
-    Ok(Json(json!({ "following": following })))
+    Ok(json!({ "following": following }))
 }

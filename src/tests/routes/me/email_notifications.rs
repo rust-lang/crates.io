@@ -4,6 +4,7 @@ use crate::tests::new_user;
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use http::StatusCode;
+use serde_json::json;
 
 #[derive(Serialize)]
 struct EmailNotificationsUpdate {

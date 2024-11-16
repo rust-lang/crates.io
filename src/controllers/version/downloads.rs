@@ -13,11 +13,11 @@ use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
 use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum_extra::json;
+use axum_extra::response::ErasedJson;
 use chrono::{Duration, NaiveDate, Utc};
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
-use serde_json::Value;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
 /// This returns a URL to the location where the crate is stored.
@@ -29,7 +29,7 @@ pub async fn download(
     let wants_json = req.wants_json();
     let redirect_url = app.storage.crate_location(&crate_name, &version);
     if wants_json {
-        Ok(Json(json!({ "url": redirect_url })).into_response())
+        Ok(json!({ "url": redirect_url }).into_response())
     } else {
         Ok(redirect(redirect_url))
     }
@@ -40,7 +40,7 @@ pub async fn downloads(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
-) -> AppResult<Json<Value>> {
+) -> AppResult<ErasedJson> {
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
@@ -67,7 +67,7 @@ pub async fn downloads(
             .map(VersionDownload::into)
             .collect::<Vec<EncodableVersionDownload>>();
 
-        Ok(Json(json!({ "version_downloads": downloads })))
+        Ok(json!({ "version_downloads": downloads }))
     })
     .await
 }

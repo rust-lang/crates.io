@@ -6,6 +6,7 @@ use diesel::{prelude::*, update};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
+use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn versions() {

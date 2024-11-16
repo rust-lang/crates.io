@@ -3,6 +3,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde_json::json;
 
 async fn assert_is_following(crate_name: &str, expected: bool, user: &impl RequestHelper) {
     let response = user

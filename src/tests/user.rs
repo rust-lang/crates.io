@@ -8,6 +8,7 @@ use crate::util::token::HashedToken;
 use diesel::prelude::*;
 use http::StatusCode;
 use secrecy::ExposeSecret;
+use serde_json::json;
 
 impl crate::tests::util::MockCookieUser {
     async fn confirm_email(&self, email_token: &str) {
