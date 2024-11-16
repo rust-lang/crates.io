@@ -2,8 +2,8 @@ use axum::extract::{FromRequestParts, Query};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use diesel::QueryResult;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
@@ -151,9 +151,6 @@ async fn save_user_to_database(
 }
 
 async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
-    use diesel::prelude::*;
-    use diesel_async::RunQueryDsl;
-
     users::table
         .filter(users::gh_id.eq(gh_id))
         .first(conn)
