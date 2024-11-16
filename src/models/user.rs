@@ -104,6 +104,22 @@ impl User {
             .optional()
     }
 
+    /// Queries the database for the verified emails
+    /// belonging to a given user
+    pub async fn async_verified_email(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Option<String>> {
+        use diesel_async::RunQueryDsl;
+
+        Email::belonging_to(self)
+            .select(emails::email)
+            .filter(emails::verified.eq(true))
+            .first(conn)
+            .await
+            .optional()
+    }
+
     /// Queries for the email belonging to a particular user
     pub fn email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
         use diesel::RunQueryDsl;
