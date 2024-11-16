@@ -1,6 +1,8 @@
 use crate::models::NewUser;
+use crate::schema::users;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodablePublicUser;
+use diesel::RunQueryDsl;
 
 #[derive(Deserialize)]
 pub struct UserShowPublicResponse {
@@ -32,22 +34,26 @@ async fn show_latest_user_case_insensitively() {
     // should be used for uniquely identifying GitHub accounts whenever possible. For the
     // crates.io/user/:username pages, the best we can do is show the last crates.io account
     // created with that username.
-    assert_ok!(NewUser::new(
+
+    let user1 = NewUser::new(
         1,
         "foobar",
         Some("I was first then deleted my github account"),
         None,
-        "bar"
-    )
-    .create_or_update(None, &app.as_inner().emails, &mut conn));
-    assert_ok!(NewUser::new(
+        "bar",
+    );
+
+    let user2 = NewUser::new(
         2,
         "FOOBAR",
         Some("I was second, I took the foobar username on github"),
         None,
-        "bar"
-    )
-    .create_or_update(None, &app.as_inner().emails, &mut conn));
+        "bar",
+    );
+
+    assert_ok!(diesel::insert_into(users::table)
+        .values(&vec![user1, user2])
+        .execute(&mut conn));
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(

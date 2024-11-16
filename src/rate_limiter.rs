@@ -181,7 +181,7 @@ struct Bucket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::email::Emails;
+    use crate::schema::users;
     use crate::test_util::*;
 
     #[test]
@@ -647,13 +647,17 @@ mod tests {
 
     fn new_user(conn: &mut impl Conn, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
+        use diesel::RunQueryDsl;
 
         let user = NewUser {
             gh_login,
             ..NewUser::default()
-        }
-        .create_or_update(None, &Emails::new_in_memory(), conn)?;
-        Ok(user.id)
+        };
+
+        diesel::insert_into(users::table)
+            .values(user)
+            .returning(users::id)
+            .get_result(conn)
     }
 
     fn new_user_bucket(
