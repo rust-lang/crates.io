@@ -20,7 +20,7 @@ tokio = { version = "=1.41.1", features = ["io-util"] }
 tracing = "=0.1.40"
 
 [dev-dependencies]
-claims = "=0.7.1"
+claims = "=0.8.0"
 clap = { version = "=4.5.21", features = ["derive"] }
 criterion = { version = "=0.5.1", features = ["async_tokio"] }
 insta = "=1.41.1"

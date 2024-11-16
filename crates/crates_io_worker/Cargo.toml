@@ -21,7 +21,7 @@ tokio = { version = "=1.41.1", features = ["rt", "time"]}
 tracing = "=0.1.40"
 
 [dev-dependencies]
-claims = "=0.7.1"
+claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
 insta = { version = "=1.41.1", features = ["json"] }
 tokio = { version = "=1.41.1", features = ["macros", "sync"]}

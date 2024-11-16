@@ -28,5 +28,5 @@ tracing = "=0.1.40"
 url = "=2.5.3"
 
 [dev-dependencies]
-claims = "=0.7.1"
+claims = "=0.8.0"
 insta = "=1.41.1"
