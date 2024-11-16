@@ -30,9 +30,10 @@ use crate::middleware::log_request::ErrorField;
 mod json;
 
 use crate::email::EmailError;
+use crate::util::diesel::is_read_only_error;
 use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
-pub(crate) use json::{custom, InsecurelyGeneratedTokenRevoked, ReadOnlyMode, TooManyRequests};
+pub(crate) use json::{custom, InsecurelyGeneratedTokenRevoked, TooManyRequests};
 
 pub type BoxedAppError = Box<dyn AppError>;
 
@@ -145,10 +146,9 @@ impl From<DieselError> for BoxedAppError {
     fn from(err: DieselError) -> BoxedAppError {
         match err {
             DieselError::NotFound => not_found(),
-            DieselError::DatabaseError(_, info)
-                if info.message().ends_with("read-only transaction") =>
-            {
-                Box::new(ReadOnlyMode)
+            e if is_read_only_error(&e) => {
+                let detail = "crates.io is currently in read-only mode for maintenance. Please try again later.";
+                custom(StatusCode::SERVICE_UNAVAILABLE, detail)
             }
             DieselError::DatabaseError(DatabaseErrorKind::ClosedConnection, _) => {
                 service_unavailable()

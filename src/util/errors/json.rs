@@ -17,25 +17,6 @@ fn json_error(detail: &str, status: StatusCode) -> Response {
     (status, json).into_response()
 }
 
-// The following structs are empty and do not provide a custom message to the user
-
-#[derive(Debug)]
-pub(crate) struct ReadOnlyMode;
-
-impl AppError for ReadOnlyMode {
-    fn response(&self) -> Response {
-        let detail = "crates.io is currently in read-only mode for maintenance. \
-                      Please try again later.";
-        json_error(detail, StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
-
-impl fmt::Display for ReadOnlyMode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        "Tried to write in read only mode".fmt(f)
-    }
-}
-
 // The following structs wrap owned data and provide a custom message to the user
 
 pub fn custom(status: StatusCode, detail: impl Into<Cow<'static, str>>) -> BoxedAppError {
