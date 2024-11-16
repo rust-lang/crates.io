@@ -54,7 +54,7 @@ async fn test_sync_admins_job() {
     SyncAdmins.async_enqueue(&mut conn).await.unwrap();
     app.run_pending_background_jobs().await;
 
-    assert_eq!(app.emails().len(), 2);
+    assert_eq!(app.emails().await.len(), 2);
 }
 
 fn mock_permission(people: Vec<Person>) -> Permission {

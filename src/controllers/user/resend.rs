@@ -74,7 +74,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
-        assert_eq!(app.emails().len(), 0);
+        assert_eq!(app.emails().await.len(), 0);
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -87,7 +87,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
-        assert_eq!(app.emails().len(), 0);
+        assert_eq!(app.emails().await.len(), 0);
     }
 
     #[tokio::test(flavor = "multi_thread")]

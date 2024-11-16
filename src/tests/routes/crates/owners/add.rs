@@ -204,7 +204,7 @@ async fn invite_already_invited_user() {
     CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
@@ -212,7 +212,7 @@ async fn invite_already_invited_user() {
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
-    assert_eq!(app.emails().len(), 1);
+    assert_eq!(app.emails().await.len(), 1);
 
     // Then invite the user a second time, the message should point out the user is already invited
     let response = owner.add_named_owner("crate_name", "invited_user").await;
@@ -220,7 +220,7 @@ async fn invite_already_invited_user() {
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user already has a pending invitation to be an owner of crate crate_name","ok":true}"#);
 
     // Check that no new email is sent after the second invitation
-    assert_eq!(app.emails().len(), 1);
+    assert_eq!(app.emails().await.len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -232,7 +232,7 @@ async fn invite_with_existing_expired_invite() {
     let krate = CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
@@ -240,7 +240,7 @@ async fn invite_with_existing_expired_invite() {
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
-    assert_eq!(app.emails().len(), 1);
+    assert_eq!(app.emails().await.len(), 1);
 
     // Simulate the previous invite expiring
     expire_invitation(&app, krate.id);
@@ -251,7 +251,7 @@ async fn invite_with_existing_expired_invite() {
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check that the email for the second invite was sent
-    assert_eq!(app.emails().len(), 2);
+    assert_eq!(app.emails().await.len(), 2);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -335,7 +335,7 @@ async fn no_invite_emails_for_txn_rollback() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
 
     // No emails should have been sent.
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Remove the bad username.
     let _ = usernames.pop();
@@ -344,5 +344,5 @@ async fn no_invite_emails_for_txn_rollback() {
     assert_eq!(response.status(), StatusCode::OK);
 
     // 9 emails to the good invitees should have been sent.
-    assert_eq!(app.emails().len(), 9);
+    assert_eq!(app.emails().await.len(), 9);
 }

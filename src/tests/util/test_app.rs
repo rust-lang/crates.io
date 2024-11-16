@@ -179,7 +179,7 @@ impl TestApp {
             .collect()
     }
 
-    pub fn emails(&self) -> Vec<String> {
+    pub async fn emails(&self) -> Vec<String> {
         let emails = self.as_inner().emails.mails_in_memory().unwrap();
         emails.into_iter().map(|(_, email)| email).collect()
     }
@@ -200,6 +200,7 @@ impl TestApp {
         static SEPARATOR: &str = "\n----------------------------------------\n\n";
 
         self.emails()
+            .await
             .into_iter()
             .map(|email| {
                 let email = EMAIL_HEADER_REGEX.replace_all(&email, "");

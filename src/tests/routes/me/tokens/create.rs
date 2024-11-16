@@ -26,7 +26,7 @@ async fn create_token_invalid_request() {
     let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `api_token` at line 1 column 14"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -36,7 +36,7 @@ async fn create_token_no_name() {
     let response = user.put::<()>("/api/v1/me/tokens", empty_name).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"name must have a value"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -52,7 +52,7 @@ async fn create_token_exceeded_tokens_per_user() {
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"maximum tokens per user is: 500"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -118,7 +118,7 @@ async fn cannot_create_token_with_token() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot use an API token to create a new API token"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -229,7 +229,7 @@ async fn create_token_with_empty_crate_scope() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid crate scope"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -249,7 +249,7 @@ async fn create_token_with_invalid_endpoint_scope() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid endpoint scope"}]}"#);
-    assert!(app.emails().is_empty());
+    assert!(app.emails().await.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]

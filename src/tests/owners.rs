@@ -569,7 +569,7 @@ async fn test_accept_invitation_by_mail() {
         .good();
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.emails());
+    let invite_token = extract_token_from_invite_email(&app.emails().await);
 
     // Accept the invitation anonymously with a token
     anon.accept_ownership_invitation_by_token(&invite_token)
@@ -688,7 +688,7 @@ async fn test_accept_expired_invitation_by_mail() {
     expire_invitation(&app, krate.id);
 
     // Retrieve the ownership invitation
-    let invite_token = extract_token_from_invite_email(&app.emails());
+    let invite_token = extract_token_from_invite_email(&app.emails().await);
 
     // Try to accept the invitation, and ensure it fails.
     let resp = anon

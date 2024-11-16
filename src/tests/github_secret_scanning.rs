@@ -45,7 +45,7 @@ async fn github_secret_alert_revokes_token() {
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Ensure that the token currently exists in the database
     let tokens: Vec<ApiToken> = assert_ok!(
@@ -103,7 +103,7 @@ async fn github_secret_alert_for_revoked_token() {
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Ensure that the token currently exists in the database
     let tokens: Vec<ApiToken> = assert_ok!(
@@ -155,7 +155,7 @@ async fn github_secret_alert_for_revoked_token() {
     assert_that!(tokens, len(eq(1)));
 
     // Ensure still no emails were sent
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -164,7 +164,7 @@ async fn github_secret_alert_for_unknown_token() {
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 
     // Ensure that the token currently exists in the database
     let tokens: Vec<ApiToken> = assert_ok!(
@@ -197,7 +197,7 @@ async fn github_secret_alert_for_unknown_token() {
     assert_eq!(tokens[0].name, token.as_model().name);
 
     // Ensure still no emails were sent
-    assert_eq!(app.emails().len(), 0);
+    assert_eq!(app.emails().await.len(), 0);
 }
 
 #[tokio::test(flavor = "multi_thread")]
