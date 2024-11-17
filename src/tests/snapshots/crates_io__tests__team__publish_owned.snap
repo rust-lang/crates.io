@@ -1,6 +1,6 @@
 ---
 source: src/tests/team.rs
-expression: app.emails_snapshot()
+expression: app.emails_snapshot().await
 snapshot_kind: text
 ---
 To: user-all-teams@example.com

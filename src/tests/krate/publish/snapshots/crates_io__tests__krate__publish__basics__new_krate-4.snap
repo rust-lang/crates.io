@@ -1,6 +1,6 @@
 ---
 source: src/tests/krate/publish/basics.rs
-expression: app.emails_snapshot()
+expression: app.emails_snapshot().await
 snapshot_kind: text
 ---
 To: foo@example.com
