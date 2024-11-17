@@ -1,10 +1,11 @@
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
+use diesel_async::RunQueryDsl;
 
-#[test]
-fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
-    for row in get_fk_constraint_definitions("crate_id") {
+#[tokio::test]
+async fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
+    for row in get_fk_constraint_definitions("crate_id").await {
         let constraint = match row.constraint {
             Some(c) => c,
             None => panic!(
@@ -22,9 +23,9 @@ fn all_columns_called_crate_id_have_a_cascading_foreign_key() {
     }
 }
 
-#[test]
-fn all_columns_called_version_id_have_a_cascading_foreign_key() {
-    for row in get_fk_constraint_definitions("version_id") {
+#[tokio::test]
+async fn all_columns_called_version_id_have_a_cascading_foreign_key() {
+    for row in get_fk_constraint_definitions("version_id").await {
         let constraint = match row.constraint {
             Some(c) => c,
             None => panic!(
@@ -66,14 +67,15 @@ struct TableNameAndConstraint {
     constraint: Option<FkConstraint>,
 }
 
-fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
+async fn get_fk_constraint_definitions(column_name: &str) -> Vec<TableNameAndConstraint> {
     use diesel::sql_query;
 
     let test_db = TestDatabase::new();
-    let mut conn = test_db.connect();
+    let mut conn = test_db.async_connect().await;
 
     sql_query(include_str!("load_foreign_key_constraints.sql"))
         .bind::<Text, _>(column_name)
         .load(&mut conn)
+        .await
         .unwrap()
 }

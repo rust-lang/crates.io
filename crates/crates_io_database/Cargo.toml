@@ -13,3 +13,5 @@ diesel_full_text_search = "=2.2.0"
 
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
+diesel-async = { version = "=0.5.1", features = ["postgres"] }
+tokio = { version = "=1.41.1", features = ["macros", "rt"] }
