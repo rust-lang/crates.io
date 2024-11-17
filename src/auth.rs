@@ -214,7 +214,7 @@ async fn authenticate_via_token(
     let token =
         HashedToken::parse(header_value).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
 
-    let token = ApiToken::async_find_by_api_token(conn, &token)
+    let token = ApiToken::find_by_api_token(conn, &token)
         .await
         .map_err(|e| {
             let cause = format!("invalid token caused by {e}");
