@@ -127,7 +127,7 @@ impl NewCrate {
 
         let description = self
             .description
-            .map(|d| quick_xml::escape::escape(&d).to_string());
+            .map(|d| d.replace("]]>", "]]]]><![CDATA[>"));
 
         let name_extension = rss::extension::Extension {
             name: "crates:name".into(),
