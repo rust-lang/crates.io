@@ -130,7 +130,7 @@ fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult
 mod tests {
     use super::*;
     use crate::schema::crates;
-    use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
     use insta::assert_snapshot;
     use std::fmt::Write;
 
@@ -275,7 +275,8 @@ mod tests {
 
     #[test]
     fn test_update_default_version() {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
 
         let crate_id = create_crate("foo", conn);
         create_version(crate_id, "1.0.0", conn);

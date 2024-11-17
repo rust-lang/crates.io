@@ -107,7 +107,7 @@ mod tests {
     use super::*;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use crate::schema::{crate_downloads, crates, users, versions};
-    use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
 
     fn user(conn: &mut impl Conn) -> User {
         let user = NewUser::new(2, "login", None, None, "access_token");
@@ -138,7 +138,8 @@ mod tests {
     fn increment() {
         use diesel::dsl::*;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let user = user(conn);
         let (krate, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -181,7 +182,8 @@ mod tests {
     fn set_processed_true() {
         use diesel::dsl::*;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let user = user(conn);
         let (_, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -205,7 +207,8 @@ mod tests {
     #[test]
     fn dont_process_recent_row() {
         use diesel::dsl::*;
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let user = user(conn);
         let (_, version) = crate_and_version(conn, user.id);
         insert_into(version_downloads::table)
@@ -231,7 +234,8 @@ mod tests {
         use diesel::dsl::*;
         use diesel::update;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let user = user(conn);
         let (krate, version) = crate_and_version(conn, user.id);
         update(versions::table)
@@ -296,7 +300,8 @@ mod tests {
         use diesel::dsl::*;
         use diesel::update;
 
-        let (_test_db, mut conn) = test_db_connection();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.connect();
 
         // This test is using a transaction to ensure `now` is the same for all
         // queries within this test.

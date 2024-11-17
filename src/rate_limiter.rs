@@ -182,11 +182,12 @@ struct Bucket {
 mod tests {
     use super::*;
     use crate::schema::users;
-    use crate::test_util::*;
+    use crates_io_test_db::TestDatabase;
 
     #[test]
     fn default_rate_limits() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         // Set the defaults as if no env vars have been set in production
@@ -254,7 +255,8 @@ mod tests {
 
     #[test]
     fn take_token_with_no_bucket_creates_new_one() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -301,7 +303,8 @@ mod tests {
 
     #[test]
     fn take_token_with_existing_bucket_modifies_existing_bucket() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -324,7 +327,8 @@ mod tests {
 
     #[test]
     fn take_token_after_delay_refills() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -348,7 +352,8 @@ mod tests {
 
     #[test]
     fn refill_subsecond_rate() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
         let now =
@@ -376,7 +381,8 @@ mod tests {
 
     #[test]
     fn last_refill_always_advanced_by_multiple_of_rate() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -405,7 +411,8 @@ mod tests {
 
     #[test]
     fn zero_tokens_returned_when_user_has_no_tokens_left() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -431,7 +438,8 @@ mod tests {
 
     #[test]
     fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -456,7 +464,8 @@ mod tests {
 
     #[test]
     fn tokens_never_refill_past_burst() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -481,7 +490,8 @@ mod tests {
 
     #[test]
     fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let mut config = HashMap::new();
@@ -526,7 +536,8 @@ mod tests {
     fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
         use diesel::RunQueryDsl;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -558,7 +569,8 @@ mod tests {
     fn overrides_can_expire() -> QueryResult<()> {
         use diesel::RunQueryDsl;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -607,7 +619,8 @@ mod tests {
     fn override_is_different_for_each_action() -> QueryResult<()> {
         use diesel::RunQueryDsl;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
         let now = now();
         let user_id = new_user(conn, "user")?;
 
