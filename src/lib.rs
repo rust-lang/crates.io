@@ -53,7 +53,6 @@ pub mod sqs;
 pub mod ssh;
 pub mod storage;
 pub mod tasks;
-mod test_util;
 #[cfg(test)]
 pub mod tests;
 pub mod typosquat;

@@ -122,15 +122,16 @@ Specific squat checks that triggered:
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::test_db_connection, typosquat::test_util::faker};
-    use lettre::Address;
-
     use super::*;
+    use crate::typosquat::test_util::faker;
+    use crates_io_test_db::TestDatabase;
+    use lettre::Address;
 
     #[tokio::test]
     async fn integration() -> anyhow::Result<()> {
         let emails = Emails::new_in_memory();
-        let (_test_db, mut conn) = test_db_connection();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.connect();
 
         // Set up a user and a popular crate to match against.
         let user = faker::user(&mut conn, "a")?;

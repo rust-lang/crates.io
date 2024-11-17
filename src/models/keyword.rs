@@ -97,13 +97,15 @@ impl Keyword {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_util::test_db_connection;
+    use crates_io_test_db::TestDatabase;
 
     #[test]
     fn dont_associate_with_non_lowercased_keywords() {
         use diesel::RunQueryDsl;
 
-        let (_test_db, conn) = &mut test_db_connection();
+        let test_db = TestDatabase::new();
+        let conn = &mut test_db.connect();
+
         // The code should be preventing lowercased keywords from existing,
         // but if one happens to sneak in there, don't associate crates with it.
 

@@ -163,14 +163,15 @@ impl From<crate::models::Owner> for Owner {
 
 #[cfg(test)]
 mod tests {
-    use crate::{test_util::test_db_connection, typosquat::test_util::faker};
-    use thiserror::Error;
-
     use super::*;
+    use crate::typosquat::test_util::faker;
+    use crates_io_test_db::TestDatabase;
+    use thiserror::Error;
 
     #[test]
     fn top_crates() -> Result<(), Error> {
-        let (_test_db, mut conn) = test_db_connection();
+        let test_db = TestDatabase::new();
+        let mut conn = test_db.connect();
 
         // Set up two users.
         let user_a = faker::user(&mut conn, "a")?;
