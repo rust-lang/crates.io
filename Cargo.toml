@@ -90,7 +90,7 @@ json-subscriber = "=0.2.2"
 tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 lettre = { version = "=0.11.10", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = "=2.5.0"
-mockall = "=0.13.0"
+mockall = "=0.13.1"
 native-tls = "=0.2.12"
 oauth2 = "=4.4.2"
 object_store = { version = "=0.11.1", features = ["aws"] }
