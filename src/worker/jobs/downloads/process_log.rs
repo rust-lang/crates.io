@@ -433,26 +433,26 @@ mod tests {
             let store = store.clone();
             run(store, CLOUDFRONT_PATH, db_pool.clone()).await
         });
-        assert_debug_snapshot!(all_version_downloads(db_pool.clone()).await, @r###"
+        assert_debug_snapshot!(all_version_downloads(db_pool.clone()).await, @r#"
         [
             "bindgen | 0.65.1 | 1 | 0 | 2024-01-16 | false",
             "quick-error | 1.2.3 | 2 | 0 | 2024-01-16 | false",
             "quick-error | 1.2.3 | 1 | 0 | 2024-01-17 | false",
             "tracing-core | 0.1.32 | 1 | 0 | 2024-01-16 | false",
         ]
-        "###);
+        "#);
 
         // Check that processing the same log file again does not insert
         // duplicate data.
         assert_ok!(run(store, CLOUDFRONT_PATH, db_pool.clone()).await);
-        assert_debug_snapshot!(all_version_downloads(db_pool).await, @r###"
+        assert_debug_snapshot!(all_version_downloads(db_pool).await, @r#"
         [
             "bindgen | 0.65.1 | 1 | 0 | 2024-01-16 | false",
             "quick-error | 1.2.3 | 2 | 0 | 2024-01-16 | false",
             "quick-error | 1.2.3 | 1 | 0 | 2024-01-17 | false",
             "tracing-core | 0.1.32 | 1 | 0 | 2024-01-16 | false",
         ]
-        "###);
+        "#);
     }
 
     #[test]

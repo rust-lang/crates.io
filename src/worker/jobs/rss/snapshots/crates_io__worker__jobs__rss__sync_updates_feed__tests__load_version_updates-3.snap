@@ -1,6 +1,7 @@
 ---
 source: src/worker/jobs/rss/sync_updates_feed.rs
 expression: "updates.iter().map(|u| &u.version).collect::<Vec<_>>()"
+snapshot_kind: text
 ---
 [
     "1.3.110",

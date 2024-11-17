@@ -266,13 +266,13 @@ mod tests {
         export(&database_url, &csv_path, &before).await.unwrap();
 
         let content = tokio::fs::read_to_string(&csv_path).await.unwrap();
-        assert_snapshot!(content, @r###"
+        assert_snapshot!(content, @r"
         date,version_id,downloads
         2021-01-01,1,100
         2021-01-02,1,200
         2021-01-01,2,400
         2021-01-02,2,500
-        "###);
+        ");
     }
 
     #[test]
