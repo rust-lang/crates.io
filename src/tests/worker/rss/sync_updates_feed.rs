@@ -12,7 +12,7 @@ async fn test_sync_updates_feed() {
     let (app, _) = TestApp::full().empty();
     let mut conn = app.async_db_conn().await;
 
-    let d = Some("let's try & break this <item>");
+    let d = Some("let's try & break this <item> ]]>");
 
     create_version(&mut conn, "foo", "0.1.0", None, "2024-06-20T10:13:54Z").await;
     create_version(&mut conn, "foo", "0.1.1", None, "2024-06-20T12:45:12Z").await;

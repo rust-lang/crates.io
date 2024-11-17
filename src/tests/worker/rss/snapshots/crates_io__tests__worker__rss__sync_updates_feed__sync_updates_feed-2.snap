@@ -30,7 +30,7 @@ snapshot_kind: text
         <item>
             <title>New crate version published: bar v3.0.0-beta.1</title>
             <link>https://crates.io/crates/bar/3.0.0-beta.1</link>
-            <description><![CDATA[let's try & break this <item>]]></description>
+            <description><![CDATA[let's try & break this <item> ]]]]><![CDATA[>]]></description>
             <guid>https://crates.io/crates/bar/3.0.0-beta.1</guid>
             <pubDate>Fri, 21 Jun 2024 17:03:45 +0000</pubDate>
             <crates:name>bar</crates:name>

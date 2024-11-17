@@ -15,7 +15,7 @@ async fn test_sync_crates_feed() {
     let description = Some("something something foo");
     create_crate(&mut conn, "foo", description, "2024-06-20T10:13:54Z").await;
     create_crate(&mut conn, "bar", None, "2024-06-20T12:45:12Z").await;
-    let description = Some("does it handle XML? <item>");
+    let description = Some("does it handle XML? <item> ]]>");
     create_crate(&mut conn, "baz", description, "2024-06-21T17:01:33Z").await;
     create_crate(&mut conn, "quux", None, "2024-06-21T17:03:45Z").await;
 
