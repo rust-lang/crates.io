@@ -30,13 +30,7 @@ pub struct User {
 }
 
 impl User {
-    pub fn find(conn: &mut impl Conn, id: i32) -> QueryResult<User> {
-        use diesel::RunQueryDsl;
-
-        users::table.find(id).first(conn)
-    }
-
-    pub async fn async_find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
+    pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
         use diesel_async::RunQueryDsl;
 
         users::table.find(id).first(conn).await

@@ -72,7 +72,7 @@ async fn handle_expiring_token(
     emails: &Emails,
 ) -> Result<(), anyhow::Error> {
     debug!("Looking up user {} for token {}…", token.user_id, token.id);
-    let user = User::async_find(conn, token.user_id).await?;
+    let user = User::find(conn, token.user_id).await?;
 
     debug!("Looking up email address for user {}…", user.id);
     let recipient = user.async_email(conn).await?;

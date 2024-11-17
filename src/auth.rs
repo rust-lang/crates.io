@@ -185,7 +185,7 @@ async fn authenticate_via_cookie(
         return Ok(None);
     };
 
-    let user = User::async_find(conn, id).await.map_err(|err| {
+    let user = User::find(conn, id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from cookie not found in database")
     })?;
@@ -223,7 +223,7 @@ async fn authenticate_via_token(
             forbidden("authentication failed")
         })?;
 
-    let user = User::async_find(conn, token.user_id).await.map_err(|err| {
+    let user = User::find(conn, token.user_id).await.map_err(|err| {
         parts.request_log().add("cause", err);
         internal("user_id from token not found in database")
     })?;

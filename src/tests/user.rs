@@ -37,7 +37,7 @@ async fn updating_existing_user_doesnt_change_api_token() {
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token.expose_secret()));
     let api_token = assert_ok!(ApiToken::find_by_api_token(&mut conn, &hashed_token).await);
-    let user = assert_ok!(User::async_find(&mut conn, api_token.user_id).await);
+    let user = assert_ok!(User::find(&mut conn, api_token.user_id).await);
 
     assert_eq!(user.gh_login, "bar");
     assert_eq!(user.gh_access_token, "bar_token");
