@@ -281,8 +281,8 @@ importers:
         specifier: 17.1.0
         version: 17.1.0
       postcss-preset-env:
-        specifier: 10.1.0
-        version: 10.1.0(postcss@8.4.48)
+        specifier: 10.1.1
+        version: 10.1.1(postcss@8.4.48)
       prettier:
         specifier: 3.3.3
         version: 3.3.3
@@ -1127,8 +1127,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@csstools/postcss-sign-functions@1.0.0':
-    resolution: {integrity: sha512-cUpr5W8eookBi5TiLSvx1HL6DFoTTgcj2pmiVNd63y2JHhvtpnJs3sfsFMmLhB42yTRS02tFPsNz3Q5zeN8ZVA==}
+  '@csstools/postcss-sign-functions@1.1.0':
+    resolution: {integrity: sha512-SLcc20Nujx/kqbSwDmj6oaXgpy3UjFhBy1sfcqPgDkHfOIfUtUVH7OXO+j7BU4v/At5s61N5ZX6shvgPwluhsA==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -7012,8 +7012,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.1.0:
-    resolution: {integrity: sha512-OfzbinZWpFcmuLB3mabsGa0NArzx5DVVtZ9G1k326iLvU7Jj9q/G3ihBu/Msi0mt96CjrM23HpbuEewDvT71KQ==}
+  postcss-preset-env@10.1.1:
+    resolution: {integrity: sha512-wqqsnBFD6VIwcHHRbhjTOcOi4qRVlB26RwSr0ordPj7OubRRxdWebv/aLjKLRR8zkZrbxZyuus03nOIgC5elMQ==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -9712,7 +9712,7 @@ snapshots:
       postcss: 8.4.48
       postcss-selector-parser: 7.0.0
 
-  '@csstools/postcss-sign-functions@1.0.0(postcss@8.4.48)':
+  '@csstools/postcss-sign-functions@1.1.0(postcss@8.4.48)':
     dependencies:
       '@csstools/css-calc': 2.1.0(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
@@ -10977,26 +10977,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.26.0)
-      '@types/ember__array': 4.0.10(@babel/core@7.26.0)
-      '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__debug': 4.0.8(@babel/core@7.26.0)
-      '@types/ember__engine': 4.0.11(@babel/core@7.26.0)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22(@babel/core@7.26.0)
-      '@types/ember__runloop': 4.0.10
-      '@types/ember__service': 4.0.9(@babel/core@7.26.0)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.26.0)
-      '@types/ember__utils': 4.0.7
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.26.0)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.26.0)
@@ -11029,7 +11009,7 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.26.0)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.26.0)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.26.0)
       '@types/ember__engine': 4.0.11(@babel/core@7.26.0)
       '@types/ember__object': 4.0.12(@babel/core@7.26.0)
       '@types/ember__owner': 4.0.9
@@ -11054,11 +11034,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.32
-
-  '@types/ember__component@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.26.0)
 
   '@types/ember__component@4.0.22(@babel/core@7.26.0)':
     dependencies:
@@ -11145,10 +11120,6 @@ snapshots:
 
   '@types/ember__runloop@3.16.10': {}
 
-  '@types/ember__runloop@4.0.10':
-    dependencies:
-      '@types/ember': 4.0.11
-
   '@types/ember__runloop@4.0.10(@babel/core@7.26.0)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.26.0)
@@ -11189,10 +11160,6 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
-
-  '@types/ember__utils@4.0.7':
-    dependencies:
-      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.26.0)':
     dependencies:
@@ -17817,7 +17784,7 @@ snapshots:
       postcss: 8.4.48
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.1.0(postcss@8.4.48):
+  postcss-preset-env@10.1.1(postcss@8.4.48):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.1(postcss@8.4.48)
       '@csstools/postcss-color-function': 4.0.6(postcss@8.4.48)
@@ -17846,7 +17813,7 @@ snapshots:
       '@csstools/postcss-random-function': 1.0.1(postcss@8.4.48)
       '@csstools/postcss-relative-color-syntax': 3.0.6(postcss@8.4.48)
       '@csstools/postcss-scope-pseudo-class': 4.0.1(postcss@8.4.48)
-      '@csstools/postcss-sign-functions': 1.0.0(postcss@8.4.48)
+      '@csstools/postcss-sign-functions': 1.1.0(postcss@8.4.48)
       '@csstools/postcss-stepped-value-functions': 4.0.5(postcss@8.4.48)
       '@csstools/postcss-text-decoration-shorthand': 4.0.1(postcss@8.4.48)
       '@csstools/postcss-trigonometric-functions': 4.0.5(postcss@8.4.48)
