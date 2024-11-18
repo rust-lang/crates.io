@@ -48,16 +48,15 @@ pub mod faker {
     }
 
     pub fn team(conn: &mut PgConnection, org: &str, team: &str) -> anyhow::Result<Owner> {
-        Ok(Owner::Team(
-            NewTeam::new(
-                &format!("github:{org}:{team}"),
-                next_gh_id(),
-                next_gh_id(),
-                Some(team),
-                None,
-            )
-            .create_or_update(conn)?,
-        ))
+        let login = format!("github:{org}:{team}");
+        let team = NewTeam::builder()
+            .login(&login)
+            .org_id(next_gh_id())
+            .github_id(next_gh_id())
+            .name(team)
+            .build();
+
+        Ok(Owner::Team(team.create_or_update(conn)?))
     }
 
     pub fn user(conn: &mut PgConnection, login: &str) -> QueryResult<User> {

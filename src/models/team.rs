@@ -1,3 +1,4 @@
+use bon::Builder;
 use diesel_async::AsyncPgConnection;
 use http::StatusCode;
 
@@ -35,7 +36,7 @@ pub struct Team {
     pub org_id: Option<i32>,
 }
 
-#[derive(Insertable, AsChangeset, Debug)]
+#[derive(Insertable, AsChangeset, Debug, Builder)]
 #[diesel(table_name = teams, check_for_backend(diesel::pg::Pg))]
 pub struct NewTeam<'a> {
     pub login: &'a str,
@@ -46,22 +47,6 @@ pub struct NewTeam<'a> {
 }
 
 impl<'a> NewTeam<'a> {
-    pub fn new(
-        login: &'a str,
-        org_id: i32,
-        github_id: i32,
-        name: Option<&'a str>,
-        avatar: Option<&'a str>,
-    ) -> Self {
-        NewTeam {
-            login,
-            github_id,
-            name,
-            avatar,
-            org_id,
-        }
-    }
-
     pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Team> {
         use diesel::insert_into;
         use diesel::RunQueryDsl;
@@ -174,15 +159,15 @@ impl Team {
 
         let org = Handle::current().block_on(app.github.org_by_name(org_name, &token))?;
 
-        NewTeam::new(
-            &login.to_lowercase(),
-            org_id,
-            team.id,
-            team.name.as_deref(),
-            org.avatar_url.as_deref(),
-        )
-        .create_or_update(conn)
-        .map_err(Into::into)
+        NewTeam::builder()
+            .login(&login.to_lowercase())
+            .org_id(org_id)
+            .github_id(team.id)
+            .maybe_name(team.name.as_deref())
+            .maybe_avatar(org.avatar_url.as_deref())
+            .build()
+            .create_or_update(conn)
+            .map_err(Into::into)
     }
 
     /// Phones home to Github to ask if this User is a member of the given team.

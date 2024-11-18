@@ -104,13 +104,11 @@ fn new_user(login: &str) -> NewUser<'_> {
 }
 
 fn new_team(login: &str) -> NewTeam<'_> {
-    NewTeam {
-        org_id: next_gh_id(),
-        github_id: next_gh_id(),
-        login,
-        name: None,
-        avatar: None,
-    }
+    NewTeam::builder()
+        .login(login)
+        .org_id(next_gh_id())
+        .github_id(next_gh_id())
+        .build()
 }
 
 fn add_team_to_crate(
