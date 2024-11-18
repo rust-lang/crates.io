@@ -183,7 +183,7 @@ async fn send_notification_email(
     state: &AppState,
     conn: &mut AsyncPgConnection,
 ) -> anyhow::Result<()> {
-    let user = User::async_find(conn, token.user_id)
+    let user = User::find(conn, token.user_id)
         .await
         .context("Failed to find user")?;
 
