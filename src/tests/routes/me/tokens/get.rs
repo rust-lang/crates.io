@@ -26,7 +26,7 @@ async fn show() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_token_with_scopes() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user_model = user.as_model();
     let id = user_model.id;
@@ -62,7 +62,7 @@ async fn show_with_anonymous_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_other_user_token() {
-    let (app, _, user1) = TestApp::init().with_user();
+    let (app, _, user1) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user2 = app.db_new_user("baz");
     let user2 = user2.as_model();

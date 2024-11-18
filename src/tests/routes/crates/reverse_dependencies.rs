@@ -5,7 +5,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -42,7 +42,7 @@ async fn reverse_dependencies() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -67,7 +67,7 @@ async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -92,7 +92,7 @@ async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn prerelease_versions_not_included_in_reverse_dependencies() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -121,7 +121,7 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_not_included_in_reverse_dependencies() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -163,7 +163,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_includes_published_by_user_when_present() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -202,7 +202,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_query_supports_u64_version_number_parts() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

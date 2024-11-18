@@ -45,7 +45,8 @@ async fn can_download_crate_in_read_only_mode() {
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
 

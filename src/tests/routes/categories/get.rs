@@ -43,7 +43,7 @@ async fn update_crate() {
         json.category.crates_cnt as usize
     }
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

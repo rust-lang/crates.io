@@ -100,7 +100,7 @@ async fn github_without_email_does_not_overwrite_email() {
 async fn github_with_email_does_not_overwrite_email() {
     use crate::schema::emails;
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.async_db_conn().await;
 
     let model = user.as_model();
@@ -139,7 +139,7 @@ async fn github_with_email_does_not_overwrite_email() {
 /// that the updated email is sent back to the user (GET /me).
 #[tokio::test(flavor = "multi_thread")]
 async fn test_email_get_and_put() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
 
     let json = user.show_me().await;
     assert_eq!(json.user.email.unwrap(), "foo@example.com");

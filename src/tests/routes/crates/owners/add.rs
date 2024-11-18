@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 // which call the `PUT /crates/:crate_id/owners` route
 #[tokio::test(flavor = "multi_thread")]
 async fn test_cargo_invite_owners() {
-    let (app, _, owner) = TestApp::init().with_user();
+    let (app, _, owner) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let new_user = app.db_new_user("cilantro");
@@ -35,7 +35,7 @@ async fn test_cargo_invite_owners() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_cookie() {
-    let (app, _, cookie) = TestApp::full().with_user();
+    let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     let user2 = app.db_new_user("user-2");
@@ -139,7 +139,7 @@ async fn owner_change_via_publish_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_without_auth() {
-    let (app, anon, cookie) = TestApp::full().with_user();
+    let (app, anon, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     let user2 = app.db_new_user("user-2");
@@ -154,7 +154,7 @@ async fn owner_change_without_auth() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_legacy_field() {
-    let (app, _, user1) = TestApp::full().with_user();
+    let (app, _, user1) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo", user1.as_model().id).expect_build(&mut conn);
@@ -170,7 +170,7 @@ async fn test_owner_change_with_legacy_field() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_invalid_json() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     app.db_new_user("bar");
@@ -262,7 +262,7 @@ async fn invite_with_existing_expired_invite() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
     app.db_new_user("bar");
 
     let response = user.add_named_owner("unknown", "bar").await;
@@ -272,7 +272,7 @@ async fn test_unknown_crate() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_user() {
-    let (app, _, cookie) = TestApp::full().with_user();
+    let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
@@ -284,7 +284,7 @@ async fn test_unknown_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_team() {
-    let (app, _, cookie) = TestApp::full().with_user();
+    let (app, _, cookie) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);

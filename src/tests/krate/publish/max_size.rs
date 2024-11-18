@@ -121,7 +121,8 @@ async fn new_krate_too_big() {
             config.max_upload_size = 3000;
             config.max_unpack_size = 2000;
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let builder =
         PublishBuilder::new("foo_big", "1.0.0").add_file("foo_big-1.0.0/big", vec![b'a'; 2000]);

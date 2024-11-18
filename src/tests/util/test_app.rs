@@ -347,7 +347,7 @@ impl TestAppBuilder {
     }
 
     // Create a `TestApp` with a database including a default user
-    pub fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
+    pub async fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
         let (app, anon) = self.empty();
         let user = app.db_new_user("foo");
         (app, anon, user)

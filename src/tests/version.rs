@@ -4,7 +4,7 @@ use crate::tests::TestApp;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn record_rerendered_readme_time() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

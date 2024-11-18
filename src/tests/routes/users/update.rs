@@ -39,7 +39,7 @@ impl crate::tests::util::MockCookieUser {
 /// their email by adding an empty string.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_empty_email_not_added() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
     let response = user.update_email_more_control(model.id, Some("")).await;
@@ -49,7 +49,7 @@ async fn test_empty_email_not_added() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_ignore_empty() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
     let url = format!("/api/v1/users/{}", model.id);
@@ -61,7 +61,7 @@ async fn test_ignore_empty() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_ignore_nulls() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
     let url = format!("/api/v1/users/{}", model.id);
@@ -78,7 +78,7 @@ async fn test_ignore_nulls() {
 /// does not match the requested user.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_other_users_cannot_change_my_email() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let another_user = app.db_new_user("not_me");
     let another_user_model = another_user.as_model();
 
@@ -103,7 +103,7 @@ async fn test_other_users_cannot_change_my_email() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_email_address() {
-    let (_app, _, user) = TestApp::init().with_user();
+    let (_app, _, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
     let response = user.update_email_more_control(model.id, Some("foo")).await;
@@ -113,7 +113,7 @@ async fn test_invalid_email_address() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_json() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
     let url = format!("/api/v1/users/{}", model.id);

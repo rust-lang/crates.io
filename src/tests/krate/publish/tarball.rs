@@ -7,7 +7,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_wrong_files() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
 
     let builder = PublishBuilder::new("foo", "1.0.0")
         .add_file("foo-1.0.0/a", "")
@@ -48,7 +48,7 @@ async fn new_krate_tarball_with_hard_links() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_body() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
 
     let response = user.publish_crate(&[] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);

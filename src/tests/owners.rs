@@ -275,7 +275,7 @@ async fn modify_multiple_owners() {
 /// only crates owned by that team.
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_two_crates() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -306,7 +306,7 @@ async fn check_ownership_two_crates() {
 /// EncodableOwner::encodable is expecting
 #[tokio::test(flavor = "multi_thread")]
 async fn check_ownership_one_crate() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -357,7 +357,7 @@ async fn add_existing_team() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn deleted_ownership_isnt_in_owner_user() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -373,7 +373,7 @@ async fn deleted_ownership_isnt_in_owner_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
     app.db_new_user("bar");
 
     let response = user.get::<()>("/api/v1/crates/unknown/owners").await;
@@ -391,7 +391,7 @@ async fn test_unknown_crate() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_are_empty_by_default_v1() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (_, _, user) = TestApp::init().with_user().await;
 
     let json = user.list_invitations().await;
     assert_eq!(json.crate_owner_invitations.len(), 0);

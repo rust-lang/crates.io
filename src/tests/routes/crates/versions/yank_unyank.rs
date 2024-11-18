@@ -136,7 +136,7 @@ mod auth {
     const CRATE_VERSION: &str = "1.0.0";
 
     async fn prepare() -> (TestApp, MockAnonymousUser, MockCookieUser) {
-        let (app, anon, cookie) = TestApp::full().with_user();
+        let (app, anon, cookie) = TestApp::full().with_user().await;
 
         let pb = PublishBuilder::new(CRATE_NAME, CRATE_VERSION);
         cookie.publish_crate(pb).await.good();

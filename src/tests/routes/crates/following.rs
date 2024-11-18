@@ -3,7 +3,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn diesel_not_found_results_in_404() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (_, _, user) = TestApp::init().with_user().await;
 
     user.get("/api/v1/crates/foo_following/following")
         .await

@@ -26,7 +26,7 @@ async fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>)
 
 #[tokio::test(flavor = "multi_thread")]
 async fn account_locked_indefinitely() {
-    let (app, _anon, user) = TestApp::init().with_user();
+    let (app, _anon, user) = TestApp::init().with_user().await;
     lock_account(&app, user.as_model().id, None).await;
 
     let response = user.get::<()>(URL).await;
@@ -41,7 +41,7 @@ async fn account_locked_with_future_expiry() {
         .unwrap()
         .naive_utc();
 
-    let (app, _anon, user) = TestApp::init().with_user();
+    let (app, _anon, user) = TestApp::init().with_user().await;
     lock_account(&app, user.as_model().id, Some(until)).await;
 
     let response = user.get::<()>(URL).await;
@@ -53,7 +53,7 @@ async fn account_locked_with_future_expiry() {
 async fn expired_account_lock() {
     let until = Utc::now().naive_utc() - Duration::days(1);
 
-    let (app, _anon, user) = TestApp::init().with_user();
+    let (app, _anon, user) = TestApp::init().with_user().await;
     lock_account(&app, user.as_model().id, Some(until)).await;
 
     user.get::<serde_json::Value>(URL).await.good();

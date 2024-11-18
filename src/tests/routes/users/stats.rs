@@ -13,7 +13,7 @@ async fn user_total_downloads() {
     use diesel::prelude::*;
     use diesel::{update, QueryDsl, RunQueryDsl};
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
     let another_user = app.db_new_user("bar");
@@ -54,7 +54,7 @@ async fn user_total_downloads() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_total_downloads_no_crates() {
-    let (_, anon, user) = TestApp::init().with_user();
+    let (_, anon, user) = TestApp::init().with_user().await;
     let user = user.as_model();
     let url = format!("/api/v1/users/{}/stats", user.id);
 

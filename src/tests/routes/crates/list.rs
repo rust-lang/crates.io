@@ -40,7 +40,7 @@ async fn index() {
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
 async fn index_queries() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -201,7 +201,7 @@ async fn index_queries() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn search_includes_crates_where_name_is_stopword() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -218,7 +218,7 @@ async fn search_includes_crates_where_name_is_stopword() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn exact_match_first_on_queries() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -263,7 +263,7 @@ async fn exact_match_first_on_queries() {
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
 async fn index_sorting() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -483,7 +483,7 @@ async fn index_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
 async fn ignore_exact_match_on_queries_with_sort() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -613,7 +613,7 @@ async fn ignore_exact_match_on_queries_with_sort() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn multiple_ids() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -637,7 +637,7 @@ async fn multiple_ids() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn loose_search_order() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -684,7 +684,7 @@ async fn loose_search_order() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_include_yanked() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -748,7 +748,7 @@ async fn index_include_yanked() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_are_not_considered_for_max_version() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -768,7 +768,7 @@ async fn yanked_versions_are_not_considered_for_max_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn max_stable_version() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -797,7 +797,7 @@ async fn max_stable_version() {
 /// these numbers do not overlap.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_recent_download_count() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -833,7 +833,7 @@ async fn test_recent_download_count() {
 /// for both recent downloads and downloads.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_zero_downloads() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -857,7 +857,7 @@ async fn test_zero_downloads() {
 /// categories and keywords is sorted by recent downloads by default.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_default_sort_recent() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -917,7 +917,7 @@ async fn test_default_sort_recent() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_links_included_if_applicable() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -962,7 +962,7 @@ async fn pagination_links_included_if_applicable() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn seek_based_pagination() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -1011,7 +1011,7 @@ async fn seek_based_pagination() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pages_work_even_with_seek_based_pagination() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -1034,7 +1034,7 @@ async fn test_pages_work_even_with_seek_based_pagination() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_params_with_null_bytes() {
-    let (_app, anon, _cookie) = TestApp::init().with_user();
+    let (_app, anon, _cookie) = TestApp::init().with_user().await;
 
     for name in ["q", "category", "all_keywords", "keyword", "letter"] {
         let response = anon.get::<()>(&format!("/api/v1/crates?{name}=%00")).await;
@@ -1045,7 +1045,7 @@ async fn invalid_params_with_null_bytes() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
-    let (_app, anon, _cookie) = TestApp::init().with_user();
+    let (_app, anon, _cookie) = TestApp::init().with_user().await;
 
     let response = anon.get::<()>("/api/v1/crates?seek=broken").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -1054,7 +1054,7 @@ async fn invalid_seek_parameter() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_parameters_only_accept_integers() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -1077,7 +1077,7 @@ async fn pagination_parameters_only_accept_integers() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let id = user.as_model().id;
 
@@ -1091,7 +1091,7 @@ async fn crates_by_user_id() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id_not_including_deleted_owners() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

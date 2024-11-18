@@ -11,7 +11,7 @@ pub struct UserShowPublicResponse {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (app, anon, _) = TestApp::init().with_user();
+    let (app, anon, _) = TestApp::init().with_user().await;
     app.db_new_user("Bar");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();

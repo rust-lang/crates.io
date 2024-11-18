@@ -35,7 +35,7 @@ async fn new_wrong_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_wrong_user() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     // Create the foo_wrong crate with one user

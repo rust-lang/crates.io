@@ -9,7 +9,7 @@ pub struct RevokedResponse {}
 
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_non_existing() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (_, _, user) = TestApp::init().with_user().await;
     let _json: RevokedResponse = user.delete("/api/v1/me/tokens/5").await.good();
 }
 

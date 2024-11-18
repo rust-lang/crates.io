@@ -27,7 +27,7 @@ async fn following() {
         more: bool,
     }
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user_model = user.as_model();
     let user_id = user_model.id;

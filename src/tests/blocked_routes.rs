@@ -8,7 +8,8 @@ async fn test_non_blocked_download_route() {
         .with_config(|config| {
             config.blocked_routes.clear();
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
 
@@ -32,7 +33,8 @@ async fn test_blocked_download_route() {
                 .blocked_routes
                 .insert("/api/v1/crates/:crate_id/:version/download".into());
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
 

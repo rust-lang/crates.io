@@ -6,7 +6,7 @@ use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_by_crate_name_and_version() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -32,7 +32,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
     use crate::schema::versions;
     use diesel::{update, RunQueryDsl};
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

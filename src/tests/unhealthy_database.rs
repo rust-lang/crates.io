@@ -77,7 +77,8 @@ async fn fallback_to_replica_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
+        .with_user()
+        .await;
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking().unwrap();
 
@@ -97,7 +98,8 @@ async fn restored_replica_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
+        .with_user()
+        .await;
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
@@ -130,7 +132,8 @@ async fn restored_primary_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
+        .with_user()
+        .await;
     app.db_new_user("foo");
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
