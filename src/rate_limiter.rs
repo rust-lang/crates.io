@@ -1,11 +1,11 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
 use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{NaiveDateTime, Utc};
 use diesel::dsl::IntervalDsl;
 use diesel::sql_types::Interval;
+use diesel_async::AsyncPgConnection;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -74,13 +74,15 @@ impl RateLimiter {
         Self { config }
     }
 
-    pub fn check_rate_limit(
+    pub async fn check_rate_limit(
         &self,
         uploader: i32,
         performed_action: LimitedAction,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
     ) -> AppResult<()> {
-        let bucket = self.take_token(uploader, performed_action, Utc::now().naive_utc(), conn)?;
+        let bucket = self
+            .take_token(uploader, performed_action, Utc::now().naive_utc(), conn)
+            .await?;
         if bucket.tokens >= 1 {
             Ok(())
         } else {
@@ -101,14 +103,14 @@ impl RateLimiter {
     /// have a token to take. Technically a "full" bucket would have
     /// `self.burst + 1` tokens in it, but that value would never be returned
     /// since we only refill buckets when trying to take a token from it.
-    fn take_token(
+    async fn take_token(
         &self,
         uploader: i32,
         performed_action: LimitedAction,
         now: NaiveDateTime,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
     ) -> QueryResult<Bucket> {
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         let config = self.config_for_action(performed_action);
         let refill_rate = (config.rate.as_millis() as i64).milliseconds();
@@ -122,6 +124,7 @@ impl RateLimiter {
             )
             .select(publish_rate_overrides::burst)
             .first(conn)
+            .await
             .optional()?
             .unwrap_or(config.burst);
 
@@ -154,6 +157,7 @@ impl RateLimiter {
                     + refill_rate.into_sql::<Interval>() * tokens_to_add),
             ))
             .get_result(conn)
+            .await
     }
 
     fn config_for_action(&self, action: LimitedAction) -> Cow<'_, RateLimiterConfig> {
@@ -183,11 +187,12 @@ mod tests {
     use super::*;
     use crate::schema::users;
     use crates_io_test_db::TestDatabase;
+    use diesel_async::AsyncConnection;
 
-    #[test]
-    fn default_rate_limits() -> QueryResult<()> {
+    #[tokio::test]
+    async fn default_rate_limits() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         // Set the defaults as if no env vars have been set in production
@@ -203,7 +208,7 @@ mod tests {
         }
         let rate = RateLimiter::new(rate_limiter);
 
-        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+        let user_id = new_user_bucket(&mut conn, 5, now).await?.user_id;
 
         // Publishing new crates has a burst of 5 and refill time of 1 every 10 minutes, which
         // means we should be able to publish every 10 min, always have tokens remaining, and
@@ -213,7 +218,9 @@ mod tests {
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=10 {
             let publish_time = now + chrono::Duration::minutes(10 * publish_num);
-            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+            let bucket = rate
+                .take_token(user_id, action, publish_time, &mut conn)
+                .await?;
 
             last_refill_times.push(bucket.last_refill);
             expected_last_refill_times.push(publish_time);
@@ -228,7 +235,9 @@ mod tests {
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=35 {
             let publish_time = now + chrono::Duration::minutes(publish_num);
-            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+            let bucket = rate
+                .take_token(user_id, action, publish_time, &mut conn)
+                .await?;
 
             last_refill_times.push(bucket.last_refill);
             expected_last_refill_times.push(publish_time);
@@ -243,7 +252,9 @@ mod tests {
         let mut expected_last_refill_times = vec![];
         for publish_num in 1..=110 {
             let publish_time = now + chrono::Duration::minutes(publish_num);
-            let bucket = rate.take_token(user_id, action, publish_time, conn)?;
+            let bucket = rate
+                .take_token(user_id, action, publish_time, &mut conn)
+                .await?;
 
             last_refill_times.push(bucket.last_refill);
             expected_last_refill_times.push(publish_time);
@@ -253,10 +264,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn take_token_with_no_bucket_creates_new_one() -> QueryResult<()> {
+    #[tokio::test]
+    async fn take_token_with_no_bucket_creates_new_one() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -265,12 +276,14 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let bucket = rate.take_token(
-            new_user(conn, "user1")?,
-            LimitedAction::PublishNew,
-            now,
-            conn,
-        )?;
+        let bucket = rate
+            .take_token(
+                new_user(&mut conn, "user1").await?,
+                LimitedAction::PublishNew,
+                now,
+                &mut conn,
+            )
+            .await?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 10,
@@ -285,12 +298,14 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let bucket = rate.take_token(
-            new_user(conn, "user2")?,
-            LimitedAction::PublishNew,
-            now,
-            conn,
-        )?;
+        let bucket = rate
+            .take_token(
+                new_user(&mut conn, "user2").await?,
+                LimitedAction::PublishNew,
+                now,
+                &mut conn,
+            )
+            .await?;
         let expected = Bucket {
             user_id: bucket.user_id,
             tokens: 20,
@@ -301,10 +316,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn take_token_with_existing_bucket_modifies_existing_bucket() -> QueryResult<()> {
+    #[tokio::test]
+    async fn take_token_with_existing_bucket_modifies_existing_bucket() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -313,8 +328,10 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let user_id = new_user_bucket(&mut conn, 5, now).await?.user_id;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 4,
@@ -325,10 +342,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn take_token_after_delay_refills() -> QueryResult<()> {
+    #[tokio::test]
+    async fn take_token_after_delay_refills() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -337,9 +354,11 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+        let user_id = new_user_bucket(&mut conn, 5, now).await?.user_id;
         let refill_time = now + chrono::Duration::seconds(2);
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, refill_time, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 6,
@@ -350,10 +369,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn refill_subsecond_rate() -> QueryResult<()> {
+    #[tokio::test]
+    async fn refill_subsecond_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
         let now =
@@ -366,9 +385,11 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 5, now)?.user_id;
+        let user_id = new_user_bucket(&mut conn, 5, now).await?.user_id;
         let refill_time = now + chrono::Duration::milliseconds(300);
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, refill_time, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 7,
@@ -379,10 +400,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn last_refill_always_advanced_by_multiple_of_rate() -> QueryResult<()> {
+    #[tokio::test]
+    async fn last_refill_always_advanced_by_multiple_of_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -391,13 +412,15 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 5, now)?.user_id;
-        let bucket = rate.take_token(
-            user_id,
-            LimitedAction::PublishNew,
-            now + chrono::Duration::milliseconds(250),
-            conn,
-        )?;
+        let user_id = new_user_bucket(&mut conn, 5, now).await?.user_id;
+        let bucket = rate
+            .take_token(
+                user_id,
+                LimitedAction::PublishNew,
+                now + chrono::Duration::milliseconds(250),
+                &mut conn,
+            )
+            .await?;
         let expected_refill_time = now + chrono::Duration::milliseconds(200);
         let expected = Bucket {
             user_id,
@@ -409,10 +432,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn zero_tokens_returned_when_user_has_no_tokens_left() -> QueryResult<()> {
+    #[tokio::test]
+    async fn zero_tokens_returned_when_user_has_no_tokens_left() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -421,8 +444,10 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 1, now)?.user_id;
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let user_id = new_user_bucket(&mut conn, 1, now).await?.user_id;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 0,
@@ -431,15 +456,17 @@ mod tests {
         };
         assert_eq!(expected, bucket);
 
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
         assert_eq!(expected, bucket);
         Ok(())
     }
 
-    #[test]
-    fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> QueryResult<()> {
+    #[tokio::test]
+    async fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -448,9 +475,11 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 0, now)?.user_id;
+        let user_id = new_user_bucket(&mut conn, 0, now).await?.user_id;
         let refill_time = now + chrono::Duration::seconds(1);
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, refill_time, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 1,
@@ -462,10 +491,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn tokens_never_refill_past_burst() -> QueryResult<()> {
+    #[tokio::test]
+    async fn tokens_never_refill_past_burst() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -474,9 +503,11 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user_bucket(conn, 8, now)?.user_id;
+        let user_id = new_user_bucket(&mut conn, 8, now).await?.user_id;
         let refill_time = now + chrono::Duration::seconds(4);
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, refill_time, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, refill_time, &mut conn)
+            .await?;
         let expected = Bucket {
             user_id,
             tokens: 10,
@@ -488,10 +519,10 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn two_actions_dont_interfere_with_each_other() -> QueryResult<()> {
+    #[tokio::test]
+    async fn two_actions_dont_interfere_with_each_other() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let mut config = HashMap::new();
@@ -511,33 +542,36 @@ mod tests {
         );
         let rate = RateLimiter::new(config);
 
-        let user_id = new_user(conn, "user")?;
+        let user_id = new_user(&mut conn, "user").await?;
 
         assert_eq!(
             10,
-            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+            rate.take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+                .await?
                 .tokens
         );
         assert_eq!(
             9,
-            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+            rate.take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+                .await?
                 .tokens
         );
         assert_eq!(
             20,
-            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, &mut conn)
+                .await?
                 .tokens
         );
 
         Ok(())
     }
 
-    #[test]
-    fn override_is_used_instead_of_global_burst_if_present() -> QueryResult<()> {
-        use diesel::RunQueryDsl;
+    #[tokio::test]
+    async fn override_is_used_instead_of_global_burst_if_present() -> anyhow::Result<()> {
+        use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -546,8 +580,8 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user(conn, "user1")?;
-        let other_user_id = new_user(conn, "user2")?;
+        let user_id = new_user(&mut conn, "user1").await?;
+        let other_user_id = new_user(&mut conn, "user2").await?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
@@ -555,22 +589,27 @@ mod tests {
                 publish_rate_overrides::action.eq(LimitedAction::PublishNew),
                 publish_rate_overrides::burst.eq(20),
             ))
-            .execute(conn)?;
+            .execute(&mut conn)
+            .await?;
 
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
+        let other_bucket = rate
+            .take_token(other_user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
 
         assert_eq!(bucket.tokens, 20);
         assert_eq!(other_bucket.tokens, 10);
         Ok(())
     }
 
-    #[test]
-    fn overrides_can_expire() -> QueryResult<()> {
-        use diesel::RunQueryDsl;
+    #[tokio::test]
+    async fn overrides_can_expire() -> anyhow::Result<()> {
+        use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -579,8 +618,8 @@ mod tests {
             action: LimitedAction::PublishNew,
         }
         .create();
-        let user_id = new_user(conn, "user1")?;
-        let other_user_id = new_user(conn, "user2")?;
+        let user_id = new_user(&mut conn, "user1").await?;
+        let other_user_id = new_user(&mut conn, "user2").await?;
 
         diesel::insert_into(publish_rate_overrides::table)
             .values((
@@ -589,10 +628,15 @@ mod tests {
                 publish_rate_overrides::burst.eq(20),
                 publish_rate_overrides::expires_at.eq(now + chrono::Duration::days(30)),
             ))
-            .execute(conn)?;
+            .execute(&mut conn)
+            .await?;
 
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
+        let other_bucket = rate
+            .take_token(other_user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
 
         assert_eq!(bucket.tokens, 20);
         assert_eq!(other_bucket.tokens, 10);
@@ -601,10 +645,15 @@ mod tests {
         diesel::update(publish_rate_overrides::table)
             .set(publish_rate_overrides::expires_at.eq(now - chrono::Duration::days(30)))
             .filter(publish_rate_overrides::user_id.eq(user_id))
-            .execute(conn)?;
+            .execute(&mut conn)
+            .await?;
 
-        let bucket = rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?;
-        let other_bucket = rate.take_token(other_user_id, LimitedAction::PublishNew, now, conn)?;
+        let bucket = rate
+            .take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
+        let other_bucket = rate
+            .take_token(other_user_id, LimitedAction::PublishNew, now, &mut conn)
+            .await?;
 
         // The number of tokens of user_id is 10 and not 9 because when the new burst limit is
         // lower than the amount of available tokens, the number of available tokens is reset to
@@ -615,14 +664,14 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn override_is_different_for_each_action() -> QueryResult<()> {
-        use diesel::RunQueryDsl;
+    #[tokio::test]
+    async fn override_is_different_for_each_action() -> anyhow::Result<()> {
+        use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
         let now = now();
-        let user_id = new_user(conn, "user")?;
+        let user_id = new_user(&mut conn, "user").await?;
 
         let mut config = HashMap::new();
         for action in [LimitedAction::PublishNew, LimitedAction::YankUnyank] {
@@ -642,25 +691,28 @@ mod tests {
                 publish_rate_overrides::action.eq(LimitedAction::PublishNew),
                 publish_rate_overrides::burst.eq(20),
             ))
-            .execute(conn)?;
+            .execute(&mut conn)
+            .await?;
 
         assert_eq!(
             20,
-            rate.take_token(user_id, LimitedAction::PublishNew, now, conn)?
+            rate.take_token(user_id, LimitedAction::PublishNew, now, &mut conn)
+                .await?
                 .tokens,
         );
         assert_eq!(
             10,
-            rate.take_token(user_id, LimitedAction::YankUnyank, now, conn)?
+            rate.take_token(user_id, LimitedAction::YankUnyank, now, &mut conn)
+                .await?
                 .tokens,
         );
 
         Ok(())
     }
 
-    fn new_user(conn: &mut impl Conn, gh_login: &str) -> QueryResult<i32> {
+    async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         let user = NewUser {
             gh_login,
@@ -671,23 +723,25 @@ mod tests {
             .values(user)
             .returning(users::id)
             .get_result(conn)
+            .await
     }
 
-    fn new_user_bucket(
-        conn: &mut impl Conn,
+    async fn new_user_bucket(
+        conn: &mut AsyncPgConnection,
         tokens: i32,
         now: NaiveDateTime,
     ) -> QueryResult<Bucket> {
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
-                user_id: new_user(conn, "new_user")?,
+                user_id: new_user(conn, "new_user").await?,
                 tokens,
                 last_refill: now,
                 action: LimitedAction::PublishNew,
             })
             .get_result(conn)
+            .await
     }
 
     struct SampleRateLimiter {

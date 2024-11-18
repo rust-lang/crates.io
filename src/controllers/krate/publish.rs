@@ -124,6 +124,25 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         (existing_crate, auth)
     };
 
+    let verified_email_address = auth.user().async_verified_email(&mut conn).await?;
+    let verified_email_address = verified_email_address.ok_or_else(|| {
+        bad_request(format!(
+            "A verified email address is required to publish crates to crates.io. \
+             Visit https://{}/settings/profile to set and verify your email address.",
+            app.config.domain_name,
+        ))
+    })?;
+
+    // Use a different rate limit whether this is a new or an existing crate.
+    let rate_limit_action = match existing_crate {
+        Some(_) => LimitedAction::PublishUpdate,
+        None => LimitedAction::PublishNew,
+    };
+
+    app.rate_limiter
+        .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
+        .await?;
+
     spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
@@ -131,23 +150,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         let api_token_id = auth.api_token_id();
         let user = auth.user();
-
-        let verified_email_address = user.verified_email(conn)?;
-        let verified_email_address = verified_email_address.ok_or_else(|| {
-            bad_request(format!(
-                "A verified email address is required to publish crates to crates.io. \
-             Visit https://{}/settings/profile to set and verify your email address.",
-                app.config.domain_name,
-            ))
-        })?;
-
-        // Use a different rate limit whether this is a new or an existing crate.
-        let rate_limit_action = match existing_crate {
-            Some(_) => LimitedAction::PublishUpdate,
-            None => LimitedAction::PublishNew,
-        };
-        app.rate_limiter
-            .check_rate_limit(user.id, rate_limit_action, conn)?;
 
         let content_length = tarball_bytes.len() as u64;
 
@@ -226,7 +228,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         validate_url(homepage.as_deref(), "homepage")?;
         validate_url(documentation.as_deref(), "documentation")?;
         validate_url(repository.as_deref(), "repository")?;
-        if let Some(ref rust_version) =  rust_version {
+        if let Some(ref rust_version) = rust_version {
             validate_rust_version(rust_version)?;
         }
 
@@ -495,7 +497,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         repository,
                         pkg_path_in_vcs,
                     )
-                    .enqueue(conn)?;
+                        .enqueue(conn)?;
                 }
             }
 
@@ -556,7 +558,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }))
         })
     })
-    .await
+        .await
 }
 
 /// Counts the number of versions for `crate_id` that were published within
