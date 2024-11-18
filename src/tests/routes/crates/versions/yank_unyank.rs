@@ -62,7 +62,7 @@ impl<T: RequestHelper> YankRequestHelper for T {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_by_a_non_owner_fails() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     let another_user = app.db_new_user("bar");
@@ -79,7 +79,7 @@ async fn yank_by_a_non_owner_fails() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_records_an_audit_action() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
@@ -100,7 +100,7 @@ async fn yank_records_an_audit_action() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unyank_records_an_audit_action() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");

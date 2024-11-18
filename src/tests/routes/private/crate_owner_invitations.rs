@@ -28,7 +28,7 @@ async fn get_invitations(user: &MockCookieUser, query: &str) -> CrateOwnerInvita
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list() {
-    let (app, _, owner, token) = TestApp::init().with_token();
+    let (app, _, owner, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     let crate1 = CrateBuilder::new("crate_1", owner.as_model().id).expect_build(&mut conn);
@@ -165,7 +165,7 @@ async fn invitation_list() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_does_not_include_expired_invites() {
-    let (app, _, owner, token) = TestApp::init().with_token();
+    let (app, _, owner, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("invited_user");
 
@@ -209,7 +209,7 @@ async fn invitations_list_does_not_include_expired_invites() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitations_list_paginated() {
-    let (app, _, owner, token) = TestApp::init().with_token();
+    let (app, _, owner, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("invited_user");
 
@@ -283,7 +283,7 @@ async fn invitations_list_paginated() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list_with_no_filter() {
-    let (_, _, owner, _) = TestApp::init().with_token();
+    let (_, _, owner, _) = TestApp::init().with_token().await;
 
     let resp = owner
         .get::<()>("/api/private/crate_owner_invitations")
@@ -301,7 +301,7 @@ async fn invitation_list_with_no_filter() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list_other_users() {
-    let (app, _, owner, _) = TestApp::init().with_token();
+    let (app, _, owner, _) = TestApp::init().with_token().await;
     let other_user = app.db_new_user("other");
 
     // Retrieving our own invitations work.
@@ -325,7 +325,7 @@ async fn invitation_list_other_users() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invitation_list_other_crates() {
-    let (app, _, owner, _) = TestApp::init().with_token();
+    let (app, _, owner, _) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let other_user = app.db_new_user("other");
 

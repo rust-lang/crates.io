@@ -8,7 +8,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 async fn boolean_readme() {
     // see https://github.com/rust-lang/crates.io/issues/6847
 
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
@@ -41,7 +41,7 @@ async fn boolean_readme() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn missing_manifest() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest())
@@ -52,7 +52,7 @@ async fn missing_manifest() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn manifest_casing() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(
@@ -70,7 +70,7 @@ async fn manifest_casing() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn multiple_manifests() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(
@@ -92,7 +92,7 @@ async fn multiple_manifests() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_manifest() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""))
@@ -103,7 +103,7 @@ async fn invalid_manifest() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_manifest_missing_name() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(
@@ -116,7 +116,7 @@ async fn invalid_manifest_missing_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_manifest_missing_version() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(
@@ -129,7 +129,7 @@ async fn invalid_manifest_missing_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_rust_version() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response =
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
@@ -147,7 +147,7 @@ async fn invalid_rust_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_lib_and_bin_crate() {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .add_file("foo-1.0.0/src/lib.rs", "pub fn foo() {}")

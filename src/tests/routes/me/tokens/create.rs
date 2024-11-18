@@ -109,7 +109,7 @@ async fn create_token_multiple_users_have_different_values() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn cannot_create_token_with_token() {
-    let (app, _, _, token) = TestApp::init().with_token();
+    let (app, _, _, token) = TestApp::init().with_token().await;
     let response = token
         .put::<()>(
             "/api/v1/me/tokens",

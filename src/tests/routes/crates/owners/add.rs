@@ -50,7 +50,7 @@ async fn owner_change_via_cookie() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_token() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     let user2 = app.db_new_user("user-2");
@@ -197,7 +197,7 @@ async fn test_owner_change_with_invalid_json() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_already_invited_user() {
-    let (app, _, _, owner) = TestApp::init().with_token();
+    let (app, _, _, owner) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     app.db_new_user("invited_user");
@@ -225,7 +225,7 @@ async fn invite_already_invited_user() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_with_existing_expired_invite() {
-    let (app, _, _, owner) = TestApp::init().with_token();
+    let (app, _, _, owner) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     app.db_new_user("invited_user");
@@ -292,7 +292,7 @@ async fn test_unknown_team() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn max_invites_per_request() {
-    let (app, _, _, owner) = TestApp::init().with_token();
+    let (app, _, _, owner) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
@@ -314,7 +314,7 @@ async fn max_invites_per_request() {
 /// Assert that emails are only sent if the request succeeds.
 #[tokio::test(flavor = "multi_thread")]
 async fn no_invite_emails_for_txn_rollback() {
-    let (app, _, _, token) = TestApp::init().with_token();
+    let (app, _, _, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("crate_name", token.as_model().user_id).expect_build(&mut conn);

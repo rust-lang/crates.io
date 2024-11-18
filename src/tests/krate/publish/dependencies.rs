@@ -6,7 +6,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_name() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").dependency(DependencyBuilder::new("🦀")))
@@ -18,7 +18,7 @@ async fn invalid_dependency_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_renamed_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -35,7 +35,7 @@ async fn new_with_renamed_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_rename() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -54,7 +54,7 @@ async fn invalid_dependency_rename() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_name_starts_with_digit() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -73,7 +73,7 @@ async fn invalid_dependency_name_starts_with_digit() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_name_contains_unicode_chars() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -92,7 +92,7 @@ async fn invalid_dependency_name_contains_unicode_chars() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_too_long_dependency_name() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -111,7 +111,7 @@ async fn invalid_too_long_dependency_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_dependency_name() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -130,7 +130,7 @@ async fn empty_dependency_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_underscore_renamed_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new-krate can depend on it
@@ -149,7 +149,7 @@ async fn new_with_underscore_renamed_dependency() {
 async fn new_krate_with_dependency() {
     use crate::tests::routes::crates::versions::dependencies::Deps;
 
-    let (app, anon, user, token) = TestApp::full().with_token();
+    let (app, anon, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new_dep can depend on it
@@ -180,7 +180,7 @@ async fn new_krate_with_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_broken_dependency_requirement() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new_dep can depend on it
@@ -200,7 +200,7 @@ async fn new_krate_with_broken_dependency_requirement() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reject_new_krate_with_non_exact_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
@@ -218,7 +218,7 @@ async fn reject_new_krate_with_non_exact_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_allow_empty_alternative_registry_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
@@ -230,7 +230,7 @@ async fn new_crate_allow_empty_alternative_registry_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn reject_new_crate_with_alternative_registry_dependency() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let dependency =
         DependencyBuilder::new("dep").registry("https://server.example/path/to/registry");
@@ -245,7 +245,7 @@ async fn reject_new_crate_with_alternative_registry_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_wildcard_dependency() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that new_wild can depend on it
@@ -263,7 +263,7 @@ async fn new_krate_with_wildcard_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_dependency_missing() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     // Deliberately not inserting this crate in the database to test behavior when a dependency
     // doesn't exist!
@@ -278,7 +278,7 @@ async fn new_krate_dependency_missing() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_sorts_deps() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert crates directly into the database so that two-deps can depend on it
@@ -300,7 +300,7 @@ async fn new_krate_sorts_deps() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_feature_name() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(
@@ -317,7 +317,8 @@ async fn invalid_feature_name() {
 async fn test_dep_limit() {
     let (app, _, user, token) = TestApp::full()
         .with_config(|config| config.max_dependencies = 1)
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.db_conn();
 

@@ -22,7 +22,7 @@ impl crate::tests::util::MockCookieUser {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn updating_existing_user_doesnt_change_api_token() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.async_db_conn().await;
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();

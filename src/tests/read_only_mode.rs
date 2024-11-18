@@ -23,7 +23,8 @@ async fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.db_conn();
 

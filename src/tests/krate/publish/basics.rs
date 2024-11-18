@@ -43,7 +43,7 @@ async fn new_krate() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_token() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
@@ -64,7 +64,7 @@ async fn new_krate_with_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_weird_version() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_weird", "0.0.0-pre");
     let response = token.publish_crate(crate_to_publish).await;
@@ -85,7 +85,7 @@ async fn new_krate_weird_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
     token.publish_crate(crate_to_publish).await.good();
@@ -116,7 +116,7 @@ async fn new_krate_twice() {
 // The primary purpose is to verify that the `default_version` we provide is as expected.
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice_alt() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
@@ -145,7 +145,7 @@ async fn new_krate_twice_alt() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_duplicate_version() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database and then we'll try to publish the same version

@@ -12,7 +12,7 @@ async fn diesel_not_found_results_in_404() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn disallow_api_token_auth_for_get_crate_following_status() {
-    let (app, _, _, token) = TestApp::init().with_token();
+    let (app, _, _, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let api_token = token.as_model();
 

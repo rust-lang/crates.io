@@ -4,7 +4,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_git_upload_with_conflicts() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     app.upstream_index().create_empty_commit().unwrap();
 

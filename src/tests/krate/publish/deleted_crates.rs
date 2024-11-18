@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_recently_deleted_crate_with_same_name() -> anyhow::Result<()> {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     let now = Utc::now();

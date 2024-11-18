@@ -9,7 +9,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
-    let (app, anon, _, token) = TestApp::full().with_token();
+    let (app, anon, _, token) = TestApp::full().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     // Try to publish without a token

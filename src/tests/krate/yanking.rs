@@ -15,7 +15,7 @@ use std::time::Duration;
 #[tokio::test(flavor = "multi_thread")]
 #[allow(unknown_lints, clippy::bool_assert_comparison)] // for claim::assert_some_eq! with bool
 async fn yank_works_as_intended() {
-    let (app, anon, cookie, token) = TestApp::full().with_token();
+    let (app, anon, cookie, token) = TestApp::full().with_token().await;
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
@@ -81,7 +81,8 @@ fn check_yanked(app: &TestApp, is_yanked: bool) {
 async fn yank_ratelimit_hit() {
     let (app, _, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -117,7 +118,8 @@ async fn yank_ratelimit_hit() {
 async fn yank_ratelimit_expires() {
     let (app, _, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::YankUnyank, Duration::from_millis(500), 1)
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -147,7 +149,7 @@ async fn yank_ratelimit_expires() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_max_version() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
@@ -201,7 +203,7 @@ async fn yank_max_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_after_yank_max_version() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk_max", "1.0.0");
@@ -231,7 +233,7 @@ async fn publish_after_yank_max_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn patch_version_yank_unyank() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("patchable", "1.0.0");

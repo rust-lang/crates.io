@@ -26,7 +26,7 @@ impl crate::tests::util::MockAnonymousUser {
 /// Test adding team without `github:`
 #[tokio::test(flavor = "multi_thread")]
 async fn not_github() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
 
     let mut conn = app.db_conn();
 
@@ -41,7 +41,7 @@ async fn not_github() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn weird_name() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_weird_name", user.as_model().id).expect_build(&mut conn);
@@ -56,7 +56,7 @@ async fn weird_name() {
 /// Test adding team without second `:`
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_one_colon", user.as_model().id).expect_build(&mut conn);
@@ -68,7 +68,7 @@ async fn one_colon() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn add_nonexistent_team() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_add_nonexistent", user.as_model().id).expect_build(&mut conn);
@@ -258,7 +258,7 @@ async fn remove_team_as_team_owner() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_nonexistent_team() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_remove_nonexistent", user.as_model().id).expect_build(&mut conn);

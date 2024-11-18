@@ -7,7 +7,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_json() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let (_json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
     let body = PublishBuilder::create_publish_body("{}", &tarball);
@@ -20,7 +20,7 @@ async fn empty_json() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_names() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     async fn bad_name(name: &str, client: &impl RequestHelper) {
         let crate_to_publish = PublishBuilder::new(name, "1.0.0");
@@ -46,7 +46,7 @@ async fn invalid_names() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_version() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let (json, tarball) = PublishBuilder::new("foo", "1.0.0").build();
     let new_json = json.replace(r#""vers":"1.0.0""#, r#""vers":"broken""#);
@@ -61,7 +61,7 @@ async fn invalid_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn license_and_description_required() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0")
         .unset_license()
@@ -88,7 +88,7 @@ async fn license_and_description_required() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn long_description() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let description = "a".repeat(2000);
     let crate_to_publish = PublishBuilder::new("foo_metadata", "1.1.0").description(&description);
@@ -102,7 +102,7 @@ async fn long_description() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_license() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").license("MIT AND foobar"))
@@ -114,7 +114,7 @@ async fn invalid_license() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_urls() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(

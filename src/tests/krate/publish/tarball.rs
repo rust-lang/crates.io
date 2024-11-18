@@ -21,7 +21,7 @@ async fn new_krate_wrong_files() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_tarball_with_hard_links() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let tarball = {
         let mut builder = TarballBuilder::new();
@@ -58,7 +58,7 @@ async fn empty_body() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn json_len_truncated() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token.publish_crate(&[0u8, 0] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -68,7 +68,7 @@ async fn json_len_truncated() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn json_bytes_truncated() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token.publish_crate(&[100u8, 0, 0, 0, 0] as &[u8]).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -78,7 +78,7 @@ async fn json_bytes_truncated() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn tarball_len_truncated() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8])
@@ -90,7 +90,7 @@ async fn tarball_len_truncated() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn tarball_bytes_truncated() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8])

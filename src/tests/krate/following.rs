@@ -117,7 +117,7 @@ async fn test_api_token_auth() {
     const CRATE_TO_FOLLOW: &str = "some_crate_to_follow";
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
 
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let api_token = token.as_model();
 

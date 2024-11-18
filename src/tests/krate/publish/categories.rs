@@ -10,7 +10,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn good_categories() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     insert_into(categories::table)
@@ -30,7 +30,7 @@ async fn good_categories() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn ignored_categories() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (_, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_ignored_cat", "1.0.0").category("bar");
     let response = token.publish_crate(crate_to_publish).await;
@@ -40,7 +40,7 @@ async fn ignored_categories() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn too_many_categories() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let response = token
         .publish_crate(

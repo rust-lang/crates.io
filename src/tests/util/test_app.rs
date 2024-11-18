@@ -354,7 +354,7 @@ impl TestAppBuilder {
     }
 
     /// Create a `TestApp` with a database including a default user and its token
-    pub fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
+    pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty();
         let user = app.db_new_user("foo");
         let token = user.db_new_token("bar");

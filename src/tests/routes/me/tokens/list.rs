@@ -15,7 +15,7 @@ async fn list_logged_out() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_with_api_token_is_forbidden() {
-    let (_, _, _, token) = TestApp::init().with_token();
+    let (_, _, _, token) = TestApp::init().with_token().await;
     token.get("/api/v1/me/tokens").await.assert_forbidden();
 }
 

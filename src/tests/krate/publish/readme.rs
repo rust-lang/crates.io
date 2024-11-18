@@ -5,7 +5,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_readme() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("hello world");
     let response = token.publish_crate(crate_to_publish).await;
@@ -27,7 +27,7 @@ async fn new_krate_with_readme() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_empty_readme() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0").readme("");
     let response = token.publish_crate(crate_to_publish).await;
@@ -48,7 +48,7 @@ async fn new_krate_with_empty_readme() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_readme_and_plus_version() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo_readme", "1.0.0+foo").readme("hello world");
     let response = token.publish_crate(crate_to_publish).await;
@@ -70,7 +70,7 @@ async fn new_krate_with_readme_and_plus_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_after_removing_documentation() {
-    let (app, anon, user, token) = TestApp::full().with_token();
+    let (app, anon, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

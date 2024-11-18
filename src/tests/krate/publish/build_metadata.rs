@@ -5,7 +5,7 @@ use insta::assert_json_snapshot;
 use serde_json::json;
 
 async fn version_with_build_metadata(v1: &str, v2: &str, expected_error: &str) {
-    let (_app, _anon, _cookie, token) = TestApp::full().with_token();
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
     let response = token.publish_crate(PublishBuilder::new("foo", v1)).await;
     assert_eq!(response.status(), StatusCode::OK);
