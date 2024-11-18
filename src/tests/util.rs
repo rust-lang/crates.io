@@ -327,7 +327,7 @@ impl MockCookieUser {
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
     ) -> MockTokenUser {
-        let mut conn = self.app().db_conn();
+        let mut conn = self.app().async_db_conn().await;
 
         let token = ApiToken::insert_with_scopes(
             &mut conn,
@@ -337,6 +337,7 @@ impl MockCookieUser {
             endpoint_scopes,
             expired_at,
         )
+        .await
         .unwrap();
 
         MockTokenUser {

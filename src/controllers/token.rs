@@ -6,7 +6,6 @@ use crate::views::EncodableApiTokenWithToken;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, AppResult};
 use axum::extract::{Path, Query};
@@ -17,7 +16,7 @@ use axum_extra::response::ErasedJson;
 use chrono::NaiveDateTime;
 use diesel::data_types::PgInterval;
 use diesel::dsl::{now, IntervalDsl};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use http::StatusCode;
 
@@ -42,8 +41,6 @@ pub async fn list(
     Query(params): Query<GetParams>,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -91,89 +88,85 @@ pub async fn new(
 
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&parts, &mut conn).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    if auth.api_token_id().is_some() {
+        return Err(bad_request(
+            "cannot use an API token to create a new API token",
+        ));
+    }
 
-        if auth.api_token_id().is_some() {
-            return Err(bad_request(
-                "cannot use an API token to create a new API token",
-            ));
+    let user = auth.user();
+
+    let max_token_per_user = 500;
+    let count: i64 = ApiToken::belonging_to(user)
+        .count()
+        .get_result(&mut conn)
+        .await?;
+    if count >= max_token_per_user {
+        return Err(bad_request(format!(
+            "maximum tokens per user is: {max_token_per_user}"
+        )));
+    }
+
+    let crate_scopes = new
+        .api_token
+        .crate_scopes
+        .map(|scopes| {
+            scopes
+                .into_iter()
+                .map(CrateScope::try_from)
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .transpose()
+        .map_err(|_err| bad_request("invalid crate scope"))?;
+
+    let endpoint_scopes = new
+        .api_token
+        .endpoint_scopes
+        .map(|scopes| {
+            scopes
+                .into_iter()
+                .map(|scope| EndpointScope::try_from(scope.as_bytes()))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .transpose()
+        .map_err(|_err| bad_request("invalid endpoint scope"))?;
+
+    let recipient = user.async_email(&mut conn).await?;
+
+    let api_token = ApiToken::insert_with_scopes(
+        &mut conn,
+        user.id,
+        &new.api_token.name,
+        crate_scopes,
+        endpoint_scopes,
+        new.api_token.expired_at,
+    )
+    .await?;
+
+    if let Some(recipient) = recipient {
+        let email = NewTokenEmail {
+            token_name: &new.api_token.name,
+            user_name: &user.gh_login,
+            domain: &app.emails.domain,
+        };
+
+        // At this point the token has been created so failing to send the
+        // email should not cause an error response to be returned to the
+        // caller.
+        let email_ret = app.emails.async_send(&recipient, email).await;
+        if let Err(e) = email_ret {
+            error!("Failed to send token creation email: {e}")
         }
+    }
 
-        let user = auth.user();
+    let api_token = EncodableApiTokenWithToken::from(api_token);
 
-        let max_token_per_user = 500;
-        let count: i64 = ApiToken::belonging_to(user).count().get_result(conn)?;
-        if count >= max_token_per_user {
-            return Err(bad_request(format!(
-                "maximum tokens per user is: {max_token_per_user}"
-            )));
-        }
-
-        let crate_scopes = new
-            .api_token
-            .crate_scopes
-            .map(|scopes| {
-                scopes
-                    .into_iter()
-                    .map(CrateScope::try_from)
-                    .collect::<Result<Vec<_>, _>>()
-            })
-            .transpose()
-            .map_err(|_err| bad_request("invalid crate scope"))?;
-
-        let endpoint_scopes = new
-            .api_token
-            .endpoint_scopes
-            .map(|scopes| {
-                scopes
-                    .into_iter()
-                    .map(|scope| EndpointScope::try_from(scope.as_bytes()))
-                    .collect::<Result<Vec<_>, _>>()
-            })
-            .transpose()
-            .map_err(|_err| bad_request("invalid endpoint scope"))?;
-
-        let recipient = user.email(conn)?;
-
-        let api_token = ApiToken::insert_with_scopes(
-            conn,
-            user.id,
-            &new.api_token.name,
-            crate_scopes,
-            endpoint_scopes,
-            new.api_token.expired_at,
-        )?;
-
-        if let Some(recipient) = recipient {
-            let email = NewTokenEmail {
-                token_name: &new.api_token.name,
-                user_name: &user.gh_login,
-                domain: &app.emails.domain,
-            };
-
-            // At this point the token has been created so failing to send the
-            // email should not cause an error response to be returned to the
-            // caller.
-            let email_ret = app.emails.send(&recipient, email);
-            if let Err(e) = email_ret {
-                error!("Failed to send token creation email: {e}")
-            }
-        }
-
-        let api_token = EncodableApiTokenWithToken::from(api_token);
-
-        Ok(json!({ "api_token": api_token }))
-    })
-    .await
+    Ok(json!({ "api_token": api_token }))
 }
 
 /// Handles the `GET /me/tokens/:id` route.
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -188,8 +181,6 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<E
 
 /// Handles the `DELETE /me/tokens/:id` route.
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -203,8 +194,6 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 
 /// Handles the `DELETE /tokens/current` route.
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let api_token_id = auth

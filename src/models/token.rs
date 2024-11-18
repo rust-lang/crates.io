@@ -1,13 +1,14 @@
 mod scopes;
 
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel::dsl::now;
+use diesel::prelude::*;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
@@ -35,20 +36,22 @@ pub struct ApiToken {
 
 impl ApiToken {
     /// Generates a new named API token for a user
-    pub fn insert(conn: &mut impl Conn, user_id: i32, name: &str) -> QueryResult<CreatedApiToken> {
-        Self::insert_with_scopes(conn, user_id, name, None, None, None)
+    pub async fn insert(
+        conn: &mut AsyncPgConnection,
+        user_id: i32,
+        name: &str,
+    ) -> QueryResult<CreatedApiToken> {
+        Self::insert_with_scopes(conn, user_id, name, None, None, None).await
     }
 
-    pub fn insert_with_scopes(
-        conn: &mut impl Conn,
+    pub async fn insert_with_scopes(
+        conn: &mut AsyncPgConnection,
         user_id: i32,
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
         expired_at: Option<NaiveDateTime>,
     ) -> QueryResult<CreatedApiToken> {
-        use diesel::RunQueryDsl;
-
         let token = PlainToken::generate();
 
         let model: ApiToken = diesel::insert_into(api_tokens::table)
@@ -61,7 +64,8 @@ impl ApiToken {
                 api_tokens::expired_at.eq(expired_at),
             ))
             .returning(ApiToken::as_returning())
-            .get_result(conn)?;
+            .get_result(conn)
+            .await?;
 
         Ok(CreatedApiToken {
             plaintext: token,
@@ -73,10 +77,6 @@ impl ApiToken {
         conn: &mut AsyncPgConnection,
         token: &HashedToken,
     ) -> QueryResult<ApiToken> {
-        use diesel::{dsl::now, update};
-        use diesel_async::scoped_futures::ScopedFutureExt;
-        use diesel_async::{AsyncConnection, RunQueryDsl};
-
         let tokens = api_tokens::table
             .filter(api_tokens::revoked.eq(false))
             .filter(
@@ -91,7 +91,7 @@ impl ApiToken {
         let token = conn
             .transaction(|conn| {
                 async move {
-                    update(tokens)
+                    diesel::update(tokens)
                         .set(api_tokens::last_used_at.eq(now.nullable()))
                         .returning(ApiToken::as_returning())
                         .get_result(conn)
