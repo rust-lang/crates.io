@@ -249,7 +249,7 @@ async fn invite_with_existing_expired_invite() {
     assert_eq!(app.emails().await.len(), 1);
 
     // Simulate the previous invite expiring
-    expire_invitation(&app, krate.id);
+    expire_invitation(&app, krate.id).await;
 
     // Then invite the user a second time, a new invite is created as the old one expired
     let response = owner.add_named_owner("crate_name", "invited_user").await;

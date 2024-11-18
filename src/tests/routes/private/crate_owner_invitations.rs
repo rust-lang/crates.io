@@ -182,7 +182,7 @@ async fn invitations_list_does_not_include_expired_invites() {
         .good();
 
     // Simulate one of the invitations expiring
-    crate::tests::owners::expire_invitation(&app, crate1.id);
+    crate::tests::owners::expire_invitation(&app, crate1.id).await;
 
     // user1 has an invite just for crate 2
     let invitations = get_invitations(&user, &format!("invitee_id={}", user.as_model().id)).await;
