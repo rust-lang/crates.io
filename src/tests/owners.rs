@@ -15,6 +15,7 @@ use crate::{
 use crate::schema::users;
 use chrono::{Duration, Utc};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::assert_snapshot;
 use serde_json::json;
@@ -128,7 +129,7 @@ impl MockAnonymousUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_owner() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Create a crate under one user
     let crate_to_publish = PublishBuilder::new("foo_owner", "1.0.0");
@@ -141,7 +142,7 @@ async fn new_crate_owner() {
     assert_snapshot!(app.emails_snapshot().await);
 
     // accept invitation for user to be added as owner
-    let krate: Crate = Crate::by_name("foo_owner").first(&mut conn).unwrap();
+    let krate: Crate = Crate::by_name("foo_owner").first(&mut conn).await.unwrap();
     user2
         .accept_ownership_invitation("foo_owner", krate.id)
         .await;
@@ -465,7 +466,7 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
         .good();
 
     // Simulate one of the invitations expiring
-    expire_invitation(&app, krate1.id);
+    expire_invitation(&app, krate1.id).await;
 
     let invitations = user.list_invitations().await;
     assert_eq!(
@@ -588,10 +589,10 @@ async fn test_accept_invitation_by_mail() {
 
 /// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
 /// pass, the creation date of the invite is moved back a month.
-pub fn expire_invitation(app: &TestApp, crate_id: i32) {
+pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
     use crate::schema::crate_owner_invitations;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
     let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
@@ -600,6 +601,7 @@ pub fn expire_invitation(app: &TestApp, crate_id: i32) {
         .set(crate_owner_invitations::created_at.eq(created_at))
         .filter(crate_owner_invitations::crate_id.eq(crate_id))
         .execute(&mut conn)
+        .await
         .expect("failed to override the creation time");
 }
 
@@ -619,7 +621,7 @@ async fn test_accept_expired_invitation() {
         .good();
 
     // Manually update the creation time to simulate the invite expiring
-    expire_invitation(&app, krate.id);
+    expire_invitation(&app, krate.id).await;
 
     // New owner tries to accept the invitation but it fails
     let resp = invited_user
@@ -659,7 +661,7 @@ async fn test_decline_expired_invitation() {
         .good();
 
     // Manually update the creation time to simulate the invite expiring
-    expire_invitation(&app, krate.id);
+    expire_invitation(&app, krate.id).await;
 
     // New owner declines the invitation and it succeeds, even though the invitation expired.
     invited_user
@@ -687,7 +689,7 @@ async fn test_accept_expired_invitation_by_mail() {
         .good();
 
     // Manually update the creation time to simulate the invite expiring
-    expire_invitation(&app, krate.id);
+    expire_invitation(&app, krate.id).await;
 
     // Retrieve the ownership invitation
     let invite_token = extract_token_from_invite_email(&app.emails().await);
@@ -719,7 +721,7 @@ async fn inactive_users_dont_get_invitations() {
     use crate::models::NewUser;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let owner = owner.as_model();
 
     // An inactive user with gh_id -1 and an active user with a non-negative gh_id both exist
@@ -737,8 +739,10 @@ async fn inactive_users_dont_get_invitations() {
     diesel::insert_into(users::table)
         .values(user)
         .execute(&mut conn)
+        .await
         .unwrap();
 
+    let mut conn = app.db_conn();
     CrateBuilder::new(krate_name, owner.id).expect_build(&mut conn);
 
     let invited_user = app.db_new_user(invited_gh_login).await;
