@@ -361,7 +361,7 @@ impl TestAppBuilder {
         (app, anon, user, token)
     }
 
-    pub fn with_scoped_token(
+    pub async fn with_scoped_token(
         self,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,

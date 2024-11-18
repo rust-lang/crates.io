@@ -65,8 +65,9 @@ async fn owner_change_via_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_change_owner_token() {
-    let (app, _, _, token) =
-        TestApp::full().with_scoped_token(None, Some(vec![EndpointScope::ChangeOwners]));
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(None, Some(vec![EndpointScope::ChangeOwners]))
+        .await;
 
     let mut conn = app.db_conn();
 
@@ -84,7 +85,9 @@ async fn owner_change_via_change_owner_token() {
 async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let crate_scopes = Some(vec![CrateScope::try_from("foo_crate").unwrap()]);
     let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
-    let (app, _, _, token) = TestApp::full().with_scoped_token(crate_scopes, endpoint_scopes);
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(crate_scopes, endpoint_scopes)
+        .await;
     let mut conn = app.db_conn();
 
     let user2 = app.db_new_user("user-2");
@@ -101,7 +104,9 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
 async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let crate_scopes = Some(vec![CrateScope::try_from("bar").unwrap()]);
     let endpoint_scopes = Some(vec![EndpointScope::ChangeOwners]);
-    let (app, _, _, token) = TestApp::full().with_scoped_token(crate_scopes, endpoint_scopes);
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(crate_scopes, endpoint_scopes)
+        .await;
     let mut conn = app.db_conn();
 
     let user2 = app.db_new_user("user-2");
@@ -116,8 +121,9 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_publish_token() {
-    let (app, _, _, token) =
-        TestApp::full().with_scoped_token(None, Some(vec![EndpointScope::PublishUpdate]));
+    let (app, _, _, token) = TestApp::full()
+        .with_scoped_token(None, Some(vec![EndpointScope::PublishUpdate]))
+        .await;
 
     let mut conn = app.db_conn();
 
