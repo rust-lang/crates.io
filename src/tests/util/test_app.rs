@@ -365,7 +365,9 @@ impl TestAppBuilder {
     ) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo").await;
-        let token = user.db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None);
+        let token = user
+            .db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None)
+            .await;
         (app, anon, user, token)
     }
 
