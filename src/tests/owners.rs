@@ -156,6 +156,7 @@ async fn new_crate_owner() {
     let crate_to_publish = PublishBuilder::new("foo_owner", "2.0.0");
     user2
         .db_new_token("bar_token")
+        .await
         .publish_crate(crate_to_publish)
         .await
         .good();

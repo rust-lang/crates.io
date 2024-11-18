@@ -190,7 +190,7 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_token("test-token");
+        let client = client.db_new_token("test-token").await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);

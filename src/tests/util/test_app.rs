@@ -354,7 +354,7 @@ impl TestAppBuilder {
     pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo").await;
-        let token = user.db_new_token("bar");
+        let token = user.db_new_token("bar").await;
         (app, anon, user, token)
     }
 

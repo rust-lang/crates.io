@@ -86,7 +86,7 @@ async fn add_renamed_team() {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("user-all-teams").await;
-    let token = user.db_new_token("arbitrary token name");
+    let token = user.db_new_token("arbitrary token name").await;
     let owner_id = user.as_model().id;
 
     use crate::schema::teams;
@@ -126,7 +126,7 @@ async fn add_team_mixed_case() {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("user-all-teams").await;
-    let token = user.db_new_token("arbitrary token name");
+    let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_mixed_case", user.as_model().id).expect_build(&mut conn);
 
@@ -151,7 +151,7 @@ async fn add_team_as_org_owner() {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("user-org-owner").await;
-    let token = user.db_new_token("arbitrary token name");
+    let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_org_owner", user.as_model().id).expect_build(&mut conn);
 
@@ -177,7 +177,7 @@ async fn add_team_as_non_member() {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user = app.db_new_user("user-one-team").await;
-    let token = user.db_new_token("arbitrary token name");
+    let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_team_non_member", user.as_model().id).expect_build(&mut conn);
 
@@ -194,7 +194,9 @@ async fn remove_team_as_named_owner() {
     let mut conn = app.db_conn();
     let username = "user-all-teams";
     let user_on_both_teams = app.db_new_user(username).await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_remove_team", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -228,7 +230,9 @@ async fn remove_team_as_team_owner() {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_remove_team_owner", user_on_both_teams.as_model().id)
         .expect_build(&mut conn);
@@ -239,7 +243,7 @@ async fn remove_team_as_team_owner() {
         .good();
 
     let user_on_one_team = app.db_new_user("user-one-team").await;
-    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
+    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name").await;
 
     let response = token_on_one_team
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
@@ -248,7 +252,7 @@ async fn remove_team_as_team_owner() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to modify owners"}]}"#);
 
     let user_org_owner = app.db_new_user("user-org-owner").await;
-    let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
+    let token_org_owner = user_org_owner.db_new_token("arbitrary token name").await;
     let response = token_org_owner
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
@@ -286,7 +290,9 @@ async fn publish_not_owned() {
     let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -308,7 +314,9 @@ async fn publish_org_owner_owned() {
     let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -331,7 +339,9 @@ async fn publish_owned() {
     let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_team_owned", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -357,7 +367,9 @@ async fn add_owners_as_org_owner() {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -367,7 +379,7 @@ async fn add_owners_as_org_owner() {
         .good();
 
     let user_org_owner = app.db_new_user("user-org-owner").await;
-    let token_org_owner = user_org_owner.db_new_token("arbitrary token name");
+    let token_org_owner = user_org_owner.db_new_token("arbitrary token name").await;
 
     let response = token_org_owner
         .add_named_owner("foo_add_owner", "arbitrary_username")
@@ -381,7 +393,9 @@ async fn add_owners_as_team_owner() {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
-    let token_on_both_teams = user_on_both_teams.db_new_token("arbitrary token name");
+    let token_on_both_teams = user_on_both_teams
+        .db_new_token("arbitrary token name")
+        .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id).expect_build(&mut conn);
 
@@ -391,7 +405,7 @@ async fn add_owners_as_team_owner() {
         .good();
 
     let user_on_one_team = app.db_new_user("user-one-team").await;
-    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name");
+    let token_on_one_team = user_on_one_team.db_new_token("arbitrary token name").await;
 
     let response = token_on_one_team
         .add_named_owner("foo_add_owner", "arbitrary_username")
