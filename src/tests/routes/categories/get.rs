@@ -9,7 +9,7 @@ use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     let url = "/api/v1/categories/foo-bar";
@@ -43,7 +43,7 @@ async fn update_crate() {
         json.category.crates_cnt as usize
     }
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

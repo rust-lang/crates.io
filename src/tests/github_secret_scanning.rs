@@ -41,7 +41,10 @@ fn github_mock() -> MockGitHubClient {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_revokes_token() {
-    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
+    let (app, anon, user, token) = TestApp::init()
+        .with_github(github_mock())
+        .with_token()
+        .await;
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -99,7 +102,10 @@ async fn github_secret_alert_revokes_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_revoked_token() {
-    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
+    let (app, anon, user, token) = TestApp::init()
+        .with_github(github_mock())
+        .with_token()
+        .await;
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -160,7 +166,10 @@ async fn github_secret_alert_for_revoked_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_for_unknown_token() {
-    let (app, anon, user, token) = TestApp::init().with_github(github_mock()).with_token();
+    let (app, anon, user, token) = TestApp::init()
+        .with_github(github_mock())
+        .with_token()
+        .await;
     let mut conn = app.async_db_conn().await;
 
     // Ensure no emails were sent up to this point
@@ -202,7 +211,7 @@ async fn github_secret_alert_for_unknown_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_invalid_signature_fails() {
-    let (_, anon) = TestApp::init().with_github(github_mock()).empty();
+    let (_, anon) = TestApp::init().with_github(github_mock()).empty().await;
 
     // No headers or request body
     let request = anon.post_request(URL);

@@ -64,7 +64,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_no_auth() {
-        let (app, anon, user) = TestApp::init().with_user();
+        let (app, anon, user) = TestApp::init().with_user().await;
 
         let url = format!("/api/v1/users/{}/resend", user.as_model().id);
         let response = anon.put::<()>(&url, "").await;
@@ -76,8 +76,8 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_wrong_user() {
-        let (app, _anon, user) = TestApp::init().with_user();
-        let user2 = app.db_new_user("bar");
+        let (app, _anon, user) = TestApp::init().with_user().await;
+        let user2 = app.db_new_user("bar").await;
 
         let url = format!("/api/v1/users/{}/resend", user2.as_model().id);
         let response = user.put::<()>(&url, "").await;
@@ -89,7 +89,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_happy_path() {
-        let (app, _anon, user) = TestApp::init().with_user();
+        let (app, _anon, user) = TestApp::init().with_user().await;
 
         let url = format!("/api/v1/users/{}/resend", user.as_model().id);
         let response = user.put::<()>(&url, "").await;

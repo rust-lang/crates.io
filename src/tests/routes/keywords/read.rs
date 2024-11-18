@@ -11,7 +11,7 @@ struct GoodKeyword {
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
     let url = "/api/v1/keywords/foo";
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     anon.get(url).await.assert_not_found();
@@ -25,7 +25,7 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn uppercase() {
     let url = "/api/v1/keywords/UPPER";
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     anon.get(url).await.assert_not_found();
@@ -38,7 +38,7 @@ async fn uppercase() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn update_crate() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

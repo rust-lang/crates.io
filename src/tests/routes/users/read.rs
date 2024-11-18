@@ -11,8 +11,8 @@ pub struct UserShowPublicResponse {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (app, anon, _) = TestApp::init().with_user();
-    app.db_new_user("Bar");
+    let (app, anon, _) = TestApp::init().with_user().await;
+    app.db_new_user("Bar").await;
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
@@ -24,7 +24,7 @@ async fn show() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_latest_user_case_insensitively() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     // Please do not delete or modify the setup of this test in order to get it to pass.

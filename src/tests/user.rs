@@ -22,7 +22,7 @@ impl crate::tests::util::MockCookieUser {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn updating_existing_user_doesnt_change_api_token() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.async_db_conn().await;
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
@@ -54,7 +54,7 @@ async fn updating_existing_user_doesnt_change_api_token() {
 /// deleting their email when they sign back in.
 #[tokio::test(flavor = "multi_thread")]
 async fn github_without_email_does_not_overwrite_email() {
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub with an account that has no email.
@@ -100,7 +100,7 @@ async fn github_without_email_does_not_overwrite_email() {
 async fn github_with_email_does_not_overwrite_email() {
     use crate::schema::emails;
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.async_db_conn().await;
 
     let model = user.as_model();
@@ -139,7 +139,7 @@ async fn github_with_email_does_not_overwrite_email() {
 /// that the updated email is sent back to the user (GET /me).
 #[tokio::test(flavor = "multi_thread")]
 async fn test_email_get_and_put() {
-    let (_app, _anon, user) = TestApp::init().with_user();
+    let (_app, _anon, user) = TestApp::init().with_user().await;
 
     let json = user.show_me().await;
     assert_eq!(json.user.email.unwrap(), "foo@example.com");
@@ -161,7 +161,7 @@ async fn test_email_get_and_put() {
 async fn test_confirm_user_email() {
     use crate::schema::emails;
 
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
@@ -200,7 +200,7 @@ async fn test_existing_user_email() {
     use chrono::NaiveDateTime;
     use diesel::update;
 
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified

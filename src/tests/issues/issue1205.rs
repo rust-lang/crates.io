@@ -9,7 +9,10 @@ use insta::assert_snapshot;
 async fn test_issue_1205() -> anyhow::Result<()> {
     const CRATE_NAME: &str = "deepspeech-sys";
 
-    let (app, _, _, user) = TestApp::full().with_github(github_mock()).with_token();
+    let (app, _, _, user) = TestApp::full()
+        .with_github(github_mock())
+        .with_token()
+        .await;
 
     let mut conn = app.db_conn();
 

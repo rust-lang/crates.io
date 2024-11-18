@@ -19,7 +19,7 @@ pub struct UserShowPrivateResponse {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn me() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let response = anon.get::<()>("/api/v1/me").await;
@@ -39,7 +39,7 @@ async fn me() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user_model = user.as_model();
 

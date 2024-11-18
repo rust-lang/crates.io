@@ -11,7 +11,7 @@ pub struct Deps {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn dependencies() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

@@ -8,13 +8,13 @@ use insta::assert_json_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn show_token_non_existing() {
     let url = "/api/v1/me/tokens/10086";
-    let (_, _, user, _) = TestApp::init().with_token();
+    let (_, _, user, _) = TestApp::init().with_token().await;
     user.get(url).await.assert_not_found();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (_, _, user, token) = TestApp::init().with_token();
+    let (_, _, user, token) = TestApp::init().with_token().await;
     let token = token.as_model();
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user.get::<()>(&url).await;
@@ -26,7 +26,7 @@ async fn show() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_token_with_scopes() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user_model = user.as_model();
     let id = user_model.id;
@@ -56,15 +56,15 @@ async fn show_token_with_scopes() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_with_anonymous_user() {
     let url = "/api/v1/me/tokens/1";
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get(url).await.assert_forbidden();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_other_user_token() {
-    let (app, _, user1) = TestApp::init().with_user();
+    let (app, _, user1) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
-    let user2 = app.db_new_user("baz");
+    let user2 = app.db_new_user("baz").await;
     let user2 = user2.as_model();
 
     let token = assert_ok!(ApiToken::insert(&mut conn, user2.id, "bar"));

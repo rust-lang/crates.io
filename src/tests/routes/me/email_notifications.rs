@@ -26,7 +26,7 @@ impl crate::tests::util::MockCookieUser {
 /// were sent in the request should be updated to the corresponding `email_notifications` value.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let a = CrateBuilder::new("test_package", user.as_model().id).expect_build(&mut conn);
@@ -107,7 +107,7 @@ async fn test_update_email_notifications() {
 /// owned by them.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications_not_owned() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let user_id = diesel::insert_into(users::table)

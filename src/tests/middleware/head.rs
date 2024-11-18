@@ -3,7 +3,7 @@ use http::{Method, StatusCode};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn head_method_works() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let req = anon.request_builder(Method::HEAD, "/api/v1/summary");
     let res = anon.run::<()>(req).await;
@@ -13,7 +13,7 @@ async fn head_method_works() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn head_method_works_for_404() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let req = anon.request_builder(Method::HEAD, "/unknown");
     let res = anon.run::<()>(req).await;

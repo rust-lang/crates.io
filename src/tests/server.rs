@@ -7,7 +7,7 @@ use http::{header, Request, StatusCode};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_required() {
-    let (_app, anon) = TestApp::init().empty();
+    let (_app, anon) = TestApp::init().empty().await;
 
     let req = Request::get("/api/v1/crates").body("").unwrap();
     let resp = anon.run::<()>(req).await;
@@ -25,7 +25,7 @@ async fn user_agent_is_required() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_not_required_for_download() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(&mut conn);
@@ -42,7 +42,8 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
         .with_config(|config| {
             config.blocked_traffic = vec![("Never-Given".into(), vec!["1".into()])];
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
 
@@ -60,7 +61,8 @@ async fn block_traffic_via_arbitrary_header_and_value() {
         .with_config(|config| {
             config.blocked_traffic = vec![("User-Agent".into(), vec!["1".into(), "2".into()])];
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
 
@@ -97,7 +99,8 @@ async fn block_traffic_via_ip() {
         .with_config(|config| {
             config.blocked_ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
         })
-        .empty();
+        .empty()
+        .await;
 
     let resp = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);

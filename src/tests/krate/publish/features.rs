@@ -6,7 +6,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn features_version_2() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     // Insert a crate directly into the database so that foo_new can depend on it
@@ -26,7 +26,7 @@ async fn features_version_2() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_with_dot() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.bar", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
@@ -35,7 +35,7 @@ async fn feature_name_with_dot() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_start_with_number_and_underscore() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
         .feature("0foo1.bar", &[])
         .feature("_foo2.bar", &[]);
@@ -46,7 +46,7 @@ async fn feature_name_start_with_number_and_underscore() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn feature_name_with_unicode_chars() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo.你好世界", &[]);
     token.publish_crate(crate_to_publish).await.good();
     let crates = app.crates_from_index_head("foo");
@@ -55,7 +55,7 @@ async fn feature_name_with_unicode_chars() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_feature_name() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("", &[]);
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -65,7 +65,7 @@ async fn empty_feature_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_feature_name1() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("~foo", &[]);
     let response = token.publish_crate(crate_to_publish).await;
@@ -76,7 +76,7 @@ async fn invalid_feature_name1() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_feature_name2() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("foo", &["!bar"]);
     let response = token.publish_crate(crate_to_publish).await;
@@ -87,7 +87,7 @@ async fn invalid_feature_name2() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_feature_name_start_with_hyphen() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").feature("-foo1.bar", &[]);
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -101,7 +101,8 @@ async fn too_many_features() {
         .with_config(|config| {
             config.max_features = 3;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("one", &[])
@@ -121,7 +122,8 @@ async fn too_many_features_with_custom_limit() {
         .with_config(|config| {
             config.max_features = 3;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.db_conn();
 
@@ -162,7 +164,8 @@ async fn too_many_enabled_features() {
         .with_config(|config| {
             config.max_features = 3;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("default", &["one", "two", "three", "four", "five"]);
@@ -178,7 +181,8 @@ async fn too_many_enabled_features_with_custom_limit() {
         .with_config(|config| {
             config.max_features = 3;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.db_conn();
 

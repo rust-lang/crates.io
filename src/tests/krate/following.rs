@@ -33,7 +33,7 @@ async fn unfollow(crate_name: &str, user: &impl RequestHelper) {
 async fn test_unauthenticated_requests() {
     const CRATE_NAME: &str = "foo";
 
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(&mut conn);
@@ -61,7 +61,7 @@ async fn test_unauthenticated_requests() {
 async fn test_following() {
     const CRATE_NAME: &str = "foo_following";
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(&mut conn);
@@ -91,7 +91,7 @@ async fn test_following() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (_, _, user) = TestApp::init().with_user().await;
 
     let response = user
         .get::<()>("/api/v1/crates/unknown-crate/following")
@@ -117,7 +117,7 @@ async fn test_api_token_auth() {
     const CRATE_TO_FOLLOW: &str = "some_crate_to_follow";
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
 
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
     let api_token = token.as_model();
 

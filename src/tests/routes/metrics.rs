@@ -6,7 +6,8 @@ use http::StatusCode;
 async fn metrics_endpoint_works() {
     let (_, anon) = TestApp::init()
         .with_config(|config| config.metrics_authorization_token = Some("foobar".into()))
-        .empty();
+        .empty()
+        .await;
 
     let resp = request_metrics(&anon, "service", Some("foobar")).await;
     assert_eq!(resp.status(), StatusCode::OK);
@@ -22,7 +23,8 @@ async fn metrics_endpoint_works() {
 async fn metrics_endpoint_wrong_auth() {
     let (_, anon) = TestApp::init()
         .with_config(|config| config.metrics_authorization_token = Some("secret".into()))
-        .empty();
+        .empty()
+        .await;
 
     // Wrong secret
 
@@ -51,7 +53,8 @@ async fn metrics_endpoint_wrong_auth() {
 async fn metrics_endpoint_auth_disabled() {
     let (_, anon) = TestApp::init()
         .with_config(|config| config.metrics_authorization_token = None)
-        .empty();
+        .empty()
+        .await;
 
     // Wrong secret
 

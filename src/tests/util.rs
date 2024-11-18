@@ -313,14 +313,14 @@ impl MockCookieUser {
     /// Creates a token and wraps it in a helper struct
     ///
     /// This method updates the database directly
-    pub fn db_new_token(&self, name: &str) -> MockTokenUser {
-        self.db_new_scoped_token(name, None, None, None)
+    pub async fn db_new_token(&self, name: &str) -> MockTokenUser {
+        self.db_new_scoped_token(name, None, None, None).await
     }
 
     /// Creates a scoped token and wraps it in a helper struct
     ///
     /// This method updates the database directly
-    pub fn db_new_scoped_token(
+    pub async fn db_new_scoped_token(
         &self,
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,

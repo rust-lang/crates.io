@@ -62,10 +62,10 @@ impl<T: RequestHelper> YankRequestHelper for T {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_by_a_non_owner_fails() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
-    let another_user = app.db_new_user("bar");
+    let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
 
     CrateBuilder::new("foo_not", another_user.id)
@@ -79,7 +79,7 @@ async fn yank_by_a_non_owner_fails() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_records_an_audit_action() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate, putting it in the git index
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
@@ -100,7 +100,7 @@ async fn yank_records_an_audit_action() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn unyank_records_an_audit_action() {
-    let (_, anon, _, token) = TestApp::full().with_token();
+    let (_, anon, _, token) = TestApp::full().with_token().await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("fyk", "1.0.0");
@@ -136,7 +136,7 @@ mod auth {
     const CRATE_VERSION: &str = "1.0.0";
 
     async fn prepare() -> (TestApp, MockAnonymousUser, MockCookieUser) {
-        let (app, anon, cookie) = TestApp::full().with_user();
+        let (app, anon, cookie) = TestApp::full().with_user().await;
 
         let pb = PublishBuilder::new(CRATE_NAME, CRATE_VERSION);
         cookie.publish_crate(pb).await.good();
@@ -190,7 +190,7 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_token("test-token");
+        let client = client.db_new_token("test-token").await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -208,8 +208,9 @@ mod auth {
         let expired_at = Utc::now() + Duration::days(7);
 
         let (app, _, client) = prepare().await;
-        let client =
-            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+        let client = client
+            .db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()))
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -227,8 +228,9 @@ mod auth {
         let expired_at = Utc::now() - Duration::days(7);
 
         let (app, _, client) = prepare().await;
-        let client =
-            client.db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()));
+        let client = client
+            .db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()))
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -244,8 +246,9 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user_with_correct_endpoint_scope() {
         let (app, _, client) = prepare().await;
-        let client =
-            client.db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None);
+        let client = client
+            .db_new_scoped_token("test-token", None, Some(vec![EndpointScope::Yank]), None)
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -261,12 +264,14 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user_with_incorrect_endpoint_scope() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_scoped_token(
-            "test-token",
-            None,
-            Some(vec![EndpointScope::PublishUpdate]),
-            None,
-        );
+        let client = client
+            .db_new_scoped_token(
+                "test-token",
+                None,
+                Some(vec![EndpointScope::PublishUpdate]),
+                None,
+            )
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -282,12 +287,14 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user_with_correct_crate_scope() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_scoped_token(
-            "test-token",
-            Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
-            None,
-            None,
-        );
+        let client = client
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
+                None,
+                None,
+            )
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -304,12 +311,14 @@ mod auth {
     async fn token_user_with_correct_wildcard_crate_scope() {
         let (app, _, client) = prepare().await;
         let wildcard = format!("{}*", CRATE_NAME.chars().next().unwrap());
-        let client = client.db_new_scoped_token(
-            "test-token",
-            Some(vec![CrateScope::try_from(wildcard).unwrap()]),
-            None,
-            None,
-        );
+        let client = client
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from(wildcard).unwrap()]),
+                None,
+                None,
+            )
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -325,12 +334,14 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user_with_incorrect_crate_scope() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_scoped_token(
-            "test-token",
-            Some(vec![CrateScope::try_from("foo").unwrap()]),
-            None,
-            None,
-        );
+        let client = client
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from("foo").unwrap()]),
+                None,
+                None,
+            )
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -346,12 +357,14 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn token_user_with_incorrect_wildcard_crate_scope() {
         let (app, _, client) = prepare().await;
-        let client = client.db_new_scoped_token(
-            "test-token",
-            Some(vec![CrateScope::try_from("foo*").unwrap()]),
-            None,
-            None,
-        );
+        let client = client
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from("foo*").unwrap()]),
+                None,
+                None,
+            )
+            .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -369,7 +382,7 @@ mod auth {
         let (app, _, _) = prepare().await;
         let mut conn = app.async_db_conn().await;
 
-        let admin = app.db_new_user("admin");
+        let admin = app.db_new_user("admin").await;
 
         diesel::update(admin.as_model())
             .set(users::is_admin.eq(true))

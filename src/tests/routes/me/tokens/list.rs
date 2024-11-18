@@ -9,19 +9,19 @@ use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_logged_out() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get("/api/v1/me/tokens").await.assert_forbidden();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_with_api_token_is_forbidden() {
-    let (_, _, _, token) = TestApp::init().with_token();
+    let (_, _, _, token) = TestApp::init().with_token().await;
     token.get("/api/v1/me/tokens").await.assert_forbidden();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_empty() {
-    let (_, _, user) = TestApp::init().with_user();
+    let (_, _, user) = TestApp::init().with_user().await;
     let response = user.get::<()>("/api/v1/me/tokens").await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"api_tokens":[]}"#);
@@ -29,7 +29,7 @@ async fn list_empty() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let id = user.as_model().id;
 
@@ -70,7 +70,7 @@ async fn list_recently_expired_tokens() {
         assert_some!(response_tokens.iter().find(|token| token["name"] == name));
     }
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let id = user.as_model().id;
 
@@ -115,7 +115,7 @@ async fn list_recently_expired_tokens() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens_exclude_revoked() {
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let id = user.as_model().id;
 

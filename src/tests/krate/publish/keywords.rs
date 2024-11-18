@@ -6,7 +6,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn good_keywords() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (_, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish = PublishBuilder::new("foo_good_key", "1.0.0")
         .keyword("c++")
         .keyword("crates-io_index")
@@ -21,7 +21,7 @@ async fn good_keywords() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn bad_keywords() {
-    let (_, _, _, token) = TestApp::full().with_token();
+    let (_, _, _, token) = TestApp::full().with_token().await;
     let crate_to_publish =
         PublishBuilder::new("foo_bad_key", "1.0.0").keyword("super-long-keyword-name-oh-no");
     let response = token.publish_crate(crate_to_publish).await;
@@ -41,7 +41,7 @@ async fn bad_keywords() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn too_many_keywords() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let response = token
         .publish_crate(
             PublishBuilder::new("foo", "1.0.0")

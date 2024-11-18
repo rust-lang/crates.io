@@ -10,7 +10,7 @@ use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn versions() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -39,7 +39,7 @@ async fn versions() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.get::<()>("/api/v1/crates/unknown/versions").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -48,7 +48,7 @@ async fn test_unknown_crate() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sorting() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let user = user.as_model();
@@ -150,7 +150,7 @@ async fn test_sorting() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_semver_sorting() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -233,7 +233,7 @@ async fn test_seek_based_pagination_semver_sorting() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_date_sorting() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -319,7 +319,7 @@ async fn test_seek_based_pagination_date_sorting() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 

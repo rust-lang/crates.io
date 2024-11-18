@@ -33,7 +33,7 @@ async fn wait_until_healthy(pool: &Pool<AsyncPgConnection>) {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn http_error_with_unhealthy_database() {
-    let (app, anon) = TestApp::init().with_chaos_proxy().empty();
+    let (app, anon) = TestApp::init().with_chaos_proxy().empty().await;
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -52,7 +52,7 @@ async fn http_error_with_unhealthy_database() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn download_requests_with_unhealthy_database_succeed() {
-    let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token();
+    let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo", token.as_model().user_id)
@@ -77,8 +77,9 @@ async fn fallback_to_replica_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
-    app.db_new_user("foo");
+        .with_user()
+        .await;
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
 
     // When the primary database is down, requests are forwarded to the replica database
@@ -97,8 +98,9 @@ async fn restored_replica_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
-    app.db_new_user("foo");
+        .with_user()
+        .await;
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
 
@@ -130,8 +132,9 @@ async fn restored_primary_returns_user_info() {
     let (app, _, owner) = TestApp::init()
         .with_replica()
         .with_chaos_proxy()
-        .with_user();
-    app.db_new_user("foo");
+        .with_user()
+        .await;
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
 

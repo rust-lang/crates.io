@@ -8,7 +8,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_current_token_success() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     // Ensure that the token currently exists in the database
@@ -41,7 +41,7 @@ async fn revoke_current_token_success() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_current_token_without_auth() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -50,7 +50,7 @@ async fn revoke_current_token_without_auth() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_current_token_with_cookie_user() {
-    let (app, _, user, token) = TestApp::init().with_token();
+    let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     // Ensure that the token currently exists in the database

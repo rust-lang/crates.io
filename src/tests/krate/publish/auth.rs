@@ -9,7 +9,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
-    let (app, anon, _, token) = TestApp::full().with_token();
+    let (app, anon, _, token) = TestApp::full().with_token().await;
     let mut conn = app.async_db_conn().await;
 
     // Try to publish without a token
@@ -35,14 +35,15 @@ async fn new_wrong_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_wrong_user() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
     // Create the foo_wrong crate with one user
     CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&mut conn);
 
     // Then try to publish with a different user
-    let another_user = app.db_new_user("another").db_new_token("bar");
+    let another_user = app.db_new_user("another").await;
+    let another_user = another_user.db_new_token("bar").await;
     let crate_to_publish = PublishBuilder::new("foo_wrong", "2.0.0");
 
     let response = another_user.publish_crate(crate_to_publish).await;

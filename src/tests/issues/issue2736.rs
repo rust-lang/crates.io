@@ -9,14 +9,14 @@ use insta::assert_snapshot;
 /// See <https://github.com/rust-lang/crates.io/issues/2736>.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_issue_2736() -> anyhow::Result<()> {
-    let (app, _) = TestApp::full().empty();
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
 
     // - A user had a GitHub account named, let's say, `foo`
-    let foo1 = app.db_new_user("foo");
+    let foo1 = app.db_new_user("foo").await;
 
     // - Another user `someone_else` added them as an owner of a crate
-    let someone_else = app.db_new_user("someone_else");
+    let someone_else = app.db_new_user("someone_else").await;
 
     let krate = CrateBuilder::new("crate1", someone_else.as_model().id).expect_build(&mut conn);
 
@@ -33,7 +33,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     // - `foo` deleted their GitHub account (but crates.io has no real knowledge of this)
     // - `foo` recreated their GitHub account with the same username (because it was still available), but in this situation GitHub assigns them a new ID
     // - When `foo` now logs in to crates.io, it's a different account than their old `foo` crates.io account because of the new GitHub ID (and if it wasn't, this would be a security problem)
-    let foo2 = app.db_new_user("foo");
+    let foo2 = app.db_new_user("foo").await;
 
     let github_ids = users::table
         .filter(users::gh_login.eq("foo"))

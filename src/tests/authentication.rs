@@ -9,7 +9,7 @@ static URL: &str = "/api/v1/me/updates";
 
 #[tokio::test(flavor = "multi_thread")]
 async fn anonymous_user_unauthorized() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     let response: Response<()> = anon.get(URL).await;
 
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -18,7 +18,7 @@ async fn anonymous_user_unauthorized() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn token_auth_cannot_find_token() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     let mut request = anon.request_builder(Method::GET, URL);
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
     let response: Response<()> = anon.run(request).await;
@@ -32,7 +32,7 @@ async fn token_auth_cannot_find_token() {
 // the database, it is not possible to implement this same test for a token.
 #[tokio::test(flavor = "multi_thread")]
 async fn cookie_auth_cannot_find_user() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
 
     let session_key = app.as_inner().session_key();
     let cookie = encode_session_header(session_key, -1);

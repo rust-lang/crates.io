@@ -11,7 +11,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {
-    let (_, _, _, token) = TestApp::init().with_token();
+    let (_, _, _, token) = TestApp::init().with_token().await;
     token.get("/api/v1/me/updates").await.assert_forbidden();
 }
 
@@ -27,7 +27,7 @@ async fn following() {
         more: bool,
     }
 
-    let (app, _, user) = TestApp::init().with_user();
+    let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user_model = user.as_model();
     let user_id = user_model.id;

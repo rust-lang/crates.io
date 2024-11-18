@@ -6,7 +6,7 @@ async fn publish_records_an_audit_action() {
     use crate::tests::builders::PublishBuilder;
     use crate::tests::util::{RequestHelper, TestApp};
 
-    let (app, anon, _, token) = TestApp::full().with_token();
+    let (app, anon, _, token) = TestApp::full().with_token().await;
 
     let mut conn = app.db_conn();
     assert!(VersionOwnerAction::all(&mut conn).unwrap().is_empty());

@@ -20,12 +20,11 @@ use crates_io_test_db::TestDatabase;
 use crates_io_worker::Runner;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::PgConnection;
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
 use std::collections::HashSet;
-use std::ops::DerefMut;
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -119,8 +118,8 @@ impl TestApp {
     }
 
     /// Obtain an async database connection from the primary database pool.
-    pub async fn async_db_conn(&self) -> impl DerefMut<Target = AsyncPgConnection> {
-        let result = self.as_inner().primary_database.get().await;
+    pub async fn async_db_conn(&self) -> AsyncPgConnection {
+        let result = AsyncPgConnection::establish(self.0.test_database.url()).await;
         result.expect("Failed to get database connection")
     }
 
@@ -128,17 +127,19 @@ impl TestApp {
     /// (`<username>@example.com`) and return a mock user session.
     ///
     /// This method updates the database directly
-    pub fn db_new_user(&self, username: &str) -> MockCookieUser {
+    pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
         use crate::schema::emails;
         use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
 
-        let mut conn = self.db_conn();
+        let mut conn = self.async_db_conn().await;
 
         let email = format!("{username}@example.com");
 
         let user: User = diesel::insert_into(users::table)
             .values(crate::tests::new_user(username))
             .get_result(&mut conn)
+            .await
             .unwrap();
 
         diesel::insert_into(emails::table)
@@ -148,6 +149,7 @@ impl TestApp {
                 emails::verified.eq(true),
             ))
             .execute(&mut conn)
+            .await
             .unwrap();
 
         MockCookieUser {
@@ -260,7 +262,7 @@ pub struct TestAppBuilder {
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
-    pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
+    pub async fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let test_database = TestDatabase::new();
@@ -268,11 +270,7 @@ impl TestAppBuilder {
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
-                let (primary_proxy, url) = block_in_place(move || {
-                    Handle::current()
-                        .block_on(ChaosProxy::proxy_database_url(db_url))
-                        .unwrap()
-                });
+                let (primary_proxy, url) = ChaosProxy::proxy_database_url(db_url).await.unwrap();
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
@@ -281,21 +279,19 @@ impl TestAppBuilder {
                 None
             };
 
-            let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
-                if self.use_chaos_proxy {
-                    let (primary_proxy, url) = block_in_place(move || {
-                        Handle::current()
-                            .block_on(ChaosProxy::proxy_database_url(db_url))
-                            .unwrap()
-                    });
-
+            let replica_proxy = match (self.config.db.replica.as_mut(), self.use_chaos_proxy) {
+                (Some(replica), true) => {
+                    let (replica_proxy, url) =
+                        ChaosProxy::proxy_database_url(db_url).await.unwrap();
                     replica.url = url.into();
-                    Some(primary_proxy)
-                } else {
+                    Some(replica_proxy)
+                }
+                (Some(replica), false) => {
                     replica.url = db_url.to_string().into();
                     None
                 }
-            });
+                (None, _) => None,
+            };
 
             (primary_proxy, replica_proxy)
         };
@@ -348,28 +344,30 @@ impl TestAppBuilder {
     }
 
     // Create a `TestApp` with a database including a default user
-    pub fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
-        let (app, anon) = self.empty();
-        let user = app.db_new_user("foo");
+    pub async fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
+        let (app, anon) = self.empty().await;
+        let user = app.db_new_user("foo").await;
         (app, anon, user)
     }
 
     /// Create a `TestApp` with a database including a default user and its token
-    pub fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
-        let (app, anon) = self.empty();
-        let user = app.db_new_user("foo");
-        let token = user.db_new_token("bar");
+    pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
+        let (app, anon) = self.empty().await;
+        let user = app.db_new_user("foo").await;
+        let token = user.db_new_token("bar").await;
         (app, anon, user, token)
     }
 
-    pub fn with_scoped_token(
+    pub async fn with_scoped_token(
         self,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
-        let (app, anon) = self.empty();
-        let user = app.db_new_user("foo");
-        let token = user.db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None);
+        let (app, anon) = self.empty().await;
+        let user = app.db_new_user("foo").await;
+        let token = user
+            .db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None)
+            .await;
         (app, anon, user, token)
     }
 

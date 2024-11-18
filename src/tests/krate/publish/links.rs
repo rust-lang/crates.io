@@ -5,7 +5,7 @@ use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_crate_with_links_field() {
-    let (app, anon, _, token) = TestApp::full().with_token();
+    let (app, anon, _, token) = TestApp::full().with_token().await;
 
     let manifest = r#"
     [package]

@@ -9,7 +9,7 @@ use http::StatusCode;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.async_db_conn().await;
     let upstream = app.upstream_index();
 
@@ -95,7 +95,7 @@ async fn test_config_changes() {
         "api": "https://crates.io"
     }"#;
 
-    let (app, _, _, token) = TestApp::full().with_token();
+    let (app, _, _, token) = TestApp::full().with_token().await;
     let upstream = app.upstream_index();
 
     // Initialize upstream index with a `config.json` file

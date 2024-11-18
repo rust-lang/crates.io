@@ -6,7 +6,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -47,7 +47,7 @@ async fn show() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_minimal() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -75,7 +75,7 @@ async fn show_minimal() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_all_yanked() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -103,7 +103,7 @@ async fn show_all_yanked() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.get::<()>("/api/v1/crates/missing").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -112,7 +112,7 @@ async fn test_missing() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn version_size() {
-    let (_, _, user) = TestApp::full().with_user();
+    let (_, _, user) = TestApp::full().with_user().await;
 
     let crate_to_publish = PublishBuilder::new("foo_version_size", "1.0.0");
     user.publish_crate(crate_to_publish).await.good();
@@ -145,7 +145,7 @@ async fn version_size() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn block_bad_documentation_url() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -159,7 +159,7 @@ async fn block_bad_documentation_url() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_new_name() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("new", user.as_model().id).expect_build(&mut conn);

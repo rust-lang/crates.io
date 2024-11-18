@@ -63,7 +63,7 @@ pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -98,7 +98,7 @@ async fn test_download() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download_with_counting_via_cdn() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo", user.as_model().id)
@@ -113,7 +113,7 @@ async fn test_download_with_counting_via_cdn() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_crate_downloads() {
-    let (app, anon, cookie) = TestApp::init().with_user();
+    let (app, anon, cookie) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let user_id = cookie.as_model().id;
@@ -153,7 +153,7 @@ async fn test_crate_downloads() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_version_downloads() {
-    let (app, anon, cookie) = TestApp::init().with_user();
+    let (app, anon, cookie) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
 
     let user_id = cookie.as_model().id;

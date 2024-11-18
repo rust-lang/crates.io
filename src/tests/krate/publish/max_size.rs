@@ -14,7 +14,8 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
             config.max_upload_size = max_upload_size;
             config.max_unpack_size = max_upload_size;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let tarball = {
         let mut builder = TarballBuilder::new();
@@ -66,7 +67,8 @@ async fn tarball_bigger_than_max_upload_size() {
             config.max_upload_size = max_upload_size;
             config.max_unpack_size = max_upload_size;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let tarball = {
         // `data` is bigger than `max_upload_size`
@@ -100,7 +102,8 @@ async fn new_krate_gzip_bomb() {
             config.max_upload_size = 3000;
             config.max_unpack_size = 2000;
         })
-        .with_token();
+        .with_token()
+        .await;
 
     let body = vec![0; 512 * 1024];
     let crate_to_publish = PublishBuilder::new("foo", "1.1.0").add_file("foo-1.1.0/a", body);
@@ -118,7 +121,8 @@ async fn new_krate_too_big() {
             config.max_upload_size = 3000;
             config.max_unpack_size = 2000;
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let builder =
         PublishBuilder::new("foo_big", "1.0.0").add_file("foo_big-1.0.0/big", vec![b'a'; 2000]);
@@ -131,7 +135,7 @@ async fn new_krate_too_big() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_too_big_but_whitelisted() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_whitelist", user.as_model().id)

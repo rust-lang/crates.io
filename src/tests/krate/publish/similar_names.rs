@@ -6,7 +6,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_similar_name() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("Foo_similar", user.as_model().id)
@@ -22,7 +22,7 @@ async fn new_crate_similar_name() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_similar_name_hyphen() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo_bar_hyphen", user.as_model().id)
@@ -38,7 +38,7 @@ async fn new_crate_similar_name_hyphen() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_similar_name_underscore() {
-    let (app, _, user, token) = TestApp::full().with_token();
+    let (app, _, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
     CrateBuilder::new("foo-bar-underscore", user.as_model().id)

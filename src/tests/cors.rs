@@ -9,7 +9,8 @@ async fn test_with_matching_origin() {
         .with_config(|server| {
             server.allowed_origins = "https://crates.io".parse().unwrap();
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut request = cookie.get_request("/api/v1/me");
     request.header("Origin", "https://crates.io");
@@ -24,7 +25,8 @@ async fn test_with_unknown_origin() {
         .with_config(|server| {
             server.allowed_origins = "https://crates.io".parse().unwrap();
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut request = cookie.get_request("/api/v1/me");
     request.header("Origin", "https://evil.hacker.io");
@@ -40,7 +42,8 @@ async fn test_with_multiple_origins() {
         .with_config(|server| {
             server.allowed_origins = "https://crates.io".parse().unwrap();
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut request = cookie.get_request("/api/v1/me");
     request.header("Origin", "https://evil.hacker.io");

@@ -8,7 +8,7 @@ use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn category_slugs_returns_all_slugs_in_alphabetical_order() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     let cats = vec![

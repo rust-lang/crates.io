@@ -21,13 +21,13 @@ struct SummaryResponse {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_doesnt_die() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get::<SummaryResponse>("/api/v1/summary").await.good();
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_new_crates() {
-    let (app, anon, user) = TestApp::init().with_user();
+    let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
 
@@ -146,7 +146,8 @@ async fn excluded_crate_id() {
                 "downloads".into(),
             ];
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
     let user = user.as_model();
@@ -201,7 +202,8 @@ async fn all_yanked() {
                 "downloads".into(),
             ];
         })
-        .with_user();
+        .with_user()
+        .await;
 
     let mut conn = app.db_conn();
     let user = user.as_model();

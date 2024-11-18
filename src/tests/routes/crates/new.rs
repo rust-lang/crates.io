@@ -5,7 +5,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn daily_limit() {
-    let (app, _, user) = TestApp::full().with_user();
+    let (app, _, user) = TestApp::full().with_user().await;
 
     let max_daily_versions = app.as_inner().config.new_version_rate_limit.unwrap();
     for version in 1..=max_daily_versions {

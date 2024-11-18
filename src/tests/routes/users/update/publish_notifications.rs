@@ -6,7 +6,7 @@ use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unsubscribe_and_resubscribe() {
-    let (app, _anon, cookie, token) = TestApp::full().with_token();
+    let (app, _anon, cookie, token) = TestApp::full().with_token().await;
 
     let user_url = format!("/api/v1/users/{}", cookie.as_model().id);
 

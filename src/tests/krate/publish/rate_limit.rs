@@ -14,7 +14,8 @@ use std::time::Duration;
 async fn publish_new_crate_ratelimit_hit() {
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -49,7 +50,8 @@ async fn publish_new_crate_ratelimit_hit() {
 async fn publish_new_crate_ratelimit_expires() {
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_millis(500), 1)
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -92,7 +94,8 @@ async fn publish_new_crate_override_loosens_ratelimit() {
             Duration::from_secs(60 * 60 * 24),
             1,
         )
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -169,7 +172,8 @@ async fn publish_new_crate_expired_override_ignored() {
             Duration::from_secs(60 * 60 * 24),
             1,
         )
-        .with_token();
+        .with_token()
+        .await;
 
     let mut conn = app.async_db_conn().await;
 
@@ -222,7 +226,8 @@ async fn publish_new_crate_expired_override_ignored() {
 async fn publish_new_crate_rate_limit_doesnt_affect_existing_crates() {
     let (_, _, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishNew, Duration::from_secs(60 * 60), 1)
-        .with_token();
+        .with_token()
+        .await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
@@ -238,7 +243,8 @@ async fn publish_existing_crate_rate_limited() {
 
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishUpdate, RATE_LIMIT, 1)
-        .with_token();
+        .with_token()
+        .await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
@@ -315,7 +321,8 @@ async fn publish_existing_crate_rate_limit_doesnt_affect_new_crates() {
             Duration::from_secs(60 * 60),
             1,
         )
-        .with_token();
+        .with_token()
+        .await;
 
     // Upload a new crate
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.0");
