@@ -95,15 +95,16 @@ async fn add_renamed_team() {
 
     // create team with same ID and different name compared to http mock
     // used for `async_add_named_owner`.await
-    NewTeam::new(
-        "github:test-org:old-core", // different team name
-        1000,                       // same org ID
-        2001,                       // same team id as `core` team
-        None,
-        None,
-    )
-    .create_or_update(&mut conn)
-    .unwrap();
+    let new_team = NewTeam::builder()
+        // different team name
+        .login("github:test-org:old-core")
+        // same org ID
+        .org_id(1000)
+        // same team id as `core` team
+        .github_id(2001)
+        .build();
+
+    new_team.create_or_update(&mut conn).unwrap();
 
     assert_eq!(
         teams::table.count().get_result::<i64>(&mut conn).unwrap(),
@@ -437,9 +438,13 @@ async fn crates_by_team_id_not_including_deleted_owners() {
     let user = app.db_new_user("user-all-teams").await;
     let user = user.as_model();
 
-    let t = NewTeam::new("github:test-org:core", 1000, 2001, None, None)
-        .create_or_update(&mut conn)
-        .unwrap();
+    let new_team = NewTeam::builder()
+        .login("github:test-org:core")
+        .org_id(1000)
+        .github_id(2001)
+        .build();
+
+    let t = new_team.create_or_update(&mut conn).unwrap();
 
     let krate = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
     add_team_to_crate(&t, &krate, user, &mut conn).unwrap();
