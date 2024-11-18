@@ -7,7 +7,7 @@ use http::{header, Request, StatusCode};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_required() {
-    let (_app, anon) = TestApp::init().empty();
+    let (_app, anon) = TestApp::init().empty().await;
 
     let req = Request::get("/api/v1/crates").body("").unwrap();
     let resp = anon.run::<()>(req).await;
@@ -99,7 +99,8 @@ async fn block_traffic_via_ip() {
         .with_config(|config| {
             config.blocked_ips = HashSet::from(["127.0.0.1".parse().unwrap()]);
         })
-        .empty();
+        .empty()
+        .await;
 
     let resp = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);

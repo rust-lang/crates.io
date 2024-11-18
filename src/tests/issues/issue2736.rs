@@ -9,7 +9,7 @@ use insta::assert_snapshot;
 /// See <https://github.com/rust-lang/crates.io/issues/2736>.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_issue_2736() -> anyhow::Result<()> {
-    let (app, _) = TestApp::full().empty();
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
 
     // - A user had a GitHub account named, let's say, `foo`

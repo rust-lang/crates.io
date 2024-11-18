@@ -21,7 +21,7 @@ struct SummaryResponse {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_doesnt_die() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get::<SummaryResponse>("/api/v1/summary").await.good();
 }
 

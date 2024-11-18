@@ -16,7 +16,7 @@ struct KeywordMeta {
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
     let url = "/api/v1/keywords";
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     let json: KeywordList = anon.get(url).await.good();

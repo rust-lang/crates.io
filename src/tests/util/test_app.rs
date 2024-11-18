@@ -259,7 +259,7 @@ pub struct TestAppBuilder {
 
 impl TestAppBuilder {
     /// Create a `TestApp` with an empty database
-    pub fn empty(mut self) -> (TestApp, MockAnonymousUser) {
+    pub async fn empty(mut self) -> (TestApp, MockAnonymousUser) {
         // Run each test inside a fresh database schema, deleted at the end of the test,
         // The schema will be cleared up once the app is dropped.
         let test_database = TestDatabase::new();
@@ -267,11 +267,7 @@ impl TestAppBuilder {
 
         let (primary_db_chaosproxy, replica_db_chaosproxy) = {
             let primary_proxy = if self.use_chaos_proxy {
-                let (primary_proxy, url) = block_in_place(move || {
-                    Handle::current()
-                        .block_on(ChaosProxy::proxy_database_url(db_url))
-                        .unwrap()
-                });
+                let (primary_proxy, url) = ChaosProxy::proxy_database_url(db_url).await.unwrap();
 
                 self.config.db.primary.url = url.into();
                 Some(primary_proxy)
@@ -280,21 +276,19 @@ impl TestAppBuilder {
                 None
             };
 
-            let replica_proxy = self.config.db.replica.as_mut().and_then(|replica| {
-                if self.use_chaos_proxy {
-                    let (primary_proxy, url) = block_in_place(move || {
-                        Handle::current()
-                            .block_on(ChaosProxy::proxy_database_url(db_url))
-                            .unwrap()
-                    });
-
+            let replica_proxy = match (self.config.db.replica.as_mut(), self.use_chaos_proxy) {
+                (Some(replica), true) => {
+                    let (replica_proxy, url) =
+                        ChaosProxy::proxy_database_url(db_url).await.unwrap();
                     replica.url = url.into();
-                    Some(primary_proxy)
-                } else {
+                    Some(replica_proxy)
+                }
+                (Some(replica), false) => {
                     replica.url = db_url.to_string().into();
                     None
                 }
-            });
+                (None, _) => None,
+            };
 
             (primary_proxy, replica_proxy)
         };
@@ -348,14 +342,14 @@ impl TestAppBuilder {
 
     // Create a `TestApp` with a database including a default user
     pub async fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
-        let (app, anon) = self.empty();
+        let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo");
         (app, anon, user)
     }
 
     /// Create a `TestApp` with a database including a default user and its token
     pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
-        let (app, anon) = self.empty();
+        let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo");
         let token = user.db_new_token("bar");
         (app, anon, user, token)
@@ -366,7 +360,7 @@ impl TestAppBuilder {
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
-        let (app, anon) = self.empty();
+        let (app, anon) = self.empty().await;
         let user = app.db_new_user("foo");
         let token = user.db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None);
         (app, anon, user, token)

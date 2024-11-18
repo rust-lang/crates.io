@@ -39,7 +39,7 @@ async fn versions() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.get::<()>("/api/v1/crates/unknown/versions").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);

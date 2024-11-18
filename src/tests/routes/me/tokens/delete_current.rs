@@ -41,7 +41,7 @@ async fn revoke_current_token_success() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_current_token_without_auth() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.delete::<()>("/api/v1/tokens/current").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);

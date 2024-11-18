@@ -8,7 +8,7 @@ use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // List 0 categories if none exist

@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     for json in search_both(&anon, "").await {

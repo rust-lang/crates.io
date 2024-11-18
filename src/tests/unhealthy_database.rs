@@ -33,7 +33,7 @@ async fn wait_until_healthy(pool: &Pool<AsyncPgConnection>) {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn http_error_with_unhealthy_database() {
-    let (app, anon) = TestApp::init().with_chaos_proxy().empty();
+    let (app, anon) = TestApp::init().with_chaos_proxy().empty().await;
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);

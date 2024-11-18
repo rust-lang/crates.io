@@ -24,7 +24,7 @@ async fn show() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_latest_user_case_insensitively() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     // Please do not delete or modify the setup of this test in order to get it to pass.

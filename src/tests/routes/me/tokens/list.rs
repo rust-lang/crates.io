@@ -9,7 +9,7 @@ use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn list_logged_out() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get("/api/v1/me/tokens").await.assert_forbidden();
 }
 

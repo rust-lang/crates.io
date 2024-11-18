@@ -9,7 +9,7 @@ use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
-    let (app, anon) = TestApp::init().empty();
+    let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
 
     let url = "/api/v1/categories/foo-bar";

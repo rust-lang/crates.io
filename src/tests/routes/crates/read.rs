@@ -103,7 +103,7 @@ async fn show_all_yanked() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.get::<()>("/api/v1/crates/missing").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);

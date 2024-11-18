@@ -13,7 +13,7 @@ static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_logged_out() {
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.put("/api/v1/me/tokens", NEW_BAR)
         .await
         .assert_forbidden();

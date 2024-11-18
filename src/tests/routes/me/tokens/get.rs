@@ -56,7 +56,7 @@ async fn show_token_with_scopes() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_with_anonymous_user() {
     let url = "/api/v1/me/tokens/1";
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
     anon.get(url).await.assert_forbidden();
 }
 

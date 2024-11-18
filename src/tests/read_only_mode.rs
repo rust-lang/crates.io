@@ -11,7 +11,8 @@ async fn can_hit_read_only_endpoints_in_read_only_mode() {
         .with_config(|config| {
             config.db.primary.read_only_mode = true;
         })
-        .empty();
+        .empty()
+        .await;
 
     let response = anon.get::<()>("/api/v1/crates").await;
     assert_eq!(response.status(), StatusCode::OK);

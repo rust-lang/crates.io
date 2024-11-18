@@ -54,7 +54,7 @@ async fn updating_existing_user_doesnt_change_api_token() {
 /// deleting their email when they sign back in.
 #[tokio::test(flavor = "multi_thread")]
 async fn github_without_email_does_not_overwrite_email() {
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub with an account that has no email.
@@ -161,7 +161,7 @@ async fn test_email_get_and_put() {
 async fn test_confirm_user_email() {
     use crate::schema::emails;
 
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
@@ -200,7 +200,7 @@ async fn test_existing_user_email() {
     use chrono::NaiveDateTime;
     use diesel::update;
 
-    let (app, _) = TestApp::init().empty();
+    let (app, _) = TestApp::init().empty().await;
     let mut conn = app.async_db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified

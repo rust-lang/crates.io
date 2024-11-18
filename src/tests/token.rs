@@ -35,7 +35,7 @@ async fn using_token_updates_last_used_at() {
 #[tokio::test(flavor = "multi_thread")]
 async fn old_tokens_give_specific_error_message() {
     let url = "/api/v1/me";
-    let (_, anon) = TestApp::init().empty();
+    let (_, anon) = TestApp::init().empty().await;
 
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");

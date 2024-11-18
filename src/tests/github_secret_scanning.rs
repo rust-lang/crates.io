@@ -211,7 +211,7 @@ async fn github_secret_alert_for_unknown_token() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_invalid_signature_fails() {
-    let (_, anon) = TestApp::init().with_github(github_mock()).empty();
+    let (_, anon) = TestApp::init().with_github(github_mock()).empty().await;
 
     // No headers or request body
     let request = anon.post_request(URL);

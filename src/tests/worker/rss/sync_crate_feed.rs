@@ -9,7 +9,7 @@ use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_crate_feed() {
-    let (app, _) = TestApp::full().empty();
+    let (app, _) = TestApp::full().empty().await;
     let mut conn = app.async_db_conn().await;
 
     create_version(&mut conn, "foo", "0.1.0", "2024-06-20T10:13:54Z").await;
