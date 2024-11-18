@@ -3,6 +3,7 @@ mod auth;
 mod basics;
 mod build_metadata;
 mod categories;
+mod deleted_crates;
 mod dependencies;
 mod emails;
 mod features;

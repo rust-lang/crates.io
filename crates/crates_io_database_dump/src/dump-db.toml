@@ -106,6 +106,17 @@ dependencies = ["crates", "versions"]
 crate_id = "public"
 version_id = "public"
 
+[deleted_crates]
+dependencies = ["users"]
+[deleted_crates.columns]
+id = "private"
+name = "private"
+created_at = "private"
+deleted_at = "private"
+deleted_by = "private"
+message = "private"
+available_at = "private"
+
 [dependencies]
 dependencies = ["crates", "versions"]
 [dependencies.columns]

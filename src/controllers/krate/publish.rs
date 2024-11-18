@@ -9,6 +9,7 @@ use crate::worker::jobs::{
 use axum::body::Bytes;
 use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
+use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::connection::DefaultLoadingMode;
@@ -85,6 +86,22 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
     let (existing_crate, auth) = {
         use diesel_async::RunQueryDsl;
+
+        let deleted_crate: Option<(String, DateTime<Utc>)> = deleted_crates::table
+            .filter(canon_crate_name(deleted_crates::name).eq(canon_crate_name(&metadata.name)))
+            .filter(deleted_crates::available_at.gt(Utc::now()))
+            .select((deleted_crates::name, deleted_crates::available_at))
+            .first(&mut conn)
+            .await
+            .optional()?;
+
+        if let Some(deleted_crate) = deleted_crate {
+            return Err(bad_request(format!(
+                "A crate with the name `{}` was recently deleted. Reuse of this name will be available after {}.",
+                deleted_crate.0,
+                deleted_crate.1.to_rfc3339_opts(SecondsFormat::Secs, true)
+            )));
+        }
 
         // this query should only be used for the endpoint scope calculation
         // since a race condition there would only cause `publish-new` instead of
