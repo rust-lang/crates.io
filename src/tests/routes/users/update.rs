@@ -79,7 +79,7 @@ async fn test_ignore_nulls() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_other_users_cannot_change_my_email() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let another_user = app.db_new_user("not_me");
+    let another_user = app.db_new_user("not_me").await;
     let another_user_model = another_user.as_model();
 
     let response = user

@@ -19,7 +19,7 @@ async fn revoke_token_doesnt_revoke_other_users_token() {
     let mut conn = app.async_db_conn().await;
     let user1 = user1.as_model();
     let token = token.as_model();
-    let user2 = app.db_new_user("baz");
+    let user2 = app.db_new_user("baz").await;
 
     // List tokens for first user contains the token
     let tokens: Vec<ApiToken> = assert_ok!(

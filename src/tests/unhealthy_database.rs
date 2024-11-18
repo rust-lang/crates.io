@@ -79,7 +79,7 @@ async fn fallback_to_replica_returns_user_info() {
         .with_chaos_proxy()
         .with_user()
         .await;
-    app.db_new_user("foo");
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
 
     // When the primary database is down, requests are forwarded to the replica database
@@ -100,7 +100,7 @@ async fn restored_replica_returns_user_info() {
         .with_chaos_proxy()
         .with_user()
         .await;
-    app.db_new_user("foo");
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
 
@@ -134,7 +134,7 @@ async fn restored_primary_returns_user_info() {
         .with_chaos_proxy()
         .with_user()
         .await;
-    app.db_new_user("foo");
+    app.db_new_user("foo").await;
     app.primary_db_chaosproxy().break_networking().unwrap();
     app.replica_db_chaosproxy().break_networking().unwrap();
 

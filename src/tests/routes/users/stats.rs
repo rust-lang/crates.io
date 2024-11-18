@@ -16,7 +16,7 @@ async fn user_total_downloads() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
     let user = user.as_model();
-    let another_user = app.db_new_user("bar");
+    let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
 
     let krate = CrateBuilder::new("foo_krate1", user.id).expect_build(&mut conn);

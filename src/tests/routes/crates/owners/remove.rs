@@ -11,7 +11,7 @@ async fn test_owner_change_with_invalid_json() {
     let (app, _, user) = TestApp::full().with_user().await;
     let mut conn = app.db_conn();
 
-    app.db_new_user("bar");
+    app.db_new_user("bar").await;
     CrateBuilder::new("foo", user.as_model().id).expect_build(&mut conn);
 
     // incomplete input
@@ -42,7 +42,7 @@ async fn test_owner_change_with_invalid_json() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_crate() {
     let (app, _, user) = TestApp::full().with_user().await;
-    app.db_new_user("bar");
+    app.db_new_user("bar").await;
 
     let response = user.remove_named_owner("unknown", "bar").await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -80,7 +80,7 @@ async fn test_remove_uppercase_user() {
     use diesel::RunQueryDsl;
 
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let user2 = app.db_new_user("user2");
+    let user2 = app.db_new_user("user2").await;
     let mut conn = app.db_conn();
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);

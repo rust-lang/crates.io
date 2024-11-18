@@ -65,7 +65,7 @@ async fn yank_by_a_non_owner_fails() {
     let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn();
 
-    let another_user = app.db_new_user("bar");
+    let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
 
     CrateBuilder::new("foo_not", another_user.id)
@@ -369,7 +369,7 @@ mod auth {
         let (app, _, _) = prepare().await;
         let mut conn = app.async_db_conn().await;
 
-        let admin = app.db_new_user("admin");
+        let admin = app.db_new_user("admin").await;
 
         diesel::update(admin.as_model())
             .set(users::is_admin.eq(true))

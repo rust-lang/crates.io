@@ -64,7 +64,7 @@ async fn show_with_anonymous_user() {
 async fn show_other_user_token() {
     let (app, _, user1) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
-    let user2 = app.db_new_user("baz");
+    let user2 = app.db_new_user("baz").await;
     let user2 = user2.as_model();
 
     let token = assert_ok!(ApiToken::insert(&mut conn, user2.id, "bar"));

@@ -101,7 +101,7 @@ async fn create_token_multiple_users_have_different_values() {
     let (app, _, user1) = TestApp::init().with_user().await;
     let first: Value = user1.put("/api/v1/me/tokens", NEW_BAR).await.good();
 
-    let user2 = app.db_new_user("bar");
+    let user2 = app.db_new_user("bar").await;
     let second: Value = user2.put("/api/v1/me/tokens", NEW_BAR).await.good();
 
     assert_ne!(first["api_token"]["token"], second["api_token"]["token"]);

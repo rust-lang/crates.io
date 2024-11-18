@@ -127,17 +127,19 @@ impl TestApp {
     /// (`<username>@example.com`) and return a mock user session.
     ///
     /// This method updates the database directly
-    pub fn db_new_user(&self, username: &str) -> MockCookieUser {
+    pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
         use crate::schema::emails;
         use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
 
-        let mut conn = self.db_conn();
+        let mut conn = self.async_db_conn().await;
 
         let email = format!("{username}@example.com");
 
         let user: User = diesel::insert_into(users::table)
             .values(crate::tests::new_user(username))
             .get_result(&mut conn)
+            .await
             .unwrap();
 
         diesel::insert_into(emails::table)
@@ -147,6 +149,7 @@ impl TestApp {
                 emails::verified.eq(true),
             ))
             .execute(&mut conn)
+            .await
             .unwrap();
 
         MockCookieUser {
@@ -343,14 +346,14 @@ impl TestAppBuilder {
     // Create a `TestApp` with a database including a default user
     pub async fn with_user(self) -> (TestApp, MockAnonymousUser, MockCookieUser) {
         let (app, anon) = self.empty().await;
-        let user = app.db_new_user("foo");
+        let user = app.db_new_user("foo").await;
         (app, anon, user)
     }
 
     /// Create a `TestApp` with a database including a default user and its token
     pub async fn with_token(self) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
-        let user = app.db_new_user("foo");
+        let user = app.db_new_user("foo").await;
         let token = user.db_new_token("bar");
         (app, anon, user, token)
     }
@@ -361,7 +364,7 @@ impl TestAppBuilder {
         endpoint_scopes: Option<Vec<EndpointScope>>,
     ) -> (TestApp, MockAnonymousUser, MockCookieUser, MockTokenUser) {
         let (app, anon) = self.empty().await;
-        let user = app.db_new_user("foo");
+        let user = app.db_new_user("foo").await;
         let token = user.db_new_scoped_token("bar", crate_scopes, endpoint_scopes, None);
         (app, anon, user, token)
     }

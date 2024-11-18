@@ -77,7 +77,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_wrong_user() {
         let (app, _anon, user) = TestApp::init().with_user().await;
-        let user2 = app.db_new_user("bar");
+        let user2 = app.db_new_user("bar").await;
 
         let url = format!("/api/v1/users/{}/resend", user2.as_model().id);
         let response = user.put::<()>(&url, "").await;
