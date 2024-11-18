@@ -2,7 +2,6 @@ use crate::cloudfront::CloudFront;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::typosquat;
-use crate::util::diesel::Conn;
 use crate::Emails;
 use anyhow::Context;
 use bon::Builder;
@@ -13,8 +12,9 @@ use diesel_async::AsyncPgConnection;
 use object_store::ObjectStore;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use std::time::Instant;
+use tokio::sync::OnceCell;
 
 #[derive(Builder)]
 pub struct Environment {
@@ -33,7 +33,7 @@ pub struct Environment {
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(skip)]
-    typosquat_cache: OnceLock<Result<typosquat::Cache, typosquat::CacheError>>,
+    typosquat_cache: OnceCell<Result<typosquat::Cache, typosquat::CacheError>>,
 }
 
 impl Environment {
@@ -78,9 +78,9 @@ impl Environment {
     }
 
     /// Returns the typosquatting cache, initialising it if required.
-    pub(crate) fn typosquat_cache(
+    pub(crate) async fn typosquat_cache(
         &self,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
     ) -> Result<&typosquat::Cache, typosquat::CacheError> {
         // We have to pass conn back in here because the caller might be in a transaction, and
         // getting a new connection here to query crates can result in a deadlock.
@@ -90,6 +90,7 @@ impl Environment {
         // generated if initialising the cache fails.
         self.typosquat_cache
             .get_or_init(|| typosquat::Cache::from_env(conn))
+            .await
             .as_ref()
             .map_err(|e| e.clone())
     }

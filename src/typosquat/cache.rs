@@ -1,6 +1,5 @@
+use diesel_async::AsyncPgConnection;
 use std::sync::Arc;
-
-use crate::util::diesel::Conn;
 use thiserror::Error;
 use typomania::{
     checks::{Bitflips, Omitted, SwappedWords, Typos},
@@ -28,7 +27,7 @@ impl Cache {
     /// addresses to send notifications to, then invokes [`Cache::new`] to read popular crates from
     /// the database.
     #[instrument(skip_all, err)]
-    pub fn from_env(conn: &mut impl Conn) -> Result<Self, Error> {
+    pub async fn from_env(conn: &mut AsyncPgConnection) -> Result<Self, Error> {
         let emails: Vec<String> = crates_io_env_vars::var(NOTIFICATION_EMAILS_ENV)
             .map_err(|e| Error::Environment {
                 name: NOTIFICATION_EMAILS_ENV.into(),
@@ -49,15 +48,15 @@ impl Cache {
             })
         } else {
             // Otherwise, let's go get the top crates and build a corpus.
-            Self::new(emails, conn)
+            Self::new(emails, conn).await
         }
     }
 
     /// Instantiates a cache by querying popular crates and building them into a typomania harness.
     ///
     /// This relies on configuration in the `super::config` module.
-    pub fn new(emails: Vec<String>, conn: &mut impl Conn) -> Result<Self, Error> {
-        let top = TopCrates::new(conn, config::TOP_CRATES)?;
+    pub async fn new(emails: Vec<String>, conn: &mut AsyncPgConnection) -> Result<Self, Error> {
+        let top = TopCrates::new(conn, config::TOP_CRATES).await?;
 
         Ok(Self {
             emails,
