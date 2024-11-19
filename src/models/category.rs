@@ -155,7 +155,6 @@ pub struct NewCategory<'a> {
 mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use diesel_async::RunQueryDsl;
 
     #[tokio::test]
@@ -163,7 +162,7 @@ mod tests {
         use self::categories;
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![
@@ -207,7 +206,7 @@ mod tests {
         };
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![
@@ -238,7 +237,7 @@ mod tests {
         use self::categories;
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![
@@ -287,7 +286,7 @@ mod tests {
         };
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![
@@ -329,7 +328,7 @@ mod tests {
         };
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![
@@ -376,7 +375,7 @@ mod tests {
         };
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         insert_into(categories::table)
             .values(&vec![

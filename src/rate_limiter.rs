@@ -187,12 +187,11 @@ mod tests {
     use super::*;
     use crate::schema::users;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
 
     #[tokio::test]
     async fn default_rate_limits() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         // Set the defaults as if no env vars have been set in production
@@ -267,7 +266,7 @@ mod tests {
     #[tokio::test]
     async fn take_token_with_no_bucket_creates_new_one() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -319,7 +318,7 @@ mod tests {
     #[tokio::test]
     async fn take_token_with_existing_bucket_modifies_existing_bucket() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -345,7 +344,7 @@ mod tests {
     #[tokio::test]
     async fn take_token_after_delay_refills() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -372,7 +371,7 @@ mod tests {
     #[tokio::test]
     async fn refill_subsecond_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
         let now =
@@ -403,7 +402,7 @@ mod tests {
     #[tokio::test]
     async fn last_refill_always_advanced_by_multiple_of_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -435,7 +434,7 @@ mod tests {
     #[tokio::test]
     async fn zero_tokens_returned_when_user_has_no_tokens_left() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -466,7 +465,7 @@ mod tests {
     #[tokio::test]
     async fn a_user_with_no_tokens_gets_a_token_after_exactly_rate() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -494,7 +493,7 @@ mod tests {
     #[tokio::test]
     async fn tokens_never_refill_past_burst() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -522,7 +521,7 @@ mod tests {
     #[tokio::test]
     async fn two_actions_dont_interfere_with_each_other() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let mut config = HashMap::new();
@@ -571,7 +570,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -609,7 +608,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
 
         let rate = SampleRateLimiter {
@@ -669,7 +668,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
         let now = now();
         let user_id = new_user(&mut conn, "user").await?;
 

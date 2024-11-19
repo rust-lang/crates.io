@@ -170,13 +170,12 @@ mod tests {
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
     use diesel::dsl::IntervalDsl;
-    use diesel_async::AsyncConnection;
     use lettre::Address;
 
     #[tokio::test]
     async fn test_expiry_notification() -> anyhow::Result<()> {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
         let user = NewUser::new(0, "a", None, None, "token");

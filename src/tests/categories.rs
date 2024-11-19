@@ -1,7 +1,7 @@
 use crate::schema::categories;
 use crates_io_test_db::TestDatabase;
 use diesel::*;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 const ALGORITHMS: &str = r#"
 [algorithms]
@@ -50,7 +50,7 @@ async fn select_slugs(conn: &mut AsyncPgConnection) -> Vec<String> {
 #[tokio::test]
 async fn sync_adds_new_categories() {
     let test_db = TestDatabase::new();
-    let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+    let mut conn = test_db.async_connect().await;
 
     crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
@@ -63,7 +63,7 @@ async fn sync_adds_new_categories() {
 #[tokio::test]
 async fn sync_removes_missing_categories() {
     let test_db = TestDatabase::new();
-    let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+    let mut conn = test_db.async_connect().await;
 
     crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
@@ -79,7 +79,7 @@ async fn sync_removes_missing_categories() {
 #[tokio::test]
 async fn sync_adds_and_removes() {
     let test_db = TestDatabase::new();
-    let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+    let mut conn = test_db.async_connect().await;
 
     crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
@@ -95,7 +95,7 @@ async fn sync_adds_and_removes() {
 #[tokio::test]
 async fn test_real_categories() {
     let test_db = TestDatabase::new();
-    let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+    let mut conn = test_db.async_connect().await;
 
     const TOML: &str = include_str!("../boot/categories.toml");
     assert_ok!(crate::boot::categories::sync_with_connection(TOML, &mut conn).await);

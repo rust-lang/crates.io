@@ -20,7 +20,7 @@ use crates_io_test_db::TestDatabase;
 use crates_io_worker::Runner;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::PgConnection;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
@@ -119,8 +119,7 @@ impl TestApp {
 
     /// Obtain an async database connection from the primary database pool.
     pub async fn async_db_conn(&self) -> AsyncPgConnection {
-        let result = AsyncPgConnection::establish(self.0.test_database.url()).await;
-        result.expect("Failed to get database connection")
+        self.0.test_database.async_connect().await
     }
 
     /// Create a new user with a verified email address in the database

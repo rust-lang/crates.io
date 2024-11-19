@@ -2,6 +2,7 @@ use crates_io_env_vars::required_var_parsed;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::sql_query;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use rand::Rng;
 use std::sync::LazyLock;
@@ -127,6 +128,13 @@ impl TestDatabase {
             .unwrap()
             .get()
             .expect("Failed to get database connection")
+    }
+
+    #[instrument(skip(self))]
+    pub async fn async_connect(&self) -> AsyncPgConnection {
+        AsyncPgConnection::establish(self.url())
+            .await
+            .expect("Failed to connect to database")
     }
 }
 

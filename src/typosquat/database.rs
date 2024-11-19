@@ -176,7 +176,6 @@ mod tests {
     use super::*;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use thiserror::Error;
 
     #[tokio::test]
@@ -198,7 +197,7 @@ mod tests {
         faker::add_crate_to_team(&mut conn, &user_b, &top_b, &not_the_a_team)?;
         faker::add_crate_to_team(&mut conn, &user_b, &not_top_c, &not_the_a_team)?;
 
-        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut async_conn = test_db.async_connect().await;
         let top_crates = TopCrates::new(&mut async_conn, 2).await?;
 
         // Let's ensure the top crates include what we expect (which is a and b, since we asked for

@@ -140,14 +140,13 @@ mod tests {
     use crate::tests::builders::{CrateBuilder, VersionBuilder};
     use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use insta::assert_json_snapshot;
 
     #[tokio::test]
     async fn test_index_metadata() {
         let test_db = TestDatabase::new();
         let mut conn = test_db.connect();
-        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut async_conn = test_db.async_connect().await;
 
         let user_id = diesel::insert_into(users::table)
             .values((

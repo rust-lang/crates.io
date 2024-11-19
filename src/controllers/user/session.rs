@@ -168,14 +168,13 @@ pub async fn logout(session: SessionExtension) -> Json<bool> {
 mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
 
     #[tokio::test]
     async fn gh_user_with_invalid_email_doesnt_fail() {
         let emails = Emails::new_in_memory();
 
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         let gh_user = GithubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
