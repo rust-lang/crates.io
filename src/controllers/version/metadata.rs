@@ -10,7 +10,6 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::StatusCode;
@@ -24,7 +23,6 @@ use crate::models::{
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
@@ -101,16 +99,10 @@ pub async fn show(
     let mut conn = state.db_read().await?;
     let (version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
     let published_by = version.published_by(&mut conn).await?;
+    let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
 
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let actions = VersionOwnerAction::by_version(conn, &version)?;
-
-        let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-        Ok(json!({ "version": version }))
-    })
-    .await
+    let version = EncodableVersion::from(version, &krate.name, published_by, actions);
+    Ok(json!({ "version": version }))
 }
 
 /// Handles the `PATCH /crates/:crate/:version` route.
@@ -148,15 +140,9 @@ pub async fn update(
     .await?;
 
     let published_by = version.published_by(&mut conn).await?;
-
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        let actions = VersionOwnerAction::by_version(conn, &version)?;
-        let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
-        Ok(json!({ "version": updated_version }))
-    })
-    .await
+    let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
+    let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
+    Ok(json!({ "version": updated_version }))
 }
 
 fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppResult<()> {

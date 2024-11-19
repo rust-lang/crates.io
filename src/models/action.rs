@@ -57,8 +57,11 @@ impl VersionOwnerAction {
         version_owner_actions::table.load(conn)
     }
 
-    pub fn by_version(conn: &mut impl Conn, version: &Version) -> QueryResult<Vec<(Self, User)>> {
-        use diesel::RunQueryDsl;
+    pub async fn by_version(
+        conn: &mut AsyncPgConnection,
+        version: &Version,
+    ) -> QueryResult<Vec<(Self, User)>> {
+        use diesel_async::RunQueryDsl;
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
@@ -66,6 +69,7 @@ impl VersionOwnerAction {
             .inner_join(users::table)
             .order(version_owner_actions::dsl::id)
             .load(conn)
+            .await
     }
 
     pub fn for_versions(
