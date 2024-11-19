@@ -212,6 +212,10 @@
     }
 }
 
+.edition {
+    margin-top: var(--space-2xs);
+}
+
 .bytes {
     font-variant-numeric: tabular-nums;
     text-transform: none;
