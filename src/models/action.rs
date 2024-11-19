@@ -3,6 +3,7 @@ use crate::schema::*;
 use crate::sql::pg_enum;
 use crate::util::diesel::prelude::*;
 use crate::util::diesel::Conn;
+use bon::Builder;
 use chrono::NaiveDateTime;
 use diesel_async::AsyncPgConnection;
 
@@ -95,22 +96,22 @@ impl VersionOwnerAction {
     }
 }
 
-pub fn insert_version_owner_action(
-    conn: &mut impl Conn,
-    version_id_: i32,
-    user_id_: i32,
-    api_token_id_: Option<i32>,
-    action_: VersionAction,
-) -> QueryResult<VersionOwnerAction> {
-    use diesel::RunQueryDsl;
-    use version_owner_actions::dsl::{action, api_token_id, user_id, version_id};
+#[derive(Insertable, Debug, Builder)]
+#[diesel(table_name = version_owner_actions, check_for_backend(diesel::pg::Pg))]
+pub struct NewVersionOwnerAction {
+    version_id: i32,
+    user_id: i32,
+    api_token_id: Option<i32>,
+    #[builder(into)]
+    action: VersionAction,
+}
 
-    diesel::insert_into(version_owner_actions::table)
-        .values((
-            version_id.eq(version_id_),
-            user_id.eq(user_id_),
-            api_token_id.eq(api_token_id_),
-            action.eq(action_),
-        ))
-        .get_result(conn)
+impl NewVersionOwnerAction {
+    pub fn insert(&self, conn: &mut impl Conn) -> QueryResult<VersionOwnerAction> {
+        use diesel::RunQueryDsl;
+
+        diesel::insert_into(version_owner_actions::table)
+            .values(self)
+            .get_result(conn)
+    }
 }

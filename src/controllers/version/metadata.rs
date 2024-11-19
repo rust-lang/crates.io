@@ -21,8 +21,7 @@ use crate::app::AppState;
 use crate::auth::{AuthCheck, Authentication};
 use crate::models::token::EndpointScope;
 use crate::models::{
-    insert_version_owner_action, Crate, Dependency, Rights, Version, VersionAction,
-    VersionOwnerAction,
+    Crate, Dependency, NewVersionOwnerAction, Rights, Version, VersionAction, VersionOwnerAction,
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
@@ -247,7 +246,13 @@ pub fn perform_version_yank_update(
     } else {
         VersionAction::Unyank
     };
-    insert_version_owner_action(conn, version.id, user.id, api_token_id, action)?;
+    NewVersionOwnerAction::builder()
+        .version_id(version.id)
+        .user_id(user.id)
+        .maybe_api_token_id(api_token_id)
+        .action(action)
+        .build()
+        .insert(conn)?;
 
     SyncToGitIndex::new(&krate.name).enqueue(conn)?;
     SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
