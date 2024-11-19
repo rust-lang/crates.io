@@ -124,7 +124,6 @@ mod tests {
     use super::*;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use lettre::Address;
 
     #[tokio::test]
@@ -138,7 +137,7 @@ mod tests {
         faker::crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100)?;
 
         // Prime the cache so it only includes the crate we just created.
-        let mut async_conn = AsyncPgConnection::establish(test_db.url()).await?;
+        let mut async_conn = test_db.async_connect().await;
         let cache = Cache::new(vec!["admin@example.com".to_string()], &mut async_conn).await?;
         let cache = Arc::new(cache);
 

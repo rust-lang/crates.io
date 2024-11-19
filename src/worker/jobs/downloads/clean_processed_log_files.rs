@@ -44,13 +44,13 @@ mod tests {
     use super::*;
     use chrono::{DateTime, Utc};
     use crates_io_test_db::TestDatabase;
-    use diesel_async::{AsyncConnection, AsyncPgConnection};
+    use diesel_async::AsyncPgConnection;
     use insta::assert_debug_snapshot;
 
     #[tokio::test]
     async fn test_cleanup() {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
 
         let now = chrono::Utc::now();
         let cut_off_date = cut_off_date();

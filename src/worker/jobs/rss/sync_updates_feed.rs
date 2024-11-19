@@ -173,7 +173,6 @@ mod tests {
     use super::*;
     use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use futures_util::future::join_all;
     use insta::assert_debug_snapshot;
     use std::borrow::Cow;
@@ -184,7 +183,7 @@ mod tests {
         crate::util::tracing::init_for_test();
 
         let db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(db.url()).await.unwrap();
+        let mut conn = db.async_connect().await;
 
         let now = chrono::Utc::now().naive_utc();
 

@@ -249,13 +249,12 @@ mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
     use crates_io_test_db::TestDatabase;
-    use diesel_async::AsyncConnection;
     use insta::assert_snapshot;
 
     #[tokio::test]
     async fn test_export() {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
         prepare_database(&mut conn).await;
 
         let tempdir = tempdir().unwrap();
@@ -357,7 +356,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete() {
         let test_db = TestDatabase::new();
-        let mut conn = AsyncPgConnection::establish(test_db.url()).await.unwrap();
+        let mut conn = test_db.async_connect().await;
         prepare_database(&mut conn).await;
 
         let dates = vec![NaiveDate::from_ymd_opt(2021, 1, 1).unwrap()];
