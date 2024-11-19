@@ -24,8 +24,8 @@ use tokio::runtime::Handle;
 use url::Url;
 
 use crate::models::{
-    default_versions::Version as DefaultVersion, insert_version_owner_action, Category, Crate,
-    DependencyKind, Keyword, NewCrate, NewVersion, Rights, VersionAction,
+    default_versions::Version as DefaultVersion, Category, Crate, DependencyKind, Keyword,
+    NewCrate, NewVersion, NewVersionOwnerAction, Rights, VersionAction,
 };
 
 use crate::licenses::parse_license_expr;
@@ -415,13 +415,13 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 }
             })?;
 
-            insert_version_owner_action(
-                conn,
-                version.id,
-                user.id,
-                api_token_id,
-                VersionAction::Publish,
-            )?;
+            NewVersionOwnerAction::builder()
+                .version_id(version.id)
+                .user_id(user.id)
+                .maybe_api_token_id(api_token_id)
+                .action(VersionAction::Publish)
+                .build()
+                .insert(conn)?;
 
             // Link this new version to all dependencies
             add_dependencies(conn, &deps, version.id)?;

@@ -1,4 +1,4 @@
-pub use self::action::{insert_version_owner_action, VersionAction, VersionOwnerAction};
+pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::category::{Category, CrateCategory, NewCategory};
 pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
 pub use self::default_versions::{update_default_version, verify_default_version};
