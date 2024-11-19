@@ -46,16 +46,16 @@
         z-index: 1;
         cursor: help;
     }
-
-    :global(.ember-tooltip) {
-        word-break: break-all;
-    }
 }
 
 .version {
     display: grid;
     grid-template-columns: auto auto;
     place-items: center;
+
+    :global(.ember-tooltip) {
+        word-break: break-all;
+    }
 
     @media only screen and (max-width: 550px) {
         grid-template-columns: auto;
@@ -210,6 +210,10 @@
         /* this makes the text look a little more aligned with the icon... 🤷 */
         margin-bottom: -0.15em;
     }
+}
+
+.edition {
+    margin-top: var(--space-2xs);
 }
 
 .bytes {

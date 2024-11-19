@@ -40,6 +40,10 @@
     }
 }
 
+.edition {
+    margin-top: var(--space-2xs);
+}
+
 .license {
     a {
         color: var(--main-color);

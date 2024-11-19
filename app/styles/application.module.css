@@ -202,5 +202,6 @@ noscript {
 }
 
 :global(.ember-tooltip) {
+    max-width: 300px;
     font-weight: normal;
 }

@@ -22,7 +22,13 @@
         {{svg-jar "rust"}}
         <span>
           v{{@version.msrv}}
-          <EmberTooltip @text="Minimum Supported Rust Version" />
+
+          <EmberTooltip>
+            &quot;Minimum Supported Rust Version&quot;
+            {{#if @version.edition}}
+              <div local-class="edition">requires Rust Edition {{@version.edition}}</div>
+            {{/if}}
+          </EmberTooltip>
         </span>
       </div>
     {{/if}}
