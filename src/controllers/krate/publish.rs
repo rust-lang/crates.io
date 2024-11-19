@@ -143,73 +143,69 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
         .await?;
 
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let content_length = tarball_bytes.len() as u64;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let maximums = Maximums::new(
+        existing_crate.as_ref().and_then(|c| c.max_upload_size),
+        app.config.max_upload_size,
+        app.config.max_unpack_size,
+    );
 
-        let api_token_id = auth.api_token_id();
-        let user = auth.user();
+    if content_length > maximums.max_upload_size {
+        return Err(custom(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            format!("max upload size is: {}", maximums.max_upload_size),
+        ));
+    }
 
-        let content_length = tarball_bytes.len() as u64;
-
-        let maximums = Maximums::new(
-            existing_crate.as_ref().and_then(|c| c.max_upload_size),
-            app.config.max_upload_size,
-            app.config.max_unpack_size,
-        );
-
-        if content_length > maximums.max_upload_size {
-            return Err(custom(StatusCode::PAYLOAD_TOO_LARGE, format!(
-                "max upload size is: {}",
-                maximums.max_upload_size
-            )));
-        }
-
+    let tarball_info = spawn_blocking({
         let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-        let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)?;
+        let tarball_bytes = tarball_bytes.clone();
+        move || process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)
+    })
+    .await??;
 
-        // `unwrap()` is safe here since `process_tarball()` validates that
-        // we only accept manifests with a `package` section and without
-        // inheritance.
-        let package = tarball_info.manifest.package.unwrap();
+    // `unwrap()` is safe here since `process_tarball()` validates that
+    // we only accept manifests with a `package` section and without
+    // inheritance.
+    let package = tarball_info.manifest.package.unwrap();
 
-        let description = package.description.map(|it| it.as_local().unwrap());
-        let mut license = package.license.map(|it| it.as_local().unwrap());
-        let license_file = package.license_file.map(|it| it.as_local().unwrap());
-        let homepage = package.homepage.map(|it| it.as_local().unwrap());
-        let documentation = package.documentation.map(|it| it.as_local().unwrap());
-        let repository = package.repository.map(|it| it.as_local().unwrap());
-        let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
-        let edition = package.edition.map(|rv| rv.as_local().unwrap());
+    let description = package.description.map(|it| it.as_local().unwrap());
+    let mut license = package.license.map(|it| it.as_local().unwrap());
+    let license_file = package.license_file.map(|it| it.as_local().unwrap());
+    let homepage = package.homepage.map(|it| it.as_local().unwrap());
+    let documentation = package.documentation.map(|it| it.as_local().unwrap());
+    let repository = package.repository.map(|it| it.as_local().unwrap());
+    let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
+    let edition = package.edition.map(|rv| rv.as_local().unwrap());
 
-        // Make sure required fields are provided
-        fn empty(s: Option<&String>) -> bool {
-            s.map_or(true, String::is_empty)
+    // Make sure required fields are provided
+    fn empty(s: Option<&String>) -> bool {
+        s.map_or(true, String::is_empty)
+    }
+
+    // It can have up to three elements per below conditions.
+    let mut missing = Vec::with_capacity(3);
+    if empty(description.as_ref()) {
+        missing.push("description");
+    }
+    if empty(license.as_ref()) && empty(license_file.as_ref()) {
+        missing.push("license");
+    }
+    if !missing.is_empty() {
+        let message = missing_metadata_error_message(&missing);
+        return Err(bad_request(&message));
+    }
+
+    if let Some(description) = &description {
+        if description.len() > MAX_DESCRIPTION_LENGTH {
+            return Err(bad_request(format!("The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed.")));
         }
+    }
 
-        // It can have up to three elements per below conditions.
-        let mut missing = Vec::with_capacity(3);
-        if empty(description.as_ref()) {
-            missing.push("description");
-        }
-        if empty(license.as_ref()) && empty(license_file.as_ref()) {
-            missing.push("license");
-        }
-        if !missing.is_empty() {
-            let message = missing_metadata_error_message(&missing);
-            return Err(bad_request(&message));
-        }
-
-        if let Some(description) = &description {
-            if description.len() > MAX_DESCRIPTION_LENGTH {
-                return Err(bad_request(format!("The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed.")));
-            }
-        }
-
-        if let Some(ref license) = license {
-            parse_license_expr(license).map_err(|e| bad_request(format_args!(
-                "unknown or invalid license expression; \
+    if let Some(ref license) = license {
+        parse_license_expr(license).map_err(|e| bad_request(format_args!(
+            "unknown or invalid license expression; \
                 see http://opensource.org/licenses for options, \
                 and http://spdx.org/licenses/ for their identifiers\n\
                 Note: If you have a non-standard license that is not listed by SPDX, \
@@ -218,58 +214,59 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields \
                 for more information.\n\
                 {e}"
-            )))?;
-        } else if license_file.is_some() {
-            // If no license is given, but a license file is given, flag this
-            // crate as having a nonstandard license. Note that we don't
-            // actually do anything else with license_file currently.
-            license = Some(String::from("non-standard"));
-        }
+        )))?;
+    } else if license_file.is_some() {
+        // If no license is given, but a license file is given, flag this
+        // crate as having a nonstandard license. Note that we don't
+        // actually do anything else with license_file currently.
+        license = Some(String::from("non-standard"));
+    }
 
-        validate_url(homepage.as_deref(), "homepage")?;
-        validate_url(documentation.as_deref(), "documentation")?;
-        validate_url(repository.as_deref(), "repository")?;
-        if let Some(ref rust_version) = rust_version {
-            validate_rust_version(rust_version)?;
-        }
+    validate_url(homepage.as_deref(), "homepage")?;
+    validate_url(documentation.as_deref(), "documentation")?;
+    validate_url(repository.as_deref(), "repository")?;
+    if let Some(ref rust_version) = rust_version {
+        validate_rust_version(rust_version)?;
+    }
 
-        let keywords = package
-            .keywords
-            .map(|it| it.as_local().unwrap())
-            .unwrap_or_default();
+    let keywords = package
+        .keywords
+        .map(|it| it.as_local().unwrap())
+        .unwrap_or_default();
 
-        if keywords.len() > 5 {
-            return Err(bad_request("expected at most 5 keywords per crate"));
-        }
+    if keywords.len() > 5 {
+        return Err(bad_request("expected at most 5 keywords per crate"));
+    }
 
-        for keyword in keywords.iter() {
-            if keyword.len() > 20 {
-                return Err(bad_request(format!(
-                    "\"{keyword}\" is an invalid keyword (keywords must have less than 20 characters)"
-                )));
-            } else if !Keyword::valid_name(keyword) {
-                return Err(bad_request(format!("\"{keyword}\" is an invalid keyword")));
-            }
-        }
-
-        let categories = package
-            .categories
-            .map(|it| it.as_local().unwrap())
-            .unwrap_or_default();
-
-        if categories.len() > 5 {
-            return Err(bad_request("expected at most 5 categories per crate"));
-        }
-
-        let max_features = existing_crate.as_ref()
-            .and_then(|c| c.max_features.map(|mf| mf as usize))
-            .unwrap_or(app.config.max_features);
-
-        let features = tarball_info.manifest.features.unwrap_or_default();
-        let num_features = features.len();
-        if num_features > max_features {
+    for keyword in keywords.iter() {
+        if keyword.len() > 20 {
             return Err(bad_request(format!(
-                "crates.io only allows a maximum number of {max_features} \
+                "\"{keyword}\" is an invalid keyword (keywords must have less than 20 characters)"
+            )));
+        } else if !Keyword::valid_name(keyword) {
+            return Err(bad_request(format!("\"{keyword}\" is an invalid keyword")));
+        }
+    }
+
+    let categories = package
+        .categories
+        .map(|it| it.as_local().unwrap())
+        .unwrap_or_default();
+
+    if categories.len() > 5 {
+        return Err(bad_request("expected at most 5 categories per crate"));
+    }
+
+    let max_features = existing_crate
+        .as_ref()
+        .and_then(|c| c.max_features.map(|mf| mf as usize))
+        .unwrap_or(app.config.max_features);
+
+    let features = tarball_info.manifest.features.unwrap_or_default();
+    let num_features = features.len();
+    if num_features > max_features {
+        return Err(bad_request(format!(
+            "crates.io only allows a maximum number of {max_features} \
                 features, but your crate is declaring {num_features} features.\n\
                 \n\
                 Take a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html \
@@ -277,16 +274,16 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 \n\
                 If you have a use case that requires an increase of this limit, \
                 please send us an email to help@crates.io to discuss the details."
-            )));
-        }
+        )));
+    }
 
-        for (key, values) in features.iter() {
-            Crate::validate_feature_name(key).map_err(bad_request)?;
+    for (key, values) in features.iter() {
+        Crate::validate_feature_name(key).map_err(bad_request)?;
 
-            let num_features = values.len();
-            if num_features > max_features {
-                return Err(bad_request(format!(
-                    "crates.io only allows a maximum number of {max_features} \
+        let num_features = values.len();
+        if num_features > max_features {
+            return Err(bad_request(format!(
+                "crates.io only allows a maximum number of {max_features} \
                     features or dependencies that another feature can enable, \
                     but the \"{key}\" feature of your crate is enabling \
                     {num_features} features or dependencies.\n\
@@ -296,34 +293,42 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                     \n\
                     If you have a use case that requires an increase of this limit, \
                     please send us an email to help@crates.io to discuss the details."
-                )));
-            }
-
-            for value in values.iter() {
-                Crate::validate_feature(value).map_err(bad_request)?;
-            }
-        }
-
-        let deps = convert_dependencies(
-            tarball_info.manifest.dependencies.as_ref(),
-            tarball_info.manifest.dev_dependencies.as_ref(),
-            tarball_info.manifest.build_dependencies.as_ref(),
-            tarball_info.manifest.target.as_ref()
-        );
-
-        let max_dependencies = app.config.max_dependencies;
-        if deps.len() > max_dependencies {
-            return Err(bad_request(format!(
-                "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
-                \n\
-                If you have a use case that requires an increase of this limit, \
-                please send us an email to help@crates.io to discuss the details."
             )));
         }
 
-        for dep in &deps {
-            validate_dependency(dep)?;
+        for value in values.iter() {
+            Crate::validate_feature(value).map_err(bad_request)?;
         }
+    }
+
+    let deps = convert_dependencies(
+        tarball_info.manifest.dependencies.as_ref(),
+        tarball_info.manifest.dev_dependencies.as_ref(),
+        tarball_info.manifest.build_dependencies.as_ref(),
+        tarball_info.manifest.target.as_ref(),
+    );
+
+    let max_dependencies = app.config.max_dependencies;
+    if deps.len() > max_dependencies {
+        return Err(bad_request(format!(
+            "crates.io only allows a maximum number of {max_dependencies} dependencies.\n\
+                \n\
+                If you have a use case that requires an increase of this limit, \
+                please send us an email to help@crates.io to discuss the details."
+        )));
+    }
+
+    for dep in &deps {
+        validate_dependency(dep)?;
+    }
+
+    spawn_blocking(move || {
+        use diesel::RunQueryDsl;
+
+        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+
+        let api_token_id = auth.api_token_id();
+        let user = auth.user();
 
         // Create a transaction on the database, if there are no errors,
         // commit the transactions to record a new or updated crate.
