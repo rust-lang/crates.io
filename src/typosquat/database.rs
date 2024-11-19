@@ -174,6 +174,7 @@ impl From<crate::models::Owner> for Owner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests::add_team_to_crate;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
     use thiserror::Error;
@@ -194,8 +195,8 @@ mod tests {
 
         // Let's set up a team that owns both b and c, but not a.
         let not_the_a_team = faker::team(&mut conn, "org", "team")?;
-        faker::add_crate_to_team(&mut conn, &user_b, &top_b, &not_the_a_team)?;
-        faker::add_crate_to_team(&mut conn, &user_b, &not_top_c, &not_the_a_team)?;
+        add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut conn)?;
+        add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut conn)?;
 
         let mut async_conn = test_db.async_connect().await;
         let top_crates = TopCrates::new(&mut async_conn, 2).await?;

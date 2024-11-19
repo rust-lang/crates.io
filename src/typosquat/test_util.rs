@@ -2,35 +2,14 @@ use diesel::{prelude::*, PgConnection};
 
 use crate::tests::util::github::next_gh_id;
 use crate::{
-    models::{Crate, CrateOwner, NewTeam, NewUser, OwnerKind, Team, User},
-    schema::{crate_owners, users},
+    models::{Crate, NewTeam, NewUser, Team, User},
+    schema::users,
 };
 
 pub mod faker {
     use super::*;
     use crate::tests::builders::CrateBuilder;
     use anyhow::anyhow;
-
-    pub fn add_crate_to_team(
-        conn: &mut PgConnection,
-        user: &User,
-        krate: &Crate,
-        team: &Team,
-    ) -> anyhow::Result<()> {
-        // We have to do a bunch of this by hand, since normally adding a team owner triggers
-        // various checks.
-        diesel::insert_into(crate_owners::table)
-            .values(&CrateOwner {
-                crate_id: krate.id,
-                owner_id: team.id,
-                created_by: user.id,
-                owner_kind: OwnerKind::Team,
-                email_notifications: true,
-            })
-            .execute(conn)?;
-
-        Ok(())
-    }
 
     pub fn crate_and_version(
         conn: &mut PgConnection,
