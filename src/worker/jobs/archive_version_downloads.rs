@@ -61,7 +61,7 @@ impl BackgroundJob for ArchiveVersionDownloads {
         let csv_path = tempdir.path().join(FILE_NAME);
 
         export(&env.config.db.primary.url, &csv_path, &self.before).await?;
-        let dates = spawn_blocking(move || split(csv_path)).await?;
+        let dates = spawn_blocking(move || split(csv_path)).await??;
         let uploaded_dates = upload(downloads_archive_store, tempdir.path(), dates).await?;
 
         let mut conn = env.deadpool.get().await?;

@@ -103,7 +103,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
             "meta": { "more": more },
         }))
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /confirm/:email_token` route

@@ -65,7 +65,7 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
             "users": users,
         }))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
@@ -86,7 +86,7 @@ pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateLi
         let list = prepare_list(&app, &req, auth, filter, conn)?;
         Ok(Json(list))
     })
-    .await
+    .await?
 }
 
 enum ListFilter {

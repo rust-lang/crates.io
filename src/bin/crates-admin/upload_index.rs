@@ -30,7 +30,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
         Ok::<_, anyhow::Error>((repo, files))
     })
-    .await?;
+    .await??;
 
     if !dialoguer::confirm("continue with upload?").await? {
         return Ok(());

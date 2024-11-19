@@ -175,7 +175,7 @@ async fn get_readme(
         let archive = Archive::new(reader);
         render_pkg_readme(archive, &pkg_name)
     })
-    .await
+    .await?
 }
 
 fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow::Result<String> {

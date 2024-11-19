@@ -64,7 +64,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
     }
 
-    let opts = spawn_blocking::<_, _, anyhow::Error>(move || {
+    let opts = spawn_blocking(move || {
         use diesel::RunQueryDsl;
 
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
@@ -110,8 +110,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
         }
 
-        Ok(opts)
-    }).await?;
+        Ok::<_, anyhow::Error>(opts)
+    }).await??;
 
     let crate_name = &opts.crate_name;
 

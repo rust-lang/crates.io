@@ -73,7 +73,7 @@ impl BackgroundJob for SyncToGitIndex {
 
             Ok(())
         })
-        .await
+        .await?
     }
 }
 

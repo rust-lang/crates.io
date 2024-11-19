@@ -3,7 +3,7 @@ use crates_io::tasks::spawn_blocking;
 
 pub async fn confirm(msg: impl Into<String>) -> anyhow::Result<bool> {
     let msg = msg.into();
-    spawn_blocking(move || sync_confirm(msg).map_err(anyhow::Error::from)).await
+    spawn_blocking(move || sync_confirm(msg).map_err(anyhow::Error::from)).await?
 }
 
 fn sync_confirm(msg: impl Into<String>) -> dialoguer::Result<bool> {

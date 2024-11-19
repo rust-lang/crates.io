@@ -84,7 +84,7 @@ pub async fn versions(
             None => json!({ "versions": versions }),
         })
     })
-    .await
+    .await?
 }
 
 /// Seek-based pagination of versions by date

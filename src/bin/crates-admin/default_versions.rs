@@ -48,5 +48,5 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
 
         Ok(())
     })
-    .await
+    .await?
 }

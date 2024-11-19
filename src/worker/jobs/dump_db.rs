@@ -37,7 +37,7 @@ impl BackgroundJob for DumpDb {
                 PathBuf::from(directory.timestamp.format("%Y-%m-%d-%H%M%S").to_string());
             create_archives(export_dir, &tarball_prefix)
         })
-        .await?;
+        .await??;
 
         info!("Uploading tarball…");
         env.storage

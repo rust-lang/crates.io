@@ -267,7 +267,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
             },
         }))
     })
-    .await
+    .await?
 }
 
 #[derive(Default)]

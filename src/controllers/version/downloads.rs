@@ -69,5 +69,5 @@ pub async fn downloads(
 
         Ok(json!({ "version_downloads": downloads }))
     })
-    .await
+    .await?
 }
