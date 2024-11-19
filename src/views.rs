@@ -587,6 +587,10 @@ pub struct EncodableVersion {
     pub has_lib: Option<bool>,
     pub bin_names: Option<Vec<Option<String>>>,
     pub edition: Option<String>,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
+    pub repository: Option<String>,
 }
 
 impl EncodableVersion {
@@ -613,6 +617,10 @@ impl EncodableVersion {
             has_lib,
             bin_names,
             edition,
+            description,
+            homepage,
+            documentation,
+            repository,
             ..
         } = version;
 
@@ -643,6 +651,10 @@ impl EncodableVersion {
             has_lib,
             bin_names,
             edition,
+            description,
+            homepage,
+            documentation,
+            repository,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -773,6 +785,10 @@ mod tests {
             bin_names: None,
             published_by: None,
             edition: None,
+            description: None,
+            homepage: None,
+            documentation: None,
+            repository: None,
             audit_actions: vec![EncodableAuditAction {
                 action: "publish".to_string(),
                 user: EncodablePublicUser {
