@@ -419,13 +419,16 @@ async fn add_owners_as_team_owner() {
 async fn crates_by_team_id() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
         .create_or_update(&mut conn)
         .unwrap();
     let krate = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
-    add_team_to_crate(&t, &krate, user, &mut conn).unwrap();
+    add_team_to_crate(&t, &krate, user, &mut async_conn)
+        .await
+        .unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 1);
@@ -435,6 +438,7 @@ async fn crates_by_team_id() {
 async fn crates_by_team_id_not_including_deleted_owners() {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let user = user.as_model();
 
@@ -447,7 +451,9 @@ async fn crates_by_team_id_not_including_deleted_owners() {
     let t = new_team.create_or_update(&mut conn).unwrap();
 
     let krate = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
-    add_team_to_crate(&t, &krate, user, &mut conn).unwrap();
+    add_team_to_crate(&t, &krate, user, &mut async_conn)
+        .await
+        .unwrap();
     krate.owner_remove(&mut conn, &t.login).unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;

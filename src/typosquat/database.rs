@@ -183,6 +183,7 @@ mod tests {
     async fn top_crates() -> Result<(), Error> {
         let test_db = TestDatabase::new();
         let mut conn = test_db.connect();
+        let mut async_conn = test_db.async_connect().await;
 
         // Set up two users.
         let user_a = faker::user(&mut conn, "a")?;
@@ -195,10 +196,9 @@ mod tests {
 
         // Let's set up a team that owns both b and c, but not a.
         let not_the_a_team = faker::team(&mut conn, "org", "team")?;
-        add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut conn)?;
-        add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut conn)?;
+        add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut async_conn).await?;
+        add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut async_conn).await?;
 
-        let mut async_conn = test_db.async_connect().await;
         let top_crates = TopCrates::new(&mut async_conn, 2).await?;
 
         // Let's ensure the top crates include what we expect (which is a and b, since we asked for

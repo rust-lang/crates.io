@@ -10,6 +10,7 @@ use crate::{
 
 use crate::tests::util::github::next_gh_id;
 use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 mod account_lock;
 mod authentication;
@@ -111,11 +112,11 @@ fn new_team(login: &str) -> NewTeam<'_> {
         .build()
 }
 
-pub fn add_team_to_crate(
+pub async fn add_team_to_crate(
     t: &Team,
     krate: &Crate,
     u: &User,
-    conn: &mut PgConnection,
+    conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
     let crate_owner = CrateOwner {
         crate_id: krate.id,
@@ -130,7 +131,8 @@ pub fn add_team_to_crate(
         .on_conflict(crate_owners::table.primary_key())
         .do_update()
         .set(crate_owners::deleted.eq(false))
-        .execute(conn)?;
+        .execute(conn)
+        .await?;
 
     Ok(())
 }
