@@ -15,7 +15,6 @@ use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::StatusCode;
 use serde::Deserialize;
-use tokio::runtime::Handle;
 
 use crate::app::AppState;
 use crate::auth::{AuthCheck, Authentication};
@@ -27,7 +26,6 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
@@ -137,18 +135,19 @@ pub async fn update(
         .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
         .await?;
 
+    perform_version_yank_update(
+        &state,
+        &mut conn,
+        &mut version,
+        &krate,
+        &auth,
+        update_request.version.yanked,
+        update_request.version.yank_message,
+    )
+    .await?;
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
-        perform_version_yank_update(
-            &state,
-            conn,
-            &mut version,
-            &krate,
-            &auth,
-            update_request.version.yanked,
-            update_request.version.yank_message,
-        )?;
 
         let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
@@ -186,24 +185,24 @@ pub async fn authenticate(
         .await
 }
 
-pub fn perform_version_yank_update(
+pub async fn perform_version_yank_update(
     state: &AppState,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
     version: &mut Version,
     krate: &Crate,
     auth: &Authentication,
     yanked: Option<bool>,
     yank_message: Option<String>,
 ) -> AppResult<()> {
-    use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
     let api_token_id = auth.api_token_id();
     let user = auth.user();
-    let owners = krate.owners(conn)?;
+    let owners = krate.async_owners(conn).await?;
 
     let yanked = yanked.unwrap_or(version.yanked);
 
-    if Handle::current().block_on(user.rights(state, &owners))? < Rights::Publish {
+    if user.rights(state, &owners).await? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
@@ -230,7 +229,8 @@ pub fn perform_version_yank_update(
         versions::yanked.eq(yanked),
         versions::yank_message.eq(&yank_message),
     ))
-    .execute(conn)?;
+    .execute(conn)
+    .await?;
 
     // If no rows were updated, return early
     if updated_cnt == 0 {
@@ -252,11 +252,16 @@ pub fn perform_version_yank_update(
         .maybe_api_token_id(api_token_id)
         .action(action)
         .build()
-        .insert(conn)?;
+        .async_insert(conn)
+        .await?;
 
-    SyncToGitIndex::new(&krate.name).enqueue(conn)?;
-    SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
-    UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+    SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
+    SyncToSparseIndex::new(&krate.name)
+        .async_enqueue(conn)
+        .await?;
+    UpdateDefaultVersion::new(krate.id)
+        .async_enqueue(conn)
+        .await?;
 
     Ok(())
 }

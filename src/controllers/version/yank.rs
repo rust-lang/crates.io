@@ -5,11 +5,9 @@ use super::version_and_crate;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;
 use crate::rate_limiter::LimitedAction;
-use crate::tasks::spawn_blocking;
 use crate::util::errors::{version_not_found, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 
 /// Handles the `DELETE /crates/:crate_id/:version/yank` route.
@@ -62,18 +60,16 @@ async fn modify_yank(
         .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
         .await?;
 
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-        perform_version_yank_update(
-            &state,
-            conn,
-            &mut version,
-            &krate,
-            &auth,
-            Some(yanked),
-            None,
-        )?;
-        ok_true()
-    })
-    .await
+    perform_version_yank_update(
+        &state,
+        &mut conn,
+        &mut version,
+        &krate,
+        &auth,
+        Some(yanked),
+        None,
+    )
+    .await?;
+
+    ok_true()
 }
