@@ -34,6 +34,10 @@ pub struct Version {
     pub yank_message: Option<String>,
     pub num_no_build: String,
     pub edition: Option<String>,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
+    pub repository: Option<String>,
 }
 
 impl Version {
