@@ -6,11 +6,12 @@ use crates_io::models::{NewDeletedCrate, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
+use crates_io_database::schema::dependencies;
 use crates_io_worker::BackgroundJob;
-use diesel::dsl::sql;
+use diesel::dsl::{count_star, sql};
 use diesel::expression::SqlLiteral;
 use diesel::prelude::*;
-use diesel::sql_types::{Array, BigInt, Text};
+use diesel::sql_types::{Array, Text};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use std::fmt::Display;
@@ -199,12 +200,10 @@ fn owners_subquery() -> SqlLiteral<Array<Text>> {
 /// "default version" per crate. However, it's good enough for our
 /// purposes here.
 #[diesel::dsl::auto_type]
-fn rev_deps_subquery() -> SqlLiteral<BigInt> {
-    sql(r#"
-       (
-            SELECT COUNT(*)
-            FROM dependencies
-            WHERE dependencies.crate_id = crates.id
-        )
-    "#)
+fn rev_deps_subquery() -> _ {
+    dependencies::table
+        .select(count_star())
+        .filter(dependencies::crate_id.eq(crates::id))
+        .single_value()
+        .assume_not_null()
 }
