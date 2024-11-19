@@ -28,6 +28,7 @@ snapshot_kind: text
     "created_at": "[datetime]",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "downloads": 0,
+    "edition": null,
     "features": {},
     "has_lib": true,
     "id": "[id]",

@@ -181,6 +181,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         let documentation = package.documentation.map(|it| it.as_local().unwrap());
         let repository = package.repository.map(|it| it.as_local().unwrap());
         let rust_version = package.rust_version.map(|rv| rv.as_local().unwrap());
+        let edition = package.edition.map(|rv| rv.as_local().unwrap());
 
         // Make sure required fields are provided
         fn empty(s: Option<&String>) -> bool {
@@ -384,6 +385,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .filter_map(|bin| bin.name.as_deref())
                 .collect::<Vec<_>>();
 
+            let edition = edition.map(|edition| edition.as_str());
+
             // Read tarball from request
             let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
@@ -400,6 +403,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                 .maybe_rust_version(rust_version.as_deref())
                 .has_lib(tarball_info.manifest.lib.is_some())
                 .bin_names(bin_names.as_slice())
+                .maybe_edition(edition)
                 .build();
 
             let version = new_version.save(conn, &verified_email_address).map_err(|error| {

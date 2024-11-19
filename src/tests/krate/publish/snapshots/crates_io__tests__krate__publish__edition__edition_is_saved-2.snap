@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish/manifest.rs
+source: src/tests/krate/publish/edition.rs
 expression: response.json()
 snapshot_kind: text
 ---
@@ -19,13 +19,13 @@ snapshot_kind: text
       }
     ],
     "bin_names": [],
-    "checksum": "418c24c55cbcde274a5b1815d2c844203c7116e7f712008f4727d38bc7c82d8d",
+    "checksum": "7bca599a373dd56631d8c47704f17d2c166e75ffc7327c6dcc54c91e3d290e5b",
     "crate": "foo",
-    "crate_size": 170,
+    "crate_size": 169,
     "created_at": "[datetime]",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "downloads": 0,
-    "edition": null,
+    "edition": "2021",
     "features": {},
     "has_lib": false,
     "id": "[id]",
@@ -45,7 +45,7 @@ snapshot_kind: text
       "url": "https://github.com/foo"
     },
     "readme_path": "/api/v1/crates/foo/1.0.0/readme",
-    "rust_version": "1.69",
+    "rust_version": "1.0",
     "updated_at": "[datetime]",
     "yank_message": null,
     "yanked": false

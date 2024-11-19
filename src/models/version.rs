@@ -33,6 +33,7 @@ pub struct Version {
     pub bin_names: Option<Vec<Option<String>>>,
     pub yank_message: Option<String>,
     pub num_no_build: String,
+    pub edition: Option<String>,
 }
 
 impl Version {
@@ -96,6 +97,7 @@ pub struct NewVersion<'a> {
     rust_version: Option<&'a str>,
     pub has_lib: Option<bool>,
     pub bin_names: Option<&'a [&'a str]>,
+    edition: Option<&'a str>,
 }
 
 impl NewVersion<'_> {
