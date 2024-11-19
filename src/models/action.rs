@@ -114,4 +114,16 @@ impl NewVersionOwnerAction {
             .values(self)
             .get_result(conn)
     }
+
+    pub async fn async_insert(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<VersionOwnerAction> {
+        use diesel_async::RunQueryDsl;
+
+        diesel::insert_into(version_owner_actions::table)
+            .values(self)
+            .get_result(conn)
+            .await
+    }
 }
