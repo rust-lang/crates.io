@@ -140,6 +140,7 @@ async fn delete_from_database(
 }
 
 #[derive(Debug, Clone, Queryable, Selectable)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 struct CrateInfo {
     #[diesel(select_expression = crates::columns::name)]
     name: String,
