@@ -164,7 +164,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             "categories": encodable_cats,
         }))
     })
-    .await
+    .await?
 }
 
 #[derive(Debug)]

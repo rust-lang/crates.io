@@ -24,7 +24,7 @@ impl BackgroundJob for UpdateDownloads {
             let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
             Ok(update(conn)?)
         })
-        .await
+        .await?
     }
 }
 

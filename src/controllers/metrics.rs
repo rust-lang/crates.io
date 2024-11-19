@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::tasks::spawn_blocking;
-use crate::util::errors::{custom, forbidden, not_found, AppResult, BoxedAppError};
+use crate::util::errors::{custom, forbidden, not_found, AppResult};
 use axum::extract::Path;
 use http::request::Parts;
 use http::{header, StatusCode};
@@ -30,10 +30,7 @@ pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> 
             let mut conn = app.db_read().await?;
             app.service_metrics.gather(&mut conn).await?
         }
-        "instance" => {
-            spawn_blocking(move || Ok::<_, BoxedAppError>(app.instance_metrics.gather(&app)?))
-                .await?
-        }
+        "instance" => spawn_blocking(move || app.instance_metrics.gather(&app)).await??,
         _ => return Err(not_found()),
     };
 

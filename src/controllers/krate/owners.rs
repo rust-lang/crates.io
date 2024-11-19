@@ -80,7 +80,7 @@ pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppR
 
         Ok(json!({ "users": owners }))
     })
-    .await
+    .await?
 }
 
 /// Handles the `PUT /crates/:crate_id/owners` route.
@@ -246,7 +246,7 @@ async fn modify_owners(
 
         Ok(json!({ "msg": comma_sep_msg, "ok": true }))
     })
-    .await
+    .await?
 }
 
 pub struct OwnerInviteEmail {

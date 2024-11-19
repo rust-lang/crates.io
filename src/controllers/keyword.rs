@@ -46,7 +46,7 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
             "meta": { "total": total },
         }))
     })
-    .await
+    .await?
 }
 
 /// Handles the `GET /keywords/:keyword_id` route.

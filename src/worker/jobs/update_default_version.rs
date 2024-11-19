@@ -33,6 +33,6 @@ impl BackgroundJob for UpdateDefaultVersion {
             update_default_version(crate_id, conn)?;
             Ok(())
         })
-        .await
+        .await?
     }
 }

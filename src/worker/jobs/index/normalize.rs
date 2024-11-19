@@ -94,6 +94,6 @@ impl BackgroundJob for NormalizeIndex {
 
             Ok(())
         })
-        .await
+        .await?
     }
 }

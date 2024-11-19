@@ -62,6 +62,6 @@ impl BackgroundJob for SquashIndex {
 
             Ok(())
         })
-        .await
+        .await?
     }
 }

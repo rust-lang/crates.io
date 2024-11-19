@@ -54,7 +54,7 @@ pub async fn run(_opts: Opts) -> Result<(), Error> {
 
         Ok::<_, Error>(conn)
     })
-    .await?;
+    .await??;
 
     info!("Synchronizing crate categories");
     crates_io::boot::categories::sync_with_connection(CATEGORIES_TOML, &mut conn).await?;

@@ -52,12 +52,12 @@ impl BackgroundJob for RenderAndUploadReadme {
 
         let job = self.clone();
         let rendered = spawn_blocking(move || {
-            Ok::<_, anyhow::Error>(text_to_html(
+            text_to_html(
                 &job.text,
                 &job.readme_path,
                 job.base_url.as_deref(),
                 job.pkg_path_in_vcs.as_ref(),
-            ))
+            )
         })
         .await?;
 

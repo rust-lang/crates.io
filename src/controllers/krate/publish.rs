@@ -562,7 +562,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             }))
         })
     })
-        .await
+        .await?
 }
 
 /// Counts the number of versions for `crate_id` that were published within
