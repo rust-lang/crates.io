@@ -82,7 +82,7 @@ futures-util = "=0.3.31"
 hex = "=0.4.3"
 http = "=1.1.0"
 http-body-util = "=0.1.2"
-hyper = { version = "=1.5.0", features = ["client", "http1"] }
+hyper = { version = "=1.5.1", features = ["client", "http1"] }
 indexmap = { version = "=2.6.0", features = ["serde"] }
 indicatif = "=0.17.9"
 ipnetwork = "=0.20.0"
