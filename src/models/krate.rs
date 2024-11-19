@@ -344,6 +344,24 @@ impl Crate {
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
+    pub async fn async_top_versions(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<TopVersions> {
+        use diesel_async::RunQueryDsl;
+
+        Ok(TopVersions::from_date_version_pairs(
+            Version::belonging_to(self)
+                .filter(versions::yanked.eq(false))
+                .select((versions::created_at, versions::num))
+                .load(conn)
+                .await?,
+        ))
+    }
+
+    /// Return both the newest (most recently updated) and
+    /// highest version (in semver order) for the current crate,
+    /// where all top versions are not yanked.
     pub fn top_versions(&self, conn: &mut impl Conn) -> QueryResult<TopVersions> {
         use diesel::RunQueryDsl;
 
