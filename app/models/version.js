@@ -29,6 +29,12 @@ export default class Version extends Model {
    */
   @attr rust_version;
 
+  /**
+   * The Rust edition required to compile this crate version.
+   * @type {string | null}
+   */
+  @attr edition;
+
   /** @type {boolean | null} */
   @attr has_lib;
   /** @type {string[] | null} */
@@ -46,8 +52,14 @@ export default class Version extends Model {
 
   get msrv() {
     let rustVersion = this.rust_version;
-    // add `.0` suffix if the `rust-version` field only has two version components
-    return /^[^.]+\.[^.]+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
+    if (rustVersion) {
+      // add `.0` suffix if the `rust-version` field only has two version components
+      return /^[^.]+\.[^.]+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
+    } else if (this.edition === '2018') {
+      return '1.31.0';
+    } else if (this.edition === '2021') {
+      return '1.56.0';
+    }
   }
 
   get isNew() {
