@@ -100,10 +100,11 @@ pub async fn show(
 
     let mut conn = state.db_read().await?;
     let (version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let published_by = version.published_by(&mut conn).await?;
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
 
         let version = EncodableVersion::from(version, &krate.name, published_by, actions);
@@ -146,10 +147,11 @@ pub async fn update(
     )
     .await?;
 
+    let published_by = version.published_by(&mut conn).await?;
+
     spawn_blocking(move || {
         let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let published_by = version.published_by(conn)?;
         let actions = VersionOwnerAction::by_version(conn, &version)?;
         let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
         Ok(json!({ "version": updated_version }))
