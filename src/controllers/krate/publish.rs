@@ -12,15 +12,15 @@ use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
-use diesel::connection::DefaultLoadingMode;
 use diesel::dsl::{exists, select};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use futures_util::TryStreamExt;
 use hex::ToHex;
 use http::StatusCode;
 use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use tokio::runtime::Handle;
 use url::Url;
 
 use crate::models::{
@@ -35,7 +35,6 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 use crate::tasks::spawn_blocking;
-use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
 use crate::util::{BytesRequest, Maximums};
 use crate::views::{
@@ -84,45 +83,40 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
     let mut conn = app.db_write().await?;
 
-    let (existing_crate, auth) = {
-        use diesel_async::RunQueryDsl;
+    let deleted_crate: Option<(String, DateTime<Utc>)> = deleted_crates::table
+        .filter(canon_crate_name(deleted_crates::name).eq(canon_crate_name(&metadata.name)))
+        .filter(deleted_crates::available_at.gt(Utc::now()))
+        .select((deleted_crates::name, deleted_crates::available_at))
+        .first(&mut conn)
+        .await
+        .optional()?;
 
-        let deleted_crate: Option<(String, DateTime<Utc>)> = deleted_crates::table
-            .filter(canon_crate_name(deleted_crates::name).eq(canon_crate_name(&metadata.name)))
-            .filter(deleted_crates::available_at.gt(Utc::now()))
-            .select((deleted_crates::name, deleted_crates::available_at))
-            .first(&mut conn)
-            .await
-            .optional()?;
-
-        if let Some(deleted_crate) = deleted_crate {
-            return Err(bad_request(format!(
+    if let Some(deleted_crate) = deleted_crate {
+        return Err(bad_request(format!(
                 "A crate with the name `{}` was recently deleted. Reuse of this name will be available after {}.",
                 deleted_crate.0,
                 deleted_crate.1.to_rfc3339_opts(SecondsFormat::Secs, true)
             )));
-        }
+    }
 
-        // this query should only be used for the endpoint scope calculation
-        // since a race condition there would only cause `publish-new` instead of
-        // `publish-update` to be used.
-        let existing_crate: Option<Crate> = Crate::by_name(&metadata.name)
-            .first::<Crate>(&mut conn)
-            .await
-            .optional()?;
+    // this query should only be used for the endpoint scope calculation
+    // since a race condition there would only cause `publish-new` instead of
+    // `publish-update` to be used.
+    let existing_crate: Option<Crate> = Crate::by_name(&metadata.name)
+        .first::<Crate>(&mut conn)
+        .await
+        .optional()?;
 
-        let endpoint_scope = match existing_crate {
-            Some(_) => EndpointScope::PublishUpdate,
-            None => EndpointScope::PublishNew,
-        };
-
-        let auth = AuthCheck::default()
-            .with_endpoint_scope(endpoint_scope)
-            .for_crate(&metadata.name)
-            .check(&req, &mut conn)
-            .await?;
-        (existing_crate, auth)
+    let endpoint_scope = match existing_crate {
+        Some(_) => EndpointScope::PublishUpdate,
+        None => EndpointScope::PublishNew,
     };
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(endpoint_scope)
+        .for_crate(&metadata.name)
+        .check(&req, &mut conn)
+        .await?;
 
     let verified_email_address = auth.user().async_verified_email(&mut conn).await?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
@@ -322,265 +316,261 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         validate_dependency(dep)?;
     }
 
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
+    let api_token_id = auth.api_token_id();
+    let user = auth.user();
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    // Create a transaction on the database, if there are no errors,
+    // commit the transactions to record a new or updated crate.
+    conn.transaction(|conn| async move {
+        let name = metadata.name;
+        let keywords = keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
+        let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
-        let api_token_id = auth.api_token_id();
-        let user = auth.user();
+        // Persist the new crate, if it doesn't already exist
+        let persist = NewCrate {
+            name: &name,
+            description: description.as_deref(),
+            homepage: homepage.as_deref(),
+            documentation: documentation.as_deref(),
+            readme: metadata.readme.as_deref(),
+            repository: repository.as_deref(),
+            max_upload_size: None,
+            max_features: None,
+        };
 
-        // Create a transaction on the database, if there are no errors,
-        // commit the transactions to record a new or updated crate.
-        conn.transaction(|conn| {
-            let name = metadata.name;
-            let keywords = keywords.iter().map(|s| s.as_str()).collect::<Vec<_>>();
-            let categories = categories.iter().map(|s| s.as_str()).collect::<Vec<_>>();
+        if is_reserved_name(persist.name, conn).await? {
+            return Err(bad_request("cannot upload a crate with a reserved name"));
+        }
 
-            // Persist the new crate, if it doesn't already exist
-            let persist = NewCrate {
-                name: &name,
-                description: description.as_deref(),
-                homepage: homepage.as_deref(),
-                documentation: documentation.as_deref(),
-                readme: metadata.readme.as_deref(),
-                repository: repository.as_deref(),
-                max_upload_size: None,
-                max_features: None,
+        // To avoid race conditions, we try to insert
+        // first so we know whether to add an owner
+        let krate = match persist.async_create(conn, user.id).await.optional()? {
+            Some(krate) => krate,
+            None => persist.update(conn).await?,
+        };
+
+        let owners = krate.async_owners(conn).await?;
+        if user.rights(&app, &owners).await? < Rights::Publish {
+            return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
+        }
+
+        if krate.name != *name {
+            return Err(bad_request(format_args!(
+                "crate was previously named `{}`",
+                krate.name
+            )));
+        }
+
+        if let Some(daily_version_limit) = app.config.new_version_rate_limit {
+            let published_today = count_versions_published_today(krate.id, conn).await?;
+            if published_today >= daily_version_limit as i64 {
+                return Err(custom(
+                    StatusCode::TOO_MANY_REQUESTS,
+                    "You have published too many versions of this crate in the last 24 hours",
+                ));
+            }
+        }
+
+        // https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field says that
+        // the `name` field is required for `bin` targets, so we can ignore `None` values via
+        // `filter_map()` here.
+        let bin_names = tarball_info.manifest.bin
+            .iter()
+            .filter_map(|bin| bin.name.as_deref())
+            .collect::<Vec<_>>();
+
+        let edition = edition.map(|edition| edition.as_str());
+
+        // Read tarball from request
+        let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
+
+        // Persist the new version of this crate
+        let new_version = NewVersion::builder(krate.id, &version_string)
+            .features(serde_json::to_value(&features)?)
+            .maybe_license(license.as_deref())
+            // Downcast is okay because the file length must be less than the max upload size
+            // to get here, and max upload sizes are way less than i32 max
+            .size(content_length as i32)
+            .published_by(user.id)
+            .checksum(&hex_cksum)
+            .maybe_links(package.links.as_deref())
+            .maybe_rust_version(rust_version.as_deref())
+            .has_lib(tarball_info.manifest.lib.is_some())
+            .bin_names(bin_names.as_slice())
+            .maybe_edition(edition)
+            .build();
+
+        let version = new_version.async_save(conn, &verified_email_address).await.map_err(|error| {
+            use diesel::result::{Error, DatabaseErrorKind};
+            match error {
+                Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
+                    duplicate_version_error(new_version.num_no_build),
+                error => error.into(),
+            }
+        })?;
+
+        NewVersionOwnerAction::builder()
+            .version_id(version.id)
+            .user_id(user.id)
+            .maybe_api_token_id(api_token_id)
+            .action(VersionAction::Publish)
+            .build()
+            .async_insert(conn)
+            .await?;
+
+        // Link this new version to all dependencies
+        add_dependencies(conn, &deps, version.id).await?;
+
+        let existing_default_version = default_versions::table
+            .inner_join(versions::table)
+            .filter(default_versions::crate_id.eq(krate.id))
+            .select(DefaultVersion::as_select())
+            .first(conn)
+            .await
+            .optional()?;
+
+        let mut default_version = None;
+        // Upsert the `default_value` determined by the existing `default_value` and the
+        // published version. Note that this could potentially write an outdated version
+        // (although this should not happen regularly), as we might be comparing to an
+        // outdated value.
+        //
+        // Compared to only using a background job, this prevents us from getting into a
+        // situation where a crate exists in the `crates` table but doesn't have a default
+        // version in the `default_versions` table.
+        if let Some(existing_default_version) = existing_default_version {
+            let published_default_version = DefaultVersion {
+                id: version.id,
+                num: semver,
+                yanked: false,
             };
 
-            if is_reserved_name(persist.name, conn)? {
-                return Err(bad_request("cannot upload a crate with a reserved name"));
-            }
-
-            // To avoid race conditions, we try to insert
-            // first so we know whether to add an owner
-            let krate = match persist.create(conn, user.id).optional()? {
-                Some(krate) => krate,
-                None => persist.update(conn)?,
-            };
-
-            let owners = krate.owners(conn)?;
-            if Handle::current().block_on(user.rights(&app, &owners))? < Rights::Publish {
-                return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
-            }
-
-            if krate.name != *name {
-                return Err(bad_request(format_args!(
-                    "crate was previously named `{}`",
-                    krate.name
-                )));
-            }
-
-            if let Some(daily_version_limit) = app.config.new_version_rate_limit {
-                let published_today = count_versions_published_today(krate.id, conn)?;
-                if published_today >= daily_version_limit as i64 {
-                    return Err(custom(
-                        StatusCode::TOO_MANY_REQUESTS,
-                        "You have published too many versions of this crate in the last 24 hours",
-                    ));
-                }
-            }
-
-            // https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field says that
-            // the `name` field is required for `bin` targets, so we can ignore `None` values via
-            // `filter_map()` here.
-            let bin_names = tarball_info.manifest.bin
-                .iter()
-                .filter_map(|bin| bin.name.as_deref())
-                .collect::<Vec<_>>();
-
-            let edition = edition.map(|edition| edition.as_str());
-
-            // Read tarball from request
-            let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
-
-            // Persist the new version of this crate
-            let new_version = NewVersion::builder(krate.id, &version_string)
-                .features(serde_json::to_value(&features)?)
-                .maybe_license(license.as_deref())
-                // Downcast is okay because the file length must be less than the max upload size
-                // to get here, and max upload sizes are way less than i32 max
-                .size(content_length as i32)
-                .published_by(user.id)
-                .checksum(&hex_cksum)
-                .maybe_links(package.links.as_deref())
-                .maybe_rust_version(rust_version.as_deref())
-                .has_lib(tarball_info.manifest.lib.is_some())
-                .bin_names(bin_names.as_slice())
-                .maybe_edition(edition)
-                .build();
-
-            let version = new_version.save(conn, &verified_email_address).map_err(|error| {
-                use diesel::result::{Error, DatabaseErrorKind};
-                match error {
-                    Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
-                        duplicate_version_error(new_version.num_no_build),
-                    error => error.into(),
-                }
-            })?;
-
-            NewVersionOwnerAction::builder()
-                .version_id(version.id)
-                .user_id(user.id)
-                .maybe_api_token_id(api_token_id)
-                .action(VersionAction::Publish)
-                .build()
-                .insert(conn)?;
-
-            // Link this new version to all dependencies
-            add_dependencies(conn, &deps, version.id)?;
-
-            let existing_default_version = default_versions::table
-                .inner_join(versions::table)
-                .filter(default_versions::crate_id.eq(krate.id))
-                .select(DefaultVersion::as_select())
-                .first(conn)
-                .optional()?;
-
-            let mut default_version = None;
-            // Upsert the `default_value` determined by the existing `default_value` and the
-            // published version. Note that this could potentially write an outdated version
-            // (although this should not happen regularly), as we might be comparing to an
-            // outdated value.
-            //
-            // Compared to only using a background job, this prevents us from getting into a
-            // situation where a crate exists in the `crates` table but doesn't have a default
-            // version in the `default_versions` table.
-            if let Some(existing_default_version) = existing_default_version {
-                let published_default_version = DefaultVersion {
-                    id: version.id,
-                    num: semver,
-                    yanked: false,
-                };
-
-                if existing_default_version < published_default_version {
-                    diesel::update(default_versions::table)
-                        .filter(default_versions::crate_id.eq(krate.id))
-                        .set(default_versions::version_id.eq(version.id))
-                        .execute(conn)?;
-                } else {
-                    default_version = Some(existing_default_version.num.to_string());
-                }
-
-                // Update the default version asynchronously in a background job
-                // to ensure correctness and eventual consistency.
-                UpdateDefaultVersion::new(krate.id).enqueue(conn)?;
+            if existing_default_version < published_default_version {
+                diesel::update(default_versions::table)
+                    .filter(default_versions::crate_id.eq(krate.id))
+                    .set(default_versions::version_id.eq(version.id))
+                    .execute(conn)
+                    .await?;
             } else {
-                diesel::insert_into(default_versions::table)
-                    .values((
-                        default_versions::crate_id.eq(krate.id),
-                        default_versions::version_id.eq(version.id),
-                    ))
-                    .execute(conn)?;
+                default_version = Some(existing_default_version.num.to_string());
             }
 
-            // Update all keywords for this crate
-            Keyword::update_crate(conn, krate.id, &keywords)?;
-
-            // Update all categories for this crate, collecting any invalid categories
-            // in order to be able to return an error to the user.
-            let unknown_categories = Category::update_crate(conn, krate.id, &categories)?;
-            if !unknown_categories.is_empty() {
-                let unknown_categories = unknown_categories.join(", ");
-                let domain = &app.config.domain_name;
-                return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
-            }
-
-            let top_versions = krate.top_versions(conn)?;
-
-            let downloads: i64 = crate_downloads::table.select(crate_downloads::downloads)
-                .filter(crate_downloads::crate_id.eq(krate.id))
-                .first(conn)?;
-
-            let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
-
-            if let Some(readme) = metadata.readme {
-                if !readme.is_empty() {
-                    jobs::RenderAndUploadReadme::new(
-                        version.id,
-                        readme,
-                        metadata
-                            .readme_file
-                            .unwrap_or_else(|| String::from("README.md")),
-                        repository,
-                        pkg_path_in_vcs,
-                    )
-                        .enqueue(conn)?;
-                }
-            }
-
-            // Upload crate tarball
-            Handle::current()
-                .block_on(app.storage.upload_crate_file(
-                    &krate.name,
-                    &version_string,
-                    tarball_bytes,
+            // Update the default version asynchronously in a background job
+            // to ensure correctness and eventual consistency.
+            UpdateDefaultVersion::new(krate.id).async_enqueue(conn).await?;
+        } else {
+            diesel::insert_into(default_versions::table)
+                .values((
+                    default_versions::crate_id.eq(krate.id),
+                    default_versions::version_id.eq(version.id),
                 ))
-                .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
+                .execute(conn)
+                .await?;
+        }
 
-            jobs::SyncToGitIndex::new(&krate.name).enqueue(conn)?;
-            jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn)?;
+        // Update all keywords for this crate
+        Keyword::async_update_crate(conn, krate.id, &keywords).await?;
 
-            SendPublishNotificationsJob::new(version.id).enqueue(conn)?;
+        // Update all categories for this crate, collecting any invalid categories
+        // in order to be able to return an error to the user.
+        let unknown_categories = Category::async_update_crate(conn, krate.id, &categories).await?;
+        if !unknown_categories.is_empty() {
+            let unknown_categories = unknown_categories.join(", ");
+            let domain = &app.config.domain_name;
+            return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
+        }
 
-            // Experiment: check new crates for potential typosquatting.
-            if existing_crate.is_none() {
-                CheckTyposquat::new(&krate.name).enqueue(conn)?;
+        let top_versions = krate.async_top_versions(conn).await?;
+
+        let downloads: i64 = crate_downloads::table.select(crate_downloads::downloads)
+            .filter(crate_downloads::crate_id.eq(krate.id))
+            .first(conn)
+            .await?;
+
+        let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
+
+        if let Some(readme) = metadata.readme {
+            if !readme.is_empty() {
+                jobs::RenderAndUploadReadme::new(
+                    version.id,
+                    readme,
+                    metadata
+                        .readme_file
+                        .unwrap_or_else(|| String::from("README.md")),
+                    repository,
+                    pkg_path_in_vcs,
+                ).async_enqueue(conn).await?;
             }
+        }
 
-            let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
-            if let Err(error) = job.enqueue(conn) {
-                error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
+        // Upload crate tarball
+        app.storage.upload_crate_file(&krate.name, &version_string, tarball_bytes)
+            .await
+            .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
+
+        jobs::SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
+        jobs::SyncToSparseIndex::new(&krate.name).async_enqueue(conn).await?;
+
+        SendPublishNotificationsJob::new(version.id).async_enqueue(conn).await?;
+
+        // Experiment: check new crates for potential typosquatting.
+        if existing_crate.is_none() {
+            CheckTyposquat::new(&krate.name).async_enqueue(conn).await?;
+        }
+
+        let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
+        if let Err(error) = job.async_enqueue(conn).await {
+            error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
+        }
+
+        if let Err(error) = jobs::rss::SyncUpdatesFeed.async_enqueue(conn).await {
+            error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
+        }
+
+        if existing_crate.is_none() {
+            if let Err(error) = jobs::rss::SyncCratesFeed.async_enqueue(conn).await {
+                error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
             }
+        }
 
-            if let Err(error) = jobs::rss::SyncUpdatesFeed.enqueue(conn) {
-                error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
-            }
+        // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
+        // that is no longer needed. As such, crates.io currently does not return any `other`
+        // warnings at this time, but if we need to, the field is available.
+        let warnings = PublishWarnings {
+            invalid_categories: vec![],
+            invalid_badges: vec![],
+            other: vec![],
+        };
 
-            if existing_crate.is_none() {
-                if let Err(error) = jobs::rss::SyncCratesFeed.enqueue(conn) {
-                    error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
-                }
-            }
-
-            // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
-            // that is no longer needed. As such, crates.io currently does not return any `other`
-            // warnings at this time, but if we need to, the field is available.
-            let warnings = PublishWarnings {
-                invalid_categories: vec![],
-                invalid_badges: vec![],
-                other: vec![],
-            };
-
-            Ok(Json(GoodCrate {
-                krate: EncodableCrate::from_minimal(
-                    krate,
-                    default_version.or(Some(version_string)).as_deref(),
-                    Some(false),
-                    Some(&top_versions),
-                    false,
-                    downloads,
-                    None,
-                ),
-                warnings,
-            }))
-        })
-    })
-        .await?
+        Ok(Json(GoodCrate {
+            krate: EncodableCrate::from_minimal(
+                krate,
+                default_version.or(Some(version_string)).as_deref(),
+                Some(false),
+                Some(&top_versions),
+                false,
+                downloads,
+                None,
+            ),
+            warnings,
+        }))
+    }.scope_boxed()).await
 }
 
 /// Counts the number of versions for `crate_id` that were published within
 /// the last 24 hours.
-fn count_versions_published_today(crate_id: i32, conn: &mut impl Conn) -> QueryResult<i64> {
+async fn count_versions_published_today(
+    crate_id: i32,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<i64> {
     use diesel::dsl::{now, IntervalDsl};
-    use diesel::RunQueryDsl;
 
     versions::table
         .filter(versions::crate_id.eq(crate_id))
         .filter(versions::created_at.gt(now - 24.hours()))
         .count()
         .get_result(conn)
+        .await
 }
 
 #[instrument(skip_all)]
@@ -623,13 +613,12 @@ fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
     Ok((json_bytes, tarball_bytes))
 }
 
-fn is_reserved_name(name: &str, conn: &mut impl Conn) -> QueryResult<bool> {
-    use diesel::RunQueryDsl;
-
+async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
     select(exists(reserved_crate_names::table.filter(
         canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
     )))
     .get_result(conn)
+    .await
 }
 
 fn validate_url(url: Option<&str>, field: &str) -> AppResult<()> {
@@ -789,19 +778,23 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
 }
 
 #[instrument(skip_all)]
-pub fn add_dependencies(
-    conn: &mut impl Conn,
+pub async fn add_dependencies(
+    conn: &mut AsyncPgConnection,
     deps: &[EncodableCrateDependency],
     version_id: i32,
 ) -> AppResult<()> {
     use diesel::insert_into;
-    use diesel::RunQueryDsl;
 
     let crate_ids = crates::table
         .select((crates::name, crates::id))
         .filter(crates::name.eq_any(deps.iter().map(|d| &d.name)))
-        .load_iter::<(String, i32), DefaultLoadingMode>(conn)?
-        .collect::<QueryResult<HashMap<_, _>>>()?;
+        .load_stream::<(String, i32)>(conn)
+        .await?
+        .try_fold(HashMap::new(), |mut map, (name, id)| {
+            map.insert(name, id);
+            futures_util::future::ready(Ok(map))
+        })
+        .await?;
 
     let new_dependencies = deps
         .iter()
@@ -830,7 +823,8 @@ pub fn add_dependencies(
 
     insert_into(dependencies::table)
         .values(&new_dependencies)
-        .execute(conn)?;
+        .execute(conn)
+        .await?;
 
     Ok(())
 }
