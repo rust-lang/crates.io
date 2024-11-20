@@ -13,6 +13,9 @@ use diesel::pg::Pg;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
 use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
+use diesel_async::AsyncPgConnection;
+use futures_util::future::BoxFuture;
+use futures_util::{FutureExt, TryStreamExt};
 use http::header;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -261,6 +264,31 @@ impl<T> PaginatedQuery<T> {
             options,
         })
     }
+
+    pub fn async_load<'a, U>(
+        self,
+        conn: &'a mut AsyncPgConnection,
+    ) -> BoxFuture<'a, QueryResult<Paginated<U>>>
+    where
+        Self: diesel_async::methods::LoadQuery<'a, AsyncPgConnection, WithCount<U>>,
+        T: 'a,
+        U: Send + 'a,
+    {
+        use diesel_async::methods::LoadQuery;
+
+        let options = self.options.clone();
+        let future = self.internal_load(conn);
+
+        async move {
+            let records_and_total = future.await?.try_collect().await?;
+
+            Ok(Paginated {
+                records_and_total,
+                options,
+            })
+        }
+        .boxed()
+    }
 }
 
 impl<T> QueryId for PaginatedQuery<T> {
@@ -400,6 +428,32 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
             records_and_total,
             options,
         })
+    }
+
+    pub fn async_load<'a, U>(
+        self,
+        conn: &'a mut AsyncPgConnection,
+    ) -> BoxFuture<'a, QueryResult<Paginated<U>>>
+    where
+        Self: diesel_async::methods::LoadQuery<'a, AsyncPgConnection, WithCount<U>> + Send,
+        C: 'a,
+        T: 'a,
+        U: Send + 'a,
+    {
+        use diesel_async::methods::LoadQuery;
+
+        let options = self.options.clone();
+        let future = self.internal_load(conn);
+
+        async move {
+            let records_and_total = future.await?.try_collect().await?;
+
+            Ok(Paginated {
+                records_and_total,
+                options,
+            })
+        }
+        .boxed()
     }
 }
 
