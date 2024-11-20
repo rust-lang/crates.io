@@ -2,7 +2,7 @@ use crate::dialoguer;
 use anyhow::Context;
 use chrono::{NaiveDateTime, Utc};
 use colored::Colorize;
-use crates_io::models::{NewDeletedCrate, User};
+use crates_io::models::{NewDeletedCrate, TopVersions, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
 use crates_io::{db, schema::crates};
@@ -80,6 +80,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
             let id = crate_info.id;
 
+            let min_version = crate_info.top_versions(&mut conn).await?.highest.map(
+                |semver::Version { major, minor, .. }| {
+                    if major > 0 {
+                        semver::Version::new(major + 1, 0, 0)
+                    } else {
+                        semver::Version::new(0, minor + 1, 0)
+                    }
+                    .to_string()
+                },
+            );
+
             let created_at = crate_info.created_at.and_utc();
             let deleted_crate = NewDeletedCrate::builder(name)
                 .created_at(&created_at)
@@ -87,6 +98,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 .deleted_by(deleted_by.id)
                 .maybe_message(opts.message.as_deref())
                 .available_at(&now)
+                .maybe_min_version(min_version.as_deref())
                 .build();
 
             info!("{name}: Deleting crate from the database…");
@@ -154,6 +166,20 @@ struct CrateInfo {
     owners: Vec<String>,
     #[diesel(select_expression = rev_deps_subquery())]
     rev_deps: i64,
+}
+
+impl CrateInfo {
+    async fn top_versions(&self, conn: &mut AsyncPgConnection) -> QueryResult<TopVersions> {
+        use crates_io_database::schema::versions::dsl::*;
+
+        Ok(TopVersions::from_date_version_pairs(
+            versions
+                .filter(crate_id.eq(self.id))
+                .select((created_at, num))
+                .load(conn)
+                .await?,
+        ))
+    }
 }
 
 impl Display for CrateInfo {
