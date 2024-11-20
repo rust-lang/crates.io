@@ -11,7 +11,6 @@ use crate::util::diesel::prelude::*;
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
-use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
 use diesel_async::AsyncPgConnection;
 use futures_util::future::BoxFuture;
@@ -253,19 +252,7 @@ pub(crate) struct PaginatedQuery<T> {
 }
 
 impl<T> PaginatedQuery<T> {
-    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
-    where
-        Self: LoadQuery<'a, Conn, WithCount<U>>,
-    {
-        let options = self.options.clone();
-        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
-        Ok(Paginated {
-            records_and_total,
-            options,
-        })
-    }
-
-    pub fn async_load<'a, U>(
+    pub fn load<'a, U>(
         self,
         conn: &'a mut AsyncPgConnection,
     ) -> BoxFuture<'a, QueryResult<Paginated<U>>>
@@ -418,19 +405,7 @@ where
 }
 
 impl<T, C> PaginatedQueryWithCountSubq<T, C> {
-    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
-    where
-        Self: LoadQuery<'a, Conn, WithCount<U>>,
-    {
-        let options = self.options.clone();
-        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
-        Ok(Paginated {
-            records_and_total,
-            options,
-        })
-    }
-
-    pub fn async_load<'a, U>(
+    pub fn load<'a, U>(
         self,
         conn: &'a mut AsyncPgConnection,
     ) -> BoxFuture<'a, QueryResult<Paginated<U>>>

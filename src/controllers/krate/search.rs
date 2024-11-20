@@ -195,7 +195,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
         let count_query = filter_params.make_query(&req, conn).await?.count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
-        let data = query.async_load::<Record>(conn).instrument(span).await?;
+        let data = query.load::<Record>(conn).instrument(span).await?;
         (
             data.total(),
             data.next_seek_params(|last| seek.to_payload(last))?
@@ -208,7 +208,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
         let count_query = filter_params.make_query(&req, conn).await?.count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
-        let data = query.async_load::<Record>(conn).instrument(span).await?;
+        let data = query.load::<Record>(conn).instrument(span).await?;
         (
             data.total(),
             data.next_page_params().map(|p| req.query_with_params(p)),

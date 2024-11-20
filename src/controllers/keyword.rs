@@ -29,7 +29,7 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
     let query = query.pages_pagination(PaginationOptions::builder().gather(&req)?);
 
     let mut conn = state.db_read().await?;
-    let data: Paginated<Keyword> = query.async_load(&mut conn).await?;
+    let data: Paginated<Keyword> = query.load(&mut conn).await?;
     let total = data.total();
     let kws = data
         .into_iter()

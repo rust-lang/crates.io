@@ -79,7 +79,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
         .select(<(Version, CrateName, Option<User>)>::as_select())
         .pages_pagination(PaginationOptions::builder().gather(&req)?);
 
-    let data: Paginated<(Version, CrateName, Option<User>)> = query.async_load(&mut conn).await?;
+    let data: Paginated<(Version, CrateName, Option<User>)> = query.load(&mut conn).await?;
 
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
