@@ -1,0 +1,5 @@
+---
+source: src/controllers/krate/publish/deleted.rs
+expression: text
+---
+{"errors":[{"detail":"A crate with the name `foo` was previously deleted.\n\n* Reuse of this name will be available after 2024-11-21T12:00:00Z."}]}

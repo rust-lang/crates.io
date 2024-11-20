@@ -1,0 +1,5 @@
+---
+source: src/controllers/krate/publish/deleted.rs
+expression: text
+---
+{"errors":[{"detail":"A crate with the name `foo` was previously deleted.\n\n* To avoid conflicts with previously published versions of this crate, the minimum version that can be published is 1.0.0."}]}
