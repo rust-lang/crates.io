@@ -4,9 +4,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, forbidden, internal, AppResult};
 use crate::util::{BytesRequest, RequestUtils};
 use crate::views::{
@@ -20,73 +18,64 @@ use axum_extra::response::ErasedJson;
 use chrono::{Duration, Utc};
 use diesel::pg::Pg;
 use diesel::sql_types::Bool;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
-use tokio::runtime::Handle;
 
 /// Handles the `GET /api/v1/me/crate_owner_invitations` route.
 pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let user_id = auth.user_id();
+    let user_id = auth.user_id();
 
-        let PrivateListResponse {
-            invitations, users, ..
-        } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), conn)?;
+    let PrivateListResponse {
+        invitations, users, ..
+    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &mut conn).await?;
 
-        // The schema for the private endpoints is converted to the schema used by v1 endpoints.
-        let crate_owner_invitations = invitations
-            .into_iter()
-            .map(|private| {
-                Ok(EncodableCrateOwnerInvitationV1 {
-                    invited_by_username: users
-                        .iter()
-                        .find(|u| u.id == private.inviter_id)
-                        .ok_or_else(|| internal(format!("missing user {}", private.inviter_id)))?
-                        .login
-                        .clone(),
-                    invitee_id: private.invitee_id,
-                    inviter_id: private.inviter_id,
-                    crate_name: private.crate_name,
-                    crate_id: private.crate_id,
-                    created_at: private.created_at,
-                    expires_at: private.expires_at,
-                })
+    // The schema for the private endpoints is converted to the schema used by v1 endpoints.
+    let crate_owner_invitations = invitations
+        .into_iter()
+        .map(|private| {
+            Ok(EncodableCrateOwnerInvitationV1 {
+                invited_by_username: users
+                    .iter()
+                    .find(|u| u.id == private.inviter_id)
+                    .ok_or_else(|| internal(format!("missing user {}", private.inviter_id)))?
+                    .login
+                    .clone(),
+                invitee_id: private.invitee_id,
+                inviter_id: private.inviter_id,
+                crate_name: private.crate_name,
+                crate_id: private.crate_id,
+                created_at: private.created_at,
+                expires_at: private.expires_at,
             })
-            .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
+        })
+        .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-        Ok(json!({
-            "crate_owner_invitations": crate_owner_invitations,
-            "users": users,
-        }))
-    })
-    .await?
+    Ok(json!({
+        "crate_owner_invitations": crate_owner_invitations,
+        "users": users,
+    }))
 }
 
 /// Handles the `GET /api/private/crate_owner_invitations` route.
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let filter = if let Some(crate_name) = req.query().get("crate_name") {
-            ListFilter::CrateName(crate_name.clone())
-        } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
-            ListFilter::InviteeId(id)
-        } else {
-            return Err(bad_request("missing or invalid filter"));
-        };
+    let filter = if let Some(crate_name) = req.query().get("crate_name") {
+        ListFilter::CrateName(crate_name.clone())
+    } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
+        ListFilter::InviteeId(id)
+    } else {
+        return Err(bad_request("missing or invalid filter"));
+    };
 
-        let list = prepare_list(&app, &req, auth, filter, conn)?;
-        Ok(Json(list))
-    })
-    .await?
+    let list = prepare_list(&app, &req, auth, filter, &mut conn).await?;
+    Ok(Json(list))
 }
 
 enum ListFilter {
@@ -94,14 +83,14 @@ enum ListFilter {
     InviteeId(i32),
 }
 
-fn prepare_list(
+async fn prepare_list(
     state: &AppState,
     req: &Parts,
     auth: Authentication,
     filter: ListFilter,
-    conn: &mut impl Conn,
+    conn: &mut AsyncPgConnection,
 ) -> AppResult<PrivateListResponse> {
-    use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
@@ -120,9 +109,9 @@ fn prepare_list(
         match filter {
             ListFilter::CrateName(crate_name) => {
                 // Only allow crate owners to query pending invitations for their crate.
-                let krate: Crate = Crate::by_name(&crate_name).first(conn)?;
-                let owners = krate.owners(conn)?;
-                if Handle::current().block_on(user.rights(state, &owners))? != Rights::Full {
+                let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
+                let owners = krate.async_owners(conn).await?;
+                if user.rights(state, &owners).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));
                 }
@@ -155,7 +144,7 @@ fn prepare_list(
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
-        Page::Unspecified => query.load(conn)?,
+        Page::Unspecified => query.load(conn).await?,
         Page::Seek(s) => {
             let seek_key: (i32, i32) = s.decode()?;
             query
@@ -166,7 +155,8 @@ fn prepare_list(
                             .and(crate_owner_invitations::invited_user_id.gt(seek_key.1)),
                     ),
                 )
-                .load(conn)?
+                .load(conn)
+                .await?
         }
         Page::Numeric(_) => unreachable!("page-based pagination is disabled"),
     };
@@ -202,7 +192,8 @@ fn prepare_list(
         let new_names: Vec<(i32, String)> = crates::table
             .select((crates::id, crates::name))
             .filter(crates::id.eq_any(missing_crate_names))
-            .load(conn)?;
+            .load(conn)
+            .await?;
         for (id, name) in new_names.into_iter() {
             crate_names.insert(id, name);
         }
@@ -220,7 +211,8 @@ fn prepare_list(
     if !missing_users.is_empty() {
         let new_users: Vec<User> = users::table
             .filter(users::id.eq_any(missing_users))
-            .load(conn)?;
+            .load(conn)
+            .await?;
         for user in new_users.into_iter() {
             users.insert(user.id, user);
         }
