@@ -111,7 +111,7 @@ fn new_team(login: &str) -> NewTeam<'_> {
         .build()
 }
 
-fn add_team_to_crate(
+pub fn add_team_to_crate(
     t: &Team,
     krate: &Crate,
     u: &User,
