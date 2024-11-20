@@ -38,6 +38,11 @@ pub struct Opts {
     /// An optional message explaining why the crate was deleted.
     #[arg(long)]
     message: Option<String>,
+
+    /// The amount of time (in hours) before making the crate available
+    /// for re-registration.
+    #[arg(long, default_value = "24")]
+    availability_delay: i64,
 }
 
 pub async fn run(opts: Opts) -> anyhow::Result<()> {
@@ -75,6 +80,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     }
 
     let now = Utc::now();
+    let available_at = now + chrono::TimeDelta::hours(opts.availability_delay);
 
     for name in &crate_names {
         if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
@@ -86,7 +92,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
                 .deleted_at(&now)
                 .deleted_by(deleted_by.id)
                 .maybe_message(opts.message.as_deref())
-                .available_at(&now)
+                .available_at(&available_at)
                 .build();
 
             info!("{name}: Deleting crate from the database…");
