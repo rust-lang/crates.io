@@ -70,7 +70,7 @@
     "@mainmatter/ember-api-actions": "0.6.0",
     "@percy/cli": "1.30.2",
     "@percy/ember": "4.2.0",
-    "@percy/playwright": "1.0.6",
+    "@percy/playwright": "1.0.7",
     "@playwright/test": "1.49.0",
     "@sinonjs/fake-timers": "13.0.5",
     "@types/ember": "4.0.11",
