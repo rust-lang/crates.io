@@ -10,8 +10,8 @@ use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use diesel_full_text_search::*;
 use http::request::Parts;
-use std::cell::OnceCell;
 use tokio::runtime::Handle;
+use std::sync::OnceLock;
 
 use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
@@ -282,8 +282,8 @@ struct FilterParams<'a> {
     team_id: Option<i32>,
     following: bool,
     has_ids: bool,
-    _auth_user_id: OnceCell<i32>,
-    _ids: OnceCell<Option<Vec<String>>>,
+    _auth_user_id: OnceLock<i32>,
+    _ids: OnceLock<Option<Vec<String>>>,
 }
 
 impl<'a> FilterParams<'a> {
