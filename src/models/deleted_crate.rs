@@ -13,4 +13,5 @@ pub struct NewDeletedCrate<'a> {
     deleted_by: Option<i32>,
     message: Option<&'a str>,
     available_at: &'a DateTime<Utc>,
+    min_version: Option<&'a str>,
 }

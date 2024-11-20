@@ -428,6 +428,8 @@ diesel::table! {
         message -> Nullable<Varchar>,
         /// Date and time when users will be able to create a new crate with the same name
         available_at -> Timestamptz,
+        /// The first version that can be used by a new crate with the same name
+        min_version -> Nullable<Varchar>,
     }
 }
 
