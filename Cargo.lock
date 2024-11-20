@@ -1142,7 +1142,9 @@ version = "0.0.0"
 dependencies = [
  "crates_io_test_db",
  "diesel",
+ "diesel-async",
  "diesel_full_text_search",
+ "tokio",
 ]
 
 [[package]]
