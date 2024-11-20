@@ -120,17 +120,18 @@ mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
     use diesel::prelude::*;
+    use diesel_async::{AsyncPgConnection, RunQueryDsl};
     use std::collections::HashSet;
     use std::iter::FromIterator;
 
     /// Test whether the visibility configuration matches the schema of the
     /// test database.
-    #[test]
-    fn check_visibility_config() {
+    #[tokio::test]
+    async fn check_visibility_config() {
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
+        let mut conn = test_db.async_connect().await;
 
-        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&mut conn));
+        let db_columns = HashSet::<Column>::from_iter(get_db_columns(&mut conn).await);
         let vis_columns = VisibilityConfig::get()
             .0
             .iter()
@@ -186,13 +187,14 @@ mod tests {
         column_name: String,
     }
 
-    fn get_db_columns(conn: &mut PgConnection) -> Vec<Column> {
+    async fn get_db_columns(conn: &mut AsyncPgConnection) -> Vec<Column> {
         use information_schema::columns;
         columns::table
             .select((columns::table_name, columns::column_name))
             .filter(columns::table_schema.eq("public"))
             .order_by((columns::table_name, columns::ordinal_position))
             .load(conn)
+            .await
             .unwrap()
     }
 }
