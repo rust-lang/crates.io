@@ -279,11 +279,14 @@ async fn modify_multiple_owners() {
 async fn check_ownership_two_crates() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let team = new_team("team_foo").create_or_update(&mut conn).unwrap();
     let krate_owned_by_team = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
-    add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn).unwrap();
+    add_team_to_crate(&team, &krate_owned_by_team, user, &mut async_conn)
+        .await
+        .unwrap();
 
     let user2 = app.db_new_user("user_bar").await;
     let user2 = user2.as_model();
@@ -310,13 +313,16 @@ async fn check_ownership_two_crates() {
 async fn check_ownership_one_crate() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let team = new_team("github:test_org:team_sloth")
         .create_or_update(&mut conn)
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
-    add_team_to_crate(&team, &krate, user, &mut conn).unwrap();
+    add_team_to_crate(&team, &krate, user, &mut async_conn)
+        .await
+        .unwrap();
 
     let json: TeamResponse = anon
         .get("/api/v1/crates/best_crate/owner_team")
@@ -339,13 +345,16 @@ async fn check_ownership_one_crate() {
 async fn add_existing_team() {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let t = new_team("github:test_org:bananas")
         .create_or_update(&mut conn)
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
-    add_team_to_crate(&t, &krate, user, &mut conn).unwrap();
+    add_team_to_crate(&t, &krate, user, &mut async_conn)
+        .await
+        .unwrap();
 
     let ret = token
         .add_named_owner("best_crate", "github:test_org:bananas")
