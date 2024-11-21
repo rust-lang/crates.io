@@ -7,9 +7,9 @@ use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::{HeaderMapExt, RequestUtils};
 
-use crate::util::diesel::prelude::*;
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
+use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
 use diesel::sql_types::BigInt;
 use diesel_async::AsyncPgConnection;
