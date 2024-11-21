@@ -5,7 +5,7 @@ use crate::util::diesel::prelude::*;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
-use diesel::sql_types::{Array, Bool, Text};
+use diesel::sql_types::{Bool, Text};
 use diesel_async::AsyncPgConnection;
 use diesel_full_text_search::*;
 use http::request::Parts;
@@ -341,16 +341,12 @@ impl<'a> FilterParams<'a> {
                 .collect();
 
             query = query.filter(
-                // FIXME: Just use `.contains` in Diesel 2.0
-                // https://github.com/diesel-rs/diesel/issues/2066
-                Contains::new(
-                    crates_keywords::table
-                        .inner_join(keywords::table)
-                        .filter(crates_keywords::crate_id.eq(crates::id))
-                        .select(array_agg(keywords::keyword))
-                        .single_value(),
-                    names.into_sql::<Array<Text>>(),
-                ),
+                crates_keywords::table
+                    .inner_join(keywords::table)
+                    .filter(crates_keywords::crate_id.eq(crates::id))
+                    .select(array_agg(keywords::keyword))
+                    .single_value()
+                    .contains(names),
             );
         } else if let Some(kw) = self.keyword {
             query = query.filter(
@@ -667,5 +663,3 @@ type BoxedCondition<'a> = Box<
     dyn BoxableExpression<QuerySource, diesel::pg::Pg, SqlType = diesel::sql_types::Nullable<Bool>>
         + 'a,
 >;
-
-diesel::infix_operator!(Contains, "@>");
