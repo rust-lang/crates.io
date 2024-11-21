@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 
 use crate::models::Crate;
 use crate::schema::*;
@@ -90,6 +91,42 @@ impl Keyword {
         };
         first.is_ascii_alphanumeric()
             && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
+    }
+
+    pub async fn async_update_crate(
+        conn: &mut AsyncPgConnection,
+        crate_id: i32,
+        keywords: &[&str],
+    ) -> QueryResult<()> {
+        conn.transaction(|conn| {
+            async move {
+                use diesel_async::RunQueryDsl;
+
+                let keywords = Keyword::async_find_or_create_all(conn, keywords).await?;
+
+                diesel::delete(crates_keywords::table)
+                    .filter(crates_keywords::crate_id.eq(crate_id))
+                    .execute(conn)
+                    .await?;
+
+                let crate_keywords = keywords
+                    .into_iter()
+                    .map(|kw| CrateKeyword {
+                        crate_id,
+                        keyword_id: kw.id,
+                    })
+                    .collect::<Vec<_>>();
+
+                diesel::insert_into(crates_keywords::table)
+                    .values(&crate_keywords)
+                    .execute(conn)
+                    .await?;
+
+                Ok(())
+            }
+            .scope_boxed()
+        })
+        .await
     }
 
     pub fn update_crate(conn: &mut impl Conn, crate_id: i32, keywords: &[&str]) -> QueryResult<()> {

@@ -57,27 +57,39 @@ async fn update_crate() {
         .unwrap();
     let krate = CrateBuilder::new("fookey", user.id).expect_build(&mut conn);
 
-    Keyword::update_crate(&mut conn, krate.id, &[]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &[])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    Keyword::update_crate(&mut conn, krate.id, &["kw1"]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &["kw1"])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 1);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    Keyword::update_crate(&mut conn, krate.id, &["kw2"]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &["kw2"])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 1);
 
-    Keyword::update_crate(&mut conn, krate.id, &[]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &[])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 
-    Keyword::update_crate(&mut conn, krate.id, &["kw1", "kw2"]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &["kw1", "kw2"])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 1);
     assert_eq!(cnt("kw2", &anon).await, 1);
 
-    Keyword::update_crate(&mut conn, krate.id, &[]).unwrap();
+    Keyword::async_update_crate(&mut async_conn, krate.id, &[])
+        .await
+        .unwrap();
     assert_eq!(cnt("kw1", &anon).await, 0);
     assert_eq!(cnt("kw2", &anon).await, 0);
 }
