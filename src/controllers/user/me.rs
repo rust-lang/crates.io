@@ -5,7 +5,6 @@ use axum::response::Response;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 use std::collections::HashMap;
 
@@ -15,7 +14,6 @@ use crate::controllers::helpers::{ok_true, Paginate};
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
-use crate::tasks::spawn_blocking;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::BytesRequest;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
@@ -69,41 +67,39 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-    spawn_blocking(move || {
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
 
-        let user = auth.user();
+    let user = auth.user();
 
-        let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
-        let query = versions::table
-            .inner_join(crates::table)
-            .left_outer_join(users::table)
-            .filter(crates::id.eq_any(followed_crates))
-            .order(versions::created_at.desc())
-            .select(<(Version, CrateName, Option<User>)>::as_select())
-            .pages_pagination(PaginationOptions::builder().gather(&req)?);
-        let data: Paginated<(Version, CrateName, Option<User>)> = query.load(conn)?;
-        let more = data.next_page_params().is_some();
-        let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
-        let actions = VersionOwnerAction::for_versions(conn, &versions)?;
-        let data = data
-            .into_iter()
-            .zip(actions)
-            .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
+    let followed_crates = Follow::belonging_to(user).select(follows::crate_id);
+    let query = versions::table
+        .inner_join(crates::table)
+        .left_outer_join(users::table)
+        .filter(crates::id.eq_any(followed_crates))
+        .order(versions::created_at.desc())
+        .select(<(Version, CrateName, Option<User>)>::as_select())
+        .pages_pagination(PaginationOptions::builder().gather(&req)?);
 
-        let versions = data
-            .into_iter()
-            .map(|(version, crate_name, published_by, actions)| {
-                EncodableVersion::from(version, &crate_name.name, published_by, actions)
-            })
-            .collect::<Vec<_>>();
+    let data: Paginated<(Version, CrateName, Option<User>)> = query.load(&mut conn).await?;
 
-        Ok(json!({
-            "versions": versions,
-            "meta": { "more": more },
-        }))
-    })
-    .await?
+    let more = data.next_page_params().is_some();
+    let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
+    let actions = VersionOwnerAction::async_for_versions(&mut conn, &versions).await?;
+    let data = data
+        .into_iter()
+        .zip(actions)
+        .map(|((v, cn, pb), voas)| (v, cn, pb, voas));
+
+    let versions = data
+        .into_iter()
+        .map(|(version, crate_name, published_by, actions)| {
+            EncodableVersion::from(version, &crate_name.name, published_by, actions)
+        })
+        .collect::<Vec<_>>();
+
+    Ok(json!({
+        "versions": versions,
+        "meta": { "more": more },
+    }))
 }
 
 /// Handles the `PUT /confirm/:email_token` route

@@ -7,12 +7,14 @@ use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::{HeaderMapExt, RequestUtils};
 
-use crate::util::diesel::prelude::*;
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
+use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
-use diesel::query_dsl::LoadQuery;
 use diesel::sql_types::BigInt;
+use diesel_async::AsyncPgConnection;
+use futures_util::future::BoxFuture;
+use futures_util::{FutureExt, TryStreamExt};
 use http::header;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -250,16 +252,29 @@ pub(crate) struct PaginatedQuery<T> {
 }
 
 impl<T> PaginatedQuery<T> {
-    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
+    pub fn load<'a, U>(
+        self,
+        conn: &'a mut AsyncPgConnection,
+    ) -> BoxFuture<'a, QueryResult<Paginated<U>>>
     where
-        Self: LoadQuery<'a, Conn, WithCount<U>>,
+        Self: diesel_async::methods::LoadQuery<'a, AsyncPgConnection, WithCount<U>>,
+        T: 'a,
+        U: Send + 'a,
     {
+        use diesel_async::methods::LoadQuery;
+
         let options = self.options.clone();
-        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
-        Ok(Paginated {
-            records_and_total,
-            options,
-        })
+        let future = self.internal_load(conn);
+
+        async move {
+            let records_and_total = future.await?.try_collect().await?;
+
+            Ok(Paginated {
+                records_and_total,
+                options,
+            })
+        }
+        .boxed()
     }
 }
 
@@ -271,8 +286,6 @@ impl<T> QueryId for PaginatedQuery<T> {
 impl<T: Query> Query for PaginatedQuery<T> {
     type SqlType = (T::SqlType, BigInt);
 }
-
-impl<T, DB> diesel::RunQueryDsl<DB> for PaginatedQuery<T> {}
 
 impl<T> QueryFragment<Pg> for PaginatedQuery<T>
 where
@@ -366,8 +379,6 @@ impl<
     type SqlType = (T::SqlType, BigInt);
 }
 
-impl<T, C, DB> diesel::RunQueryDsl<DB> for PaginatedQueryWithCountSubq<T, C> {}
-
 impl<T, C> QueryFragment<Pg> for PaginatedQueryWithCountSubq<T, C>
 where
     T: QueryFragment<Pg>,
@@ -390,16 +401,30 @@ where
 }
 
 impl<T, C> PaginatedQueryWithCountSubq<T, C> {
-    pub(crate) fn load<'a, U, Conn>(self, conn: &mut Conn) -> QueryResult<Paginated<U>>
+    pub fn load<'a, U>(
+        self,
+        conn: &'a mut AsyncPgConnection,
+    ) -> BoxFuture<'a, QueryResult<Paginated<U>>>
     where
-        Self: LoadQuery<'a, Conn, WithCount<U>>,
+        Self: diesel_async::methods::LoadQuery<'a, AsyncPgConnection, WithCount<U>> + Send,
+        C: 'a,
+        T: 'a,
+        U: Send + 'a,
     {
+        use diesel_async::methods::LoadQuery;
+
         let options = self.options.clone();
-        let records_and_total = self.internal_load(conn)?.collect::<QueryResult<_>>()?;
-        Ok(Paginated {
-            records_and_total,
-            options,
-        })
+        let future = self.internal_load(conn);
+
+        async move {
+            let records_and_total = future.await?.try_collect().await?;
+
+            Ok(Paginated {
+                records_and_total,
+                options,
+            })
+        }
+        .boxed()
     }
 }
 
