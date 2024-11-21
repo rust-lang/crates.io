@@ -42,6 +42,7 @@ async fn index() {
 async fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_index_queries", user.id)
@@ -165,8 +166,12 @@ async fn index_queries() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::update_crate(&mut conn, krate.id, &["cat1"]).unwrap();
-    Category::update_crate(&mut conn, krate2.id, &["cat1::bar"]).unwrap();
+    Category::async_update_crate(&mut async_conn, krate.id, &["cat1"])
+        .await
+        .unwrap();
+    Category::async_update_crate(&mut async_conn, krate2.id, &["cat1::bar"])
+        .await
+        .unwrap();
 
     for cl in search_both(&anon, "category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
@@ -859,6 +864,7 @@ async fn test_zero_downloads() {
 async fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     // More than 90 days ago
@@ -896,8 +902,12 @@ async fn test_default_sort_recent() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::update_crate(&mut conn, green_crate.id, &["animal"]).unwrap();
-    Category::update_crate(&mut conn, potato_crate.id, &["animal"]).unwrap();
+    Category::async_update_crate(&mut async_conn, green_crate.id, &["animal"])
+        .await
+        .unwrap();
+    Category::async_update_crate(&mut async_conn, potato_crate.id, &["animal"])
+        .await
+        .unwrap();
 
     // test that index for categories is sorted by recent_downloads
     // by default

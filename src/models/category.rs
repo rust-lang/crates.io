@@ -3,7 +3,8 @@ use diesel::{
     delete, dsl, insert_into, sql_query, ExpressionMethods, QueryDsl, QueryResult,
     TextExpressionMethods,
 };
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 
 use crate::models::Crate;
 use crate::schema::*;
@@ -44,6 +45,50 @@ impl Category {
     pub fn by_slug<'a>(slug: &'a str) -> _ {
         let filter: WithSlug<'a> = Self::with_slug(slug);
         categories::table.filter(filter)
+    }
+
+    pub async fn async_update_crate(
+        conn: &mut AsyncPgConnection,
+        crate_id: i32,
+        slugs: &[&str],
+    ) -> QueryResult<Vec<String>> {
+        use diesel_async::RunQueryDsl;
+        conn.transaction(|conn| {
+            async move {
+                let categories: Vec<Category> = categories::table
+                    .filter(categories::slug.eq_any(slugs))
+                    .load(conn)
+                    .await?;
+
+                let invalid_categories = slugs
+                    .iter()
+                    .filter(|s| !categories.iter().any(|c| c.slug == **s))
+                    .map(ToString::to_string)
+                    .collect();
+
+                let crate_categories = categories
+                    .iter()
+                    .map(|c| CrateCategory {
+                        category_id: c.id,
+                        crate_id,
+                    })
+                    .collect::<Vec<_>>();
+
+                delete(crates_categories::table)
+                    .filter(crates_categories::crate_id.eq(crate_id))
+                    .execute(conn)
+                    .await?;
+
+                insert_into(crates_categories::table)
+                    .values(&crate_categories)
+                    .execute(conn)
+                    .await?;
+
+                Ok(invalid_categories)
+            }
+            .scope_boxed()
+        })
+        .await
     }
 
     pub fn update_crate(
