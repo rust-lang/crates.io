@@ -287,8 +287,6 @@ impl<T: Query> Query for PaginatedQuery<T> {
     type SqlType = (T::SqlType, BigInt);
 }
 
-impl<T, DB> diesel::RunQueryDsl<DB> for PaginatedQuery<T> {}
-
 impl<T> QueryFragment<Pg> for PaginatedQuery<T>
 where
     T: QueryFragment<Pg>,
@@ -380,8 +378,6 @@ impl<
 {
     type SqlType = (T::SqlType, BigInt);
 }
-
-impl<T, C, DB> diesel::RunQueryDsl<DB> for PaginatedQueryWithCountSubq<T, C> {}
 
 impl<T, C> QueryFragment<Pg> for PaginatedQueryWithCountSubq<T, C>
 where
