@@ -8,6 +8,7 @@ use serde_json::Value;
 async fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show", user.id).expect_build(&mut conn);
@@ -15,7 +16,8 @@ async fn show_by_crate_name_and_version() {
         .size(1234)
         .checksum("c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4")
         .rust_version("1.64")
-        .expect_build(krate.id, user.id, &mut conn);
+        .async_expect_build(krate.id, user.id, &mut async_conn)
+        .await;
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
     let json: Value = anon.get(url).await.good();
@@ -34,10 +36,13 @@ async fn show_by_crate_name_and_semver_no_published_by() {
 
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show_no_pb", user.id).expect_build(&mut conn);
-    let version = VersionBuilder::new("1.0.0").expect_build(krate.id, user.id, &mut conn);
+    let version = VersionBuilder::new("1.0.0")
+        .async_expect_build(krate.id, user.id, &mut async_conn)
+        .await;
 
     // Mimic a version published before we started recording who published versions
     let none: Option<i32> = None;

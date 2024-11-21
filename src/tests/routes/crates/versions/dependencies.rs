@@ -13,13 +13,15 @@ pub struct Deps {
 async fn dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&mut conn);
     let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&mut conn);
     VersionBuilder::new("1.0.0")
         .dependency(&c2, None)
-        .expect_build(c1.id, user.id, &mut conn);
+        .async_expect_build(c1.id, user.id, &mut async_conn)
+        .await;
 
     let deps: Deps = anon
         .get("/api/v1/crates/foo_deps/1.0.0/dependencies")
