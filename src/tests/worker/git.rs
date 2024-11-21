@@ -57,14 +57,10 @@ async fn index_smoke_test() {
             .await
     );
 
-    assert_ok!(
-        jobs::SyncToGitIndex::new("serde")
-            .async_enqueue(&mut conn)
-            .await
-    );
+    assert_ok!(jobs::SyncToGitIndex::new("serde").enqueue(&mut conn).await);
     assert_ok!(
         jobs::SyncToSparseIndex::new("serde")
-            .async_enqueue(&mut conn)
+            .enqueue(&mut conn)
             .await
     );
 

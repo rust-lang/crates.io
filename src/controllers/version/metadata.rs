@@ -243,13 +243,9 @@ pub async fn perform_version_yank_update(
         .async_insert(conn)
         .await?;
 
-    SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
-    SyncToSparseIndex::new(&krate.name)
-        .async_enqueue(conn)
-        .await?;
-    UpdateDefaultVersion::new(krate.id)
-        .async_enqueue(conn)
-        .await?;
+    SyncToGitIndex::new(&krate.name).enqueue(conn).await?;
+    SyncToSparseIndex::new(&krate.name).enqueue(conn).await?;
+    UpdateDefaultVersion::new(krate.id).enqueue(conn).await?;
 
     Ok(())
 }

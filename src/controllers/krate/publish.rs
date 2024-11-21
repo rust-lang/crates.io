@@ -457,7 +457,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             // Update the default version asynchronously in a background job
             // to ensure correctness and eventual consistency.
-            UpdateDefaultVersion::new(krate.id).async_enqueue(conn).await?;
+            UpdateDefaultVersion::new(krate.id).enqueue(conn).await?;
         } else {
             diesel::insert_into(default_versions::table)
                 .values((
@@ -499,7 +499,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         .unwrap_or_else(|| String::from("README.md")),
                     repository,
                     pkg_path_in_vcs,
-                ).async_enqueue(conn).await?;
+                ).enqueue(conn).await?;
             }
         }
 
@@ -508,27 +508,27 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        jobs::SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
-        jobs::SyncToSparseIndex::new(&krate.name).async_enqueue(conn).await?;
+        jobs::SyncToGitIndex::new(&krate.name).enqueue(conn).await?;
+        jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn).await?;
 
-        SendPublishNotificationsJob::new(version.id).async_enqueue(conn).await?;
+        SendPublishNotificationsJob::new(version.id).enqueue(conn).await?;
 
         // Experiment: check new crates for potential typosquatting.
         if existing_crate.is_none() {
-            CheckTyposquat::new(&krate.name).async_enqueue(conn).await?;
+            CheckTyposquat::new(&krate.name).enqueue(conn).await?;
         }
 
         let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
-        if let Err(error) = job.async_enqueue(conn).await {
+        if let Err(error) = job.enqueue(conn).await {
             error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
         }
 
-        if let Err(error) = jobs::rss::SyncUpdatesFeed.async_enqueue(conn).await {
+        if let Err(error) = jobs::rss::SyncUpdatesFeed.enqueue(conn).await {
             error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
         }
 
         if existing_crate.is_none() {
-            if let Err(error) = jobs::rss::SyncCratesFeed.async_enqueue(conn).await {
+            if let Err(error) = jobs::rss::SyncCratesFeed.enqueue(conn).await {
                 error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
             }
         }
