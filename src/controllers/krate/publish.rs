@@ -469,7 +469,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         // Update all keywords for this crate
-        Keyword::async_update_crate(conn, krate.id, &keywords).await?;
+        Keyword::update_crate(conn, krate.id, &keywords).await?;
 
         // Update all categories for this crate, collecting any invalid categories
         // in order to be able to return an error to the user.
