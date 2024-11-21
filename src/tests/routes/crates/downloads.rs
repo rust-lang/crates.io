@@ -65,11 +65,13 @@ pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
 async fn test_download() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_download", user.id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut conn);
+        .expect_build(&mut async_conn)
+        .await;
 
     // TODO: test the with_json code path
     download(&anon, "foo_download/1.0.0").await;
@@ -99,11 +101,12 @@ async fn test_download() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download_with_counting_via_cdn() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     download(&anon, "foo/1.0.0").await;
 
@@ -115,12 +118,14 @@ async fn test_download_with_counting_via_cdn() {
 async fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     let user_id = cookie.as_model().id;
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .expect_build(&mut conn);
+        .expect_build(&mut async_conn)
+        .await;
 
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;
@@ -155,12 +160,14 @@ async fn test_crate_downloads() {
 async fn test_version_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     let user_id = cookie.as_model().id;
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .expect_build(&mut conn);
+        .expect_build(&mut async_conn)
+        .await;
 
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.0.0").await;

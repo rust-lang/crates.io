@@ -11,6 +11,7 @@ use insta::assert_snapshot;
 async fn test_issue_2736() -> anyhow::Result<()> {
     let (app, _) = TestApp::full().empty().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     // - A user had a GitHub account named, let's say, `foo`
     let foo1 = app.db_new_user("foo").await;
@@ -18,7 +19,9 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     // - Another user `someone_else` added them as an owner of a crate
     let someone_else = app.db_new_user("someone_else").await;
 
-    let krate = CrateBuilder::new("crate1", someone_else.as_model().id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("crate1", someone_else.as_model().id)
+        .expect_build(&mut async_conn)
+        .await;
 
     diesel::insert_into(crate_owners::table)
         .values(CrateOwner {

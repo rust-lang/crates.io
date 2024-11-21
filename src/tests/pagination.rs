@@ -14,12 +14,18 @@ async fn pagination_blocks_ip_from_cidr_block_list() {
         .with_user()
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
-    CrateBuilder::new("pagination_links_1", user.id).expect_build(&mut conn);
-    CrateBuilder::new("pagination_links_2", user.id).expect_build(&mut conn);
-    CrateBuilder::new("pagination_links_3", user.id).expect_build(&mut conn);
+    CrateBuilder::new("pagination_links_1", user.id)
+        .expect_build(&mut conn)
+        .await;
+    CrateBuilder::new("pagination_links_2", user.id)
+        .expect_build(&mut conn)
+        .await;
+    CrateBuilder::new("pagination_links_3", user.id)
+        .expect_build(&mut conn)
+        .await;
 
     let response = anon
         .get_with_query::<()>("/api/v1/crates", "page=2&per_page=1")

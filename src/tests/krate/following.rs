@@ -34,9 +34,11 @@ async fn test_unauthenticated_requests() {
     const CRATE_NAME: &str = "foo";
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new(CRATE_NAME, user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
 
     let response = anon
         .get::<()>(&format!("/api/v1/crates/{CRATE_NAME}/following"))
@@ -62,9 +64,11 @@ async fn test_following() {
     const CRATE_NAME: &str = "foo_following";
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new(CRATE_NAME, user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
 
     // Check that initially we are not following the crate yet.
     assert_is_following(CRATE_NAME, false, &user).await;
@@ -118,11 +122,15 @@ async fn test_api_token_auth() {
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
 
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let api_token = token.as_model();
 
-    CrateBuilder::new(CRATE_TO_FOLLOW, api_token.user_id).expect_build(&mut conn);
-    CrateBuilder::new(CRATE_NOT_TO_FOLLOW, api_token.user_id).expect_build(&mut conn);
+    CrateBuilder::new(CRATE_TO_FOLLOW, api_token.user_id)
+        .expect_build(&mut conn)
+        .await;
+    CrateBuilder::new(CRATE_NOT_TO_FOLLOW, api_token.user_id)
+        .expect_build(&mut conn)
+        .await;
 
     follow(CRATE_TO_FOLLOW, &token).await;
 

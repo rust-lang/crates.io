@@ -47,6 +47,19 @@ pub struct NewTeam<'a> {
 }
 
 impl<'a> NewTeam<'a> {
+    pub async fn async_create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
+        use diesel::insert_into;
+        use diesel_async::RunQueryDsl;
+
+        insert_into(teams::table)
+            .values(self)
+            .on_conflict(teams::github_id)
+            .do_update()
+            .set(self)
+            .get_result(conn)
+            .await
+    }
+
     pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Team> {
         use diesel::insert_into;
         use diesel::RunQueryDsl;

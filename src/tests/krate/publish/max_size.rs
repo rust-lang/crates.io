@@ -136,11 +136,12 @@ async fn new_krate_too_big() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_too_big_but_whitelisted() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_whitelist", user.as_model().id)
         .max_upload_size(2_000_000)
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0")
         .add_file("foo_whitelist-1.1.0/big", vec![b'a'; 2000]);

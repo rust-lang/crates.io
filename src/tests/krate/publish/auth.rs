@@ -36,10 +36,12 @@ async fn new_wrong_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_wrong_user() {
     let (app, _, user) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Create the foo_wrong crate with one user
-    CrateBuilder::new("foo_wrong", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo_wrong", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
 
     // Then try to publish with a different user
     let another_user = app.db_new_user("another").await;

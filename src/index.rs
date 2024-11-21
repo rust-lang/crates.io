@@ -145,8 +145,7 @@ mod tests {
     #[tokio::test]
     async fn test_index_metadata() {
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
-        let mut async_conn = test_db.async_connect().await;
+        let mut conn = test_db.async_connect().await;
 
         let user_id = diesel::insert_into(users::table)
             .values((
@@ -156,7 +155,7 @@ mod tests {
                 users::gh_access_token.eq("some random token"),
             ))
             .returning(users::id)
-            .get_result::<i32>(&mut async_conn)
+            .get_result::<i32>(&mut conn)
             .await
             .unwrap();
 
@@ -172,9 +171,10 @@ mod tests {
 
         let fooo = CrateBuilder::new("foo", user_id)
             .version(VersionBuilder::new("0.1.0"))
-            .expect_build(&mut conn);
+            .expect_build(&mut conn)
+            .await;
 
-        let metadata = index_metadata(&fooo, &mut async_conn).await.unwrap();
+        let metadata = index_metadata(&fooo, &mut conn).await.unwrap();
         assert_json_snapshot!(metadata);
 
         let bar = CrateBuilder::new("bar", user_id)
@@ -190,9 +190,10 @@ mod tests {
                     .dependency(&fooo, None),
             )
             .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
-            .expect_build(&mut conn);
+            .expect_build(&mut conn)
+            .await;
 
-        let metadata = index_metadata(&bar, &mut async_conn).await.unwrap();
+        let metadata = index_metadata(&bar, &mut conn).await.unwrap();
         assert_json_snapshot!(metadata);
     }
 }

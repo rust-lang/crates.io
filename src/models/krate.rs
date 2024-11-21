@@ -3,7 +3,8 @@ use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
 use diesel::sql_types::{Bool, Integer, Text};
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use secrecy::SecretString;
 use thiserror::Error;
 
@@ -122,6 +123,42 @@ impl<'a> NewCrate<'a> {
             ))
             .returning(Crate::as_returning())
             .get_result(conn)
+    }
+
+    pub async fn async_create(
+        &self,
+        conn: &mut AsyncPgConnection,
+        user_id: i32,
+    ) -> QueryResult<Crate> {
+        use diesel_async::RunQueryDsl;
+
+        conn.transaction(|conn| {
+            async move {
+                let krate: Crate = diesel::insert_into(crates::table)
+                    .values(self)
+                    .on_conflict_do_nothing()
+                    .returning(Crate::as_returning())
+                    .get_result(conn)
+                    .await?;
+
+                let owner = CrateOwner {
+                    crate_id: krate.id,
+                    owner_id: user_id,
+                    created_by: user_id,
+                    owner_kind: OwnerKind::User,
+                    email_notifications: true,
+                };
+
+                diesel::insert_into(crate_owners::table)
+                    .values(&owner)
+                    .execute(conn)
+                    .await?;
+
+                Ok(krate)
+            }
+            .scope_boxed()
+        })
+        .await
     }
 
     pub fn create(&self, conn: &mut impl Conn, user_id: i32) -> QueryResult<Crate> {

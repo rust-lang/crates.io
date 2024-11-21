@@ -17,13 +17,15 @@ struct KeywordMeta {
 async fn index() {
     let url = "/api/v1/keywords";
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let json: KeywordList = anon.get(url).await.good();
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    Keyword::find_or_create_all(&mut conn, &["foo"]).unwrap();
+    Keyword::async_find_or_create_all(&mut conn, &["foo"])
+        .await
+        .unwrap();
 
     let json: KeywordList = anon.get(url).await.good();
     assert_eq!(json.keywords.len(), 1);

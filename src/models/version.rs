@@ -3,7 +3,8 @@ use std::collections::BTreeMap;
 use bon::Builder;
 use chrono::NaiveDateTime;
 use crates_io_index::features::FeaturesMap;
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use serde::Deserialize;
 
 use crate::models::{Crate, User};
@@ -116,6 +117,36 @@ impl NewVersion<'_> {
                 .execute(conn)?;
             Ok(version)
         })
+    }
+
+    pub async fn async_save(
+        &self,
+        conn: &mut AsyncPgConnection,
+        published_by_email: &str,
+    ) -> QueryResult<Version> {
+        use diesel::insert_into;
+        use diesel_async::RunQueryDsl;
+
+        conn.transaction(|conn| {
+            async move {
+                let version: Version = insert_into(versions::table)
+                    .values(self)
+                    .get_result(conn)
+                    .await?;
+
+                insert_into(versions_published_by::table)
+                    .values((
+                        versions_published_by::version_id.eq(version.id),
+                        versions_published_by::email.eq(published_by_email),
+                    ))
+                    .execute(conn)
+                    .await?;
+
+                Ok(version)
+            }
+            .scope_boxed()
+        })
+        .await
     }
 }
 

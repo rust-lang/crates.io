@@ -5,8 +5,9 @@ use crate::{
 };
 use std::collections::BTreeMap;
 
+use crate::util::diesel::prelude::*;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel_async::AsyncPgConnection;
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder {
@@ -90,13 +91,14 @@ impl VersionBuilder {
         self
     }
 
-    pub fn build(
+    pub async fn build(
         self,
         crate_id: i32,
         published_by: i32,
-        connection: &mut PgConnection,
+        connection: &mut AsyncPgConnection,
     ) -> AppResult<Version> {
         use diesel::insert_into;
+        use diesel_async::RunQueryDsl;
 
         let version = self.num.to_string();
 
@@ -112,7 +114,9 @@ impl VersionBuilder {
             .maybe_created_at(self.created_at.as_ref())
             .build();
 
-        let vers = new_version.save(connection, "someone@example.com")?;
+        let vers = new_version
+            .async_save(connection, "someone@example.com")
+            .await?;
 
         let new_deps = self
             .dependencies
@@ -129,9 +133,11 @@ impl VersionBuilder {
                 )
             })
             .collect::<Vec<_>>();
+
         insert_into(dependencies::table)
             .values(&new_deps)
-            .execute(connection)?;
+            .execute(connection)
+            .await?;
 
         Ok(vers)
     }
@@ -141,14 +147,14 @@ impl VersionBuilder {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the version record fails.
-    #[track_caller]
-    pub fn expect_build(
+    pub async fn expect_build(
         self,
         crate_id: i32,
         published_by: i32,
-        connection: &mut PgConnection,
+        connection: &mut AsyncPgConnection,
     ) -> Version {
         self.build(crate_id, published_by, connection)
+            .await
             .unwrap_or_else(|e| {
                 panic!("Unable to create version: {e:?}");
             })

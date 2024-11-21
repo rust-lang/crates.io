@@ -131,10 +131,11 @@ mod tests {
         let emails = Emails::new_in_memory();
         let test_db = TestDatabase::new();
         let mut conn = test_db.connect();
+        let mut async_conn = test_db.async_connect().await;
 
         // Set up a user and a popular crate to match against.
         let user = faker::user(&mut conn, "a")?;
-        faker::crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100)?;
+        faker::crate_and_version(&mut async_conn, "my-crate", "It's awesome", &user, 100).await?;
 
         // Prime the cache so it only includes the crate we just created.
         let mut async_conn = test_db.async_connect().await;
@@ -144,19 +145,21 @@ mod tests {
         // Now we'll create new crates: one problematic, one not so.
         let other_user = faker::user(&mut conn, "b")?;
         let angel = faker::crate_and_version(
-            &mut conn,
+            &mut async_conn,
             "innocent-crate",
             "I'm just a simple, innocent crate",
             &other_user,
             0,
-        )?;
+        )
+        .await?;
         let demon = faker::crate_and_version(
-            &mut conn,
+            &mut async_conn,
             "mycrate",
             "I'm even more innocent, obviously",
             &other_user,
             0,
-        )?;
+        )
+        .await?;
 
         // Run the check with a crate that shouldn't cause problems.
         check(&emails, &cache, &mut async_conn, &angel.name).await?;

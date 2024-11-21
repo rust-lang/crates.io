@@ -4,11 +4,12 @@ use crate::tests::util::{RequestHelper, TestApp};
 #[tokio::test(flavor = "multi_thread")]
 async fn test_redirects() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo-download", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     // Any redirect to an existing crate and version works correctly.
     anon.get::<()>("/api/v1/crates/foo-download/1.0.0/download")
@@ -34,12 +35,13 @@ async fn test_redirects() {
 #[tokio::test(flavor = "multi_thread")]
 async fn download_with_build_metadata() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo", user.id)
         .version(VersionBuilder::new("1.0.0+bar"))
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/download")
         .await

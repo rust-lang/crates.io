@@ -15,8 +15,11 @@ async fn test_issue_1205() -> anyhow::Result<()> {
         .await;
 
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
-    let krate = CrateBuilder::new(CRATE_NAME, user.as_model().id).expect_build(&mut conn);
+    let krate = CrateBuilder::new(CRATE_NAME, user.as_model().id)
+        .expect_build(&mut async_conn)
+        .await;
 
     let response = user
         .add_named_owner(CRATE_NAME, "github:rustaudio:owners")

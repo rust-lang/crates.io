@@ -8,6 +8,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 async fn show() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     use crate::schema::versions;
@@ -23,7 +24,8 @@ async fn show() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .expect_build(&mut conn);
+        .expect_build(&mut async_conn)
+        .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
     // versions
@@ -48,7 +50,7 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_minimal() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_show_minimal", user.id)
@@ -61,7 +63,8 @@ async fn show_minimal() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     let response = anon
         .get::<()>("/api/v1/crates/foo_show_minimal?include=")
@@ -76,7 +79,7 @@ async fn show_minimal() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_all_yanked() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_show", user.id)
@@ -88,7 +91,8 @@ async fn show_all_yanked() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     let response = anon.get::<()>("/api/v1/crates/foo_show").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -146,12 +150,13 @@ async fn version_size() {
 #[tokio::test(flavor = "multi_thread")]
 async fn block_bad_documentation_url() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_bad_doc_url", user.id)
         .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
-        .expect_build(&mut conn);
+        .expect_build(&mut conn)
+        .await;
 
     let json = anon.show_crate("foo_bad_doc_url").await;
     assert_eq!(json.krate.documentation, None);
@@ -160,9 +165,11 @@ async fn block_bad_documentation_url() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_new_name() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("new", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("new", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
 
     let response = anon.get::<()>("/api/v1/crates/new?include=").await;
     assert_eq!(response.status(), StatusCode::OK);

@@ -27,10 +27,14 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    let a = CrateBuilder::new("test_package", user.as_model().id).expect_build(&mut conn);
-    let b = CrateBuilder::new("another_package", user.as_model().id).expect_build(&mut conn);
+    let a = CrateBuilder::new("test_package", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+    let b = CrateBuilder::new("another_package", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
 
     // Update crate_a: email_notifications = false
     // crate_a should be false, crate_b should be true
@@ -109,6 +113,7 @@ async fn test_update_email_notifications() {
 async fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     let user_id = diesel::insert_into(users::table)
         .values(new_user("arbitrary_username"))
@@ -116,7 +121,9 @@ async fn test_update_email_notifications_not_owned() {
         .get_result(&mut conn)
         .unwrap();
 
-    let not_my_crate = CrateBuilder::new("test_package", user_id).expect_build(&mut conn);
+    let not_my_crate = CrateBuilder::new("test_package", user_id)
+        .expect_build(&mut async_conn)
+        .await;
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {
         id: not_my_crate.id,

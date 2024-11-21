@@ -4,12 +4,12 @@ use crate::{
     util::errors::AppResult,
 };
 
-use crate::models::update_default_version;
-use crate::schema::crate_downloads;
-use chrono::NaiveDateTime;
-use diesel::prelude::*;
-
 use super::VersionBuilder;
+use crate::models::async_update_default_version;
+use crate::schema::crate_downloads;
+use crate::util::diesel::prelude::*;
+use chrono::NaiveDateTime;
+use diesel_async::AsyncPgConnection;
 
 /// A builder to create crate records for the purpose of inserting directly into the database.
 /// If you want to test logic that happens as part of a publish request, use `PublishBuilder`
@@ -118,10 +118,11 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    pub fn build(mut self, connection: &mut PgConnection) -> AppResult<Crate> {
+    pub async fn build(mut self, connection: &mut AsyncPgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
+        use diesel_async::RunQueryDsl;
 
-        let mut krate = self.krate.create(connection, self.owner_id)?;
+        let mut krate = self.krate.async_create(connection, self.owner_id).await?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -129,7 +130,8 @@ impl<'a> CrateBuilder<'a> {
         if let Some(downloads) = self.downloads {
             update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
                 .set(crate_downloads::downloads.eq(downloads as i64))
-                .execute(connection)?;
+                .execute(connection)
+                .await?;
         }
 
         if self.versions.is_empty() {
@@ -139,7 +141,8 @@ impl<'a> CrateBuilder<'a> {
         let mut last_version_id = 0;
         for version_builder in self.versions {
             last_version_id = version_builder
-                .build(krate.id, self.owner_id, connection)?
+                .build(krate.id, self.owner_id, connection)
+                .await?
                 .id;
         }
 
@@ -149,28 +152,32 @@ impl<'a> CrateBuilder<'a> {
                     version_downloads::version_id.eq(last_version_id),
                     version_downloads::downloads.eq(downloads),
                 ))
-                .execute(connection)?;
+                .execute(connection)
+                .await?;
 
             define_sql_function!(fn refresh_recent_crate_downloads());
-            select(refresh_recent_crate_downloads()).execute(connection)?;
+            select(refresh_recent_crate_downloads())
+                .execute(connection)
+                .await?;
         }
 
         if !self.categories.is_empty() {
-            Category::update_crate(connection, krate.id, &self.categories)?;
+            Category::async_update_crate(connection, krate.id, &self.categories).await?;
         }
 
         if !self.keywords.is_empty() {
-            Keyword::update_crate(connection, krate.id, &self.keywords)?;
+            Keyword::async_update_crate(connection, krate.id, &self.keywords).await?;
         }
 
         if let Some(updated_at) = self.updated_at {
             krate = update(&krate)
                 .set(crates::updated_at.eq(updated_at))
                 .returning(Crate::as_returning())
-                .get_result(connection)?;
+                .get_result(connection)
+                .await?;
         }
 
-        update_default_version(krate.id, connection)?;
+        async_update_default_version(krate.id, connection).await?;
 
         Ok(krate)
     }
@@ -180,10 +187,9 @@ impl<'a> CrateBuilder<'a> {
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the crate record fails.
-    #[track_caller]
-    pub fn expect_build(self, connection: &mut PgConnection) -> Crate {
+    pub async fn expect_build(self, connection: &mut AsyncPgConnection) -> Crate {
         let name = self.krate.name;
-        self.build(connection).unwrap_or_else(|e| {
+        self.build(connection).await.unwrap_or_else(|e| {
             panic!("Unable to create crate {name}: {e:?}");
         })
     }
