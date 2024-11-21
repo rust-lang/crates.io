@@ -331,18 +331,19 @@ mod tests {
         buf
     }
 
-    fn create_crate(name: &str, conn: &mut impl Conn) -> i32 {
-        use diesel::RunQueryDsl;
+    async fn create_crate(name: &str, conn: &mut AsyncPgConnection) -> i32 {
+        use diesel_async::RunQueryDsl;
 
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
             .get_result(conn)
+            .await
             .unwrap()
     }
 
-    fn create_version(crate_id: i32, num: &str, conn: &mut impl Conn) {
-        use diesel::RunQueryDsl;
+    async fn create_version(crate_id: i32, num: &str, conn: &mut AsyncPgConnection) {
+        use diesel_async::RunQueryDsl;
 
         diesel::insert_into(versions::table)
             .values((
@@ -353,36 +354,38 @@ mod tests {
                 versions::crate_size.eq(0),
             ))
             .execute(conn)
+            .await
             .unwrap();
     }
 
-    fn get_default_version(crate_id: i32, conn: &mut impl Conn) -> String {
-        use diesel::RunQueryDsl;
+    async fn get_default_version(crate_id: i32, conn: &mut AsyncPgConnection) -> String {
+        use diesel_async::RunQueryDsl;
 
         default_versions::table
             .inner_join(versions::table)
             .select(versions::num)
             .filter(default_versions::crate_id.eq(crate_id))
             .first(conn)
+            .await
             .unwrap()
     }
 
-    #[test]
-    fn test_update_default_version() {
+    #[tokio::test]
+    async fn test_update_default_version() {
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let conn = &mut test_db.async_connect().await;
 
-        let crate_id = create_crate("foo", conn);
-        create_version(crate_id, "1.0.0", conn);
+        let crate_id = create_crate("foo", conn).await;
+        create_version(crate_id, "1.0.0", conn).await;
 
-        update_default_version(crate_id, conn).unwrap();
-        assert_eq!(get_default_version(crate_id, conn), "1.0.0");
+        async_update_default_version(crate_id, conn).await.unwrap();
+        assert_eq!(get_default_version(crate_id, conn).await, "1.0.0");
 
-        create_version(crate_id, "1.1.0", conn);
-        create_version(crate_id, "1.0.1", conn);
-        assert_eq!(get_default_version(crate_id, conn), "1.0.0");
+        create_version(crate_id, "1.1.0", conn).await;
+        create_version(crate_id, "1.0.1", conn).await;
+        assert_eq!(get_default_version(crate_id, conn).await, "1.0.0");
 
-        update_default_version(crate_id, conn).unwrap();
-        assert_eq!(get_default_version(crate_id, conn), "1.1.0");
+        async_update_default_version(crate_id, conn).await.unwrap();
+        assert_eq!(get_default_version(crate_id, conn).await, "1.1.0");
     }
 }
