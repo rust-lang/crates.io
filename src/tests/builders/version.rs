@@ -114,9 +114,7 @@ impl VersionBuilder {
             .maybe_created_at(self.created_at.as_ref())
             .build();
 
-        let vers = new_version
-            .async_save(connection, "someone@example.com")
-            .await?;
+        let vers = new_version.save(connection, "someone@example.com").await?;
 
         let new_deps = self
             .dependencies

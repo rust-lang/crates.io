@@ -400,7 +400,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .maybe_edition(edition)
             .build();
 
-        let version = new_version.async_save(conn, &verified_email_address).await.map_err(|error| {
+        let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {
             use diesel::result::{Error, DatabaseErrorKind};
             match error {
                 Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>

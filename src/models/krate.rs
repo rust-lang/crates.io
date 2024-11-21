@@ -126,11 +126,7 @@ impl<'a> NewCrate<'a> {
             .await
     }
 
-    pub async fn create(
-        &self,
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-    ) -> QueryResult<Crate> {
+    pub async fn create(&self, conn: &mut AsyncPgConnection, user_id: i32) -> QueryResult<Crate> {
         use diesel_async::RunQueryDsl;
 
         conn.transaction(|conn| {
@@ -356,10 +352,7 @@ impl Crate {
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
-    pub async fn top_versions(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<TopVersions> {
+    pub async fn top_versions(&self, conn: &mut AsyncPgConnection) -> QueryResult<TopVersions> {
         use diesel_async::RunQueryDsl;
 
         Ok(TopVersions::from_date_version_pairs(
