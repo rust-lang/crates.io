@@ -38,6 +38,31 @@ impl Keyword {
             .await
     }
 
+    pub async fn async_find_or_create_all(
+        conn: &mut AsyncPgConnection,
+        names: &[&str],
+    ) -> QueryResult<Vec<Keyword>> {
+        use diesel_async::RunQueryDsl;
+
+        let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
+
+        let new_keywords: Vec<_> = lowercase_names
+            .iter()
+            .map(|s| keywords::keyword.eq(s))
+            .collect();
+
+        diesel::insert_into(keywords::table)
+            .values(&new_keywords)
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        keywords::table
+            .filter(keywords::keyword.eq_any(&lowercase_names))
+            .load(conn)
+            .await
+    }
+
     pub fn find_or_create_all(conn: &mut impl Conn, names: &[&str]) -> QueryResult<Vec<Keyword>> {
         use diesel::RunQueryDsl;
 
@@ -99,23 +124,27 @@ mod tests {
     use super::*;
     use crates_io_test_db::TestDatabase;
 
-    #[test]
-    fn dont_associate_with_non_lowercased_keywords() {
-        use diesel::RunQueryDsl;
+    #[tokio::test]
+    #[allow(clippy::iter_next_slice)]
+    async fn dont_associate_with_non_lowercased_keywords() {
+        use diesel_async::RunQueryDsl;
 
         let test_db = TestDatabase::new();
-        let conn = &mut test_db.connect();
+        let mut conn = test_db.async_connect().await;
 
         // The code should be preventing lowercased keywords from existing,
         // but if one happens to sneak in there, don't associate crates with it.
 
         diesel::insert_into(keywords::table)
             .values(keywords::keyword.eq("NO"))
-            .execute(conn)
+            .execute(&mut conn)
+            .await
             .unwrap();
 
-        let associated = Keyword::find_or_create_all(conn, &["no"]).unwrap();
+        let associated = Keyword::async_find_or_create_all(&mut conn, &["no"])
+            .await
+            .unwrap();
         assert_eq!(associated.len(), 1);
-        assert_eq!(associated.first().unwrap().keyword, "no");
+        assert_eq!(associated.iter().next().unwrap().keyword, "no");
     }
 }
