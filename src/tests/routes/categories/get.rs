@@ -62,42 +62,42 @@ async fn update_crate() {
         .await;
 
     // Updating with no categories has no effect
-    Category::async_update_crate(&mut async_conn, krate.id, &[])
+    Category::update_crate(&mut async_conn, krate.id, &[])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 0);
     assert_eq!(count(&anon, "category-2").await, 0);
 
     // Happy path adding one category
-    Category::async_update_crate(&mut async_conn, krate.id, &["cat1"])
+    Category::update_crate(&mut async_conn, krate.id, &["cat1"])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 1);
     assert_eq!(count(&anon, "category-2").await, 0);
 
     // Replacing one category with another
-    Category::async_update_crate(&mut async_conn, krate.id, &["category-2"])
+    Category::update_crate(&mut async_conn, krate.id, &["category-2"])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 0);
     assert_eq!(count(&anon, "category-2").await, 1);
 
     // Removing one category
-    Category::async_update_crate(&mut async_conn, krate.id, &[])
+    Category::update_crate(&mut async_conn, krate.id, &[])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 0);
     assert_eq!(count(&anon, "category-2").await, 0);
 
     // Adding 2 categories
-    Category::async_update_crate(&mut async_conn, krate.id, &["cat1", "category-2"])
+    Category::update_crate(&mut async_conn, krate.id, &["cat1", "category-2"])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 1);
     assert_eq!(count(&anon, "category-2").await, 1);
 
     // Removing all categories
-    Category::async_update_crate(&mut async_conn, krate.id, &[])
+    Category::update_crate(&mut async_conn, krate.id, &[])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 0);
@@ -105,7 +105,7 @@ async fn update_crate() {
 
     // Attempting to add one valid category and one invalid category
     let invalid_categories =
-        Category::async_update_crate(&mut async_conn, krate.id, &["cat1", "catnope"])
+        Category::update_crate(&mut async_conn, krate.id, &["cat1", "catnope"])
             .await
             .unwrap();
     assert_eq!(invalid_categories, vec!["catnope"]);
@@ -119,7 +119,7 @@ async fn update_crate() {
     assert_eq!(json.meta.total, 2);
 
     // Attempting to add a category by display text; must use slug
-    Category::async_update_crate(&mut async_conn, krate.id, &["Category 2"])
+    Category::update_crate(&mut async_conn, krate.id, &["Category 2"])
         .await
         .unwrap();
     assert_eq!(count(&anon, "cat1").await, 0);
@@ -130,7 +130,7 @@ async fn update_crate() {
         .values(new_category("cat1::bar", "cat1::bar", "bar crates"))
         .execute(&mut conn));
 
-    Category::async_update_crate(&mut async_conn, krate.id, &["cat1", "cat1::bar"])
+    Category::update_crate(&mut async_conn, krate.id, &["cat1", "cat1::bar"])
         .await
         .unwrap();
 

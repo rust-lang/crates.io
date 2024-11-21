@@ -162,7 +162,7 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if !self.categories.is_empty() {
-            Category::async_update_crate(connection, krate.id, &self.categories).await?;
+            Category::update_crate(connection, krate.id, &self.categories).await?;
         }
 
         if !self.keywords.is_empty() {
