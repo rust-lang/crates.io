@@ -29,7 +29,7 @@ async fn index() {
         .unwrap();
 
     let krate = CrateBuilder::new("fooindex", user_id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     for json in search_both(&anon, "").await {
@@ -52,23 +52,23 @@ async fn index_queries() {
         .readme("readme")
         .description("description")
         .keyword("kw1")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", user.id)
         .keyword("KW1")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     CrateBuilder::new("foo", user.id)
         .keyword("kw3")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     CrateBuilder::new("two-keywords", user.id)
         .keyword("kw1")
         .keyword("kw3")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     for json in search_both(&anon, "q=baz").await {
@@ -218,11 +218,11 @@ async fn search_includes_crates_where_name_is_stopword() {
     let user = user.as_model();
 
     CrateBuilder::new("which", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("should_be_excluded", user.id)
         .readme("crate which does things")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "q=which").await {
@@ -239,22 +239,22 @@ async fn exact_match_first_on_queries() {
 
     CrateBuilder::new("foo_exact", user.id)
         .description("bar_exact baz_exact")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("bar-exact", user.id)
         .description("foo_exact baz_exact foo-exact baz_exact")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("baz_exact", user.id)
         .description("foo-exact bar_exact foo-exact bar_exact foo_exact bar_exact")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("other_exact", user.id)
         .description("other_exact")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "q=foo-exact").await {
@@ -294,27 +294,27 @@ async fn index_sorting() {
         .description("bar_sort baz_sort const")
         .downloads(50)
         .recent_downloads(50)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate2 = CrateBuilder::new("bar_sort", user.id)
         .description("foo_sort baz_sort foo_sort baz_sort const")
         .downloads(3333)
         .recent_downloads(0)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate3 = CrateBuilder::new("baz_sort", user.id)
         .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
         .downloads(100_000)
         .recent_downloads(50)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate4 = CrateBuilder::new("other_sort", user.id)
         .description("other_sort const")
         .downloads(100_000)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Set the created at column for each crate
@@ -516,27 +516,27 @@ async fn ignore_exact_match_on_queries_with_sort() {
         .description("bar_sort baz_sort const")
         .downloads(50)
         .recent_downloads(50)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate2 = CrateBuilder::new("bar_sort", user.id)
         .description("foo_sort baz_sort foo_sort baz_sort const")
         .downloads(3333)
         .recent_downloads(0)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate3 = CrateBuilder::new("baz_sort", user.id)
         .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
         .downloads(100_000)
         .recent_downloads(10)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let krate4 = CrateBuilder::new("other_sort", user.id)
         .description("other_sort const")
         .downloads(999_999)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Set the created at column for each crate
@@ -647,16 +647,16 @@ async fn multiple_ids() {
     let user = user.as_model();
 
     CrateBuilder::new("foo", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("bar", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("baz", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("other", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(
@@ -683,28 +683,28 @@ async fn loose_search_order() {
         .readme("readme")
         .description("description")
         .keyword("kw1")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     // temp_udp should match second because of _
     let two = CrateBuilder::new("temp_utp", user.id)
         .readme("readme")
         .description("description")
         .keyword("kw1")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     // evalrs should match 3rd because of readme
     let three = CrateBuilder::new("evalrs", user.id)
         .readme("evalrs_temp evalrs_temp evalrs_temp")
         .description("description")
         .keyword("kw1")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     // tempfile should appear 4th
     let four = CrateBuilder::new("tempfile", user.id)
         .readme("readme")
         .description("description")
         .keyword("kw1")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let ordered = vec![one, two, three, four];
@@ -732,25 +732,25 @@ async fn index_include_yanked() {
     CrateBuilder::new("unyanked", user.id)
         .version(VersionBuilder::new("1.0.0"))
         .version(VersionBuilder::new("2.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("newest_yanked", user.id)
         .version(VersionBuilder::new("1.0.0"))
         .version(VersionBuilder::new("2.0.0").yanked(true))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("oldest_yanked", user.id)
         .version(VersionBuilder::new("1.0.0").yanked(true))
         .version(VersionBuilder::new("2.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("all_yanked", user.id)
         .version(VersionBuilder::new("1.0.0").yanked(true))
         .version(VersionBuilder::new("2.0.0").yanked(true))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Include fully yanked (all versions were yanked) crates
@@ -801,7 +801,7 @@ async fn yanked_versions_are_not_considered_for_max_version() {
         .description("foo")
         .version("1.0.0")
         .version(VersionBuilder::new("1.1.0").yanked(true))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "q=foo").await {
@@ -825,7 +825,7 @@ async fn max_stable_version() {
         .version(VersionBuilder::new("1.1.0").yanked(true))
         .version("2.0.0-beta.1")
         .version("0.3.1")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "q=foo").await {
@@ -853,14 +853,14 @@ async fn test_recent_download_count() {
         .description("For fetching")
         .downloads(10)
         .recent_downloads(0)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("sweet_potato_snack", user.id)
         .description("For when better than usual")
         .downloads(5)
         .recent_downloads(2)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "sort=recent-downloads").await {
@@ -891,7 +891,7 @@ async fn test_zero_downloads() {
         .description("For fetching")
         .downloads(0)
         .recent_downloads(0)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "sort=recent-downloads").await {
@@ -918,7 +918,7 @@ async fn test_default_sort_recent() {
         .keyword("dog")
         .downloads(10)
         .recent_downloads(10)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let potato_crate = CrateBuilder::new("sweet_potato_snack", user.id)
@@ -926,7 +926,7 @@ async fn test_default_sort_recent() {
         .keyword("dog")
         .downloads(20)
         .recent_downloads(0)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // test that index for keywords is sorted by recent_downloads
@@ -979,13 +979,13 @@ async fn pagination_links_included_if_applicable() {
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_2", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_3", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // This uses a filter (`page=n`) to disable seek-based pagination, as seek-based pagination
@@ -1030,13 +1030,13 @@ async fn seek_based_pagination() {
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_2", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_3", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let mut url = Some("?per_page=1".to_string());
@@ -1085,13 +1085,13 @@ async fn test_pages_work_even_with_seek_based_pagination() {
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_2", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_3", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // The next_page returned by the request is seek-based
@@ -1134,13 +1134,13 @@ async fn pagination_parameters_only_accept_integers() {
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_2", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_3", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -1163,7 +1163,7 @@ async fn crates_by_user_id() {
     let id = user.as_model().id;
 
     CrateBuilder::new("foo_my_packages", id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     for response in search_both_by_user_id(&user, id).await {
@@ -1180,7 +1180,7 @@ async fn crates_by_user_id_not_including_deleted_owners() {
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     krate.owner_remove(&mut conn, "foo").unwrap();
 

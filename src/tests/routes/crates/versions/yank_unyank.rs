@@ -70,7 +70,7 @@ async fn yank_by_a_non_owner_fails() {
 
     CrateBuilder::new("foo_not", another_user.id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.yank("foo_not", "1.0.0").await;

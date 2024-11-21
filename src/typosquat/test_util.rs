@@ -23,7 +23,7 @@ pub mod faker {
             .description(description)
             .downloads(downloads)
             .version("1.0.0")
-            .async_build(conn)
+            .build(conn)
             .await
             .map_err(|err| anyhow!(err.to_string()))
     }

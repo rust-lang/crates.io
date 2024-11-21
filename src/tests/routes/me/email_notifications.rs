@@ -30,10 +30,10 @@ async fn test_update_email_notifications() {
     let mut conn = app.async_db_conn().await;
 
     let a = CrateBuilder::new("test_package", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let b = CrateBuilder::new("another_package", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Update crate_a: email_notifications = false
@@ -122,7 +122,7 @@ async fn test_update_email_notifications_not_owned() {
         .unwrap();
 
     let not_my_crate = CrateBuilder::new("test_package", user_id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {

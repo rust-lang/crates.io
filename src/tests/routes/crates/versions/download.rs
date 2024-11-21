@@ -8,7 +8,7 @@ async fn test_redirects() {
 
     CrateBuilder::new("foo-download", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Any redirect to an existing crate and version works correctly.
@@ -40,7 +40,7 @@ async fn download_with_build_metadata() {
 
     CrateBuilder::new("foo", user.id)
         .version(VersionBuilder::new("1.0.0+bar"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     anon.get::<()>("/api/v1/crates/foo/1.0.0+bar/download")

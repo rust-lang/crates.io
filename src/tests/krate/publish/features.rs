@@ -11,7 +11,7 @@ async fn features_version_2() {
 
     // Insert a crate directly into the database so that foo_new can depend on it
     CrateBuilder::new("bar", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let dependency = DependencyBuilder::new("bar");
@@ -131,7 +131,7 @@ async fn too_many_features_with_custom_limit() {
 
     CrateBuilder::new("foo", user.as_model().id)
         .max_features(4)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
@@ -191,7 +191,7 @@ async fn too_many_enabled_features_with_custom_limit() {
 
     CrateBuilder::new("foo", user.as_model().id)
         .max_features(4)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")

@@ -35,7 +35,7 @@ async fn following() {
 
     CrateBuilder::new("foo_fighters", user_id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make foo_fighters's version mimic a version published before we started recording who
@@ -48,7 +48,7 @@ async fn following() {
 
     CrateBuilder::new("bar_fighters", user_id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let r: R = user.get("/api/v1/me/updates").await.good();

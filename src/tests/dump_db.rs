@@ -19,7 +19,7 @@ async fn test_dump_db_job() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("test-crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     DumpDb.async_enqueue(&mut conn).await.unwrap();

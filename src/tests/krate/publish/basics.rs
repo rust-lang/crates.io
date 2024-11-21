@@ -151,7 +151,7 @@ async fn new_krate_duplicate_version() {
     // Insert a crate directly into the database and then we'll try to publish the same version
     CrateBuilder::new("foo_dupe", user.as_model().id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");

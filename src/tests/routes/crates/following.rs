@@ -19,7 +19,7 @@ async fn disallow_api_token_auth_for_get_crate_following_status() {
     let a_crate = "a_crate";
 
     CrateBuilder::new(a_crate, api_token.user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Token auth on GET for get following status is disallowed

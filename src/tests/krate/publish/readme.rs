@@ -77,7 +77,7 @@ async fn publish_after_removing_documentation() {
     // 1. Start with a crate with no documentation
     CrateBuilder::new("docscrate", user.id)
         .version("0.2.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Verify that crates start without any documentation so the next assertion can *prove*

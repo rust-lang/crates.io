@@ -171,7 +171,7 @@ mod tests {
 
         let fooo = CrateBuilder::new("foo", user_id)
             .version(VersionBuilder::new("0.1.0"))
-            .async_expect_build(&mut conn)
+            .expect_build(&mut conn)
             .await;
 
         let metadata = index_metadata(&fooo, &mut conn).await.unwrap();
@@ -190,7 +190,7 @@ mod tests {
                     .dependency(&fooo, None),
             )
             .version(VersionBuilder::new("1.0.1").checksum("0123456789abcdef"))
-            .async_expect_build(&mut conn)
+            .expect_build(&mut conn)
             .await;
 
         let metadata = index_metadata(&bar, &mut conn).await.unwrap();

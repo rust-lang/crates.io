@@ -31,7 +31,7 @@ async fn me() {
     assert_json_snapshot!(response.json());
 
     CrateBuilder::new("foo_my_packages", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = user.get::<()>("/api/v1/me").await;
@@ -47,7 +47,7 @@ async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
     let user_model = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user_model.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     krate.owner_remove(&mut conn, &user_model.gh_login).unwrap();
 

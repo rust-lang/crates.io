@@ -10,7 +10,7 @@ async fn reverse_dependencies() {
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
@@ -20,7 +20,7 @@ async fn reverse_dependencies() {
                 .dependency(&c1, None)
                 .dependency(&c1, Some("foo")),
         )
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -51,13 +51,13 @@ async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.1.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
         .version("1.0.0")
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -78,13 +78,13 @@ async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
         .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
         .version("2.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -105,18 +105,18 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
         .version("1.1.0-pre")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c3", user.id)
         .version(VersionBuilder::new("1.0.0").dependency(&c1, None))
         .version("1.1.0-pre")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -138,13 +138,13 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
         .version("1.0.0")
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = anon
@@ -186,11 +186,11 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     CrateBuilder::new("c2", user.id)
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make c2's version (and,incidentally, c1's, but that doesn't matter) mimic a version
@@ -204,7 +204,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     // c3's version will have the published by info recorded
     CrateBuilder::new("c3", user.id)
         .version(VersionBuilder::new("3.0.0").dependency(&c1, None))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = anon
@@ -226,14 +226,14 @@ async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     let large_but_valid_version_number = format!("1.0.{}", u64::MAX);
 
     let c1 = CrateBuilder::new("c1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // The crate that depends on c1...
     CrateBuilder::new("c2", user.id)
         // ...has a patch version at the limits of what the semver crate supports
         .version(VersionBuilder::new(&large_but_valid_version_number).dependency(&c1, None))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon

@@ -140,7 +140,7 @@ async fn new_krate_too_big_but_whitelisted() {
 
     CrateBuilder::new("foo_whitelist", user.as_model().id)
         .max_upload_size(2_000_000)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let crate_to_publish = PublishBuilder::new("foo_whitelist", "1.1.0")

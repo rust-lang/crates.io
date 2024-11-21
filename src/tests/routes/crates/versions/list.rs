@@ -19,7 +19,7 @@ async fn versions() {
         .version("0.5.1")
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -71,7 +71,7 @@ async fn test_sorting() {
     for version in versions {
         builder = builder.version(version);
     }
-    builder.async_expect_build(&mut async_conn).await;
+    builder.expect_build(&mut async_conn).await;
     // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
     // but 1.0.0-alpha.beta owns larger id number
     let versions_aliased = diesel::alias!(versions as versions_aliased);
@@ -90,7 +90,7 @@ async fn test_sorting() {
     // An additional crate to guarantee the accuracy of the response dataset and its total
     CrateBuilder::new("bar_versions", user.id)
         .version("0.0.1")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let expects = [
@@ -163,7 +163,7 @@ async fn test_seek_based_pagination_semver_sorting() {
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -248,7 +248,7 @@ async fn test_seek_based_pagination_date_sorting() {
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -332,7 +332,7 @@ async fn invalid_seek_parameter() {
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let url = "/api/v1/crates/foo_versions/versions";

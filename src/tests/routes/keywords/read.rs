@@ -55,7 +55,7 @@ async fn update_crate() {
         .await
         .unwrap();
     let krate = CrateBuilder::new("fookey", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     Keyword::async_update_crate(&mut conn, krate.id, &[])

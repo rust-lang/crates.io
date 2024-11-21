@@ -20,7 +20,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     let someone_else = app.db_new_user("someone_else").await;
 
     let krate = CrateBuilder::new("crate1", someone_else.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     diesel::insert_into(crate_owners::table)

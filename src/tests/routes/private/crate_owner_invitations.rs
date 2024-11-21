@@ -32,10 +32,10 @@ async fn invitation_list() {
     let mut conn = app.async_db_conn().await;
 
     let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let user1 = app.db_new_user("user_1").await;
@@ -174,10 +174,10 @@ async fn invitations_list_does_not_include_expired_invites() {
     let user = app.db_new_user("invited_user").await;
 
     let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     token
@@ -222,10 +222,10 @@ async fn invitations_list_paginated() {
     let user = app.db_new_user("invited_user").await;
 
     let crate1 = CrateBuilder::new("crate_1", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let crate2 = CrateBuilder::new("crate_2", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     token
@@ -342,10 +342,10 @@ async fn invitation_list_other_crates() {
     let other_user = app.db_new_user("other").await;
 
     CrateBuilder::new("crate_1", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("crate_2", other_user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Retrieving our own invitations work.

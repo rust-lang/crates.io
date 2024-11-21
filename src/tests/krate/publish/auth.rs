@@ -40,7 +40,7 @@ async fn new_krate_wrong_user() {
 
     // Create the foo_wrong crate with one user
     CrateBuilder::new("foo_wrong", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Then try to publish with a different user

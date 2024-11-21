@@ -11,7 +11,7 @@ async fn authors() {
 
     CrateBuilder::new("foo_authors", user.id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json: Value = anon

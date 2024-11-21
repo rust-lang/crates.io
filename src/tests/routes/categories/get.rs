@@ -58,7 +58,7 @@ async fn update_crate() {
         .execute(&mut conn));
 
     let krate = CrateBuilder::new("foo_crate", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Updating with no categories has no effect

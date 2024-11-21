@@ -18,13 +18,13 @@ async fn pagination_blocks_ip_from_cidr_block_list() {
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_2", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("pagination_links_3", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon

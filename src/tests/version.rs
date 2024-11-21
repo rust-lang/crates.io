@@ -9,7 +9,7 @@ async fn record_rerendered_readme_time() {
     let user = user.as_model();
 
     let c = CrateBuilder::new("foo_authors", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let version = VersionBuilder::new("1.0.0")
         .async_expect_build(c.id, user.id, &mut conn)

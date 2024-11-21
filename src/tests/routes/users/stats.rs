@@ -21,7 +21,7 @@ async fn user_total_downloads() {
     let another_user = another_user.as_model();
 
     let krate = CrateBuilder::new("foo_krate1", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
         .set(crate_downloads::downloads.eq(10))
@@ -29,7 +29,7 @@ async fn user_total_downloads() {
         .unwrap();
 
     let krate2 = CrateBuilder::new("foo_krate2", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate2.id)))
         .set(crate_downloads::downloads.eq(20))
@@ -37,7 +37,7 @@ async fn user_total_downloads() {
         .unwrap();
 
     let another_krate = CrateBuilder::new("bar_krate1", another_user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(another_krate.id)))
         .set(crate_downloads::downloads.eq(2))
@@ -45,7 +45,7 @@ async fn user_total_downloads() {
         .unwrap();
 
     let no_longer_my_krate = CrateBuilder::new("nacho", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(no_longer_my_krate.id)))
         .set(crate_downloads::downloads.eq(5))

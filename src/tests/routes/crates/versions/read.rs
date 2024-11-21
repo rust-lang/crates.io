@@ -11,7 +11,7 @@ async fn show_by_crate_name_and_version() {
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let v = VersionBuilder::new("2.0.0")
         .size(1234)
@@ -41,7 +41,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show_no_pb", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     let version = VersionBuilder::new("1.0.0")
         .async_expect_build(krate.id, user.id, &mut async_conn)

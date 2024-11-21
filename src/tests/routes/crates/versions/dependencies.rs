@@ -16,10 +16,10 @@ async fn dependencies() {
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("foo_deps", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let c2 = CrateBuilder::new("bar_deps", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     VersionBuilder::new("1.0.0")
         .dependency(&c2, None)

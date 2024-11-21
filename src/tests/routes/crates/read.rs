@@ -24,7 +24,7 @@ async fn show() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -63,7 +63,7 @@ async fn show_minimal() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -91,7 +91,7 @@ async fn show_all_yanked() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon.get::<()>("/api/v1/crates/foo_show").await;
@@ -155,7 +155,7 @@ async fn block_bad_documentation_url() {
 
     CrateBuilder::new("foo_bad_doc_url", user.id)
         .documentation("http://rust-ci.org/foo/foo_bad_doc_url/doc/foo_bad_doc_url/")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json = anon.show_crate("foo_bad_doc_url").await;
@@ -168,7 +168,7 @@ async fn test_new_name() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("new", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon.get::<()>("/api/v1/crates/new?include=").await;

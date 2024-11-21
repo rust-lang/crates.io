@@ -57,7 +57,7 @@ async fn download_requests_with_unhealthy_database_succeed() {
 
     CrateBuilder::new("foo", token.as_model().user_id)
         .version("1.0.0")
-        .async_build(&mut conn)
+        .build(&mut conn)
         .await
         .unwrap();
 

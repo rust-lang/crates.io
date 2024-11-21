@@ -187,7 +187,7 @@ async fn owners_can_remove_self() {
     let username = &user.as_model().gh_login;
 
     let krate = CrateBuilder::new("owners_selfremove", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Deleting yourself when you're the only owner isn't allowed.
@@ -223,7 +223,7 @@ async fn modify_multiple_owners() {
     let username = &user.as_model().gh_login;
 
     let krate = CrateBuilder::new("owners_multiple", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let user2 = create_and_add_owner(&app, &token, "user2", &krate).await;
@@ -291,7 +291,7 @@ async fn check_ownership_two_crates() {
         .await
         .unwrap();
     let krate_owned_by_team = CrateBuilder::new("foo", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn)
         .await
@@ -300,7 +300,7 @@ async fn check_ownership_two_crates() {
     let user2 = app.db_new_user("user_bar").await;
     let user2 = user2.as_model();
     let krate_not_owned_by_team = CrateBuilder::new("bar", user2.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json = anon.search(&format!("user_id={}", user2.id)).await;
@@ -331,7 +331,7 @@ async fn check_ownership_one_crate() {
         .await
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     add_team_to_crate(&team, &krate, user, &mut conn)
         .await
@@ -365,7 +365,7 @@ async fn add_existing_team() {
         .await
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     add_team_to_crate(&t, &krate, user, &mut conn)
         .await
@@ -389,7 +389,7 @@ async fn deleted_ownership_isnt_in_owner_user() {
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     krate.owner_remove(&mut conn, &user.gh_login).unwrap();
 
@@ -443,7 +443,7 @@ async fn invitations_list_v1() {
     let owner = owner.as_model();
 
     let krate = CrateBuilder::new("invited_crate", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let user = app.db_new_user("invited_user").await;
@@ -484,10 +484,10 @@ async fn invitations_list_does_not_include_expired_invites_v1() {
     let user = app.db_new_user("invited_user").await;
 
     let krate1 = CrateBuilder::new("invited_crate_1", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     let krate2 = CrateBuilder::new("invited_crate_2", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     token
         .add_named_owner("invited_crate_1", "invited_user")
@@ -534,7 +534,7 @@ async fn test_accept_invitation() {
     let invited_user = app.db_new_user("user_bar").await;
 
     let krate = CrateBuilder::new("accept_invitation", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new owner
@@ -569,7 +569,7 @@ async fn test_decline_invitation() {
     let invited_user = app.db_new_user("user_bar").await;
 
     let krate = CrateBuilder::new("decline_invitation", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new owner
@@ -601,7 +601,7 @@ async fn test_accept_invitation_by_mail() {
     let invited_user = app.db_new_user("user_bar").await;
 
     CrateBuilder::new("accept_invitation", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new owner
@@ -652,7 +652,7 @@ async fn test_accept_expired_invitation() {
     let invited_user = app.db_new_user("demo_user").await;
 
     let krate = CrateBuilder::new("demo_crate", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new user
@@ -694,7 +694,7 @@ async fn test_decline_expired_invitation() {
     let invited_user = app.db_new_user("demo_user").await;
 
     let krate = CrateBuilder::new("demo_crate", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new user
@@ -724,7 +724,7 @@ async fn test_accept_expired_invitation_by_mail() {
     let owner = owner.as_model();
     let _invited_user = app.db_new_user("demo_user").await;
     let krate = CrateBuilder::new("demo_crate", owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Invite a new owner
@@ -788,7 +788,7 @@ async fn inactive_users_dont_get_invitations() {
         .unwrap();
 
     CrateBuilder::new(krate_name, owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let invited_user = app.db_new_user(invited_gh_login).await;
@@ -818,7 +818,7 @@ async fn highest_gh_id_is_most_recent_account_we_know_of() {
     let invited_user = app.db_new_user(invited_gh_login).await;
 
     CrateBuilder::new(krate_name, owner.id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     owner_token

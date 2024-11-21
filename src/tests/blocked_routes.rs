@@ -15,7 +15,7 @@ async fn test_non_blocked_download_route() {
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let status = anon
@@ -41,7 +41,7 @@ async fn test_blocked_download_route() {
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let status = anon

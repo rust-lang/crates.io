@@ -70,7 +70,7 @@ async fn test_download() {
 
     CrateBuilder::new("foo_download", user.id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // TODO: test the with_json code path
@@ -105,7 +105,7 @@ async fn test_download_with_counting_via_cdn() {
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     download(&anon, "foo/1.0.0").await;
@@ -124,7 +124,7 @@ async fn test_crate_downloads() {
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     download(&anon, "foo/1.0.0").await;
@@ -166,7 +166,7 @@ async fn test_version_downloads() {
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     download(&anon, "foo/1.0.0").await;

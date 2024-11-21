@@ -31,7 +31,7 @@ async fn not_github() {
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_not_github", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = token
@@ -47,7 +47,7 @@ async fn weird_name() {
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_weird_name", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = token
@@ -64,7 +64,7 @@ async fn one_colon() {
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_one_colon", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
@@ -78,7 +78,7 @@ async fn add_nonexistent_team() {
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_add_nonexistent", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = token
@@ -101,7 +101,7 @@ async fn add_renamed_team() {
     use crate::schema::teams;
 
     CrateBuilder::new("foo_renamed_team", owner_id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     // create team with same ID and different name compared to http mock
@@ -145,7 +145,7 @@ async fn add_team_mixed_case() {
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_mixed_case", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token
@@ -173,7 +173,7 @@ async fn add_team_as_org_owner() {
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_org_owner", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token
@@ -201,7 +201,7 @@ async fn add_team_as_non_member() {
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_team_non_member", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     let response = token
@@ -222,7 +222,7 @@ async fn remove_team_as_named_owner() {
         .await;
 
     CrateBuilder::new("foo_remove_team", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -260,7 +260,7 @@ async fn remove_team_as_team_owner() {
         .await;
 
     CrateBuilder::new("foo_remove_team_owner", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -293,7 +293,7 @@ async fn remove_nonexistent_team() {
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_remove_nonexistent", user.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     insert_into(teams::table)
         .values((
@@ -324,7 +324,7 @@ async fn publish_not_owned() {
         .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -350,7 +350,7 @@ async fn publish_org_owner_owned() {
         .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -377,7 +377,7 @@ async fn publish_owned() {
         .await;
 
     CrateBuilder::new("foo_team_owned", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -407,7 +407,7 @@ async fn add_owners_as_org_owner() {
         .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -435,7 +435,7 @@ async fn add_owners_as_team_owner() {
         .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
 
     token_on_both_teams
@@ -464,7 +464,7 @@ async fn crates_by_team_id() {
         .await
         .unwrap();
     let krate = CrateBuilder::new("foo", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     add_team_to_crate(&t, &krate, user, &mut async_conn)
         .await
@@ -494,7 +494,7 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         .unwrap();
 
     let krate = CrateBuilder::new("foo", user.id)
-        .async_expect_build(&mut async_conn)
+        .expect_build(&mut async_conn)
         .await;
     add_team_to_crate(&t, &krate, user, &mut async_conn)
         .await

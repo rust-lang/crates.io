@@ -15,7 +15,7 @@ async fn test_cargo_invite_owners() {
 
     let new_user = app.db_new_user("cilantro").await;
     CrateBuilder::new("guacamole", owner.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json = owner
@@ -44,7 +44,7 @@ async fn owner_change_via_cookie() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", cookie.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = cookie.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -61,7 +61,7 @@ async fn owner_change_via_token() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -81,7 +81,7 @@ async fn owner_change_via_change_owner_token() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -102,7 +102,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -123,7 +123,7 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -143,7 +143,7 @@ async fn owner_change_via_publish_token() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -160,7 +160,7 @@ async fn owner_change_without_auth() {
     let user2 = user2.as_model();
 
     let krate = CrateBuilder::new("foo_crate", cookie.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon.add_named_owner(&krate.name, &user2.gh_login).await;
@@ -174,7 +174,7 @@ async fn test_owner_change_with_legacy_field() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo", user1.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
     app.db_new_user("user2").await;
 
@@ -193,7 +193,7 @@ async fn test_owner_change_with_invalid_json() {
 
     app.db_new_user("bar").await;
     CrateBuilder::new("foo", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // incomplete input
@@ -228,7 +228,7 @@ async fn invite_already_invited_user() {
 
     app.db_new_user("invited_user").await;
     CrateBuilder::new("crate_name", owner.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Ensure no emails were sent up to this point
@@ -258,7 +258,7 @@ async fn invite_with_existing_expired_invite() {
 
     app.db_new_user("invited_user").await;
     let krate = CrateBuilder::new("crate_name", owner.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     // Ensure no emails were sent up to this point
@@ -300,7 +300,7 @@ async fn test_unknown_user() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo", cookie.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = cookie.add_named_owner("foo", "unknown").await;
@@ -314,7 +314,7 @@ async fn test_unknown_team() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo", cookie.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = cookie
@@ -330,7 +330,7 @@ async fn max_invites_per_request() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("crate_name", owner.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let usernames = (0..11)
@@ -354,7 +354,7 @@ async fn no_invite_emails_for_txn_rollback() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("crate_name", token.as_model().user_id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let mut usernames = (0..9).map(|i| format!("user_{i}")).collect::<Vec<String>>();

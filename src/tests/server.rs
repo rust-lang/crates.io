@@ -29,7 +29,7 @@ async fn user_agent_is_not_required_for_download() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
@@ -50,7 +50,7 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
@@ -71,7 +71,7 @@ async fn block_traffic_via_arbitrary_header_and_value() {
     let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")

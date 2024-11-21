@@ -11,7 +11,7 @@ async fn new_crate_similar_name() {
 
     CrateBuilder::new("Foo_similar", user.as_model().id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let crate_to_publish = PublishBuilder::new("foo_similar", "1.1.0");
@@ -28,7 +28,7 @@ async fn new_crate_similar_name_hyphen() {
 
     CrateBuilder::new("foo_bar_hyphen", user.as_model().id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let crate_to_publish = PublishBuilder::new("foo-bar-hyphen", "1.1.0");
@@ -45,7 +45,7 @@ async fn new_crate_similar_name_underscore() {
 
     CrateBuilder::new("foo-bar-underscore", user.as_model().id)
         .version("1.0.0")
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let crate_to_publish = PublishBuilder::new("foo_bar_underscore", "1.1.0");

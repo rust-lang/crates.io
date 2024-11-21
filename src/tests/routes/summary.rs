@@ -51,7 +51,7 @@ async fn summary_new_crates() {
                 .category("cat1")
                 .downloads(20)
                 .recent_downloads(10)
-                .async_expect_build(conn)
+                .expect_build(conn)
                 .await;
 
             CrateBuilder::new("most_recent_downloads", user.id)
@@ -61,7 +61,7 @@ async fn summary_new_crates() {
                 .category("cat1")
                 .downloads(5000)
                 .recent_downloads(50)
-                .async_expect_build(conn)
+                .expect_build(conn)
                 .await;
 
             CrateBuilder::new("just_updated", user.id)
@@ -70,7 +70,7 @@ async fn summary_new_crates() {
                 .version(VersionBuilder::new("0.1.2"))
                 // update 'just_updated' krate. Others won't appear because updated_at == created_at.
                 .updated_at(now_)
-                .async_expect_build(conn)
+                .expect_build(conn)
                 .await;
 
             CrateBuilder::new("just_updated_patch", user.id)
@@ -80,7 +80,7 @@ async fn summary_new_crates() {
                 // Add a patch version be newer than the other versions, including the higher one.
                 .version(VersionBuilder::new("0.1.1").created_at(now_plus_two))
                 .updated_at(now_plus_two)
-                .async_expect_build(conn)
+                .expect_build(conn)
                 .await;
 
             CrateBuilder::new("with_downloads", user.id)
@@ -88,7 +88,7 @@ async fn summary_new_crates() {
                 .version(VersionBuilder::new("0.3.1").yanked(true))
                 .keyword("popular")
                 .downloads(1000)
-                .async_expect_build(conn)
+                .expect_build(conn)
                 .await;
 
             // set total_downloads global value for `num_downloads` prop
@@ -174,7 +174,7 @@ async fn excluded_crate_id() {
         .category("cat1")
         .downloads(20)
         .recent_downloads(10)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("most_recent_downloads", user.id)
@@ -183,7 +183,7 @@ async fn excluded_crate_id() {
         .category("cat1")
         .downloads(5000)
         .recent_downloads(50)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
@@ -232,7 +232,7 @@ async fn all_yanked() {
         .category("cat1")
         .downloads(20)
         .recent_downloads(10)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("most_recent_downloads", user.id)
@@ -241,7 +241,7 @@ async fn all_yanked() {
         .category("cat1")
         .downloads(5000)
         .recent_downloads(50)
-        .async_expect_build(&mut conn)
+        .expect_build(&mut conn)
         .await;
 
     let json: SummaryResponse = anon.get("/api/v1/summary").await.good();
