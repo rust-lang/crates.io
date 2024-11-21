@@ -124,7 +124,7 @@ mod tests {
             name: "foo",
             ..Default::default()
         }
-        .async_create(conn, user_id)
+        .create(conn, user_id)
         .await
         .unwrap();
 

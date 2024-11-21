@@ -122,7 +122,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
     };
 
     let top_versions = if include.versions {
-        Some(krate.async_top_versions(&mut conn).await?)
+        Some(krate.top_versions(&mut conn).await?)
     } else {
         None
     };

@@ -122,7 +122,7 @@ impl<'a> CrateBuilder<'a> {
         use diesel::{insert_into, select, update};
         use diesel_async::RunQueryDsl;
 
-        let mut krate = self.krate.async_create(connection, self.owner_id).await?;
+        let mut krate = self.krate.create(connection, self.owner_id).await?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.

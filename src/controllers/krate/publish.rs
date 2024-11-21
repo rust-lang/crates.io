@@ -344,7 +344,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         // To avoid race conditions, we try to insert
         // first so we know whether to add an owner
-        let krate = match persist.async_create(conn, user.id).await.optional()? {
+        let krate = match persist.create(conn, user.id).await.optional()? {
             Some(krate) => krate,
             None => persist.update(conn).await?,
         };
@@ -480,7 +480,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
         }
 
-        let top_versions = krate.async_top_versions(conn).await?;
+        let top_versions = krate.top_versions(conn).await?;
 
         let downloads: i64 = crate_downloads::table.select(crate_downloads::downloads)
             .filter(crate_downloads::crate_id.eq(krate.id))
