@@ -1,10 +1,8 @@
 use anyhow::Context;
-use crates_io::models::{update_default_version, verify_default_version};
-use crates_io::tasks::spawn_blocking;
+use crates_io::models::{async_update_default_version, async_verify_default_version};
 use crates_io::{db, schema::crates};
 use diesel::prelude::*;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
 #[derive(clap::Parser, Debug, Eq, PartialEq)]
@@ -28,25 +26,21 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
         .await
         .context("Failed to load crates")?;
 
-    let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
-    spawn_blocking(move || {
-        let pb = ProgressBar::new(crate_ids.len() as u64);
-        pb.set_style(ProgressStyle::with_template(
-            "{bar:60} ({pos}/{len}, ETA {eta})",
-        )?);
+    let pb = ProgressBar::new(crate_ids.len() as u64);
+    pb.set_style(ProgressStyle::with_template(
+        "{bar:60} ({pos}/{len}, ETA {eta})",
+    )?);
 
-        for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
-            let func = match command {
-                Command::Update => update_default_version,
-                Command::Verify => verify_default_version,
-            };
+    for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
+        let result = match command {
+            Command::Update => async_update_default_version(crate_id, &mut conn).await,
+            Command::Verify => async_verify_default_version(crate_id, &mut conn).await,
+        };
 
-            if let Err(error) = func(crate_id, &mut conn) {
-                pb.suspend(|| warn!(%crate_id, %error, "Failed to update the default version"));
-            }
+        if let Err(error) = result {
+            pb.suspend(|| warn!(%crate_id, %error, "Failed to update the default version"));
         }
+    }
 
-        Ok(())
-    })
-    .await?
+    Ok(())
 }
