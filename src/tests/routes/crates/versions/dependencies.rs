@@ -23,7 +23,7 @@ async fn dependencies() {
         .await;
     VersionBuilder::new("1.0.0")
         .dependency(&c2, None)
-        .async_expect_build(c1.id, user.id, &mut conn)
+        .expect_build(c1.id, user.id, &mut conn)
         .await;
 
     let deps: Deps = anon

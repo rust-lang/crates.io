@@ -141,7 +141,7 @@ impl<'a> CrateBuilder<'a> {
         let mut last_version_id = 0;
         for version_builder in self.versions {
             last_version_id = version_builder
-                .async_build(krate.id, self.owner_id, connection)
+                .build(krate.id, self.owner_id, connection)
                 .await?
                 .id;
         }

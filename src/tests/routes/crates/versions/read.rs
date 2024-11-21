@@ -17,7 +17,7 @@ async fn show_by_crate_name_and_version() {
         .size(1234)
         .checksum("c241cd77c3723ccf1aa453f169ee60c0a888344da504bee0142adb859092acb4")
         .rust_version("1.64")
-        .async_expect_build(krate.id, user.id, &mut conn)
+        .expect_build(krate.id, user.id, &mut conn)
         .await;
 
     let url = "/api/v1/crates/foo_vers_show/2.0.0";
@@ -44,7 +44,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
         .expect_build(&mut async_conn)
         .await;
     let version = VersionBuilder::new("1.0.0")
-        .async_expect_build(krate.id, user.id, &mut async_conn)
+        .expect_build(krate.id, user.id, &mut async_conn)
         .await;
 
     // Mimic a version published before we started recording who published versions

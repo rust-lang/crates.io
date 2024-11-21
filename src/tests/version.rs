@@ -12,7 +12,7 @@ async fn record_rerendered_readme_time() {
         .expect_build(&mut conn)
         .await;
     let version = VersionBuilder::new("1.0.0")
-        .async_expect_build(c.id, user.id, &mut conn)
+        .expect_build(c.id, user.id, &mut conn)
         .await;
 
     let mut conn = app.async_db_conn().await;

@@ -91,7 +91,7 @@ impl VersionBuilder {
         self
     }
 
-    pub async fn async_build(
+    pub async fn build(
         self,
         crate_id: i32,
         published_by: i32,
@@ -142,83 +142,19 @@ impl VersionBuilder {
         Ok(vers)
     }
 
-    pub fn build(
-        self,
-        crate_id: i32,
-        published_by: i32,
-        connection: &mut PgConnection,
-    ) -> AppResult<Version> {
-        use diesel::{insert_into, RunQueryDsl};
-
-        let version = self.num.to_string();
-
-        let new_version = NewVersion::builder(crate_id, &version)
-            .features(serde_json::to_value(&self.features)?)
-            .maybe_license(self.license.as_deref())
-            .size(self.size)
-            .published_by(published_by)
-            .checksum(&self.checksum)
-            .maybe_links(self.links.as_deref())
-            .maybe_rust_version(self.rust_version.as_deref())
-            .yanked(self.yanked)
-            .maybe_created_at(self.created_at.as_ref())
-            .build();
-
-        let vers = new_version.save(connection, "someone@example.com")?;
-
-        let new_deps = self
-            .dependencies
-            .into_iter()
-            .map(|(crate_id, target)| {
-                (
-                    dependencies::version_id.eq(vers.id),
-                    dependencies::req.eq(">= 0"),
-                    dependencies::crate_id.eq(crate_id),
-                    dependencies::target.eq(target),
-                    dependencies::optional.eq(false),
-                    dependencies::default_features.eq(false),
-                    dependencies::features.eq(Vec::<String>::new()),
-                )
-            })
-            .collect::<Vec<_>>();
-        insert_into(dependencies::table)
-            .values(&new_deps)
-            .execute(connection)?;
-
-        Ok(vers)
-    }
-
     /// Consumes the builder and creates the version record in the database.
     ///
     /// # Panics
     ///
     /// Panics (and fails the test) if any part of inserting the version record fails.
-    pub async fn async_expect_build(
+    pub async fn expect_build(
         self,
         crate_id: i32,
         published_by: i32,
         connection: &mut AsyncPgConnection,
     ) -> Version {
-        self.async_build(crate_id, published_by, connection)
-            .await
-            .unwrap_or_else(|e| {
-                panic!("Unable to create version: {e:?}");
-            })
-    }
-
-    /// Consumes the builder and creates the version record in the database.
-    ///
-    /// # Panics
-    ///
-    /// Panics (and fails the test) if any part of inserting the version record fails.
-    #[track_caller]
-    pub fn expect_build(
-        self,
-        crate_id: i32,
-        published_by: i32,
-        connection: &mut PgConnection,
-    ) -> Version {
         self.build(crate_id, published_by, connection)
+            .await
             .unwrap_or_else(|e| {
                 panic!("Unable to create version: {e:?}");
             })
