@@ -85,6 +85,7 @@ async fn add_nonexistent_team() {
 async fn add_renamed_team() {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
     let owner_id = user.as_model().id;
@@ -104,7 +105,10 @@ async fn add_renamed_team() {
         .github_id(2001)
         .build();
 
-    new_team.create_or_update(&mut conn).unwrap();
+    new_team
+        .async_create_or_update(&mut async_conn)
+        .await
+        .unwrap();
 
     assert_eq!(
         teams::table.count().get_result::<i64>(&mut conn).unwrap(),
@@ -423,7 +427,8 @@ async fn crates_by_team_id() {
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
-        .create_or_update(&mut conn)
+        .async_create_or_update(&mut async_conn)
+        .await
         .unwrap();
     let krate = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
     add_team_to_crate(&t, &krate, user, &mut async_conn)
@@ -448,7 +453,10 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         .github_id(2001)
         .build();
 
-    let t = new_team.create_or_update(&mut conn).unwrap();
+    let t = new_team
+        .async_create_or_update(&mut async_conn)
+        .await
+        .unwrap();
 
     let krate = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
     add_team_to_crate(&t, &krate, user, &mut async_conn)

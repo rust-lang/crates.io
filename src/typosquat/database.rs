@@ -195,7 +195,7 @@ mod tests {
         let not_top_c = faker::crate_and_version(&mut conn, "c", "Unpopular", &user_a, 0)?;
 
         // Let's set up a team that owns both b and c, but not a.
-        let not_the_a_team = faker::team(&mut conn, "org", "team")?;
+        let not_the_a_team = faker::team(&mut async_conn, "org", "team").await?;
         add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut async_conn).await?;
         add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut async_conn).await?;
 

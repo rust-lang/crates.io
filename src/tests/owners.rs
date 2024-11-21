@@ -282,7 +282,10 @@ async fn check_ownership_two_crates() {
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
-    let team = new_team("team_foo").create_or_update(&mut conn).unwrap();
+    let team = new_team("team_foo")
+        .async_create_or_update(&mut async_conn)
+        .await
+        .unwrap();
     let krate_owned_by_team = CrateBuilder::new("foo", user.id).expect_build(&mut conn);
     add_team_to_crate(&team, &krate_owned_by_team, user, &mut async_conn)
         .await
@@ -317,7 +320,8 @@ async fn check_ownership_one_crate() {
     let user = user.as_model();
 
     let team = new_team("github:test_org:team_sloth")
-        .create_or_update(&mut conn)
+        .async_create_or_update(&mut async_conn)
+        .await
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
     add_team_to_crate(&team, &krate, user, &mut async_conn)
@@ -349,7 +353,8 @@ async fn add_existing_team() {
     let user = user.as_model();
 
     let t = new_team("github:test_org:bananas")
-        .create_or_update(&mut conn)
+        .async_create_or_update(&mut async_conn)
+        .await
         .unwrap();
     let krate = CrateBuilder::new("best_crate", user.id).expect_build(&mut conn);
     add_team_to_crate(&t, &krate, user, &mut async_conn)

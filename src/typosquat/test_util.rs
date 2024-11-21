@@ -10,6 +10,7 @@ pub mod faker {
     use super::*;
     use crate::tests::builders::CrateBuilder;
     use anyhow::anyhow;
+    use diesel_async::AsyncPgConnection;
 
     pub fn crate_and_version(
         conn: &mut PgConnection,
@@ -26,7 +27,7 @@ pub mod faker {
             .map_err(|err| anyhow!(err.to_string()))
     }
 
-    pub fn team(conn: &mut PgConnection, org: &str, team: &str) -> anyhow::Result<Team> {
+    pub async fn team(conn: &mut AsyncPgConnection, org: &str, team: &str) -> anyhow::Result<Team> {
         let login = format!("github:{org}:{team}");
         let team = NewTeam::builder()
             .login(&login)
@@ -35,7 +36,7 @@ pub mod faker {
             .name(team)
             .build();
 
-        Ok(team.create_or_update(conn)?)
+        Ok(team.async_create_or_update(conn).await?)
     }
 
     pub fn user(conn: &mut PgConnection, login: &str) -> QueryResult<User> {
