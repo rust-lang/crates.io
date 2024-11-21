@@ -415,7 +415,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .maybe_api_token_id(api_token_id)
             .action(VersionAction::Publish)
             .build()
-            .async_insert(conn)
+            .insert(conn)
             .await?;
 
         // Link this new version to all dependencies

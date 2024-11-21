@@ -240,7 +240,7 @@ pub async fn perform_version_yank_update(
         .maybe_api_token_id(api_token_id)
         .action(action)
         .build()
-        .async_insert(conn)
+        .insert(conn)
         .await?;
 
     SyncToGitIndex::new(&krate.name).enqueue(conn).await?;

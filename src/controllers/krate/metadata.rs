@@ -74,7 +74,7 @@ pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppRes
             .iter()
             .map(|(v, _)| v)
             .collect::<Vec<_>>();
-        let actions = VersionOwnerAction::async_for_versions(&mut conn, &versions).await?;
+        let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
         Some(
             versions_and_publishers
                 .into_iter()
@@ -284,7 +284,7 @@ pub async fn reverse_dependencies(
         .map(|(v, ..)| v)
         .collect::<Vec<_>>();
 
-    let actions = VersionOwnerAction::async_for_versions(&mut conn, &versions).await?;
+    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
 
     let versions = versions_and_publishers
         .into_iter()
