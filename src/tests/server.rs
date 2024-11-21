@@ -26,9 +26,11 @@ async fn user_agent_is_required() {
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_not_required_for_download() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("dl_no_ua", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
@@ -45,9 +47,11 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
         .with_user()
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("dl_no_ua", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let uri = "/api/v1/crates/dl_no_ua/0.99.0/download";
     let req = Request::get(uri).body("").unwrap();
@@ -64,9 +68,11 @@ async fn block_traffic_via_arbitrary_header_and_value() {
         .with_user()
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("dl_no_ua", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("dl_no_ua", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let req = Request::get("/api/v1/crates/dl_no_ua/0.99.0/download")
         // A request with a header value we want to block isn't allowed

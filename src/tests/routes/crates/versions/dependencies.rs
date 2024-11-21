@@ -12,15 +12,18 @@ pub struct Deps {
 #[tokio::test(flavor = "multi_thread")]
 async fn dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
-    let c1 = CrateBuilder::new("foo_deps", user.id).expect_build(&mut conn);
-    let c2 = CrateBuilder::new("bar_deps", user.id).expect_build(&mut conn);
+    let c1 = CrateBuilder::new("foo_deps", user.id)
+        .async_expect_build(&mut conn)
+        .await;
+    let c2 = CrateBuilder::new("bar_deps", user.id)
+        .async_expect_build(&mut conn)
+        .await;
     VersionBuilder::new("1.0.0")
         .dependency(&c2, None)
-        .async_expect_build(c1.id, user.id, &mut async_conn)
+        .async_expect_build(c1.id, user.id, &mut conn)
         .await;
 
     let deps: Deps = anon

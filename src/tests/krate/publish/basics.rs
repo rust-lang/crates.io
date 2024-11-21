@@ -146,12 +146,13 @@ async fn new_krate_twice_alt() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_duplicate_version() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database and then we'll try to publish the same version
     CrateBuilder::new("foo_dupe", user.as_model().id)
         .version("1.0.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut conn)
+        .await;
 
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;

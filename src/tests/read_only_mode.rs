@@ -27,11 +27,12 @@ async fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
         .with_token()
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_yank_read_only", user.as_model().id)
         .version("1.0.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
@@ -50,10 +51,12 @@ async fn can_download_crate_in_read_only_mode() {
         .await;
 
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_download_read_only", user.as_model().id)
         .version("1.0.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut async_conn)
+        .await;
 
     let response = anon
         .get::<()>("/api/v1/crates/foo_download_read_only/1.0.0/download")

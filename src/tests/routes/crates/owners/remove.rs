@@ -9,10 +9,12 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_invalid_json() {
     let (app, _, user) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     app.db_new_user("bar").await;
-    CrateBuilder::new("foo", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
@@ -52,9 +54,11 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_user() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -64,9 +68,11 @@ async fn test_unknown_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_team() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie
         .remove_named_owner("foo", "github:unknown:unknown")
@@ -82,8 +88,11 @@ async fn test_remove_uppercase_user() {
     let (app, _, cookie) = TestApp::full().with_user().await;
     let user2 = app.db_new_user("user2").await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
-    let krate = CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .async_expect_build(&mut async_conn)
+        .await;
 
     diesel::insert_into(crate_owners::table)
         .values(CrateOwner {
@@ -141,9 +150,11 @@ async fn test_remove_uppercase_team() {
         });
 
     let (app, _, cookie) = TestApp::full().with_github(github_mock).with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("crate42", cookie.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("crate42", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie.add_named_owner("crate42", "github:org:team").await;
     assert_eq!(response.status(), StatusCode::OK);

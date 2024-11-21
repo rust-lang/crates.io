@@ -11,10 +11,12 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_cargo_invite_owners() {
     let (app, _, owner) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let new_user = app.db_new_user("cilantro").await;
-    CrateBuilder::new("guacamole", owner.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("guacamole", owner.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let json = owner
         .add_named_owner("guacamole", &new_user.as_model().gh_login)
@@ -36,12 +38,14 @@ async fn test_cargo_invite_owners() {
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_cookie() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", cookie.as_model().id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -51,12 +55,14 @@ async fn owner_change_via_cookie() {
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_via_token() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -69,12 +75,14 @@ async fn owner_change_via_change_owner_token() {
         .with_scoped_token(None, Some(vec![EndpointScope::ChangeOwners]))
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -88,12 +96,14 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
     let (app, _, _, token) = TestApp::full()
         .with_scoped_token(crate_scopes, endpoint_scopes)
         .await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -107,12 +117,14 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
     let (app, _, _, token) = TestApp::full()
         .with_scoped_token(crate_scopes, endpoint_scopes)
         .await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -125,12 +137,14 @@ async fn owner_change_via_publish_token() {
         .with_scoped_token(None, Some(vec![EndpointScope::PublishUpdate]))
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -140,12 +154,14 @@ async fn owner_change_via_publish_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn owner_change_without_auth() {
     let (app, anon, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let user2 = app.db_new_user("user-2").await;
     let user2 = user2.as_model();
 
-    let krate = CrateBuilder::new("foo_crate", cookie.as_model().id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("foo_crate", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = anon.add_named_owner(&krate.name, &user2.gh_login).await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
@@ -155,9 +171,11 @@ async fn owner_change_without_auth() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_legacy_field() {
     let (app, _, user1) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo", user1.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", user1.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
     app.db_new_user("user2").await;
 
     let input = r#"{"users": ["user2"]}"#;
@@ -171,10 +189,12 @@ async fn test_owner_change_with_legacy_field() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_owner_change_with_invalid_json() {
     let (app, _, user) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     app.db_new_user("bar").await;
-    CrateBuilder::new("foo", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     // incomplete input
     let input = r#"{"owners": ["foo", }"#;
@@ -204,10 +224,12 @@ async fn test_owner_change_with_invalid_json() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_already_invited_user() {
     let (app, _, _, owner) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     app.db_new_user("invited_user").await;
-    CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
+    CrateBuilder::new("crate_name", owner.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().await.len(), 0);
@@ -232,10 +254,12 @@ async fn invite_already_invited_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invite_with_existing_expired_invite() {
     let (app, _, _, owner) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     app.db_new_user("invited_user").await;
-    let krate = CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
+    let krate = CrateBuilder::new("crate_name", owner.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().await.len(), 0);
@@ -273,9 +297,11 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_user() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie.add_named_owner("foo", "unknown").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -285,9 +311,11 @@ async fn test_unknown_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_unknown_team() {
     let (app, _, cookie) = TestApp::full().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo", cookie.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo", cookie.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = cookie
         .add_named_owner("foo", "github:unknown:unknown")
@@ -299,9 +327,11 @@ async fn test_unknown_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn max_invites_per_request() {
     let (app, _, _, owner) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("crate_name", owner.as_model().user_id).expect_build(&mut conn);
+    CrateBuilder::new("crate_name", owner.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let usernames = (0..11)
         .map(|i| format!("user_{i}"))
@@ -321,9 +351,11 @@ async fn max_invites_per_request() {
 #[tokio::test(flavor = "multi_thread")]
 async fn no_invite_emails_for_txn_rollback() {
     let (app, _, _, token) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("crate_name", token.as_model().user_id).expect_build(&mut conn);
+    CrateBuilder::new("crate_name", token.as_model().user_id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let mut usernames = (0..9).map(|i| format!("user_{i}")).collect::<Vec<String>>();
 

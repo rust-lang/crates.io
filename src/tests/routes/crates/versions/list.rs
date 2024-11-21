@@ -12,13 +12,15 @@ use serde_json::json;
 async fn versions() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version("0.5.1")
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut async_conn)
+        .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
     // versions
@@ -50,6 +52,7 @@ async fn test_unknown_crate() {
 async fn test_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
 
     let user = user.as_model();
     let versions = [
@@ -68,7 +71,7 @@ async fn test_sorting() {
     for version in versions {
         builder = builder.version(version);
     }
-    builder.expect_build(&mut conn);
+    builder.async_expect_build(&mut async_conn).await;
     // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
     // but 1.0.0-alpha.beta owns larger id number
     let versions_aliased = diesel::alias!(versions as versions_aliased);
@@ -87,7 +90,8 @@ async fn test_sorting() {
     // An additional crate to guarantee the accuracy of the response dataset and its total
     CrateBuilder::new("bar_versions", user.id)
         .version("0.0.1")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut async_conn)
+        .await;
 
     let expects = [
         "2.0.0-alpha",
@@ -152,13 +156,15 @@ async fn test_sorting() {
 async fn test_seek_based_pagination_semver_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut async_conn)
+        .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
     // versions
@@ -235,13 +241,15 @@ async fn test_seek_based_pagination_semver_sorting() {
 async fn test_seek_based_pagination_date_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn();
+    let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut async_conn)
+        .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
     // versions
@@ -320,10 +328,12 @@ async fn test_seek_based_pagination_date_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
     let user = user.as_model();
 
-    CrateBuilder::new("foo_versions", user.id).expect_build(&mut conn);
+    CrateBuilder::new("foo_versions", user.id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let url = "/api/v1/crates/foo_versions/versions";
     // Sort by semver

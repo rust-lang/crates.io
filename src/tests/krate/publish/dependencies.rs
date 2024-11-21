@@ -19,10 +19,12 @@ async fn invalid_dependency_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_renamed_dependency() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("package-name").rename("my-name");
 
@@ -36,10 +38,12 @@ async fn new_with_renamed_dependency() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_rename() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .publish_crate(
@@ -55,10 +59,12 @@ async fn invalid_dependency_rename() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_name_starts_with_digit() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .publish_crate(
@@ -74,10 +80,12 @@ async fn invalid_dependency_name_starts_with_digit() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_dependency_name_contains_unicode_chars() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .publish_crate(
@@ -93,10 +101,12 @@ async fn invalid_dependency_name_contains_unicode_chars() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_too_long_dependency_name() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .publish_crate(
@@ -112,10 +122,12 @@ async fn invalid_too_long_dependency_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn empty_dependency_name() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token
         .publish_crate(
@@ -131,10 +143,12 @@ async fn empty_dependency_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_with_underscore_renamed_dependency() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new-krate can depend on it
-    CrateBuilder::new("package-name", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("package-name", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("package-name").rename("_my-name");
 
@@ -150,13 +164,15 @@ async fn new_krate_with_dependency() {
     use crate::tests::routes::crates::versions::dependencies::Deps;
 
     let (app, anon, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new_dep can depend on it
     // The name choice of `foo-dep` is important! It has the property of
     // name != canon_crate_name(name) and is a regression test for
     // https://github.com/rust-lang/crates.io/issues/651
-    CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo-dep", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("foo-dep").version_req("1.0.0");
 
@@ -181,13 +197,15 @@ async fn new_krate_with_dependency() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_broken_dependency_requirement() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new_dep can depend on it
     // The name choice of `foo-dep` is important! It has the property of
     // name != canon_crate_name(name) and is a regression test for
     // https://github.com/rust-lang/crates.io/issues/651
-    CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo-dep", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("foo-dep").version_req("broken");
 
@@ -201,9 +219,11 @@ async fn new_krate_with_broken_dependency_requirement() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reject_new_krate_with_non_exact_dependency() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo-dep", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     // Use non-exact name for the dependency
     let dependency = DependencyBuilder::new("foo_dep");
@@ -219,9 +239,11 @@ async fn reject_new_krate_with_non_exact_dependency() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_crate_allow_empty_alternative_registry_dependency() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("foo-dep", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo-dep", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("foo-dep").registry("");
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0").dependency(dependency);
@@ -246,10 +268,12 @@ async fn reject_new_crate_with_alternative_registry_dependency() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_wildcard_dependency() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert a crate directly into the database so that new_wild can depend on it
-    CrateBuilder::new("foo_wild", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("foo_wild", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dependency = DependencyBuilder::new("foo_wild").version_req("*");
 
@@ -279,11 +303,15 @@ async fn new_krate_dependency_missing() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_sorts_deps() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Insert crates directly into the database so that two-deps can depend on it
-    CrateBuilder::new("dep-a", user.as_model().id).expect_build(&mut conn);
-    CrateBuilder::new("dep-b", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("dep-a", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
+    CrateBuilder::new("dep-b", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let dep_a = DependencyBuilder::new("dep-a");
     let dep_b = DependencyBuilder::new("dep-b");
@@ -320,10 +348,14 @@ async fn test_dep_limit() {
         .with_token()
         .await;
 
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
-    CrateBuilder::new("dep-a", user.as_model().id).expect_build(&mut conn);
-    CrateBuilder::new("dep-b", user.as_model().id).expect_build(&mut conn);
+    CrateBuilder::new("dep-a", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
+    CrateBuilder::new("dep-b", user.as_model().id)
+        .async_expect_build(&mut conn)
+        .await;
 
     let crate_to_publish = PublishBuilder::new("foo", "1.0.0")
         .dependency(DependencyBuilder::new("dep-a"))

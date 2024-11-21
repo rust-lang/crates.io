@@ -63,14 +63,15 @@ impl<T: RequestHelper> YankRequestHelper for T {
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_by_a_non_owner_fails() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
 
     CrateBuilder::new("foo_not", another_user.id)
         .version("1.0.0")
-        .expect_build(&mut conn);
+        .async_expect_build(&mut conn)
+        .await;
 
     let response = token.yank("foo_not", "1.0.0").await;
     assert_eq!(response.status(), StatusCode::FORBIDDEN);
