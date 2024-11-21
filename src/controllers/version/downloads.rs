@@ -6,7 +6,6 @@ use super::version_and_crate;
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
-use crate::tasks::spawn_blocking;
 use crate::util::diesel::prelude::*;
 use crate::util::errors::{version_not_found, AppResult};
 use crate::util::{redirect, RequestUtils};
@@ -16,7 +15,6 @@ use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::{Duration, NaiveDate, Utc};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use http::request::Parts;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
@@ -41,33 +39,30 @@ pub async fn downloads(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<ErasedJson> {
+    use diesel_async::RunQueryDsl;
+
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
 
     let mut conn = app.db_read().await?;
     let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
-    spawn_blocking(move || {
-        use diesel::RunQueryDsl;
 
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let cutoff_end_date = req
+        .query()
+        .get("before_date")
+        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
+        .unwrap_or_else(|| Utc::now().date_naive());
+    let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
-        let cutoff_end_date = req
-            .query()
-            .get("before_date")
-            .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
-            .unwrap_or_else(|| Utc::now().date_naive());
-        let cutoff_start_date = cutoff_end_date - Duration::days(89);
+    let downloads = VersionDownload::belonging_to(&version)
+        .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
+        .order(version_downloads::date)
+        .load(&mut conn)
+        .await?
+        .into_iter()
+        .map(VersionDownload::into)
+        .collect::<Vec<EncodableVersionDownload>>();
 
-        let downloads = VersionDownload::belonging_to(&version)
-            .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
-            .order(version_downloads::date)
-            .load(conn)?
-            .into_iter()
-            .map(VersionDownload::into)
-            .collect::<Vec<EncodableVersionDownload>>();
-
-        Ok(json!({ "version_downloads": downloads }))
-    })
-    .await?
+    Ok(json!({ "version_downloads": downloads }))
 }
