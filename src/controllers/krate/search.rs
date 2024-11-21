@@ -6,7 +6,6 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
 use diesel::sql_types::{Array, Bool, Text};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
 use diesel_full_text_search::*;
 use http::request::Parts;
@@ -49,9 +48,7 @@ use crate::util::RequestUtils;
 pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     use diesel_async::RunQueryDsl;
 
-    let conn = app.db_read().await?;
-
-    let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
+    let mut conn = app.db_read().await?;
 
     use diesel::sql_types::Float;
     use seek::*;
@@ -95,7 +92,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 
     let mut seek: Option<Seek> = None;
     let mut query = filter_params
-        .make_query(&req, conn)
+        .make_query(&req, &mut conn)
         .await?
         .inner_join(crate_downloads::table)
         .left_join(recent_crate_downloads::table)
@@ -177,7 +174,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
     // not been provided. This way clients relying on meta.next_page will use the faster seek-based
     // paginations, while client hardcoding pages handling will use the slower offset-based code.
-    let (total, next_page, prev_page, data, conn) = if !explicit_page && seek.is_some() {
+    let (total, next_page, prev_page, data) = if !explicit_page && seek.is_some() {
         let seek = seek.unwrap();
         if let Some(condition) = seek
             .after(&pagination.page)?
@@ -192,29 +189,27 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
         //
         // If this becomes a problem in the future the crates count could be denormalized, at least
         // for the filterless happy path.
-        let count_query = filter_params.make_query(&req, conn).await?.count();
+        let count_query = filter_params.make_query(&req, &mut conn).await?.count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
-        let data = query.load::<Record>(conn).instrument(span).await?;
+        let data = query.load::<Record>(&mut conn).instrument(span).await?;
         (
             data.total(),
             data.next_seek_params(|last| seek.to_payload(last))?
                 .map(|p| req.query_with_params(p)),
             None,
             data.into_iter().collect::<Vec<_>>(),
-            conn,
         )
     } else {
-        let count_query = filter_params.make_query(&req, conn).await?.count();
+        let count_query = filter_params.make_query(&req, &mut conn).await?.count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
-        let data = query.load::<Record>(conn).instrument(span).await?;
+        let data = query.load::<Record>(&mut conn).instrument(span).await?;
         (
             data.total(),
             data.next_page_params().map(|p| req.query_with_params(p)),
             data.prev_page_params().map(|p| req.query_with_params(p)),
             data.into_iter().collect::<Vec<_>>(),
-            conn,
         )
     };
 
@@ -223,7 +218,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let span = info_span!("db.query", message = "SELECT ... FROM versions");
     let versions: Vec<Version> = Version::belonging_to(&crates)
         .filter(versions::yanked.eq(false))
-        .load(conn)
+        .load(&mut conn)
         .instrument(span)
         .await?;
     let versions = versions
