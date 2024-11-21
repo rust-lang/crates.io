@@ -5,7 +5,7 @@ use crate::{
 };
 
 use super::VersionBuilder;
-use crate::models::async_update_default_version;
+use crate::models::update_default_version;
 use crate::schema::crate_downloads;
 use crate::util::diesel::prelude::*;
 use chrono::NaiveDateTime;
@@ -177,7 +177,7 @@ impl<'a> CrateBuilder<'a> {
                 .await?;
         }
 
-        async_update_default_version(krate.id, connection).await?;
+        update_default_version(krate.id, connection).await?;
 
         Ok(krate)
     }

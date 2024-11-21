@@ -1,4 +1,4 @@
-use crate::models::async_update_default_version;
+use crate::models::update_default_version;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
@@ -26,7 +26,7 @@ impl BackgroundJob for UpdateDefaultVersion {
 
         info!("Updating default version for crate {crate_id}");
         let mut conn = ctx.deadpool.get().await?;
-        async_update_default_version(crate_id, &mut conn).await?;
+        update_default_version(crate_id, &mut conn).await?;
 
         Ok(())
     }

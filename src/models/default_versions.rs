@@ -1,8 +1,7 @@
 use crate::schema::{default_versions, versions};
 use crate::sql::SemverVersion;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// A subset of the columns of the `versions` table.
 ///
@@ -57,13 +56,11 @@ impl Ord for Version {
 ///
 /// The default version is then written to the `default_versions` table.
 #[instrument(skip(conn))]
-pub async fn async_update_default_version(
+pub async fn update_default_version(
     crate_id: i32,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
-    use diesel_async::RunQueryDsl;
-
-    let default_version = async_calculate_default_version(crate_id, conn).await?;
+    let default_version = calculate_default_version(crate_id, conn).await?;
 
     debug!(
         "Updating default version to {} (id: {})…",
@@ -84,49 +81,13 @@ pub async fn async_update_default_version(
     Ok(())
 }
 
-/// Updates the `default_versions` table entry for the specified crate.
-///
-/// This function first loads all versions of the crate from the database,
-/// then determines the default version based on the following criteria:
-///
-/// 1. The highest non-prerelease version that is not yanked.
-/// 2. The highest non-yanked version.
-/// 3. The highest version.
-///
-/// The default version is then written to the `default_versions` table.
-#[instrument(skip(conn))]
-pub fn update_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
-    use diesel::RunQueryDsl;
-
-    let default_version = calculate_default_version(crate_id, conn)?;
-
-    debug!(
-        "Updating default version to {} (id: {})…",
-        default_version.num, default_version.id
-    );
-
-    diesel::insert_into(default_versions::table)
-        .values((
-            default_versions::crate_id.eq(crate_id),
-            default_versions::version_id.eq(default_version.id),
-        ))
-        .on_conflict(default_versions::crate_id)
-        .do_update()
-        .set(default_versions::version_id.eq(default_version.id))
-        .execute(conn)?;
-
-    Ok(())
-}
-
 /// Verifies that the default version for the specified crate is up-to-date.
 #[instrument(skip(conn))]
-pub async fn async_verify_default_version(
+pub async fn verify_default_version(
     crate_id: i32,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
-    use diesel_async::RunQueryDsl;
-
-    let calculated = async_calculate_default_version(crate_id, conn).await?;
+    let calculated = calculate_default_version(crate_id, conn).await?;
 
     let saved = default_versions::table
         .select(default_versions::version_id)
@@ -154,44 +115,11 @@ pub async fn async_verify_default_version(
     Ok(())
 }
 
-/// Verifies that the default version for the specified crate is up-to-date.
-#[instrument(skip(conn))]
-pub fn verify_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<()> {
-    use diesel::RunQueryDsl;
-
-    let calculated = calculate_default_version(crate_id, conn)?;
-
-    let saved = default_versions::table
-        .select(default_versions::version_id)
-        .filter(default_versions::crate_id.eq(crate_id))
-        .first::<i32>(conn)
-        .optional()?;
-
-    if let Some(saved) = saved {
-        if saved == calculated.id {
-            debug!("Default version for crate {crate_id} is up to date");
-        } else {
-            warn!(
-                "Default version for crate {crate_id} is outdated (expected: {saved}, actual: {})",
-                calculated.id,
-            );
-        }
-    } else {
-        warn!(
-            "Default version for crate {crate_id} is missing (expected: {})",
-            calculated.id
-        );
-    }
-
-    Ok(())
-}
-
-async fn async_calculate_default_version(
+async fn calculate_default_version(
     crate_id: i32,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<Version> {
     use diesel::result::Error::NotFound;
-    use diesel_async::RunQueryDsl;
 
     debug!("Loading all versions for the crate…");
     let versions = versions::table
@@ -199,21 +127,6 @@ async fn async_calculate_default_version(
         .select(Version::as_returning())
         .load::<Version>(conn)
         .await?;
-
-    debug!("Found {} versions", versions.len());
-
-    versions.into_iter().max().ok_or(NotFound)
-}
-
-fn calculate_default_version(crate_id: i32, conn: &mut impl Conn) -> QueryResult<Version> {
-    use diesel::result::Error::NotFound;
-    use diesel::RunQueryDsl;
-
-    debug!("Loading all versions for the crate…");
-    let versions = versions::table
-        .filter(versions::crate_id.eq(crate_id))
-        .select(Version::as_returning())
-        .load::<Version>(conn)?;
 
     debug!("Found {} versions", versions.len());
 
@@ -332,8 +245,6 @@ mod tests {
     }
 
     async fn create_crate(name: &str, conn: &mut AsyncPgConnection) -> i32 {
-        use diesel_async::RunQueryDsl;
-
         diesel::insert_into(crates::table)
             .values(crates::name.eq(name))
             .returning(crates::id)
@@ -343,8 +254,6 @@ mod tests {
     }
 
     async fn create_version(crate_id: i32, num: &str, conn: &mut AsyncPgConnection) {
-        use diesel_async::RunQueryDsl;
-
         diesel::insert_into(versions::table)
             .values((
                 versions::crate_id.eq(crate_id),
@@ -359,8 +268,6 @@ mod tests {
     }
 
     async fn get_default_version(crate_id: i32, conn: &mut AsyncPgConnection) -> String {
-        use diesel_async::RunQueryDsl;
-
         default_versions::table
             .inner_join(versions::table)
             .select(versions::num)
@@ -378,14 +285,14 @@ mod tests {
         let crate_id = create_crate("foo", conn).await;
         create_version(crate_id, "1.0.0", conn).await;
 
-        async_update_default_version(crate_id, conn).await.unwrap();
+        update_default_version(crate_id, conn).await.unwrap();
         assert_eq!(get_default_version(crate_id, conn).await, "1.0.0");
 
         create_version(crate_id, "1.1.0", conn).await;
         create_version(crate_id, "1.0.1", conn).await;
         assert_eq!(get_default_version(crate_id, conn).await, "1.0.0");
 
-        async_update_default_version(crate_id, conn).await.unwrap();
+        update_default_version(crate_id, conn).await.unwrap();
         assert_eq!(get_default_version(crate_id, conn).await, "1.1.0");
     }
 }

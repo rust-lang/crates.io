@@ -1,6 +1,6 @@
 use crate::dialoguer;
 use anyhow::Context;
-use crates_io::models::async_update_default_version;
+use crates_io::models::update_default_version;
 use crates_io::schema::crates;
 use crates_io::storage::Storage;
 use crates_io::worker::jobs;
@@ -85,7 +85,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
 
         info!(%crate_name, %crate_id, "Updating default version in the database");
-        if let Err(error) = async_update_default_version(crate_id, conn).await {
+        if let Err(error) = update_default_version(crate_id, conn).await {
             warn!(%crate_name, %crate_id, ?error, "Failed to update default version");
         }
 
