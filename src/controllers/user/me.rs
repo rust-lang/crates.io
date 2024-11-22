@@ -1,10 +1,11 @@
 use crate::auth::AuthCheck;
-use crate::util::diesel::prelude::*;
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use std::collections::HashMap;
 
@@ -20,8 +21,6 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 
 /// Handles the `GET /me` route.
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
@@ -105,7 +104,6 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 /// Handles the `PUT /confirm/:email_token` route
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     use diesel::update;
-    use diesel_async::RunQueryDsl;
 
     let mut conn = state.db_write().await?;
 
@@ -124,7 +122,6 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
 /// Handles `PUT /me/email_notifications` route
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
     use diesel::pg::upsert::excluded;
-    use diesel_async::RunQueryDsl;
 
     let (parts, body) = req.0.into_parts();
 

@@ -4,7 +4,6 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, forbidden, internal, AppResult};
 use crate::util::{BytesRequest, RequestUtils};
 use crate::views::{
@@ -17,8 +16,9 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::{Duration, Utc};
 use diesel::pg::Pg;
+use diesel::prelude::*;
 use diesel::sql_types::Bool;
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
@@ -90,8 +90,6 @@ async fn prepare_list(
     filter: ListFilter,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PrivateListResponse> {
-    use diesel_async::RunQueryDsl;
-
     let pagination: PaginationOptions = PaginationOptions::builder()
         .enable_pages(false)
         .enable_seek(true)

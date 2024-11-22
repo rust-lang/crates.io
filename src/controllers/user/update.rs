@@ -3,11 +3,12 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::NewEmail;
 use crate::schema::{emails, users};
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
 use axum::Json;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use lettre::Address;
 use secrecy::{ExposeSecret, SecretString};
@@ -30,8 +31,6 @@ pub async fn update_user(
     req: Parts,
     Json(user_update): Json<UserUpdate>,
 ) -> AppResult<Response> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = state.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
 

@@ -1,10 +1,10 @@
 //! Endpoint for versions of a crate
 
-use crate::util::diesel::prelude::*;
 use axum::extract::Path;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::not;
+use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{future, TryStreamExt};
 use http::request::Parts;
@@ -93,7 +93,6 @@ async fn list_by_date(
     req: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
-    use diesel_async::RunQueryDsl;
     use seek::*;
 
     let mut query = versions::table

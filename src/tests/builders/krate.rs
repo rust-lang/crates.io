@@ -7,9 +7,9 @@ use crate::{
 use super::VersionBuilder;
 use crate::models::update_default_version;
 use crate::schema::crate_downloads;
-use crate::util::diesel::prelude::*;
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// A builder to create crate records for the purpose of inserting directly into the database.
 /// If you want to test logic that happens as part of a publish request, use `PublishBuilder`
@@ -120,7 +120,6 @@ impl<'a> CrateBuilder<'a> {
 
     pub async fn build(mut self, connection: &mut AsyncPgConnection) -> AppResult<Crate> {
         use diesel::{insert_into, select, update};
-        use diesel_async::RunQueryDsl;
 
         let mut krate = self.krate.create(connection, self.owner_id).await?;
 

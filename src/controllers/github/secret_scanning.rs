@@ -2,7 +2,6 @@ use crate::app::AppState;
 use crate::email::Email;
 use crate::models::{ApiToken, User};
 use crate::schema::api_tokens;
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, AppResult, BoxedAppError};
 use crate::util::token::HashedToken;
 use anyhow::{anyhow, Context};
@@ -10,7 +9,8 @@ use axum::body::Bytes;
 use axum::Json;
 use base64::{engine::general_purpose, Engine};
 use crates_io_github::GitHubPublicKey;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::HeaderMap;
 use p256::ecdsa::signature::Verifier;
 use p256::ecdsa::VerifyingKey;
@@ -132,8 +132,6 @@ async fn alert_revoke_token(
     alert: &GitHubSecretAlert,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
-    use diesel_async::RunQueryDsl;
-
     let hashed_token = HashedToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`

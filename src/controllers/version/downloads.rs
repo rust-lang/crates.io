@@ -6,7 +6,6 @@ use super::version_and_crate;
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{version_not_found, AppResult};
 use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
@@ -15,6 +14,8 @@ use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::{Duration, NaiveDate, Utc};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
 /// Handles the `GET /crates/:crate_id/:version/download` route.
@@ -39,8 +40,6 @@ pub async fn downloads(
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }

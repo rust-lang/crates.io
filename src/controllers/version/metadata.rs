@@ -10,7 +10,8 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use http::StatusCode;
 use serde::Deserialize;
@@ -23,7 +24,6 @@ use crate::models::{
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
@@ -51,8 +51,6 @@ pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     if semver::Version::parse(&version).is_err() {
         return Err(version_not_found(&crate_name, &version));
     }
@@ -182,8 +180,6 @@ pub async fn perform_version_yank_update(
     yanked: Option<bool>,
     yank_message: Option<String>,
 ) -> AppResult<()> {
-    use diesel_async::RunQueryDsl;
-
     let api_token_id = auth.api_token_id();
     let user = auth.user();
     let owners = krate.owners(conn).await?;
