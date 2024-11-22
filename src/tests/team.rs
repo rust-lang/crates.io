@@ -91,7 +91,7 @@ async fn add_nonexistent_team() {
 
 /// Test adding a renamed team
 #[tokio::test(flavor = "multi_thread")]
-async fn add_renamed_team() {
+async fn add_renamed_team() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
@@ -115,16 +115,9 @@ async fn add_renamed_team() {
         .github_id(2001)
         .build();
 
-    new_team.create_or_update(&mut conn).await.unwrap();
+    new_team.create_or_update(&mut conn).await?;
 
-    assert_eq!(
-        teams::table
-            .count()
-            .get_result::<i64>(&mut conn)
-            .await
-            .unwrap(),
-        1
-    );
+    assert_eq!(teams::table.count().get_result::<i64>(&mut conn).await?, 1);
 
     token
         .add_named_owner("foo_renamed_team", "github:test-org:core")
@@ -134,11 +127,13 @@ async fn add_renamed_team() {
     let json = anon.crate_owner_teams("foo_renamed_team").await.good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:test-org:core");
+
+    Ok(())
 }
 
 /// Test adding team names with mixed case, when on the team
 #[tokio::test(flavor = "multi_thread")]
-async fn add_team_mixed_case() {
+async fn add_team_mixed_case() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
@@ -153,11 +148,8 @@ async fn add_team_mixed_case() {
         .await
         .good();
 
-    let krate: Crate = Crate::by_name("foo_mixed_case")
-        .first(&mut conn)
-        .await
-        .unwrap();
-    let owners = krate.owners(&mut conn).await.unwrap();
+    let krate: Crate = Crate::by_name("foo_mixed_case").first(&mut conn).await?;
+    let owners = krate.owners(&mut conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -165,10 +157,12 @@ async fn add_team_mixed_case() {
     let json = anon.crate_owner_teams("foo_mixed_case").await.good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:test-org:core");
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn add_team_as_org_owner() {
+async fn add_team_as_org_owner() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-org-owner").await;
@@ -183,11 +177,8 @@ async fn add_team_as_org_owner() {
         .await
         .good();
 
-    let krate: Crate = Crate::by_name("foo_org_owner")
-        .first(&mut conn)
-        .await
-        .unwrap();
-    let owners = krate.owners(&mut conn).await.unwrap();
+    let krate: Crate = Crate::by_name("foo_org_owner").first(&mut conn).await?;
+    let owners = krate.owners(&mut conn).await?;
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -195,6 +186,8 @@ async fn add_team_as_org_owner() {
     let json = anon.crate_owner_teams("foo_org_owner").await.good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:test-org:core");
+
+    Ok(())
 }
 
 /// Test adding team as owner when not on it
@@ -459,28 +452,27 @@ async fn add_owners_as_team_owner() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn crates_by_team_id() {
+async fn crates_by_team_id() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
         .create_or_update(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     let krate = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&t, &krate, user, &mut conn)
-        .await
-        .unwrap();
+    add_team_to_crate(&t, &krate, user, &mut conn).await?;
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 1);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn crates_by_team_id_not_including_deleted_owners() {
+async fn crates_by_team_id_not_including_deleted_owners() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
@@ -492,16 +484,16 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         .github_id(2001)
         .build();
 
-    let t = new_team.create_or_update(&mut conn).await.unwrap();
+    let t = new_team.create_or_update(&mut conn).await?;
 
     let krate = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&t, &krate, user, &mut conn)
-        .await
-        .unwrap();
+    add_team_to_crate(&t, &krate, user, &mut conn).await?;
     krate.owner_remove(&mut conn, &t.login).await.unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 0);
+
+    Ok(())
 }

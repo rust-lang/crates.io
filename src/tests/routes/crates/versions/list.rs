@@ -10,7 +10,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn versions() {
+async fn versions() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -29,8 +29,7 @@ async fn versions() {
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let response = anon.get::<()>("/api/v1/crates/foo_versions/versions").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -38,6 +37,8 @@ async fn versions() {
         ".versions[].created_at" => "[datetime]",
         ".versions[].updated_at" => "[datetime]",
     });
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -50,7 +51,7 @@ async fn test_unknown_crate() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_sorting() {
+async fn test_sorting() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
 
@@ -85,8 +86,7 @@ async fn test_sorting() {
         .filter(versions::num.eq("1.0.0-beta.2"))
         .set(versions::created_at.eq(created_at_by_num("1.0.0-alpha.beta").assume_not_null()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     // An additional crate to guarantee the accuracy of the response dataset and its total
     CrateBuilder::new("bar_versions", user.id)
@@ -151,10 +151,12 @@ async fn test_sorting() {
         }
         assert_eq!(calls as usize, expects.len() + 1);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_seek_based_pagination_semver_sorting() {
+async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -173,8 +175,7 @@ async fn test_seek_based_pagination_semver_sorting() {
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["1.0.0", "0.5.1", "0.5.0"];
@@ -236,10 +237,12 @@ async fn test_seek_based_pagination_semver_sorting() {
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total, 0);
     assert_eq!(json.meta.release_tracks, None);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_seek_based_pagination_date_sorting() {
+async fn test_seek_based_pagination_date_sorting() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -258,8 +261,7 @@ async fn test_seek_based_pagination_date_sorting() {
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let url = "/api/v1/crates/foo_versions/versions";
     let expects = ["0.5.0", "1.0.0", "0.5.1"];
@@ -324,6 +326,8 @@ async fn test_seek_based_pagination_date_sorting() {
     assert!(json.meta.next_page.is_none());
     assert_eq!(json.meta.total, 0);
     assert_eq!(json.meta.release_tracks, None);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]

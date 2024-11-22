@@ -13,7 +13,7 @@ use regex::Regex;
 use std::sync::LazyLock;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn index() {
+async fn index() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
 
@@ -26,8 +26,7 @@ async fn index() {
         .values(new_user("foo"))
         .returning(users::id)
         .get_result(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let krate = CrateBuilder::new("fooindex", user_id)
         .expect_build(&mut conn)
@@ -39,11 +38,13 @@ async fn index() {
         assert_eq!(json.crates[0].name, krate.name);
         assert_eq!(json.crates[0].id, krate.name);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-async fn index_queries() {
+async fn index_queries() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -171,15 +172,10 @@ async fn index_queries() {
     insert_into(categories::table)
         .values(cats)
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
-    Category::update_crate(&mut conn, krate.id, &["cat1"])
-        .await
-        .unwrap();
-    Category::update_crate(&mut conn, krate2.id, &["cat1::bar"])
-        .await
-        .unwrap();
+    Category::update_crate(&mut conn, krate.id, &["cat1"]).await?;
+    Category::update_crate(&mut conn, krate2.id, &["cat1::bar"]).await?;
 
     for cl in search_both(&anon, "category=cat1").await {
         assert_eq!(cl.crates.len(), 2);
@@ -210,10 +206,12 @@ async fn index_queries() {
         assert_eq!(cl.crates.len(), 0);
         assert_eq!(cl.meta.total, 0);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn search_includes_crates_where_name_is_stopword() {
+async fn search_includes_crates_where_name_is_stopword() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -230,10 +228,12 @@ async fn search_includes_crates_where_name_is_stopword() {
         assert_eq!(json.crates.len(), 1);
         assert_eq!(json.meta.total, 1);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn exact_match_first_on_queries() {
+async fn exact_match_first_on_queries() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -278,11 +278,13 @@ async fn exact_match_first_on_queries() {
         assert_eq!(json.crates[1].name, "bar-exact");
         assert_eq!(json.crates[2].name, "foo_exact");
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-async fn index_sorting() {
+async fn index_sorting() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -321,35 +323,29 @@ async fn index_sorting() {
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
         .set(crates::created_at.eq(now - 3.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
         .set(crates::updated_at.eq(now - 5.days()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate4)
         .set(crates::updated_at.eq(now))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     // Sort by downloads
     for json in search_both(&anon, "sort=downloads").await {
@@ -508,11 +504,13 @@ async fn index_sorting() {
     assert_eq!(resp[3].crates[0].name, "other_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
 #[allow(clippy::cognitive_complexity)]
-async fn ignore_exact_match_on_queries_with_sort() {
+async fn ignore_exact_match_on_queries_with_sort() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -548,45 +546,37 @@ async fn ignore_exact_match_on_queries_with_sort() {
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate3)
         .set(crates::created_at.eq(now - 2.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate4)
         .set(crates::created_at.eq(now - 3.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate2)
         .set(crates::updated_at.eq(now - 5.days()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate3)
         .set(crates::updated_at.eq(now - 10.seconds()))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     update(&krate4)
         .set(crates::updated_at.eq(now))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     // Sort by downloads, order always the same no matter the crate name query
     for json in search_both(&anon, "q=foo_sort&sort=downloads").await {
@@ -651,10 +641,12 @@ async fn ignore_exact_match_on_queries_with_sort() {
         assert_eq!(json.crates[1].name, "baz_sort");
         assert_eq!(json.crates[2].name, "foo_sort");
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn multiple_ids() {
+async fn multiple_ids() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -683,10 +675,12 @@ async fn multiple_ids() {
         assert_eq!(json.crates[1].name, "baz");
         assert_eq!(json.crates[2].name, "foo");
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn loose_search_order() {
+async fn loose_search_order() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -734,10 +728,12 @@ async fn loose_search_order() {
         assert_eq!(search_temp.meta.total, 3);
         assert_eq!(search_temp.crates.len(), 3);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn index_include_yanked() {
+async fn index_include_yanked() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -802,10 +798,12 @@ async fn index_include_yanked() {
             [("1.0.0", false), ("2.0.0", false), ("2.0.0", false),]
         );
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn yanked_versions_are_not_considered_for_max_version() {
+async fn yanked_versions_are_not_considered_for_max_version() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -823,10 +821,12 @@ async fn yanked_versions_are_not_considered_for_max_version() {
         assert!(!json.crates[0].yanked);
         assert_eq!(json.crates[0].max_version, "1.0.0");
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn max_stable_version() {
+async fn max_stable_version() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -847,6 +847,8 @@ async fn max_stable_version() {
         assert!(!json.crates[0].yanked);
         assert_eq!(json.crates[0].max_stable_version, Some("1.0.0".to_string()));
     }
+
+    Ok(())
 }
 
 /// Given two crates, one with downloads less than 90 days ago, the
@@ -856,7 +858,7 @@ async fn max_stable_version() {
 /// and total downloads counts are returned in downloads, and that
 /// these numbers do not overlap.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_recent_download_count() {
+async fn test_recent_download_count() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -888,13 +890,15 @@ async fn test_recent_download_count() {
         assert_eq!(json.crates[1].recent_downloads, Some(0));
         assert_eq!(json.crates[1].downloads, 10);
     }
+
+    Ok(())
 }
 
 /// Given one crate with zero downloads, check that the crate
 /// still shows up in index results, but that it displays 0
 /// for both recent downloads and downloads.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_zero_downloads() {
+async fn test_zero_downloads() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -913,13 +917,15 @@ async fn test_zero_downloads() {
         assert_eq!(json.crates[0].recent_downloads, Some(0));
         assert_eq!(json.crates[0].downloads, 0);
     }
+
+    Ok(())
 }
 
 /// Given two crates, one with more all-time downloads, the other with
 /// more downloads in the past 90 days, check that the index page for
 /// categories and keywords is sorted by recent downloads by default.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_default_sort_recent() {
+async fn test_default_sort_recent() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -959,15 +965,10 @@ async fn test_default_sort_recent() {
     insert_into(categories::table)
         .values(new_category("Animal", "animal", "animal crates"))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
-    Category::update_crate(&mut conn, green_crate.id, &["animal"])
-        .await
-        .unwrap();
-    Category::update_crate(&mut conn, potato_crate.id, &["animal"])
-        .await
-        .unwrap();
+    Category::update_crate(&mut conn, green_crate.id, &["animal"]).await?;
+    Category::update_crate(&mut conn, potato_crate.id, &["animal"]).await?;
 
     // test that index for categories is sorted by recent_downloads
     // by default
@@ -983,10 +984,12 @@ async fn test_default_sort_recent() {
         assert_eq!(json.crates[1].recent_downloads, Some(0));
         assert_eq!(json.crates[1].downloads, 20);
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn pagination_links_included_if_applicable() {
+async fn pagination_links_included_if_applicable() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -1034,10 +1037,12 @@ async fn pagination_links_included_if_applicable() {
     for p in [page1, page2, page3, page4] {
         assert!(default_versions_iter(&p.crates).all(Option::is_some));
     }
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn seek_based_pagination() {
+async fn seek_based_pagination() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -1089,10 +1094,12 @@ async fn seek_based_pagination() {
         ],
         results
     );
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pages_work_even_with_seek_based_pagination() {
+async fn test_pages_work_even_with_seek_based_pagination() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -1118,6 +1125,8 @@ async fn test_pages_work_even_with_seek_based_pagination() {
     assert!(second.meta.next_page.unwrap().contains("page=3"));
     assert_eq!(second.meta.total, 3);
     assert!(default_versions_iter(&second.crates).all(Option::is_some));
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -1186,7 +1195,7 @@ async fn crates_by_user_id() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn crates_by_user_id_not_including_deleted_owners() {
+async fn crates_by_user_id_not_including_deleted_owners() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -1200,6 +1209,8 @@ async fn crates_by_user_id_not_including_deleted_owners() {
         assert_eq!(response.crates.len(), 0);
         assert_eq!(response.meta.total, 0);
     }
+
+    Ok(())
 }
 
 static PAGE_RE: LazyLock<Regex> =

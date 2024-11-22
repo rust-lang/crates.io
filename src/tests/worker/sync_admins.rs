@@ -9,7 +9,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_sync_admins_job() {
+async fn test_sync_admins_job() -> anyhow::Result<()> {
     let mock_response = mock_permission(vec![
         mock_person("existing-admin", 1),
         mock_person("new-admin", 3),
@@ -25,25 +25,19 @@ async fn test_sync_admins_job() {
     let (app, _) = TestApp::full().with_team_repo(team_repo).empty().await;
     let mut conn = app.db_conn().await;
 
-    create_user("existing-admin", 1, true, &mut conn)
-        .await
-        .unwrap();
-    create_user("obsolete-admin", 2, true, &mut conn)
-        .await
-        .unwrap();
-    create_user("new-admin", 3, false, &mut conn).await.unwrap();
-    create_user("unrelated-user", 42, false, &mut conn)
-        .await
-        .unwrap();
+    create_user("existing-admin", 1, true, &mut conn).await?;
+    create_user("obsolete-admin", 2, true, &mut conn).await?;
+    create_user("new-admin", 3, false, &mut conn).await?;
+    create_user("unrelated-user", 42, false, &mut conn).await?;
 
-    let admins = get_admins(&mut conn).await.unwrap();
+    let admins = get_admins(&mut conn).await?;
     let expected_admins = vec![("existing-admin".into(), 1), ("obsolete-admin".into(), 2)];
     assert_eq!(admins, expected_admins);
 
-    SyncAdmins.enqueue(&mut conn).await.unwrap();
+    SyncAdmins.enqueue(&mut conn).await?;
     app.run_pending_background_jobs().await;
 
-    let admins = get_admins(&mut conn).await.unwrap();
+    let admins = get_admins(&mut conn).await?;
     let expected_admins = vec![("existing-admin".into(), 1), ("new-admin".into(), 3)];
     assert_eq!(admins, expected_admins);
 
@@ -51,10 +45,12 @@ async fn test_sync_admins_job() {
 
     // Run the job again to verify that no new emails are sent
     // for `new-admin-without-account`.
-    SyncAdmins.enqueue(&mut conn).await.unwrap();
+    SyncAdmins.enqueue(&mut conn).await?;
     app.run_pending_background_jobs().await;
 
     assert_eq!(app.emails().await.len(), 2);
+
+    Ok(())
 }
 
 fn mock_permission(people: Vec<Person>) -> Permission {
