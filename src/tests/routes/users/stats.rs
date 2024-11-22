@@ -6,7 +6,7 @@ struct UserStats {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn user_total_downloads() {
+async fn user_total_downloads() -> anyhow::Result<()> {
     use crate::schema::crate_downloads;
     use crate::tests::builders::CrateBuilder;
     use crate::tests::util::{RequestHelper, TestApp};
@@ -26,8 +26,7 @@ async fn user_total_downloads() {
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
         .set(crate_downloads::downloads.eq(10))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let krate2 = CrateBuilder::new("foo_krate2", user.id)
         .expect_build(&mut conn)
@@ -35,8 +34,7 @@ async fn user_total_downloads() {
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate2.id)))
         .set(crate_downloads::downloads.eq(20))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let another_krate = CrateBuilder::new("bar_krate1", another_user.id)
         .expect_build(&mut conn)
@@ -44,8 +42,7 @@ async fn user_total_downloads() {
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(another_krate.id)))
         .set(crate_downloads::downloads.eq(2))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let no_longer_my_krate = CrateBuilder::new("nacho", user.id)
         .expect_build(&mut conn)
@@ -53,8 +50,7 @@ async fn user_total_downloads() {
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(no_longer_my_krate.id)))
         .set(crate_downloads::downloads.eq(5))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     no_longer_my_krate
         .owner_remove(&mut conn, &user.gh_login)
         .await
@@ -64,6 +60,8 @@ async fn user_total_downloads() {
     let stats: UserStats = anon.get(&url).await.good();
     // does not include crates user never owned (2) or no longer owns (5)
     assert_eq!(stats.total_downloads, 30);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
