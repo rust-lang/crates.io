@@ -9,6 +9,7 @@ use crate::{
 };
 
 use diesel::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::assert_snapshot;
 
@@ -92,7 +93,6 @@ async fn add_nonexistent_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_renamed_team() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -121,7 +121,11 @@ async fn add_renamed_team() {
         .unwrap();
 
     assert_eq!(
-        teams::table.count().get_result::<i64>(&mut conn).unwrap(),
+        teams::table
+            .count()
+            .get_result::<i64>(&mut async_conn)
+            .await
+            .unwrap(),
         1
     );
 
@@ -139,7 +143,6 @@ async fn add_renamed_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_mixed_case() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -153,8 +156,11 @@ async fn add_team_mixed_case() {
         .await
         .good();
 
-    let krate: Crate = Crate::by_name("foo_mixed_case").first(&mut conn).unwrap();
-    let owners = krate.owners(&mut conn).unwrap();
+    let krate: Crate = Crate::by_name("foo_mixed_case")
+        .first(&mut async_conn)
+        .await
+        .unwrap();
+    let owners = krate.async_owners(&mut async_conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -167,7 +173,6 @@ async fn add_team_mixed_case() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_org_owner() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-org-owner").await;
     let token = user.db_new_token("arbitrary token name").await;
@@ -181,8 +186,11 @@ async fn add_team_as_org_owner() {
         .await
         .good();
 
-    let krate: Crate = Crate::by_name("foo_org_owner").first(&mut conn).unwrap();
-    let owners = krate.owners(&mut conn).unwrap();
+    let krate: Crate = Crate::by_name("foo_org_owner")
+        .first(&mut async_conn)
+        .await
+        .unwrap();
+    let owners = krate.async_owners(&mut async_conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -289,7 +297,6 @@ async fn remove_team_as_team_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_nonexistent_team() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_remove_nonexistent", user.as_model().id)
@@ -300,7 +307,8 @@ async fn remove_nonexistent_team() {
             teams::login.eq("github:test-org:this-does-not-exist"),
             teams::github_id.eq(5678),
         ))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .expect("couldn't insert nonexistent team");
 
     let response = token

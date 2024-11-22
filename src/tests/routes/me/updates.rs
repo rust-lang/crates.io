@@ -5,6 +5,7 @@ use crate::tests::OkBool;
 use crate::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::assert_snapshot;
@@ -28,7 +29,6 @@ async fn following() {
     }
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user_model = user.as_model();
     let user_id = user_model.id;
@@ -43,7 +43,8 @@ async fn following() {
     let none: Option<i32> = None;
     update(versions::table)
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     CrateBuilder::new("bar_fighters", user_id)

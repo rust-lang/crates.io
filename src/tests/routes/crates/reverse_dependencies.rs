@@ -132,7 +132,6 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_not_included_in_reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -157,11 +156,13 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 
     use crate::schema::versions;
-    use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+    use diesel::{ExpressionMethods, QueryDsl};
+    use diesel_async::RunQueryDsl;
 
     diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
         .set(versions::yanked.eq(true))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let response = anon
@@ -177,12 +178,12 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_includes_published_by_user_when_present() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     use crate::schema::versions;
-    use diesel::{update, ExpressionMethods, RunQueryDsl};
+    use diesel::{update, ExpressionMethods};
+    use diesel_async::RunQueryDsl;
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
@@ -198,7 +199,8 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     let none: Option<i32> = None;
     update(versions::table)
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // c3's version will have the published by info recorded

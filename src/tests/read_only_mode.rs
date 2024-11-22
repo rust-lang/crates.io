@@ -2,6 +2,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::{RequestHelper, TestApp};
 
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::assert_json_snapshot;
 
@@ -50,7 +51,6 @@ async fn can_download_crate_in_read_only_mode() {
         .with_user()
         .await;
 
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
 
     CrateBuilder::new("foo_download_read_only", user.as_model().id)
@@ -70,6 +70,7 @@ async fn can_download_crate_in_read_only_mode() {
 
     let dl_count: Result<Option<i64>, _> = version_downloads::table
         .select(sum(version_downloads::downloads))
-        .get_result(&mut conn);
+        .get_result(&mut async_conn)
+        .await;
     assert_ok_eq!(dl_count, None);
 }

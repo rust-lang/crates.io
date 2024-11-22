@@ -2,6 +2,7 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -33,10 +34,9 @@ async fn show_by_crate_name_and_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_by_crate_name_and_semver_no_published_by() {
     use crate::schema::versions;
-    use diesel::{update, RunQueryDsl};
+    use diesel::update;
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -51,7 +51,8 @@ async fn show_by_crate_name_and_semver_no_published_by() {
     let none: Option<i32> = None;
     update(versions::table)
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";

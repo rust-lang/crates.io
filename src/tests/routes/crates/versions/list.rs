@@ -3,6 +3,7 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableVersion;
 use diesel::{prelude::*, update};
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -11,7 +12,6 @@ use serde_json::json;
 #[tokio::test(flavor = "multi_thread")]
 async fn versions() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -28,7 +28,8 @@ async fn versions() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let response = anon.get::<()>("/api/v1/crates/foo_versions/versions").await;
@@ -51,7 +52,6 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
 
     let user = user.as_model();
@@ -84,7 +84,8 @@ async fn test_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0-beta.2"))
         .set(versions::created_at.eq(created_at_by_num("1.0.0-alpha.beta").assume_not_null()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // An additional crate to guarantee the accuracy of the response dataset and its total
@@ -155,7 +156,6 @@ async fn test_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_semver_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -172,7 +172,8 @@ async fn test_seek_based_pagination_semver_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let url = "/api/v1/crates/foo_versions/versions";
@@ -240,7 +241,6 @@ async fn test_seek_based_pagination_semver_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_date_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -257,7 +257,8 @@ async fn test_seek_based_pagination_date_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let url = "/api/v1/crates/foo_versions/versions";

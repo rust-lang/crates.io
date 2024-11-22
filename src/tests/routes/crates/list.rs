@@ -5,6 +5,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::{new_category, new_user};
 use crates_io_database::schema::categories;
 use diesel::{dsl::*, prelude::*, update};
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -14,7 +15,6 @@ use std::sync::LazyLock;
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
 
     for json in search_both(&anon, "").await {
@@ -25,7 +25,8 @@ async fn index() {
     let user_id = insert_into(users::table)
         .values(new_user("foo"))
         .returning(users::id)
-        .get_result(&mut conn)
+        .get_result(&mut async_conn)
+        .await
         .unwrap();
 
     let krate = CrateBuilder::new("fooindex", user_id)
@@ -44,7 +45,6 @@ async fn index() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -170,7 +170,8 @@ async fn index_queries() {
 
     insert_into(categories::table)
         .values(cats)
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     Category::update_crate(&mut async_conn, krate.id, &["cat1"])
@@ -283,7 +284,6 @@ async fn exact_match_first_on_queries() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -320,29 +320,35 @@ async fn index_sorting() {
     // Set the created at column for each crate
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
         .set(crates::created_at.eq(now - 3.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
         .set(crates::updated_at.eq(now - 5.days()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::updated_at.eq(now))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // Sort by downloads
@@ -508,7 +514,6 @@ async fn index_sorting() {
 #[allow(clippy::cognitive_complexity)]
 async fn ignore_exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -542,37 +547,45 @@ async fn ignore_exact_match_on_queries_with_sort() {
     // Set the created at column for each crate
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate3)
         .set(crates::created_at.eq(now - 2.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::created_at.eq(now - 3.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::updated_at.eq(now - 5.days()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate3)
         .set(crates::updated_at.eq(now - 10.seconds()))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::updated_at.eq(now))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     // Sort by downloads, order always the same no matter the crate name query
@@ -908,7 +921,6 @@ async fn test_zero_downloads() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -946,7 +958,8 @@ async fn test_default_sort_recent() {
 
     insert_into(categories::table)
         .values(new_category("Animal", "animal", "animal crates"))
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     Category::update_crate(&mut async_conn, green_crate.id, &["animal"])

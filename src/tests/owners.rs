@@ -218,7 +218,6 @@ async fn owners_can_remove_self() {
 #[tokio::test(flavor = "multi_thread")]
 async fn modify_multiple_owners() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let username = &user.as_model().gh_login;
 
@@ -237,7 +236,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
-    assert_eq!(krate.owners(&mut conn).unwrap().len(), 3);
+    assert_eq!(krate.async_owners(&mut async_conn).await.unwrap().len(), 3);
 
     // Deleting two owners at once is allowed.
     let response = token
@@ -245,7 +244,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
-    assert_eq!(krate.owners(&mut conn).unwrap().len(), 1);
+    assert_eq!(krate.async_owners(&mut async_conn).await.unwrap().len(), 1);
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token
@@ -253,7 +252,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
-    assert_eq!(krate.owners(&mut conn).unwrap().len(), 1);
+    assert_eq!(krate.async_owners(&mut async_conn).await.unwrap().len(), 1);
 
     // Adding multiple users at once succeeds.
     let response = token
@@ -271,7 +270,7 @@ async fn modify_multiple_owners() {
         .accept_ownership_invitation(&krate.name, krate.id)
         .await;
 
-    assert_eq!(krate.owners(&mut conn).unwrap().len(), 3);
+    assert_eq!(krate.async_owners(&mut async_conn).await.unwrap().len(), 3);
 }
 
 /// Testing the crate ownership between two crates and one team.

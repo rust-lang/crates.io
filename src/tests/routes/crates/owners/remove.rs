@@ -83,11 +83,10 @@ async fn test_unknown_team() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remove_uppercase_user() {
-    use diesel::RunQueryDsl;
+    use diesel_async::RunQueryDsl;
 
     let (app, _, cookie) = TestApp::full().with_user().await;
     let user2 = app.db_new_user("user2").await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
 
     let krate = CrateBuilder::new("foo", cookie.as_model().id)
@@ -102,7 +101,8 @@ async fn test_remove_uppercase_user() {
             owner_kind: OwnerKind::User,
             email_notifications: true,
         })
-        .execute(&mut conn)
+        .execute(&mut async_conn)
+        .await
         .unwrap();
 
     let response = cookie.remove_named_owner("foo", "USER2").await;

@@ -3,14 +3,15 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::new_category;
 use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
 use crates_io_database::schema::categories;
-use diesel::{insert_into, RunQueryDsl};
+use diesel::insert_into;
+use diesel_async::RunQueryDsl;
 use insta::assert_json_snapshot;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     let url = "/api/v1/categories/foo-bar";
 
@@ -23,9 +24,12 @@ async fn show() {
         new_category("Foo Bar::Baz", "foo-bar::baz", "Baz crates"),
     ];
 
-    assert_ok!(insert_into(categories::table)
-        .values(cats)
-        .execute(&mut conn));
+    assert_ok!(
+        insert_into(categories::table)
+            .values(cats)
+            .execute(&mut conn)
+            .await
+    );
 
     // The category and its subcategories should be in the json
     let json: Value = anon.get(url).await.good();
@@ -44,7 +48,6 @@ async fn update_crate() {
     }
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
@@ -53,9 +56,12 @@ async fn update_crate() {
         new_category("Category 2", "category-2", "Category 2 crates"),
     ];
 
-    assert_ok!(insert_into(categories::table)
-        .values(cats)
-        .execute(&mut conn));
+    assert_ok!(
+        insert_into(categories::table)
+            .values(cats)
+            .execute(&mut async_conn)
+            .await
+    );
 
     let krate = CrateBuilder::new("foo_crate", user.id)
         .expect_build(&mut async_conn)
@@ -126,9 +132,12 @@ async fn update_crate() {
     assert_eq!(count(&anon, "category-2").await, 0);
 
     // Add a category and its subcategory
-    assert_ok!(insert_into(categories::table)
-        .values(new_category("cat1::bar", "cat1::bar", "bar crates"))
-        .execute(&mut conn));
+    assert_ok!(
+        insert_into(categories::table)
+            .values(new_category("cat1::bar", "cat1::bar", "bar crates"))
+            .execute(&mut async_conn)
+            .await
+    );
 
     Category::update_crate(&mut async_conn, krate.id, &["cat1", "cat1::bar"])
         .await

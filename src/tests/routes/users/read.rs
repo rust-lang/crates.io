@@ -2,7 +2,7 @@ use crate::models::NewUser;
 use crate::schema::users;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodablePublicUser;
-use diesel::RunQueryDsl;
+use diesel_async::RunQueryDsl;
 
 #[derive(Deserialize)]
 pub struct UserShowPublicResponse {
@@ -25,7 +25,7 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_latest_user_case_insensitively() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
+    let mut conn = app.async_db_conn().await;
 
     // Please do not delete or modify the setup of this test in order to get it to pass.
     // This setup mimics how GitHub works. If someone abandons a GitHub account, the username is
@@ -51,9 +51,12 @@ async fn show_latest_user_case_insensitively() {
         "bar",
     );
 
-    assert_ok!(diesel::insert_into(users::table)
-        .values(&vec![user1, user2])
-        .execute(&mut conn));
+    assert_ok!(
+        diesel::insert_into(users::table)
+            .values(&vec![user1, user2])
+            .execute(&mut conn)
+            .await
+    );
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/fOObAr").await.good();
     assert_eq!(
