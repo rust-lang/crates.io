@@ -216,7 +216,7 @@ async fn owners_can_remove_self() {
 
 /// Verify consistency when adidng or removing multiple owners in a single request.
 #[tokio::test(flavor = "multi_thread")]
-async fn modify_multiple_owners() {
+async fn modify_multiple_owners() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
     let username = &user.as_model().gh_login;
@@ -236,7 +236,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
-    assert_eq!(krate.owners(&mut conn).await.unwrap().len(), 3);
+    assert_eq!(krate.owners(&mut conn).await?.len(), 3);
 
     // Deleting two owners at once is allowed.
     let response = token
@@ -244,7 +244,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
-    assert_eq!(krate.owners(&mut conn).await.unwrap().len(), 1);
+    assert_eq!(krate.owners(&mut conn).await?.len(), 1);
 
     // Adding multiple users fails if one of them already is an owner.
     let response = token
@@ -252,7 +252,7 @@ async fn modify_multiple_owners() {
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
-    assert_eq!(krate.owners(&mut conn).await.unwrap().len(), 1);
+    assert_eq!(krate.owners(&mut conn).await?.len(), 1);
 
     // Adding multiple users at once succeeds.
     let response = token
@@ -270,7 +270,9 @@ async fn modify_multiple_owners() {
         .accept_ownership_invitation(&krate.name, krate.id)
         .await;
 
-    assert_eq!(krate.owners(&mut conn).await.unwrap().len(), 3);
+    assert_eq!(krate.owners(&mut conn).await?.len(), 3);
+
+    Ok(())
 }
 
 /// Testing the crate ownership between two crates and one team.
@@ -280,21 +282,16 @@ async fn modify_multiple_owners() {
 /// and that the CrateList returned for the team_id contains
 /// only crates owned by that team.
 #[tokio::test(flavor = "multi_thread")]
-async fn check_ownership_two_crates() {
+async fn check_ownership_two_crates() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
-    let team = new_team("team_foo")
-        .create_or_update(&mut conn)
-        .await
-        .unwrap();
+    let team = new_team("team_foo").create_or_update(&mut conn).await?;
     let krate_owned_by_team = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn)
-        .await
-        .unwrap();
+    add_team_to_crate(&team, &krate_owned_by_team, user, &mut conn).await?;
 
     let user2 = app.db_new_user("user_bar").await;
     let user2 = user2.as_model();
@@ -310,6 +307,8 @@ async fn check_ownership_two_crates() {
     let json = anon.search(&query).await;
     assert_eq!(json.crates.len(), 1);
     assert_eq!(json.crates[0].name, krate_owned_by_team.name);
+
+    Ok(())
 }
 
 /// Given a crate owned by both a team and a user, check that the
@@ -320,21 +319,18 @@ async fn check_ownership_two_crates() {
 /// of form github:org_name:team_name as that is the format
 /// EncodableOwner::encodable is expecting
 #[tokio::test(flavor = "multi_thread")]
-async fn check_ownership_one_crate() {
+async fn check_ownership_one_crate() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let team = new_team("github:test_org:team_sloth")
         .create_or_update(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     let krate = CrateBuilder::new("best_crate", user.id)
         .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&team, &krate, user, &mut conn)
-        .await
-        .unwrap();
+    add_team_to_crate(&team, &krate, user, &mut conn).await?;
 
     let json: TeamResponse = anon
         .get("/api/v1/crates/best_crate/owner_team")
@@ -349,6 +345,8 @@ async fn check_ownership_one_crate() {
         .good();
     assert_eq!(json.users[0].kind, "user");
     assert_eq!(json.users[0].name, user.name);
+
+    Ok(())
 }
 
 /// Assert the error response when attempting to add a team as a crate owner
