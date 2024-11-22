@@ -125,10 +125,6 @@ impl NewCrate {
             permalink: true,
         };
 
-        let description = self
-            .description
-            .map(|d| d.replace("]]>", "]]]]><![CDATA[>"));
-
         let name_extension = rss::extension::Extension {
             name: "crates:name".into(),
             value: Some(self.name),
@@ -144,7 +140,7 @@ impl NewCrate {
             guid: Some(guid),
             title: Some(title),
             link: Some(link),
-            description,
+            description: self.description,
             pub_date: Some(pub_date),
             extensions,
             ..Default::default()
