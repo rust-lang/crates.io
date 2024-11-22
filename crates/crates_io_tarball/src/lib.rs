@@ -200,6 +200,20 @@ mod tests {
     }
 
     #[test]
+    fn process_tarball_test_size_limit() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err = assert_err!(process_tarball(
+            "foo-0.0.1",
+            &*tarball,
+            tarball.len() as u64 - 1
+        ));
+        assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
+    }
+
+    #[test]
     fn process_tarball_test_incomplete_vcs_info() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
