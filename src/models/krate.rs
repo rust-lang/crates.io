@@ -415,22 +415,23 @@ impl Crate {
 
     /// Invite `login` as an owner of this crate, returning the created
     /// [`NewOwnerInvite`].
-    pub fn owner_add(
+    pub async fn owner_add(
         &self,
         app: &App,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         req_user: &User,
         login: &str,
     ) -> Result<NewOwnerInvite, OwnerAddError> {
         use diesel::insert_into;
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
-        let owner = Owner::find_or_create_by_login(app, conn, req_user, login)?;
+        let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
                 let creation_ret =
                     CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, &app.config)
+                        .await
                         .map_err(BoxedAppError::from)?;
 
                 match creation_ret {
@@ -456,6 +457,7 @@ impl Crate {
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
                     .execute(conn)
+                    .await
                     .map_err(BoxedAppError::from)?;
 
                 Ok(NewOwnerInvite::Team(team))
@@ -463,8 +465,8 @@ impl Crate {
         }
     }
 
-    pub fn owner_remove(&self, conn: &mut impl Conn, login: &str) -> AppResult<()> {
-        use diesel::RunQueryDsl;
+    pub async fn owner_remove(&self, conn: &mut AsyncPgConnection, login: &str) -> AppResult<()> {
+        use diesel_async::RunQueryDsl;
 
         let query = diesel::sql_query(
             r#"WITH crate_owners_with_login AS (
@@ -497,7 +499,8 @@ impl Crate {
         let num_updated_rows = query
             .bind::<Integer, _>(self.id)
             .bind::<Text, _>(login)
-            .execute(conn)?;
+            .execute(conn)
+            .await?;
 
         if num_updated_rows == 0 {
             let error = format!("could not find owner with login `{login}`");

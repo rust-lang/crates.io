@@ -1,5 +1,6 @@
 use chrono::{NaiveDateTime, Utc};
-use diesel_async::AsyncPgConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection};
 use http::StatusCode;
 use secrecy::SecretString;
 
@@ -7,7 +8,6 @@ use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
 use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{custom, AppResult};
 
 #[derive(Debug)]
@@ -30,14 +30,14 @@ pub struct CrateOwnerInvitation {
 }
 
 impl CrateOwnerInvitation {
-    pub fn create(
+    pub async fn create(
         invited_user_id: i32,
         invited_by_user_id: i32,
         crate_id: i32,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         #[derive(Insertable, Clone, Copy, Debug)]
         #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
@@ -50,22 +50,27 @@ impl CrateOwnerInvitation {
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
         // expired, instead of returning "already exists".
-        conn.transaction(|conn| -> QueryResult<()> {
-            // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
-            // use the model's `is_expired` method, centralizing our expiration checking logic.
-            let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
-                .find((invited_user_id, crate_id))
-                .for_update()
-                .first(conn)
-                .optional()?;
+        conn.transaction(|conn| {
+            async move {
+                // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
+                // use the model's `is_expired` method, centralizing our expiration checking logic.
+                let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
+                    .find((invited_user_id, crate_id))
+                    .for_update()
+                    .first(conn)
+                    .await
+                    .optional()?;
 
-            if let Some(existing) = existing {
-                if existing.is_expired(config) {
-                    diesel::delete(&existing).execute(conn)?;
+                if let Some(existing) = existing {
+                    if existing.is_expired(config) {
+                        diesel::delete(&existing).execute(conn).await?;
+                    }
                 }
+                QueryResult::Ok(())
             }
-            Ok(())
-        })?;
+            .scope_boxed()
+        })
+        .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
             .values(&NewRecord {
@@ -78,6 +83,7 @@ impl CrateOwnerInvitation {
             // deleted before doing this INSERT.
             .on_conflict_do_nothing()
             .get_result(conn)
+            .await
             .optional()?;
 
         Ok(match res {

@@ -1,13 +1,12 @@
-use diesel::pg::Pg;
-use diesel::prelude::*;
-
 use crate::app::App;
 use crate::util::errors::{bad_request, AppResult};
+use diesel::pg::Pg;
+use diesel::prelude::*;
+use diesel_async::AsyncPgConnection;
 
 use crate::models::{Crate, Team, User};
 use crate::schema::crate_owners;
 use crate::sql::pg_enum;
-use crate::util::diesel::Conn;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -61,18 +60,19 @@ impl Owner {
     ///
     /// May be a user's GH login or a full team name. This is case
     /// sensitive.
-    pub fn find_or_create_by_login(
+    pub async fn find_or_create_by_login(
         app: &App,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         req_user: &User,
         name: &str,
     ) -> AppResult<Owner> {
         if name.contains(':') {
-            Ok(Owner::Team(Team::create_or_update(
-                app, conn, name, req_user,
-            )?))
+            Ok(Owner::Team(
+                Team::create_or_update(app, conn, name, req_user).await?,
+            ))
         } else {
-            User::find_by_login(conn, name)
+            User::async_find_by_login(conn, name)
+                .await
                 .optional()?
                 .map(Owner::User)
                 .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))

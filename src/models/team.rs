@@ -7,7 +7,6 @@ use crate::util::errors::{bad_request, custom, AppResult};
 
 use crates_io_github::GitHubError;
 use oauth2::AccessToken;
-use tokio::runtime::Handle;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
@@ -88,9 +87,9 @@ impl Team {
     /// # Panics
     ///
     /// This function will panic if login contains less than 2 `:` characters.
-    pub fn create_or_update(
+    pub async fn create_or_update(
         app: &App,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         login: &str,
         req_user: &User,
     ) -> AppResult<Self> {
@@ -116,6 +115,7 @@ impl Team {
                     team,
                     req_user,
                 )
+                .await
             }
             _ => Err(bad_request(
                 "unknown organization handler, \
@@ -127,9 +127,9 @@ impl Team {
     /// Tries to create or update a Github Team. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    fn create_or_update_github_team(
+    async fn create_or_update_github_team(
         app: &App,
-        conn: &mut impl Conn,
+        conn: &mut AsyncPgConnection,
         login: &str,
         org_name: &str,
         team_name: &str,
@@ -151,8 +151,7 @@ impl Team {
         }
 
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let team = Handle::current()
-            .block_on(app.github.team_by_name(org_name, team_name, &token))
+        let team = app.github.team_by_name(org_name, team_name, &token).await
             .map_err(|_| {
                 bad_request(format_args!(
                     "could not find the github team {org_name}/{team_name}. \
@@ -163,14 +162,14 @@ impl Team {
 
         let org_id = team.organization.id;
 
-        if !Handle::current().block_on(can_add_team(app, org_id, team.id, req_user))? {
+        if !can_add_team(app, org_id, team.id, req_user).await? {
             return Err(custom(
                 StatusCode::FORBIDDEN,
                 "only members of a team or organization owners can add it as an owner",
             ));
         }
 
-        let org = Handle::current().block_on(app.github.org_by_name(org_name, &token))?;
+        let org = app.github.org_by_name(org_name, &token).await?;
 
         NewTeam::builder()
             .login(&login.to_lowercase())
@@ -179,7 +178,8 @@ impl Team {
             .maybe_name(team.name.as_deref())
             .maybe_avatar(org.avatar_url.as_deref())
             .build()
-            .create_or_update(conn)
+            .async_create_or_update(conn)
+            .await
             .map_err(Into::into)
     }
 

@@ -477,7 +477,6 @@ async fn crates_by_team_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_team_id_not_including_deleted_owners() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let user = user.as_model();
@@ -499,7 +498,7 @@ async fn crates_by_team_id_not_including_deleted_owners() {
     add_team_to_crate(&t, &krate, user, &mut async_conn)
         .await
         .unwrap();
-    krate.owner_remove(&mut conn, &t.login).unwrap();
+    krate.owner_remove(&mut async_conn, &t.login).await.unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 0);
