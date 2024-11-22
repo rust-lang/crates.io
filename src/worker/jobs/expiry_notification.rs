@@ -75,7 +75,7 @@ async fn handle_expiring_token(
     let user = User::find(conn, token.user_id).await?;
 
     debug!("Looking up email address for user {}…", user.id);
-    let recipient = user.async_email(conn).await?;
+    let recipient = user.email(conn).await?;
     if let Some(recipient) = recipient {
         debug!("Sending expiry notification to {}…", recipient);
         let email = ExpiryNotificationEmail {

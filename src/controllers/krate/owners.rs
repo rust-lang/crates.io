@@ -188,7 +188,7 @@ async fn modify_owners(
                                 ));
 
                                 if let Some(recipient) =
-                                    invitee.async_verified_email(conn).await.ok().flatten()
+                                    invitee.verified_email(conn).await.ok().flatten()
                                 {
                                     emails.push(OwnerInviteEmail {
                                         recipient_email_address: recipient,

@@ -50,7 +50,7 @@ pub async fn update_user(
                 .await?;
 
             if !publish_notifications {
-                let email_address = user.async_verified_email(&mut conn).await?;
+                let email_address = user.verified_email(&mut conn).await?;
 
                 if let Some(email_address) = email_address {
                     let email = PublishNotificationsUnsubscribeEmail {

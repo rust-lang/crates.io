@@ -132,7 +132,7 @@ pub async fn new(
         .transpose()
         .map_err(|_err| bad_request("invalid endpoint scope"))?;
 
-    let recipient = user.async_email(&mut conn).await?;
+    let recipient = user.email(&mut conn).await?;
 
     let api_token = ApiToken::insert_with_scopes(
         &mut conn,
