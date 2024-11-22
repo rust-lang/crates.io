@@ -115,7 +115,7 @@ async fn add_renamed_team() {
         .github_id(2001)
         .build();
 
-    new_team.async_create_or_update(&mut conn).await.unwrap();
+    new_team.create_or_update(&mut conn).await.unwrap();
 
     assert_eq!(
         teams::table
@@ -465,7 +465,7 @@ async fn crates_by_team_id() {
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
-        .async_create_or_update(&mut conn)
+        .create_or_update(&mut conn)
         .await
         .unwrap();
     let krate = CrateBuilder::new("foo", user.id)
@@ -492,7 +492,7 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         .github_id(2001)
         .build();
 
-    let t = new_team.async_create_or_update(&mut conn).await.unwrap();
+    let t = new_team.create_or_update(&mut conn).await.unwrap();
 
     let krate = CrateBuilder::new("foo", user.id)
         .expect_build(&mut conn)
