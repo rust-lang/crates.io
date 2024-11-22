@@ -11,7 +11,7 @@ async fn test_non_blocked_download_route() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
@@ -37,7 +37,7 @@ async fn test_blocked_download_route() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))

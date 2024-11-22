@@ -17,7 +17,7 @@ struct KeywordMeta {
 async fn index() {
     let url = "/api/v1/keywords";
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let json: KeywordList = anon.get(url).await.good();
     assert_eq!(json.keywords.len(), 0);

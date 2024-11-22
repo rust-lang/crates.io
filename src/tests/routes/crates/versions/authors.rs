@@ -6,7 +6,7 @@ use serde_json::Value;
 #[tokio::test(flavor = "multi_thread")]
 async fn authors() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_authors", user.id)

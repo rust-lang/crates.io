@@ -14,7 +14,7 @@ async fn pagination_blocks_ip_from_cidr_block_list() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)

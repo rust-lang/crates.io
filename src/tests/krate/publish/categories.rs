@@ -11,7 +11,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn good_categories() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     insert_into(categories::table)
         .values(new_category("Category 1", "cat1", "Category 1 crates"))

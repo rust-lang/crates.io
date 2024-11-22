@@ -3,6 +3,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::new_user;
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use serde_json::json;
 
@@ -27,7 +28,7 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let a = CrateBuilder::new("test_package", user.as_model().id)
         .expect_build(&mut conn)
@@ -112,17 +113,17 @@ async fn test_update_email_notifications() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_update_email_notifications_not_owned() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let user_id = diesel::insert_into(users::table)
         .values(new_user("arbitrary_username"))
         .returning(users::id)
         .get_result(&mut conn)
+        .await
         .unwrap();
 
     let not_my_crate = CrateBuilder::new("test_package", user_id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     user.update_email_notifications(vec![EmailNotificationsUpdate {
@@ -135,6 +136,7 @@ async fn test_update_email_notifications_not_owned() {
         .select(crate_owners::email_notifications)
         .filter(crate_owners::crate_id.eq(not_my_crate.id))
         .first(&mut conn)
+        .await
         .unwrap();
 
     // There should be no change to the `email_notifications` value for a crate not belonging to me

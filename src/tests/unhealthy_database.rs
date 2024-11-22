@@ -53,7 +53,7 @@ async fn http_error_with_unhealthy_database() {
 #[tokio::test(flavor = "multi_thread")]
 async fn download_requests_with_unhealthy_database_succeed() {
     let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", token.as_model().user_id)
         .version("1.0.0")

@@ -45,7 +45,7 @@ async fn github_secret_alert_revokes_token() {
         .with_github(github_mock())
         .with_token()
         .await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().await.len(), 0);
@@ -106,7 +106,7 @@ async fn github_secret_alert_for_revoked_token() {
         .with_github(github_mock())
         .with_token()
         .await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().await.len(), 0);
@@ -170,7 +170,7 @@ async fn github_secret_alert_for_unknown_token() {
         .with_github(github_mock())
         .with_token()
         .await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Ensure no emails were sent up to this point
     assert_eq!(app.emails().await.len(), 0);

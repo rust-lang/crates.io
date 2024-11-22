@@ -4,7 +4,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 #[tokio::test(flavor = "multi_thread")]
 async fn test_redirects() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo-download", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
@@ -35,7 +35,7 @@ async fn test_redirects() {
 #[tokio::test(flavor = "multi_thread")]
 async fn download_with_build_metadata() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo", user.id)

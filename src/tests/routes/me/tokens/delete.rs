@@ -16,7 +16,7 @@ async fn revoke_token_non_existing() {
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_doesnt_revoke_other_users_token() {
     let (app, _, user1, token) = TestApp::init().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user1 = user1.as_model();
     let token = token.as_model();
     let user2 = app.db_new_user("baz").await;
@@ -51,7 +51,7 @@ async fn revoke_token_doesnt_revoke_other_users_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn revoke_token_success() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // List tokens contains the token
     let tokens: Vec<ApiToken> = assert_ok!(

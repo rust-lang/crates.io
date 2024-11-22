@@ -2,12 +2,13 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_by_crate_name_and_version() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show", user.id)
@@ -33,18 +34,17 @@ async fn show_by_crate_name_and_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_by_crate_name_and_semver_no_published_by() {
     use crate::schema::versions;
-    use diesel::{update, RunQueryDsl};
+    use diesel::update;
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_vers_show_no_pb", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     let version = VersionBuilder::new("1.0.0")
-        .expect_build(krate.id, user.id, &mut async_conn)
+        .expect_build(krate.id, user.id, &mut conn)
         .await;
 
     // Mimic a version published before we started recording who published versions
@@ -52,6 +52,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
     update(versions::table)
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let url = "/api/v1/crates/foo_vers_show_no_pb/1.0.0";

@@ -5,6 +5,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::{new_category, new_user};
 use crates_io_database::schema::categories;
 use diesel::{dsl::*, prelude::*, update};
+use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -14,8 +15,7 @@ use std::sync::LazyLock;
 #[tokio::test(flavor = "multi_thread")]
 async fn index() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     for json in search_both(&anon, "").await {
         assert_eq!(json.crates.len(), 0);
@@ -26,10 +26,11 @@ async fn index() {
         .values(new_user("foo"))
         .returning(users::id)
         .get_result(&mut conn)
+        .await
         .unwrap();
 
     let krate = CrateBuilder::new("fooindex", user_id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "").await {
@@ -44,31 +45,30 @@ async fn index() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_queries() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_index_queries", user.id)
         .readme("readme")
         .description("description")
         .keyword("kw1")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate2 = CrateBuilder::new("BAR_INDEX_QUERIES", user.id)
         .keyword("KW1")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("foo", user.id)
         .keyword("kw3")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("two-keywords", user.id)
         .keyword("kw1")
         .keyword("kw3")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     for json in search_both(&anon, "q=baz").await {
@@ -171,12 +171,13 @@ async fn index_queries() {
     insert_into(categories::table)
         .values(cats)
         .execute(&mut conn)
-        .unwrap();
-
-    Category::update_crate(&mut async_conn, krate.id, &["cat1"])
         .await
         .unwrap();
-    Category::update_crate(&mut async_conn, krate2.id, &["cat1::bar"])
+
+    Category::update_crate(&mut conn, krate.id, &["cat1"])
+        .await
+        .unwrap();
+    Category::update_crate(&mut conn, krate2.id, &["cat1::bar"])
         .await
         .unwrap();
 
@@ -214,7 +215,7 @@ async fn index_queries() {
 #[tokio::test(flavor = "multi_thread")]
 async fn search_includes_crates_where_name_is_stopword() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("which", user.id)
@@ -234,7 +235,7 @@ async fn search_includes_crates_where_name_is_stopword() {
 #[tokio::test(flavor = "multi_thread")]
 async fn exact_match_first_on_queries() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_exact", user.id)
@@ -283,8 +284,7 @@ async fn exact_match_first_on_queries() {
 #[allow(clippy::cognitive_complexity)]
 async fn index_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // To test that the unique ordering of seed-based pagination is correct, we need to
@@ -294,55 +294,61 @@ async fn index_sorting() {
         .description("bar_sort baz_sort const")
         .downloads(50)
         .recent_downloads(50)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate2 = CrateBuilder::new("bar_sort", user.id)
         .description("foo_sort baz_sort foo_sort baz_sort const")
         .downloads(3333)
         .recent_downloads(0)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate3 = CrateBuilder::new("baz_sort", user.id)
         .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
         .downloads(100_000)
         .recent_downloads(50)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate4 = CrateBuilder::new("other_sort", user.id)
         .description("other_sort const")
         .downloads(100_000)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Set the created at column for each crate
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
         .set(crates::created_at.eq(now - 3.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
         .set(crates::updated_at.eq(now - 5.days()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::updated_at.eq(now))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     // Sort by downloads
@@ -508,71 +514,78 @@ async fn index_sorting() {
 #[allow(clippy::cognitive_complexity)]
 async fn ignore_exact_match_on_queries_with_sort() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let krate1 = CrateBuilder::new("foo_sort", user.id)
         .description("bar_sort baz_sort const")
         .downloads(50)
         .recent_downloads(50)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate2 = CrateBuilder::new("bar_sort", user.id)
         .description("foo_sort baz_sort foo_sort baz_sort const")
         .downloads(3333)
         .recent_downloads(0)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate3 = CrateBuilder::new("baz_sort", user.id)
         .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
         .downloads(100_000)
         .recent_downloads(10)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let krate4 = CrateBuilder::new("other_sort", user.id)
         .description("other_sort const")
         .downloads(999_999)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Set the created at column for each crate
     update(&krate1)
         .set(crates::created_at.eq(now - 4.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::created_at.eq(now - 1.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate3)
         .set(crates::created_at.eq(now - 2.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::created_at.eq(now - 3.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     // Set the updated at column for each crate
     update(&krate1)
         .set(crates::updated_at.eq(now - 3.weeks()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate2)
         .set(crates::updated_at.eq(now - 5.days()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate3)
         .set(crates::updated_at.eq(now - 10.seconds()))
         .execute(&mut conn)
+        .await
         .unwrap();
     update(&krate4)
         .set(crates::updated_at.eq(now))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     // Sort by downloads, order always the same no matter the crate name query
@@ -643,7 +656,7 @@ async fn ignore_exact_match_on_queries_with_sort() {
 #[tokio::test(flavor = "multi_thread")]
 async fn multiple_ids() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo", user.id)
@@ -675,7 +688,7 @@ async fn multiple_ids() {
 #[tokio::test(flavor = "multi_thread")]
 async fn loose_search_order() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // exact match should be first
@@ -726,7 +739,7 @@ async fn loose_search_order() {
 #[tokio::test(flavor = "multi_thread")]
 async fn index_include_yanked() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("unyanked", user.id)
@@ -794,7 +807,7 @@ async fn index_include_yanked() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_are_not_considered_for_max_version() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_yanked_version", user.id)
@@ -815,7 +828,7 @@ async fn yanked_versions_are_not_considered_for_max_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn max_stable_version() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo", user.id)
@@ -845,7 +858,7 @@ async fn max_stable_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_recent_download_count() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // More than 90 days ago
@@ -883,7 +896,7 @@ async fn test_recent_download_count() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_zero_downloads() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // More than 90 days ago
@@ -908,8 +921,7 @@ async fn test_zero_downloads() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_default_sort_recent() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // More than 90 days ago
@@ -918,7 +930,7 @@ async fn test_default_sort_recent() {
         .keyword("dog")
         .downloads(10)
         .recent_downloads(10)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let potato_crate = CrateBuilder::new("sweet_potato_snack", user.id)
@@ -926,7 +938,7 @@ async fn test_default_sort_recent() {
         .keyword("dog")
         .downloads(20)
         .recent_downloads(0)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // test that index for keywords is sorted by recent_downloads
@@ -947,12 +959,13 @@ async fn test_default_sort_recent() {
     insert_into(categories::table)
         .values(new_category("Animal", "animal", "animal crates"))
         .execute(&mut conn)
-        .unwrap();
-
-    Category::update_crate(&mut async_conn, green_crate.id, &["animal"])
         .await
         .unwrap();
-    Category::update_crate(&mut async_conn, potato_crate.id, &["animal"])
+
+    Category::update_crate(&mut conn, green_crate.id, &["animal"])
+        .await
+        .unwrap();
+    Category::update_crate(&mut conn, potato_crate.id, &["animal"])
         .await
         .unwrap();
 
@@ -975,7 +988,7 @@ async fn test_default_sort_recent() {
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_links_included_if_applicable() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
@@ -1026,7 +1039,7 @@ async fn pagination_links_included_if_applicable() {
 #[tokio::test(flavor = "multi_thread")]
 async fn seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
@@ -1081,7 +1094,7 @@ async fn seek_based_pagination() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_pages_work_even_with_seek_based_pagination() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
@@ -1130,7 +1143,7 @@ async fn invalid_seek_parameter() {
 #[tokio::test(flavor = "multi_thread")]
 async fn pagination_parameters_only_accept_integers() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("pagination_links_1", user.id)
@@ -1159,7 +1172,7 @@ async fn pagination_parameters_only_accept_integers() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
     CrateBuilder::new("foo_my_packages", id)
@@ -1175,13 +1188,13 @@ async fn crates_by_user_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id_not_including_deleted_owners() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
-    krate.owner_remove(&mut async_conn, "foo").await.unwrap();
+    krate.owner_remove(&mut conn, "foo").await.unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);

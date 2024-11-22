@@ -18,8 +18,6 @@ use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
 use crates_io_worker::Runner;
-use diesel::r2d2::{ConnectionManager, PooledConnection};
-use diesel::PgConnection;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
@@ -112,13 +110,8 @@ impl TestApp {
         Self::init().with_git_index().with_job_runner()
     }
 
-    /// Obtain a database connection.
-    pub fn db_conn(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
-        self.0.test_database.connect()
-    }
-
     /// Obtain an async database connection from the primary database pool.
-    pub async fn async_db_conn(&self) -> AsyncPgConnection {
+    pub async fn db_conn(&self) -> AsyncPgConnection {
         self.0.test_database.async_connect().await
     }
 
@@ -131,7 +124,7 @@ impl TestApp {
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
 
-        let mut conn = self.async_db_conn().await;
+        let mut conn = self.db_conn().await;
 
         let email = format!("{username}@example.com");
 

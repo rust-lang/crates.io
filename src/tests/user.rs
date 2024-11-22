@@ -23,7 +23,7 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn updating_existing_user_doesnt_change_api_token() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
@@ -55,7 +55,7 @@ async fn updating_existing_user_doesnt_change_api_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn github_without_email_does_not_overwrite_email() {
     let (app, _) = TestApp::init().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub with an account that has no email.
     // Because faking GitHub is terrible, call what GithubUser::save_to_database does directly.
@@ -101,7 +101,7 @@ async fn github_with_email_does_not_overwrite_email() {
     use crate::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let model = user.as_model();
 
@@ -162,7 +162,7 @@ async fn test_confirm_user_email() {
     use crate::schema::emails;
 
     let (app, _) = TestApp::init().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.
@@ -201,7 +201,7 @@ async fn test_existing_user_email() {
     use diesel::update;
 
     let (app, _) = TestApp::init().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a verified
     // email directly into the database and we want to test the verification flow here.

@@ -34,7 +34,7 @@ async fn test_unauthenticated_requests() {
     const CRATE_NAME: &str = "foo";
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new(CRATE_NAME, user.as_model().id)
         .expect_build(&mut conn)
@@ -64,7 +64,7 @@ async fn test_following() {
     const CRATE_NAME: &str = "foo_following";
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new(CRATE_NAME, user.as_model().id)
         .expect_build(&mut conn)
@@ -122,7 +122,7 @@ async fn test_api_token_auth() {
     const CRATE_NOT_TO_FOLLOW: &str = "another_crate";
 
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let api_token = token.as_model();
 
     CrateBuilder::new(CRATE_TO_FOLLOW, api_token.user_id)

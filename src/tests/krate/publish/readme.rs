@@ -71,7 +71,7 @@ async fn new_krate_with_readme_and_plus_version() {
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_after_removing_documentation() {
     let (app, anon, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     // 1. Start with a crate with no documentation

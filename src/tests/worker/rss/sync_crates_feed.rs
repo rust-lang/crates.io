@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_crates_feed() {
     let (app, _) = TestApp::full().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let description = Some("something something foo");
     create_crate(&mut conn, "foo", description, "2024-06-20T10:13:54Z").await;

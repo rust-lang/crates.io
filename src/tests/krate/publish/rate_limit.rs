@@ -17,7 +17,7 @@ async fn publish_new_crate_ratelimit_hit() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 
@@ -53,7 +53,7 @@ async fn publish_new_crate_ratelimit_expires() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 
@@ -97,7 +97,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Add an override so our user gets *2* new tokens (expires, y'know, sometime)
     diesel::insert_into(publish_rate_overrides::table)
@@ -175,7 +175,7 @@ async fn publish_new_crate_expired_override_ignored() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Add an override so our user gets *2* new tokens (expires, y'know, sometime)
     let just_now = Utc::now().naive_utc() - Duration::from_secs(1);

@@ -10,7 +10,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate() {
     let (app, _, user) = TestApp::full().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = user.publish_crate(crate_to_publish).await;
@@ -146,7 +146,7 @@ async fn new_krate_twice_alt() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_duplicate_version() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database and then we'll try to publish the same version
     CrateBuilder::new("foo_dupe", user.as_model().id)

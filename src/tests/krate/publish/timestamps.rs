@@ -9,7 +9,7 @@ async fn uploading_new_version_touches_crate() {
     use diesel_async::RunQueryDsl;
 
     let (app, _, user) = TestApp::full().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let crate_to_publish = PublishBuilder::new("foo_versions_updated_at", "1.0.0");
     user.publish_crate(crate_to_publish).await.good();

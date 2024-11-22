@@ -1,14 +1,13 @@
 use crate::tests::builders::{CrateBuilder, PublishBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     use crate::schema::versions;
@@ -24,7 +23,7 @@ async fn show() {
         .keyword("kw1")
         .downloads(20)
         .recent_downloads(10)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -34,6 +33,7 @@ async fn show() {
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let response = anon.get::<()>("/api/v1/crates/foo_show").await;
@@ -50,7 +50,7 @@ async fn show() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_minimal() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_show_minimal", user.id)
@@ -79,7 +79,7 @@ async fn show_minimal() {
 #[tokio::test(flavor = "multi_thread")]
 async fn show_all_yanked() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_show", user.id)
@@ -150,7 +150,7 @@ async fn version_size() {
 #[tokio::test(flavor = "multi_thread")]
 async fn block_bad_documentation_url() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_bad_doc_url", user.id)
@@ -165,7 +165,7 @@ async fn block_bad_documentation_url() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_new_name() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("new", user.as_model().id)
         .expect_build(&mut conn)

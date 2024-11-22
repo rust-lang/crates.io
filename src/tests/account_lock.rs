@@ -11,7 +11,7 @@ async fn lock_account(app: &TestApp, user_id: i32, until: Option<NaiveDateTime>)
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     diesel::update(users::table)
         .set((

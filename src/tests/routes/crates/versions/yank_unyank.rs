@@ -63,7 +63,7 @@ impl<T: RequestHelper> YankRequestHelper for T {
 #[tokio::test(flavor = "multi_thread")]
 async fn yank_by_a_non_owner_fails() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
@@ -146,7 +146,7 @@ mod auth {
     }
 
     async fn is_yanked(app: &TestApp) -> bool {
-        let mut conn = app.async_db_conn().await;
+        let mut conn = app.db_conn().await;
 
         versions::table
             .inner_join(crates::table)
@@ -381,7 +381,7 @@ mod auth {
     #[tokio::test(flavor = "multi_thread")]
     async fn admin() {
         let (app, _, _) = prepare().await;
-        let mut conn = app.async_db_conn().await;
+        let mut conn = app.db_conn().await;
 
         let admin = app.db_new_user("admin").await;
 

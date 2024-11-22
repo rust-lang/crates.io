@@ -6,7 +6,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
@@ -46,7 +46,7 @@ async fn reverse_dependencies() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
@@ -73,7 +73,7 @@ async fn reverse_dependencies_when_old_version_doesnt_depend_but_new_does() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
@@ -100,7 +100,7 @@ async fn reverse_dependencies_when_old_version_depended_but_new_doesnt() {
 #[tokio::test(flavor = "multi_thread")]
 async fn prerelease_versions_not_included_in_reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
@@ -132,19 +132,18 @@ async fn prerelease_versions_not_included_in_reverse_dependencies() {
 #[tokio::test(flavor = "multi_thread")]
 async fn yanked_versions_not_included_in_reverse_dependencies() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     CrateBuilder::new("c2", user.id)
         .version("1.0.0")
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -157,11 +156,13 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
     });
 
     use crate::schema::versions;
-    use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+    use diesel::{ExpressionMethods, QueryDsl};
+    use diesel_async::RunQueryDsl;
 
     diesel::update(versions::table.filter(versions::num.eq("2.0.0")))
         .set(versions::yanked.eq(true))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     let response = anon
@@ -177,20 +178,20 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_includes_published_by_user_when_present() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     use crate::schema::versions;
-    use diesel::{update, ExpressionMethods, RunQueryDsl};
+    use diesel::{update, ExpressionMethods};
+    use diesel_async::RunQueryDsl;
 
     let c1 = CrateBuilder::new("c1", user.id)
         .version("1.0.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     CrateBuilder::new("c2", user.id)
         .version(VersionBuilder::new("2.0.0").dependency(&c1, None))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make c2's version (and,incidentally, c1's, but that doesn't matter) mimic a version
@@ -199,12 +200,13 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     update(versions::table)
         .set(versions::published_by.eq(none))
         .execute(&mut conn)
+        .await
         .unwrap();
 
     // c3's version will have the published by info recorded
     CrateBuilder::new("c3", user.id)
         .version(VersionBuilder::new("3.0.0").dependency(&c1, None))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = anon
@@ -220,7 +222,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
 #[tokio::test(flavor = "multi_thread")]
 async fn reverse_dependencies_query_supports_u64_version_number_parts() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let large_but_valid_version_number = format!("1.0.{}", u64::MAX);
