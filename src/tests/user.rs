@@ -21,7 +21,7 @@ impl crate::tests::util::MockCookieUser {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn updating_existing_user_doesnt_change_api_token() {
+async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
     let gh_id = user.as_model().gh_id;
@@ -41,6 +41,8 @@ async fn updating_existing_user_doesnt_change_api_token() {
 
     assert_eq!(user.gh_login, "bar");
     assert_eq!(user.gh_access_token, "bar_token");
+
+    Ok(())
 }
 
 /// Given a GitHub user, check that if the user logs in,
@@ -53,7 +55,7 @@ async fn updating_existing_user_doesnt_change_api_token() {
 /// send none as the email and we will end up inadvertently
 /// deleting their email when they sign back in.
 #[tokio::test(flavor = "multi_thread")]
-async fn github_without_email_does_not_overwrite_email() {
+async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
 
@@ -62,8 +64,7 @@ async fn github_without_email_does_not_overwrite_email() {
     // Don't use app.db_new_user because it adds a verified email.
     let u = new_user("arbitrary_username")
         .create_or_update(None, &app.as_inner().emails, &mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
     let user_without_github_email_model = user_without_github_email.as_model();
@@ -86,18 +87,19 @@ async fn github_without_email_does_not_overwrite_email() {
     };
     let u = u
         .create_or_update(None, &app.as_inner().emails, &mut conn)
-        .await
-        .unwrap();
+        .await?;
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
     let json = again_user_without_github_email.show_me().await;
     assert_eq!(json.user.email.unwrap(), "apricot@apricots.apricot");
+
+    Ok(())
 }
 
 /// Given a new user, test that if they sign in with one email, change their email on GitHub, then
 /// sign in again, that the email in crates.io will remain set to the original email used on GitHub.
 #[tokio::test(flavor = "multi_thread")]
-async fn github_with_email_does_not_overwrite_email() {
+async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
     use crate::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user().await;
@@ -108,8 +110,7 @@ async fn github_with_email_does_not_overwrite_email() {
     let original_email: String = Email::belonging_to(model)
         .select(emails::email)
         .first(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let new_github_email = "new-email-in-github@example.com";
 
@@ -125,20 +126,21 @@ async fn github_with_email_does_not_overwrite_email() {
     };
     let u = u
         .create_or_update(Some(new_github_email), &emails, &mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
     let json = user_with_different_email_in_github.show_me().await;
     assert_eq!(json.user.email, Some(original_email));
+
+    Ok(())
 }
 
 /// Given a crates.io user, check that the user's email can be
 /// updated in the database (PUT /user/:user_id), then check
 /// that the updated email is sent back to the user (GET /me).
 #[tokio::test(flavor = "multi_thread")]
-async fn test_email_get_and_put() {
+async fn test_email_get_and_put() -> anyhow::Result<()> {
     let (_app, _anon, user) = TestApp::init().with_user().await;
 
     let json = user.show_me().await;
@@ -150,6 +152,8 @@ async fn test_email_get_and_put() {
     assert_eq!(json.user.email.unwrap(), "mango@mangos.mango");
     assert!(!json.user.email_verified);
     assert!(json.user.email_verification_sent);
+
+    Ok(())
 }
 
 /// Given a new user, test that their email can be added
@@ -158,7 +162,7 @@ async fn test_email_get_and_put() {
 /// requested, check that the response back is ok, and that
 /// the email_verified field on user is now set to true.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_confirm_user_email() {
+async fn test_confirm_user_email() -> anyhow::Result<()> {
     use crate::schema::emails;
 
     let (app, _) = TestApp::init().empty().await;
@@ -171,8 +175,7 @@ async fn test_confirm_user_email() {
     let emails = app.as_inner().emails.clone();
     let u = new_user("arbitrary_username")
         .create_or_update(Some(email), &emails, &mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -180,8 +183,7 @@ async fn test_confirm_user_email() {
     let email_token: String = Email::belonging_to(user_model)
         .select(emails::token)
         .first(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     user.confirm_email(&email_token).await;
 
@@ -189,13 +191,15 @@ async fn test_confirm_user_email() {
     assert_eq!(json.user.email.unwrap(), "potato2@example.com");
     assert!(json.user.email_verified);
     assert!(json.user.email_verification_sent);
+
+    Ok(())
 }
 
 /// Given a user who existed before we added email confirmation,
 /// test that `email_verification_sent` is false so that we don't
 /// make the user think we've sent an email when we haven't.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_existing_user_email() {
+async fn test_existing_user_email() -> anyhow::Result<()> {
     use crate::schema::emails;
     use chrono::NaiveDateTime;
     use diesel::update;
@@ -210,20 +214,20 @@ async fn test_existing_user_email() {
     let emails = app.as_inner().emails.clone();
     let u = new_user("arbitrary_username")
         .create_or_update(Some(email), &emails, &mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
         // `NULL` in the `token_generated_at` column.
         .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
         .execute(&mut conn)
-        .await
-        .unwrap();
+        .await?;
     let user = MockCookieUser::new(&app, u);
 
     let json = user.show_me().await;
     assert_eq!(json.user.email.unwrap(), "potahto@example.com");
     assert!(!json.user.email_verified);
     assert!(!json.user.email_verification_sent);
+
+    Ok(())
 }
