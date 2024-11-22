@@ -3,7 +3,7 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::TestApp;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn record_rerendered_readme_time() {
+async fn record_rerendered_readme_time() -> anyhow::Result<()> {
     let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
     let user = user.as_model();
@@ -16,10 +16,8 @@ async fn record_rerendered_readme_time() {
         .await;
 
     let mut conn = app.db_conn().await;
-    Version::record_readme_rendering(version.id, &mut conn)
-        .await
-        .unwrap();
-    Version::record_readme_rendering(version.id, &mut conn)
-        .await
-        .unwrap();
+    Version::record_readme_rendering(version.id, &mut conn).await?;
+    Version::record_readme_rendering(version.id, &mut conn).await?;
+
+    Ok(())
 }
