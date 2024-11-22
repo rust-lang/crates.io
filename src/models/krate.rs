@@ -108,9 +108,9 @@ pub struct NewCrate<'a> {
 }
 
 impl<'a> NewCrate<'a> {
-    pub fn update(&self, conn: &mut impl Conn) -> QueryResult<Crate> {
+    pub async fn update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Crate> {
         use diesel::update;
-        use diesel::RunQueryDsl;
+        use diesel_async::RunQueryDsl;
 
         update(crates::table)
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
@@ -123,6 +123,7 @@ impl<'a> NewCrate<'a> {
             ))
             .returning(Crate::as_returning())
             .get_result(conn)
+            .await
     }
 
     pub async fn async_create(
