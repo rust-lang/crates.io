@@ -1175,14 +1175,13 @@ async fn crates_by_user_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_user_id_not_including_deleted_owners() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut async_conn)
         .await;
-    krate.owner_remove(&mut conn, "foo").unwrap();
+    krate.owner_remove(&mut async_conn, "foo").await.unwrap();
 
     for response in search_both_by_user_id(&anon, user.id).await {
         assert_eq!(response.crates.len(), 0);

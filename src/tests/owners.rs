@@ -384,14 +384,16 @@ async fn add_existing_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn deleted_ownership_isnt_in_owner_user() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user.id)
         .expect_build(&mut async_conn)
         .await;
-    krate.owner_remove(&mut conn, &user.gh_login).unwrap();
+    krate
+        .owner_remove(&mut async_conn, &user.gh_login)
+        .await
+        .unwrap();
 
     let json: UserResponse = anon
         .get("/api/v1/crates/foo_my_packages/owner_user")

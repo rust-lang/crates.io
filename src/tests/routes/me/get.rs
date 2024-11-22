@@ -42,14 +42,16 @@ async fn me() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_user_owned_crates_doesnt_include_deleted_ownership() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.db_conn();
     let mut async_conn = app.async_db_conn().await;
     let user_model = user.as_model();
 
     let krate = CrateBuilder::new("foo_my_packages", user_model.id)
         .expect_build(&mut async_conn)
         .await;
-    krate.owner_remove(&mut conn, &user_model.gh_login).unwrap();
+    krate
+        .owner_remove(&mut async_conn, &user_model.gh_login)
+        .await
+        .unwrap();
 
     let json = user.show_me().await;
     assert_eq!(json.owned_crates.len(), 0);

@@ -60,14 +60,15 @@ impl User {
             .await
     }
 
-    pub fn owning(krate: &Crate, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
-        use diesel::RunQueryDsl;
+    pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
+        use diesel_async::RunQueryDsl;
 
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(User::as_select())
             .filter(crate_owners::crate_id.eq(krate.id))
-            .load(conn)?
+            .load(conn)
+            .await?
             .into_iter()
             .map(Owner::User);
 

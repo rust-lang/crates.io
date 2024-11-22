@@ -52,7 +52,8 @@ async fn user_total_downloads() {
         .execute(&mut conn)
         .unwrap();
     no_longer_my_krate
-        .owner_remove(&mut conn, &user.gh_login)
+        .owner_remove(&mut async_conn, &user.gh_login)
+        .await
         .unwrap();
 
     let url = format!("/api/v1/users/{}/stats", user.id);
