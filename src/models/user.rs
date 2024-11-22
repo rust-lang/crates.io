@@ -192,7 +192,7 @@ impl<'a> NewUser<'a> {
                             domain: &emails.domain,
                             token,
                         };
-                        let _ = emails.async_send(user_email, email).await;
+                        let _ = emails.send(user_email, email).await;
                     }
                 }
 

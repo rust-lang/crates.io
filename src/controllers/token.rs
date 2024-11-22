@@ -154,7 +154,7 @@ pub async fn new(
         // At this point the token has been created so failing to send the
         // email should not cause an error response to be returned to the
         // caller.
-        let email_ret = app.emails.async_send(&recipient, email).await;
+        let email_ret = app.emails.send(&recipient, email).await;
         if let Err(e) = email_ret {
             error!("Failed to send token creation email: {e}")
         }

@@ -199,7 +199,7 @@ async fn send_notification_email(
         url: &alert.url,
     };
 
-    state.emails.async_send(&recipient, email).await?;
+    state.emails.send(&recipient, email).await?;
 
     Ok(())
 }

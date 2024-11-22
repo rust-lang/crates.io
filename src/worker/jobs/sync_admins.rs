@@ -144,7 +144,7 @@ impl BackgroundJob for SyncAdmins {
         for database_admin in &database_admins {
             let (_, _, email_address) = database_admin;
             if let Some(email_address) = email_address {
-                if let Err(error) = ctx.emails.async_send(email_address, email.clone()).await {
+                if let Err(error) = ctx.emails.send(email_address, email.clone()).await {
                     warn!(
                         "Failed to send email to admin {} ({}, github_id: {}): {}",
                         database_admin.1, email_address, database_admin.0, error

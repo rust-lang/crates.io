@@ -84,7 +84,7 @@ async fn handle_expiring_token(
             token_name: &token.name,
             expiry_date: token.expired_at.unwrap().and_utc(),
         };
-        emails.async_send(&recipient, email).await?;
+        emails.send(&recipient, email).await?;
     } else {
         info!(
             "User {} has no email address set. Skipping expiry notification.",

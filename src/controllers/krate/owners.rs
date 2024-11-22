@@ -243,7 +243,7 @@ async fn modify_owners(
     for email in emails {
         let addr = email.recipient_email_address().to_string();
 
-        if let Err(e) = app.emails.async_send(&addr, email).await {
+        if let Err(e) = app.emails.send(&addr, email).await {
             warn!("Failed to send co-owner invite email: {e}");
         }
     }
