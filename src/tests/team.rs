@@ -157,7 +157,7 @@ async fn add_team_mixed_case() {
         .first(&mut conn)
         .await
         .unwrap();
-    let owners = krate.async_owners(&mut conn).await.unwrap();
+    let owners = krate.owners(&mut conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -187,7 +187,7 @@ async fn add_team_as_org_owner() {
         .first(&mut conn)
         .await
         .unwrap();
-    let owners = krate.async_owners(&mut conn).await.unwrap();
+    let owners = krate.owners(&mut conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());

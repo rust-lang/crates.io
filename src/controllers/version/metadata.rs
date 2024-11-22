@@ -186,7 +186,7 @@ pub async fn perform_version_yank_update(
 
     let api_token_id = auth.api_token_id();
     let user = auth.user();
-    let owners = krate.async_owners(conn).await?;
+    let owners = krate.owners(conn).await?;
 
     let yanked = yanked.unwrap_or(version.yanked);
 

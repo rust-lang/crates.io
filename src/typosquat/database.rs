@@ -115,7 +115,7 @@ impl Crate {
 
         let krate = models::Crate::by_exact_name(name).first(conn).await?;
         let owners = krate
-            .async_owners(conn)
+            .owners(conn)
             .await?
             .into_iter()
             .map(Owner::from)

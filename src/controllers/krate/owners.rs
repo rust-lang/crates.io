@@ -30,7 +30,7 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
         .ok_or_else(|| crate_not_found(&crate_name))?;
 
     let owners = krate
-        .async_owners(&mut conn)
+        .owners(&mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
@@ -144,7 +144,7 @@ async fn modify_owners(
                     .optional()?
                     .ok_or_else(|| crate_not_found(&crate_name))?;
 
-                let owners = krate.async_owners(conn).await?;
+                let owners = krate.owners(conn).await?;
 
                 match user.rights(&app, &owners).await? {
                     Rights::Full => {}

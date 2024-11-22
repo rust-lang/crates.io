@@ -349,7 +349,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             None => persist.update(conn).await?,
         };
 
-        let owners = krate.async_owners(conn).await?;
+        let owners = krate.owners(conn).await?;
         if user.rights(&app, &owners).await? < Rights::Publish {
             return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
         }
