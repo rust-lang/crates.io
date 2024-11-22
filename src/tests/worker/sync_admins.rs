@@ -23,7 +23,7 @@ async fn test_sync_admins_job() {
         .returning(move |_| Ok(mock_response.clone()));
 
     let (app, _) = TestApp::full().with_team_repo(team_repo).empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     create_user("existing-admin", 1, true, &mut conn)
         .await

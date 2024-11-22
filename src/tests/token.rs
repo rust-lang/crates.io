@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 async fn using_token_updates_last_used_at() {
     let url = "/api/v1/me";
     let (app, anon, user, token) = TestApp::init().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     anon.get(url).await.assert_forbidden();
     user.get::<EncodableMe>(url).await.good();

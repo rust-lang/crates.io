@@ -111,7 +111,7 @@ impl TestApp {
     }
 
     /// Obtain an async database connection from the primary database pool.
-    pub async fn async_db_conn(&self) -> AsyncPgConnection {
+    pub async fn db_conn(&self) -> AsyncPgConnection {
         self.0.test_database.async_connect().await
     }
 
@@ -124,7 +124,7 @@ impl TestApp {
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
 
-        let mut conn = self.async_db_conn().await;
+        let mut conn = self.db_conn().await;
 
         let email = format!("{username}@example.com");
 

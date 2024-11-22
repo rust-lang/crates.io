@@ -10,7 +10,7 @@ use http::StatusCode;
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let upstream = app.upstream_index();
 
     // Add a new crate

@@ -7,7 +7,7 @@ use insta::{assert_json_snapshot, assert_snapshot};
 #[tokio::test(flavor = "multi_thread")]
 async fn features_version_2() {
     let (app, _, user, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Insert a crate directly into the database so that foo_new can depend on it
     CrateBuilder::new("bar", user.as_model().id)
@@ -127,7 +127,7 @@ async fn too_many_features_with_custom_limit() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .max_features(4)
@@ -187,7 +187,7 @@ async fn too_many_enabled_features_with_custom_limit() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .max_features(4)

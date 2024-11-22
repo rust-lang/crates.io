@@ -11,7 +11,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_without_any_email_fails() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     delete(emails::table).execute(&mut conn).await.unwrap();
 
@@ -27,7 +27,7 @@ async fn new_krate_without_any_email_fails() {
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_unverified_email_fails() {
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     update(emails::table)
         .set((emails::verified.eq(false),))

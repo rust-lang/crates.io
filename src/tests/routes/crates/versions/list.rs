@@ -12,14 +12,14 @@ use serde_json::json;
 #[tokio::test(flavor = "multi_thread")]
 async fn versions() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version("0.5.1")
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -28,7 +28,7 @@ async fn versions() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
@@ -52,7 +52,7 @@ async fn test_unknown_crate() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let user = user.as_model();
     let versions = [
@@ -71,7 +71,7 @@ async fn test_sorting() {
     for version in versions {
         builder = builder.version(version);
     }
-    builder.expect_build(&mut async_conn).await;
+    builder.expect_build(&mut conn).await;
     // Make version 1.0.0-beta.2 and 1.0.0-alpha.beta mimic versions created at same time,
     // but 1.0.0-alpha.beta owns larger id number
     let versions_aliased = diesel::alias!(versions as versions_aliased);
@@ -84,14 +84,14 @@ async fn test_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0-beta.2"))
         .set(versions::created_at.eq(created_at_by_num("1.0.0-alpha.beta").assume_not_null()))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
     // An additional crate to guarantee the accuracy of the response dataset and its total
     CrateBuilder::new("bar_versions", user.id)
         .version("0.0.1")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let expects = [
@@ -156,14 +156,14 @@ async fn test_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_semver_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -172,7 +172,7 @@ async fn test_seek_based_pagination_semver_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
@@ -241,14 +241,14 @@ async fn test_seek_based_pagination_semver_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_date_sorting() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)
         .version(VersionBuilder::new("0.5.1").yanked(true))
         .version(VersionBuilder::new("1.0.0").rust_version("1.64"))
         .version("0.5.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make version 1.0.0 mimic a version published before we started recording who published
@@ -257,7 +257,7 @@ async fn test_seek_based_pagination_date_sorting() {
     update(versions::table)
         .filter(versions::num.eq("1.0.0"))
         .set(versions::published_by.eq(none))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
@@ -329,7 +329,7 @@ async fn test_seek_based_pagination_date_sorting() {
 #[tokio::test(flavor = "multi_thread")]
 async fn invalid_seek_parameter() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_versions", user.id)

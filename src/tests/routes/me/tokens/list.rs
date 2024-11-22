@@ -30,7 +30,7 @@ async fn list_empty() {
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
     assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);
@@ -77,7 +77,7 @@ async fn list_recently_expired_tokens() {
     }
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
     assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);
@@ -128,7 +128,7 @@ async fn list_recently_expired_tokens() {
 #[tokio::test(flavor = "multi_thread")]
 async fn list_tokens_exclude_revoked() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
     let token1 = assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);

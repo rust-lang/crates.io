@@ -10,7 +10,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_sync_updates_feed() {
     let (app, _) = TestApp::full().empty().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let d = Some("let's try & break this <item> ]]>");
 

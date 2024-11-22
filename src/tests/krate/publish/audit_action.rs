@@ -8,7 +8,7 @@ async fn publish_records_an_audit_action() {
 
     let (app, anon, _, token) = TestApp::full().with_token().await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     assert!(VersionOwnerAction::all(&mut conn).await.unwrap().is_empty());
 
     // Upload a new crate, putting it in the git index

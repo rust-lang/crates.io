@@ -29,13 +29,13 @@ async fn following() {
     }
 
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_model = user.as_model();
     let user_id = user_model.id;
 
     CrateBuilder::new("foo_fighters", user_id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // Make foo_fighters's version mimic a version published before we started recording who
@@ -43,13 +43,13 @@ async fn following() {
     let none: Option<i32> = None;
     update(versions::table)
         .set(versions::published_by.eq(none))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
     CrateBuilder::new("bar_fighters", user_id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let r: R = user.get("/api/v1/me/updates").await.good();

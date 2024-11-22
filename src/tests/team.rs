@@ -29,10 +29,10 @@ impl crate::tests::util::MockAnonymousUser {
 async fn not_github() {
     let (app, _, user, token) = TestApp::init().with_token().await;
 
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_not_github", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token
@@ -45,10 +45,10 @@ async fn not_github() {
 #[tokio::test(flavor = "multi_thread")]
 async fn weird_name() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_weird_name", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token
@@ -62,10 +62,10 @@ async fn weird_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn one_colon() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_one_colon", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
@@ -76,10 +76,10 @@ async fn one_colon() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_nonexistent_team() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_add_nonexistent", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token
@@ -93,7 +93,7 @@ async fn add_nonexistent_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_renamed_team() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
     let owner_id = user.as_model().id;
@@ -101,7 +101,7 @@ async fn add_renamed_team() {
     use crate::schema::teams;
 
     CrateBuilder::new("foo_renamed_team", owner_id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // create team with same ID and different name compared to http mock
@@ -115,15 +115,12 @@ async fn add_renamed_team() {
         .github_id(2001)
         .build();
 
-    new_team
-        .async_create_or_update(&mut async_conn)
-        .await
-        .unwrap();
+    new_team.async_create_or_update(&mut conn).await.unwrap();
 
     assert_eq!(
         teams::table
             .count()
-            .get_result::<i64>(&mut async_conn)
+            .get_result::<i64>(&mut conn)
             .await
             .unwrap(),
         1
@@ -143,12 +140,12 @@ async fn add_renamed_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_mixed_case() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_mixed_case", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token
@@ -157,10 +154,10 @@ async fn add_team_mixed_case() {
         .good();
 
     let krate: Crate = Crate::by_name("foo_mixed_case")
-        .first(&mut async_conn)
+        .first(&mut conn)
         .await
         .unwrap();
-    let owners = krate.async_owners(&mut async_conn).await.unwrap();
+    let owners = krate.async_owners(&mut conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -173,12 +170,12 @@ async fn add_team_mixed_case() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_org_owner() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-org-owner").await;
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_org_owner", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token
@@ -187,10 +184,10 @@ async fn add_team_as_org_owner() {
         .good();
 
     let krate: Crate = Crate::by_name("foo_org_owner")
-        .first(&mut async_conn)
+        .first(&mut conn)
         .await
         .unwrap();
-    let owners = krate.async_owners(&mut async_conn).await.unwrap();
+    let owners = krate.async_owners(&mut conn).await.unwrap();
     assert_eq!(owners.len(), 2);
     let owner = &owners[1];
     assert_eq!(owner.login(), owner.login().to_lowercase());
@@ -204,12 +201,12 @@ async fn add_team_as_org_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_as_non_member() {
     let (app, _) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-one-team").await;
     let token = user.db_new_token("arbitrary token name").await;
 
     CrateBuilder::new("foo_team_non_member", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     let response = token
@@ -222,7 +219,7 @@ async fn add_team_as_non_member() {
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_team_as_named_owner() {
     let (app, _) = TestApp::full().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let username = "user-all-teams";
     let user_on_both_teams = app.db_new_user(username).await;
     let token_on_both_teams = user_on_both_teams
@@ -230,7 +227,7 @@ async fn remove_team_as_named_owner() {
         .await;
 
     CrateBuilder::new("foo_remove_team", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -261,14 +258,14 @@ async fn remove_team_as_named_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_team_as_team_owner() {
     let (app, _) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_remove_team_owner", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -297,17 +294,17 @@ async fn remove_team_as_team_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn remove_nonexistent_team() {
     let (app, _, user, token) = TestApp::init().with_token().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo_remove_nonexistent", user.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     insert_into(teams::table)
         .values((
             teams::login.eq("github:test-org:this-does-not-exist"),
             teams::github_id.eq(5678),
         ))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .expect("couldn't insert nonexistent team");
 
@@ -325,14 +322,14 @@ async fn remove_nonexistent_team() {
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_not_owned() {
     let (app, _) = TestApp::full().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -351,14 +348,14 @@ async fn publish_not_owned() {
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_org_owner_owned() {
     let (app, _) = TestApp::full().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_not_owned", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -378,14 +375,14 @@ async fn publish_org_owner_owned() {
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_owned() {
     let (app, _) = TestApp::full().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_team_owned", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -408,14 +405,14 @@ async fn publish_owned() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_owners_as_org_owner() {
     let (app, _) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -436,14 +433,14 @@ async fn add_owners_as_org_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn add_owners_as_team_owner() {
     let (app, _) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user_on_both_teams = app.db_new_user("user-all-teams").await;
     let token_on_both_teams = user_on_both_teams
         .db_new_token("arbitrary token name")
         .await;
 
     CrateBuilder::new("foo_add_owner", user_on_both_teams.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     token_on_both_teams
@@ -464,17 +461,17 @@ async fn add_owners_as_team_owner() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_team_id() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     let t = new_team("github:test-org:team")
-        .async_create_or_update(&mut async_conn)
+        .async_create_or_update(&mut conn)
         .await
         .unwrap();
     let krate = CrateBuilder::new("foo", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&t, &krate, user, &mut async_conn)
+    add_team_to_crate(&t, &krate, user, &mut conn)
         .await
         .unwrap();
 
@@ -485,7 +482,7 @@ async fn crates_by_team_id() {
 #[tokio::test(flavor = "multi_thread")]
 async fn crates_by_team_id_not_including_deleted_owners() {
     let (app, anon) = TestApp::init().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = app.db_new_user("user-all-teams").await;
     let user = user.as_model();
 
@@ -495,18 +492,15 @@ async fn crates_by_team_id_not_including_deleted_owners() {
         .github_id(2001)
         .build();
 
-    let t = new_team
-        .async_create_or_update(&mut async_conn)
-        .await
-        .unwrap();
+    let t = new_team.async_create_or_update(&mut conn).await.unwrap();
 
     let krate = CrateBuilder::new("foo", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
-    add_team_to_crate(&t, &krate, user, &mut async_conn)
+    add_team_to_crate(&t, &krate, user, &mut conn)
         .await
         .unwrap();
-    krate.owner_remove(&mut async_conn, &t.login).await.unwrap();
+    krate.owner_remove(&mut conn, &t.login).await.unwrap();
 
     let json = anon.search(&format!("team_id={}", t.id)).await;
     assert_eq!(json.crates.len(), 0);

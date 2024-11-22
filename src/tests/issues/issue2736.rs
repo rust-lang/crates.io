@@ -11,7 +11,7 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn test_issue_2736() -> anyhow::Result<()> {
     let (app, _) = TestApp::full().empty().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // - A user had a GitHub account named, let's say, `foo`
     let foo1 = app.db_new_user("foo").await;
@@ -20,7 +20,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     let someone_else = app.db_new_user("someone_else").await;
 
     let krate = CrateBuilder::new("crate1", someone_else.as_model().id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     diesel::insert_into(crate_owners::table)
@@ -31,7 +31,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
             owner_kind: OwnerKind::User,
             email_notifications: true,
         })
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await?;
 
     // - `foo` deleted their GitHub account (but crates.io has no real knowledge of this)
@@ -42,14 +42,14 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     let github_ids = users::table
         .filter(users::gh_login.eq("foo"))
         .select(users::gh_id)
-        .load::<i32>(&mut async_conn)
+        .load::<i32>(&mut conn)
         .await?;
 
     assert_eq!(github_ids.len(), 2);
     assert_ne!(github_ids[0], github_ids[1]);
 
     // - The new `foo` account is NOT an owner of the crate
-    let owners = krate.async_owners(&mut async_conn).await?;
+    let owners = krate.async_owners(&mut conn).await?;
     assert_eq!(owners.len(), 2);
     assert_none!(owners.iter().find(|o| o.id() == foo2.as_model().id));
 
@@ -58,7 +58,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
     assert_eq!(response.status(), StatusCode::OK);
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 
-    let owners = krate.async_owners(&mut async_conn).await?;
+    let owners = krate.async_owners(&mut conn).await?;
     assert_eq!(owners.len(), 1);
     assert_eq!(owners[0].id(), someone_else.as_model().id);
 

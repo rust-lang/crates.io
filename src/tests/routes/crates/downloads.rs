@@ -67,12 +67,12 @@ pub async fn download(client: &impl RequestHelper, name_and_version: &str) {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("foo_download", user.id)
         .version(VersionBuilder::new("1.0.0"))
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     // TODO: test the with_json code path
@@ -82,7 +82,7 @@ async fn test_download() {
     assert_dl_count(&anon, "foo_download/1.0.0", None, 0).await;
     assert_dl_count(&anon, "foo_download", None, 0).await;
 
-    save_version_downloads("foo_download", "1.0.0", 1, &mut async_conn).await;
+    save_version_downloads("foo_download", "1.0.0", 1, &mut conn).await;
 
     // Now that the counters are persisted the download counts show up.
     assert_dl_count(&anon, "foo_download/1.0.0", None, 1).await;
@@ -103,7 +103,7 @@ async fn test_download() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_download_with_counting_via_cdn() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("foo", user.as_model().id)
         .version(VersionBuilder::new("1.0.0"))
@@ -119,13 +119,13 @@ async fn test_download_with_counting_via_cdn() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_crate_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let user_id = cookie.as_model().id;
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     download(&anon, "foo/1.0.0").await;
@@ -133,8 +133,8 @@ async fn test_crate_downloads() {
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.1.0").await;
 
-    save_version_downloads("foo", "1.0.0", 3, &mut async_conn).await;
-    save_version_downloads("foo", "1.1.0", 1, &mut async_conn).await;
+    save_version_downloads("foo", "1.0.0", 3, &mut conn).await;
+    save_version_downloads("foo", "1.1.0", 1, &mut conn).await;
 
     let response = anon.get::<()>("/api/v1/crates/foo/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -160,13 +160,13 @@ async fn test_crate_downloads() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_version_downloads() {
     let (app, anon, cookie) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let user_id = cookie.as_model().id;
     CrateBuilder::new("foo", user_id)
         .version("1.0.0")
         .version("1.1.0")
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
 
     download(&anon, "foo/1.0.0").await;
@@ -174,8 +174,8 @@ async fn test_version_downloads() {
     download(&anon, "foo/1.0.0").await;
     download(&anon, "foo/1.1.0").await;
 
-    save_version_downloads("foo", "1.0.0", 3, &mut async_conn).await;
-    save_version_downloads("foo", "1.1.0", 1, &mut async_conn).await;
+    save_version_downloads("foo", "1.0.0", 3, &mut conn).await;
+    save_version_downloads("foo", "1.1.0", 1, &mut conn).await;
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads").await;
     assert_eq!(response.status(), StatusCode::OK);

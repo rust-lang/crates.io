@@ -42,7 +42,7 @@ async fn create_token_no_name() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_exceeded_tokens_per_user() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
     for i in 0..1000 {
@@ -58,7 +58,7 @@ async fn create_token_exceeded_tokens_per_user() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_success() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -124,7 +124,7 @@ async fn cannot_create_token_with_token() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_scopes() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let json = json!({
         "api_token": {
@@ -174,7 +174,7 @@ async fn create_token_with_scopes() {
 #[tokio::test(flavor = "multi_thread")]
 async fn create_token_with_null_scopes() {
     let (app, _, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     let json = json!({
         "api_token": {

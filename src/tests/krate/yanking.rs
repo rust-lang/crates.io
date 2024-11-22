@@ -84,7 +84,7 @@ async fn yank_ratelimit_hit() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Set up the database so it'll think we've massively rate-limited ourselves.
 
@@ -121,7 +121,7 @@ async fn yank_ratelimit_expires() {
         .with_token()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     // Set up the database so it'll think we've massively ratelimited ourselves
 

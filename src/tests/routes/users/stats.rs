@@ -15,48 +15,48 @@ async fn user_total_downloads() {
     use diesel_async::RunQueryDsl;
 
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut async_conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
     let another_user = app.db_new_user("bar").await;
     let another_user = another_user.as_model();
 
     let krate = CrateBuilder::new("foo_krate1", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate.id)))
         .set(crate_downloads::downloads.eq(10))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
     let krate2 = CrateBuilder::new("foo_krate2", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(krate2.id)))
         .set(crate_downloads::downloads.eq(20))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
     let another_krate = CrateBuilder::new("bar_krate1", another_user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(another_krate.id)))
         .set(crate_downloads::downloads.eq(2))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
 
     let no_longer_my_krate = CrateBuilder::new("nacho", user.id)
-        .expect_build(&mut async_conn)
+        .expect_build(&mut conn)
         .await;
     update(crate_downloads::table.filter(crate_downloads::crate_id.eq(no_longer_my_krate.id)))
         .set(crate_downloads::downloads.eq(5))
-        .execute(&mut async_conn)
+        .execute(&mut conn)
         .await
         .unwrap();
     no_longer_my_krate
-        .owner_remove(&mut async_conn, &user.gh_login)
+        .owner_remove(&mut conn, &user.gh_login)
         .await
         .unwrap();
 

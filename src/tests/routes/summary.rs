@@ -30,7 +30,7 @@ async fn summary_doesnt_die() {
 #[tokio::test(flavor = "multi_thread")]
 async fn summary_new_crates() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     conn.transaction(|conn| {
@@ -163,7 +163,7 @@ async fn excluded_crate_id() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("some_downloads", user.id)
@@ -221,7 +221,7 @@ async fn all_yanked() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
     let user = user.as_model();
 
     CrateBuilder::new("some_downloads", user.id)

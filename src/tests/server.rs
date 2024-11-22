@@ -26,7 +26,7 @@ async fn user_agent_is_required() {
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_not_required_for_download() {
     let (app, anon, user) = TestApp::init().with_user().await;
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
         .expect_build(&mut conn)
@@ -47,7 +47,7 @@ async fn blocked_traffic_doesnt_panic_if_checked_header_is_not_present() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
         .expect_build(&mut conn)
@@ -68,7 +68,7 @@ async fn block_traffic_via_arbitrary_header_and_value() {
         .with_user()
         .await;
 
-    let mut conn = app.async_db_conn().await;
+    let mut conn = app.db_conn().await;
 
     CrateBuilder::new("dl_no_ua", user.as_model().id)
         .expect_build(&mut conn)
