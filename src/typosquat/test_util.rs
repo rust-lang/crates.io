@@ -1,4 +1,5 @@
-use diesel::{prelude::*, PgConnection};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 use crate::tests::util::github::next_gh_id;
 use crate::{
@@ -40,11 +41,12 @@ pub mod faker {
         Ok(team.create_or_update(conn).await?)
     }
 
-    pub fn user(conn: &mut PgConnection, login: &str) -> QueryResult<User> {
+    pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
         let user = NewUser::new(next_gh_id(), login, None, None, "token");
 
         diesel::insert_into(users::table)
             .values(user)
             .get_result(conn)
+            .await
     }
 }

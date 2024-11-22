@@ -182,26 +182,24 @@ mod tests {
     #[tokio::test]
     async fn top_crates() -> Result<(), Error> {
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
-        let mut async_conn = test_db.async_connect().await;
+        let mut conn = test_db.async_connect().await;
 
         // Set up two users.
-        let user_a = faker::user(&mut conn, "a")?;
-        let user_b = faker::user(&mut conn, "b")?;
+        let user_a = faker::user(&mut conn, "a").await?;
+        let user_b = faker::user(&mut conn, "b").await?;
 
         // Set up three crates with various ownership schemes.
-        let _top_a = faker::crate_and_version(&mut async_conn, "a", "Hello", &user_a, 2).await?;
+        let _top_a = faker::crate_and_version(&mut conn, "a", "Hello", &user_a, 2).await?;
         let top_b =
-            faker::crate_and_version(&mut async_conn, "b", "Yes, this is dog", &user_b, 1).await?;
-        let not_top_c =
-            faker::crate_and_version(&mut async_conn, "c", "Unpopular", &user_a, 0).await?;
+            faker::crate_and_version(&mut conn, "b", "Yes, this is dog", &user_b, 1).await?;
+        let not_top_c = faker::crate_and_version(&mut conn, "c", "Unpopular", &user_a, 0).await?;
 
         // Let's set up a team that owns both b and c, but not a.
-        let not_the_a_team = faker::team(&mut async_conn, "org", "team").await?;
-        add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut async_conn).await?;
-        add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut async_conn).await?;
+        let not_the_a_team = faker::team(&mut conn, "org", "team").await?;
+        add_team_to_crate(&not_the_a_team, &top_b, &user_b, &mut conn).await?;
+        add_team_to_crate(&not_the_a_team, &not_top_c, &user_b, &mut conn).await?;
 
-        let top_crates = TopCrates::new(&mut async_conn, 2).await?;
+        let top_crates = TopCrates::new(&mut conn, 2).await?;
 
         // Let's ensure the top crates include what we expect (which is a and b, since we asked for
         // 2 crates and they're the most downloaded).
@@ -215,7 +213,7 @@ mod tests {
         assert!(!pkg_a.shared_authors(pkg_b.authors()));
 
         // Now let's go get package c and pretend it's a new package.
-        let pkg_c = Crate::from_name(&mut async_conn, "c").await?;
+        let pkg_c = Crate::from_name(&mut conn, "c").await?;
 
         // c _does_ have an author in common with a.
         assert!(pkg_a.shared_authors(pkg_c.authors()));

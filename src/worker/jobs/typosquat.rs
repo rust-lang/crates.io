@@ -130,12 +130,11 @@ mod tests {
     async fn integration() -> anyhow::Result<()> {
         let emails = Emails::new_in_memory();
         let test_db = TestDatabase::new();
-        let mut conn = test_db.connect();
-        let mut async_conn = test_db.async_connect().await;
+        let mut conn = test_db.async_connect().await;
 
         // Set up a user and a popular crate to match against.
-        let user = faker::user(&mut conn, "a")?;
-        faker::crate_and_version(&mut async_conn, "my-crate", "It's awesome", &user, 100).await?;
+        let user = faker::user(&mut conn, "a").await?;
+        faker::crate_and_version(&mut conn, "my-crate", "It's awesome", &user, 100).await?;
 
         // Prime the cache so it only includes the crate we just created.
         let mut async_conn = test_db.async_connect().await;
@@ -143,7 +142,7 @@ mod tests {
         let cache = Arc::new(cache);
 
         // Now we'll create new crates: one problematic, one not so.
-        let other_user = faker::user(&mut conn, "b")?;
+        let other_user = faker::user(&mut async_conn, "b").await?;
         let angel = faker::crate_and_version(
             &mut async_conn,
             "innocent-crate",
