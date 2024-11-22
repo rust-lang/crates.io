@@ -14,7 +14,7 @@ path = "lib.rs"
 
 [dependencies]
 ammonia = "=4.0.0"
-comrak = { version = "=0.29.0", default-features = false }
+comrak = { version = "=0.30.0", default-features = false }
 htmlescape = "=0.3.1"
 url = "=2.5.3"
 
