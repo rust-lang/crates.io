@@ -1,5 +1,5 @@
 use anyhow::Context;
-use crates_io::models::{async_update_default_version, async_verify_default_version};
+use crates_io::models::{update_default_version, verify_default_version};
 use crates_io::{db, schema::crates};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -33,8 +33,8 @@ pub async fn run(command: Command) -> anyhow::Result<()> {
 
     for crate_id in crate_ids.into_iter().progress_with(pb.clone()) {
         let result = match command {
-            Command::Update => async_update_default_version(crate_id, &mut conn).await,
-            Command::Verify => async_verify_default_version(crate_id, &mut conn).await,
+            Command::Update => update_default_version(crate_id, &mut conn).await,
+            Command::Verify => verify_default_version(crate_id, &mut conn).await,
         };
 
         if let Err(error) = result {

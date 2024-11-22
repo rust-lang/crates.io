@@ -3,12 +3,12 @@ use anyhow::Context;
 use crates_io::models::update_default_version;
 use crates_io::schema::crates;
 use crates_io::storage::Storage;
-use crates_io::tasks::spawn_blocking;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::versions};
 use crates_io_worker::BackgroundJob;
-use diesel::{Connection, ExpressionMethods, QueryDsl};
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel::prelude::*;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, RunQueryDsl};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -36,17 +36,12 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
     let store = Storage::from_environment();
 
-    let crate_id: i32 = {
-        use diesel_async::RunQueryDsl;
-
-        crates::table
-            .select(crates::id)
-            .filter(crates::name.eq(&opts.crate_name))
-            .first(&mut conn)
-            .await
-            .context("Failed to look up crate id from the database")
-    }?;
-
+    let crate_id: i32 = crates::table
+        .select(crates::id)
+        .filter(crates::name.eq(&opts.crate_name))
+        .first(&mut conn)
+        .await
+        .context("Failed to look up crate id from the database")?;
     {
         let crate_name = &opts.crate_name;
 
@@ -64,56 +59,50 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         }
     }
 
-    let opts = spawn_blocking(move || {
-        use diesel::RunQueryDsl;
-
-        let conn: &mut AsyncConnectionWrapper<_> = &mut conn.into();
-
+    let opts = conn.transaction(|conn| async move {
         let crate_name = &opts.crate_name;
 
-        conn.transaction(|conn| {
-            info!(%crate_name, %crate_id, versions = ?opts.versions, "Deleting versions from the database");
-            let result = diesel::delete(
-                versions::table
-                    .filter(versions::crate_id.eq(crate_id))
-                    .filter(versions::num.eq_any(&opts.versions)),
-            )
-            .execute(conn);
+        info!(%crate_name, %crate_id, versions = ?opts.versions, "Deleting versions from the database");
+        let result = diesel::delete(
+            versions::table
+                .filter(versions::crate_id.eq(crate_id))
+                .filter(versions::num.eq_any(&opts.versions)),
+        )
+        .execute(conn).await;
 
-            match result {
-                Ok(num_deleted) if num_deleted == opts.versions.len() => {}
-                Ok(num_deleted) => {
-                    warn!(
-                        %crate_name,
-                        "Deleted only {num_deleted} of {num_expected} versions from the database",
-                        num_expected = opts.versions.len()
-                    );
-                }
-                Err(error) => {
-                    warn!(%crate_name, ?error, "Failed to delete versions from the database")
-                }
+        match result {
+            Ok(num_deleted) if num_deleted == opts.versions.len() => {}
+            Ok(num_deleted) => {
+                warn!(
+                    %crate_name,
+                    "Deleted only {num_deleted} of {num_expected} versions from the database",
+                    num_expected = opts.versions.len()
+                );
             }
-
-            info!(%crate_name, %crate_id, "Updating default version in the database");
-            if let Err(error) = update_default_version(crate_id, conn) {
-                warn!(%crate_name, %crate_id, ?error, "Failed to update default version");
+            Err(error) => {
+                warn!(%crate_name, ?error, "Failed to delete versions from the database")
             }
-
-            Ok::<_, anyhow::Error>(())
-        })?;
-
-        info!(%crate_name, "Enqueuing index sync jobs");
-        if let Err(error) = jobs::SyncToGitIndex::new(crate_name).enqueue(conn) {
-            warn!(%crate_name, ?error, "Failed to enqueue SyncToGitIndex job");
         }
-        if let Err(error) = jobs::SyncToSparseIndex::new(crate_name).enqueue(conn) {
-            warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
+
+        info!(%crate_name, %crate_id, "Updating default version in the database");
+        if let Err(error) = update_default_version(crate_id, conn).await {
+            warn!(%crate_name, %crate_id, ?error, "Failed to update default version");
         }
 
         Ok::<_, anyhow::Error>(opts)
-    }).await??;
+    }.scope_boxed()).await?;
 
     let crate_name = &opts.crate_name;
+
+    info!(%crate_name, "Enqueuing index sync jobs");
+    let job = jobs::SyncToGitIndex::new(crate_name);
+    if let Err(error) = job.async_enqueue(&mut conn).await {
+        warn!(%crate_name, ?error, "Failed to enqueue SyncToGitIndex job");
+    }
+    let job = jobs::SyncToSparseIndex::new(crate_name);
+    if let Err(error) = job.async_enqueue(&mut conn).await {
+        warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
+    }
 
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
