@@ -1,12 +1,12 @@
 //! Endpoint for searching and discovery functionality
 
 use crate::auth::AuthCheck;
-use crate::util::diesel::prelude::*;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
+use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel_full_text_search::*;
 use http::request::Parts;
 use std::sync::OnceLock;
@@ -46,8 +46,6 @@ use crate::util::RequestUtils;
 /// function out to cover the different use cases, and create unit tests
 /// for them.
 pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_read().await?;
 
     use diesel::sql_types::Float;

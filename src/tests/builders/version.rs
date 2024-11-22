@@ -5,9 +5,9 @@ use crate::{
 };
 use std::collections::BTreeMap;
 
-use crate::util::diesel::prelude::*;
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder {
@@ -98,7 +98,6 @@ impl VersionBuilder {
         connection: &mut AsyncPgConnection,
     ) -> AppResult<Version> {
         use diesel::insert_into;
-        use diesel_async::RunQueryDsl;
 
         let version = self.num.to_string();
 

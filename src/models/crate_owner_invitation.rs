@@ -1,13 +1,13 @@
 use chrono::{NaiveDateTime, Utc};
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use secrecy::SecretString;
 
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{custom, AppResult};
 
 #[derive(Debug)]
@@ -37,8 +37,6 @@ impl CrateOwnerInvitation {
         conn: &mut AsyncPgConnection,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
-        use diesel_async::RunQueryDsl;
-
         #[derive(Insertable, Clone, Copy, Debug)]
         #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
         struct NewRecord {
@@ -99,8 +97,6 @@ impl CrateOwnerInvitation {
         crate_id: i32,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Self> {
-        use diesel_async::RunQueryDsl;
-
         crate_owner_invitations::table
             .find((user_id, crate_id))
             .first::<Self>(conn)
@@ -108,8 +104,6 @@ impl CrateOwnerInvitation {
     }
 
     pub async fn find_by_token(token: &str, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
-        use diesel_async::RunQueryDsl;
-
         crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
             .first::<Self>(conn)
@@ -165,8 +159,6 @@ impl CrateOwnerInvitation {
     }
 
     pub async fn decline(self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
-        use diesel_async::RunQueryDsl;
-
         // The check to prevent declining expired invitations is *explicitly* missing. We do not
         // care if an expired invitation is declined, as that just removes the invitation from the
         // database.

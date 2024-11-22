@@ -11,7 +11,6 @@ use crate::models::{
     Version, VersionOwnerAction,
 };
 use crate::schema::*;
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
 use crate::util::{redirect, RequestUtils};
 use crate::views::{
@@ -21,6 +20,8 @@ use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use std::cmp::Reverse;
 use std::str::FromStr;
@@ -32,8 +33,6 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 
 /// Handles the `GET /crates/:crate_id` route.
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_read().await?;
 
     let include = req
@@ -248,8 +247,6 @@ pub async fn reverse_dependencies(
     Path(name): Path<String>,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = app.db_read().await?;
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;

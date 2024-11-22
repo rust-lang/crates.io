@@ -2,7 +2,6 @@
 
 use crate::models::{krate::NewOwnerInvite, token::EndpointScope};
 use crate::models::{Crate, Owner, Rights, Team, User};
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, models::krate::OwnerAddError};
@@ -11,16 +10,15 @@ use axum::extract::Path;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::AsyncConnection;
+use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
 use http::StatusCode;
 use secrecy::{ExposeSecret, SecretString};
 
 /// Handles the `GET /crates/:crate_id/owners` route.
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = state.db_read().await?;
 
     let krate: Crate = Crate::by_name(&crate_name)
@@ -41,8 +39,6 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
 
 /// Handles the `GET /crates/:crate_id/owner_team` route.
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = state.db_read().await?;
     let krate: Crate = Crate::by_name(&crate_name)
         .first(&mut conn)
@@ -61,8 +57,6 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
 
 /// Handles the `GET /crates/:crate_id/owner_user` route.
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let mut conn = state.db_read().await?;
 
     let krate: Crate = Crate::by_name(&crate_name)
@@ -113,8 +107,6 @@ async fn modify_owners(
     body: ChangeOwnersRequest,
     add: bool,
 ) -> AppResult<ErasedJson> {
-    use diesel_async::RunQueryDsl;
-
     let logins = body.owners;
 
     // Bound the number of invites processed per request to limit the cost of

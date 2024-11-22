@@ -1,11 +1,11 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::sql::{date_part, floor, greatest, interval_part, least, pg_enum};
-use crate::util::diesel::prelude::*;
 use crate::util::errors::{AppResult, TooManyRequests};
 use chrono::{NaiveDateTime, Utc};
 use diesel::dsl::IntervalDsl;
+use diesel::prelude::*;
 use diesel::sql_types::Interval;
-use diesel_async::AsyncPgConnection;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -110,8 +110,6 @@ impl RateLimiter {
         now: NaiveDateTime,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Bucket> {
-        use diesel_async::RunQueryDsl;
-
         let config = self.config_for_action(performed_action);
         let refill_rate = (config.rate.as_millis() as i64).milliseconds();
 
@@ -567,8 +565,6 @@ mod tests {
 
     #[tokio::test]
     async fn override_is_used_instead_of_global_burst_if_present() -> anyhow::Result<()> {
-        use diesel_async::RunQueryDsl;
-
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
         let now = now();
@@ -605,8 +601,6 @@ mod tests {
 
     #[tokio::test]
     async fn overrides_can_expire() -> anyhow::Result<()> {
-        use diesel_async::RunQueryDsl;
-
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
         let now = now();
@@ -665,8 +659,6 @@ mod tests {
 
     #[tokio::test]
     async fn override_is_different_for_each_action() -> anyhow::Result<()> {
-        use diesel_async::RunQueryDsl;
-
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
         let now = now();
@@ -711,7 +703,6 @@ mod tests {
 
     async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
-        use diesel_async::RunQueryDsl;
 
         let user = NewUser {
             gh_login,
@@ -730,8 +721,6 @@ mod tests {
         tokens: i32,
         now: NaiveDateTime,
     ) -> QueryResult<Bucket> {
-        use diesel_async::RunQueryDsl;
-
         diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
                 user_id: new_user(conn, "new_user").await?,

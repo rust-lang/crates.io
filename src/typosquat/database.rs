@@ -5,7 +5,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
 };
 
-use crate::util::diesel::prelude::*;
+use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
 use typomania::{AuthorSet, Corpus, Package};

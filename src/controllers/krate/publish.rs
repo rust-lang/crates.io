@@ -2,7 +2,6 @@
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::util::diesel::prelude::*;
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
@@ -13,6 +12,7 @@ use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::{exists, select};
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
