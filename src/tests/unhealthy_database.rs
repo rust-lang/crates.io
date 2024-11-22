@@ -32,26 +32,28 @@ async fn wait_until_healthy(pool: &Pool<AsyncPgConnection>) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn http_error_with_unhealthy_database() {
+async fn http_error_with_unhealthy_database() -> anyhow::Result<()> {
     let (app, anon) = TestApp::init().with_chaos_proxy().empty().await;
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
 
-    app.primary_db_chaosproxy().break_networking().unwrap();
+    app.primary_db_chaosproxy().break_networking()?;
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
-    app.primary_db_chaosproxy().restore_networking().unwrap();
+    app.primary_db_chaosproxy().restore_networking()?;
     wait_until_healthy(&app.as_inner().primary_database).await;
 
     let response = anon.get::<()>("/api/v1/summary").await;
     assert_eq!(response.status(), StatusCode::OK);
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn download_requests_with_unhealthy_database_succeed() {
+async fn download_requests_with_unhealthy_database_succeed() -> anyhow::Result<()> {
     let (app, anon, _, token) = TestApp::init().with_chaos_proxy().with_token().await;
     let mut conn = app.db_conn().await;
 
@@ -61,7 +63,7 @@ async fn download_requests_with_unhealthy_database_succeed() {
         .await
         .unwrap();
 
-    app.primary_db_chaosproxy().break_networking().unwrap();
+    app.primary_db_chaosproxy().break_networking()?;
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/download").await;
     assert_eq!(response.status(), StatusCode::FOUND);
@@ -69,10 +71,12 @@ async fn download_requests_with_unhealthy_database_succeed() {
     let location = assert_some!(response.headers().get("location"));
     let location = assert_ok!(location.to_str());
     assert_that!(location, ends_with("/crates/foo/foo-1.0.0.crate"));
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn fallback_to_replica_returns_user_info() {
+async fn fallback_to_replica_returns_user_info() -> anyhow::Result<()> {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -81,19 +85,21 @@ async fn fallback_to_replica_returns_user_info() {
         .with_user()
         .await;
     app.db_new_user("foo").await;
-    app.primary_db_chaosproxy().break_networking().unwrap();
+    app.primary_db_chaosproxy().break_networking()?;
 
     // When the primary database is down, requests are forwarded to the replica database
     let response = owner.get::<()>(URL).await;
     assert_eq!(response.status(), 200);
 
     // restore primary database connection
-    app.primary_db_chaosproxy().restore_networking().unwrap();
+    app.primary_db_chaosproxy().restore_networking()?;
     wait_until_healthy(&app.as_inner().primary_database).await;
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn restored_replica_returns_user_info() {
+async fn restored_replica_returns_user_info() -> anyhow::Result<()> {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -102,15 +108,15 @@ async fn restored_replica_returns_user_info() {
         .with_user()
         .await;
     app.db_new_user("foo").await;
-    app.primary_db_chaosproxy().break_networking().unwrap();
-    app.replica_db_chaosproxy().break_networking().unwrap();
+    app.primary_db_chaosproxy().break_networking()?;
+    app.replica_db_chaosproxy().break_networking()?;
 
     // When both primary and replica database are down, the request returns an error
     let response = owner.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     // Once the replica database is restored, it should serve as a fallback again
-    app.replica_db_chaosproxy().restore_networking().unwrap();
+    app.replica_db_chaosproxy().restore_networking()?;
     let replica = app
         .as_inner()
         .replica_database
@@ -122,12 +128,14 @@ async fn restored_replica_returns_user_info() {
     assert_eq!(response.status(), StatusCode::OK);
 
     // restore connection
-    app.primary_db_chaosproxy().restore_networking().unwrap();
+    app.primary_db_chaosproxy().restore_networking()?;
     wait_until_healthy(&app.as_inner().primary_database).await;
+
+    Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn restored_primary_returns_user_info() {
+async fn restored_primary_returns_user_info() -> anyhow::Result<()> {
     const URL: &str = "/api/v1/users/foo";
 
     let (app, _, owner) = TestApp::init()
@@ -136,17 +144,19 @@ async fn restored_primary_returns_user_info() {
         .with_user()
         .await;
     app.db_new_user("foo").await;
-    app.primary_db_chaosproxy().break_networking().unwrap();
-    app.replica_db_chaosproxy().break_networking().unwrap();
+    app.primary_db_chaosproxy().break_networking()?;
+    app.replica_db_chaosproxy().break_networking()?;
 
     // When both primary and replica database are down, the request returns an error
     let response = owner.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     // Once the replica database is restored, it should serve as a fallback again
-    app.primary_db_chaosproxy().restore_networking().unwrap();
+    app.primary_db_chaosproxy().restore_networking()?;
     wait_until_healthy(&app.as_inner().primary_database).await;
 
     let response = owner.get::<()>(URL).await;
     assert_eq!(response.status(), StatusCode::OK);
+
+    Ok(())
 }
