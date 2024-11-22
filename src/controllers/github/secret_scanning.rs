@@ -187,7 +187,7 @@ async fn send_notification_email(
         .await
         .context("Failed to find user")?;
 
-    let Some(recipient) = user.async_email(conn).await? else {
+    let Some(recipient) = user.email(conn).await? else {
         return Err(anyhow!("No address found"));
     };
 
@@ -199,7 +199,7 @@ async fn send_notification_email(
         url: &alert.url,
     };
 
-    state.emails.async_send(&recipient, email).await?;
+    state.emails.send(&recipient, email).await?;
 
     Ok(())
 }

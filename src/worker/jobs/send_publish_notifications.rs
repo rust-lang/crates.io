@@ -95,7 +95,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
             };
 
             debug!("Sending publish notification for {krate}@{version} to {email_address}…");
-            let result = ctx.emails.async_send(&email_address, email).await.inspect_err(|err| {
+            let result = ctx.emails.send(&email_address, email).await.inspect_err(|err| {
                 warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
             });
 

@@ -30,7 +30,7 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
         .ok_or_else(|| crate_not_found(&crate_name))?;
 
     let owners = krate
-        .async_owners(&mut conn)
+        .owners(&mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
@@ -144,7 +144,7 @@ async fn modify_owners(
                     .optional()?
                     .ok_or_else(|| crate_not_found(&crate_name))?;
 
-                let owners = krate.async_owners(conn).await?;
+                let owners = krate.owners(conn).await?;
 
                 match user.rights(&app, &owners).await? {
                     Rights::Full => {}
@@ -188,7 +188,7 @@ async fn modify_owners(
                                 ));
 
                                 if let Some(recipient) =
-                                    invitee.async_verified_email(conn).await.ok().flatten()
+                                    invitee.verified_email(conn).await.ok().flatten()
                                 {
                                     emails.push(OwnerInviteEmail {
                                         recipient_email_address: recipient,
@@ -243,7 +243,7 @@ async fn modify_owners(
     for email in emails {
         let addr = email.recipient_email_address().to_string();
 
-        if let Err(e) = app.emails.async_send(&addr, email).await {
+        if let Err(e) = app.emails.send(&addr, email).await {
             warn!("Failed to send co-owner invite email: {e}");
         }
     }

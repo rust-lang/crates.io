@@ -118,7 +118,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         .check(&req, &mut conn)
         .await?;
 
-    let verified_email_address = auth.user().async_verified_email(&mut conn).await?;
+    let verified_email_address = auth.user().verified_email(&mut conn).await?;
     let verified_email_address = verified_email_address.ok_or_else(|| {
         bad_request(format!(
             "A verified email address is required to publish crates to crates.io. \
@@ -349,7 +349,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             None => persist.update(conn).await?,
         };
 
-        let owners = krate.async_owners(conn).await?;
+        let owners = krate.owners(conn).await?;
         if user.rights(&app, &owners).await? < Rights::Publish {
             return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
         }

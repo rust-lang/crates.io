@@ -50,7 +50,7 @@ pub async fn update_user(
                 .await?;
 
             if !publish_notifications {
-                let email_address = user.async_verified_email(&mut conn).await?;
+                let email_address = user.verified_email(&mut conn).await?;
 
                 if let Some(email_address) = email_address {
                     let email = PublishNotificationsUnsubscribeEmail {
@@ -58,7 +58,7 @@ pub async fn update_user(
                         domain: &state.emails.domain,
                     };
 
-                    if let Err(error) = state.emails.async_send(&email_address, email).await {
+                    if let Err(error) = state.emails.send(&email_address, email).await {
                         warn!("Failed to send publish notifications unsubscribe email to {email_address}: {error}");
                     }
                 }
@@ -103,7 +103,7 @@ pub async fn update_user(
             token,
         };
 
-        let _ = state.emails.async_send(user_email, email).await;
+        let _ = state.emails.send(user_email, email).await;
     }
 
     ok_true()

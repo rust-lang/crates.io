@@ -37,7 +37,7 @@ pub mod faker {
             .name(team)
             .build();
 
-        Ok(team.async_create_or_update(conn).await?)
+        Ok(team.create_or_update(conn).await?)
     }
 
     pub fn user(conn: &mut PgConnection, login: &str) -> QueryResult<User> {

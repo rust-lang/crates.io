@@ -71,7 +71,7 @@ impl Owner {
                 Team::create_or_update(app, conn, name, req_user).await?,
             ))
         } else {
-            User::async_find_by_login(conn, name)
+            User::find_by_login(conn, name)
                 .await
                 .optional()?
                 .map(Owner::User)

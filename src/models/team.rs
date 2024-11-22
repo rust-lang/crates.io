@@ -1,5 +1,6 @@
 use bon::Builder;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 
 use crate::app::App;
@@ -10,9 +11,6 @@ use oauth2::AccessToken;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
-use crate::sql::lower;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
@@ -46,9 +44,8 @@ pub struct NewTeam<'a> {
 }
 
 impl<'a> NewTeam<'a> {
-    pub async fn async_create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
+    pub async fn create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
         use diesel::insert_into;
-        use diesel_async::RunQueryDsl;
 
         insert_into(teams::table)
             .values(self)
@@ -58,30 +55,9 @@ impl<'a> NewTeam<'a> {
             .get_result(conn)
             .await
     }
-
-    pub fn create_or_update(&self, conn: &mut impl Conn) -> QueryResult<Team> {
-        use diesel::insert_into;
-        use diesel::RunQueryDsl;
-
-        insert_into(teams::table)
-            .values(self)
-            .on_conflict(teams::github_id)
-            .do_update()
-            .set(self)
-            .get_result(conn)
-    }
 }
 
 impl Team {
-    pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<Self> {
-        use diesel::RunQueryDsl;
-
-        teams::table
-            .filter(lower(teams::login).eq(&login.to_lowercase()))
-            .first(conn)
-            .map_err(Into::into)
-    }
-
     /// Tries to create the Team in the DB (assumes a `:` has already been found).
     ///
     /// # Panics
@@ -178,7 +154,7 @@ impl Team {
             .maybe_name(team.name.as_deref())
             .maybe_avatar(org.avatar_url.as_deref())
             .build()
-            .async_create_or_update(conn)
+            .create_or_update(conn)
             .await
             .map_err(Into::into)
     }
@@ -199,8 +175,6 @@ impl Team {
     }
 
     pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        use diesel_async::RunQueryDsl;
-
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
             .inner_join(teams::table)

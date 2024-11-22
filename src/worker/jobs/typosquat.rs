@@ -64,7 +64,7 @@ async fn check(
             };
 
             for recipient in cache.iter_emails() {
-                if let Err(error) = emails.async_send(recipient, email.clone()).await {
+                if let Err(error) = emails.send(recipient, email.clone()).await {
                     error!(
                         ?error,
                         ?recipient,

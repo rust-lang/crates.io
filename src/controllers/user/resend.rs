@@ -45,7 +45,7 @@ pub async fn regenerate_token_and_send(
 
             state
                 .emails
-                .async_send(&email.email, email1)
+                .send(&email.email, email1)
                 .await
                 .map_err(BoxedAppError::from)
         }

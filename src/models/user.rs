@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::app::App;
@@ -11,8 +12,6 @@ use crate::util::errors::AppResult;
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crate::sql::lower;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
@@ -31,27 +30,10 @@ pub struct User {
 
 impl User {
     pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
-        use diesel_async::RunQueryDsl;
-
         users::table.find(id).first(conn).await
     }
 
-    pub fn find_by_login(conn: &mut impl Conn, login: &str) -> QueryResult<User> {
-        use diesel::RunQueryDsl;
-
-        users::table
-            .filter(lower(users::gh_login).eq(login.to_lowercase()))
-            .filter(users::gh_id.ne(-1))
-            .order(users::gh_id.desc())
-            .first(conn)
-    }
-
-    pub async fn async_find_by_login(
-        conn: &mut AsyncPgConnection,
-        login: &str,
-    ) -> QueryResult<User> {
-        use diesel_async::RunQueryDsl;
-
+    pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
         users::table
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
@@ -61,8 +43,6 @@ impl User {
     }
 
     pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        use diesel_async::RunQueryDsl;
-
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .inner_join(users::table)
             .select(User::as_select())
@@ -104,24 +84,10 @@ impl User {
 
     /// Queries the database for the verified emails
     /// belonging to a given user
-    pub fn verified_email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
-        use diesel::RunQueryDsl;
-
-        Email::belonging_to(self)
-            .select(emails::email)
-            .filter(emails::verified.eq(true))
-            .first(conn)
-            .optional()
-    }
-
-    /// Queries the database for the verified emails
-    /// belonging to a given user
-    pub async fn async_verified_email(
+    pub async fn verified_email(
         &self,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Option<String>> {
-        use diesel_async::RunQueryDsl;
-
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
@@ -131,19 +97,7 @@ impl User {
     }
 
     /// Queries for the email belonging to a particular user
-    pub fn email(&self, conn: &mut impl Conn) -> QueryResult<Option<String>> {
-        use diesel::RunQueryDsl;
-
-        Email::belonging_to(self)
-            .select(emails::email)
-            .first(conn)
-            .optional()
-    }
-
-    /// Queries for the email belonging to a particular user
-    pub async fn async_email(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<String>> {
-        use diesel_async::RunQueryDsl;
-
+    pub async fn email(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<String>> {
         Email::belonging_to(self)
             .select(emails::email)
             .first(conn)
@@ -191,7 +145,6 @@ impl<'a> NewUser<'a> {
         use diesel::insert_into;
         use diesel::pg::upsert::excluded;
         use diesel::sql_types::Integer;
-        use diesel_async::RunQueryDsl;
 
         conn.transaction(|conn| {
             async move {
@@ -239,7 +192,7 @@ impl<'a> NewUser<'a> {
                             domain: &emails.domain,
                             token,
                         };
-                        let _ = emails.async_send(user_email, email).await;
+                        let _ = emails.send(user_email, email).await;
                     }
                 }
 

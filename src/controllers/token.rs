@@ -132,7 +132,7 @@ pub async fn new(
         .transpose()
         .map_err(|_err| bad_request("invalid endpoint scope"))?;
 
-    let recipient = user.async_email(&mut conn).await?;
+    let recipient = user.email(&mut conn).await?;
 
     let api_token = ApiToken::insert_with_scopes(
         &mut conn,
@@ -154,7 +154,7 @@ pub async fn new(
         // At this point the token has been created so failing to send the
         // email should not cause an error response to be returned to the
         // caller.
-        let email_ret = app.emails.async_send(&recipient, email).await;
+        let email_ret = app.emails.send(&recipient, email).await;
         if let Err(e) = email_ret {
             error!("Failed to send token creation email: {e}")
         }

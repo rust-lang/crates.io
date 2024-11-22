@@ -110,7 +110,7 @@ async fn prepare_list(
             ListFilter::CrateName(crate_name) => {
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
-                let owners = krate.async_owners(conn).await?;
+                let owners = krate.owners(conn).await?;
                 if user.rights(state, &owners).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));

@@ -10,7 +10,6 @@ use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use rand::distributions::{Alphanumeric, DistString};
 use std::sync::Arc;
-use tokio::runtime::Handle;
 
 pub trait Email {
     fn subject(&self) -> String;
@@ -115,15 +114,7 @@ impl Emails {
         Ok(message)
     }
 
-    pub fn send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
-        let email = self.build_message(recipient, email)?;
-
-        Handle::current()
-            .block_on(self.backend.send(email))
-            .map_err(EmailError::TransportError)
-    }
-
-    pub async fn async_send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
+    pub async fn send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
         let email = self.build_message(recipient, email)?;
 
         self.backend
@@ -195,7 +186,7 @@ mod tests {
         let emails = Emails::new_in_memory();
 
         let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
-        assert_err!(emails.async_send(address, TestEmail).await);
+        assert_err!(emails.send(address, TestEmail).await);
     }
 
     #[tokio::test]
@@ -203,6 +194,6 @@ mod tests {
         let emails = Emails::new_in_memory();
 
         let address = "someone@example.com";
-        assert_ok!(emails.async_send(address, TestEmail).await);
+        assert_ok!(emails.send(address, TestEmail).await);
     }
 }

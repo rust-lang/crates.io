@@ -2,9 +2,10 @@ use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
+use diesel::prelude::*;
 use diesel::sql_types::{Bool, Integer, Text};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 use thiserror::Error;
 
@@ -17,8 +18,6 @@ use crate::models::{
 };
 use crate::schema::*;
 use crate::sql::canon_crate_name;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use crate::util::errors::{bad_request, version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
 
@@ -110,7 +109,6 @@ pub struct NewCrate<'a> {
 impl<'a> NewCrate<'a> {
     pub async fn update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Crate> {
         use diesel::update;
-        use diesel_async::RunQueryDsl;
 
         update(crates::table)
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(self.name)))
@@ -127,8 +125,6 @@ impl<'a> NewCrate<'a> {
     }
 
     pub async fn create(&self, conn: &mut AsyncPgConnection, user_id: i32) -> QueryResult<Crate> {
-        use diesel_async::RunQueryDsl;
-
         conn.transaction(|conn| {
             async move {
                 let krate: Crate = diesel::insert_into(crates::table)
@@ -209,8 +205,6 @@ impl Crate {
         conn: &mut AsyncPgConnection,
         version: &str,
     ) -> AppResult<Version> {
-        use diesel_async::RunQueryDsl;
-
         Version::belonging_to(self)
             .filter(versions::num.eq(version))
             .first(conn)
@@ -353,8 +347,6 @@ impl Crate {
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
     pub async fn top_versions(&self, conn: &mut AsyncPgConnection) -> QueryResult<TopVersions> {
-        use diesel_async::RunQueryDsl;
-
         Ok(TopVersions::from_date_version_pairs(
             Version::belonging_to(self)
                 .filter(versions::yanked.eq(false))
@@ -364,9 +356,7 @@ impl Crate {
         ))
     }
 
-    pub async fn async_owners(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
-        use diesel_async::RunQueryDsl;
-
+    pub async fn owners(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let users = CrateOwner::by_owner_kind(OwnerKind::User)
             .filter(crate_owners::crate_id.eq(self.id))
             .order((crate_owners::owner_id, crate_owners::owner_kind))
@@ -384,29 +374,6 @@ impl Crate {
             .select(Team::as_select())
             .load(conn)
             .await?
-            .into_iter()
-            .map(Owner::Team);
-
-        Ok(users.chain(teams).collect())
-    }
-
-    pub fn owners(&self, conn: &mut impl Conn) -> QueryResult<Vec<Owner>> {
-        use diesel::RunQueryDsl;
-
-        let users = CrateOwner::by_owner_kind(OwnerKind::User)
-            .filter(crate_owners::crate_id.eq(self.id))
-            .order((crate_owners::owner_id, crate_owners::owner_kind))
-            .inner_join(users::table)
-            .select(User::as_select())
-            .load(conn)?
-            .into_iter()
-            .map(Owner::User);
-        let teams = CrateOwner::by_owner_kind(OwnerKind::Team)
-            .filter(crate_owners::crate_id.eq(self.id))
-            .order((crate_owners::owner_id, crate_owners::owner_kind))
-            .inner_join(teams::table)
-            .select(Team::as_select())
-            .load(conn)?
             .into_iter()
             .map(Owner::Team);
 
@@ -423,7 +390,6 @@ impl Crate {
         login: &str,
     ) -> Result<NewOwnerInvite, OwnerAddError> {
         use diesel::insert_into;
-        use diesel_async::RunQueryDsl;
 
         let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
         match owner {
@@ -466,8 +432,6 @@ impl Crate {
     }
 
     pub async fn owner_remove(&self, conn: &mut AsyncPgConnection, login: &str) -> AppResult<()> {
-        use diesel_async::RunQueryDsl;
-
         let query = diesel::sql_query(
             r#"WITH crate_owners_with_login AS (
                 SELECT
@@ -519,7 +483,6 @@ impl Crate {
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
-        use diesel_async::RunQueryDsl;
 
         let offset = options.offset().unwrap_or_default();
         let rows: Vec<WithCount<ReverseDependency>> =
