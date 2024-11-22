@@ -14,7 +14,7 @@ static PATH_DATE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}-\d{6}").unwrap());
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_dump_db_job() {
+async fn test_dump_db_job() -> anyhow::Result<()> {
     let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
@@ -22,7 +22,7 @@ async fn test_dump_db_job() {
         .expect_build(&mut conn)
         .await;
 
-    DumpDb.enqueue(&mut conn).await.unwrap();
+    DumpDb.enqueue(&mut conn).await?;
 
     app.run_pending_background_jobs().await;
 
@@ -31,9 +31,9 @@ async fn test_dump_db_job() {
     db-dump.zip
     ");
 
-    let path = object_store::path::Path::parse("db-dump.tar.gz").unwrap();
-    let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
-    let bytes = result.bytes().await.unwrap();
+    let path = object_store::path::Path::parse("db-dump.tar.gz")?;
+    let result = app.as_inner().storage.as_inner().get(&path).await?;
+    let bytes = result.bytes().await?;
 
     let gz = GzDecoder::new(bytes.reader());
     let mut tar = Archive::new(gz);
@@ -66,11 +66,11 @@ async fn test_dump_db_job() {
     ]
     "#);
 
-    let path = object_store::path::Path::parse("db-dump.zip").unwrap();
-    let result = app.as_inner().storage.as_inner().get(&path).await.unwrap();
-    let bytes = result.bytes().await.unwrap();
+    let path = object_store::path::Path::parse("db-dump.zip")?;
+    let result = app.as_inner().storage.as_inner().get(&path).await?;
+    let bytes = result.bytes().await?;
 
-    let archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+    let archive = zip::ZipArchive::new(Cursor::new(bytes))?;
     let zip_paths = archive.file_names().collect::<Vec<_>>();
     assert_debug_snapshot!(zip_paths, @r#"
     [
@@ -97,6 +97,8 @@ async fn test_dump_db_job() {
         "data/version_downloads.csv",
     ]
     "#);
+
+    Ok(())
 }
 
 fn tar_paths<R: Read>(archive: &mut Archive<R>) -> Vec<String> {
