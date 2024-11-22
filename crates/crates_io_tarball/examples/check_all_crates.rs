@@ -1,10 +1,11 @@
 use anyhow::anyhow;
 use clap::Parser;
-use crates_io_tarball::process_tarball;
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use crates_io_tarball::async_process_tarball;
+use futures_util::{stream, StreamExt};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
-use std::fs::File;
 use std::path::{Path, PathBuf};
+use tokio::fs::File;
 use tracing::{debug, info, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -17,7 +18,8 @@ pub struct Options {
     path: PathBuf,
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     setup_tracing();
 
     let options = Options::parse();
@@ -51,19 +53,22 @@ fn main() -> anyhow::Result<()> {
         ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta}) {wide_msg}").unwrap(),
     );
 
-    paths
-        .par_iter()
-        .progress_with(pb.clone())
-        .for_each(|path| process_path(path, &pb));
+    stream::iter(paths.iter().progress_with(pb.clone()))
+        .for_each_concurrent(None, |path| {
+            let pb = pb.clone();
+            async move { process_path(path, &pb).await }
+        })
+        .await;
 
     Ok(())
 }
 
-fn process_path(path: &Path, pb: &ProgressBar) {
-    let file =
-        File::open(path).map_err(|error| pb.suspend(|| warn!(%error, "Failed to read crate file")));
+async fn process_path(path: &Path, pb: &ProgressBar) {
+    let file = File::open(path)
+        .await
+        .map_err(|error| pb.suspend(|| warn!(%error, "Failed to read crate file")));
 
-    let Ok(file) = file else {
+    let Ok(mut file) = file else {
         return;
     };
 
@@ -71,7 +76,7 @@ fn process_path(path: &Path, pb: &ProgressBar) {
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
     pb.set_message(format!("{pkg_name}"));
 
-    let result = process_tarball(&pkg_name, &file, u64::MAX);
+    let result = async_process_tarball(&pkg_name, &mut file, u64::MAX).await;
     pb.suspend(|| match result {
         Ok(result) => debug!(%pkg_name, path = %path.display(), ?result),
         Err(error) => warn!(%pkg_name, path = %path.display(), %error, "Failed to process tarball"),
