@@ -23,7 +23,7 @@ async fn index() {
     assert_eq!(json.keywords.len(), 0);
     assert_eq!(json.meta.total, 0);
 
-    Keyword::async_find_or_create_all(&mut conn, &["foo"])
+    Keyword::find_or_create_all(&mut conn, &["foo"])
         .await
         .unwrap();
 

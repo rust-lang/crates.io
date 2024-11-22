@@ -1,11 +1,10 @@
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 use crate::sql::pg_enum;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 use bon::Builder;
 use chrono::NaiveDateTime;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 pg_enum! {
     pub enum VersionAction {
@@ -51,17 +50,14 @@ pub struct VersionOwnerAction {
 }
 
 impl VersionOwnerAction {
-    pub fn all(conn: &mut impl Conn) -> QueryResult<Vec<Self>> {
-        use diesel::RunQueryDsl;
-
-        version_owner_actions::table.load(conn)
+    pub async fn all(conn: &mut AsyncPgConnection) -> QueryResult<Vec<Self>> {
+        version_owner_actions::table.load(conn).await
     }
 
     pub async fn by_version(
         conn: &mut AsyncPgConnection,
         version: &Version,
     ) -> QueryResult<Vec<(Self, User)>> {
-        use diesel_async::RunQueryDsl;
         use version_owner_actions::dsl::version_id;
 
         version_owner_actions::table
@@ -72,25 +68,10 @@ impl VersionOwnerAction {
             .await
     }
 
-    pub fn for_versions(
-        conn: &mut impl Conn,
-        versions: &[&Version],
-    ) -> QueryResult<Vec<Vec<(Self, User)>>> {
-        use diesel::RunQueryDsl;
-
-        Ok(Self::belonging_to(versions)
-            .inner_join(users::table)
-            .order(version_owner_actions::dsl::id)
-            .load(conn)?
-            .grouped_by(versions))
-    }
-
-    pub async fn async_for_versions(
+    pub async fn for_versions(
         conn: &mut AsyncPgConnection,
         versions: &[&Version],
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
-        use diesel_async::RunQueryDsl;
-
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)
             .order(version_owner_actions::dsl::id)
@@ -111,20 +92,7 @@ pub struct NewVersionOwnerAction {
 }
 
 impl NewVersionOwnerAction {
-    pub fn insert(&self, conn: &mut impl Conn) -> QueryResult<VersionOwnerAction> {
-        use diesel::RunQueryDsl;
-
-        diesel::insert_into(version_owner_actions::table)
-            .values(self)
-            .get_result(conn)
-    }
-
-    pub async fn async_insert(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<VersionOwnerAction> {
-        use diesel_async::RunQueryDsl;
-
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<VersionOwnerAction> {
         diesel::insert_into(version_owner_actions::table)
             .values(self)
             .get_result(conn)

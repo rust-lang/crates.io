@@ -344,7 +344,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
         // To avoid race conditions, we try to insert
         // first so we know whether to add an owner
-        let krate = match persist.async_create(conn, user.id).await.optional()? {
+        let krate = match persist.create(conn, user.id).await.optional()? {
             Some(krate) => krate,
             None => persist.update(conn).await?,
         };
@@ -400,7 +400,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .maybe_edition(edition)
             .build();
 
-        let version = new_version.async_save(conn, &verified_email_address).await.map_err(|error| {
+        let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {
             use diesel::result::{Error, DatabaseErrorKind};
             match error {
                 Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
@@ -415,7 +415,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .maybe_api_token_id(api_token_id)
             .action(VersionAction::Publish)
             .build()
-            .async_insert(conn)
+            .insert(conn)
             .await?;
 
         // Link this new version to all dependencies
@@ -457,7 +457,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
             // Update the default version asynchronously in a background job
             // to ensure correctness and eventual consistency.
-            UpdateDefaultVersion::new(krate.id).async_enqueue(conn).await?;
+            UpdateDefaultVersion::new(krate.id).enqueue(conn).await?;
         } else {
             diesel::insert_into(default_versions::table)
                 .values((
@@ -469,18 +469,18 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         }
 
         // Update all keywords for this crate
-        Keyword::async_update_crate(conn, krate.id, &keywords).await?;
+        Keyword::update_crate(conn, krate.id, &keywords).await?;
 
         // Update all categories for this crate, collecting any invalid categories
         // in order to be able to return an error to the user.
-        let unknown_categories = Category::async_update_crate(conn, krate.id, &categories).await?;
+        let unknown_categories = Category::update_crate(conn, krate.id, &categories).await?;
         if !unknown_categories.is_empty() {
             let unknown_categories = unknown_categories.join(", ");
             let domain = &app.config.domain_name;
             return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
         }
 
-        let top_versions = krate.async_top_versions(conn).await?;
+        let top_versions = krate.top_versions(conn).await?;
 
         let downloads: i64 = crate_downloads::table.select(crate_downloads::downloads)
             .filter(crate_downloads::crate_id.eq(krate.id))
@@ -499,7 +499,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
                         .unwrap_or_else(|| String::from("README.md")),
                     repository,
                     pkg_path_in_vcs,
-                ).async_enqueue(conn).await?;
+                ).enqueue(conn).await?;
             }
         }
 
@@ -508,27 +508,27 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        jobs::SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
-        jobs::SyncToSparseIndex::new(&krate.name).async_enqueue(conn).await?;
+        jobs::SyncToGitIndex::new(&krate.name).enqueue(conn).await?;
+        jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn).await?;
 
-        SendPublishNotificationsJob::new(version.id).async_enqueue(conn).await?;
+        SendPublishNotificationsJob::new(version.id).enqueue(conn).await?;
 
         // Experiment: check new crates for potential typosquatting.
         if existing_crate.is_none() {
-            CheckTyposquat::new(&krate.name).async_enqueue(conn).await?;
+            CheckTyposquat::new(&krate.name).enqueue(conn).await?;
         }
 
         let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
-        if let Err(error) = job.async_enqueue(conn).await {
+        if let Err(error) = job.enqueue(conn).await {
             error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
         }
 
-        if let Err(error) = jobs::rss::SyncUpdatesFeed.async_enqueue(conn).await {
+        if let Err(error) = jobs::rss::SyncUpdatesFeed.enqueue(conn).await {
             error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
         }
 
         if existing_crate.is_none() {
-            if let Err(error) = jobs::rss::SyncCratesFeed.async_enqueue(conn).await {
+            if let Err(error) = jobs::rss::SyncCratesFeed.enqueue(conn).await {
                 error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
             }
         }

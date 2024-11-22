@@ -4,11 +4,10 @@ use diesel::{
     TextExpressionMethods,
 };
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use crate::models::Crate;
 use crate::schema::*;
-use crate::util::diesel::Conn;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
@@ -47,12 +46,11 @@ impl Category {
         categories::table.filter(filter)
     }
 
-    pub async fn async_update_crate(
+    pub async fn update_crate(
         conn: &mut AsyncPgConnection,
         crate_id: i32,
         slugs: &[&str],
     ) -> QueryResult<Vec<String>> {
-        use diesel_async::RunQueryDsl;
         conn.transaction(|conn| {
             async move {
                 let categories: Vec<Category> = categories::table
@@ -91,43 +89,7 @@ impl Category {
         .await
     }
 
-    pub fn update_crate(
-        conn: &mut impl Conn,
-        crate_id: i32,
-        slugs: &[&str],
-    ) -> QueryResult<Vec<String>> {
-        use diesel::RunQueryDsl;
-        conn.transaction(|conn| {
-            let categories: Vec<Category> = categories::table
-                .filter(categories::slug.eq_any(slugs))
-                .load(conn)?;
-            let invalid_categories = slugs
-                .iter()
-                .filter(|s| !categories.iter().any(|c| c.slug == **s))
-                .map(ToString::to_string)
-                .collect();
-            let crate_categories = categories
-                .iter()
-                .map(|c| CrateCategory {
-                    category_id: c.id,
-                    crate_id,
-                })
-                .collect::<Vec<_>>();
-
-            delete(crates_categories::table)
-                .filter(crates_categories::crate_id.eq(crate_id))
-                .execute(conn)?;
-
-            insert_into(crates_categories::table)
-                .values(&crate_categories)
-                .execute(conn)?;
-
-            Ok(invalid_categories)
-        })
-    }
-
     pub async fn count_toplevel(conn: &mut AsyncPgConnection) -> QueryResult<i64> {
-        use diesel_async::RunQueryDsl;
         categories::table
             .filter(categories::category.not_like("%::%"))
             .count()
@@ -142,7 +104,6 @@ impl Category {
         offset: i64,
     ) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Int8;
-        use diesel_async::RunQueryDsl;
 
         let sort_sql = match sort {
             "crates" => "ORDER BY crates_cnt DESC",
@@ -160,7 +121,6 @@ impl Category {
 
     pub async fn subcategories(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
-        use diesel_async::RunQueryDsl;
 
         sql_query(include_str!("../subcategories.sql"))
             .bind::<Text, _>(&self.category)
@@ -177,7 +137,6 @@ impl Category {
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
-        use diesel_async::RunQueryDsl;
 
         sql_query(include_str!("../parent_categories.sql"))
             .bind::<Text, _>(&self.slug)

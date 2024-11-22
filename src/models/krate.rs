@@ -126,11 +126,7 @@ impl<'a> NewCrate<'a> {
             .await
     }
 
-    pub async fn async_create(
-        &self,
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-    ) -> QueryResult<Crate> {
+    pub async fn create(&self, conn: &mut AsyncPgConnection, user_id: i32) -> QueryResult<Crate> {
         use diesel_async::RunQueryDsl;
 
         conn.transaction(|conn| {
@@ -160,32 +156,6 @@ impl<'a> NewCrate<'a> {
             .scope_boxed()
         })
         .await
-    }
-
-    pub fn create(&self, conn: &mut impl Conn, user_id: i32) -> QueryResult<Crate> {
-        use diesel::RunQueryDsl;
-
-        conn.transaction(|conn| {
-            let krate: Crate = diesel::insert_into(crates::table)
-                .values(self)
-                .on_conflict_do_nothing()
-                .returning(Crate::as_returning())
-                .get_result(conn)?;
-
-            let owner = CrateOwner {
-                crate_id: krate.id,
-                owner_id: user_id,
-                created_by: user_id,
-                owner_kind: OwnerKind::User,
-                email_notifications: true,
-            };
-
-            diesel::insert_into(crate_owners::table)
-                .values(&owner)
-                .execute(conn)?;
-
-            Ok(krate)
-        })
     }
 }
 
@@ -382,10 +352,7 @@ impl Crate {
     /// Return both the newest (most recently updated) and
     /// highest version (in semver order) for the current crate,
     /// where all top versions are not yanked.
-    pub async fn async_top_versions(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<TopVersions> {
+    pub async fn top_versions(&self, conn: &mut AsyncPgConnection) -> QueryResult<TopVersions> {
         use diesel_async::RunQueryDsl;
 
         Ok(TopVersions::from_date_version_pairs(
@@ -394,20 +361,6 @@ impl Crate {
                 .select((versions::created_at, versions::num))
                 .load(conn)
                 .await?,
-        ))
-    }
-
-    /// Return both the newest (most recently updated) and
-    /// highest version (in semver order) for the current crate,
-    /// where all top versions are not yanked.
-    pub fn top_versions(&self, conn: &mut impl Conn) -> QueryResult<TopVersions> {
-        use diesel::RunQueryDsl;
-
-        Ok(TopVersions::from_date_version_pairs(
-            Version::belonging_to(self)
-                .filter(versions::yanked.eq(false))
-                .select((versions::created_at, versions::num))
-                .load(conn)?,
         ))
     }
 

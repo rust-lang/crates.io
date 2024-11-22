@@ -20,7 +20,7 @@ async fn test_sync_crate_feed() {
     create_version(&mut conn, "foo", "1.2.0", "2024-06-22T15:57:19Z").await;
 
     let job = jobs::rss::SyncCrateFeed::new("foo".to_string());
-    job.async_enqueue(&mut conn).await.unwrap();
+    job.enqueue(&mut conn).await.unwrap();
 
     app.run_pending_background_jobs().await;
 

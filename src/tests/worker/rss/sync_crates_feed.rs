@@ -19,10 +19,7 @@ async fn test_sync_crates_feed() {
     create_crate(&mut conn, "baz", description, "2024-06-21T17:01:33Z").await;
     create_crate(&mut conn, "quux", None, "2024-06-21T17:03:45Z").await;
 
-    jobs::rss::SyncCratesFeed
-        .async_enqueue(&mut conn)
-        .await
-        .unwrap();
+    jobs::rss::SyncCratesFeed.enqueue(&mut conn).await.unwrap();
 
     app.run_pending_background_jobs().await;
 

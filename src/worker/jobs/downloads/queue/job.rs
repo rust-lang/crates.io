@@ -209,7 +209,7 @@ async fn enqueue_jobs(
         let path = &job.path;
 
         info!("Enqueuing processing job… ({path})");
-        job.async_enqueue(conn)
+        job.enqueue(conn)
             .await
             .context("Failed to enqueue processing job")?;
 

@@ -122,7 +122,7 @@ impl<'a> CrateBuilder<'a> {
         use diesel::{insert_into, select, update};
         use diesel_async::RunQueryDsl;
 
-        let mut krate = self.krate.async_create(connection, self.owner_id).await?;
+        let mut krate = self.krate.create(connection, self.owner_id).await?;
 
         // Since we are using `NewCrate`, we can't set all the
         // crate properties in a single DB call.
@@ -162,11 +162,11 @@ impl<'a> CrateBuilder<'a> {
         }
 
         if !self.categories.is_empty() {
-            Category::async_update_crate(connection, krate.id, &self.categories).await?;
+            Category::update_crate(connection, krate.id, &self.categories).await?;
         }
 
         if !self.keywords.is_empty() {
-            Keyword::async_update_crate(connection, krate.id, &self.keywords).await?;
+            Keyword::update_crate(connection, krate.id, &self.keywords).await?;
         }
 
         if let Some(updated_at) = self.updated_at {

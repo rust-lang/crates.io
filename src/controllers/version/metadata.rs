@@ -240,16 +240,12 @@ pub async fn perform_version_yank_update(
         .maybe_api_token_id(api_token_id)
         .action(action)
         .build()
-        .async_insert(conn)
+        .insert(conn)
         .await?;
 
-    SyncToGitIndex::new(&krate.name).async_enqueue(conn).await?;
-    SyncToSparseIndex::new(&krate.name)
-        .async_enqueue(conn)
-        .await?;
-    UpdateDefaultVersion::new(krate.id)
-        .async_enqueue(conn)
-        .await?;
+    SyncToGitIndex::new(&krate.name).enqueue(conn).await?;
+    SyncToSparseIndex::new(&krate.name).enqueue(conn).await?;
+    UpdateDefaultVersion::new(krate.id).enqueue(conn).await?;
 
     Ok(())
 }

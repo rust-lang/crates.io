@@ -96,11 +96,11 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 
     info!(%crate_name, "Enqueuing index sync jobs");
     let job = jobs::SyncToGitIndex::new(crate_name);
-    if let Err(error) = job.async_enqueue(&mut conn).await {
+    if let Err(error) = job.enqueue(&mut conn).await {
         warn!(%crate_name, ?error, "Failed to enqueue SyncToGitIndex job");
     }
     let job = jobs::SyncToSparseIndex::new(crate_name);
-    if let Err(error) = job.async_enqueue(&mut conn).await {
+    if let Err(error) = job.enqueue(&mut conn).await {
         warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
     }
 

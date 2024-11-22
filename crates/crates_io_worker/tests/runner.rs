@@ -76,7 +76,7 @@ async fn jobs_are_locked_when_fetched() -> anyhow::Result<()> {
 
     let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
-    let job_id = assert_some!(TestJob.async_enqueue(&mut conn).await?);
+    let job_id = assert_some!(TestJob.enqueue(&mut conn).await?);
 
     assert!(job_exists(job_id, &mut conn).await?);
     assert!(!job_is_locked(job_id, &mut conn).await?);
@@ -122,7 +122,7 @@ async fn jobs_are_deleted_when_successfully_run() -> anyhow::Result<()> {
 
     assert_eq!(remaining_jobs(&mut conn).await?, 0);
 
-    TestJob.async_enqueue(&mut conn).await?;
+    TestJob.enqueue(&mut conn).await?;
     assert_eq!(remaining_jobs(&mut conn).await?, 1);
 
     let runner = runner.start();
@@ -163,7 +163,7 @@ async fn failed_jobs_do_not_release_lock_before_updating_retry_time() -> anyhow:
 
     let runner = runner(pool, test_context.clone()).register_job_type::<TestJob>();
 
-    TestJob.async_enqueue(&mut conn).await?;
+    TestJob.enqueue(&mut conn).await?;
 
     let runner = runner.start();
     test_context.job_started_barrier.wait().await;
@@ -214,7 +214,7 @@ async fn panicking_in_jobs_updates_retry_counter() -> anyhow::Result<()> {
 
     let runner = runner(pool, ()).register_job_type::<TestJob>();
 
-    let job_id = assert_some!(TestJob.async_enqueue(&mut conn).await?);
+    let job_id = assert_some!(TestJob.enqueue(&mut conn).await?);
 
     let runner = runner.start();
     runner.wait_for_shutdown().await;
@@ -282,11 +282,11 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
         .shutdown_when_queue_empty();
 
     // Enqueue first job
-    assert_some!(TestJob::new("foo").async_enqueue(&mut conn).await?);
+    assert_some!(TestJob::new("foo").enqueue(&mut conn).await?);
     assert_compact_json_snapshot!(all_jobs(&mut conn).await?, @r#"[["test", {"value": "foo"}]]"#);
 
     // Try to enqueue the same job again, which should be deduplicated
-    assert_none!(TestJob::new("foo").async_enqueue(&mut conn).await?);
+    assert_none!(TestJob::new("foo").enqueue(&mut conn).await?);
     assert_compact_json_snapshot!(all_jobs(&mut conn).await?, @r#"[["test", {"value": "foo"}]]"#);
 
     // Start processing the first job
@@ -295,16 +295,16 @@ async fn jobs_can_be_deduplicated() -> anyhow::Result<()> {
 
     // Enqueue the same job again, which should NOT be deduplicated,
     // since the first job already still running
-    assert_some!(TestJob::new("foo").async_enqueue(&mut conn).await?);
+    assert_some!(TestJob::new("foo").enqueue(&mut conn).await?);
     assert_compact_json_snapshot!(all_jobs(&mut conn).await?, @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}]]"#);
 
     // Try to enqueue the same job again, which should be deduplicated again
-    assert_none!(TestJob::new("foo").async_enqueue(&mut conn).await?);
+    assert_none!(TestJob::new("foo").enqueue(&mut conn).await?);
     assert_compact_json_snapshot!(all_jobs(&mut conn).await?, @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}]]"#);
 
     // Enqueue the same job but with different data, which should
     // NOT be deduplicated
-    assert_some!(TestJob::new("bar").async_enqueue(&mut conn).await?);
+    assert_some!(TestJob::new("bar").enqueue(&mut conn).await?);
     assert_compact_json_snapshot!(all_jobs(&mut conn).await?, @r#"[["test", {"value": "foo"}], ["test", {"value": "foo"}], ["test", {"value": "bar"}]]"#);
 
     // Resolve the final barrier to finish the test

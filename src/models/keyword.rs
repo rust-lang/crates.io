@@ -1,12 +1,11 @@
 use chrono::NaiveDateTime;
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use crate::models::Crate;
 use crate::schema::*;
 use crate::sql::lower;
-use crate::util::diesel::prelude::*;
-use crate::util::diesel::Conn;
 
 #[derive(Clone, Identifiable, Queryable, Debug, Selectable)]
 pub struct Keyword {
@@ -31,20 +30,16 @@ pub struct CrateKeyword {
 
 impl Keyword {
     pub async fn find_by_keyword(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
-        use diesel_async::RunQueryDsl;
-
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
             .first(conn)
             .await
     }
 
-    pub async fn async_find_or_create_all(
+    pub async fn find_or_create_all(
         conn: &mut AsyncPgConnection,
         names: &[&str],
     ) -> QueryResult<Vec<Keyword>> {
-        use diesel_async::RunQueryDsl;
-
         let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
 
         let new_keywords: Vec<_> = lowercase_names
@@ -64,25 +59,6 @@ impl Keyword {
             .await
     }
 
-    pub fn find_or_create_all(conn: &mut impl Conn, names: &[&str]) -> QueryResult<Vec<Keyword>> {
-        use diesel::RunQueryDsl;
-
-        let lowercase_names: Vec<_> = names.iter().map(|s| s.to_lowercase()).collect();
-
-        let new_keywords: Vec<_> = lowercase_names
-            .iter()
-            .map(|s| keywords::keyword.eq(s))
-            .collect();
-
-        diesel::insert_into(keywords::table)
-            .values(&new_keywords)
-            .on_conflict_do_nothing()
-            .execute(conn)?;
-        keywords::table
-            .filter(keywords::keyword.eq_any(&lowercase_names))
-            .load(conn)
-    }
-
     pub fn valid_name(name: &str) -> bool {
         let mut chars = name.chars();
         let first = match chars.next() {
@@ -93,16 +69,14 @@ impl Keyword {
             && chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '+')
     }
 
-    pub async fn async_update_crate(
+    pub async fn update_crate(
         conn: &mut AsyncPgConnection,
         crate_id: i32,
         keywords: &[&str],
     ) -> QueryResult<()> {
         conn.transaction(|conn| {
             async move {
-                use diesel_async::RunQueryDsl;
-
-                let keywords = Keyword::async_find_or_create_all(conn, keywords).await?;
+                let keywords = Keyword::find_or_create_all(conn, keywords).await?;
 
                 diesel::delete(crates_keywords::table)
                     .filter(crates_keywords::crate_id.eq(crate_id))
@@ -128,32 +102,6 @@ impl Keyword {
         })
         .await
     }
-
-    pub fn update_crate(conn: &mut impl Conn, crate_id: i32, keywords: &[&str]) -> QueryResult<()> {
-        conn.transaction(|conn| {
-            use diesel::RunQueryDsl;
-
-            let keywords = Keyword::find_or_create_all(conn, keywords)?;
-
-            diesel::delete(crates_keywords::table)
-                .filter(crates_keywords::crate_id.eq(crate_id))
-                .execute(conn)?;
-
-            let crate_keywords = keywords
-                .into_iter()
-                .map(|kw| CrateKeyword {
-                    crate_id,
-                    keyword_id: kw.id,
-                })
-                .collect::<Vec<_>>();
-
-            diesel::insert_into(crates_keywords::table)
-                .values(&crate_keywords)
-                .execute(conn)?;
-
-            Ok(())
-        })
-    }
 }
 
 #[cfg(test)]
@@ -164,8 +112,6 @@ mod tests {
     #[tokio::test]
     #[allow(clippy::iter_next_slice)]
     async fn dont_associate_with_non_lowercased_keywords() {
-        use diesel_async::RunQueryDsl;
-
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
@@ -178,7 +124,7 @@ mod tests {
             .await
             .unwrap();
 
-        let associated = Keyword::async_find_or_create_all(&mut conn, &["no"])
+        let associated = Keyword::find_or_create_all(&mut conn, &["no"])
             .await
             .unwrap();
         assert_eq!(associated.len(), 1);

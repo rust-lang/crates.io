@@ -83,7 +83,7 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 
     let more = data.next_page_params().is_some();
     let versions = data.iter().map(|(v, ..)| v).collect::<Vec<_>>();
-    let actions = VersionOwnerAction::async_for_versions(&mut conn, &versions).await?;
+    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
     let data = data
         .into_iter()
         .zip(actions)

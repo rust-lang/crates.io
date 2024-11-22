@@ -173,10 +173,10 @@ async fn index_queries() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::async_update_crate(&mut async_conn, krate.id, &["cat1"])
+    Category::update_crate(&mut async_conn, krate.id, &["cat1"])
         .await
         .unwrap();
-    Category::async_update_crate(&mut async_conn, krate2.id, &["cat1::bar"])
+    Category::update_crate(&mut async_conn, krate2.id, &["cat1::bar"])
         .await
         .unwrap();
 
@@ -949,10 +949,10 @@ async fn test_default_sort_recent() {
         .execute(&mut conn)
         .unwrap();
 
-    Category::async_update_crate(&mut async_conn, green_crate.id, &["animal"])
+    Category::update_crate(&mut async_conn, green_crate.id, &["animal"])
         .await
         .unwrap();
-    Category::async_update_crate(&mut async_conn, potato_crate.id, &["animal"])
+    Category::update_crate(&mut async_conn, potato_crate.id, &["animal"])
         .await
         .unwrap();
 

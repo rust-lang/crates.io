@@ -22,7 +22,7 @@ async fn test_dump_db_job() {
         .expect_build(&mut conn)
         .await;
 
-    DumpDb.async_enqueue(&mut conn).await.unwrap();
+    DumpDb.enqueue(&mut conn).await.unwrap();
 
     app.run_pending_background_jobs().await;
 
