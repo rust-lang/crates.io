@@ -9,7 +9,7 @@ use axum::body::Bytes;
 use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
-use crates_io_tarball::{process_tarball, TarballError};
+use crates_io_tarball::{async_process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::{exists, select};
 use diesel::prelude::*;
@@ -34,7 +34,6 @@ use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
-use crate::tasks::spawn_blocking;
 use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
 use crate::util::{BytesRequest, Maximums};
 use crate::views::{
@@ -152,12 +151,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         ));
     }
 
-    let tarball_info = spawn_blocking({
-        let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-        let tarball_bytes = tarball_bytes.clone();
-        move || process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size)
-    })
-    .await??;
+    let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
+    let tarball_bytes = tarball_bytes.clone();
+    let tarball_info =
+        async_process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without
