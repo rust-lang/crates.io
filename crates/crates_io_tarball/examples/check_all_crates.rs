@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use clap::Parser;
-use crates_io_tarball::async_process_tarball;
+use crates_io_tarball::process_tarball;
 use futures_util::{stream, StreamExt};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
@@ -76,7 +76,7 @@ async fn process_path(path: &Path, pb: &ProgressBar) {
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
     pb.set_message(format!("{pkg_name}"));
 
-    let result = async_process_tarball(&pkg_name, &mut file, u64::MAX).await;
+    let result = process_tarball(&pkg_name, &mut file, u64::MAX).await;
     pb.suspend(|| match result {
         Ok(result) => debug!(%pkg_name, path = %path.display(), ?result),
         Err(error) => warn!(%pkg_name, path = %path.display(), %error, "Failed to process tarball"),

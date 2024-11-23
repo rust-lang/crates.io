@@ -9,7 +9,7 @@ use axum::body::Bytes;
 use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
-use crates_io_tarball::{async_process_tarball, TarballError};
+use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::{exists, select};
 use diesel::prelude::*;
@@ -154,7 +154,7 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
     let tarball_bytes = tarball_bytes.clone();
     let tarball_info =
-        async_process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size).await?;
+        process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without

@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use clap::Parser;
-use crates_io_tarball::async_process_tarball;
+use crates_io_tarball::process_tarball;
 use std::path::PathBuf;
 use tokio::fs::File;
 use tracing_subscriber::filter::LevelFilter;
@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
     let path_no_ext = path.with_extension("");
     let pkg_name = path_no_ext.file_name().unwrap().to_string_lossy();
 
-    let result = async_process_tarball(&pkg_name, &mut file, u64::MAX)
+    let result = process_tarball(&pkg_name, &mut file, u64::MAX)
         .await
         .context("Failed to process tarball")?;
 
