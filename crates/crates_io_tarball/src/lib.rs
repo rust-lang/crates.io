@@ -4,14 +4,12 @@ extern crate claims;
 
 #[cfg(any(feature = "builder", test))]
 pub use crate::builder::TarballBuilder;
-use crate::limit_reader::{AsyncLimitErrorReader, LimitErrorReader};
+use crate::limit_reader::AsyncLimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 use cargo_manifest::AbstractFilesystem;
 pub use cargo_manifest::{Manifest, StringOrBool};
-use flate2::read::GzDecoder;
 use std::collections::{BTreeMap, BTreeSet};
-use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tracing::instrument;
@@ -46,103 +44,6 @@ pub enum TarballError {
     TooManyManifests(Vec<PathBuf>),
     #[error(transparent)]
     IO(#[from] std::io::Error),
-}
-
-#[instrument(skip_all, fields(%pkg_name))]
-pub fn process_tarball<R: Read>(
-    pkg_name: &str,
-    tarball: R,
-    max_unpack: u64,
-) -> Result<TarballInfo, TarballError> {
-    // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball);
-
-    // Don't let gzip decompression go into the weeeds, apply a fixed cap after
-    // which point we say the decompressed source is "too large".
-    let decoder = LimitErrorReader::new(decoder, max_unpack);
-
-    // Use this I/O object now to take a peek inside
-    let mut archive = tar::Archive::new(decoder);
-
-    let pkg_root = Path::new(&pkg_name);
-
-    let mut vcs_info = None;
-    let mut paths = Vec::new();
-    let mut manifests = BTreeMap::new();
-
-    for entry in archive.entries()? {
-        let mut entry = entry.map_err(TarballError::Malformed)?;
-
-        // Verify that all entries actually start with `$name-$vers/`.
-        // Historically Cargo didn't verify this on extraction so you could
-        // upload a tarball that contains both `foo-0.1.0/` source code as well
-        // as `bar-0.1.0/` source code, and this could overwrite other crates in
-        // the registry!
-        let entry_path = entry.path()?;
-        let Ok(in_pkg_path) = entry_path.strip_prefix(pkg_root) else {
-            return Err(TarballError::InvalidPath(entry_path.display().to_string()));
-        };
-
-        // Historical versions of the `tar` crate which Cargo uses internally
-        // don't properly prevent hard links and symlinks from overwriting
-        // arbitrary files on the filesystem. As a bit of a hammer we reject any
-        // tarball with these sorts of links. Cargo doesn't currently ever
-        // generate a tarball with these file types so this should work for now.
-        let entry_type = entry.header().entry_type();
-        if entry_type.is_hard_link() || entry_type.is_symlink() {
-            return Err(TarballError::UnexpectedSymlink(
-                entry_path.display().to_string(),
-            ));
-        }
-
-        paths.push(in_pkg_path.to_path_buf());
-
-        // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
-        // in the package root in the tarball.
-        if entry_path.parent() == Some(pkg_root) {
-            let entry_file = entry_path.file_name().unwrap_or_default();
-            if entry_file == ".cargo_vcs_info.json" {
-                let mut contents = String::new();
-                entry.read_to_string(&mut contents)?;
-                vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-            } else if entry_file.to_ascii_lowercase() == "cargo.toml" {
-                // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
-                // cannot be read.
-                let owned_entry_path = entry_path.into_owned();
-                let mut contents = String::new();
-                entry.read_to_string(&mut contents)?;
-
-                let manifest = Manifest::from_str(&contents)?;
-                validate_manifest(&manifest)?;
-
-                manifests.insert(owned_entry_path, manifest);
-            }
-        }
-    }
-
-    if manifests.len() > 1 {
-        // There are no scenarios where we want to accept a crate file with multiple manifests.
-        return Err(TarballError::TooManyManifests(
-            manifests.into_keys().collect(),
-        ));
-    }
-
-    // Although we're interested in all possible cases of `Cargo.toml` above to protect users
-    // on case-insensitive filesystems, to match the behaviour of cargo we should only actually
-    // accept `Cargo.toml` and (the now deprecated) `cargo.toml` as valid options for the
-    // manifest.
-    let Some((path, mut manifest)) = manifests.pop_first() else {
-        return Err(TarballError::MissingManifest);
-    };
-
-    let file = path.file_name().unwrap_or_default();
-    if file != "Cargo.toml" && file != "cargo.toml" {
-        return Err(TarballError::IncorrectlyCasedManifest(file.into()));
-    }
-
-    manifest.complete_from_abstract_filesystem(&PathsFileSystem(paths))?;
-
-    Ok(TarballInfo { manifest, vcs_info })
 }
 
 #[instrument(skip_all, fields(%pkg_name))]
