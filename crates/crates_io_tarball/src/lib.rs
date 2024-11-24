@@ -4,7 +4,7 @@ extern crate claims;
 
 #[cfg(any(feature = "builder", test))]
 pub use crate::builder::TarballBuilder;
-use crate::limit_reader::AsyncLimitErrorReader;
+use crate::limit_reader::LimitErrorReader;
 use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 use cargo_manifest::AbstractFilesystem;
@@ -62,7 +62,7 @@ pub async fn async_process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
-    let decoder = AsyncLimitErrorReader::new(decoder, max_unpack);
+    let decoder = LimitErrorReader::new(decoder, max_unpack);
 
     // Use this I/O object now to take a peek inside
     let mut archive = tokio_tar::Archive::new(decoder);
