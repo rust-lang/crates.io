@@ -1036,6 +1036,7 @@ name = "crates_io"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-compression",
  "async-trait",
  "aws-credential-types",
  "aws-ip-ranges",
@@ -1086,6 +1087,7 @@ dependencies = [
  "insta",
  "ipnetwork",
  "json-subscriber",
+ "krata-tokio-tar",
  "lettre",
  "minijinja",
  "mockall",
