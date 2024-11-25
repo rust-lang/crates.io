@@ -9,11 +9,11 @@ use crate::manifest::validate_manifest;
 pub use crate::vcs_info::CargoVcsInfo;
 use cargo_manifest::AbstractFilesystem;
 pub use cargo_manifest::{Manifest, StringOrBool};
-use flate2::read::GzDecoder;
+use futures_util::StreamExt;
 use std::collections::{BTreeMap, BTreeSet};
-use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
+use tokio::io::{AsyncReadExt, BufReader};
 use tracing::instrument;
 
 #[cfg(any(feature = "builder", test))]
@@ -21,6 +21,8 @@ mod builder;
 mod limit_reader;
 mod manifest;
 mod vcs_info;
+
+const DEFAULT_BUF_SIZE: usize = 128 * 1024;
 
 #[derive(Debug)]
 pub struct TarballInfo {
@@ -49,28 +51,30 @@ pub enum TarballError {
 }
 
 #[instrument(skip_all, fields(%pkg_name))]
-pub fn process_tarball<R: Read>(
+pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     pkg_name: &str,
     tarball: R,
     max_unpack: u64,
 ) -> Result<TarballInfo, TarballError> {
+    let tarball = BufReader::with_capacity(DEFAULT_BUF_SIZE, tarball);
     // All our data is currently encoded with gzip
-    let decoder = GzDecoder::new(tarball);
+    let decoder = async_compression::tokio::bufread::GzipDecoder::new(tarball);
 
     // Don't let gzip decompression go into the weeeds, apply a fixed cap after
     // which point we say the decompressed source is "too large".
     let decoder = LimitErrorReader::new(decoder, max_unpack);
 
     // Use this I/O object now to take a peek inside
-    let mut archive = tar::Archive::new(decoder);
+    let mut archive = tokio_tar::Archive::new(decoder);
 
     let pkg_root = Path::new(&pkg_name);
 
     let mut vcs_info = None;
     let mut paths = Vec::new();
     let mut manifests = BTreeMap::new();
+    let mut entries = archive.entries()?;
 
-    for entry in archive.entries()? {
+    while let Some(entry) = entries.next().await {
         let mut entry = entry.map_err(TarballError::Malformed)?;
 
         // Verify that all entries actually start with `$name-$vers/`.
@@ -103,14 +107,14 @@ pub fn process_tarball<R: Read>(
             let entry_file = entry_path.file_name().unwrap_or_default();
             if entry_file == ".cargo_vcs_info.json" {
                 let mut contents = String::new();
-                entry.read_to_string(&mut contents)?;
+                entry.read_to_string(&mut contents).await?;
                 vcs_info = CargoVcsInfo::from_contents(&contents).ok();
             } else if entry_file.to_ascii_lowercase() == "cargo.toml" {
                 // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
                 // cannot be read.
                 let owned_entry_path = entry_path.into_owned();
                 let mut contents = String::new();
-                entry.read_to_string(&mut contents)?;
+                entry.read_to_string(&mut contents).await?;
 
                 let manifest = Manifest::from_str(&contents)?;
                 validate_manifest(&manifest)?;
@@ -183,49 +187,60 @@ mod tests {
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
     const MAX_SIZE: u64 = 512 * 1024 * 1024;
 
-    #[test]
-    fn process_tarball_test() {
+    #[tokio::test]
+    async fn process_tarball_test() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         assert_none!(tarball_info.vcs_info);
         assert_none!(tarball_info.manifest.lib);
         assert_eq!(tarball_info.manifest.bin, vec![]);
         assert_eq!(tarball_info.manifest.example, vec![]);
 
-        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE));
+        let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
     }
 
-    #[test]
-    fn process_tarball_test_incomplete_vcs_info() {
+    #[tokio::test]
+    async fn process_tarball_test_size_limit() {
+        let tarball = TarballBuilder::new()
+            .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
+            .build();
+
+        let err =
+            assert_err!(process_tarball("foo-0.0.1", &*tarball, tarball.len() as u64 - 1).await);
+        assert_snapshot!(err, @"uploaded tarball is malformed or too large when decompressed");
+    }
+
+    #[tokio::test]
+    async fn process_tarball_test_incomplete_vcs_info() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/.cargo_vcs_info.json", br#"{"unknown": "field"}"#)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let vcs_info = assert_some!(tarball_info.vcs_info);
         assert_eq!(vcs_info.path_in_vcs, "");
     }
 
-    #[test]
-    fn process_tarball_test_vcs_info() {
+    #[tokio::test]
+    async fn process_tarball_test_vcs_info() {
         let vcs_info = br#"{"path_in_vcs": "path/in/vcs"}"#;
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/.cargo_vcs_info.json", vcs_info)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let vcs_info = assert_some!(tarball_info.vcs_info);
         assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
     }
 
-    #[test]
-    fn process_tarball_test_manifest() {
+    #[tokio::test]
+    async fn process_tarball_test_manifest() {
         let manifest = br#"
             [package]
             name = "foo"
@@ -238,15 +253,15 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let package = assert_some!(tarball_info.manifest.package);
         assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::String(s))) if s == "README.md");
         assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
         assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.59");
     }
 
-    #[test]
-    fn process_tarball_test_manifest_with_project() {
+    #[tokio::test]
+    async fn process_tarball_test_manifest_with_project() {
         let manifest = br#"
             [project]
             name = "foo"
@@ -257,24 +272,24 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let package = assert_some!(tarball_info.manifest.package);
         assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.23");
     }
 
-    #[test]
-    fn process_tarball_test_manifest_with_default_readme() {
+    #[tokio::test]
+    async fn process_tarball_test_manifest_with_default_readme() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let package = assert_some!(tarball_info.manifest.package);
         assert_none!(package.readme);
     }
 
-    #[test]
-    fn process_tarball_test_manifest_with_boolean_readme() {
+    #[tokio::test]
+    async fn process_tarball_test_manifest_with_boolean_readme() {
         let manifest = br#"
             [package]
             name = "foo"
@@ -285,13 +300,13 @@ mod tests {
             .add_file("foo-0.0.1/Cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let package = assert_some!(tarball_info.manifest.package);
         assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::Bool(b))) if !b);
     }
 
-    #[test]
-    fn process_tarball_test_lowercase_manifest() {
+    #[tokio::test]
+    async fn process_tarball_test_lowercase_manifest() {
         let manifest = br#"
             [package]
             name = "foo"
@@ -302,31 +317,31 @@ mod tests {
             .add_file("foo-0.0.1/cargo.toml", manifest)
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let package = assert_some!(tarball_info.manifest.package);
         assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
     }
 
-    #[test]
-    fn process_tarball_test_incorrect_manifest_casing() {
-        let process = |file: &str| {
+    #[tokio::test]
+    async fn process_tarball_test_incorrect_manifest_casing() {
+        let process = |file| async move {
             let tarball = TarballBuilder::new()
                 .add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE)
+            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await
         };
 
-        let err = assert_err!(process("CARGO.TOML"));
+        let err = assert_err!(process("CARGO.TOML").await);
         assert_snapshot!(err, @r#"Cargo.toml manifest is incorrectly cased: "CARGO.TOML""#);
 
-        let err = assert_err!(process("Cargo.Toml"));
+        let err = assert_err!(process("Cargo.Toml").await);
         assert_snapshot!(err, @r#"Cargo.toml manifest is incorrectly cased: "Cargo.Toml""#);
     }
 
-    #[test]
-    fn process_tarball_test_multiple_manifests() {
-        let process = |files: Vec<&str>| {
+    #[tokio::test]
+    async fn process_tarball_test_multiple_manifests() {
+        let process = |files: Vec<_>| async move {
             let tarball = files
                 .iter()
                 .fold(TarballBuilder::new(), |builder, file| {
@@ -334,35 +349,35 @@ mod tests {
                 })
                 .build();
 
-            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE)
+            process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await
         };
 
-        let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]));
+        let err = assert_err!(process(vec!["cargo.toml", "Cargo.toml"]).await);
         assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"#);
 
-        let err = assert_err!(process(vec!["Cargo.toml", "Cargo.Toml"]));
+        let err = assert_err!(process(vec!["Cargo.toml", "Cargo.Toml"]).await);
         assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/Cargo.Toml", "foo-0.0.1/Cargo.toml"]"#);
 
-        let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]));
+        let err = assert_err!(process(vec!["Cargo.toml", "cargo.toml", "CARGO.TOML"]).await);
         assert_snapshot!(err, @r#"more than one Cargo.toml manifest in tarball: ["foo-0.0.1/CARGO.TOML", "foo-0.0.1/Cargo.toml", "foo-0.0.1/cargo.toml"]"#);
     }
 
-    #[test]
-    fn test_lib() {
+    #[tokio::test]
+    async fn test_lib() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/src/lib.rs", b"pub fn foo() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let lib = assert_some!(tarball_info.manifest.lib);
         assert_debug_snapshot!(lib);
         assert_eq!(tarball_info.manifest.bin, vec![]);
         assert_eq!(tarball_info.manifest.example, vec![]);
     }
 
-    #[test]
-    fn test_lib_with_bins_and_example() {
+    #[tokio::test]
+    async fn test_lib_with_bins_and_example() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/examples/how-to-use-foo.rs", b"fn main() {}")
@@ -371,21 +386,21 @@ mod tests {
             .add_file("foo-0.0.1/src/bin/bar.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         let lib = assert_some!(tarball_info.manifest.lib);
         assert_debug_snapshot!(lib);
         assert_debug_snapshot!(tarball_info.manifest.bin);
         assert_debug_snapshot!(tarball_info.manifest.example);
     }
 
-    #[test]
-    fn test_app() {
+    #[tokio::test]
+    async fn test_app() {
         let tarball = TarballBuilder::new()
             .add_file("foo-0.0.1/Cargo.toml", MANIFEST)
             .add_file("foo-0.0.1/src/main.rs", b"fn main() {}")
             .build();
 
-        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE));
+        let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
         assert_none!(tarball_info.manifest.lib);
         assert_debug_snapshot!(tarball_info.manifest.bin);
         assert_eq!(tarball_info.manifest.example, vec![]);
