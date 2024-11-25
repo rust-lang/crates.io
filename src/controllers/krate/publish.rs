@@ -21,7 +21,7 @@ use http::request::Parts;
 use http::StatusCode;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio_util::io::StreamReader;
 use url::Url;
 
@@ -69,36 +69,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     // .crate tarball file
 
     const MAX_JSON_LENGTH: u32 = 1024 * 1024; // 1 MB
-
-    let json_len = reader.read_u32_le().await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            bad_request("invalid metadata length")
-        } else {
-            e.into()
-        }
-    })?;
-
-    if json_len > MAX_JSON_LENGTH {
-        return Err(custom(
-            StatusCode::PAYLOAD_TOO_LARGE,
-            "JSON metadata blob too large",
-        ));
-    }
-
-    let mut json_bytes = vec![0; json_len as usize];
-    reader.read_exact(&mut json_bytes).await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            let message = format!("invalid metadata length for remaining payload: {json_len}");
-            bad_request(message)
-        } else {
-            e.into()
-        }
-    })?;
-
-    let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
-        .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))?;
-
-    drop(json_bytes);
+    let metadata = read_json_metadata(&mut reader, MAX_JSON_LENGTH).await?;
 
     Crate::validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
 
@@ -629,6 +600,37 @@ async fn count_versions_published_today(
         .count()
         .get_result(conn)
         .await
+}
+
+async fn read_json_metadata<R: AsyncRead + Unpin>(
+    reader: &mut R,
+    max_length: u32,
+) -> Result<PublishMetadata, BoxedAppError> {
+    let json_len = reader.read_u32_le().await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            bad_request("invalid metadata length")
+        } else {
+            e.into()
+        }
+    })?;
+
+    if json_len > max_length {
+        let message = "JSON metadata blob too large";
+        return Err(custom(StatusCode::PAYLOAD_TOO_LARGE, message));
+    }
+
+    let mut json_bytes = vec![0; json_len as usize];
+    reader.read_exact(&mut json_bytes).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            let message = format!("invalid metadata length for remaining payload: {json_len}");
+            bad_request(message)
+        } else {
+            e.into()
+        }
+    })?;
+
+    serde_json::from_slice(&json_bytes)
+        .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))
 }
 
 async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
