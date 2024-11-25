@@ -1114,6 +1114,7 @@ dependencies = [
  "tikv-jemallocator",
  "tokio",
  "tokio-postgres",
+ "tokio-util",
  "toml",
  "tower",
  "tower-http",

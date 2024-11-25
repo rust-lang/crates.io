@@ -5,7 +5,7 @@ use crate::auth::AuthCheck;
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
-use axum::body::Bytes;
+use axum::body::{Body, Bytes};
 use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
@@ -17,10 +17,12 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
 use hex::ToHex;
+use http::request::Parts;
 use http::StatusCode;
-use hyper::body::Buf;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use tokio::io::AsyncReadExt;
+use tokio_util::io::StreamReader;
 use url::Url;
 
 use crate::models::{
@@ -35,7 +37,7 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
-use crate::util::{BytesRequest, Maximums};
+use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
@@ -54,12 +56,49 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
 /// Currently blocks the HTTP thread, perhaps some function calls can spawn new
 /// threads and return completion or error through other methods  a `cargo publish
 /// --status` command, via crates.io's front end, or email.
-pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCrate>> {
-    let (req, bytes) = req.0.into_parts();
-    let (json_bytes, tarball_bytes) = split_body(bytes)?;
+pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
+    let stream = body.into_data_stream();
+    let stream = stream.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err));
+    let mut reader = StreamReader::new(stream);
+
+    // The format of the req.body() of a publish request is as follows:
+    //
+    // metadata length
+    // metadata in JSON about the crate being published
+    // .crate tarball length
+    // .crate tarball file
+
+    const MAX_JSON_LENGTH: u32 = 1024 * 1024; // 1 MB
+
+    let json_len = reader.read_u32_le().await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            bad_request("invalid metadata length")
+        } else {
+            e.into()
+        }
+    })?;
+
+    if json_len > MAX_JSON_LENGTH {
+        return Err(custom(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "JSON metadata blob too large",
+        ));
+    }
+
+    let mut json_bytes = vec![0; json_len as usize];
+    reader.read_exact(&mut json_bytes).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            let message = format!("invalid metadata length for remaining payload: {json_len}");
+            bad_request(message)
+        } else {
+            e.into()
+        }
+    })?;
 
     let metadata: PublishMetadata = serde_json::from_slice(&json_bytes)
         .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))?;
+
+    drop(json_bytes);
 
     Crate::validate_crate_name("crate", &metadata.name).map_err(bad_request)?;
 
@@ -136,7 +175,14 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
         .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
         .await?;
 
-    let content_length = tarball_bytes.len() as u64;
+    let tarball_len = reader.read_u32_le().await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            bad_request("invalid tarball length")
+        } else {
+            e.into()
+        }
+    })?;
+    let content_length = tarball_len as u64;
 
     let maximums = Maximums::new(
         existing_crate.as_ref().and_then(|c| c.max_upload_size),
@@ -150,6 +196,18 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             format!("max upload size is: {}", maximums.max_upload_size),
         ));
     }
+
+    let mut tarball_bytes = vec![0; tarball_len as usize];
+    reader.read_exact(&mut tarball_bytes).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            let message = format!("invalid tarball length for remaining payload: {tarball_len}");
+            bad_request(message)
+        } else {
+            e.into()
+        }
+    })?;
+
+    let tarball_bytes = Bytes::from(tarball_bytes);
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
     let tarball_info =
@@ -571,46 +629,6 @@ async fn count_versions_published_today(
         .count()
         .get_result(conn)
         .await
-}
-
-#[instrument(skip_all)]
-fn split_body(mut bytes: Bytes) -> AppResult<(Bytes, Bytes)> {
-    // The format of the req.body() of a publish request is as follows:
-    //
-    // metadata length
-    // metadata in JSON about the crate being published
-    // .crate tarball length
-    // .crate tarball file
-
-    if bytes.len() < 4 {
-        // Avoid panic in `get_u32_le()` if there is not enough remaining data
-        return Err(bad_request("invalid metadata length"));
-    }
-
-    let json_len = bytes.get_u32_le() as usize;
-    if json_len > bytes.len() {
-        return Err(bad_request(format!(
-            "invalid metadata length for remaining payload: {json_len}"
-        )));
-    }
-
-    let json_bytes = bytes.split_to(json_len);
-
-    if bytes.len() < 4 {
-        // Avoid panic in `get_u32_le()` if there is not enough remaining data
-        return Err(bad_request("invalid tarball length"));
-    }
-
-    let tarball_len = bytes.get_u32_le() as usize;
-    if tarball_len > bytes.len() {
-        return Err(bad_request(format!(
-            "invalid tarball length for remaining payload: {tarball_len}"
-        )));
-    }
-
-    let tarball_bytes = bytes.split_to(tarball_len);
-
-    Ok((json_bytes, tarball_bytes))
 }
 
 async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
