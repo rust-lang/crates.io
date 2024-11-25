@@ -152,7 +152,6 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
     }
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-    let tarball_bytes = tarball_bytes.clone();
     let tarball_info =
         process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size).await?;
 
