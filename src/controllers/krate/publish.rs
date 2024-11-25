@@ -146,39 +146,14 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
         .await?;
 
-    let tarball_len = reader.read_u32_le().await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            bad_request("invalid tarball length")
-        } else {
-            e.into()
-        }
-    })?;
-    let content_length = tarball_len as u64;
-
     let maximums = Maximums::new(
         existing_crate.as_ref().and_then(|c| c.max_upload_size),
         app.config.max_upload_size,
         app.config.max_unpack_size,
     );
 
-    if content_length > maximums.max_upload_size {
-        return Err(custom(
-            StatusCode::PAYLOAD_TOO_LARGE,
-            format!("max upload size is: {}", maximums.max_upload_size),
-        ));
-    }
-
-    let mut tarball_bytes = vec![0; tarball_len as usize];
-    reader.read_exact(&mut tarball_bytes).await.map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            let message = format!("invalid tarball length for remaining payload: {tarball_len}");
-            bad_request(message)
-        } else {
-            e.into()
-        }
-    })?;
-
-    let tarball_bytes = Bytes::from(tarball_bytes);
+    let tarball_bytes = read_tarball_bytes(&mut reader, maximums.max_upload_size as u32).await?;
+    let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
     let tarball_info =
@@ -631,6 +606,36 @@ async fn read_json_metadata<R: AsyncRead + Unpin>(
 
     serde_json::from_slice(&json_bytes)
         .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))
+}
+
+async fn read_tarball_bytes<R: AsyncRead + Unpin>(
+    reader: &mut R,
+    max_length: u32,
+) -> Result<Bytes, BoxedAppError> {
+    let tarball_len = reader.read_u32_le().await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            bad_request("invalid tarball length")
+        } else {
+            e.into()
+        }
+    })?;
+
+    if tarball_len > max_length {
+        let message = format!("max upload size is: {}", max_length);
+        return Err(custom(StatusCode::PAYLOAD_TOO_LARGE, message));
+    }
+
+    let mut tarball_bytes = vec![0; tarball_len as usize];
+    reader.read_exact(&mut tarball_bytes).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::UnexpectedEof {
+            let message = format!("invalid tarball length for remaining payload: {tarball_len}");
+            bad_request(message)
+        } else {
+            e.into()
+        }
+    })?;
+
+    Ok(Bytes::from(tarball_bytes))
 }
 
 async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
