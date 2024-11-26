@@ -7,12 +7,8 @@ use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use diesel::{
-    BelongingToDsl, ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl,
-    SelectableHelper,
-};
-use diesel_async::AsyncPgConnection;
-use diesel_async::RunQueryDsl;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
@@ -30,50 +26,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .get_result(&mut conn)
         .await?;
 
-    async fn encode_crates(
-        conn: &mut AsyncPgConnection,
-        data: Vec<Record>,
-    ) -> AppResult<Vec<EncodableCrate>> {
-        use diesel::GroupedBy;
-        use diesel_async::RunQueryDsl;
-
-        let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
-        let versions: Vec<Version> = Version::belonging_to(&krates)
-            .filter(versions::yanked.eq(false))
-            .select(Version::as_select())
-            .load(conn)
-            .await?;
-
-        versions
-            .grouped_by(&krates)
-            .into_iter()
-            .map(TopVersions::from_versions)
-            .zip(data)
-            .map(
-                |(top_versions, (krate, total, recent, default_version, yanked))| {
-                    Ok(EncodableCrate::from_minimal(
-                        krate,
-                        default_version.as_deref(),
-                        yanked,
-                        Some(&top_versions),
-                        false,
-                        total,
-                        recent,
-                    ))
-                },
-            )
-            .collect()
-    }
-
     let config = &state.config;
-
-    let selection = (
-        Crate::as_select(),
-        crate_downloads::downloads,
-        recent_crate_downloads::downloads.nullable(),
-        versions::num.nullable(),
-        versions::yanked.nullable(),
-    );
 
     let new_crates = crates::table
         .inner_join(crate_downloads::table)
@@ -81,7 +34,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(default_versions::table)
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .order(crates::created_at.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -92,7 +45,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::updated_at.ne(crates::created_at))
         .order(crates::updated_at.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -104,7 +57,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(crate_downloads::downloads.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -116,7 +69,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(recent_crate_downloads::downloads.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -130,16 +83,64 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .map(Keyword::into)
         .collect::<Vec<EncodableKeyword>>();
 
+    let new_crates = encode_crates(&mut conn, new_crates).await?;
+    let most_downloaded = encode_crates(&mut conn, most_downloaded).await?;
+    let most_recently_downloaded = encode_crates(&mut conn, most_recently_downloaded).await?;
+    let just_updated = encode_crates(&mut conn, just_updated).await?;
+
     Ok(json!({
         "num_downloads": num_downloads,
         "num_crates": num_crates,
-        "new_crates": encode_crates(&mut conn, new_crates).await?,
-        "most_downloaded": encode_crates(&mut conn, most_downloaded).await?,
-        "most_recently_downloaded": encode_crates(&mut conn, most_recently_downloaded).await?,
-        "just_updated": encode_crates(&mut conn, just_updated).await?,
+        "new_crates": new_crates,
+        "most_downloaded": most_downloaded,
+        "most_recently_downloaded": most_recently_downloaded,
+        "just_updated": just_updated,
         "popular_keywords": popular_keywords,
         "popular_categories": popular_categories,
     }))
 }
 
-type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);
+#[derive(Debug, Queryable, Selectable)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct Record {
+    #[diesel(embed)]
+    krate: Crate,
+    #[diesel(select_expression = crate_downloads::columns::downloads)]
+    total_downloads: i64,
+    #[diesel(select_expression = recent_crate_downloads::columns::downloads.nullable())]
+    recent_downloads: Option<i64>,
+    #[diesel(select_expression = versions::columns::num.nullable())]
+    default_version: Option<String>,
+    #[diesel(select_expression = versions::columns::yanked.nullable())]
+    yanked: Option<bool>,
+}
+
+async fn encode_crates(
+    conn: &mut AsyncPgConnection,
+    data: Vec<Record>,
+) -> AppResult<Vec<EncodableCrate>> {
+    let krates = data.iter().map(|record| &record.krate).collect::<Vec<_>>();
+    let versions: Vec<Version> = Version::belonging_to(&krates)
+        .filter(versions::yanked.eq(false))
+        .select(Version::as_select())
+        .load(conn)
+        .await?;
+
+    versions
+        .grouped_by(&krates)
+        .into_iter()
+        .map(TopVersions::from_versions)
+        .zip(data)
+        .map(|(top_versions, record)| {
+            Ok(EncodableCrate::from_minimal(
+                record.krate,
+                record.default_version.as_deref(),
+                record.yanked,
+                Some(&top_versions),
+                false,
+                record.total_downloads,
+                record.recent_downloads,
+            ))
+        })
+        .collect()
+}
