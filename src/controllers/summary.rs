@@ -91,13 +91,18 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .map(Keyword::into)
         .collect::<Vec<EncodableKeyword>>();
 
+    let new_crates = encode_crates(&mut conn, new_crates).await?;
+    let most_downloaded = encode_crates(&mut conn, most_downloaded).await?;
+    let most_recently_downloaded = encode_crates(&mut conn, most_recently_downloaded).await?;
+    let just_updated = encode_crates(&mut conn, just_updated).await?;
+
     Ok(json!({
         "num_downloads": num_downloads,
         "num_crates": num_crates,
-        "new_crates": encode_crates(&mut conn, new_crates).await?,
-        "most_downloaded": encode_crates(&mut conn, most_downloaded).await?,
-        "most_recently_downloaded": encode_crates(&mut conn, most_recently_downloaded).await?,
-        "just_updated": encode_crates(&mut conn, just_updated).await?,
+        "new_crates": new_crates,
+        "most_downloaded": most_downloaded,
+        "most_recently_downloaded": most_recently_downloaded,
+        "just_updated": just_updated,
         "popular_keywords": popular_keywords,
         "popular_categories": popular_categories,
     }))
