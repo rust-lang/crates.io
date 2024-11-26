@@ -102,6 +102,8 @@ pub struct NewVersion<'a> {
     homepage: Option<&'a str>,
     documentation: Option<&'a str>,
     repository: Option<&'a str>,
+    categories: Option<&'a [&'a str]>,
+    keywords: Option<&'a [&'a str]>,
 }
 
 impl NewVersion<'_> {

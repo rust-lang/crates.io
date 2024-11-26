@@ -393,6 +393,8 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .maybe_homepage(homepage.as_deref())
             .maybe_documentation(documentation.as_deref())
             .maybe_repository(repository.as_deref())
+            .categories(&categories)
+            .keywords(&keywords)
             .build();
 
         let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {
