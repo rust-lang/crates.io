@@ -32,7 +32,6 @@ pub struct Version {
     pub has_lib: Option<bool>,
     pub bin_names: Option<Vec<Option<String>>>,
     pub yank_message: Option<String>,
-    pub num_no_build: String,
     pub edition: Option<String>,
     pub description: Option<String>,
     pub homepage: Option<String>,
