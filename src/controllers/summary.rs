@@ -30,41 +30,6 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .get_result(&mut conn)
         .await?;
 
-    async fn encode_crates(
-        conn: &mut AsyncPgConnection,
-        data: Vec<Record>,
-    ) -> AppResult<Vec<EncodableCrate>> {
-        use diesel::GroupedBy;
-        use diesel_async::RunQueryDsl;
-
-        let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
-        let versions: Vec<Version> = Version::belonging_to(&krates)
-            .filter(versions::yanked.eq(false))
-            .select(Version::as_select())
-            .load(conn)
-            .await?;
-
-        versions
-            .grouped_by(&krates)
-            .into_iter()
-            .map(TopVersions::from_versions)
-            .zip(data)
-            .map(
-                |(top_versions, (krate, total, recent, default_version, yanked))| {
-                    Ok(EncodableCrate::from_minimal(
-                        krate,
-                        default_version.as_deref(),
-                        yanked,
-                        Some(&top_versions),
-                        false,
-                        total,
-                        recent,
-                    ))
-                },
-            )
-            .collect()
-    }
-
     let config = &state.config;
 
     let selection = (
@@ -143,3 +108,38 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
 }
 
 type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);
+
+async fn encode_crates(
+    conn: &mut AsyncPgConnection,
+    data: Vec<Record>,
+) -> AppResult<Vec<EncodableCrate>> {
+    use diesel::GroupedBy;
+    use diesel_async::RunQueryDsl;
+
+    let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
+    let versions: Vec<Version> = Version::belonging_to(&krates)
+        .filter(versions::yanked.eq(false))
+        .select(Version::as_select())
+        .load(conn)
+        .await?;
+
+    versions
+        .grouped_by(&krates)
+        .into_iter()
+        .map(TopVersions::from_versions)
+        .zip(data)
+        .map(
+            |(top_versions, (krate, total, recent, default_version, yanked))| {
+                Ok(EncodableCrate::from_minimal(
+                    krate,
+                    default_version.as_deref(),
+                    yanked,
+                    Some(&top_versions),
+                    false,
+                    total,
+                    recent,
+                ))
+            },
+        )
+        .collect()
+}
