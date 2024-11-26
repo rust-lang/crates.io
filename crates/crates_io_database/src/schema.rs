@@ -1021,6 +1021,10 @@ diesel::table! {
         documentation -> Nullable<Text>,
         /// Value of the `repository` field in the `Cargo.toml` file of this version.
         repository -> Nullable<Text>,
+        /// The list of `categories` in the `Cargo.toml` file of this version.
+        categories -> Array<Nullable<Text>>,
+        /// The list of `keywords` in the `Cargo.toml` file of this version.
+        keywords -> Array<Nullable<Text>>,
     }
 }
 

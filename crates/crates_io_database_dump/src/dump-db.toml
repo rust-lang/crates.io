@@ -251,6 +251,8 @@ description = "public"
 homepage = "public"
 documentation = "public"
 repository = "public"
+categories = "public"
+keywords = "public"
 
 [versions_published_by.columns]
 version_id = "private"
