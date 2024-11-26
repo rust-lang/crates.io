@@ -117,6 +117,7 @@ impl NewVersion<'_> {
             async move {
                 let version: Version = insert_into(versions::table)
                     .values(self)
+                    .returning(Version::as_returning())
                     .get_result(conn)
                     .await?;
 

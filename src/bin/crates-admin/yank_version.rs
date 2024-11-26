@@ -42,6 +42,7 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
 
     let v: Version = Version::belonging_to(&krate)
         .filter(versions::num.eq(&version))
+        .select(Version::as_select())
         .first(conn)
         .await?;
 

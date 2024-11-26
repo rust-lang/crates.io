@@ -207,6 +207,7 @@ impl Crate {
     ) -> AppResult<Version> {
         Version::belonging_to(self)
             .filter(versions::num.eq(version))
+            .select(Version::as_select())
             .first(conn)
             .await
             .optional()?

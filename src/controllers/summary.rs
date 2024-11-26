@@ -40,6 +40,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
         let versions: Vec<Version> = Version::belonging_to(&krates)
             .filter(versions::yanked.eq(false))
+            .select(Version::as_select())
             .load(conn)
             .await?;
 

@@ -286,6 +286,7 @@ mod tests {
 
         let version_before: Version = versions::table
             .find(version.id)
+            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
@@ -299,6 +300,7 @@ mod tests {
 
         let version2: Version = versions::table
             .find(version.id)
+            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
@@ -324,6 +326,7 @@ mod tests {
 
         let version3: Version = versions::table
             .find(version.id)
+            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();

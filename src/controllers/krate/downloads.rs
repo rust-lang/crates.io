@@ -32,6 +32,7 @@ pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppRe
 
     let mut versions: Vec<Version> = versions::table
         .filter(versions::crate_id.eq(crate_id))
+        .select(Version::as_select())
         .load(&mut conn)
         .await?;
 

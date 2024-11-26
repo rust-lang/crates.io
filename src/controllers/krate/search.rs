@@ -216,6 +216,7 @@ pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let span = info_span!("db.query", message = "SELECT ... FROM versions");
     let versions: Vec<Version> = Version::belonging_to(&crates)
         .filter(versions::yanked.eq(false))
+        .select(Version::as_select())
         .load(&mut conn)
         .instrument(span)
         .await?;
