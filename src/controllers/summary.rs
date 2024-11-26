@@ -28,21 +28,13 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
 
     let config = &state.config;
 
-    let selection = (
-        Crate::as_select(),
-        crate_downloads::downloads,
-        recent_crate_downloads::downloads.nullable(),
-        versions::num.nullable(),
-        versions::yanked.nullable(),
-    );
-
     let new_crates = crates::table
         .inner_join(crate_downloads::table)
         .left_join(recent_crate_downloads::table)
         .left_join(default_versions::table)
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .order(crates::created_at.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -53,7 +45,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::updated_at.ne(crates::created_at))
         .order(crates::updated_at.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -65,7 +57,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(crate_downloads::downloads.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -77,7 +69,7 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crates::name.ne_all(&config.excluded_crate_names))
         .then_order_by(recent_crate_downloads::downloads.desc())
-        .select(selection)
+        .select(Record::as_select())
         .limit(10)
         .load(&mut conn)
         .await?;
@@ -108,13 +100,26 @@ pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
     }))
 }
 
-type Record = (Crate, i64, Option<i64>, Option<String>, Option<bool>);
+#[derive(Debug, Queryable, Selectable)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct Record {
+    #[diesel(embed)]
+    krate: Crate,
+    #[diesel(select_expression = crate_downloads::columns::downloads)]
+    total_downloads: i64,
+    #[diesel(select_expression = recent_crate_downloads::columns::downloads.nullable())]
+    recent_downloads: Option<i64>,
+    #[diesel(select_expression = versions::columns::num.nullable())]
+    default_version: Option<String>,
+    #[diesel(select_expression = versions::columns::yanked.nullable())]
+    yanked: Option<bool>,
+}
 
 async fn encode_crates(
     conn: &mut AsyncPgConnection,
     data: Vec<Record>,
 ) -> AppResult<Vec<EncodableCrate>> {
-    let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
+    let krates = data.iter().map(|record| &record.krate).collect::<Vec<_>>();
     let versions: Vec<Version> = Version::belonging_to(&krates)
         .filter(versions::yanked.eq(false))
         .select(Version::as_select())
@@ -126,18 +131,16 @@ async fn encode_crates(
         .into_iter()
         .map(TopVersions::from_versions)
         .zip(data)
-        .map(
-            |(top_versions, (krate, total, recent, default_version, yanked))| {
-                Ok(EncodableCrate::from_minimal(
-                    krate,
-                    default_version.as_deref(),
-                    yanked,
-                    Some(&top_versions),
-                    false,
-                    total,
-                    recent,
-                ))
-            },
-        )
+        .map(|(top_versions, record)| {
+            Ok(EncodableCrate::from_minimal(
+                record.krate,
+                record.default_version.as_deref(),
+                record.yanked,
+                Some(&top_versions),
+                false,
+                record.total_downloads,
+                record.recent_downloads,
+            ))
+        })
         .collect()
 }
