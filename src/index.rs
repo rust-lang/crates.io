@@ -59,7 +59,10 @@ pub async fn index_metadata(
     krate: &Crate,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<Vec<crates_io_index::Crate>> {
-    let mut versions: Vec<Version> = Version::belonging_to(krate).load(conn).await?;
+    let mut versions: Vec<Version> = Version::belonging_to(krate)
+        .select(Version::as_select())
+        .load(conn)
+        .await?;
 
     // We sort by `created_at` by default, but since tests run within a
     // single database transaction the versions will all have the same
