@@ -114,6 +114,7 @@ tempfile = "=3.14.0"
 thiserror = "=2.0.3"
 tokio = { version = "=1.41.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.12"
+tokio-util = "=0.7.12"
 toml = "=0.8.19"
 tower = "=0.5.1"
 tower-http = { version = "=0.6.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
