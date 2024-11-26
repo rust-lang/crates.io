@@ -5,6 +5,7 @@ use diesel::{
 };
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use std::future::Future;
 
 use crate::models::Crate;
 use crate::schema::*;
@@ -97,12 +98,12 @@ impl Category {
             .await
     }
 
-    pub async fn toplevel(
+    pub fn toplevel(
         conn: &mut AsyncPgConnection,
         sort: &str,
         limit: i64,
         offset: i64,
-    ) -> QueryResult<Vec<Category>> {
+    ) -> impl Future<Output = QueryResult<Vec<Category>>> {
         use diesel::sql_types::Int8;
 
         let sort_sql = match sort {
@@ -116,7 +117,6 @@ impl Category {
             .bind::<Int8, _>(limit)
             .bind::<Int8, _>(offset)
             .load(conn)
-            .await
     }
 
     pub async fn subcategories(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Category>> {
