@@ -7,12 +7,8 @@ use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use diesel::{
-    BelongingToDsl, ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl,
-    SelectableHelper,
-};
-use diesel_async::AsyncPgConnection;
-use diesel_async::RunQueryDsl;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// Handles the `GET /summary` route.
 pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
@@ -113,9 +109,6 @@ async fn encode_crates(
     conn: &mut AsyncPgConnection,
     data: Vec<Record>,
 ) -> AppResult<Vec<EncodableCrate>> {
-    use diesel::GroupedBy;
-    use diesel_async::RunQueryDsl;
-
     let krates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
     let versions: Vec<Version> = Version::belonging_to(&krates)
         .filter(versions::yanked.eq(false))
