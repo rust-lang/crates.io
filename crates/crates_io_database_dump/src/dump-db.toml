@@ -247,6 +247,10 @@ has_lib = "public"
 bin_names = "public"
 yank_message = "private"
 edition = "public"
+description = "public"
+homepage = "public"
+documentation = "public"
+repository = "public"
 
 [versions_published_by.columns]
 version_id = "private"

@@ -70,6 +70,10 @@ snapshot_kind: text
     "rust_version": null,
     "has_lib": false,
     "bin_names": [],
-    "edition": null
+    "edition": null,
+    "description": "description",
+    "homepage": null,
+    "documentation": null,
+    "repository": null
   }
 }

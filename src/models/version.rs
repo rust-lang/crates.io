@@ -34,6 +34,10 @@ pub struct Version {
     pub yank_message: Option<String>,
     pub num_no_build: String,
     pub edition: Option<String>,
+    pub description: Option<String>,
+    pub homepage: Option<String>,
+    pub documentation: Option<String>,
+    pub repository: Option<String>,
 }
 
 impl Version {
@@ -95,6 +99,10 @@ pub struct NewVersion<'a> {
     pub has_lib: Option<bool>,
     pub bin_names: Option<&'a [&'a str]>,
     edition: Option<&'a str>,
+    description: Option<&'a str>,
+    homepage: Option<&'a str>,
+    documentation: Option<&'a str>,
+    repository: Option<&'a str>,
 }
 
 impl NewVersion<'_> {

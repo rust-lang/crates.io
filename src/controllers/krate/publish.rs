@@ -92,10 +92,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
 
     if let Some(deleted_crate) = deleted_crate {
         return Err(bad_request(format!(
-                "A crate with the name `{}` was recently deleted. Reuse of this name will be available after {}.",
-                deleted_crate.0,
-                deleted_crate.1.to_rfc3339_opts(SecondsFormat::Secs, true)
-            )));
+            "A crate with the name `{}` was recently deleted. Reuse of this name will be available after {}.",
+            deleted_crate.0,
+            deleted_crate.1.to_rfc3339_opts(SecondsFormat::Secs, true)
+        )));
     }
 
     // this query should only be used for the endpoint scope calculation
@@ -394,6 +394,10 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .has_lib(tarball_info.manifest.lib.is_some())
             .bin_names(bin_names.as_slice())
             .maybe_edition(edition)
+            .maybe_description(description.as_deref())
+            .maybe_homepage(homepage.as_deref())
+            .maybe_documentation(documentation.as_deref())
+            .maybe_repository(repository.as_deref())
             .build();
 
         let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {

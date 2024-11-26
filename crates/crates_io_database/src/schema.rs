@@ -1013,6 +1013,14 @@ diesel::table! {
         num_no_build -> Varchar,
         /// The declared Rust Edition required to compile this version of the crate.
         edition -> Nullable<Text>,
+        /// Value of the `description` field in the `Cargo.toml` file of this version.
+        description -> Nullable<Text>,
+        /// Value of the `homepage` field in the `Cargo.toml` file of this version.
+        homepage -> Nullable<Text>,
+        /// Value of the `documentation` field in the `Cargo.toml` file of this version.
+        documentation -> Nullable<Text>,
+        /// Value of the `repository` field in the `Cargo.toml` file of this version.
+        repository -> Nullable<Text>,
     }
 }
 
