@@ -10,11 +10,12 @@ use axum::Json;
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{process_tarball, TarballError};
-use crates_io_worker::BackgroundJob;
+use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, select};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use futures_util::TryFutureExt;
 use futures_util::TryStreamExt;
 use hex::ToHex;
 use http::StatusCode;
@@ -503,29 +504,41 @@ pub async fn publish(app: AppState, req: BytesRequest) -> AppResult<Json<GoodCra
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        jobs::SyncToGitIndex::new(&krate.name).enqueue(conn).await?;
-        jobs::SyncToSparseIndex::new(&krate.name).enqueue(conn).await?;
+        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
+        let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
+        let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
+        let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
+        let updates_feed_job = jobs::rss::SyncUpdatesFeed;
 
-        SendPublishNotificationsJob::new(version.id).enqueue(conn).await?;
+        tokio::try_join!(
+            git_index_job.enqueue(conn),
+            sparse_index_job.enqueue(conn),
+            publish_notifications_job.enqueue(conn),
+            crate_feed_job.enqueue(conn).or_else(|error| async move {
+                error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
+                Ok::<_, EnqueueError>(None)
+            }),
+            updates_feed_job.enqueue(conn).or_else(|error| async move {
+                error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
+                Ok::<_, EnqueueError>(None)
+            }),
+        )?;
 
         // Experiment: check new crates for potential typosquatting.
         if existing_crate.is_none() {
-            CheckTyposquat::new(&krate.name).enqueue(conn).await?;
-        }
+            let crates_feed_job = jobs::rss::SyncCratesFeed;
+            let typosquat_job = CheckTyposquat::new(&krate.name);
 
-        let job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
-        if let Err(error) = job.enqueue(conn).await {
-            error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
-        }
-
-        if let Err(error) = jobs::rss::SyncUpdatesFeed.enqueue(conn).await {
-            error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
-        }
-
-        if existing_crate.is_none() {
-            if let Err(error) = jobs::rss::SyncCratesFeed.enqueue(conn).await {
-                error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
-            }
+            tokio::try_join!(
+                crates_feed_job.enqueue(conn).or_else(|error| async move {
+                    error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
+                    Ok::<_, EnqueueError>(None)
+                }),
+                typosquat_job.enqueue(conn).or_else(|error| async move {
+                    error!("Failed to enqueue `CheckTyposquat` job: {error}");
+                    Ok::<_, EnqueueError>(None)
+                }),
+            )?;
         }
 
         // The `other` field on `PublishWarnings` was introduced to handle a temporary warning
