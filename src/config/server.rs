@@ -41,7 +41,7 @@ pub struct Server {
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
-    pub max_upload_size: u64,
+    pub max_upload_size: u32,
     pub max_unpack_size: u64,
     pub max_dependencies: usize,
     pub max_features: usize,

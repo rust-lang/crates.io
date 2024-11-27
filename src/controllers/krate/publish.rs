@@ -152,7 +152,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         app.config.max_unpack_size,
     );
 
-    let tarball_bytes = read_tarball_bytes(&mut reader, maximums.max_upload_size as u32).await?;
+    let tarball_bytes = read_tarball_bytes(&mut reader, maximums.max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);

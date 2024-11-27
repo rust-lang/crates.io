@@ -15,18 +15,19 @@ pub mod tracing;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Maximums {
-    pub max_upload_size: u64,
+    pub max_upload_size: u32,
     pub max_unpack_size: u64,
 }
 
 impl Maximums {
     pub fn new(
         krate_max_upload: Option<i32>,
-        app_max_upload: u64,
+        app_max_upload: u32,
         app_max_unpack: u64,
     ) -> Maximums {
-        let max_upload_size = krate_max_upload.map(|m| m as u64).unwrap_or(app_max_upload);
-        let max_unpack_size = cmp::max(app_max_unpack, max_upload_size);
+        let krate_max_upload = krate_max_upload.and_then(|m| u32::try_from(m).ok());
+        let max_upload_size = krate_max_upload.unwrap_or(app_max_upload);
+        let max_unpack_size = cmp::max(app_max_unpack, max_upload_size as u64);
         Maximums {
             max_upload_size,
             max_unpack_size,
