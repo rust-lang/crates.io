@@ -37,7 +37,6 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
 use crate::sql::canon_crate_name;
 use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
-use crate::util::Maximums;
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
@@ -146,18 +145,18 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
         .await?;
 
-    let maximums = Maximums::new(
-        existing_crate.as_ref().and_then(|c| c.max_upload_size),
-        app.config.max_upload_size,
-        app.config.max_unpack_size,
-    );
+    let max_upload_size = existing_crate
+        .as_ref()
+        .and_then(|c| c.max_upload_size)
+        .and_then(|m| u32::try_from(m).ok())
+        .unwrap_or(app.config.max_upload_size);
 
-    let tarball_bytes = read_tarball_bytes(&mut reader, maximums.max_upload_size).await?;
+    let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;
     let content_length = tarball_bytes.len() as u64;
 
     let pkg_name = format!("{}-{}", &*metadata.name, &version_string);
-    let tarball_info =
-        process_tarball(&pkg_name, &*tarball_bytes, maximums.max_unpack_size).await?;
+    let max_unpack_size = std::cmp::max(app.config.max_unpack_size, max_upload_size as u64);
+    let tarball_info = process_tarball(&pkg_name, &*tarball_bytes, max_unpack_size).await?;
 
     // `unwrap()` is safe here since `process_tarball()` validates that
     // we only accept manifests with a `package` section and without
