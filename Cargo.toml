@@ -42,6 +42,7 @@ doctest = true
 
 [dependencies]
 anyhow = "=1.0.93"
+async-compression = { version = "=0.4.18", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.83"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.927.0"
@@ -87,7 +88,7 @@ indexmap = { version = "=2.6.0", features = ["serde"] }
 indicatif = "=0.17.9"
 ipnetwork = "=0.20.0"
 json-subscriber = "=0.2.3"
-tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
+krata-tokio-tar = "=0.4.2"
 lettre = { version = "=0.11.10", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = "=2.5.0"
 mockall = "=0.13.1"
@@ -112,6 +113,7 @@ spdx = "=0.10.7"
 tar = "=0.4.43"
 tempfile = "=3.14.0"
 thiserror = "=2.0.3"
+tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 tokio = { version = "=1.41.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.12"
 tokio-util = "=0.7.12"

@@ -4,9 +4,13 @@ use crates_io::{
     models::Version,
     schema::{crates, readme_renderings, versions},
 };
-use std::path::PathBuf;
-use std::{io::Read, path::Path, sync::Arc};
+use futures_util::{StreamExt, TryStreamExt};
+use std::path::{Path, PathBuf};
+use std::{future, sync::Arc};
+use tokio::io::{AsyncRead, AsyncReadExt};
+use tokio_util::io::StreamReader;
 
+use async_compression::tokio::bufread::GzipDecoder;
 use chrono::{NaiveDateTime, Utc};
 use crates_io::storage::Storage;
 use crates_io::tasks::spawn_blocking;
@@ -15,10 +19,9 @@ use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use flate2::read::GzDecoder;
 use reqwest::{header, Client};
 use std::str::FromStr;
-use tar::{self, Archive};
+use tokio_tar::{self, Archive};
 
 const USER_AGENT: &str = "crates-admin";
 
@@ -168,22 +171,25 @@ async fn get_readme(
         ));
     }
 
-    let body = response.bytes().await?;
-
-    spawn_blocking(move || {
-        let reader = GzDecoder::new(&*body);
-        let archive = Archive::new(reader);
-        render_pkg_readme(archive, &pkg_name)
-    })
-    .await?
+    let reader = response
+        .bytes_stream()
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e));
+    let reader = StreamReader::new(reader);
+    let reader = GzipDecoder::new(reader);
+    let archive = Archive::new(reader);
+    render_pkg_readme(archive, &pkg_name).await
 }
 
-fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow::Result<String> {
+async fn render_pkg_readme<R: AsyncRead + Unpin>(
+    mut archive: Archive<R>,
+    pkg_name: &str,
+) -> anyhow::Result<String> {
     let mut entries = archive.entries().context("Invalid tar archive entries")?;
 
     let manifest: Manifest = {
         let path = format!("{pkg_name}/Cargo.toml");
         let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .await
             .context("Failed to read Cargo.toml file")?;
 
         Manifest::from_str(&contents).context("Failed to parse manifest file")?
@@ -207,39 +213,42 @@ fn render_pkg_readme<R: Read>(mut archive: Archive<R>, pkg_name: &str) -> anyhow
 
         let path = Path::new(pkg_name).join(&readme_path);
         let contents = find_file_by_path(&mut entries, Path::new(&path))
+            .await
             .with_context(|| format!("Failed to read {} file", readme_path.display()))?;
 
         // pkg_path_in_vcs Unsupported from admin::render_readmes. See #4095
         // Would need access to cargo_vcs_info
         let pkg_path_in_vcs = None;
 
-        let repository = manifest
-            .package
-            .as_ref()
-            .and_then(|p| p.repository.as_ref())
-            .and_then(|r| r.as_ref().as_local())
-            .map(|s| s.as_str());
-
-        text_to_html(&contents, &readme_path, repository, pkg_path_in_vcs)
+        spawn_blocking(move || {
+            let repository = manifest
+                .package
+                .as_ref()
+                .and_then(|p| p.repository.as_ref())
+                .and_then(|r| r.as_ref().as_local())
+                .map(|s| s.as_str());
+            text_to_html(&contents, &readme_path, repository, pkg_path_in_vcs)
+        })
+        .await?
     };
     Ok(rendered)
 }
 
 /// Search an entry by its path in a Tar archive.
-fn find_file_by_path<R: Read>(
-    entries: &mut tar::Entries<'_, R>,
+async fn find_file_by_path<R: AsyncRead + Unpin>(
+    entries: &mut tokio_tar::Entries<R>,
     path: &Path,
 ) -> anyhow::Result<String> {
     let mut file = entries
-        .filter_map(|entry| entry.ok())
-        .find(|file| match file.path() {
-            Ok(p) => p == path,
-            Err(_) => false,
-        })
+        .filter_map(|entry| future::ready(entry.ok()))
+        .filter(|entry| future::ready(entry.path().is_ok_and(|p| p == path)))
+        .next()
+        .await
         .ok_or_else(|| anyhow!("Failed to find tarball entry: {}", path.display()))?;
 
     let mut contents = String::new();
     file.read_to_string(&mut contents)
+        .await
         .context("Failed to read file contents")?;
 
     Ok(contents)
@@ -252,8 +261,8 @@ pub mod tests {
 
     use super::render_pkg_readme;
 
-    #[test]
-    fn test_render_pkg_readme() {
+    #[tokio::test]
+    async fn test_render_pkg_readme() {
         let serialized_archive = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/Cargo.toml",
@@ -267,13 +276,14 @@ readme = "README.md"
             .add_file("foo-0.0.1/README.md", b"readme")
             .build_unzipped();
 
-        let result =
-            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+            .await
+            .unwrap();
         assert!(result.contains("readme"))
     }
 
-    #[test]
-    fn test_render_pkg_no_readme() {
+    #[tokio::test]
+    async fn test_render_pkg_no_readme() {
         let serialized_archive = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/Cargo.toml",
@@ -283,14 +293,13 @@ readme = "README.md"
             )
             .build_unzipped();
 
-        assert_err!(render_pkg_readme(
-            tar::Archive::new(&*serialized_archive),
-            "foo-0.0.1"
-        ));
+        assert_err!(
+            render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1").await
+        );
     }
 
-    #[test]
-    fn test_render_pkg_implicit_readme() {
+    #[tokio::test]
+    async fn test_render_pkg_implicit_readme() {
         let serialized_archive = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/Cargo.toml",
@@ -303,13 +312,14 @@ version = "0.0.1"
             .add_file("foo-0.0.1/README.md", b"readme")
             .build_unzipped();
 
-        let result =
-            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+            .await
+            .unwrap();
         assert!(result.contains("readme"))
     }
 
-    #[test]
-    fn test_render_pkg_readme_w_link() {
+    #[tokio::test]
+    async fn test_render_pkg_readme_w_link() {
         let serialized_archive = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/Cargo.toml",
@@ -324,13 +334,14 @@ repository = "https://github.com/foo/foo"
             .add_file("foo-0.0.1/README.md", b"readme [link](./Other.md)")
             .build_unzipped();
 
-        let result =
-            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+            .await
+            .unwrap();
         assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/./Other.md\""))
     }
 
-    #[test]
-    fn test_render_pkg_readme_not_at_root() {
+    #[tokio::test]
+    async fn test_render_pkg_readme_not_at_root() {
         let serialized_archive = TarballBuilder::new()
             .add_file(
                 "foo-0.0.1/Cargo.toml",
@@ -348,8 +359,9 @@ repository = "https://github.com/foo/foo"
             )
             .build_unzipped();
 
-        let result =
-            render_pkg_readme(tar::Archive::new(&*serialized_archive), "foo-0.0.1").unwrap();
+        let result = render_pkg_readme(tokio_tar::Archive::new(&*serialized_archive), "foo-0.0.1")
+            .await
+            .unwrap();
         assert!(result.contains("docs/readme"));
         assert!(result.contains("\"https://github.com/foo/foo/blob/HEAD/docs/./Other.md\""))
     }
