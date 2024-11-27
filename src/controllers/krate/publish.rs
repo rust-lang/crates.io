@@ -577,6 +577,7 @@ async fn count_versions_published_today(
         .await
 }
 
+#[instrument(skip_all)]
 async fn read_json_metadata<R: AsyncRead + Unpin>(
     reader: &mut R,
     max_length: u32,
@@ -608,6 +609,7 @@ async fn read_json_metadata<R: AsyncRead + Unpin>(
         .map_err(|e| bad_request(format_args!("invalid upload request: {e}")))
 }
 
+#[instrument(skip_all)]
 async fn read_tarball_bytes<R: AsyncRead + Unpin>(
     reader: &mut R,
     max_length: u32,
@@ -638,6 +640,7 @@ async fn read_tarball_bytes<R: AsyncRead + Unpin>(
     Ok(Bytes::from(tarball_bytes))
 }
 
+#[instrument(skip_all)]
 async fn is_reserved_name(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<bool> {
     select(exists(reserved_crate_names::table.filter(
         canon_crate_name(reserved_crate_names::name).eq(canon_crate_name(name)),
