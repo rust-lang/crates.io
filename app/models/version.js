@@ -59,6 +59,8 @@ export default class Version extends Model {
       return '1.31.0';
     } else if (this.edition === '2021') {
       return '1.56.0';
+    } else if (this.edition === '2024') {
+      return '1.85.0';
     }
   }
 
