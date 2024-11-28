@@ -1,6 +1,5 @@
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use bytes::{BufMut, BytesMut};
 use crates_io_tarball::TarballBuilder;
 use googletest::prelude::*;
 use http::StatusCode;
@@ -81,16 +80,9 @@ async fn json_bytes_truncated() {
 async fn tarball_len_truncated() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
-    let json = br#"{ "name": "foo", "vers": "1.0.0" }"#;
-
-    let mut bytes = BytesMut::new();
-    bytes.put_u32_le(json.len() as u32);
-    bytes.put_slice(json);
-    bytes.put_u8(0);
-    bytes.put_u8(0);
-
-    let response = token.publish_crate(bytes.freeze()).await;
-
+    let response = token
+        .publish_crate(&[2, 0, 0, 0, b'{', b'}', 0, 0] as &[u8])
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid tarball length"}]}"#);
     assert_that!(app.stored_files().await, empty());
@@ -100,15 +92,9 @@ async fn tarball_len_truncated() {
 async fn tarball_bytes_truncated() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 
-    let json = br#"{ "name": "foo", "vers": "1.0.0" }"#;
-
-    let mut bytes = BytesMut::new();
-    bytes.put_u32_le(json.len() as u32);
-    bytes.put_slice(json);
-    bytes.put_u32_le(100);
-    bytes.put_u8(0);
-
-    let response = token.publish_crate(bytes.freeze()).await;
+    let response = token
+        .publish_crate(&[2, 0, 0, 0, b'{', b'}', 100, 0, 0, 0, 0] as &[u8])
+        .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid tarball length for remaining payload: 100"}]}"#);
     assert_that!(app.stored_files().await, empty());
