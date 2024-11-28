@@ -15,7 +15,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
-  CARGO_DENY_VERSION: 0.16.2
+  CARGO_DENY_VERSION: 0.16.3
   # renovate: datasource=crate depName=grcov versioning=semver
   GRCOV_VERSION: 0.8.20
   # renovate: datasource=npm depName=pnpm
