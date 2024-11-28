@@ -66,8 +66,6 @@ impl BackgroundJob for SendPublishNotificationsJob {
             return Ok(());
         }
 
-        // Sending emails is currently a blocking operation, so we have to use
-        // `spawn_blocking()` to run it in a separate thread.
         let mut results = Vec::with_capacity(recipients.len());
 
         for (ref recipient, email_address) in recipients {
