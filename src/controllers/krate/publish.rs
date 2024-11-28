@@ -147,8 +147,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     let max_upload_size = existing_crate
         .as_ref()
-        .and_then(|c| c.max_upload_size)
-        .and_then(|m| u32::try_from(m).ok())
+        .and_then(|c| c.max_upload_size())
         .unwrap_or(app.config.max_upload_size);
 
     let tarball_bytes = read_tarball_bytes(&mut reader, max_upload_size).await?;

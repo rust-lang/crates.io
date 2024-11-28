@@ -52,7 +52,7 @@ pub struct Crate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub repository: Option<String>,
-    pub max_upload_size: Option<i32>,
+    max_upload_size: Option<i32>,
     pub max_features: Option<i16>,
 }
 
@@ -156,6 +156,11 @@ impl<'a> NewCrate<'a> {
 }
 
 impl Crate {
+    pub fn max_upload_size(&self) -> Option<u32> {
+        self.max_upload_size
+            .and_then(|size| u32::try_from(size).ok())
+    }
+
     /// SQL filter based on whether the crate's name loosely matches the given
     /// string.
     ///
