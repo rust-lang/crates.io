@@ -45,7 +45,16 @@ BEGIN;
     TRUNCATE "version_downloads" RESTART IDENTITY CASCADE;
 
     -- Enable this trigger so that `crates.textsearchable_index_col` can be excluded from the export
+
     ALTER TABLE "crates" ENABLE TRIGGER "trigger_crates_tsvector_update";
+
+    -- Drop the `NOT NULL` and uniqueness constraints on `num_no_build` column
+    -- while importing the data.
+
+    alter table "versions"
+        alter column "num_no_build" drop not null;
+
+    drop index versions_crate_id_num_no_build_uindex;
 
     -- Import the CSV data.
 
@@ -64,6 +73,40 @@ BEGIN;
     \copy "default_versions" ("crate_id", "version_id") FROM 'data/default_versions.csv' WITH CSV HEADER
     \copy "dependencies" ("crate_id", "default_features", "explicit_name", "features", "id", "kind", "optional", "req", "target", "version_id") FROM 'data/dependencies.csv' WITH CSV HEADER
     \copy "version_downloads" ("date", "downloads", "version_id") FROM 'data/version_downloads.csv' WITH CSV HEADER
+
+    -- Backfill the `num_no_build` column with the correct values.
+
+    update versions
+        set num_no_build = split_part(num, '+', 1);
+
+    with duplicates as (
+        -- find all versions that have the same `crate_id` and `num_no_build`
+        select crate_id, num_no_build, array_agg(num ORDER BY id) as nums
+        from versions
+        group by crate_id, num_no_build
+        having count(*) > 1
+    ),
+    duplicates_to_update as (
+        -- for each group of duplicates, update all versions except the one that
+        -- doesn't have "build metadata", or the first one that was published if
+        -- all versions have "build metadata"
+        select crate_id, num_no_build, unnest(case when array_position(nums, num_no_build) IS NOT NULL then array_remove(nums, num_no_build) else nums[2:] end) as num
+        from duplicates
+    )
+    update versions
+    set num_no_build = duplicates_to_update.num
+    from duplicates_to_update
+    where versions.crate_id = duplicates_to_update.crate_id
+        and versions.num = duplicates_to_update.num;
+
+    -- Set the `num_no_build` column to `NOT NULL` again after the backfill is
+    -- done and add the unique constraint.
+
+    alter table "versions"
+        alter column "num_no_build" set not null;
+
+    create unique index versions_crate_id_num_no_build_uindex
+        on versions (crate_id, num_no_build);
 
     -- Drop the defaults again.
 
