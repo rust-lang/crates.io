@@ -137,7 +137,7 @@ struct ExpiryNotificationEmail<'a> {
     expiry_date: chrono::DateTime<chrono::Utc>,
 }
 
-impl<'a> Email for ExpiryNotificationEmail<'a> {
+impl Email for ExpiryNotificationEmail<'_> {
     fn subject(&self) -> String {
         format!(
             "crates.io: Your API token \"{}\" is about to expire",

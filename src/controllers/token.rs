@@ -214,7 +214,7 @@ struct NewTokenEmail<'a> {
     domain: &'a str,
 }
 
-impl<'a> crate::email::Email for NewTokenEmail<'a> {
+impl crate::email::Email for NewTokenEmail<'_> {
     fn subject(&self) -> String {
         format!("crates.io: New API token \"{}\" created", self.token_name)
     }
