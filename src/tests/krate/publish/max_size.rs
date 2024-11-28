@@ -12,7 +12,7 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
             config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size;
+            config.max_unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
@@ -65,7 +65,7 @@ async fn tarball_bigger_than_max_upload_size() {
     let (app, _, _, token) = TestApp::full()
         .with_config(|config| {
             config.max_upload_size = max_upload_size;
-            config.max_unpack_size = max_upload_size;
+            config.max_unpack_size = max_upload_size as u64;
         })
         .with_token()
         .await;
