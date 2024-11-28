@@ -116,10 +116,10 @@ impl CrateScope {
             return true;
         }
 
-        return match self.pattern.strip_suffix('*') {
+        match self.pattern.strip_suffix('*') {
             Some(prefix) => crate_name.starts_with(prefix),
             None => crate_name == self.pattern,
-        };
+        }
     }
 }
 

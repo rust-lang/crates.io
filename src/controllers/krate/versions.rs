@@ -173,12 +173,12 @@ async fn list_by_date(
 
 /// Seek-based pagination of versions by semver
 ///
+/// Unfortunately, Heroku Postgres has no support for the semver PG extension.
+/// Therefore, we need to perform both sorting and pagination manually on the server.
+///
 /// # Panics
 ///
 /// This function will panic if `option` is built with `enable_pages` set to true.
-
-// Unfortunately, Heroku Postgres has no support for the semver PG extension.
-// Therefore, we need to perform both sorting and pagination manually on the server.
 async fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,

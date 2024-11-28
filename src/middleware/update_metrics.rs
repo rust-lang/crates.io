@@ -51,7 +51,7 @@ impl<'a> GaugeGuard<'a> {
     }
 }
 
-impl<'a> Drop for GaugeGuard<'a> {
+impl Drop for GaugeGuard<'_> {
     fn drop(&mut self) {
         self.gauge.dec();
     }
