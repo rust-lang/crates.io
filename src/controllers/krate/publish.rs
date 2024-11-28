@@ -52,10 +52,6 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
 /// Handles the `PUT /crates/new` route.
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
-///
-/// Currently blocks the HTTP thread, perhaps some function calls can spawn new
-/// threads and return completion or error through other methods  a `cargo publish
-/// --status` command, via crates.io's front end, or email.
 pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();
     let stream = stream.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err));
