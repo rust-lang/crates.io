@@ -86,6 +86,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to run `cargo package`")?;
 
         info!("Skipping publish step");
+        new_version = old_version;
     } else {
         info!("Publishing to staging.crates.io…");
         cargo::publish(&project_path, &options.token)
