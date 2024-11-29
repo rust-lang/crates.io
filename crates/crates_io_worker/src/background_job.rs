@@ -4,6 +4,8 @@ use diesel::dsl::{exists, not};
 use diesel::sql_types::{Int2, Jsonb, Text};
 use diesel::{ExpressionMethods, IntoSql, OptionalExtension, QueryDsl};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::future::BoxFuture;
+use futures_util::FutureExt;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
@@ -38,32 +40,37 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     /// Execute the task. This method should define its logic.
     fn run(&self, ctx: Self::Context) -> impl Future<Output = anyhow::Result<()>> + Send;
 
-    #[allow(async_fn_in_trait)]
     #[instrument(name = "swirl.enqueue", skip(self, conn), fields(message = Self::JOB_NAME))]
-    async fn enqueue(&self, conn: &mut AsyncPgConnection) -> Result<Option<i64>, EnqueueError> {
-        let data = serde_json::to_value(self)?;
+    fn enqueue(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> BoxFuture<'_, Result<Option<i64>, EnqueueError>> {
+        let data = match serde_json::to_value(self) {
+            Ok(data) => data,
+            Err(err) => return async move { Err(EnqueueError::SerializationError(err)) }.boxed(),
+        };
         let priority = Self::PRIORITY;
 
         if Self::DEDUPLICATED {
-            Ok(enqueue_deduplicated(conn, Self::JOB_NAME, &data, priority).await?)
+            let future = enqueue_deduplicated(conn, Self::JOB_NAME, data, priority);
+            future.boxed()
         } else {
-            Ok(Some(
-                enqueue_simple(conn, Self::JOB_NAME, &data, priority).await?,
-            ))
+            let future = enqueue_simple(conn, Self::JOB_NAME, data, priority);
+            async move { Ok(Some(future.await?)) }.boxed()
         }
     }
 }
 
-async fn enqueue_deduplicated(
+fn enqueue_deduplicated(
     conn: &mut AsyncPgConnection,
-    job_type: &str,
-    data: &Value,
+    job_type: &'static str,
+    data: Value,
     priority: i16,
-) -> Result<Option<i64>, EnqueueError> {
+) -> impl Future<Output = Result<Option<i64>, EnqueueError>> {
     let similar_jobs = background_jobs::table
         .select(background_jobs::id)
         .filter(background_jobs::job_type.eq(job_type))
-        .filter(background_jobs::data.eq(data))
+        .filter(background_jobs::data.eq(data.clone()))
         .filter(background_jobs::priority.eq(priority))
         .for_update()
         .skip_locked();
@@ -75,7 +82,7 @@ async fn enqueue_deduplicated(
     ))
     .filter(not(exists(similar_jobs)));
 
-    let id = diesel::insert_into(background_jobs::table)
+    let future = diesel::insert_into(background_jobs::table)
         .values(deduplicated_select)
         .into_columns((
             background_jobs::job_type,
@@ -83,28 +90,25 @@ async fn enqueue_deduplicated(
             background_jobs::priority,
         ))
         .returning(background_jobs::id)
-        .get_result::<i64>(conn)
-        .await
-        .optional()?;
+        .get_result::<i64>(conn);
 
-    Ok(id)
+    async move { Ok(future.await.optional()?) }
 }
 
-async fn enqueue_simple(
+fn enqueue_simple(
     conn: &mut AsyncPgConnection,
-    job_type: &str,
-    data: &Value,
+    job_type: &'static str,
+    data: Value,
     priority: i16,
-) -> Result<i64, EnqueueError> {
-    let id = diesel::insert_into(background_jobs::table)
+) -> impl Future<Output = Result<i64, EnqueueError>> {
+    let future = diesel::insert_into(background_jobs::table)
         .values((
             background_jobs::job_type.eq(job_type),
             background_jobs::data.eq(data),
             background_jobs::priority.eq(priority),
         ))
         .returning(background_jobs::id)
-        .get_result(conn)
-        .await?;
+        .get_result(conn);
 
-    Ok(id)
+    async move { Ok(future.await?) }
 }

@@ -107,21 +107,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             info!("{name}: Skipped missing crate");
         };
 
-        info!("{name}: Enqueuing index sync jobs…");
-        let job = jobs::SyncToGitIndex::new(name);
-        if let Err(error) = job.enqueue(&mut conn).await {
-            warn!("{name}: Failed to enqueue SyncToGitIndex job: {error}");
-        }
+        info!("{name}: Enqueuing background jobs…");
+        let git_index_job = jobs::SyncToGitIndex::new(name);
+        let sparse_index_job = jobs::SyncToSparseIndex::new(name);
+        let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(name.into());
 
-        let job = jobs::SyncToSparseIndex::new(name);
-        if let Err(error) = job.enqueue(&mut conn).await {
-            warn!("{name}: Failed to enqueue SyncToSparseIndex job: {error}");
-        }
-
-        info!("{name}: Enqueuing DeleteCrateFromStorage job…");
-        let job = jobs::DeleteCrateFromStorage::new(name.into());
-        if let Err(error) = job.enqueue(&mut conn).await {
-            warn!("{name}: Failed to enqueue DeleteCrateFromStorage job: {error}");
+        if let Err(error) = tokio::try_join!(
+            git_index_job.enqueue(&mut conn),
+            sparse_index_job.enqueue(&mut conn),
+            delete_from_storage_job.enqueue(&mut conn),
+        ) {
+            warn!("{name}: Failed to enqueue background job: {error}");
         }
     }
 

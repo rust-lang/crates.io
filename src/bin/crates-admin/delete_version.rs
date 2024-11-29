@@ -95,13 +95,14 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let crate_name = &opts.crate_name;
 
     info!(%crate_name, "Enqueuing index sync jobs");
-    let job = jobs::SyncToGitIndex::new(crate_name);
-    if let Err(error) = job.enqueue(&mut conn).await {
-        warn!(%crate_name, ?error, "Failed to enqueue SyncToGitIndex job");
-    }
-    let job = jobs::SyncToSparseIndex::new(crate_name);
-    if let Err(error) = job.enqueue(&mut conn).await {
-        warn!(%crate_name, ?error, "Failed to enqueue SyncToSparseIndex job");
+    let git_index_job = jobs::SyncToGitIndex::new(crate_name);
+    let sparse_index_job = jobs::SyncToSparseIndex::new(crate_name);
+
+    if let Err(error) = tokio::try_join!(
+        git_index_job.enqueue(&mut conn),
+        sparse_index_job.enqueue(&mut conn),
+    ) {
+        warn!(%crate_name, "Failed to enqueue background job: {error}");
     }
 
     for version in &opts.versions {
