@@ -1254,6 +1254,7 @@ dependencies = [
  "bytes",
  "clap",
  "crates_io_index",
+ "rand",
  "reqwest 0.12.9",
  "secrecy",
  "semver",

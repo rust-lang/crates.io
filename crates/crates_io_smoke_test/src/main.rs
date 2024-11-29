@@ -13,6 +13,7 @@ use secrecy::SecretString;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;
 use tokio::fs;
+use tokio::io::AsyncWriteExt;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -53,8 +54,12 @@ async fn main() -> anyhow::Result<()> {
     let old_version = krate.max_version;
     let mut new_version = old_version.clone();
 
-    new_version.patch += 1;
-    info!(%old_version, %new_version, "Calculated new version number");
+    if !options.skip_publish {
+        new_version.patch += 1;
+        info!(%old_version, %new_version, "Calculated new version number");
+    } else {
+        info!(%old_version, %new_version, "Using old version number since `--skip-publish` is set");
+    }
 
     info!("Creating temporary working folder…");
     let tempdir = tempdir().context("Failed to create temporary working folder")?;
@@ -65,20 +70,6 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to create project")?;
 
-    info!("Checking publish with invalid authentication…");
-    let invalid_token = "invalid-token".into();
-    let output = cargo::publish_with_output(&project_path, &invalid_token).await?;
-    if output.status.success() {
-        bail!("Expected `cargo publish` to fail with invalid token");
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        if !stderr.contains("401 Unauthorized")
-            || !stderr.contains("The given API token does not match the format used by crates.io")
-        {
-            bail!("Expected `cargo publish` to fail with an `401 Unauthorized` error, but got: {stderr}");
-        }
-    }
-
     if options.skip_publish {
         info!("Packaging crate file…");
         cargo::package(&project_path)
@@ -86,15 +77,12 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to run `cargo package`")?;
 
         info!("Skipping publish step");
-        new_version = old_version;
     } else {
         info!("Publishing to staging.crates.io…");
         cargo::publish(&project_path, &options.token)
             .await
             .context("Failed to run `cargo publish`")?;
     }
-
-    drop(tempdir);
 
     let version = new_version;
     info!(%version, "Checking staging.crates.io API for the new version…");
@@ -176,6 +164,22 @@ async fn main() -> anyhow::Result<()> {
         return Err(anyhow!("Failed to find published version on the git index"));
     }
 
+    if !options.skip_publish {
+        info!("Checking failed publish with large payload…");
+        create_dummy_content(&project_path).await?;
+
+        info!("Sending publish request…");
+        let output = cargo::publish_with_output(&project_path, &options.token).await?;
+        if output.status.success() {
+            bail!("Expected `cargo publish` to fail with invalid token");
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            if !stderr.contains("413 Payload Too Large") {
+                bail!("Expected `cargo publish` to fail with an `413 Payload Too Large` error, but got:\n{stderr}");
+            }
+        }
+    }
+
     info!(
         "All automated smoke tests have passed.\n\nPlease visit https://staging.crates.io/crates/{}/{} for further manual testing.",
         &options.crate_name, &version
@@ -201,6 +205,8 @@ async fn create_project(
     name: &str,
     version: &semver::Version,
 ) -> anyhow::Result<PathBuf> {
+    let version = version.to_string();
+
     cargo::new_lib(parent_path, name)
         .await
         .context("Failed to run `cargo new`")?;
@@ -208,24 +214,7 @@ async fn create_project(
     let project_path = parent_path.join(name);
     debug!(project_path = %project_path.display());
 
-    {
-        let manifest_path = project_path.join("Cargo.toml");
-        info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
-
-        let new_content = format!(
-            r#"[package]
-name = "{name}"
-version = "{version}"
-edition = "2018"
-license = "MIT"
-description = "test crate"
-"#,
-        );
-
-        fs::write(&manifest_path, new_content)
-            .await
-            .context("Failed to write `Cargo.toml` file content")?;
-    }
+    write_manifest(&project_path, name, &version).await?;
 
     {
         let readme_path = project_path.join("README.md");
@@ -258,4 +247,50 @@ description = "test crate"
         .context("Failed to commit initial changes")?;
 
     Ok(project_path)
+}
+
+async fn write_manifest(project_path: &Path, name: &str, version: &str) -> anyhow::Result<()> {
+    let manifest_path = project_path.join("Cargo.toml");
+    info!(manifest_path = %manifest_path.display(), "Overriding `Cargo.toml` file…");
+
+    let new_content = format!(
+        r#"[package]
+name = "{name}"
+version = "{version}"
+edition = "2018"
+license = "MIT"
+description = "test crate"
+"#,
+    );
+
+    fs::write(&manifest_path, new_content)
+        .await
+        .context("Failed to write `Cargo.toml` file content")?;
+
+    Ok(())
+}
+
+async fn create_dummy_content(project_path: &Path) -> anyhow::Result<()> {
+    const FILE_SIZE: u32 = 15 * 1024 * 1024;
+
+    debug!("Creating `dummy.txt` file…");
+    let f = fs::File::create(project_path.join("dummy.txt")).await?;
+    let mut writer = tokio::io::BufWriter::new(f);
+    for _ in 0..(FILE_SIZE / 16) {
+        writer.write_u128(rand::random()).await?;
+    }
+    drop(writer);
+
+    write_manifest(project_path, "dummy", "0.0.0-dummy").await?;
+
+    debug!("Creating additional git commit…");
+    git::add_all(project_path)
+        .await
+        .context("Failed to add changes to git")?;
+
+    git::commit(project_path, "add dummy content")
+        .await
+        .context("Failed to commit changes")?;
+
+    Ok(())
 }
