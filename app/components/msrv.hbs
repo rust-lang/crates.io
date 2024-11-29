@@ -1,0 +1,10 @@
+<span>
+  v{{@version.msrv}}
+
+  <EmberTooltip>
+    &quot;Minimum Supported Rust Version&quot;
+    {{#if @version.edition}}
+      <div local-class="edition">requires Rust Edition {{@version.edition}}</div>
+    {{/if}}
+  </EmberTooltip>
+</span>

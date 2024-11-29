@@ -67,17 +67,15 @@
 
     {{#if (or @version.crate_size @version.license @version.featureList)}}
       <div local-class="metadata-row">
-        {{#if @version.msrv}}
+        {{#if @version.rust_version}}
           <span local-class="msrv">
             {{svg-jar "rust"}}
-            v{{@version.msrv}}
-
-            <EmberTooltip>
-              &quot;Minimum Supported Rust Version&quot;
-              {{#if @version.edition}}
-                <div local-class="edition">requires Rust Edition {{@version.edition}}</div>
-              {{/if}}
-            </EmberTooltip>
+            <Msrv @version={{@version}} />
+          </span>
+        {{else if @version.edition}}
+          <span local-class="edition">
+            {{svg-jar "rust"}}
+            <Edition @version={{@version}} />
           </span>
         {{/if}}
 

@@ -20,6 +20,7 @@
 
 .date,
 .msrv,
+.edition,
 .license,
 .bytes {
     display: flex;
@@ -34,14 +35,11 @@
 }
 
 .date,
-.msrv {
+.msrv,
+.edition {
     [title], :global(.ember-tooltip-target) {
         cursor: help;
     }
-}
-
-.edition {
-    margin-top: var(--space-2xs);
 }
 
 .license {
