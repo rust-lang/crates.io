@@ -7,7 +7,7 @@ mod git;
 extern crate tracing;
 
 use crate::api::ApiClient;
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, bail, Context};
 use clap::Parser;
 use secrecy::SecretString;
 use std::path::{Path, PathBuf};
@@ -65,6 +65,20 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to create project")?;
 
+    info!("Checking publish with invalid authentication…");
+    let invalid_token = "invalid-token".into();
+    let output = cargo::publish_with_output(&project_path, &invalid_token).await?;
+    if output.status.success() {
+        bail!("Expected `cargo publish` to fail with invalid token");
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !stderr.contains("401 Unauthorized")
+            || !stderr.contains("The given API token does not match the format used by crates.io")
+        {
+            bail!("Expected `cargo publish` to fail with an `401 Unauthorized` error, but got: {stderr}");
+        }
+    }
+
     if options.skip_publish {
         info!("Packaging crate file…");
         cargo::package(&project_path)
@@ -72,6 +86,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to run `cargo package`")?;
 
         info!("Skipping publish step");
+        new_version = old_version;
     } else {
         info!("Publishing to staging.crates.io…");
         cargo::publish(&project_path, &options.token)
