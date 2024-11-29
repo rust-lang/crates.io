@@ -2834,7 +2834,7 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-core",
- "tracing-serde",
+ "tracing-serde 0.1.3",
  "tracing-subscriber",
  "uuid",
 ]
@@ -5365,10 +5365,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "tracing-subscriber"
-version = "0.3.18"
+name = "tracing-serde"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad0f048c97dbd9faa9b7df56362b8ebcaa52adb06b498c050d2f4e32f90a7a8b"
+checksum = "704b1aeb7be0d0a84fc9828cae51dab5970fee5088f83d1dd7ee6f6246fc6ff1"
+dependencies = [
+ "serde",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.3.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8189decb5ac0fa7bc8b96b7cb9b2701d60d48805aca84a238004d665fcc4008"
 dependencies = [
  "matchers",
  "nu-ansi-term",
@@ -5382,7 +5392,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
- "tracing-serde",
+ "tracing-serde 0.2.0",
 ]
 
 [[package]]
