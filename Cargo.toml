@@ -121,7 +121,7 @@ toml = "=0.8.19"
 tower = "=0.5.1"
 tower-http = { version = "=0.6.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.41"
-tracing-subscriber = { version = "=0.3.18", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "=0.3.19", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.4"
 unicode-xid = "=0.2.6"
