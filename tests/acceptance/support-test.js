@@ -45,7 +45,7 @@ module('Acceptance | support', function (hooks) {
     );
   });
 
-  module('reporting a crate from support page', function () {
+  module('reporting a crate from support page', function (hooks) {
     setupWindowMock(hooks);
 
     async function prepare(context, assert) {
@@ -191,7 +191,7 @@ test detail
     });
   });
 
-  module('reporting a crate from crate page', function () {
+  module('reporting a crate from crate page', function (hooks) {
     setupWindowMock(hooks);
 
     async function prepare(context, assert) {
