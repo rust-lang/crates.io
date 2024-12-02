@@ -205,15 +205,13 @@
 
 .msrv {
     text-transform: initial;
+}
 
+.msrv, .edition {
     svg {
         /* this makes the text look a little more aligned with the icon... 🤷 */
         margin-bottom: -0.15em;
     }
-}
-
-.edition {
-    margin-top: var(--space-2xs);
 }
 
 .bytes {

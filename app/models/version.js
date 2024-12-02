@@ -50,17 +50,21 @@ export default class Version extends Model {
     return this.belongsTo('crate').id();
   }
 
-  get msrv() {
-    let rustVersion = this.rust_version;
-    if (rustVersion) {
-      // add `.0` suffix if the `rust-version` field only has two version components
-      return /^[^.]+\.[^.]+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
-    } else if (this.edition === '2018') {
+  get editionMsrv() {
+    if (this.edition === '2018') {
       return '1.31.0';
     } else if (this.edition === '2021') {
       return '1.56.0';
     } else if (this.edition === '2024') {
       return '1.85.0';
+    }
+  }
+
+  get msrv() {
+    let rustVersion = this.rust_version;
+    if (rustVersion) {
+      // add `.0` suffix if the `rust-version` field only has two version components
+      return /^[^.]+\.[^.]+$/.test(rustVersion) ? `${rustVersion}.0` : rustVersion;
     }
   }
 

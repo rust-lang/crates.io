@@ -32,6 +32,26 @@ module('Model | Version', function (hooks) {
     assert.false(versions[0].isNew);
   });
 
+  test('editionMsrv', async function (assert) {
+    let version = await this.store.createRecord('version');
+    assert.strictEqual(version.editionMsrv, undefined);
+
+    version.edition = '2015';
+    assert.strictEqual(version.editionMsrv, undefined);
+
+    version.edition = '2018';
+    assert.strictEqual(version.editionMsrv, '1.31.0');
+
+    version.edition = '2021';
+    assert.strictEqual(version.editionMsrv, '1.56.0');
+
+    version.edition = '2024';
+    assert.strictEqual(version.editionMsrv, '1.85.0');
+
+    version.edition = '2027';
+    assert.strictEqual(version.editionMsrv, undefined);
+  });
+
   test('msrv', async function (assert) {
     let version = await this.store.createRecord('version');
     assert.strictEqual(version.msrv, undefined);
