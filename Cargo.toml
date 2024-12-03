@@ -73,7 +73,7 @@ cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
 derive_deref = "=1.1.1"
 dialoguer = "=0.11.0"
-diesel = { version = "=2.2.5", features = ["postgres", "serde_json", "chrono", "numeric"] }
+diesel = { version = "=2.2.6", features = ["postgres", "serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.5.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 diesel_full_text_search = "=2.2.0"
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
@@ -134,7 +134,7 @@ crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] 
 crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.8.0"
-diesel = { version = "=2.2.5", features = ["r2d2"] }
+diesel = { version = "=2.2.6", features = ["r2d2"] }
 googletest = "=0.13.0"
 insta = { version = "=1.41.1", features = ["glob", "json", "redactions"] }
 regex = "=1.11.1"
