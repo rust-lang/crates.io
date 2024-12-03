@@ -42,7 +42,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             get(version::downloads::download),
         )
         // Routes used by the frontend
-        .route("/api/v1/crates/:crate_id", get(krate::metadata::show))
+        .route(
+            "/api/v1/crates/:crate_id",
+            get(krate::metadata::show).delete(krate::delete),
+        )
         .route(
             "/api/v1/crates/:crate_id/:version",
             get(version::metadata::show).patch(version::metadata::update),
