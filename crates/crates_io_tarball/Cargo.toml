@@ -24,7 +24,7 @@ krata-tokio-tar = "=0.4.2"
 futures-util = "=0.3.31"
 
 [dev-dependencies]
-anyhow = "=1.0.93"
+anyhow = "=1.0.94"
 claims = "=0.8.0"
 clap = { version = "=4.5.22", features = ["derive", "unicode", "wrap_help"] }
 flate2 = { version = "=1.0.35" }
