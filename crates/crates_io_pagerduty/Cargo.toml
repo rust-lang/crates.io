@@ -15,4 +15,4 @@ serde = { version = "=1.0.215", features = ["derive"] }
 
 [dev-dependencies]
 clap = { version = "=4.5.22", features = ["derive", "env", "unicode", "wrap_help"] }
-tokio = { version = "=1.41.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.42.0", features = ["macros", "rt-multi-thread"] }
