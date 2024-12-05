@@ -24,7 +24,7 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'].concat(['For all other cases']),
+      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
     );
 
     await percySnapshot(assert);
@@ -41,7 +41,7 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'].concat(['For all other cases']),
+      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
     );
   });
 
@@ -71,7 +71,7 @@ module('Acceptance | support', function (hooks) {
       assert.dom('[data-test-id="fieldset-crate"]').exists();
       assert.dom('[data-test-id="fieldset-reasons"]').exists();
       assert.dom('[data-test-id="fieldset-detail"]').exists();
-      assert.dom('[data-test-id="report-button"]').hasText('Report');
+      assert.dom('[data-test-id="report-button"]').hasText('Report to help@crates.io');
 
       await percySnapshot(assert);
       await a11yAudit(axeConfig);

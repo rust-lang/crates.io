@@ -67,10 +67,10 @@
   composes: button;
   composes: button small from '../../styles/shared/buttons.module.css';
   border-radius: var(--space-3xs);
-}
+  font-weight: normal;
 
-.cancel-button {
-  composes: button;
-  composes: tan-button small from '../../styles/shared/buttons.module.css';
-  border-radius: var(--space-3xs);
+  strong {
+    margin-left: var(--space-3xs);
+    font-weight: 500;
+  }
 }
