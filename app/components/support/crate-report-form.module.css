@@ -74,9 +74,3 @@
     font-weight: 500;
   }
 }
-
-.cancel-button {
-  composes: button;
-  composes: tan-button small from '../../styles/shared/buttons.module.css';
-  border-radius: var(--space-3xs);
-}

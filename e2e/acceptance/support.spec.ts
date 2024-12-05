@@ -10,7 +10,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     const inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
     await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
-      ['Report a crate that violates policies'].concat(['For all other cases']),
+      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
     );
 
     await percy.snapshot();
@@ -26,7 +26,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
     const inquireList = page.getByTestId('inquire-list');
     await expect(inquireList).toBeVisible();
     await expect(inquireList.locator(page.getByRole('listitem'))).toHaveText(
-      ['Report a crate that violates policies'].concat(['For all other cases']),
+      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
     );
   });
 
@@ -57,7 +57,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
       await expect(page.getByTestId('fieldset-crate')).toBeVisible();
       await expect(page.getByTestId('fieldset-reasons')).toBeVisible();
       await expect(page.getByTestId('fieldset-detail')).toBeVisible();
-      await expect(page.getByTestId('report-button')).toHaveText('Report');
+      await expect(page.getByTestId('report-button')).toHaveText('Report to help@crates.io');
 
       await percy.snapshot();
       await a11y.audit();
