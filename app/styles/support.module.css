@@ -12,4 +12,9 @@
   padding: var(--space-xs) var(--space-s);
   height: inherit;
   min-height: var(--space-2xl);
+
+  strong {
+    margin-left: var(--space-3xs);
+    font-weight: 500;
+  }
 }
