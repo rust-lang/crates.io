@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@ember/test-waiters': 4.0.0
   ember-get-config: 2.1.1
   ember-inflector: 5.0.2
   ember-modifier: 4.2.0
@@ -1305,10 +1306,6 @@ packages:
     resolution: {integrity: sha512-1mbOVyVEcLxYOGzBaeeaQkCrL1o9Av86QaHk/1RvrVBW24I6YUj1ILLEi2qLZT5PzcCy0TdfadHT3hKJwJ0GcQ==}
     peerDependencies:
       ember-source: '>= 4.0.0'
-
-  '@ember/test-waiters@3.1.0':
-    resolution: {integrity: sha512-bb9h95ktG2wKY9+ja1sdsFBdOms2lB19VWs8wmNpzgHv1NCetonBoV5jHBV4DHt0uS1tg9z66cZqhUVlYs96KQ==}
-    engines: {node: 10.* || 12.* || >= 14.*}
 
   '@ember/test-waiters@4.0.0':
     resolution: {integrity: sha512-anqtvTCQvQh8VlHcKPJC0Fxz3aMmc7L+mZLOqvoH7+k86TUikZ/CxhytgMvgLk0x53fqOPEL1uykl2C9Ez65OA==}
@@ -5012,7 +5009,7 @@ packages:
     resolution: {integrity: sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==}
     engines: {node: '>= 4.0'}
     os: [darwin]
-    deprecated: Upgrade to fsevents v2 to mitigate potential security issues
+    deprecated: The v1 package contains DANGEROUS / INSECURE binaries. Upgrade to safe fsevents v2
 
   fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
@@ -9918,7 +9915,7 @@ snapshots:
   '@ember-data/request@4.12.8':
     dependencies:
       '@ember-data/private-build-infra': 4.12.8
-      '@ember/test-waiters': 3.1.0
+      '@ember/test-waiters': 4.0.0
       '@embroider/macros': 1.16.9
       ember-cli-babel: 7.26.11
     transitivePeerDependencies:
@@ -10000,7 +9997,7 @@ snapshots:
 
   '@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.96.1))':
     dependencies:
-      '@ember/test-waiters': 3.1.0
+      '@ember/test-waiters': 4.0.0
       '@embroider/addon-shim': 1.9.0
       '@embroider/macros': 1.16.9
       '@simple-dom/interface': 1.4.0
@@ -10010,15 +10007,6 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - '@glint/template'
-      - supports-color
-
-  '@ember/test-waiters@3.1.0':
-    dependencies:
-      calculate-cache-key-for-tree: 2.0.0
-      ember-cli-babel: 7.26.11
-      ember-cli-version-checker: 5.1.2
-      semver: 7.6.3
-    transitivePeerDependencies:
       - supports-color
 
   '@ember/test-waiters@4.0.0':
@@ -13684,7 +13672,7 @@ snapshots:
   ember-a11y-testing@7.0.2(@babel/core@7.26.0)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.96.1)))(qunit@2.23.0)(webpack@5.96.1):
     dependencies:
       '@ember/test-helpers': 4.0.4(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.96.1))
-      '@ember/test-waiters': 3.1.0
+      '@ember/test-waiters': 4.0.0
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
       axe-core: 4.10.2
       body-parser: 1.20.3
@@ -13706,7 +13694,7 @@ snapshots:
 
   ember-app-scheduler@7.0.1(@babel/core@7.26.0):
     dependencies:
-      '@ember/test-waiters': 3.1.0
+      '@ember/test-waiters': 4.0.0
       '@types/ember': 3.16.14
       '@types/rsvp': 4.0.9
       ember-cli-babel: 7.26.11
@@ -13715,6 +13703,7 @@ snapshots:
       ember-destroyable-polyfill: 2.0.3(@babel/core@7.26.0)
     transitivePeerDependencies:
       - '@babel/core'
+      - '@glint/template'
       - supports-color
 
   ember-auto-import@1.12.2:
@@ -14561,6 +14550,7 @@ snapshots:
       ember-compatibility-helpers: 1.2.7(@babel/core@7.26.0)
     transitivePeerDependencies:
       - '@babel/core'
+      - '@glint/template'
       - supports-color
 
   ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.96.1):
