@@ -1,5 +1,3 @@
-version: "3.4"
-
 x-backend: &backend
   build:
     context: .
