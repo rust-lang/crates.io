@@ -558,7 +558,6 @@ For example, in order to specify a set of Github OAuth Client credentials, a
 `docker-compose.override.yml` file might look like this:
 
 ```yaml
-version: '3'
 services:
   backend:
     environment:
