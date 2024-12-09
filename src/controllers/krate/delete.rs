@@ -24,7 +24,11 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 /// crate has been published for less than 72 hours, or if the crate has a
 /// single owner, has been downloaded less than 100 times for each month it has
 /// been published, and is not depended upon by any other crate on crates.io.
-pub async fn delete(Path(name): Path<String>, parts: Parts, app: AppState) -> AppResult<()> {
+pub async fn delete(
+    Path(name): Path<String>,
+    parts: Parts,
+    app: AppState,
+) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
 
     // Check that the user is authenticated
@@ -107,7 +111,7 @@ pub async fn delete(Path(name): Path<String>, parts: Parts, app: AppState) -> Ap
     })
     .await?;
 
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn find_crate(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Option<Crate>> {
@@ -177,7 +181,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
 
         // Assert that the crate no longer exists
@@ -212,7 +216,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
 
         // Assert that the crate no longer exists
@@ -247,7 +251,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
 
         // Assert that the crate no longer exists
