@@ -1,12 +1,12 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
 import { waitForPromise } from '@ember/test-waiters';
+import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
 import { keepLatestTask, task } from 'ember-concurrency';
 import fetch from 'fetch';
 import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
-import { cached } from 'tracked-toolbox';
 
 import ajax from '../utils/ajax';
 

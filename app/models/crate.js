@@ -1,8 +1,8 @@
 import Model, { attr, hasMany } from '@ember-data/model';
 import { waitForPromise } from '@ember/test-waiters';
+import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
-import { cached } from 'tracked-toolbox';
 
 export default class Crate extends Model {
   @attr name;
