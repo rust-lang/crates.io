@@ -42,9 +42,6 @@ importers:
       semver:
         specifier: 7.6.3
         version: 7.6.3
-      tracked-toolbox:
-        specifier: 2.0.0
-        version: 2.0.0(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.10.1
@@ -8155,15 +8152,6 @@ packages:
 
   tracked-built-ins@3.4.0:
     resolution: {integrity: sha512-aRwWQXC3VkY50oYxS7wKZiavkjf3uaN+UYUH30D5gxUqbxDN2LnNsfWyDfckmxHUGw4gJDH5lpRS0jX/tim0vw==}
-
-  tracked-toolbox@2.0.0:
-    resolution: {integrity: sha512-adZtX+RGN6F+pWs/5JqVuDxLhuia4uhqmQp+UlUaxpykWjDFETtAdQR+LdDJiFPXFAXnS6FBqn/tnSLJQCm3Yw==}
-    engines: {node: 14.* || 16.* || >= 18}
-    peerDependencies:
-      ember-source: '*'
-    peerDependenciesMeta:
-      ember-source:
-        optional: true
 
   tree-sync@1.4.0:
     resolution: {integrity: sha512-YvYllqh3qrR5TAYZZTXdspnIhlKAYezPYw11ntmweoceu4VK+keN356phHRIIo1d+RDmLpHZrUlmxga2gc9kSQ==}
@@ -19232,16 +19220,6 @@ snapshots:
       '@embroider/addon-shim': 1.9.0
       decorator-transforms: 2.3.0(@babel/core@7.26.0)
       ember-tracked-storage-polyfill: 1.0.0
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
-
-  tracked-toolbox@2.0.0(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)):
-    dependencies:
-      '@embroider/addon-shim': 1.9.0
-      ember-cache-primitive-polyfill: 1.0.1(@babel/core@7.26.0)
-    optionalDependencies:
-      ember-source: 6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color

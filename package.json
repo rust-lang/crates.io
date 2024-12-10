@@ -49,8 +49,7 @@
     "macro-decorators": "0.1.2",
     "mermaid": "11.4.1",
     "pretty-bytes": "6.1.1",
-    "semver": "7.6.3",
-    "tracked-toolbox": "2.0.0"
+    "semver": "7.6.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.1",
