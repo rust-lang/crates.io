@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../utils/pagination';
 
 // TODO: reduce duplication with controllers/crates
@@ -12,8 +10,6 @@ export default class UserController extends Controller {
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort = 'alpha';
-
-  @reads('model.crates.meta.total') totalItems;
 
   @pagination() pagination;
 
@@ -29,5 +25,9 @@ export default class UserController extends Controller {
     } else {
       return 'Alphabetical';
     }
+  }
+
+  get totalItems() {
+    return this.model.crates.meta.total ?? 0;
   }
 }

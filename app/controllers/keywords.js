@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../utils/pagination';
 
 export default class KeywordsController extends Controller {
@@ -11,11 +9,13 @@ export default class KeywordsController extends Controller {
   @tracked per_page = 10;
   @tracked sort = 'crates';
 
-  @reads('model.meta.total') totalItems;
-
   @pagination() pagination;
 
   get currentSortBy() {
     return this.sort === 'crates' ? '# Crates' : 'Alphabetical';
+  }
+
+  get totalItems() {
+    return this.model.meta.total ?? 0;
   }
 }
