@@ -1,0 +1,86 @@
+.wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+    margin: var(--space-s);
+}
+
+.content {
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+.title {
+    margin-top: 0;
+}
+
+.warning-block {
+    background: light-dark(var(--yellow100), var(--yellow800));
+    border-color: var(--yellow500);
+    border-left-style: solid;
+    border-left-width: 4px;
+    border-top-right-radius: var(--space-3xs);
+    border-bottom-right-radius: var(--space-3xs);
+    padding: var(--space-xs);
+}
+
+.warning {
+    composes: warning-block;
+    display: flex;
+
+    svg {
+        flex-shrink: 0;
+        width: 1em;
+        height: 1em;
+        color: var(--yellow500);
+    }
+
+    p {
+        margin: 0 0 0 var(--space-xs);
+        text-wrap: pretty;
+    }
+}
+
+.impact, .requirements {
+    li {
+        margin-bottom: var(--space-2xs);
+    }
+}
+
+.requirements {
+    ul {
+        list-style: none;
+        padding-left: 0;
+    }
+}
+
+.confirmation {
+    composes: warning-block;
+    display: block;
+
+    input {
+        margin-right: var(--space-3xs);
+    }
+}
+
+.actions {
+    margin-top: var(--space-m);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.delete-button {
+    composes: red-button from '../shared/buttons.module.css';
+}
+
+.spinner-wrapper {
+    position: relative;
+}
+
+.spinner {
+    position: absolute;
+    --spinner-size: 1.5em;
+    top: calc(-.5 * var(--spinner-size));
+    margin-left: var(--space-xs);
+}

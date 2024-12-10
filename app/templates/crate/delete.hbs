@@ -1,0 +1,64 @@
+<div local-class="wrapper">
+  <div local-class="content">
+    <h1 local-class="title" data-test-title>Delete the {{@model.name}} crate?</h1>
+
+    <p>Are you sure you want to delete the crate "{{@model.name}}"?</p>
+
+    <div local-class="warning">
+      {{svg-jar "triangle-exclamation"}}
+      <p><strong>Important:</strong> This action will permanently delete the crate and its associated versions. Deleting a crate cannot be reversed!</p>
+    </div>
+
+    <div local-class="impact">
+      <h3>Potential Impact:</h3>
+      <ul>
+        <li>Users will no longer be able to download this crate.</li>
+        <li>Any dependencies or projects relying on this crate will be broken.</li>
+        <li>Deleted crates cannot be restored.</li>
+      </ul>
+    </div>
+
+    <div local-class="requirements">
+      <h3>Requirements:</h3>
+      <p>A crate can only be deleted if:</p>
+      <ol>
+        <li>the crate has been published for less than 72 hours, or</li>
+        <li>
+          <ul>
+            <li>the crate only has a single owner, and</li>
+            <li>the crate has been downloaded less than 100 times for each month it has been published, and</li>
+            <li>the crate is not depended upon by any other crate on crates.io.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <label local-class="confirmation">
+      <Input
+        @type="checkbox"
+        @checked={{this.isConfirmed}}
+        disabled={{this.deleteTask.isRunning}}
+        data-test-confirmation-checkbox
+        {{on "change" this.toggleConfirmation}}
+      />
+      I understand that deleting this crate is permanent and cannot be undone.
+    </label>
+
+    <div local-class="actions">
+      <button
+        type="submit"
+        disabled={{or (not this.isConfirmed) this.deleteTask.isRunning}}
+        local-class="delete-button"
+        data-test-delete-button
+        {{on "click" (perform this.deleteTask)}}
+      >
+        Delete this crate
+      </button>
+      {{#if this.deleteTask.isRunning}}
+        <div local-class="spinner-wrapper">
+          <LoadingSpinner local-class="spinner" data-test-spinner />
+        </div>
+      {{/if}}
+    </div>
+  </div>
+</div>
