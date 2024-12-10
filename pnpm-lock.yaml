@@ -48,7 +48,7 @@ importers:
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.10.1
-        version: 4.10.1(playwright-core@1.49.0)
+        version: 4.10.1(playwright-core@1.49.1)
       '@babel/core':
         specifier: 7.26.0
         version: 7.26.0(supports-color@8.1.1)
@@ -99,10 +99,10 @@ importers:
         version: 4.2.0
       '@percy/playwright':
         specifier: 1.0.7
-        version: 1.0.7(playwright-core@1.49.0)
+        version: 1.0.7(playwright-core@1.49.1)
       '@playwright/test':
-        specifier: 1.49.0
-        version: 1.49.0
+        specifier: 1.49.1
+        version: 1.49.1
       '@sinonjs/fake-timers':
         specifier: 13.0.5
         version: 13.0.5
@@ -1680,8 +1680,8 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.49.0':
-    resolution: {integrity: sha512-DMulbwQURa8rNIQrf94+jPJQ4FmOVdpE5ZppRNvWVjvhC+6sOeo28r8MgIpQRYouXRtt/FCCXU7zn20jnHR4Qw==}
+  '@playwright/test@1.49.1':
+    resolution: {integrity: sha512-Ky+BVzPz8pL6PQxHqNRW1k3mIyv933LML7HktS8uik0bUXNCdPhoS/kLihiO1tMf/egaJb4IutXd7UywvXEW+g==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6854,13 +6854,13 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.49.0:
-    resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
+  playwright-core@1.49.1:
+    resolution: {integrity: sha512-BzmpVcs4kE2CH15rWfzpjzVGhWERJfmnXmniSyKeRZUs9Ws65m+RGIi7mjJK/euCegfn3i7jvqWeWyHe9y3Vgg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.49.0:
-    resolution: {integrity: sha512-eKpmys0UFDnfNb3vfsf8Vx2LEOtflgRebl0Im2eQQnYMA4Aqd+Zw8bEOB+7ZKvN76901mRnqdsiOGKxzVTbi7A==}
+  playwright@1.49.1:
+    resolution: {integrity: sha512-VYL8zLoNTBxVOrJBbDuRgDWa3i+mfQgDTrL8Ah9QXZ7ax4Dsj0MSq5bYgytRnDVVe+njoKnfsYkH3HzqVj5UZA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8755,10 +8755,10 @@ snapshots:
 
   '@antfu/utils@0.7.10': {}
 
-  '@axe-core/playwright@4.10.1(playwright-core@1.49.0)':
+  '@axe-core/playwright@4.10.1(playwright-core@1.49.1)':
     dependencies:
       axe-core: 4.10.2
-      playwright-core: 1.49.0
+      playwright-core: 1.49.1
 
   '@babel/code-frame@7.26.2':
     dependencies:
@@ -10707,9 +10707,9 @@ snapshots:
 
   '@percy/logger@1.30.4': {}
 
-  '@percy/playwright@1.0.7(playwright-core@1.49.0)':
+  '@percy/playwright@1.0.7(playwright-core@1.49.1)':
     dependencies:
-      playwright-core: 1.49.0
+      playwright-core: 1.49.1
 
   '@percy/sdk-utils@1.30.4': {}
 
@@ -10725,9 +10725,9 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@playwright/test@1.49.0':
+  '@playwright/test@1.49.1':
     dependencies:
-      playwright: 1.49.0
+      playwright: 1.49.1
 
   '@pnpm/constants@7.1.1': {}
 
@@ -17651,11 +17651,11 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.49.0: {}
+  playwright-core@1.49.1: {}
 
-  playwright@1.49.0:
+  playwright@1.49.1:
     dependencies:
-      playwright-core: 1.49.0
+      playwright-core: 1.49.1
     optionalDependencies:
       fsevents: 2.3.2
 
