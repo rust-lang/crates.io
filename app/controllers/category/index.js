@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../../utils/pagination';
 
 export default class CategoryIndexController extends Controller {
@@ -10,8 +8,6 @@ export default class CategoryIndexController extends Controller {
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort = 'recent-downloads';
-
-  @reads('model.meta.total') totalItems;
 
   @pagination() pagination;
 
@@ -29,5 +25,9 @@ export default class CategoryIndexController extends Controller {
     } else {
       return 'Recent Downloads';
     }
+  }
+
+  get totalItems() {
+    return this.model.meta.total ?? 0;
   }
 }

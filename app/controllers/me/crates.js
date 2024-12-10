@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../../utils/pagination';
 
 // TODO: reduce duplicatoin with controllers/crates
@@ -12,8 +10,6 @@ export default class MeCratesController extends Controller {
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort = 'alpha';
-
-  @reads('model.meta.total') totalItems;
 
   @pagination() pagination;
 
@@ -29,5 +25,9 @@ export default class MeCratesController extends Controller {
     } else {
       return 'Alphabetical';
     }
+  }
+
+  get totalItems() {
+    return this.model.meta.total ?? 0;
   }
 }

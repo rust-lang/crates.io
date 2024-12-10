@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../utils/pagination';
 
 export default class CratesController extends Controller {
@@ -11,7 +9,6 @@ export default class CratesController extends Controller {
   @tracked per_page = 50;
   @tracked sort = 'recent-downloads';
 
-  @reads('model.meta.total') totalItems;
   @pagination() pagination;
 
   get currentSortBy() {
@@ -26,5 +23,9 @@ export default class CratesController extends Controller {
     } else {
       return 'Alphabetical';
     }
+  }
+
+  get totalItems() {
+    return this.model.meta.total ?? 0;
   }
 }

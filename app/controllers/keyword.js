@@ -1,8 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 
-import { reads } from 'macro-decorators';
-
 import { pagination } from '../utils/pagination';
 
 export default class KeywordIndexController extends Controller {
@@ -10,8 +8,6 @@ export default class KeywordIndexController extends Controller {
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort = 'recent-downloads';
-
-  @reads('model.crates.meta.total') totalItems;
 
   @pagination() pagination;
 
@@ -27,5 +23,9 @@ export default class KeywordIndexController extends Controller {
     } else {
       return 'Recent Downloads';
     }
+  }
+
+  get totalItems() {
+    return this.model.crates.meta.total ?? 0;
   }
 }

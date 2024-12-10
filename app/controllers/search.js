@@ -29,8 +29,6 @@ export default class SearchController extends Controller {
     return !this.dataTask.lastComplete && this.dataTask.isRunning;
   }
 
-  @reads('model.meta.total') totalItems;
-
   @pagination() pagination;
 
   get pageTitle() {
@@ -75,4 +73,8 @@ export default class SearchController extends Controller {
 
     return await this.store.query('crate', searchOptions);
   });
+
+  get totalItems() {
+    return this.model.meta.total ?? 0;
+  }
 }
