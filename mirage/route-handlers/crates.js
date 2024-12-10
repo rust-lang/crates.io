@@ -67,6 +67,23 @@ export function register(server) {
     };
   });
 
+  server.delete('/api/v1/crates/:name', (schema, request) => {
+    let { user } = getSession(schema);
+    if (!user) {
+      return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
+    }
+
+    let { name } = request.params;
+    let crate = schema.crates.findBy({ name });
+    if (!crate) {
+      return new Response(404, {}, { errors: [{ detail: `crate \`${name}\` does not exist` }] });
+    }
+
+    crate.destroy();
+
+    return '';
+  });
+
   server.get('/api/v1/crates/:name/following', (schema, request) => {
     let { user } = getSession(schema);
     if (!user) {
