@@ -55,6 +55,7 @@
     &[disabled] {
         background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
         color: var(--disabled-text-color) !important;
+        cursor: not-allowed;
     }
 }
 
