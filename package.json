@@ -71,7 +71,7 @@
     "@percy/ember": "4.2.0",
     "@percy/playwright": "1.0.7",
     "@playwright/test": "1.49.1",
-    "@sinonjs/fake-timers": "13.0.5",
+    "@sinonjs/fake-timers": "14.0.0",
     "@types/ember": "4.0.11",
     "@types/node": "22.10.1",
     "@types/sinonjs__fake-timers": "8.1.5",
