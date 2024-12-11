@@ -3,6 +3,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use http::{Method, StatusCode};
+use utoipa_axum::routes;
 
 use crate::app::AppState;
 use crate::controllers::user::update_user;
@@ -14,11 +15,14 @@ use crate::Env;
 const MAX_PUBLISH_CONTENT_LENGTH: usize = 128 * 1024 * 1024; // 128 MB
 
 pub fn build_axum_router(state: AppState) -> Router<()> {
-    let (router, openapi) = BaseOpenApi::router().split_for_parts();
+    let (router, openapi) = BaseOpenApi::router()
+        .routes(routes!(
+            // Route used by both `cargo search` and the frontend
+            krate::search::search
+        ))
+        .split_for_parts();
 
     let mut router = router
-        // Route used by both `cargo search` and the frontend
-        .route("/api/v1/crates", get(krate::search::search))
         // Routes used by `cargo`
         .route(
             "/api/v1/crates/new",
