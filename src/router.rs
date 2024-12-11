@@ -1,19 +1,22 @@
 use axum::extract::DefaultBodyLimit;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
-use axum::Router;
+use axum::{Json, Router};
 use http::{Method, StatusCode};
 
 use crate::app::AppState;
 use crate::controllers::user::update_user;
 use crate::controllers::*;
+use crate::openapi::BaseOpenApi;
 use crate::util::errors::not_found;
 use crate::Env;
 
 const MAX_PUBLISH_CONTENT_LENGTH: usize = 128 * 1024 * 1024; // 128 MB
 
 pub fn build_axum_router(state: AppState) -> Router<()> {
-    let mut router = Router::new()
+    let (router, openapi) = BaseOpenApi::router().split_for_parts();
+
+    let mut router = router
         // Route used by both `cargo search` and the frontend
         .route("/api/v1/crates", get(krate::search::search))
         // Routes used by `cargo`
@@ -174,6 +177,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     }
 
     router
+        .route("/api/openapi.json", get(|| async { Json(openapi) }))
         .fallback(|method: Method| async move {
             match method {
                 Method::HEAD => StatusCode::NOT_FOUND.into_response(),
