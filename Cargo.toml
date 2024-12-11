@@ -125,6 +125,9 @@ tracing-subscriber = { version = "=0.3.19", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.4"
 unicode-xid = "=0.2.6"
+utoipa = "=5.2.0"
+utoipa-axum = "=0.1.2"
+utoipa-swagger-ui = { version = "=8.0.3", features = ["axum", "vendored"] }
 
 [dev-dependencies]
 bytes = "=1.9.0"
