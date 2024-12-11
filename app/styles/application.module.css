@@ -18,8 +18,10 @@
     --orange-800: #9a3412;
     --orange-900: #7c2d12;
 
+    --yellow100: hsl(44, 100%, 90%);
     --yellow500: hsl(44, 100%, 60%);
     --yellow700: hsl(44, 67%, 50%);
+    --yellow800: hsl(44, 67%, 20%);
 
     --header-bg-color: light-dark(hsl(115, 31%, 20%), #141413);
 

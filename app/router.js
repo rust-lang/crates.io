@@ -20,6 +20,7 @@ Router.map(function () {
 
     this.route('owners');
     this.route('settings');
+    this.route('delete');
 
     // Well-known routes
     this.route('docs');
