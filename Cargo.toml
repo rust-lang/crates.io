@@ -118,7 +118,7 @@ tokio = { version = "=1.42.0", features = ["net", "signal", "io-std", "io-util",
 tokio-postgres = "=0.7.12"
 tokio-util = "=0.7.13"
 toml = "=0.8.19"
-tower = "=0.5.1"
+tower = "=0.5.2"
 tower-http = { version = "=0.6.2", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter", "json"] }
