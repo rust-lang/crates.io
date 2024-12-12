@@ -16,6 +16,7 @@ use diesel_async::AsyncPgConnection;
 use futures_util::future::BoxFuture;
 use futures_util::{FutureExt, TryStreamExt};
 use http::header;
+use http::request::Parts;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -76,8 +77,8 @@ impl PaginationOptionsBuilder {
         self
     }
 
-    pub(crate) fn gather<T: RequestPartsExt>(self, req: &T) -> AppResult<PaginationOptions> {
-        let params = req.query();
+    pub(crate) fn gather(self, parts: &Parts) -> AppResult<PaginationOptions> {
+        let params = parts.query();
         let page_param = params.get("page");
         let seek_param = params.get("seek");
 
@@ -100,16 +101,16 @@ impl PaginationOptionsBuilder {
             }
 
             if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
-                req.request_log().add("bot", "suspected");
+                parts.request_log().add("bot", "suspected");
             }
 
             // Block large offsets for known violators of the crawler policy
             if self.limit_page_numbers {
-                let config = &req.app().config;
+                let config = &parts.app().config;
                 if numeric_page > config.max_allowed_page_offset
-                    && is_useragent_or_ip_blocked(config, req)
+                    && is_useragent_or_ip_blocked(config, parts)
                 {
-                    req.request_log().add("cause", "large page offset");
+                    parts.request_log().add("cause", "large page offset");
 
                     let error =
                             format!("Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.");
@@ -739,12 +740,14 @@ mod tests {
         );
     }
 
-    fn mock(query: &str) -> Request<()> {
+    fn mock(query: &str) -> Parts {
         Request::builder()
             .method(Method::GET)
             .uri(format!("/?{query}"))
             .body(())
             .unwrap()
+            .into_parts()
+            .0
     }
 
     fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
