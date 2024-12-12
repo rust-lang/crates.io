@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use derive_deref::Deref;
+use derive_more::Deref;
 use semver::Version;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
