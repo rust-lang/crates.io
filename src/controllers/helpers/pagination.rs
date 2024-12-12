@@ -4,7 +4,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
-use crate::util::{HeaderMapExt, RequestUtils};
+use crate::util::HeaderMapExt;
 
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
@@ -77,22 +77,29 @@ impl PaginationOptionsBuilder {
     }
 
     pub(crate) fn gather(self, parts: &Parts) -> AppResult<PaginationOptions> {
-        let params = parts.query();
-        let page_param = params.get("page");
-        let seek_param = params.get("seek");
+        use axum::extract::Query;
 
-        if seek_param.is_some() && page_param.is_some() {
+        #[derive(Debug, Deserialize)]
+        struct QueryParams {
+            page: Option<u32>,
+            per_page: Option<i64>,
+            seek: Option<String>,
+        }
+
+        let Query(params) = Query::<QueryParams>::try_from_uri(&parts.uri)
+            .map_err(|err| bad_request(err.body_text()))?;
+
+        if params.seek.is_some() && params.page.is_some() {
             return Err(bad_request(
                 "providing both ?page= and ?seek= is unsupported",
             ));
         }
 
-        let page = if let Some(s) = page_param {
+        let page = if let Some(numeric_page) = params.page {
             if !self.enable_pages {
                 return Err(bad_request("?page= is not supported for this request"));
             }
 
-            let numeric_page = s.parse().map_err(bad_request)?;
             if numeric_page < 1 {
                 return Err(bad_request(format_args!(
                     "page indexing starts from 1, page {numeric_page} is invalid",
@@ -119,20 +126,17 @@ impl PaginationOptionsBuilder {
             }
 
             Page::Numeric(numeric_page)
-        } else if let Some(s) = seek_param {
+        } else if let Some(s) = params.seek {
             if !self.enable_seek {
                 return Err(bad_request("?seek= is not supported for this request"));
             }
 
-            Page::Seek(RawSeekPayload(s.clone()))
+            Page::Seek(RawSeekPayload(s))
         } else {
             Page::Unspecified
         };
 
-        let per_page = params
-            .get("per_page")
-            .map(|s| s.parse().map_err(bad_request))
-            .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
+        let per_page = params.per_page.unwrap_or(DEFAULT_PER_PAGE);
         if per_page > MAX_PER_PAGE {
             return Err(bad_request(format_args!(
                 "cannot request more than {MAX_PER_PAGE} items",
@@ -542,9 +546,12 @@ mod tests {
         let assert_error =
             |query, msg| assert_pagination_error(PaginationOptions::builder(), query, msg);
 
-        assert_error("page=", "cannot parse integer from empty string");
-        assert_error("page=not_a_number", "invalid digit found in string");
-        assert_error("page=1.0", "invalid digit found in string");
+        let expected = "Failed to deserialize query string: cannot parse integer from empty string";
+        assert_error("page=", expected);
+        let expected = "Failed to deserialize query string: invalid digit found in string";
+        assert_error("page=not_a_number", expected);
+        let expected = "Failed to deserialize query string: invalid digit found in string";
+        assert_error("page=1.0", expected);
         assert_error("page=0", "page indexing starts from 1, page 0 is invalid");
 
         let pagination = PaginationOptions::builder()
@@ -558,9 +565,12 @@ mod tests {
         let assert_error =
             |query, msg| assert_pagination_error(PaginationOptions::builder(), query, msg);
 
-        assert_error("per_page=", "cannot parse integer from empty string");
-        assert_error("per_page=not_a_number", "invalid digit found in string");
-        assert_error("per_page=1.0", "invalid digit found in string");
+        let expected = "Failed to deserialize query string: cannot parse integer from empty string";
+        assert_error("per_page=", expected);
+        let expected = "Failed to deserialize query string: invalid digit found in string";
+        assert_error("per_page=not_a_number", expected);
+        let expected = "Failed to deserialize query string: invalid digit found in string";
+        assert_error("per_page=1.0", expected);
         assert_error("per_page=101", "cannot request more than 100 items");
         assert_error(
             "per_page=0",
