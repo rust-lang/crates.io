@@ -664,12 +664,8 @@ async fn multiple_ids() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    for json in search_both(
-        &anon,
-        "ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown",
-    )
-    .await
-    {
+    let query = "ids[]=foo&ids[]=bar&ids[]=baz&ids[]=baz&ids[]=unknown";
+    for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "bar");
         assert_eq!(json.crates[1].name, "baz");
