@@ -83,7 +83,7 @@ impl PaginationOptionsBuilder {
         #[derive(Debug, Deserialize)]
         struct QueryParams {
             page: Option<NonZeroU32>,
-            per_page: Option<i64>,
+            per_page: Option<NonZeroU32>,
             seek: Option<String>,
         }
 
@@ -132,14 +132,11 @@ impl PaginationOptionsBuilder {
             Page::Unspecified
         };
 
-        let per_page = params.per_page.unwrap_or(DEFAULT_PER_PAGE);
+        let per_page = params.per_page.map(|p| p.get() as i64);
+        let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
         if per_page > MAX_PER_PAGE {
             return Err(bad_request(format_args!(
                 "cannot request more than {MAX_PER_PAGE} items",
-            )));
-        } else if per_page < 1 {
-            return Err(bad_request(format_args!(
-                "cannot request less than 1 item, per_page {per_page} is invalid",
             )));
         }
 
@@ -569,10 +566,8 @@ mod tests {
         let expected = "Failed to deserialize query string: invalid digit found in string";
         assert_error("per_page=1.0", expected);
         assert_error("per_page=101", "cannot request more than 100 items");
-        assert_error(
-            "per_page=0",
-            "cannot request less than 1 item, per_page 0 is invalid",
-        );
+        let expected = "Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32";
+        assert_error("per_page=0", expected);
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("per_page=5"))
