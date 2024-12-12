@@ -24,28 +24,35 @@ use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
 use crate::util::RequestUtils;
 
-/// Handles the `GET /crates` route.
-/// Returns a list of crates. Called in a variety of scenarios in the
-/// front end, including:
+/// Returns a list of crates.
+///
+/// Called in a variety of scenarios in the front end, including:
 /// - Alphabetical listing of crates
 /// - List of crates under a specific owner
 /// - Listing a user's followed crates
-///
-/// Notes:
-/// The different use cases this function covers is handled through passing
-/// in parameters in the GET request.
-///
-/// We would like to stop adding functionality in here. It was built like
-/// this to keep the number of database queries low, though given Rust's
-/// low performance overhead, this is a soft goal to have, and can afford
-/// more database transactions if it aids understandability.
-///
-/// All of the edge cases for this function are not currently covered
-/// in testing, and if they fail, it is difficult to determine what
-/// caused the break. In the future, we should look at splitting this
-/// function out to cover the different use cases, and create unit tests
-/// for them.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates",
+    operation_id = "crates_list",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+    // Notes:
+    // The different use cases this function covers is handled through passing
+    // in parameters in the GET request.
+    //
+    // We would like to stop adding functionality in here. It was built like
+    // this to keep the number of database queries low, though given Rust's
+    // low performance overhead, this is a soft goal to have, and can afford
+    // more database transactions if it aids understandability.
+    //
+    // All of the edge cases for this function are not currently covered
+    // in testing, and if they fail, it is difficult to determine what
+    // caused the break. In the future, we should look at splitting this
+    // function out to cover the different use cases, and create unit tests
+    // for them.
+
     let mut conn = app.db_read().await?;
 
     use diesel::sql_types::Float;

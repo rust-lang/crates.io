@@ -1,0 +1,47 @@
+---
+source: src/openapi.rs
+expression: response.json()
+snapshot_kind: text
+---
+{
+  "components": {},
+  "info": {
+    "contact": {
+      "email": "help@crates.io",
+      "name": "the crates.io team"
+    },
+    "description": "API documentation for the [crates.io](https://crates.io/) package registry",
+    "license": {
+      "name": ""
+    },
+    "termsOfService": "https://crates.io/policies",
+    "title": "crates.io",
+    "version": "0.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/crates": {
+      "get": {
+        "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
+        "operationId": "crates_list",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Returns a list of crates.",
+        "tags": [
+          "crates"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://crates.io"
+    },
+    {
+      "url": "https://staging.crates.io"
+    }
+  ]
+}
