@@ -1,5 +1,4 @@
 use crate::config::Server;
-use crate::controllers::util::RequestPartsExt;
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
@@ -317,9 +316,9 @@ impl RawSeekPayload {
 ///
 /// A request can be blocked if either the User Agent is on the User Agent block list or if the client
 /// IP is on the CIDR block list.
-fn is_useragent_or_ip_blocked<T: RequestPartsExt>(config: &Server, req: &T) -> bool {
-    let user_agent = req.headers().get_str_or_default(header::USER_AGENT);
-    let client_ip = req.extensions().get::<RealIp>();
+fn is_useragent_or_ip_blocked(config: &Server, req: &Parts) -> bool {
+    let user_agent = req.headers.get_str_or_default(header::USER_AGENT);
+    let client_ip = req.extensions.get::<RealIp>();
 
     // check if user agent is blocked
     if config
