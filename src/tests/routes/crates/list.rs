@@ -672,6 +672,13 @@ async fn multiple_ids() -> anyhow::Result<()> {
         assert_eq!(json.crates[2].name, "foo");
     }
 
+    let response = anon.search(&format!("{query}&per_page=1&page=2")).await;
+    assert_snapshot!(response.meta.prev_page.unwrap(), @"?ids%5B%5D=unknown&per_page=1&page=1");
+    assert_snapshot!(response.meta.next_page.unwrap(), @"?ids%5B%5D=unknown&per_page=1&page=3");
+
+    let response = anon.search(&format!("{query}&per_page=1")).await;
+    assert_snapshot!(response.meta.next_page.unwrap(), @"?ids%5B%5D=unknown&per_page=1&seek=Mg");
+
     Ok(())
 }
 
