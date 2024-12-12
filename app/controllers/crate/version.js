@@ -24,7 +24,7 @@ export default class CrateVersionController extends Controller {
     this.stackedGraph = false;
   }
 
-  @alias('downloadsContext.version_downloads.content') downloads;
+  @alias('loadDownloadsTask.last.value') downloads;
   @alias('model.crate') crate;
   @alias('model.requestedVersion') requestedVersion;
   @alias('model.version') currentVersion;
@@ -61,5 +61,11 @@ export default class CrateVersionController extends Controller {
     }
 
     return readme;
+  });
+
+  // This task would be `perform()` in setupController
+  loadDownloadsTask = task(async () => {
+    let downloads = await this.downloadsContext.version_downloads;
+    return downloads;
   });
 }

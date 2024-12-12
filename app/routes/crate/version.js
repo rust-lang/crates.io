@@ -51,6 +51,9 @@ export default class VersionRoute extends Route {
     waitForPromise(controller.loadReadmeTask.perform()).catch(() => {
       // ignored
     });
+    waitForPromise(controller.loadDownloadsTask.perform()).catch(() => {
+      // ignored
+    });
 
     let { crate, version } = model;
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
