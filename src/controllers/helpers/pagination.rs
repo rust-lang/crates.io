@@ -5,6 +5,7 @@ use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;
+use std::num::NonZeroU32;
 
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
@@ -81,7 +82,7 @@ impl PaginationOptionsBuilder {
 
         #[derive(Debug, Deserialize)]
         struct QueryParams {
-            page: Option<u32>,
+            page: Option<NonZeroU32>,
             per_page: Option<i64>,
             seek: Option<String>,
         }
@@ -95,17 +96,12 @@ impl PaginationOptionsBuilder {
             ));
         }
 
-        let page = if let Some(numeric_page) = params.page {
+        let page = if let Some(s) = params.page {
             if !self.enable_pages {
                 return Err(bad_request("?page= is not supported for this request"));
             }
 
-            if numeric_page < 1 {
-                return Err(bad_request(format_args!(
-                    "page indexing starts from 1, page {numeric_page} is invalid",
-                )));
-            }
-
+            let numeric_page = s.get();
             if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
                 parts.request_log().add("bot", "suspected");
             }
@@ -552,7 +548,8 @@ mod tests {
         assert_error("page=not_a_number", expected);
         let expected = "Failed to deserialize query string: invalid digit found in string";
         assert_error("page=1.0", expected);
-        assert_error("page=0", "page indexing starts from 1, page 0 is invalid");
+        let expected = "Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32";
+        assert_error("page=0", expected);
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("page=5"))
