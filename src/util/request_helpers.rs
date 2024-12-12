@@ -47,8 +47,15 @@ impl<T: RequestPartsExt> RequestUtils for T {
     }
 
     fn query_with_params(&self, new_params: IndexMap<String, String>) -> String {
-        let mut params = self.query();
+        let query_bytes = self.uri().query().unwrap_or("").as_bytes();
+
+        let mut params = url::form_urlencoded::parse(query_bytes)
+            .into_owned()
+            .filter(|(key, _)| !new_params.contains_key(key))
+            .collect::<Vec<_>>();
+
         params.extend(new_params);
+
         let query_string = url::form_urlencoded::Serializer::new(String::new())
             .extend_pairs(params)
             .finish();

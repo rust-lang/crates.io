@@ -664,17 +664,20 @@ async fn multiple_ids() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    for json in search_both(
-        &anon,
-        "ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown",
-    )
-    .await
-    {
+    let query = "ids[]=foo&ids[]=bar&ids[]=baz&ids[]=baz&ids[]=unknown";
+    for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(json.crates[0].name, "bar");
         assert_eq!(json.crates[1].name, "baz");
         assert_eq!(json.crates[2].name, "foo");
     }
+
+    let response = anon.search(&format!("{query}&per_page=1&page=2")).await;
+    assert_snapshot!(response.meta.prev_page.unwrap(), @"?ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown&per_page=1&page=1");
+    assert_snapshot!(response.meta.next_page.unwrap(), @"?ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown&per_page=1&page=3");
+
+    let response = anon.search(&format!("{query}&per_page=1")).await;
+    assert_snapshot!(response.meta.next_page.unwrap(), @"?ids%5B%5D=foo&ids%5B%5D=bar&ids%5B%5D=baz&ids%5B%5D=baz&ids%5B%5D=unknown&per_page=1&seek=Mg");
 
     Ok(())
 }
@@ -1013,21 +1016,21 @@ async fn pagination_links_included_if_applicable() -> anyhow::Result<()> {
     let page4 = anon.search("letter=p&page=4&per_page=1").await;
 
     assert_eq!(
-        Some("?letter=p&page=2&per_page=1".to_string()),
+        Some("?letter=p&per_page=1&page=2".to_string()),
         page1.meta.next_page
     );
     assert_eq!(None, page1.meta.prev_page);
     assert_eq!(
-        Some("?letter=p&page=3&per_page=1".to_string()),
+        Some("?letter=p&per_page=1&page=3".to_string()),
         page2.meta.next_page
     );
     assert_eq!(
-        Some("?letter=p&page=1&per_page=1".to_string()),
+        Some("?letter=p&per_page=1&page=1".to_string()),
         page2.meta.prev_page
     );
     assert_eq!(None, page4.meta.next_page);
     assert_eq!(
-        Some("?letter=p&page=2&per_page=1".to_string()),
+        Some("?letter=p&per_page=1&page=2".to_string()),
         page3.meta.prev_page
     );
     assert!([page1.meta.total, page2.meta.total, page3.meta.total]
