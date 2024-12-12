@@ -8,8 +8,6 @@
 #[macro_use]
 extern crate claims;
 #[macro_use]
-extern crate derive_deref;
-#[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate serde;

@@ -2,6 +2,7 @@ use crate::real_ip::process_xff_headers;
 use axum::extract::{ConnectInfo, Request};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
+use derive_more::Deref;
 use std::net::{IpAddr, SocketAddr};
 
 #[derive(Copy, Clone, Debug, Deref)]

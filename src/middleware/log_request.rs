@@ -11,6 +11,7 @@ use axum::response::IntoResponse;
 use axum::Extension;
 use axum_extra::headers::UserAgent;
 use axum_extra::TypedHeader;
+use derive_more::Deref;
 use http::{Method, Uri};
 use parking_lot::Mutex;
 use std::borrow::Cow;

@@ -71,7 +71,7 @@ chrono = { version = "=0.4.39", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.23", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
-derive_deref = "=1.1.1"
+derive_more = { version = "=1.0.0", features = ["deref"] }
 dialoguer = "=0.11.0"
 diesel = { version = "=2.2.6", features = ["postgres", "serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.5.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
