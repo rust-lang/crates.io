@@ -94,7 +94,7 @@
   </div>
 
   {{#unless @crate.categories.isPending}}
-    {{#if @crate.categories}}
+    {{#if @crate.categories.length}}
       <div>
         <h2 local-class="heading">Categories</h2>
         <ul local-class="categories">
