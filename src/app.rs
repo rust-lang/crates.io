@@ -2,7 +2,6 @@
 
 use crate::config;
 use crate::db::{connection_url, make_manager_config, ConnectionConfig};
-use std::ops::Deref;
 use std::sync::Arc;
 
 use crate::email::Emails;
@@ -12,6 +11,7 @@ use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
 use deadpool_diesel::Runtime;
+use derive_more::Deref;
 use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::AsyncPgConnection;
@@ -206,18 +206,9 @@ impl App {
     }
 }
 
-#[derive(Clone, FromRequestParts)]
+#[derive(Clone, FromRequestParts, Deref)]
 #[from_request(via(State))]
 pub struct AppState(pub Arc<App>);
-
-// deref so you can still access the inner fields easily
-impl Deref for AppState {
-    type Target = App;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromRef<AppState> for cookie::Key {
     fn from_ref(app: &AppState) -> Self {
