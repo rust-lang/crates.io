@@ -480,6 +480,32 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/me/tokens/{id}": {
+      "delete": {
+        "operationId": "revoke_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      },
+      "get": {
+        "operationId": "get_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find API token by id.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
     "/api/v1/me/updates": {
       "get": {
         "operationId": "get_authenticated_user_updates",

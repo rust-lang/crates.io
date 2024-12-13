@@ -179,7 +179,14 @@ pub async fn new(
     Ok(json!({ "api_token": api_token }))
 }
 
-/// Handles the `GET /me/tokens/:id` route.
+/// Find API token by id.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/tokens/{id}",
+    operation_id = "get_api_token",
+    tag = "api_tokens",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
@@ -193,7 +200,14 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<E
     Ok(json!({ "api_token": token }))
 }
 
-/// Handles the `DELETE /me/tokens/:id` route.
+/// Revoke API token.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/me/tokens/{id}",
+    operation_id = "revoke_api_token",
+    tag = "api_tokens",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
