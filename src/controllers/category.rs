@@ -48,7 +48,14 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `GET /categories/:category_id` route.
+/// Get category metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/categories/{category}",
+    operation_id = "get_category",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
