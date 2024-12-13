@@ -636,6 +636,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/users/{id}/resend": {
+      "put": {
+        "operationId": "resend_email_verification",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Regenerate and send an email verification token.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users/{id}/stats": {
       "get": {
         "description": "This currently only returns the total number of downloads for crates owned\nby the user.",

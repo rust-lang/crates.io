@@ -1,5 +1,5 @@
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post, put};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use http::{Method, StatusCode};
 use utoipa_axum::routes;
@@ -58,13 +58,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(user::me::update_email_notifications))
         .routes(routes!(summary::summary))
         .routes(routes!(user::me::confirm_user_email))
+        .routes(routes!(user::resend::regenerate_token_and_send))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/users/:user_id/resend",
-            put(user::regenerate_token_and_send),
-        )
         .route(
             "/api/v1/site_metadata",
             get(site_metadata::show_deployed_sha),
