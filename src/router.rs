@@ -46,10 +46,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(category::slugs))
         .routes(routes!(user::other::show, user::update::update_user))
         .routes(routes!(user::other::stats))
+        .routes(routes!(team::show_team))
         .split_for_parts();
 
     let mut router = router
-        .route("/api/v1/teams/:team_id", get(team::show_team))
         .route("/api/v1/me", get(user::me::me))
         .route("/api/v1/me/updates", get(user::me::updates))
         .route("/api/v1/me/tokens", get(token::list).put(token::new))

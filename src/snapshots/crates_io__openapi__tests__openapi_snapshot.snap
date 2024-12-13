@@ -440,6 +440,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/teams/{team}": {
+      "get": {
+        "operationId": "get_team",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find team by login.",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
     "/api/v1/users/{id}/stats": {
       "get": {
         "description": "This currently only returns the total number of downloads for crates owned\nby the user.",

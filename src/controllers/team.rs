@@ -8,7 +8,14 @@ use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
-/// Handles the `GET /teams/:team_id` route.
+/// Find team by login.
+#[utoipa::path(
+    get,
+    path = "/api/v1/teams/{team}",
+    operation_id = "get_team",
+    tag = "teams",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<ErasedJson> {
     use crate::schema::teams::dsl::{login, teams};
 
