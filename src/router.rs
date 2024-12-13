@@ -24,13 +24,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         ))
         .routes(routes!(version::yank::yank))
         .routes(routes!(version::yank::unyank))
+        .routes(routes!(version::downloads::download))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/:version/download",
-            get(version::downloads::download),
-        )
         // Routes used by the frontend
         .route(
             "/api/v1/crates/:crate_id",

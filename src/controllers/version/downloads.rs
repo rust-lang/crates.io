@@ -18,8 +18,16 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
-/// Handles the `GET /crates/:crate_id/:version/download` route.
+/// Download a crate version.
+///
 /// This returns a URL to the location where the crate is stored.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/download",
+    operation_id = "download_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn download(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
