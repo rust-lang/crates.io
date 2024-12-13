@@ -37,13 +37,23 @@ export default class Crate extends Model {
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
   @cached get versionIdsBySemver() {
-    let versions = this.versions.toArray() ?? [];
-    return versions.sort(compareVersionBySemver).map(v => v.id);
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsBySemver`', last != null);
+    let versions = last?.value ?? [];
+    return versions
+      .slice()
+      .sort(compareVersionBySemver)
+      .map(v => v.id);
   }
 
   @cached get versionIdsByDate() {
-    let versions = this.versions.toArray() ?? [];
-    return versions.sort(compareVersionByDate).map(v => v.id);
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsByDate`', last != null);
+    let versions = last?.value ?? [];
+    return versions
+      .slice()
+      .sort(compareVersionByDate)
+      .map(v => v.id);
   }
 
   @cached get firstVersionId() {
@@ -51,8 +61,10 @@ export default class Crate extends Model {
   }
 
   @cached get versionsObj() {
-    let versions = this.versions.toArray() ?? [];
-    return Object.fromEntries(versions.map(v => [v.id, v]));
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionsObj`', last != null);
+    let versions = last?.value ?? [];
+    return Object.fromEntries(versions.slice().map(v => [v.id, v]));
   }
 
   @cached get releaseTrackSet() {
@@ -116,6 +128,10 @@ export default class Crate extends Model {
   loadOwnersTask = task(async () => {
     let [teams, users] = await Promise.all([this.owner_team, this.owner_user]);
     return [...(teams ?? []), ...(users ?? [])];
+  });
+
+  loadVersionsTask = task(async () => {
+    return (await this.versions) ?? [];
   });
 }
 
