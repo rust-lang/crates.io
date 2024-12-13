@@ -62,13 +62,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(site_metadata::show_deployed_sha))
         // Session management
         .routes(routes!(user::session::begin))
+        .routes(routes!(user::session::authorize))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/private/session/authorize",
-            get(user::session::authorize),
-        )
         .route("/api/private/session", delete(user::session::logout))
         // Metrics
         .route("/api/private/metrics/:kind", get(metrics::prometheus))

@@ -61,7 +61,7 @@ pub struct AuthorizeQuery {
     state: CsrfToken,
 }
 
-/// Handles the `GET /api/private/session/authorize` route.
+/// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
 /// the data access permissions. It will check the `state` parameter and then call the GitHub API
@@ -79,7 +79,6 @@ pub struct AuthorizeQuery {
 ///
 /// ```json
 /// {
-///     "api_token": "b84a63c4ea3fcb4ac84",
 ///     "user": {
 ///         "email": "foo@bar.org",
 ///         "name": "Foo Bar",
@@ -89,6 +88,13 @@ pub struct AuthorizeQuery {
 ///     }
 /// }
 /// ```
+#[utoipa::path(
+    get,
+    path = "/api/private/session/authorize",
+    operation_id = "authorize_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn authorize(
     query: AuthorizeQuery,
     app: AppState,
