@@ -20,7 +20,14 @@ use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
-/// Handles the `GET /crates/:crate_id/versions` route.
+/// List all versions of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/versions",
+    operation_id = "list_crate_versions",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn versions(
     state: AppState,
     Path(crate_name): Path<String>,

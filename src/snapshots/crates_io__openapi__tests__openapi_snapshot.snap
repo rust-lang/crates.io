@@ -143,6 +143,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/versions": {
+      "get": {
+        "operationId": "list_crate_versions",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all versions of a crate.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/{version}": {
       "get": {
         "operationId": "get_version",
