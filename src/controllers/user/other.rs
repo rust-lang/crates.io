@@ -12,7 +12,14 @@ use crate::sql::lower;
 use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
 
-/// Handles the `GET /users/:user_id` route.
+/// Find user by login.
+#[utoipa::path(
+    get,
+    path = "/api/v1/users/{user}",
+    operation_id = "get_user",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 

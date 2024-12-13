@@ -5,7 +5,6 @@ use http::{Method, StatusCode};
 use utoipa_axum::routes;
 
 use crate::app::AppState;
-use crate::controllers::user::update_user;
 use crate::controllers::*;
 use crate::openapi::BaseOpenApi;
 use crate::util::errors::not_found;
@@ -45,13 +44,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(category::index))
         .routes(routes!(category::show))
         .routes(routes!(category::slugs))
+        .routes(routes!(user::other::show, user::update::update_user))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/users/:user_id",
-            get(user::other::show).put(update_user),
-        )
         .route("/api/v1/users/:user_id/stats", get(user::other::stats))
         .route("/api/v1/teams/:team_id", get(team::show_team))
         .route("/api/v1/me", get(user::me::me))

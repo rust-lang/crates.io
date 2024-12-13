@@ -24,7 +24,18 @@ pub struct User {
     publish_notifications: Option<bool>,
 }
 
-/// Handles the `PUT /users/:user_id` route.
+/// Update user settings.
+///
+/// This endpoint allows users to update their email address and publish notifications settings.
+///
+/// The `id` parameter needs to match the ID of the currently authenticated user.
+#[utoipa::path(
+    put,
+    path = "/api/v1/users/{user}",
+    operation_id = "update_user",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn update_user(
     state: AppState,
     Path(param_user_id): Path<i32>,

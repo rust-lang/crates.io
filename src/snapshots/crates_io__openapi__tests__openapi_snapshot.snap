@@ -439,6 +439,33 @@ snapshot_kind: text
           "keywords"
         ]
       }
+    },
+    "/api/v1/users/{user}": {
+      "get": {
+        "operationId": "get_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find user by login.",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "This endpoint allows users to update their email address and publish notifications settings.\n\nThe `id` parameter needs to match the ID of the currently authenticated user.",
+        "operationId": "update_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update user settings.",
+        "tags": [
+          "users"
+        ]
+      }
     }
   },
   "servers": [
