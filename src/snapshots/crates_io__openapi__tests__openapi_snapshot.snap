@@ -48,6 +48,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/category_slugs": {
+      "get": {
+        "operationId": "list_category_slugs",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all available category slugs.",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",

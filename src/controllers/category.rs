@@ -88,7 +88,14 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Erased
     Ok(json!({ "category": cat_with_subcats }))
 }
 
-/// Handles the `GET /category_slugs` route.
+/// List all available category slugs.
+#[utoipa::path(
+    get,
+    path = "/api/v1/category_slugs",
+    operation_id = "list_category_slugs",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn slugs(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
