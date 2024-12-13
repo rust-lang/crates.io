@@ -62,6 +62,44 @@ snapshot_kind: text
           "publish"
         ]
       }
+    },
+    "/api/v1/crates/{name}/owners": {
+      "delete": {
+        "operationId": "delete_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Remove crate owners.",
+        "tags": [
+          "owners"
+        ]
+      },
+      "get": {
+        "operationId": "list_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List crate owners.",
+        "tags": [
+          "owners"
+        ]
+      },
+      "put": {
+        "operationId": "add_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Add crate owners.",
+        "tags": [
+          "owners"
+        ]
+      }
     }
   },
   "servers": [

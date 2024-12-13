@@ -17,15 +17,14 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(krate::search::search))
         // Routes used by `cargo`
         .routes(routes!(krate::publish::publish, krate::metadata::show_new))
+        .routes(routes!(
+            krate::owners::owners,
+            krate::owners::add_owners,
+            krate::owners::remove_owners
+        ))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/owners",
-            get(krate::owners::owners)
-                .put(krate::owners::add_owners)
-                .delete(krate::owners::remove_owners),
-        )
         .route(
             "/api/v1/crates/:crate_id/:version/yank",
             delete(version::yank::yank),
