@@ -41,7 +41,14 @@ pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     show(app, Path("new".to_string()), req).await
 }
 
-/// Handles the `GET /crates/:crate_id` route.
+/// Get crate metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}",
+    operation_id = "get_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 

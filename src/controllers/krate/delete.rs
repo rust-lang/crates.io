@@ -18,12 +18,22 @@ use http::StatusCode;
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 100;
 const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 
-/// Deletes a crate from the database, index and storage.
+/// Delete a crate.
+///
+/// The crate is immediately deleted from the database, and with a small delay
+/// from the git and sparse index, and the crate file storage.
 ///
 /// The crate can only be deleted by the owner of the crate, and only if the
 /// crate has been published for less than 72 hours, or if the crate has a
 /// single owner, has been downloaded less than 100 times for each month it has
 /// been published, and is not depended upon by any other crate on crates.io.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/crates/{name}",
+    operation_id = "delete_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn delete(
     Path(name): Path<String>,
     parts: Parts,

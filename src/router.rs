@@ -25,14 +25,11 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(version::yank::yank))
         .routes(routes!(version::yank::unyank))
         .routes(routes!(version::downloads::download))
+        // Routes used by the frontend
+        .routes(routes!(krate::metadata::show, krate::delete::delete))
         .split_for_parts();
 
     let mut router = router
-        // Routes used by the frontend
-        .route(
-            "/api/v1/crates/:crate_id",
-            get(krate::metadata::show).delete(krate::delete),
-        )
         .route(
             "/api/v1/crates/:crate_id/:version",
             get(version::metadata::show).patch(version::metadata::update),
