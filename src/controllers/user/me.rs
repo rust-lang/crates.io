@@ -133,7 +133,18 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
     ok_true()
 }
 
-/// Handles `PUT /me/email_notifications` route
+/// Update email notification settings for the authenticated user.
+///
+/// This endpoint was implemented for an experimental feature that was never
+/// fully implemented. It is now deprecated and will be removed in the future.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/email_notifications",
+    operation_id = "update_email_notifications",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
+#[deprecated]
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
     use diesel::pg::upsert::excluded;
 

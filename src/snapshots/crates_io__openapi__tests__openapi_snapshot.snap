@@ -496,6 +496,22 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/me/email_notifications": {
+      "put": {
+        "deprecated": true,
+        "description": "This endpoint was implemented for an experimental feature that was never\nfully implemented. It is now deprecated and will be removed in the future.",
+        "operationId": "update_email_notifications",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update email notification settings for the authenticated user.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/me/tokens": {
       "get": {
         "operationId": "list_api_tokens",

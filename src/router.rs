@@ -55,13 +55,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(crate_owner_invitation::list))
         .routes(routes!(crate_owner_invitation::handle_invite))
         .routes(routes!(crate_owner_invitation::handle_invite_with_token))
+        .routes(routes!(user::me::update_email_notifications))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/me/email_notifications",
-            put(user::me::update_email_notifications),
-        )
         .route("/api/v1/summary", get(summary::summary))
         .route(
             "/api/v1/confirm/:email_token",
