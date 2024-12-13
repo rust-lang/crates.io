@@ -90,6 +90,21 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/downloads": {
+      "get": {
+        "description": "This includes the per-day downloads for the last 90 days and for the\nlatest 5 versions plus the sum of the rest.",
+        "operationId": "get_crate_downloads",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the download counts for a crate.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/owners": {
       "delete": {
         "operationId": "delete_owners",
