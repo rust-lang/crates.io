@@ -3,27 +3,13 @@ use axum::body::Bytes;
 use axum::extract::{FromRequest, Request};
 use axum::response::{IntoResponse, Response};
 use axum::{async_trait, Extension, RequestExt};
+use derive_more::{Deref, DerefMut};
 use http::StatusCode;
 use http_body_util::{BodyExt, LengthLimitError};
 use std::error::Error;
-use std::ops::{Deref, DerefMut};
 
-#[derive(Debug)]
+#[derive(Debug, Deref, DerefMut)]
 pub struct BytesRequest(pub Request<Bytes>);
-
-impl Deref for BytesRequest {
-    type Target = Request<Bytes>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for BytesRequest {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 #[async_trait]
 impl<S> FromRequest<S> for BytesRequest
