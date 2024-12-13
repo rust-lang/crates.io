@@ -82,10 +82,14 @@ pub async fn authors() -> ErasedJson {
     })
 }
 
-/// Handles the `GET /crates/:crate/:version` route.
-///
-/// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
-/// API route to have.
+/// Get crate version metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}",
+    operation_id = "get_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
@@ -103,9 +107,16 @@ pub async fn show(
     Ok(json!({ "version": version }))
 }
 
-/// Handles the `PATCH /crates/:crate/:version` route.
+/// Update a crate version.
 ///
-/// This endpoint allows updating the yanked state of a version, including a yank message.
+/// This endpoint allows updating the `yanked` state of a version, including a yank message.
+#[utoipa::path(
+    patch,
+    path = "/api/v1/crates/{name}/{version}",
+    operation_id = "update_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn update(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,

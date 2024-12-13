@@ -128,6 +128,33 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/{version}": {
+      "get": {
+        "operationId": "get_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate version metadata.",
+        "tags": [
+          "versions"
+        ]
+      },
+      "patch": {
+        "description": "This endpoint allows updating the `yanked` state of a version, including a yank message.",
+        "operationId": "update_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/{version}/download": {
       "get": {
         "description": "This returns a URL to the location where the crate is stored.",
