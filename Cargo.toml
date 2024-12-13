@@ -45,7 +45,7 @@ anyhow = "=1.0.94"
 async-compression = { version = "=0.4.18", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.83"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
-aws-ip-ranges = "=0.952.0"
+aws-ip-ranges = "=0.953.0"
 aws-sdk-cloudfront = "=1.55.0"
 aws-sdk-sqs = "=1.50.0"
 axum = { version = "=0.7.9", features = ["macros", "matched-path"] }
