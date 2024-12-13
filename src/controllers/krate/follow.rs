@@ -75,7 +75,14 @@ pub async fn unfollow(
     ok_true()
 }
 
-/// Handles the `GET /crates/:crate_id/following` route.
+/// Check if a crate is followed.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/following",
+    operation_id = "get_following_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn following(
     app: AppState,
     Path(crate_name): Path<String>,

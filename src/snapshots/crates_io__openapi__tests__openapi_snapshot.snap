@@ -131,6 +131,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/following": {
+      "get": {
+        "operationId": "get_following_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check if a crate is followed.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/owners": {
       "delete": {
         "operationId": "delete_owners",
