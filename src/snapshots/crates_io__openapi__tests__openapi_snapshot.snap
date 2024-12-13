@@ -100,6 +100,21 @@ snapshot_kind: text
           "owners"
         ]
       }
+    },
+    "/api/v1/crates/{name}/{version}/yank": {
+      "delete": {
+        "description": "This does not delete a crate version, it makes the crate\nversion accessible only to crates that already have a\n`Cargo.lock` containing this version.\n\nNotes:\n\nVersion deletion is not implemented to avoid breaking builds,\nand the goal of yanking a crate is to prevent crates\nbeginning to depend on the yanked crate version.",
+        "operationId": "yank_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Yank a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
     }
   },
   "servers": [

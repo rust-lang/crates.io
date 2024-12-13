@@ -22,13 +22,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             krate::owners::add_owners,
             krate::owners::remove_owners
         ))
+        .routes(routes!(version::yank::yank))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/:version/yank",
-            delete(version::yank::yank),
-        )
         .route(
             "/api/v1/crates/:crate_id/:version/unyank",
             put(version::yank::unyank),
