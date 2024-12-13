@@ -35,13 +35,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(version::metadata::authors))
         .routes(routes!(krate::downloads::downloads))
         .routes(routes!(krate::versions::versions))
+        .routes(routes!(krate::follow::follow, krate::follow::unfollow))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/follow",
-            put(krate::follow::follow).delete(krate::follow::unfollow),
-        )
         .route(
             "/api/v1/crates/:crate_id/following",
             get(krate::follow::following),

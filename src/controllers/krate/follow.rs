@@ -29,7 +29,14 @@ async fn follow_target(
     Ok(Follow { user_id, crate_id })
 }
 
-/// Handles the `PUT /crates/:crate_id/follow` route.
+/// Follow a crate.
+#[utoipa::path(
+    put,
+    path = "/api/v1/crates/{name}/follow",
+    operation_id = "follow_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn follow(
     app: AppState,
     Path(crate_name): Path<String>,
@@ -47,7 +54,14 @@ pub async fn follow(
     ok_true()
 }
 
-/// Handles the `DELETE /crates/:crate_id/follow` route.
+/// Unfollow a crate.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/crates/{name}/follow",
+    operation_id = "unfollow_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn unfollow(
     app: AppState,
     Path(crate_name): Path<String>,
