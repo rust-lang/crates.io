@@ -211,6 +211,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/reverse_dependencies": {
+      "get": {
+        "operationId": "list_reverse_dependencies",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List reverse dependencies of a crate.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/versions": {
       "get": {
         "operationId": "list_crate_versions",

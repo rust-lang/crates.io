@@ -265,7 +265,14 @@ pub async fn readme(
     }
 }
 
-/// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
+/// List reverse dependencies of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/reverse_dependencies",
+    operation_id = "list_reverse_dependencies",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn reverse_dependencies(
     app: AppState,
     Path(name): Path<String>,
