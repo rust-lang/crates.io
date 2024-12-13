@@ -15,7 +15,14 @@ pub struct IndexQuery {
     sort: Option<String>,
 }
 
-/// Handles the `GET /keywords` route.
+/// List all keywords.
+#[utoipa::path(
+    get,
+    path = "/api/v1/keywords",
+    operation_id = "list_keywords",
+    tag = "keywords",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppResult<ErasedJson> {
     use crate::schema::keywords;
 

@@ -369,6 +369,20 @@ snapshot_kind: text
           "versions"
         ]
       }
+    },
+    "/api/v1/keywords": {
+      "get": {
+        "operationId": "list_keywords",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all keywords.",
+        "tags": [
+          "keywords"
+        ]
+      }
     }
   },
   "servers": [
