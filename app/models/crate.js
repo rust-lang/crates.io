@@ -1,8 +1,10 @@
 import Model, { attr, hasMany } from '@ember-data/model';
+import { assert } from '@ember/debug';
 import { waitForPromise } from '@ember/test-waiters';
 import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
+import { task } from 'ember-concurrency';
 
 export default class Crate extends Model {
   @attr name;
@@ -66,9 +68,9 @@ export default class Crate extends Model {
   }
 
   get owners() {
-    let teams = this.owner_team.toArray() ?? [];
-    let users = this.owner_user.toArray() ?? [];
-    return [...teams, ...users];
+    let { last } = this.loadOwnersTask;
+    assert('`loadOwnersTask.perform()` must be called before accessing `owners`', last != null);
+    return last?.value ?? [];
   }
 
   async follow() {
@@ -100,6 +102,11 @@ export default class Crate extends Model {
       throw response;
     }
   }
+
+  loadOwnersTask = task(async () => {
+    let [teams, users] = await Promise.all([this.owner_team, this.owner_user]);
+    return [...(teams ?? []), ...(users ?? [])];
+  });
 }
 
 function compareVersionBySemver(a, b) {

@@ -34,6 +34,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').doesNotExist();
@@ -46,6 +47,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     let expectedHref =
       'https://play.rust-lang.org/?edition=2021&code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
@@ -64,6 +66,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     await waitFor('[data-test-owners]');
@@ -82,6 +85,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[data-test-playground-button]').doesNotExist();

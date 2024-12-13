@@ -18,6 +18,7 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[title="Copy command to clipboard"]').exists().hasText('cargo add foo');
@@ -35,6 +36,7 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0"');
@@ -47,6 +49,7 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
     this.version = (await this.crate.versions).firstObject;
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0-alpha"');
