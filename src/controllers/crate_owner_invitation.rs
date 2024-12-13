@@ -307,7 +307,14 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Eras
     Ok(json!({ "crate_owner_invitation": crate_invite }))
 }
 
-/// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
+/// Accept a crate owner invitation with a token.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/crate_owner_invitations/accept/{token}",
+    operation_id = "accept_crate_owner_invitation_with_token",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,
