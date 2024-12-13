@@ -244,7 +244,14 @@ impl FromStr for ShowIncludeMode {
     }
 }
 
-/// Handles the `GET /crates/:crate_id/:version/readme` route.
+/// Get the readme of a crate version.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/readme",
+    operation_id = "get_version_readme",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn readme(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,

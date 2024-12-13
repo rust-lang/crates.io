@@ -170,6 +170,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/{version}/readme": {
+      "get": {
+        "operationId": "get_version_readme",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the readme of a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/{version}/unyank": {
       "put": {
         "operationId": "unyank_version",
