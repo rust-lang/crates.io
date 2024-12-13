@@ -33,7 +33,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).firstObject;
+    this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
@@ -46,7 +46,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).firstObject;
+    this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
     let expectedHref =
@@ -65,7 +65,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).firstObject;
+    this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
     render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
@@ -84,7 +84,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).firstObject;
+    this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
