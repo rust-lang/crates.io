@@ -69,7 +69,14 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     }))
 }
 
-/// Handles the `GET /me/updates` route.
+/// List versions of crates that the authenticated user follows.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/updates",
+    operation_id = "get_authenticated_user_updates",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
