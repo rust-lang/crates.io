@@ -578,6 +578,21 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/summary": {
+      "get": {
+        "description": "This endpoint returns a summary of the most important data for the front\npage of crates.io.",
+        "operationId": "get_summary",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get front page data.",
+        "tags": [
+          "other"
+        ]
+      }
+    },
     "/api/v1/teams/{team}": {
       "get": {
         "operationId": "get_team",
