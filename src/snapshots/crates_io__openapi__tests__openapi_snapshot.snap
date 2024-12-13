@@ -440,6 +440,21 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/users/{id}/stats": {
+      "get": {
+        "description": "This currently only returns the total number of downloads for crates owned\nby the user.",
+        "operationId": "get_user_stats",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get user stats.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users/{user}": {
       "get": {
         "operationId": "get_user",
