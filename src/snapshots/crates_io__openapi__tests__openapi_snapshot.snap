@@ -20,6 +20,20 @@ snapshot_kind: text
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/private/crate_owner_invitations": {
+      "get": {
+        "operationId": "list_crate_owner_invitations",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all crate owner invitations for a crate or user.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
     "/api/private/session": {
       "delete": {
         "operationId": "end_session",
@@ -514,7 +528,7 @@ snapshot_kind: text
     },
     "/api/v1/me/crate_owner_invitations": {
       "get": {
-        "operationId": "list_crate_owner_invitations",
+        "operationId": "list_crate_owner_invitations_for_user",
         "responses": {
           "200": {
             "description": "Successful Response"

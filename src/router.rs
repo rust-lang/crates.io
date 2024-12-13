@@ -1,5 +1,5 @@
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post};
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use http::{Method, StatusCode};
 use utoipa_axum::routes;
@@ -53,6 +53,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(token::show, token::revoke))
         .routes(routes!(token::revoke_current))
         .routes(routes!(crate_owner_invitation::list))
+        .routes(routes!(crate_owner_invitation::private_list))
         .routes(routes!(crate_owner_invitation::handle_invite))
         .routes(routes!(crate_owner_invitation::handle_invite_with_token))
         .routes(routes!(user::me::update_email_notifications))
@@ -69,11 +70,6 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     let mut router = router
         // Metrics
         .route("/api/private/metrics/:kind", get(metrics::prometheus))
-        // Crate ownership invitations management in the frontend
-        .route(
-            "/api/private/crate_owner_invitations",
-            get(crate_owner_invitation::private_list),
-        )
         // Alerts from GitHub scanning for exposed API tokens
         .route(
             "/api/github/secret-scanning/verify",

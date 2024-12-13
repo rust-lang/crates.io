@@ -27,7 +27,7 @@ use std::collections::{HashMap, HashSet};
 #[utoipa::path(
     get,
     path = "/api/v1/me/crate_owner_invitations",
-    operation_id = "list_crate_owner_invitations",
+    operation_id = "list_crate_owner_invitations_for_user",
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -68,7 +68,14 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `GET /api/private/crate_owner_invitations` route.
+/// List all crate owner invitations for a crate or user.
+#[utoipa::path(
+    get,
+    path = "/api/private/crate_owner_invitations",
+    operation_id = "list_crate_owner_invitations",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
