@@ -272,7 +272,14 @@ struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
-/// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
+/// Accept or decline a crate owner invitation.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/crate_owner_invitations/{crate_id}",
+    operation_id = "handle_crate_owner_invitation",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<ErasedJson> {
     let (parts, body) = req.0.into_parts();
 

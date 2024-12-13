@@ -53,13 +53,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(token::show, token::revoke))
         .routes(routes!(token::revoke_current))
         .routes(routes!(crate_owner_invitation::list))
+        .routes(routes!(crate_owner_invitation::handle_invite))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/me/crate_owner_invitations/:crate_id",
-            put(crate_owner_invitation::handle_invite),
-        )
         .route(
             "/api/v1/me/crate_owner_invitations/accept/:token",
             put(crate_owner_invitation::handle_invite_with_token),

@@ -468,6 +468,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/me/crate_owner_invitations/{crate_id}": {
+      "put": {
+        "operationId": "handle_crate_owner_invitation",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Accept or decline a crate owner invitation.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
     "/api/v1/me/tokens": {
       "get": {
         "operationId": "list_api_tokens",
