@@ -30,13 +30,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(version::metadata::show, version::metadata::update))
         .routes(routes!(krate::metadata::readme))
         .routes(routes!(version::metadata::dependencies))
+        .routes(routes!(version::downloads::downloads))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/:version/downloads",
-            get(version::downloads::downloads),
-        )
         .route(
             "/api/v1/crates/:crate_id/:version/authors",
             get(version::metadata::authors),
