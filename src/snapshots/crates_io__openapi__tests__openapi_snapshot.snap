@@ -454,6 +454,32 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/me/tokens": {
+      "get": {
+        "operationId": "list_api_tokens",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all API tokens of the authenticated user.",
+        "tags": [
+          "api_tokens"
+        ]
+      },
+      "put": {
+        "operationId": "create_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Create a new API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
     "/api/v1/me/updates": {
       "get": {
         "operationId": "get_authenticated_user_updates",

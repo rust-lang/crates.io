@@ -35,7 +35,14 @@ impl GetParams {
     }
 }
 
-/// Handles the `GET /me/tokens` route.
+/// List all API tokens of the authenticated user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/tokens",
+    operation_id = "list_api_tokens",
+    tag = "api_tokens",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn list(
     app: AppState,
     Query(params): Query<GetParams>,
@@ -76,7 +83,14 @@ pub struct NewApiTokenRequest {
     api_token: NewApiToken,
 }
 
-/// Handles the `PUT /me/tokens` route.
+/// Create a new API token.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/tokens",
+    operation_id = "create_api_token",
+    tag = "api_tokens",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn new(
     app: AppState,
     parts: Parts,
