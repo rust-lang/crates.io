@@ -383,6 +383,20 @@ snapshot_kind: text
           "keywords"
         ]
       }
+    },
+    "/api/v1/keywords/{keyword}": {
+      "get": {
+        "operationId": "get_keyword",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get keyword metadata.",
+        "tags": [
+          "keywords"
+        ]
+      }
     }
   },
   "servers": [

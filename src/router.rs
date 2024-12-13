@@ -41,10 +41,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(krate::owners::owner_user))
         .routes(routes!(krate::metadata::reverse_dependencies))
         .routes(routes!(keyword::index))
+        .routes(routes!(keyword::show))
         .split_for_parts();
 
     let mut router = router
-        .route("/api/v1/keywords/:keyword_id", get(keyword::show))
         .route("/api/v1/categories", get(category::index))
         .route("/api/v1/categories/:category_id", get(category::show))
         .route("/api/v1/category_slugs", get(category::slugs))
