@@ -534,6 +534,21 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/tokens/current": {
+      "delete": {
+        "description": "This endpoint revokes the API token that is used to authenticate\nthe request.",
+        "operationId": "revoke_current_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke the current API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
     "/api/v1/users/{id}/stats": {
       "get": {
         "description": "This currently only returns the total number of downloads for crates owned\nby the user.",

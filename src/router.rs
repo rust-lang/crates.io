@@ -51,10 +51,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(user::me::updates))
         .routes(routes!(token::list, token::new))
         .routes(routes!(token::show, token::revoke))
+        .routes(routes!(token::revoke_current))
         .split_for_parts();
 
     let mut router = router
-        .route("/api/v1/tokens/current", delete(token::revoke_current))
         .route(
             "/api/v1/me/crate_owner_invitations",
             get(crate_owner_invitation::list),

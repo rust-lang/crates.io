@@ -220,7 +220,17 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
     Ok(json!({}))
 }
 
-/// Handles the `DELETE /tokens/current` route.
+/// Revoke the current API token.
+///
+/// This endpoint revokes the API token that is used to authenticate
+/// the request.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/tokens/current",
+    operation_id = "revoke_current_api_token",
+    tag = "api_tokens",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
