@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, VecDeque};
 
 /// An enum indicating whether a column is included in the database dumps.
@@ -15,7 +15,9 @@ pub enum ColumnVisibility {
 /// and should list all tables the current tables refers to with foreign key
 /// constraints on public columns. The `filter` field is a valid SQL expression
 /// used in a `WHERE` clause to filter the rows of the table. The `columns`
-/// field maps column names to their respective visibilities.
+/// field maps column names to their respective visibilities. The `sequence`
+/// field, if present, defines the sequence used by the table when generating
+/// IDs, along with the ID column.
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct TableConfig {
     #[serde(default)]
@@ -24,6 +26,13 @@ pub struct TableConfig {
     pub columns: BTreeMap<String, ColumnVisibility>,
     #[serde(default)]
     pub column_defaults: BTreeMap<String, String>,
+    pub sequence: Option<SequenceConfig>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SequenceConfig {
+    pub column: String,
+    pub name: String,
 }
 
 /// Maps table names to the respective configurations. Used to load `dump_db.toml`.
