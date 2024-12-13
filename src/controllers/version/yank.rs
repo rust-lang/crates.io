@@ -36,7 +36,14 @@ pub async fn yank(
     modify_yank(crate_name, version, app, req, true).await
 }
 
-/// Handles the `PUT /crates/:crate_id/:version/unyank` route.
+/// Unyank a crate version.
+#[utoipa::path(
+    put,
+    path = "/api/v1/crates/{name}/{version}/unyank",
+    operation_id = "unyank_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn unyank(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
