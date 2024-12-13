@@ -67,6 +67,12 @@ export default class Crate extends Model {
     return new Set(map.values());
   }
 
+  hasOwnerUser(userId) {
+    let { last } = this.loadOwnerUserTask;
+    assert('`loadOwnerUserTask.perform()` must be called before calling `hasOwnerUser()`', last != null);
+    return (last?.value ?? []).some(({ id }) => id === userId);
+  }
+
   get owners() {
     let { last } = this.loadOwnersTask;
     assert('`loadOwnersTask.perform()` must be called before accessing `owners`', last != null);
@@ -102,6 +108,10 @@ export default class Crate extends Model {
       throw response;
     }
   }
+
+  loadOwnerUserTask = task(async () => {
+    return (await this.owner_user) ?? [];
+  });
 
   loadOwnersTask = task(async () => {
     let [teams, users] = await Promise.all([this.owner_team, this.owner_user]);
