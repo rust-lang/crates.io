@@ -30,7 +30,8 @@ export default class CrateVersionController extends Controller {
   @alias('model.version') currentVersion;
 
   get isOwner() {
-    return this.crate.owner_user.findBy('id', this.session.currentUser?.id);
+    let userId = this.session.currentUser?.id;
+    return this.crate.hasOwnerUser(userId);
   }
 
   @alias('loadReadmeTask.last.value') readme;

@@ -48,7 +48,8 @@ export default class VersionRow extends Component {
   }
 
   get isOwner() {
-    return this.args.version.crate?.owner_user?.findBy('id', this.session.currentUser?.id);
+    let userId = this.session.currentUser?.id;
+    return this.args.version.crate.hasOwnerUser(userId);
   }
 
   @action setFocused(value) {
