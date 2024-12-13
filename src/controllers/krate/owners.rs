@@ -69,7 +69,14 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
     Ok(json!({ "teams": owners }))
 }
 
-/// Handles the `GET /crates/:crate_id/owner_user` route.
+/// List user owners of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/owner_user",
+    operation_id = "get_user_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 

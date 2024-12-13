@@ -159,6 +159,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/owner_user": {
+      "get": {
+        "operationId": "get_user_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List user owners of a crate.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/owners": {
       "delete": {
         "operationId": "delete_owners",
