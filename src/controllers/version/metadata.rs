@@ -40,13 +40,20 @@ pub struct VersionUpdateRequest {
     version: VersionUpdate,
 }
 
-/// Handles the `GET /crates/:crate_id/:version/dependencies` route.
+/// Get crate version dependencies.
 ///
-/// This information can be obtained directly from the index.
+/// This information can also be obtained directly from the index.
 ///
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/dependencies",
+    operation_id = "get_version_dependencies",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
