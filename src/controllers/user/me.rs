@@ -115,7 +115,14 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `PUT /confirm/:email_token` route
+/// Marks the email belonging to the given token as verified.
+#[utoipa::path(
+    put,
+    path = "/api/v1/confirm/{email_token}",
+    operation_id = "confirm_user_email",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     use diesel::update;
 

@@ -62,6 +62,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/confirm/{email_token}": {
+      "put": {
+        "operationId": "confirm_user_email",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Marks the email belonging to the given token as verified.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
