@@ -20,6 +20,20 @@ snapshot_kind: text
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/private/session": {
+      "delete": {
+        "operationId": "end_session",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "End the current session.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
     "/api/private/session/authorize": {
       "get": {
         "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**\n\n## Response Body Example\n\n```json\n{\n    \"user\": {\n        \"email\": \"foo@bar.org\",\n        \"name\": \"Foo Bar\",\n        \"login\": \"foobar\",\n        \"avatar\": \"https://avatars.githubusercontent.com/u/1234\",\n        \"url\": null\n    }\n}\n```",

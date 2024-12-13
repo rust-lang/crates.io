@@ -63,10 +63,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Session management
         .routes(routes!(user::session::begin))
         .routes(routes!(user::session::authorize))
+        .routes(routes!(user::session::logout))
         .split_for_parts();
 
     let mut router = router
-        .route("/api/private/session", delete(user::session::logout))
         // Metrics
         .route("/api/private/metrics/:kind", get(metrics::prometheus))
         // Crate ownership invitations management in the frontend

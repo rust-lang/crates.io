@@ -171,7 +171,14 @@ async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryRe
         .optional()
 }
 
-/// Handles the `DELETE /api/private/session` route.
+/// End the current session.
+#[utoipa::path(
+    delete,
+    path = "/api/private/session",
+    operation_id = "end_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn logout(session: SessionExtension) -> Json<bool> {
     session.remove("user_id");
     Json(true)
