@@ -23,7 +23,14 @@ use http::request::Parts;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
-/// Handles the `GET /api/v1/me/crate_owner_invitations` route.
+/// List all crate owner invitations for the authenticated user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/crate_owner_invitations",
+    operation_id = "list_crate_owner_invitations",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
