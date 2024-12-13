@@ -6,15 +6,15 @@ use axum_extra::extract::SignedCookieJar;
 use base64::{engine::general_purpose, Engine};
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
+use derive_more::Deref;
 use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::sync::Arc;
 
 static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
-#[derive(Clone, FromRequestParts)]
+#[derive(Clone, FromRequestParts, Deref)]
 #[from_request(via(Extension))]
 pub struct SessionExtension(Arc<RwLock<Session>>);
 
@@ -38,14 +38,6 @@ impl SessionExtension {
         let mut session = self.write();
         session.dirty = true;
         session.data.remove(key)
-    }
-}
-
-impl Deref for SessionExtension {
-    type Target = RwLock<Session>;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.as_ref()
     }
 }
 
