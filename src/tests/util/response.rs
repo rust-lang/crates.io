@@ -3,25 +3,19 @@ use bytes::Bytes;
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;
-use std::ops::Deref;
 use std::str::from_utf8;
 
 use crate::rate_limiter::LimitedAction;
+use derive_more::Deref;
 use http::{header, StatusCode};
 
 /// A type providing helper methods for working with responses
+#[derive(Deref)]
 #[must_use]
 pub struct Response<T> {
+    #[deref]
     response: hyper::Response<Bytes>,
     return_type: PhantomData<T>,
-}
-
-impl Deref for Response<()> {
-    type Target = hyper::Response<Bytes>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.response
-    }
 }
 
 impl<T> Response<T>
