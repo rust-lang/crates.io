@@ -440,6 +440,20 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_authenticated_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the currently authenticated user.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/teams/{team}": {
       "get": {
         "operationId": "get_team",

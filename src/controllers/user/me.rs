@@ -19,7 +19,14 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::util::BytesRequest;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
-/// Handles the `GET /me` route.
+/// Get the currently authenticated user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me",
+    operation_id = "get_authenticated_user",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
