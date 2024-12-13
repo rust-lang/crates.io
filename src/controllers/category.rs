@@ -12,7 +12,14 @@ use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
-/// Handles the `GET /categories` route.
+/// List all categories.
+#[utoipa::path(
+    get,
+    path = "/api/v1/categories",
+    operation_id = "list_categories",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need

@@ -20,6 +20,20 @@ snapshot_kind: text
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "list_categories",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all categories.",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
