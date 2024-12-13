@@ -1,4 +1,3 @@
-use axum::extract::DefaultBodyLimit;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
@@ -12,8 +11,6 @@ use crate::openapi::BaseOpenApi;
 use crate::util::errors::not_found;
 use crate::Env;
 
-const MAX_PUBLISH_CONTENT_LENGTH: usize = 128 * 1024 * 1024; // 128 MB
-
 pub fn build_axum_router(state: AppState) -> Router<()> {
     let (router, openapi) = BaseOpenApi::router()
         .routes(routes!(
@@ -26,9 +23,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Routes used by `cargo`
         .route(
             "/api/v1/crates/new",
-            put(krate::publish::publish)
-                .layer(DefaultBodyLimit::max(MAX_PUBLISH_CONTENT_LENGTH))
-                .get(krate::metadata::show_new),
+            put(krate::publish::publish).get(krate::metadata::show_new),
         )
         .route(
             "/api/v1/crates/:crate_id/owners",
