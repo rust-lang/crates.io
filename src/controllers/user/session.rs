@@ -19,7 +19,7 @@ use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 
-/// Handles the `GET /api/private/session/begin` route.
+/// Begin authentication flow.
 ///
 /// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
@@ -34,6 +34,13 @@ use crates_io_github::GithubUser;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
+#[utoipa::path(
+    get,
+    path = "/api/private/session/begin",
+    operation_id = "begin_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn begin(app: AppState, session: SessionExtension) -> ErasedJson {
     let (url, state) = app
         .github_oauth

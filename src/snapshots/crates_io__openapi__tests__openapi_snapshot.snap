@@ -20,6 +20,21 @@ snapshot_kind: text
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/private/session/begin": {
+      "get": {
+        "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>\n\n## Response Body Example\n\n```json\n{\n    \"state\": \"b84a63c4ea3fcb4ac84\",\n    \"url\": \"https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg\"\n}\n```",
+        "operationId": "begin_session",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Begin authentication flow.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
     "/api/v1/categories": {
       "get": {
         "operationId": "list_categories",
