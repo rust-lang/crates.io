@@ -13,18 +13,13 @@ use crate::Env;
 
 pub fn build_axum_router(state: AppState) -> Router<()> {
     let (router, openapi) = BaseOpenApi::router()
-        .routes(routes!(
-            // Route used by both `cargo search` and the frontend
-            krate::search::search
-        ))
+        // Route used by both `cargo search` and the frontend
+        .routes(routes!(krate::search::search))
+        // Routes used by `cargo`
+        .routes(routes!(krate::publish::publish, krate::metadata::show_new))
         .split_for_parts();
 
     let mut router = router
-        // Routes used by `cargo`
-        .route(
-            "/api/v1/crates/new",
-            put(krate::publish::publish).get(krate::metadata::show_new),
-        )
         .route(
             "/api/v1/crates/:crate_id/owners",
             get(krate::owners::owners)

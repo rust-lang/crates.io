@@ -34,6 +34,34 @@ snapshot_kind: text
           "crates"
         ]
       }
+    },
+    "/api/v1/crates/new": {
+      "get": {
+        "description": "This endpoint works around a small limitation in `axum` and is delegating\nto the `GET /api/v1/crates/{name}` endpoint internally.",
+        "operationId": "crates_show_new",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate metadata (for the `new` crate).",
+        "tags": [
+          "crates"
+        ]
+      },
+      "put": {
+        "description": "Used by `cargo publish` to publish a new crate or to publish a new version of an\nexisting crate.",
+        "operationId": "publish",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Publish a new crate/version.",
+        "tags": [
+          "publish"
+        ]
+      }
     }
   },
   "servers": [

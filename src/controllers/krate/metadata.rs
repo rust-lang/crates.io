@@ -26,7 +26,17 @@ use http::request::Parts;
 use std::cmp::Reverse;
 use std::str::FromStr;
 
-/// Handles the `GET /crates/new` special case.
+/// Get crate metadata (for the `new` crate).
+///
+/// This endpoint works around a small limitation in `axum` and is delegating
+/// to the `GET /api/v1/crates/{name}` endpoint internally.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/new",
+    operation_id = "crates_show_new",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     show(app, Path("new".to_string()), req).await
 }

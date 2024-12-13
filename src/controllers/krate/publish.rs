@@ -49,9 +49,17 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
 
 const MAX_DESCRIPTION_LENGTH: usize = 1000;
 
-/// Handles the `PUT /crates/new` route.
+/// Publish a new crate/version.
+///
 /// Used by `cargo publish` to publish a new crate or to publish a new version of an
 /// existing crate.
+#[utoipa::path(
+    put,
+    path = "/api/v1/crates/new",
+    operation_id = "publish",
+    tag = "publish",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();
     let stream = stream.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err));
