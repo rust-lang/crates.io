@@ -592,6 +592,21 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/site_metadata": {
+      "get": {
+        "description": "Returns the current deployed commit SHA1 (or `unknown`), and whether the\nsystem is in read-only mode.",
+        "operationId": "get_site_metadata",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crates.io metadata.",
+        "tags": [
+          "other"
+        ]
+      }
+    },
     "/api/v1/summary": {
       "get": {
         "description": "This endpoint returns a summary of the most important data for the front\npage of crates.io.",

@@ -59,13 +59,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(summary::summary))
         .routes(routes!(user::me::confirm_user_email))
         .routes(routes!(user::resend::regenerate_token_and_send))
+        .routes(routes!(site_metadata::show_deployed_sha))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/site_metadata",
-            get(site_metadata::show_deployed_sha),
-        )
         // Session management
         .route("/api/private/session/begin", get(user::session::begin))
         .route(

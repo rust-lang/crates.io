@@ -2,10 +2,17 @@ use crate::app::AppState;
 use axum::response::IntoResponse;
 use axum_extra::json;
 
-/// Returns the JSON representation of the current deployed commit sha.
+/// Get crates.io metadata.
 ///
-/// The sha is contained within the `HEROKU_SLUG_COMMIT` environment variable.
-/// If `HEROKU_SLUG_COMMIT` is not set, returns `"unknown"`.
+/// Returns the current deployed commit SHA1 (or `unknown`), and whether the
+/// system is in read-only mode.
+#[utoipa::path(
+    get,
+    path = "/api/v1/site_metadata",
+    operation_id = "get_site_metadata",
+    tag = "other",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show_deployed_sha(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();
 
