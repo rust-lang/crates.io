@@ -155,6 +155,22 @@ snapshot_kind: text
         ]
       }
     },
+    "/api/v1/crates/{name}/{version}/authors": {
+      "get": {
+        "deprecated": true,
+        "description": "This endpoint was deprecated by [RFC #3052](https://github.com/rust-lang/rfcs/pull/3052)\nand returns an empty list for backwards compatibility reasons.",
+        "operationId": "get_version_authors",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate version authors.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
     "/api/v1/crates/{name}/{version}/dependencies": {
       "get": {
         "description": "This information can also be obtained directly from the index.\n\nIn addition to returning cached data from the index, this returns\nfields for `id`, `version_id`, and `downloads` (which appears to always\nbe 0)",

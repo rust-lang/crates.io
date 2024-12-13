@@ -11,6 +11,7 @@ use crate::openapi::BaseOpenApi;
 use crate::util::errors::not_found;
 use crate::Env;
 
+#[allow(deprecated)]
 pub fn build_axum_router(state: AppState) -> Router<()> {
     let (router, openapi) = BaseOpenApi::router()
         // Route used by both `cargo search` and the frontend
@@ -31,13 +32,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(krate::metadata::readme))
         .routes(routes!(version::metadata::dependencies))
         .routes(routes!(version::downloads::downloads))
+        .routes(routes!(version::metadata::authors))
         .split_for_parts();
 
     let mut router = router
-        .route(
-            "/api/v1/crates/:crate_id/:version/authors",
-            get(version::metadata::authors),
-        )
         .route(
             "/api/v1/crates/:crate_id/downloads",
             get(krate::downloads::downloads),

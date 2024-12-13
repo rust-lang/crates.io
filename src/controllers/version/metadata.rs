@@ -78,11 +78,19 @@ pub async fn dependencies(
     Ok(json!({ "dependencies": deps }))
 }
 
-/// Handles the `GET /crates/:crate_id/:version/authors` route.
+/// Get crate version authors.
+///
+/// This endpoint was deprecated by [RFC #3052](https://github.com/rust-lang/rfcs/pull/3052)
+/// and returns an empty list for backwards compatibility reasons.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/authors",
+    operation_id = "get_version_authors",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
+#[deprecated]
 pub async fn authors() -> ErasedJson {
-    // Currently we return the empty list.
-    // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
-
     json!({
         "users": [],
         "meta": { "names": [] },
