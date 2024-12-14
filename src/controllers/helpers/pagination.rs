@@ -4,7 +4,8 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
 use crate::util::errors::{bad_request, AppResult};
-use crate::util::{HeaderMapExt, RequestUtils};
+use crate::util::HeaderMapExt;
+use std::num::NonZeroU32;
 
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
@@ -77,28 +78,30 @@ impl PaginationOptionsBuilder {
     }
 
     pub(crate) fn gather(self, parts: &Parts) -> AppResult<PaginationOptions> {
-        let params = parts.query();
-        let page_param = params.get("page");
-        let seek_param = params.get("seek");
+        use axum::extract::Query;
 
-        if seek_param.is_some() && page_param.is_some() {
+        #[derive(Debug, Deserialize)]
+        struct QueryParams {
+            page: Option<NonZeroU32>,
+            per_page: Option<NonZeroU32>,
+            seek: Option<String>,
+        }
+
+        let Query(params) = Query::<QueryParams>::try_from_uri(&parts.uri)
+            .map_err(|err| bad_request(err.body_text()))?;
+
+        if params.seek.is_some() && params.page.is_some() {
             return Err(bad_request(
                 "providing both ?page= and ?seek= is unsupported",
             ));
         }
 
-        let page = if let Some(s) = page_param {
+        let page = if let Some(s) = params.page {
             if !self.enable_pages {
                 return Err(bad_request("?page= is not supported for this request"));
             }
 
-            let numeric_page = s.parse().map_err(bad_request)?;
-            if numeric_page < 1 {
-                return Err(bad_request(format_args!(
-                    "page indexing starts from 1, page {numeric_page} is invalid",
-                )));
-            }
-
+            let numeric_page = s.get();
             if numeric_page > MAX_PAGE_BEFORE_SUSPECTED_BOT {
                 parts.request_log().add("bot", "suspected");
             }
@@ -119,27 +122,21 @@ impl PaginationOptionsBuilder {
             }
 
             Page::Numeric(numeric_page)
-        } else if let Some(s) = seek_param {
+        } else if let Some(s) = params.seek {
             if !self.enable_seek {
                 return Err(bad_request("?seek= is not supported for this request"));
             }
 
-            Page::Seek(RawSeekPayload(s.clone()))
+            Page::Seek(RawSeekPayload(s))
         } else {
             Page::Unspecified
         };
 
-        let per_page = params
-            .get("per_page")
-            .map(|s| s.parse().map_err(bad_request))
-            .unwrap_or(Ok(DEFAULT_PER_PAGE))?;
+        let per_page = params.per_page.map(|p| p.get() as i64);
+        let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
         if per_page > MAX_PER_PAGE {
             return Err(bad_request(format_args!(
                 "cannot request more than {MAX_PER_PAGE} items",
-            )));
-        } else if per_page < 1 {
-            return Err(bad_request(format_args!(
-                "cannot request less than 1 item, per_page {per_page} is invalid",
             )));
         }
 
@@ -529,6 +526,7 @@ pub(crate) use seek;
 mod tests {
     use super::*;
     use http::{Method, Request, StatusCode};
+    use insta::assert_snapshot;
 
     #[test]
     fn no_pagination_param() {
@@ -539,13 +537,12 @@ mod tests {
 
     #[test]
     fn page_param_parsing() {
-        let assert_error =
-            |query, msg| assert_pagination_error(PaginationOptions::builder(), query, msg);
+        let error = |query| pagination_error(PaginationOptions::builder(), query);
 
-        assert_error("page=", "cannot parse integer from empty string");
-        assert_error("page=not_a_number", "invalid digit found in string");
-        assert_error("page=1.0", "invalid digit found in string");
-        assert_error("page=0", "page indexing starts from 1, page 0 is invalid");
+        assert_snapshot!(error("page="), @"Failed to deserialize query string: cannot parse integer from empty string");
+        assert_snapshot!(error("page=not_a_number"), @"Failed to deserialize query string: invalid digit found in string");
+        assert_snapshot!(error("page=1.0"), @"Failed to deserialize query string: invalid digit found in string");
+        assert_snapshot!(error("page=0"), @"Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32");
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("page=5"))
@@ -555,17 +552,13 @@ mod tests {
 
     #[test]
     fn per_page_param_parsing() {
-        let assert_error =
-            |query, msg| assert_pagination_error(PaginationOptions::builder(), query, msg);
+        let error = |query| pagination_error(PaginationOptions::builder(), query);
 
-        assert_error("per_page=", "cannot parse integer from empty string");
-        assert_error("per_page=not_a_number", "invalid digit found in string");
-        assert_error("per_page=1.0", "invalid digit found in string");
-        assert_error("per_page=101", "cannot request more than 100 items");
-        assert_error(
-            "per_page=0",
-            "cannot request less than 1 item, per_page 0 is invalid",
-        );
+        assert_snapshot!(error("per_page="), @"Failed to deserialize query string: cannot parse integer from empty string");
+        assert_snapshot!(error("per_page=not_a_number"), @"Failed to deserialize query string: invalid digit found in string");
+        assert_snapshot!(error("per_page=1.0"), @"Failed to deserialize query string: invalid digit found in string");
+        assert_snapshot!(error("per_page=101"), @"cannot request more than 100 items");
+        assert_snapshot!(error("per_page=0"), @"Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32");
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("per_page=5"))
@@ -575,11 +568,8 @@ mod tests {
 
     #[test]
     fn seek_param_parsing() {
-        assert_pagination_error(
-            PaginationOptions::builder(),
-            "seek=OTg",
-            "?seek= is not supported for this request",
-        );
+        let error = pagination_error(PaginationOptions::builder(), "seek=OTg");
+        assert_snapshot!(error, @"?seek= is not supported for this request");
 
         let pagination = PaginationOptions::builder()
             .enable_seek(true)
@@ -598,25 +588,20 @@ mod tests {
 
     #[test]
     fn both_page_and_seek() {
-        assert_pagination_error(
-            PaginationOptions::builder(),
-            "page=1&seek=OTg",
-            "providing both ?page= and ?seek= is unsupported",
-        );
-        assert_pagination_error(
+        let error = pagination_error(PaginationOptions::builder(), "page=1&seek=OTg");
+        assert_snapshot!(error, @"providing both ?page= and ?seek= is unsupported");
+
+        let error = pagination_error(
             PaginationOptions::builder().enable_seek(true),
             "page=1&seek=OTg",
-            "providing both ?page= and ?seek= is unsupported",
         );
+        assert_snapshot!(error, @"providing both ?page= and ?seek= is unsupported");
     }
 
     #[test]
     fn disabled_pages() {
-        assert_pagination_error(
-            PaginationOptions::builder().enable_pages(false),
-            "page=1",
-            "?page= is not supported for this request",
-        );
+        let error = pagination_error(PaginationOptions::builder().enable_pages(false), "page=1");
+        assert_snapshot!(error, @"?page= is not supported for this request");
     }
 
     #[test]
@@ -749,11 +734,12 @@ mod tests {
             .0
     }
 
-    fn assert_pagination_error(options: PaginationOptionsBuilder, query: &str, message: &str) {
+    fn pagination_error(options: PaginationOptionsBuilder, query: &str) -> String {
         let error = options.gather(&mock(query)).unwrap_err();
-        assert_eq!(error.to_string(), message);
 
         let response = error.response();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        error.to_string()
     }
 }
