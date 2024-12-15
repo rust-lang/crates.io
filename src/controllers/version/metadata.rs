@@ -23,7 +23,7 @@ use crate::models::{
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
+use crate::util::errors::{bad_request, custom, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 
@@ -57,10 +57,6 @@ pub async fn get_version_dependencies(
     state: AppState,
     path: CrateVersionPath,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&path.version).is_err() {
-        return Err(version_not_found(&path.name, &path.version));
-    }
-
     let mut conn = state.db_read().await?;
     let version = path.load_version(&mut conn).await?;
 
@@ -105,10 +101,6 @@ pub async fn get_version_authors() -> ErasedJson {
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&path.version).is_err() {
-        return Err(version_not_found(&path.name, &path.version));
-    }
-
     let mut conn = state.db_read().await?;
     let (version, krate) = path.load_version_and_crate(&mut conn).await?;
     let published_by = version.published_by(&mut conn).await?;
@@ -134,10 +126,6 @@ pub async fn update_version(
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&path.version).is_err() {
-        return Err(version_not_found(&path.name, &path.version));
-    }
-
     let mut conn = state.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     validate_yank_update(&update_request.version, &version)?;

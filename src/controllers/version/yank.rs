@@ -5,7 +5,7 @@ use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;
 use crate::rate_limiter::LimitedAction;
-use crate::util::errors::{version_not_found, AppResult};
+use crate::util::errors::AppResult;
 use axum::response::Response;
 use http::request::Parts;
 
@@ -60,10 +60,6 @@ async fn modify_yank(
 ) -> AppResult<Response> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
-
-    if semver::Version::parse(&path.version).is_err() {
-        return Err(version_not_found(&path.name, &path.version));
-    }
 
     let mut conn = state.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;

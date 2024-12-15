@@ -4,6 +4,8 @@ pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
 use diesel_async::AsyncPgConnection;
+use serde::de::Error;
+use serde::{Deserialize, Deserializer};
 use utoipa::IntoParams;
 
 use crate::models::{Crate, Version};
@@ -17,6 +19,7 @@ pub struct CrateVersionPath {
     pub name: String,
     /// Version number
     #[param(example = "1.0.0")]
+    #[serde(deserialize_with = "deserialize_version")]
     pub version: String,
 }
 
@@ -50,4 +53,10 @@ async fn version_and_crate(
     let version = krate.find_version(conn, semver).await?;
 
     Ok((version, krate))
+}
+
+fn deserialize_version<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
+    let s = String::deserialize(deserializer)?;
+    let _ = semver::Version::parse(&s).map_err(Error::custom)?;
+    Ok(s)
 }

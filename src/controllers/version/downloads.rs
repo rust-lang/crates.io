@@ -6,7 +6,7 @@ use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
-use crate::util::errors::{version_not_found, AppResult};
+use crate::util::errors::AppResult;
 use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
 use axum::response::{IntoResponse, Response};
@@ -56,10 +56,6 @@ pub async fn get_version_downloads(
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&path.version).is_err() {
-        return Err(version_not_found(&path.name, &path.version));
-    }
-
     let mut conn = app.db_read().await?;
     let version = path.load_version(&mut conn).await?;
 
