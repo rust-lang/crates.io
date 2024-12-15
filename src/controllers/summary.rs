@@ -12,7 +12,17 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use std::future::Future;
 
-/// Handles the `GET /summary` route.
+/// Get front page data.
+///
+/// This endpoint returns a summary of the most important data for the front
+/// page of crates.io.
+#[utoipa::path(
+    get,
+    path = "/api/v1/summary",
+    operation_id = "get_summary",
+    tag = "other",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 

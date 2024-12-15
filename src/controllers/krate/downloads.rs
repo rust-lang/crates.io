@@ -16,7 +16,18 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use std::cmp;
 
-/// Handles the `GET /crates/:crate_id/downloads` route.
+/// Get the download counts for a crate.
+///
+/// This includes the per-day downloads for the last 90 days and for the
+/// latest 5 versions plus the sum of the rest.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/downloads",
+    operation_id = "get_crate_downloads",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
+
 pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 

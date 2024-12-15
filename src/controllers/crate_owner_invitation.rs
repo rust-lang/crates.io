@@ -23,7 +23,14 @@ use http::request::Parts;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
-/// Handles the `GET /api/v1/me/crate_owner_invitations` route.
+/// List all crate owner invitations for the authenticated user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/crate_owner_invitations",
+    operation_id = "list_crate_owner_invitations_for_user",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
@@ -61,7 +68,14 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `GET /api/private/crate_owner_invitations` route.
+/// List all crate owner invitations for a crate or user.
+#[utoipa::path(
+    get,
+    path = "/api/private/crate_owner_invitations",
+    operation_id = "list_crate_owner_invitations",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
@@ -265,7 +279,14 @@ struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
-/// Handles the `PUT /api/v1/me/crate_owner_invitations/:crate_id` route.
+/// Accept or decline a crate owner invitation.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/crate_owner_invitations/{crate_id}",
+    operation_id = "handle_crate_owner_invitation",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<ErasedJson> {
     let (parts, body) = req.0.into_parts();
 
@@ -293,7 +314,14 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Eras
     Ok(json!({ "crate_owner_invitation": crate_invite }))
 }
 
-/// Handles the `PUT /api/v1/me/crate_owner_invitations/accept/:token` route.
+/// Accept a crate owner invitation with a token.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/crate_owner_invitations/accept/{token}",
+    operation_id = "accept_crate_owner_invitation_with_token",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn handle_invite_with_token(
     state: AppState,
     Path(token): Path<String>,

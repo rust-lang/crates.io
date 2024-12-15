@@ -40,13 +40,20 @@ pub struct VersionUpdateRequest {
     version: VersionUpdate,
 }
 
-/// Handles the `GET /crates/:crate_id/:version/dependencies` route.
+/// Get crate version dependencies.
 ///
-/// This information can be obtained directly from the index.
+/// This information can also be obtained directly from the index.
 ///
 /// In addition to returning cached data from the index, this returns
 /// fields for `id`, `version_id`, and `downloads` (which appears to always
 /// be 0)
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/dependencies",
+    operation_id = "get_version_dependencies",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
@@ -71,21 +78,33 @@ pub async fn dependencies(
     Ok(json!({ "dependencies": deps }))
 }
 
-/// Handles the `GET /crates/:crate_id/:version/authors` route.
+/// Get crate version authors.
+///
+/// This endpoint was deprecated by [RFC #3052](https://github.com/rust-lang/rfcs/pull/3052)
+/// and returns an empty list for backwards compatibility reasons.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/authors",
+    operation_id = "get_version_authors",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
+#[deprecated]
 pub async fn authors() -> ErasedJson {
-    // Currently we return the empty list.
-    // Because the API is not used anymore after RFC https://github.com/rust-lang/rfcs/pull/3052.
-
     json!({
         "users": [],
         "meta": { "names": [] },
     })
 }
 
-/// Handles the `GET /crates/:crate/:version` route.
-///
-/// The frontend doesn't appear to hit this endpoint, but our tests do, and it seems to be a useful
-/// API route to have.
+/// Get crate version metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}",
+    operation_id = "get_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
@@ -103,9 +122,16 @@ pub async fn show(
     Ok(json!({ "version": version }))
 }
 
-/// Handles the `PATCH /crates/:crate/:version` route.
+/// Update a crate version.
 ///
-/// This endpoint allows updating the yanked state of a version, including a yank message.
+/// This endpoint allows updating the `yanked` state of a version, including a yank message.
+#[utoipa::path(
+    patch,
+    path = "/api/v1/crates/{name}/{version}",
+    operation_id = "update_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn update(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,

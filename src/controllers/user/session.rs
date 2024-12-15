@@ -19,7 +19,7 @@ use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 
-/// Handles the `GET /api/private/session/begin` route.
+/// Begin authentication flow.
 ///
 /// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
@@ -34,6 +34,13 @@ use crates_io_github::GithubUser;
 ///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
 /// }
 /// ```
+#[utoipa::path(
+    get,
+    path = "/api/private/session/begin",
+    operation_id = "begin_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn begin(app: AppState, session: SessionExtension) -> ErasedJson {
     let (url, state) = app
         .github_oauth
@@ -54,7 +61,7 @@ pub struct AuthorizeQuery {
     state: CsrfToken,
 }
 
-/// Handles the `GET /api/private/session/authorize` route.
+/// Complete authentication flow.
 ///
 /// This route is called from the GitHub API OAuth flow after the user accepted or rejected
 /// the data access permissions. It will check the `state` parameter and then call the GitHub API
@@ -72,7 +79,6 @@ pub struct AuthorizeQuery {
 ///
 /// ```json
 /// {
-///     "api_token": "b84a63c4ea3fcb4ac84",
 ///     "user": {
 ///         "email": "foo@bar.org",
 ///         "name": "Foo Bar",
@@ -82,6 +88,13 @@ pub struct AuthorizeQuery {
 ///     }
 /// }
 /// ```
+#[utoipa::path(
+    get,
+    path = "/api/private/session/authorize",
+    operation_id = "authorize_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn authorize(
     query: AuthorizeQuery,
     app: AppState,
@@ -158,7 +171,14 @@ async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryRe
         .optional()
 }
 
-/// Handles the `DELETE /api/private/session` route.
+/// End the current session.
+#[utoipa::path(
+    delete,
+    path = "/api/private/session",
+    operation_id = "end_session",
+    tag = "session",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn logout(session: SessionExtension) -> Json<bool> {
     session.remove("user_id");
     Json(true)

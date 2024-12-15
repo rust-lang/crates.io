@@ -10,15 +10,24 @@ use axum::extract::Path;
 use axum::response::Response;
 use http::request::Parts;
 
-/// Handles the `DELETE /crates/:crate_id/:version/yank` route.
+/// Yank a crate version.
+///
 /// This does not delete a crate version, it makes the crate
 /// version accessible only to crates that already have a
 /// `Cargo.lock` containing this version.
 ///
 /// Notes:
-/// Crate deletion is not implemented to avoid breaking builds,
+///
+/// Version deletion is not implemented to avoid breaking builds,
 /// and the goal of yanking a crate is to prevent crates
 /// beginning to depend on the yanked crate version.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/crates/{name}/{version}/yank",
+    operation_id = "yank_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn yank(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
@@ -27,7 +36,14 @@ pub async fn yank(
     modify_yank(crate_name, version, app, req, true).await
 }
 
-/// Handles the `PUT /crates/:crate_id/:version/unyank` route.
+/// Unyank a crate version.
+#[utoipa::path(
+    put,
+    path = "/api/v1/crates/{name}/{version}/unyank",
+    operation_id = "unyank_version",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn unyank(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,

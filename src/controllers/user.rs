@@ -1,6 +1,6 @@
 pub mod me;
 pub mod other;
-mod resend;
+pub mod resend;
 pub mod session;
 pub mod update;
 

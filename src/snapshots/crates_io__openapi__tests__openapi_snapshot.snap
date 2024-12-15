@@ -20,6 +20,120 @@ snapshot_kind: text
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/private/crate_owner_invitations": {
+      "get": {
+        "operationId": "list_crate_owner_invitations",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all crate owner invitations for a crate or user.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/private/session": {
+      "delete": {
+        "operationId": "end_session",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "End the current session.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
+    "/api/private/session/authorize": {
+      "get": {
+        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**\n\n## Response Body Example\n\n```json\n{\n    \"user\": {\n        \"email\": \"foo@bar.org\",\n        \"name\": \"Foo Bar\",\n        \"login\": \"foobar\",\n        \"avatar\": \"https://avatars.githubusercontent.com/u/1234\",\n        \"url\": null\n    }\n}\n```",
+        "operationId": "authorize_session",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Complete authentication flow.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
+    "/api/private/session/begin": {
+      "get": {
+        "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>\n\n## Response Body Example\n\n```json\n{\n    \"state\": \"b84a63c4ea3fcb4ac84\",\n    \"url\": \"https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg\"\n}\n```",
+        "operationId": "begin_session",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Begin authentication flow.",
+        "tags": [
+          "session"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "list_categories",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all categories.",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{category}": {
+      "get": {
+        "operationId": "get_category",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get category metadata.",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/category_slugs": {
+      "get": {
+        "operationId": "list_category_slugs",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all available category slugs.",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/confirm/{email_token}": {
+      "put": {
+        "operationId": "confirm_user_email",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Marks the email belonging to the given token as verified.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
@@ -32,6 +146,622 @@ snapshot_kind: text
         "summary": "Returns a list of crates.",
         "tags": [
           "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/new": {
+      "get": {
+        "description": "This endpoint works around a small limitation in `axum` and is delegating\nto the `GET /api/v1/crates/{name}` endpoint internally.",
+        "operationId": "crates_show_new",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate metadata (for the `new` crate).",
+        "tags": [
+          "crates"
+        ]
+      },
+      "put": {
+        "description": "Used by `cargo publish` to publish a new crate or to publish a new version of an\nexisting crate.",
+        "operationId": "publish",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Publish a new crate/version.",
+        "tags": [
+          "publish"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}": {
+      "delete": {
+        "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 100 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
+        "operationId": "delete_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Delete a crate.",
+        "tags": [
+          "crates"
+        ]
+      },
+      "get": {
+        "operationId": "get_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate metadata.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/downloads": {
+      "get": {
+        "description": "This includes the per-day downloads for the last 90 days and for the\nlatest 5 versions plus the sum of the rest.",
+        "operationId": "get_crate_downloads",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the download counts for a crate.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/follow": {
+      "delete": {
+        "operationId": "unfollow_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Unfollow a crate.",
+        "tags": [
+          "crates"
+        ]
+      },
+      "put": {
+        "operationId": "follow_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Follow a crate.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/following": {
+      "get": {
+        "operationId": "get_following_crate",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check if a crate is followed.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/owner_team": {
+      "get": {
+        "operationId": "get_team_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List team owners of a crate.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/owner_user": {
+      "get": {
+        "operationId": "get_user_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List user owners of a crate.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/owners": {
+      "delete": {
+        "operationId": "delete_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Remove crate owners.",
+        "tags": [
+          "owners"
+        ]
+      },
+      "get": {
+        "operationId": "list_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List crate owners.",
+        "tags": [
+          "owners"
+        ]
+      },
+      "put": {
+        "operationId": "add_owners",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Add crate owners.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/reverse_dependencies": {
+      "get": {
+        "operationId": "list_reverse_dependencies",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List reverse dependencies of a crate.",
+        "tags": [
+          "crates"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/versions": {
+      "get": {
+        "operationId": "list_crate_versions",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all versions of a crate.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}": {
+      "get": {
+        "operationId": "get_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate version metadata.",
+        "tags": [
+          "versions"
+        ]
+      },
+      "patch": {
+        "description": "This endpoint allows updating the `yanked` state of a version, including a yank message.",
+        "operationId": "update_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/authors": {
+      "get": {
+        "deprecated": true,
+        "description": "This endpoint was deprecated by [RFC #3052](https://github.com/rust-lang/rfcs/pull/3052)\nand returns an empty list for backwards compatibility reasons.",
+        "operationId": "get_version_authors",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate version authors.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/dependencies": {
+      "get": {
+        "description": "This information can also be obtained directly from the index.\n\nIn addition to returning cached data from the index, this returns\nfields for `id`, `version_id`, and `downloads` (which appears to always\nbe 0)",
+        "operationId": "get_version_dependencies",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crate version dependencies.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/download": {
+      "get": {
+        "description": "This returns a URL to the location where the crate is stored.",
+        "operationId": "download_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Download a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/downloads": {
+      "get": {
+        "description": "This includes the per-day downloads for the last 90 days.",
+        "operationId": "get_version_downloads",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the download counts for a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/readme": {
+      "get": {
+        "operationId": "get_version_readme",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the readme of a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/unyank": {
+      "put": {
+        "operationId": "unyank_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Unyank a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/crates/{name}/{version}/yank": {
+      "delete": {
+        "description": "This does not delete a crate version, it makes the crate\nversion accessible only to crates that already have a\n`Cargo.lock` containing this version.\n\nNotes:\n\nVersion deletion is not implemented to avoid breaking builds,\nand the goal of yanking a crate is to prevent crates\nbeginning to depend on the yanked crate version.",
+        "operationId": "yank_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Yank a crate version.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/keywords": {
+      "get": {
+        "operationId": "list_keywords",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all keywords.",
+        "tags": [
+          "keywords"
+        ]
+      }
+    },
+    "/api/v1/keywords/{keyword}": {
+      "get": {
+        "operationId": "get_keyword",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get keyword metadata.",
+        "tags": [
+          "keywords"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_authenticated_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get the currently authenticated user.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/crate_owner_invitations": {
+      "get": {
+        "operationId": "list_crate_owner_invitations_for_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all crate owner invitations for the authenticated user.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/me/crate_owner_invitations/accept/{token}": {
+      "put": {
+        "operationId": "accept_crate_owner_invitation_with_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Accept a crate owner invitation with a token.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/me/crate_owner_invitations/{crate_id}": {
+      "put": {
+        "operationId": "handle_crate_owner_invitation",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Accept or decline a crate owner invitation.",
+        "tags": [
+          "owners"
+        ]
+      }
+    },
+    "/api/v1/me/email_notifications": {
+      "put": {
+        "deprecated": true,
+        "description": "This endpoint was implemented for an experimental feature that was never\nfully implemented. It is now deprecated and will be removed in the future.",
+        "operationId": "update_email_notifications",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update email notification settings for the authenticated user.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/tokens": {
+      "get": {
+        "operationId": "list_api_tokens",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all API tokens of the authenticated user.",
+        "tags": [
+          "api_tokens"
+        ]
+      },
+      "put": {
+        "operationId": "create_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Create a new API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
+    "/api/v1/me/tokens/{id}": {
+      "delete": {
+        "operationId": "revoke_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      },
+      "get": {
+        "operationId": "get_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find API token by id.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
+    "/api/v1/me/updates": {
+      "get": {
+        "operationId": "get_authenticated_user_updates",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List versions of crates that the authenticated user follows.",
+        "tags": [
+          "versions"
+        ]
+      }
+    },
+    "/api/v1/site_metadata": {
+      "get": {
+        "description": "Returns the current deployed commit SHA1 (or `unknown`), and whether the\nsystem is in read-only mode.",
+        "operationId": "get_site_metadata",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get crates.io metadata.",
+        "tags": [
+          "other"
+        ]
+      }
+    },
+    "/api/v1/summary": {
+      "get": {
+        "description": "This endpoint returns a summary of the most important data for the front\npage of crates.io.",
+        "operationId": "get_summary",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get front page data.",
+        "tags": [
+          "other"
+        ]
+      }
+    },
+    "/api/v1/teams/{team}": {
+      "get": {
+        "operationId": "get_team",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find team by login.",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/api/v1/tokens/current": {
+      "delete": {
+        "description": "This endpoint revokes the API token that is used to authenticate\nthe request.",
+        "operationId": "revoke_current_api_token",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke the current API token.",
+        "tags": [
+          "api_tokens"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/resend": {
+      "put": {
+        "operationId": "resend_email_verification",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Regenerate and send an email verification token.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/stats": {
+      "get": {
+        "description": "This currently only returns the total number of downloads for crates owned\nby the user.",
+        "operationId": "get_user_stats",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get user stats.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{user}": {
+      "get": {
+        "operationId": "get_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find user by login.",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "This endpoint allows users to update their email address and publish notifications settings.\n\nThe `id` parameter needs to match the ID of the currently authenticated user.",
+        "operationId": "update_user",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Update user settings.",
+        "tags": [
+          "users"
         ]
       }
     }

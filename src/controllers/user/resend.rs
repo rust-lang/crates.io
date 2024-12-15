@@ -14,7 +14,14 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
 
-/// Handles `PUT /user/:user_id/resend` route
+/// Regenerate and send an email verification token.
+#[utoipa::path(
+    put,
+    path = "/api/v1/users/{id}/resend",
+    operation_id = "resend_email_verification",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn regenerate_token_and_send(
     state: AppState,
     Path(param_user_id): Path<i32>,

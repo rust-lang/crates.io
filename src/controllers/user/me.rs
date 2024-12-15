@@ -19,7 +19,14 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::util::BytesRequest;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
-/// Handles the `GET /me` route.
+/// Get the currently authenticated user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me",
+    operation_id = "get_authenticated_user",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
@@ -62,7 +69,14 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     }))
 }
 
-/// Handles the `GET /me/updates` route.
+/// List versions of crates that the authenticated user follows.
+#[utoipa::path(
+    get,
+    path = "/api/v1/me/updates",
+    operation_id = "get_authenticated_user_updates",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
@@ -101,7 +115,14 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `PUT /confirm/:email_token` route
+/// Marks the email belonging to the given token as verified.
+#[utoipa::path(
+    put,
+    path = "/api/v1/confirm/{email_token}",
+    operation_id = "confirm_user_email",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
     use diesel::update;
 
@@ -119,7 +140,18 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
     ok_true()
 }
 
-/// Handles `PUT /me/email_notifications` route
+/// Update email notification settings for the authenticated user.
+///
+/// This endpoint was implemented for an experimental feature that was never
+/// fully implemented. It is now deprecated and will be removed in the future.
+#[utoipa::path(
+    put,
+    path = "/api/v1/me/email_notifications",
+    operation_id = "update_email_notifications",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
+#[deprecated]
 pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
     use diesel::pg::upsert::excluded;
 

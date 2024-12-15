@@ -17,7 +17,14 @@ use http::request::Parts;
 use http::StatusCode;
 use secrecy::{ExposeSecret, SecretString};
 
-/// Handles the `GET /crates/:crate_id/owners` route.
+/// List crate owners.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/owners",
+    operation_id = "list_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
@@ -37,7 +44,14 @@ pub async fn owners(state: AppState, Path(crate_name): Path<String>) -> AppResul
     Ok(json!({ "users": owners }))
 }
 
-/// Handles the `GET /crates/:crate_id/owner_team` route.
+/// List team owners of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/owner_team",
+    operation_id = "get_team_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
     let krate: Crate = Crate::by_name(&crate_name)
@@ -55,7 +69,14 @@ pub async fn owner_team(state: AppState, Path(crate_name): Path<String>) -> AppR
     Ok(json!({ "teams": owners }))
 }
 
-/// Handles the `GET /crates/:crate_id/owner_user` route.
+/// List user owners of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/owner_user",
+    operation_id = "get_user_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
@@ -74,7 +95,14 @@ pub async fn owner_user(state: AppState, Path(crate_name): Path<String>) -> AppR
     Ok(json!({ "users": owners }))
 }
 
-/// Handles the `PUT /crates/:crate_id/owners` route.
+/// Add crate owners.
+#[utoipa::path(
+    put,
+    path = "/api/v1/crates/{name}/owners",
+    operation_id = "add_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn add_owners(
     app: AppState,
     Path(crate_name): Path<String>,
@@ -84,7 +112,14 @@ pub async fn add_owners(
     modify_owners(app, crate_name, parts, body, true).await
 }
 
-/// Handles the `DELETE /crates/:crate_id/owners` route.
+/// Remove crate owners.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/crates/{name}/owners",
+    operation_id = "delete_owners",
+    tag = "owners",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn remove_owners(
     app: AppState,
     Path(crate_name): Path<String>,

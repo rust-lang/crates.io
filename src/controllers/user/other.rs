@@ -12,7 +12,14 @@ use crate::sql::lower;
 use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
 
-/// Handles the `GET /users/:user_id` route.
+/// Find user by login.
+#[utoipa::path(
+    get,
+    path = "/api/v1/users/{user}",
+    operation_id = "get_user",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 
@@ -28,7 +35,17 @@ pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<E
     Ok(json!({ "user": EncodablePublicUser::from(user) }))
 }
 
-/// Handles the `GET /users/:user_id/stats` route.
+/// Get user stats.
+///
+/// This currently only returns the total number of downloads for crates owned
+/// by the user.
+#[utoipa::path(
+    get,
+    path = "/api/v1/users/{id}/stats",
+    operation_id = "get_user_stats",
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 

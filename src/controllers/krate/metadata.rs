@@ -26,12 +26,29 @@ use http::request::Parts;
 use std::cmp::Reverse;
 use std::str::FromStr;
 
-/// Handles the `GET /crates/new` special case.
+/// Get crate metadata (for the `new` crate).
+///
+/// This endpoint works around a small limitation in `axum` and is delegating
+/// to the `GET /api/v1/crates/{name}` endpoint internally.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/new",
+    operation_id = "crates_show_new",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     show(app, Path("new".to_string()), req).await
 }
 
-/// Handles the `GET /crates/:crate_id` route.
+/// Get crate metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}",
+    operation_id = "get_crate",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 
@@ -227,7 +244,14 @@ impl FromStr for ShowIncludeMode {
     }
 }
 
-/// Handles the `GET /crates/:crate_id/:version/readme` route.
+/// Get the readme of a crate version.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/{version}/readme",
+    operation_id = "get_version_readme",
+    tag = "versions",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn readme(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
@@ -241,7 +265,14 @@ pub async fn readme(
     }
 }
 
-/// Handles the `GET /crates/:crate_id/reverse_dependencies` route.
+/// List reverse dependencies of a crate.
+#[utoipa::path(
+    get,
+    path = "/api/v1/crates/{name}/reverse_dependencies",
+    operation_id = "list_reverse_dependencies",
+    tag = "crates",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn reverse_dependencies(
     app: AppState,
     Path(name): Path<String>,

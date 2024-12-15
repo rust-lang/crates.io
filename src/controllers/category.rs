@@ -12,7 +12,14 @@ use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
-/// Handles the `GET /categories` route.
+/// List all categories.
+#[utoipa::path(
+    get,
+    path = "/api/v1/categories",
+    operation_id = "list_categories",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
@@ -41,7 +48,14 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-/// Handles the `GET /categories/:category_id` route.
+/// Get category metadata.
+#[utoipa::path(
+    get,
+    path = "/api/v1/categories/{category}",
+    operation_id = "get_category",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
@@ -74,7 +88,14 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Erased
     Ok(json!({ "category": cat_with_subcats }))
 }
 
-/// Handles the `GET /category_slugs` route.
+/// List all available category slugs.
+#[utoipa::path(
+    get,
+    path = "/api/v1/category_slugs",
+    operation_id = "list_category_slugs",
+    tag = "categories",
+    responses((status = 200, description = "Successful Response")),
+)]
 pub async fn slugs(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
