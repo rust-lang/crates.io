@@ -1,7 +1,7 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use super::metadata::{authenticate, perform_version_yank_update};
-use super::{version_and_crate, CrateVersionPath};
+use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;
 use crate::rate_limiter::LimitedAction;
@@ -64,7 +64,7 @@ async fn modify_yank(
     }
 
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = version_and_crate(&mut conn, &path.name, &path.version).await?;
+    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
     state

@@ -17,6 +17,15 @@ pub struct CrateVersionPath {
     pub version: String,
 }
 
+impl CrateVersionPath {
+    pub async fn load_version_and_crate(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> AppResult<(Version, Crate)> {
+        version_and_crate(conn, &self.name, &self.version).await
+    }
+}
+
 async fn version_and_crate(
     conn: &mut AsyncPgConnection,
     crate_name: &str,

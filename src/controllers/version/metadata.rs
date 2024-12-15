@@ -27,7 +27,7 @@ use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 
-use super::{version_and_crate, CrateVersionPath};
+use super::CrateVersionPath;
 
 #[derive(Deserialize)]
 pub struct VersionUpdate {
@@ -61,7 +61,7 @@ pub async fn get_version_dependencies(
     }
 
     let mut conn = state.db_read().await?;
-    let (version, _) = version_and_crate(&mut conn, &path.name, &path.version).await?;
+    let (version, _) = path.load_version_and_crate(&mut conn).await?;
 
     let deps = Dependency::belonging_to(&version)
         .inner_join(crates::table)
@@ -107,7 +107,7 @@ pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<
     }
 
     let mut conn = state.db_read().await?;
-    let (version, krate) = version_and_crate(&mut conn, &path.name, &path.version).await?;
+    let (version, krate) = path.load_version_and_crate(&mut conn).await?;
     let published_by = version.published_by(&mut conn).await?;
     let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
 
@@ -135,7 +135,7 @@ pub async fn update_version(
     }
 
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = version_and_crate(&mut conn, &path.name, &path.version).await?;
+    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     validate_yank_update(&update_request.version, &version)?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 

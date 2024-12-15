@@ -2,7 +2,7 @@
 //!
 //! Crate level functionality is located in `krate::downloads`.
 
-use super::{version_and_crate, CrateVersionPath};
+use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
@@ -59,7 +59,7 @@ pub async fn get_version_downloads(
     }
 
     let mut conn = app.db_read().await?;
-    let (version, _) = version_and_crate(&mut conn, &path.name, &path.version).await?;
+    let (version, _) = path.load_version_and_crate(&mut conn).await?;
 
     let cutoff_end_date = req
         .query()
