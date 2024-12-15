@@ -61,7 +61,7 @@ pub async fn get_version_dependencies(
     }
 
     let mut conn = state.db_read().await?;
-    let (version, _) = path.load_version_and_crate(&mut conn).await?;
+    let version = path.load_version(&mut conn).await?;
 
     let deps = Dependency::belonging_to(&version)
         .inner_join(crates::table)

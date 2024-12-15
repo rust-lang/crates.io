@@ -59,7 +59,7 @@ pub async fn get_version_downloads(
     }
 
     let mut conn = app.db_read().await?;
-    let (version, _) = path.load_version_and_crate(&mut conn).await?;
+    let version = path.load_version(&mut conn).await?;
 
     let cutoff_end_date = req
         .query()
