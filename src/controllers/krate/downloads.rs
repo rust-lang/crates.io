@@ -4,12 +4,12 @@
 //! download counts are located in `version::downloads`.
 
 use crate::app::AppState;
+use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Version, VersionDownload};
 use crate::schema::{crates, version_downloads, versions};
 use crate::sql::to_char;
 use crate::util::errors::{crate_not_found, AppResult};
 use crate::views::EncodableVersionDownload;
-use axum::extract::Path;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
@@ -27,21 +27,18 @@ use std::cmp;
     responses((status = 200, description = "Successful Response")),
 )]
 
-pub async fn get_crate_downloads(
-    state: AppState,
-    Path(crate_name): Path<String>,
-) -> AppResult<ErasedJson> {
+pub async fn get_crate_downloads(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     use diesel::dsl::*;
     use diesel::sql_types::BigInt;
 
-    let crate_id: i32 = Crate::by_name(&crate_name)
+    let crate_id: i32 = Crate::by_name(&path.name)
         .select(crates::id)
         .first(&mut conn)
         .await
         .optional()?
-        .ok_or_else(|| crate_not_found(&crate_name))?;
+        .ok_or_else(|| crate_not_found(&path.name))?;
 
     let mut versions: Vec<Version> = versions::table
         .filter(versions::crate_id.eq(crate_id))

@@ -2,10 +2,20 @@ pub mod downloads;
 pub mod metadata;
 pub mod yank;
 
+use axum::extract::{FromRequestParts, Path};
 use diesel_async::AsyncPgConnection;
 
 use crate::models::{Crate, Version};
 use crate::util::errors::{crate_not_found, AppResult};
+
+#[derive(Deserialize, FromRequestParts)]
+#[from_request(via(Path))]
+pub struct CrateVersionPath {
+    /// Name of the crate
+    pub name: String,
+    /// Version number
+    pub version: String,
+}
 
 async fn version_and_crate(
     conn: &mut AsyncPgConnection,

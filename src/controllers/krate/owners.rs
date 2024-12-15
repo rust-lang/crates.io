@@ -1,12 +1,12 @@
 //! All routes related to managing owners of a crate
 
+use crate::controllers::krate::CratePath;
 use crate::models::{krate::NewOwnerInvite, token::EndpointScope};
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, models::krate::OwnerAddError};
 use crate::{auth::AuthCheck, email::Email};
-use axum::extract::Path;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -24,14 +24,14 @@ use secrecy::{ExposeSecret, SecretString};
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list_owners(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
+pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let krate: Crate = Crate::by_name(&crate_name)
+    let krate: Crate = Crate::by_name(&path.name)
         .first(&mut conn)
         .await
         .optional()?
-        .ok_or_else(|| crate_not_found(&crate_name))?;
+        .ok_or_else(|| crate_not_found(&path.name))?;
 
     let owners = krate
         .owners(&mut conn)
@@ -50,16 +50,13 @@ pub async fn list_owners(state: AppState, Path(crate_name): Path<String>) -> App
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn get_team_owners(
-    state: AppState,
-    Path(crate_name): Path<String>,
-) -> AppResult<ErasedJson> {
+pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
-    let krate: Crate = Crate::by_name(&crate_name)
+    let krate: Crate = Crate::by_name(&path.name)
         .first(&mut conn)
         .await
         .optional()?
-        .ok_or_else(|| crate_not_found(&crate_name))?;
+        .ok_or_else(|| crate_not_found(&path.name))?;
 
     let owners = Team::owning(&krate, &mut conn)
         .await?
@@ -77,17 +74,14 @@ pub async fn get_team_owners(
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn get_user_owners(
-    state: AppState,
-    Path(crate_name): Path<String>,
-) -> AppResult<ErasedJson> {
+pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let krate: Crate = Crate::by_name(&crate_name)
+    let krate: Crate = Crate::by_name(&path.name)
         .first(&mut conn)
         .await
         .optional()?
-        .ok_or_else(|| crate_not_found(&crate_name))?;
+        .ok_or_else(|| crate_not_found(&path.name))?;
 
     let owners = User::owning(&krate, &mut conn)
         .await?
@@ -107,11 +101,11 @@ pub async fn get_user_owners(
 )]
 pub async fn add_owners(
     app: AppState,
-    Path(crate_name): Path<String>,
+    path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<ErasedJson> {
-    modify_owners(app, crate_name, parts, body, true).await
+    modify_owners(app, path.name, parts, body, true).await
 }
 
 /// Remove crate owners.
@@ -123,11 +117,11 @@ pub async fn add_owners(
 )]
 pub async fn remove_owners(
     app: AppState,
-    Path(crate_name): Path<String>,
+    path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
 ) -> AppResult<ErasedJson> {
-    modify_owners(app, crate_name, parts, body, false).await
+    modify_owners(app, path.name, parts, body, false).await
 }
 
 #[derive(Deserialize)]

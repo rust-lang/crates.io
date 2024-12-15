@@ -2,14 +2,13 @@
 //!
 //! Crate level functionality is located in `krate::downloads`.
 
-use super::version_and_crate;
+use super::{version_and_crate, CrateVersionPath};
 use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
 use crate::util::errors::{version_not_found, AppResult};
 use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
-use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -29,11 +28,11 @@ use http::request::Parts;
 )]
 pub async fn download_version(
     app: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<Response> {
     let wants_json = req.wants_json();
-    let redirect_url = app.storage.crate_location(&crate_name, &version);
+    let redirect_url = app.storage.crate_location(&path.name, &path.version);
     if wants_json {
         Ok(json!({ "url": redirect_url }).into_response())
     } else {
@@ -52,15 +51,15 @@ pub async fn download_version(
 )]
 pub async fn get_version_downloads(
     app: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&version).is_err() {
-        return Err(version_not_found(&crate_name, &version));
+    if semver::Version::parse(&path.version).is_err() {
+        return Err(version_not_found(&path.name, &path.version));
     }
 
     let mut conn = app.db_read().await?;
-    let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let (version, _) = version_and_crate(&mut conn, &path.name, &path.version).await?;
 
     let cutoff_end_date = req
         .query()
