@@ -181,6 +181,17 @@ snapshot_kind: text
       "delete": {
         "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 100 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
         "operationId": "delete_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -193,6 +204,17 @@ snapshot_kind: text
       },
       "get": {
         "operationId": "find_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -208,6 +230,17 @@ snapshot_kind: text
       "get": {
         "description": "This includes the per-day downloads for the last 90 days and for the\nlatest 5 versions plus the sum of the rest.",
         "operationId": "get_crate_downloads",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -222,6 +255,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/follow": {
       "delete": {
         "operationId": "unfollow_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -234,6 +278,17 @@ snapshot_kind: text
       },
       "put": {
         "operationId": "follow_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -248,6 +303,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/following": {
       "get": {
         "operationId": "get_following_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -262,6 +328,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/owner_team": {
       "get": {
         "operationId": "get_team_owners",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -276,6 +353,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/owner_user": {
       "get": {
         "operationId": "get_user_owners",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -290,6 +378,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/owners": {
       "delete": {
         "operationId": "remove_owners",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -302,6 +401,17 @@ snapshot_kind: text
       },
       "get": {
         "operationId": "list_owners",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -314,6 +424,17 @@ snapshot_kind: text
       },
       "put": {
         "operationId": "add_owners",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -328,6 +449,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/reverse_dependencies": {
       "get": {
         "operationId": "list_reverse_dependencies",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -342,6 +474,17 @@ snapshot_kind: text
     "/api/v1/crates/{name}/versions": {
       "get": {
         "operationId": "list_versions",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -356,6 +499,27 @@ snapshot_kind: text
     "/api/v1/crates/{name}/{version}": {
       "get": {
         "operationId": "find_version",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -369,6 +533,27 @@ snapshot_kind: text
       "patch": {
         "description": "This endpoint allows updating the `yanked` state of a version, including a yank message.",
         "operationId": "update_version",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -385,6 +570,27 @@ snapshot_kind: text
         "deprecated": true,
         "description": "This endpoint was deprecated by [RFC #3052](https://github.com/rust-lang/rfcs/pull/3052)\nand returns an empty list for backwards compatibility reasons.",
         "operationId": "get_version_authors",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -400,6 +606,27 @@ snapshot_kind: text
       "get": {
         "description": "This information can also be obtained directly from the index.\n\nIn addition to returning cached data from the index, this returns\nfields for `id`, `version_id`, and `downloads` (which appears to always\nbe 0)",
         "operationId": "get_version_dependencies",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -415,6 +642,27 @@ snapshot_kind: text
       "get": {
         "description": "This returns a URL to the location where the crate is stored.",
         "operationId": "download_version",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -430,6 +678,27 @@ snapshot_kind: text
       "get": {
         "description": "This includes the per-day downloads for the last 90 days.",
         "operationId": "get_version_downloads",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -444,6 +713,27 @@ snapshot_kind: text
     "/api/v1/crates/{name}/{version}/readme": {
       "get": {
         "operationId": "get_version_readme",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -458,6 +748,27 @@ snapshot_kind: text
     "/api/v1/crates/{name}/{version}/unyank": {
       "put": {
         "operationId": "unyank_version",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -473,6 +784,27 @@ snapshot_kind: text
       "delete": {
         "description": "This does not delete a crate version, it makes the crate\nversion accessible only to crates that already have a\n`Cargo.lock` containing this version.\n\nNotes:\n\nVersion deletion is not implemented to avoid breaking builds,\nand the goal of yanking a crate is to prevent crates\nbeginning to depend on the yanked crate version.",
         "operationId": "yank_version",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version number",
+            "example": "1.0.0",
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"

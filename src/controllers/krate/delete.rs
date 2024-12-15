@@ -1,10 +1,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::models::{Crate, NewDeletedCrate, Rights};
+use crate::controllers::krate::CratePath;
+use crate::models::{NewDeletedCrate, Rights};
 use crate::schema::{crate_downloads, crates, dependencies};
-use crate::util::errors::{crate_not_found, custom, AppResult, BoxedAppError};
+use crate::util::errors::{custom, AppResult, BoxedAppError};
 use crate::worker::jobs;
-use axum::extract::Path;
 use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
 use crates_io_database::schema::deleted_crates;
@@ -30,22 +30,18 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn delete_crate(
-    Path(name): Path<String>,
-    parts: Parts,
-    app: AppState,
-) -> AppResult<StatusCode> {
+pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
 
     // Check that the user is authenticated
     let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
 
     // Check that the crate exists
-    let krate = find_crate(&mut conn, &name).await?;
-    let krate = krate.ok_or_else(|| crate_not_found(&name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
@@ -106,7 +102,7 @@ pub async fn delete_crate(
 
             let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
             let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
-            let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(name);
+            let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name);
 
             tokio::try_join!(
                 git_index_job.enqueue(conn),
@@ -121,10 +117,6 @@ pub async fn delete_crate(
     .await?;
 
     Ok(StatusCode::NO_CONTENT)
-}
-
-async fn find_crate(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Option<Crate>> {
-    Crate::by_name(name).first(conn).await.optional()
 }
 
 async fn get_crate_downloads(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<u64> {

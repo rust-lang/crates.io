@@ -1,6 +1,5 @@
 //! Endpoint for versions of a crate
 
-use axum::extract::Path;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::not;
@@ -14,9 +13,10 @@ use std::str::FromStr;
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
-use crate::models::{Crate, User, Version, VersionOwnerAction};
-use crate::schema::{crates, users, versions};
-use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
+use crate::controllers::krate::CratePath;
+use crate::models::{User, Version, VersionOwnerAction};
+use crate::schema::{users, versions};
+use crate::util::errors::{bad_request, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
@@ -24,22 +24,14 @@ use crate::views::EncodableVersion;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
+    params(CratePath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list_versions(
-    state: AppState,
-    Path(crate_name): Path<String>,
-    req: Parts,
-) -> AppResult<ErasedJson> {
+pub async fn list_versions(state: AppState, path: CratePath, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let crate_id: i32 = Crate::by_name(&crate_name)
-        .select(crates::id)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&crate_name))?;
+    let crate_id = path.load_crate_id(&mut conn).await?;
 
     let mut pagination = None;
     let params = req.query();
@@ -78,7 +70,7 @@ pub async fn list_versions(
         .data
         .into_iter()
         .zip(actions)
-        .map(|((v, pb), aas)| EncodableVersion::from(v, &crate_name, pb, aas))
+        .map(|((v, pb), aas)| EncodableVersion::from(v, &path.name, pb, aas))
         .collect::<Vec<_>>();
 
     Ok(match pagination {

@@ -209,9 +209,9 @@ async fn test_version_downloads() {
     let response = anon
         .get::<()>("/api/v1/crates/foo/invalid-version/downloads")
         .await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     assert_snapshot!(
         response.text(),
-        @r#"{"errors":[{"detail":"crate `foo` does not have a version `invalid-version`"}]}"#
+        @r#"{"errors":[{"detail":"Invalid URL: unexpected character 'i' while parsing major version number"}]}"#
     );
 }

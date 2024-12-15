@@ -1,12 +1,11 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use super::metadata::{authenticate, perform_version_yank_update};
-use super::version_and_crate;
+use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;
 use crate::rate_limiter::LimitedAction;
-use crate::util::errors::{version_not_found, AppResult};
-use axum::extract::Path;
+use crate::util::errors::AppResult;
 use axum::response::Response;
 use http::request::Parts;
 
@@ -24,36 +23,37 @@ use http::request::Parts;
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/{version}/yank",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn yank_version(
     app: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<Response> {
-    modify_yank(crate_name, version, app, req, true).await
+    modify_yank(path, app, req, true).await
 }
 
 /// Unyank a crate version.
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/{version}/unyank",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn unyank_version(
     app: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<Response> {
-    modify_yank(crate_name, version, app, req, false).await
+    modify_yank(path, app, req, false).await
 }
 
 /// Changes `yanked` flag on a crate version record
 async fn modify_yank(
-    crate_name: String,
-    version: String,
+    path: CrateVersionPath,
     state: AppState,
     req: Parts,
     yanked: bool,
@@ -61,13 +61,9 @@ async fn modify_yank(
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
-    if semver::Version::parse(&version).is_err() {
-        return Err(version_not_found(&crate_name, &version));
-    }
-
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
-    let auth = authenticate(&req, &mut conn, &crate_name).await?;
+    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
+    let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
     state
         .rate_limiter

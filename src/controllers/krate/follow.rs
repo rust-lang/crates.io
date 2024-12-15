@@ -3,10 +3,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
+use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 use crate::util::errors::{crate_not_found, AppResult};
-use axum::extract::Path;
 use axum::response::Response;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -33,17 +33,14 @@ async fn follow_target(
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/follow",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn follow_crate(
-    app: AppState,
-    Path(crate_name): Path<String>,
-    req: Parts,
-) -> AppResult<Response> {
+pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
-    let follow = follow_target(&crate_name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &mut conn, user_id).await?;
     diesel::insert_into(follows::table)
         .values(&follow)
         .on_conflict_do_nothing()
@@ -57,17 +54,14 @@ pub async fn follow_crate(
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/follow",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn unfollow_crate(
-    app: AppState,
-    Path(crate_name): Path<String>,
-    req: Parts,
-) -> AppResult<Response> {
+pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
-    let follow = follow_target(&crate_name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &mut conn, user_id).await?;
     diesel::delete(&follow).execute(&mut conn).await?;
 
     ok_true()
@@ -77,12 +71,13 @@ pub async fn unfollow_crate(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/following",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn get_following_crate(
     app: AppState,
-    Path(crate_name): Path<String>,
+    path: CratePath,
     req: Parts,
 ) -> AppResult<ErasedJson> {
     use diesel::dsl::exists;
@@ -93,7 +88,7 @@ pub async fn get_following_crate(
         .await?
         .user_id();
 
-    let follow = follow_target(&crate_name, &mut conn, user_id).await?;
+    let follow = follow_target(&path.name, &mut conn, user_id).await?;
     let following = diesel::select(exists(follows::table.find(follow.id())))
         .get_result::<bool>(&mut conn)
         .await?;

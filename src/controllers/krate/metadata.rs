@@ -6,6 +6,8 @@
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::PaginationOptions;
+use crate::controllers::krate::CratePath;
+use crate::controllers::version::CrateVersionPath;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, CrateName, Keyword, RecentCrateDownloads, User,
     Version, VersionOwnerAction,
@@ -16,7 +18,6 @@ use crate::util::{redirect, RequestUtils};
 use crate::views::{
     EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
 };
-use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -37,21 +38,19 @@ use std::str::FromStr;
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn find_new_crate(app: AppState, req: Parts) -> AppResult<ErasedJson> {
-    find_crate(app, Path("new".to_string()), req).await
+    let name = "new".to_string();
+    find_crate(app, CratePath { name }, req).await
 }
 
 /// Get crate metadata.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn find_crate(
-    app: AppState,
-    Path(name): Path<String>,
-    req: Parts,
-) -> AppResult<ErasedJson> {
+pub async fn find_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 
     let include = req
@@ -62,7 +61,7 @@ pub async fn find_crate(
         .unwrap_or_default();
 
     let (krate, downloads, default_version, yanked): (Crate, i64, Option<String>, Option<bool>) =
-        Crate::by_name(&name)
+        Crate::by_name(&path.name)
             .inner_join(crate_downloads::table)
             .left_join(default_versions::table)
             .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
@@ -75,7 +74,7 @@ pub async fn find_crate(
             .first(&mut conn)
             .await
             .optional()?
-            .ok_or_else(|| crate_not_found(&name))?;
+            .ok_or_else(|| crate_not_found(&path.name))?;
 
     let versions_publishers_and_audit_actions = if include.versions {
         let mut versions_and_publishers: Vec<(Version, Option<User>)> =
@@ -250,15 +249,12 @@ impl FromStr for ShowIncludeMode {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/readme",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn get_version_readme(
-    app: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
-    req: Parts,
-) -> Response {
-    let redirect_url = app.storage.readme_location(&crate_name, &version);
+pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
+    let redirect_url = app.storage.readme_location(&path.name, &path.version);
     if req.wants_json() {
         json!({ "url": redirect_url }).into_response()
     } else {
@@ -270,23 +266,20 @@ pub async fn get_version_readme(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/reverse_dependencies",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn list_reverse_dependencies(
     app: AppState,
-    Path(name): Path<String>,
+    path: CratePath,
     req: Parts,
 ) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;
 
-    let krate: Crate = Crate::by_name(&name)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     let (rev_deps, total) = krate
         .reverse_dependencies(&mut conn, pagination_options)

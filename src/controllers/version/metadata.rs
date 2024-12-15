@@ -4,7 +4,6 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use axum::extract::Path;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -24,11 +23,11 @@ use crate::models::{
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::{bad_request, custom, version_not_found, AppResult};
+use crate::util::errors::{bad_request, custom, AppResult};
 use crate::views::{EncodableDependency, EncodableVersion};
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 
-use super::version_and_crate;
+use super::CrateVersionPath;
 
 #[derive(Deserialize)]
 pub struct VersionUpdate {
@@ -50,19 +49,16 @@ pub struct VersionUpdateRequest {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/dependencies",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn get_version_dependencies(
     state: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&version).is_err() {
-        return Err(version_not_found(&crate_name, &version));
-    }
-
     let mut conn = state.db_read().await?;
-    let (version, _) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let version = path.load_version(&mut conn).await?;
 
     let deps = Dependency::belonging_to(&version)
         .inner_join(crates::table)
@@ -84,6 +80,7 @@ pub async fn get_version_dependencies(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/authors",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -99,19 +96,13 @@ pub async fn get_version_authors() -> ErasedJson {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn find_version(
-    state: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
-) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&version).is_err() {
-        return Err(version_not_found(&crate_name, &version));
-    }
-
+pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
-    let (version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let (version, krate) = path.load_version_and_crate(&mut conn).await?;
     let published_by = version.published_by(&mut conn).await?;
     let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
 
@@ -125,21 +116,18 @@ pub async fn find_version(
 #[utoipa::path(
     patch,
     path = "/api/v1/crates/{name}/{version}",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn update_version(
     state: AppState,
-    Path((crate_name, version)): Path<(String, String)>,
+    path: CrateVersionPath,
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
 ) -> AppResult<ErasedJson> {
-    if semver::Version::parse(&version).is_err() {
-        return Err(version_not_found(&crate_name, &version));
-    }
-
     let mut conn = state.db_write().await?;
-    let (mut version, krate) = version_and_crate(&mut conn, &crate_name, &version).await?;
+    let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     validate_yank_update(&update_request.version, &version)?;
     let auth = authenticate(&req, &mut conn, &krate.name).await?;
 
