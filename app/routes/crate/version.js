@@ -51,8 +51,16 @@ export default class VersionRoute extends Route {
     waitForPromise(controller.loadReadmeTask.perform()).catch(() => {
       // ignored
     });
+    waitForPromise(controller.loadDownloadsTask.perform()).catch(() => {
+      // ignored
+    });
 
     let { crate, version } = model;
+
+    waitForPromise(crate.loadOwnersTask.perform()).catch(() => {
+      // ignored
+    });
+
     if (!crate.documentation || crate.documentation.startsWith('https://docs.rs/')) {
       version.loadDocsStatusTask.perform().catch(error => {
         // report unexpected errors to Sentry and ignore `ajax()` errors

@@ -1,8 +1,10 @@
 import Model, { attr, hasMany } from '@ember-data/model';
+import { assert } from '@ember/debug';
 import { waitForPromise } from '@ember/test-waiters';
 import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
+import { task } from 'ember-concurrency';
 
 export default class Crate extends Model {
   @attr name;
@@ -35,13 +37,23 @@ export default class Crate extends Model {
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
   @cached get versionIdsBySemver() {
-    let versions = this.versions.toArray() ?? [];
-    return versions.sort(compareVersionBySemver).map(v => v.id);
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsBySemver`', last != null);
+    let versions = last?.value ?? [];
+    return versions
+      .slice()
+      .sort(compareVersionBySemver)
+      .map(v => v.id);
   }
 
   @cached get versionIdsByDate() {
-    let versions = this.versions.toArray() ?? [];
-    return versions.sort(compareVersionByDate).map(v => v.id);
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsByDate`', last != null);
+    let versions = last?.value ?? [];
+    return versions
+      .slice()
+      .sort(compareVersionByDate)
+      .map(v => v.id);
   }
 
   @cached get firstVersionId() {
@@ -49,8 +61,10 @@ export default class Crate extends Model {
   }
 
   @cached get versionsObj() {
-    let versions = this.versions.toArray() ?? [];
-    return Object.fromEntries(versions.map(v => [v.id, v]));
+    let { last } = this.loadVersionsTask;
+    assert('`loadVersionsTask.perform()` must be called before calling `versionsObj`', last != null);
+    let versions = last?.value ?? [];
+    return Object.fromEntries(versions.slice().map(v => [v.id, v]));
   }
 
   @cached get releaseTrackSet() {
@@ -65,10 +79,16 @@ export default class Crate extends Model {
     return new Set(map.values());
   }
 
+  hasOwnerUser(userId) {
+    let { last } = this.loadOwnerUserTask;
+    assert('`loadOwnerUserTask.perform()` must be called before calling `hasOwnerUser()`', last != null);
+    return (last?.value ?? []).some(({ id }) => id === userId);
+  }
+
   get owners() {
-    let teams = this.owner_team.toArray() ?? [];
-    let users = this.owner_user.toArray() ?? [];
-    return [...teams, ...users];
+    let { last } = this.loadOwnersTask;
+    assert('`loadOwnersTask.perform()` must be called before accessing `owners`', last != null);
+    return last?.value ?? [];
   }
 
   async follow() {
@@ -100,6 +120,19 @@ export default class Crate extends Model {
       throw response;
     }
   }
+
+  loadOwnerUserTask = task(async () => {
+    return (await this.owner_user) ?? [];
+  });
+
+  loadOwnersTask = task(async () => {
+    let [teams, users] = await Promise.all([this.owner_team, this.owner_user]);
+    return [...(teams ?? []), ...(users ?? [])];
+  });
+
+  loadVersionsTask = task(async () => {
+    return (await this.versions) ?? [];
+  });
 }
 
 function compareVersionBySemver(a, b) {

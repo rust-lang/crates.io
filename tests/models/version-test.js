@@ -167,7 +167,7 @@ module('Model | Version', function (hooks) {
       }
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
-      let versions = (await crateRecord.versions).slice();
+      let versions = (await crateRecord.loadVersionsTask.perform()).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -198,7 +198,7 @@ module('Model | Version', function (hooks) {
       this.server.create('version', { crate, num: '0.4.2', yanked: true });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
-      let versions = (await crateRecord.versions).slice();
+      let versions = (await crateRecord.loadVersionsTask.perform()).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -216,7 +216,7 @@ module('Model | Version', function (hooks) {
       this.server.create('version', { crate, num: '0.4.1' });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
-      let versions = (await crateRecord.versions).slice();
+      let versions = (await crateRecord.loadVersionsTask.perform()).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -229,7 +229,7 @@ module('Model | Version', function (hooks) {
       this.server.create('version', { crate, num: '0.4.2' });
       this.server.create('version', { crate, num: '0.4.3', yanked: true });
       crateRecord = await this.store.findRecord('crate', crate.name, { reload: true });
-      versions = (await crateRecord.versions).slice();
+      versions = (await crateRecord.loadVersionsTask.perform()).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),

@@ -24,13 +24,14 @@ export default class CrateVersionController extends Controller {
     this.stackedGraph = false;
   }
 
-  @alias('downloadsContext.version_downloads.content') downloads;
+  @alias('loadDownloadsTask.last.value') downloads;
   @alias('model.crate') crate;
   @alias('model.requestedVersion') requestedVersion;
   @alias('model.version') currentVersion;
 
   get isOwner() {
-    return this.crate.owner_user.findBy('id', this.session.currentUser?.id);
+    let userId = this.session.currentUser?.id;
+    return this.crate.hasOwnerUser(userId);
   }
 
   @alias('loadReadmeTask.last.value') readme;
@@ -61,5 +62,11 @@ export default class CrateVersionController extends Controller {
     }
 
     return readme;
+  });
+
+  // This task would be `perform()` in setupController
+  loadDownloadsTask = task(async () => {
+    let downloads = await this.downloadsContext.version_downloads;
+    return downloads;
   });
 }

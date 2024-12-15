@@ -20,8 +20,7 @@ module('Component | OwnersList', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.hasMany('owner_team').load();
-    await this.crate.hasMany('owner_user').load();
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
     assert.dom('[data-test-owners="detailed"]').exists();
@@ -44,8 +43,7 @@ module('Component | OwnersList', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.hasMany('owner_team').load();
-    await this.crate.hasMany('owner_user').load();
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
     assert.dom('[data-test-owners="detailed"]').exists();
@@ -70,8 +68,7 @@ module('Component | OwnersList', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.hasMany('owner_team').load();
-    await this.crate.hasMany('owner_user').load();
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
     assert.dom('[data-test-owners="detailed"]').exists();
@@ -93,8 +90,7 @@ module('Component | OwnersList', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.hasMany('owner_team').load();
-    await this.crate.hasMany('owner_user').load();
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
     assert.dom('[data-test-owners="basic"]').exists();
@@ -120,8 +116,7 @@ module('Component | OwnersList', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.hasMany('owner_team').load();
-    await this.crate.hasMany('owner_user').load();
+    await this.crate.loadOwnersTask.perform();
 
     await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
     assert.dom('[data-test-owners="detailed"]').exists();
