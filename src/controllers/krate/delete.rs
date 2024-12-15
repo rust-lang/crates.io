@@ -30,6 +30,7 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]

@@ -23,6 +23,7 @@ use http::request::Parts;
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/{version}/yank",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -38,6 +39,7 @@ pub async fn yank_version(
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/{version}/unyank",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

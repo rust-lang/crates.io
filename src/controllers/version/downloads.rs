@@ -23,6 +23,7 @@ use http::request::Parts;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/download",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -46,6 +47,7 @@ pub async fn download_version(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/downloads",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

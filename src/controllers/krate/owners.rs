@@ -21,6 +21,7 @@ use secrecy::{ExposeSecret, SecretString};
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owners",
+    params(CratePath),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -43,6 +44,7 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJs
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_team",
+    params(CratePath),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -63,6 +65,7 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Eras
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owner_user",
+    params(CratePath),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -84,6 +87,7 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Eras
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/owners",
+    params(CratePath),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -100,6 +104,7 @@ pub async fn add_owners(
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/owners",
+    params(CratePath),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]

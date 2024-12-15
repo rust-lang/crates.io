@@ -23,6 +23,7 @@ use std::cmp;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/downloads",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]

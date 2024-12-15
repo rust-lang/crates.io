@@ -4,6 +4,7 @@ use axum::extract::{FromRequestParts, Path};
 use crates_io_database::schema::crates;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use utoipa::IntoParams;
 
 pub mod delete;
 pub mod downloads;
@@ -14,7 +15,8 @@ pub mod publish;
 pub mod search;
 pub mod versions;
 
-#[derive(Deserialize, FromRequestParts)]
+#[derive(Deserialize, FromRequestParts, IntoParams)]
+#[into_params(parameter_in = Path)]
 #[from_request(via(Path))]
 pub struct CratePath {
     /// Name of the crate

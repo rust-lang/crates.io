@@ -4,16 +4,19 @@ pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
 use diesel_async::AsyncPgConnection;
+use utoipa::IntoParams;
 
 use crate::models::{Crate, Version};
 use crate::util::errors::{crate_not_found, AppResult};
 
-#[derive(Deserialize, FromRequestParts)]
+#[derive(Deserialize, FromRequestParts, IntoParams)]
+#[into_params(parameter_in = Path)]
 #[from_request(via(Path))]
 pub struct CrateVersionPath {
     /// Name of the crate
     pub name: String,
     /// Version number
+    #[param(example = "1.0.0")]
     pub version: String,
 }
 

@@ -24,6 +24,7 @@ use crate::views::EncodableVersion;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
+    params(CratePath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

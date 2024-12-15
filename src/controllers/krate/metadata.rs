@@ -46,6 +46,7 @@ pub async fn find_new_crate(app: AppState, req: Parts) -> AppResult<ErasedJson> 
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -248,6 +249,7 @@ impl FromStr for ShowIncludeMode {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/readme",
+    params(CrateVersionPath),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -264,6 +266,7 @@ pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Part
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/reverse_dependencies",
+    params(CratePath),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
