@@ -16,11 +16,10 @@ use crate::views::EncodablePublicUser;
 #[utoipa::path(
     get,
     path = "/api/v1/users/{user}",
-    operation_id = "get_user",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
+pub async fn find_user(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use crate::schema::users::dsl::{gh_login, id, users};
@@ -42,11 +41,10 @@ pub async fn show(state: AppState, Path(user_name): Path<String>) -> AppResult<E
 #[utoipa::path(
     get,
     path = "/api/v1/users/{id}/stats",
-    operation_id = "get_user_stats",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<ErasedJson> {
+pub async fn get_user_stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use diesel::dsl::sum;

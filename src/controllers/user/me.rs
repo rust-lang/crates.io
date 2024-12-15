@@ -23,11 +23,10 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 #[utoipa::path(
     get,
     path = "/api/v1/me",
-    operation_id = "get_authenticated_user",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let user_id = AuthCheck::only_cookie()
         .check(&req, &mut conn)
@@ -73,11 +72,10 @@ pub async fn me(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
 #[utoipa::path(
     get,
     path = "/api/v1/me/updates",
-    operation_id = "get_authenticated_user_updates",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn get_authenticated_user_updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -119,7 +117,6 @@ pub async fn updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 #[utoipa::path(
     put,
     path = "/api/v1/confirm/{email_token}",
-    operation_id = "confirm_user_email",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -147,7 +144,6 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
 #[utoipa::path(
     put,
     path = "/api/v1/me/email_notifications",
-    operation_id = "update_email_notifications",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

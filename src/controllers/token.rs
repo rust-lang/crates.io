@@ -39,11 +39,10 @@ impl GetParams {
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens",
-    operation_id = "list_api_tokens",
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list(
+pub async fn list_api_tokens(
     app: AppState,
     Query(params): Query<GetParams>,
     req: Parts,
@@ -87,11 +86,10 @@ pub struct NewApiTokenRequest {
 #[utoipa::path(
     put,
     path = "/api/v1/me/tokens",
-    operation_id = "create_api_token",
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn new(
+pub async fn create_api_token(
     app: AppState,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
@@ -183,11 +181,14 @@ pub async fn new(
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens/{id}",
-    operation_id = "get_api_token",
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
+pub async fn find_api_token(
+    app: AppState,
+    Path(id): Path<i32>,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -204,11 +205,14 @@ pub async fn show(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<E
 #[utoipa::path(
     delete,
     path = "/api/v1/me/tokens/{id}",
-    operation_id = "revoke_api_token",
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult<ErasedJson> {
+pub async fn revoke_api_token(
+    app: AppState,
+    Path(id): Path<i32>,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
@@ -227,11 +231,10 @@ pub async fn revoke(app: AppState, Path(id): Path<i32>, req: Parts) -> AppResult
 #[utoipa::path(
     delete,
     path = "/api/v1/tokens/current",
-    operation_id = "revoke_current_api_token",
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn revoke_current(app: AppState, req: Parts) -> AppResult<Response> {
+pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let api_token_id = auth

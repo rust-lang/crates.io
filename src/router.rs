@@ -14,57 +14,77 @@ use crate::Env;
 pub fn build_axum_router(state: AppState) -> Router<()> {
     let (router, openapi) = BaseOpenApi::router()
         // Route used by both `cargo search` and the frontend
-        .routes(routes!(krate::search::search))
+        .routes(routes!(krate::search::list_crates))
         // Routes used by `cargo`
-        .routes(routes!(krate::publish::publish, krate::metadata::show_new))
         .routes(routes!(
-            krate::owners::owners,
+            krate::publish::publish,
+            krate::metadata::find_new_crate
+        ))
+        .routes(routes!(
+            krate::owners::list_owners,
             krate::owners::add_owners,
             krate::owners::remove_owners
         ))
-        .routes(routes!(version::yank::yank))
-        .routes(routes!(version::yank::unyank))
-        .routes(routes!(version::downloads::download))
+        .routes(routes!(version::yank::yank_version))
+        .routes(routes!(version::yank::unyank_version))
+        .routes(routes!(version::downloads::download_version))
         // Routes used by the frontend
-        .routes(routes!(krate::metadata::show, krate::delete::delete))
-        .routes(routes!(version::metadata::show, version::metadata::update))
-        .routes(routes!(krate::metadata::readme))
-        .routes(routes!(version::metadata::dependencies))
-        .routes(routes!(version::downloads::downloads))
-        .routes(routes!(version::metadata::authors))
-        .routes(routes!(krate::downloads::downloads))
-        .routes(routes!(krate::versions::versions))
-        .routes(routes!(krate::follow::follow, krate::follow::unfollow))
-        .routes(routes!(krate::follow::following))
-        .routes(routes!(krate::owners::owner_team))
-        .routes(routes!(krate::owners::owner_user))
-        .routes(routes!(krate::metadata::reverse_dependencies))
-        .routes(routes!(keyword::index))
-        .routes(routes!(keyword::show))
-        .routes(routes!(category::index))
-        .routes(routes!(category::show))
-        .routes(routes!(category::slugs))
-        .routes(routes!(user::other::show, user::update::update_user))
-        .routes(routes!(user::other::stats))
-        .routes(routes!(team::show_team))
-        .routes(routes!(user::me::me))
-        .routes(routes!(user::me::updates))
-        .routes(routes!(token::list, token::new))
-        .routes(routes!(token::show, token::revoke))
-        .routes(routes!(token::revoke_current))
-        .routes(routes!(crate_owner_invitation::list))
-        .routes(routes!(crate_owner_invitation::private_list))
-        .routes(routes!(crate_owner_invitation::handle_invite))
-        .routes(routes!(crate_owner_invitation::handle_invite_with_token))
+        .routes(routes!(
+            krate::metadata::find_crate,
+            krate::delete::delete_crate
+        ))
+        .routes(routes!(
+            version::metadata::find_version,
+            version::metadata::update_version
+        ))
+        .routes(routes!(krate::metadata::get_version_readme))
+        .routes(routes!(version::metadata::get_version_dependencies))
+        .routes(routes!(version::downloads::get_version_downloads))
+        .routes(routes!(version::metadata::get_version_authors))
+        .routes(routes!(krate::downloads::get_crate_downloads))
+        .routes(routes!(krate::versions::list_versions))
+        .routes(routes!(
+            krate::follow::follow_crate,
+            krate::follow::unfollow_crate
+        ))
+        .routes(routes!(krate::follow::get_following_crate))
+        .routes(routes!(krate::owners::get_team_owners))
+        .routes(routes!(krate::owners::get_user_owners))
+        .routes(routes!(krate::metadata::list_reverse_dependencies))
+        .routes(routes!(keyword::list_keywords))
+        .routes(routes!(keyword::find_keyword))
+        .routes(routes!(category::list_categories))
+        .routes(routes!(category::find_category))
+        .routes(routes!(category::list_category_slugs))
+        .routes(routes!(user::other::find_user, user::update::update_user))
+        .routes(routes!(user::other::get_user_stats))
+        .routes(routes!(team::find_team))
+        .routes(routes!(user::me::get_authenticated_user))
+        .routes(routes!(user::me::get_authenticated_user_updates))
+        .routes(routes!(token::list_api_tokens, token::create_api_token))
+        .routes(routes!(token::find_api_token, token::revoke_api_token))
+        .routes(routes!(token::revoke_current_api_token))
+        .routes(routes!(
+            crate_owner_invitation::list_crate_owner_invitations_for_user
+        ))
+        .routes(routes!(
+            crate_owner_invitation::list_crate_owner_invitations
+        ))
+        .routes(routes!(
+            crate_owner_invitation::handle_crate_owner_invitation
+        ))
+        .routes(routes!(
+            crate_owner_invitation::accept_crate_owner_invitation_with_token
+        ))
         .routes(routes!(user::me::update_email_notifications))
-        .routes(routes!(summary::summary))
+        .routes(routes!(summary::get_summary))
         .routes(routes!(user::me::confirm_user_email))
-        .routes(routes!(user::resend::regenerate_token_and_send))
-        .routes(routes!(site_metadata::show_deployed_sha))
+        .routes(routes!(user::resend::resend_email_verification))
+        .routes(routes!(site_metadata::get_site_metadata))
         // Session management
-        .routes(routes!(user::session::begin))
-        .routes(routes!(user::session::authorize))
-        .routes(routes!(user::session::logout))
+        .routes(routes!(user::session::begin_session))
+        .routes(routes!(user::session::authorize_session))
+        .routes(routes!(user::session::end_session))
         .split_for_parts();
 
     let mut router = router

@@ -33,11 +33,10 @@ use crate::util::RequestUtils;
 #[utoipa::path(
     get,
     path = "/api/v1/crates",
-    operation_id = "crates_list",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn search(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_crates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     // Notes:
     // The different use cases this function covers is handled through passing
     // in parameters in the GET request.

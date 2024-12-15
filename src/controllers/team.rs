@@ -12,11 +12,10 @@ use diesel_async::RunQueryDsl;
 #[utoipa::path(
     get,
     path = "/api/v1/teams/{team}",
-    operation_id = "get_team",
     tag = "teams",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show_team(state: AppState, Path(name): Path<String>) -> AppResult<ErasedJson> {
+pub async fn find_team(state: AppState, Path(name): Path<String>) -> AppResult<ErasedJson> {
     use crate::schema::teams::dsl::{login, teams};
 
     let mut conn = state.db_read().await?;

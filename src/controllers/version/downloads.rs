@@ -24,11 +24,10 @@ use http::request::Parts;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/download",
-    operation_id = "download_version",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn download(
+pub async fn download_version(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
@@ -48,11 +47,10 @@ pub async fn download(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/downloads",
-    operation_id = "get_version_downloads",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn downloads(
+pub async fn get_version_downloads(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,

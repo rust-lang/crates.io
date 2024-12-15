@@ -30,11 +30,10 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}",
-    operation_id = "delete_crate",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn delete(
+pub async fn delete_crate(
     Path(name): Path<String>,
     parts: Parts,
     app: AppState,

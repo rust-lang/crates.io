@@ -24,11 +24,10 @@ use http::request::Parts;
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/{version}/yank",
-    operation_id = "yank_version",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn yank(
+pub async fn yank_version(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
@@ -40,11 +39,10 @@ pub async fn yank(
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/{version}/unyank",
-    operation_id = "unyank_version",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn unyank(
+pub async fn unyank_version(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,

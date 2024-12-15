@@ -33,23 +33,25 @@ use std::str::FromStr;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/new",
-    operation_id = "crates_show_new",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show_new(app: AppState, req: Parts) -> AppResult<ErasedJson> {
-    show(app, Path("new".to_string()), req).await
+pub async fn find_new_crate(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+    find_crate(app, Path("new".to_string()), req).await
 }
 
 /// Get crate metadata.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}",
-    operation_id = "get_crate",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(app: AppState, Path(name): Path<String>, req: Parts) -> AppResult<ErasedJson> {
+pub async fn find_crate(
+    app: AppState,
+    Path(name): Path<String>,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 
     let include = req
@@ -248,11 +250,10 @@ impl FromStr for ShowIncludeMode {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/readme",
-    operation_id = "get_version_readme",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn readme(
+pub async fn get_version_readme(
     app: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,
@@ -269,11 +270,10 @@ pub async fn readme(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/reverse_dependencies",
-    operation_id = "list_reverse_dependencies",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn reverse_dependencies(
+pub async fn list_reverse_dependencies(
     app: AppState,
     Path(name): Path<String>,
     req: Parts,

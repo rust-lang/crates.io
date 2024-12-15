@@ -19,11 +19,10 @@ use std::future::Future;
 #[utoipa::path(
     get,
     path = "/api/v1/summary",
-    operation_id = "get_summary",
     tag = "other",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn summary(state: AppState) -> AppResult<ErasedJson> {
+pub async fn get_summary(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     let config = &state.config;

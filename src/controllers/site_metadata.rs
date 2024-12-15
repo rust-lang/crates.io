@@ -9,11 +9,10 @@ use axum_extra::json;
 #[utoipa::path(
     get,
     path = "/api/v1/site_metadata",
-    operation_id = "get_site_metadata",
     tag = "other",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show_deployed_sha(state: AppState) -> impl IntoResponse {
+pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();
 
     let deployed_sha =

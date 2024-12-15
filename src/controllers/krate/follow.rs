@@ -33,11 +33,10 @@ async fn follow_target(
 #[utoipa::path(
     put,
     path = "/api/v1/crates/{name}/follow",
-    operation_id = "follow_crate",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn follow(
+pub async fn follow_crate(
     app: AppState,
     Path(crate_name): Path<String>,
     req: Parts,
@@ -58,11 +57,10 @@ pub async fn follow(
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}/follow",
-    operation_id = "unfollow_crate",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn unfollow(
+pub async fn unfollow_crate(
     app: AppState,
     Path(crate_name): Path<String>,
     req: Parts,
@@ -79,11 +77,10 @@ pub async fn unfollow(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/following",
-    operation_id = "get_following_crate",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn following(
+pub async fn get_following_crate(
     app: AppState,
     Path(crate_name): Path<String>,
     req: Parts,
