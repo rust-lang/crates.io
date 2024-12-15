@@ -51,6 +51,9 @@ pub async fn list_categories(app: AppState, req: Parts) -> AppResult<ErasedJson>
 #[utoipa::path(
     get,
     path = "/api/v1/categories/{category}",
+    params(
+        ("category" = String, Path, description = "Name of the category"),
+    ),
     tag = "categories",
     responses((status = 200, description = "Successful Response")),
 )]

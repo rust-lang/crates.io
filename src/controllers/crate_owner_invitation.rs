@@ -287,6 +287,9 @@ struct OwnerInvitation {
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
+    params(
+        ("crate_id" = i32, Path, description = "ID of the crate"),
+    ),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -324,6 +327,9 @@ pub async fn handle_crate_owner_invitation(
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/accept/{token}",
+    params(
+        ("token" = String, Path, description = "Secret token sent to the user's email address"),
+    ),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]

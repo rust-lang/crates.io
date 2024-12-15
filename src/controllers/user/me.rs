@@ -117,6 +117,9 @@ pub async fn get_authenticated_user_updates(app: AppState, req: Parts) -> AppRes
 #[utoipa::path(
     put,
     path = "/api/v1/confirm/{email_token}",
+    params(
+        ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

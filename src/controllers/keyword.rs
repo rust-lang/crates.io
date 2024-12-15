@@ -56,6 +56,9 @@ pub async fn list_keywords(
 #[utoipa::path(
     get,
     path = "/api/v1/keywords/{keyword}",
+    params(
+        ("keyword" = String, Path, description = "The keyword to find"),
+    ),
     tag = "keywords",
     responses((status = 200, description = "Successful Response")),
 )]

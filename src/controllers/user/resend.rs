@@ -18,6 +18,9 @@ use http::request::Parts;
 #[utoipa::path(
     put,
     path = "/api/v1/users/{id}/resend",
+    params(
+        ("id" = i32, Path, description = "ID of the user"),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
