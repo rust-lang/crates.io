@@ -1,9 +1,9 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::CratePath;
-use crate::models::{Crate, NewDeletedCrate, Rights};
+use crate::models::{NewDeletedCrate, Rights};
 use crate::schema::{crate_downloads, crates, dependencies};
-use crate::util::errors::{crate_not_found, custom, AppResult, BoxedAppError};
+use crate::util::errors::{custom, AppResult, BoxedAppError};
 use crate::worker::jobs;
 use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
@@ -40,8 +40,7 @@ pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppRe
     let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
 
     // Check that the crate exists
-    let krate = find_crate(&mut conn, &path.name).await?;
-    let krate = krate.ok_or_else(|| crate_not_found(&path.name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
@@ -117,10 +116,6 @@ pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppRe
     .await?;
 
     Ok(StatusCode::NO_CONTENT)
-}
-
-async fn find_crate(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Option<Crate>> {
-    Crate::by_name(name).first(conn).await.optional()
 }
 
 async fn get_crate_downloads(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<u64> {

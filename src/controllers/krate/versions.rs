@@ -14,9 +14,9 @@ use std::str::FromStr;
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
 use crate::controllers::krate::CratePath;
-use crate::models::{Crate, User, Version, VersionOwnerAction};
-use crate::schema::{crates, users, versions};
-use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
+use crate::models::{User, Version, VersionOwnerAction};
+use crate::schema::{users, versions};
+use crate::util::errors::{bad_request, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
@@ -30,12 +30,7 @@ use crate::views::EncodableVersion;
 pub async fn list_versions(state: AppState, path: CratePath, req: Parts) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let crate_id: i32 = Crate::by_name(&path.name)
-        .select(crates::id)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&path.name))?;
+    let crate_id = path.load_crate_id(&mut conn).await?;
 
     let mut pagination = None;
     let params = req.query();

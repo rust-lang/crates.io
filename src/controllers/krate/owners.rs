@@ -27,11 +27,7 @@ use secrecy::{ExposeSecret, SecretString};
 pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let krate: Crate = Crate::by_name(&path.name)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&path.name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     let owners = krate
         .owners(&mut conn)
@@ -52,11 +48,7 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJs
 )]
 pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
-    let krate: Crate = Crate::by_name(&path.name)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&path.name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     let owners = Team::owning(&krate, &mut conn)
         .await?
@@ -77,11 +69,7 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Eras
 pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
-    let krate: Crate = Crate::by_name(&path.name)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&path.name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     let owners = User::owning(&krate, &mut conn)
         .await?

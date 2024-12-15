@@ -276,11 +276,7 @@ pub async fn list_reverse_dependencies(
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;
 
-    let krate: Crate = Crate::by_name(&path.name)
-        .first(&mut conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(&path.name))?;
+    let krate = path.load_crate(&mut conn).await?;
 
     let (rev_deps, total) = krate
         .reverse_dependencies(&mut conn, pagination_options)
