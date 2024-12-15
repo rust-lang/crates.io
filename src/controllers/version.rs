@@ -8,8 +8,9 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use utoipa::IntoParams;
 
+use crate::controllers::krate::load_crate;
 use crate::models::{Crate, Version};
-use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::errors::AppResult;
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]
 #[into_params(parameter_in = Path)]
@@ -41,15 +42,7 @@ async fn version_and_crate(
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
-    use diesel::prelude::*;
-    use diesel_async::RunQueryDsl;
-
-    let krate: Crate = Crate::by_name(crate_name)
-        .first(conn)
-        .await
-        .optional()?
-        .ok_or_else(|| crate_not_found(crate_name))?;
-
+    let krate = load_crate(conn, crate_name).await?;
     let version = krate.find_version(conn, semver).await?;
 
     Ok((version, krate))
