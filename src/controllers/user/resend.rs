@@ -18,11 +18,10 @@ use http::request::Parts;
 #[utoipa::path(
     put,
     path = "/api/v1/users/{id}/resend",
-    operation_id = "resend_email_verification",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn regenerate_token_and_send(
+pub async fn resend_email_verification(
     state: AppState,
     Path(param_user_id): Path<i32>,
     req: Parts,

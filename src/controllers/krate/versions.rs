@@ -24,11 +24,10 @@ use crate::views::EncodableVersion;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
-    operation_id = "list_crate_versions",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn versions(
+pub async fn list_versions(
     state: AppState,
     Path(crate_name): Path<String>,
     req: Parts,

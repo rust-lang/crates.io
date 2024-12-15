@@ -94,7 +94,7 @@ snapshot_kind: text
     },
     "/api/v1/categories/{category}": {
       "get": {
-        "operationId": "get_category",
+        "operationId": "find_category",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -137,7 +137,7 @@ snapshot_kind: text
     "/api/v1/crates": {
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
-        "operationId": "crates_list",
+        "operationId": "list_crates",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -152,7 +152,7 @@ snapshot_kind: text
     "/api/v1/crates/new": {
       "get": {
         "description": "This endpoint works around a small limitation in `axum` and is delegating\nto the `GET /api/v1/crates/{name}` endpoint internally.",
-        "operationId": "crates_show_new",
+        "operationId": "find_new_crate",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -192,7 +192,7 @@ snapshot_kind: text
         ]
       },
       "get": {
-        "operationId": "get_crate",
+        "operationId": "find_crate",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -289,7 +289,7 @@ snapshot_kind: text
     },
     "/api/v1/crates/{name}/owners": {
       "delete": {
-        "operationId": "delete_owners",
+        "operationId": "remove_owners",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -341,7 +341,7 @@ snapshot_kind: text
     },
     "/api/v1/crates/{name}/versions": {
       "get": {
-        "operationId": "list_crate_versions",
+        "operationId": "list_versions",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -355,7 +355,7 @@ snapshot_kind: text
     },
     "/api/v1/crates/{name}/{version}": {
       "get": {
-        "operationId": "get_version",
+        "operationId": "find_version",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -500,7 +500,7 @@ snapshot_kind: text
     },
     "/api/v1/keywords/{keyword}": {
       "get": {
-        "operationId": "get_keyword",
+        "operationId": "find_keyword",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -624,7 +624,7 @@ snapshot_kind: text
         ]
       },
       "get": {
-        "operationId": "get_api_token",
+        "operationId": "find_api_token",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -682,7 +682,7 @@ snapshot_kind: text
     },
     "/api/v1/teams/{team}": {
       "get": {
-        "operationId": "get_team",
+        "operationId": "find_team",
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -740,7 +740,7 @@ snapshot_kind: text
     },
     "/api/v1/users/{user}": {
       "get": {
-        "operationId": "get_user",
+        "operationId": "find_user",
         "responses": {
           "200": {
             "description": "Successful Response"

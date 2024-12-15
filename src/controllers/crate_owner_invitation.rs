@@ -27,11 +27,13 @@ use std::collections::{HashMap, HashSet};
 #[utoipa::path(
     get,
     path = "/api/v1/me/crate_owner_invitations",
-    operation_id = "list_crate_owner_invitations_for_user",
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_crate_owner_invitations_for_user(
+    app: AppState,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -72,11 +74,13 @@ pub async fn list(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 #[utoipa::path(
     get,
     path = "/api/private/crate_owner_invitations",
-    operation_id = "list_crate_owner_invitations",
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn private_list(app: AppState, req: Parts) -> AppResult<Json<PrivateListResponse>> {
+pub async fn list_crate_owner_invitations(
+    app: AppState,
+    req: Parts,
+) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -283,11 +287,13 @@ struct OwnerInvitation {
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
-    operation_id = "handle_crate_owner_invitation",
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<ErasedJson> {
+pub async fn handle_crate_owner_invitation(
+    state: AppState,
+    req: BytesRequest,
+) -> AppResult<ErasedJson> {
     let (parts, body) = req.0.into_parts();
 
     let crate_invite: OwnerInvitation =
@@ -318,11 +324,10 @@ pub async fn handle_invite(state: AppState, req: BytesRequest) -> AppResult<Eras
 #[utoipa::path(
     put,
     path = "/api/v1/me/crate_owner_invitations/accept/{token}",
-    operation_id = "accept_crate_owner_invitation_with_token",
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn handle_invite_with_token(
+pub async fn accept_crate_owner_invitation_with_token(
     state: AppState,
     Path(token): Path<String>,
 ) -> AppResult<ErasedJson> {

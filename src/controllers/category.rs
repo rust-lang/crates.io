@@ -16,11 +16,10 @@ use http::request::Parts;
 #[utoipa::path(
     get,
     path = "/api/v1/categories",
-    operation_id = "list_categories",
     tag = "categories",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_categories(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
     // to paginate this.
@@ -52,11 +51,10 @@ pub async fn index(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 #[utoipa::path(
     get,
     path = "/api/v1/categories/{category}",
-    operation_id = "get_category",
     tag = "categories",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<ErasedJson> {
+pub async fn find_category(state: AppState, Path(slug): Path<String>) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     let cat: Category = Category::by_slug(&slug).first(&mut conn).await?;
@@ -92,11 +90,10 @@ pub async fn show(state: AppState, Path(slug): Path<String>) -> AppResult<Erased
 #[utoipa::path(
     get,
     path = "/api/v1/category_slugs",
-    operation_id = "list_category_slugs",
     tag = "categories",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn slugs(state: AppState) -> AppResult<ErasedJson> {
+pub async fn list_category_slugs(state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     let slugs: Vec<Slug> = categories::table

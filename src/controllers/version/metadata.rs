@@ -50,11 +50,10 @@ pub struct VersionUpdateRequest {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/dependencies",
-    operation_id = "get_version_dependencies",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn dependencies(
+pub async fn get_version_dependencies(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<ErasedJson> {
@@ -85,12 +84,11 @@ pub async fn dependencies(
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/authors",
-    operation_id = "get_version_authors",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 #[deprecated]
-pub async fn authors() -> ErasedJson {
+pub async fn get_version_authors() -> ErasedJson {
     json!({
         "users": [],
         "meta": { "names": [] },
@@ -101,11 +99,10 @@ pub async fn authors() -> ErasedJson {
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}",
-    operation_id = "get_version",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(
+pub async fn find_version(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
 ) -> AppResult<ErasedJson> {
@@ -128,11 +125,10 @@ pub async fn show(
 #[utoipa::path(
     patch,
     path = "/api/v1/crates/{name}/{version}",
-    operation_id = "update_version",
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn update(
+pub async fn update_version(
     state: AppState,
     Path((crate_name, version)): Path<(String, String)>,
     req: Parts,

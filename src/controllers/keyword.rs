@@ -19,11 +19,14 @@ pub struct IndexQuery {
 #[utoipa::path(
     get,
     path = "/api/v1/keywords",
-    operation_id = "list_keywords",
     tag = "keywords",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_keywords(
+    state: AppState,
+    qp: Query<IndexQuery>,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     use crate::schema::keywords;
 
     let mut query = keywords::table.into_boxed();
@@ -53,11 +56,10 @@ pub async fn index(state: AppState, qp: Query<IndexQuery>, req: Parts) -> AppRes
 #[utoipa::path(
     get,
     path = "/api/v1/keywords/{keyword}",
-    operation_id = "get_keyword",
     tag = "keywords",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn show(Path(name): Path<String>, state: AppState) -> AppResult<ErasedJson> {
+pub async fn find_keyword(Path(name): Path<String>, state: AppState) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
     let kw = Keyword::find_by_keyword(&mut conn, &name).await?;
 

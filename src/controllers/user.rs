@@ -4,5 +4,5 @@ pub mod resend;
 pub mod session;
 pub mod update;
 
-pub use resend::regenerate_token_and_send;
+pub use resend::resend_email_verification;
 pub use update::update_user;

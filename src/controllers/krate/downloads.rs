@@ -23,12 +23,14 @@ use std::cmp;
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/downloads",
-    operation_id = "get_crate_downloads",
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
 
-pub async fn downloads(state: AppState, Path(crate_name): Path<String>) -> AppResult<ErasedJson> {
+pub async fn get_crate_downloads(
+    state: AppState,
+    Path(crate_name): Path<String>,
+) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     use diesel::dsl::*;

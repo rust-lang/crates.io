@@ -37,11 +37,10 @@ use crates_io_github::GithubUser;
 #[utoipa::path(
     get,
     path = "/api/private/session/begin",
-    operation_id = "begin_session",
     tag = "session",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn begin(app: AppState, session: SessionExtension) -> ErasedJson {
+pub async fn begin_session(app: AppState, session: SessionExtension) -> ErasedJson {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -91,11 +90,10 @@ pub struct AuthorizeQuery {
 #[utoipa::path(
     get,
     path = "/api/private/session/authorize",
-    operation_id = "authorize_session",
     tag = "session",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn authorize(
+pub async fn authorize_session(
     query: AuthorizeQuery,
     app: AppState,
     session: SessionExtension,
@@ -130,7 +128,7 @@ pub async fn authorize(
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
 
-    super::me::me(app, req).await
+    super::me::get_authenticated_user(app, req).await
 }
 
 async fn save_user_to_database(
@@ -175,11 +173,10 @@ async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryRe
 #[utoipa::path(
     delete,
     path = "/api/private/session",
-    operation_id = "end_session",
     tag = "session",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn logout(session: SessionExtension) -> Json<bool> {
+pub async fn end_session(session: SessionExtension) -> Json<bool> {
     session.remove("user_id");
     Json(true)
 }

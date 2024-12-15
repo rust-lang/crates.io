@@ -32,7 +32,6 @@ pub struct User {
 #[utoipa::path(
     put,
     path = "/api/v1/users/{user}",
-    operation_id = "update_user",
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
