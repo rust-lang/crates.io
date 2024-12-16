@@ -1,6 +1,8 @@
 //! Endpoint for searching and discovery functionality
 
 use crate::auth::AuthCheck;
+use axum::extract::FromRequestParts;
+use axum_extra::extract::Query;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
@@ -9,8 +11,10 @@ use diesel::sql_types::{Bool, Text};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel_full_text_search::*;
 use http::request::Parts;
+use std::ops::Deref;
 use std::sync::OnceLock;
 use tracing::Instrument;
+use utoipa::IntoParams;
 
 use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
@@ -22,6 +26,7 @@ use crate::views::EncodableCrate;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
+use crate::util::string_excl_null::StringExclNull;
 use crate::util::RequestUtils;
 
 /// Returns a list of crates.
@@ -33,10 +38,15 @@ use crate::util::RequestUtils;
 #[utoipa::path(
     get,
     path = "/api/v1/crates",
+    params(ListQueryParams),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list_crates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_crates(
+    app: AppState,
+    params: ListQueryParams,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     // Notes:
     // The different use cases this function covers is handled through passing
     // in parameters in the GET request.
@@ -57,32 +67,8 @@ pub async fn list_crates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     use diesel::sql_types::Float;
     use seek::*;
 
-    let params = req.query();
-    let option_param = |s| match params.get(s).map(|v| v.as_str()) {
-        Some(v) if v.contains('\0') => Err(bad_request(format!(
-            "parameter {s} cannot contain a null byte"
-        ))),
-        Some(v) => Ok(Some(v)),
-        None => Ok(None),
-    };
-    let sort = option_param("sort")?;
-    let include_yanked = option_param("include_yanked")?
-        .map(|s| s == "yes")
-        .unwrap_or(true);
-
-    let filter_params = FilterParams {
-        q_string: option_param("q")?,
-        include_yanked,
-        category: option_param("category")?,
-        all_keywords: option_param("all_keywords")?,
-        keyword: option_param("keyword")?,
-        letter: option_param("letter")?,
-        user_id: option_param("user_id")?.and_then(|s| s.parse::<i32>().ok()),
-        team_id: option_param("team_id")?.and_then(|s| s.parse::<i32>().ok()),
-        following: option_param("following")?.is_some(),
-        has_ids: option_param("ids[]")?.is_some(),
-        ..Default::default()
-    };
+    let filter_params: FilterParams = params.into();
+    let sort = filter_params.sort.as_deref();
 
     let selection = (
         ALL_COLUMNS,
@@ -106,6 +92,8 @@ pub async fn list_crates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
 
     if let Some(q_string) = &filter_params.q_string {
         if !q_string.is_empty() {
+            let q_string = q_string.as_str();
+
             let sort = sort.unwrap_or("relevance");
 
             query = query.order(Crate::with_name(q_string).desc());
@@ -258,40 +246,106 @@ pub async fn list_crates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
     }))
 }
 
-#[derive(Default)]
-struct FilterParams<'a> {
-    q_string: Option<&'a str>,
-    include_yanked: bool,
-    category: Option<&'a str>,
-    all_keywords: Option<&'a str>,
-    keyword: Option<&'a str>,
-    letter: Option<&'a str>,
+#[derive(Debug, Deserialize, FromRequestParts, IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct ListQueryParams {
+    /// The sort order of the crates.
+    ///
+    /// Valid values: `alphabetical`, `relevance`, `downloads`,
+    /// `recent-downloads`, `recent-updates`, `new`.
+    ///
+    /// Defaults to `relevance` if `q` is set, otherwise `alphabetical`.
+    sort: Option<String>,
+
+    /// A search query string.
+    #[serde(rename = "q")]
+    #[param(inline)]
+    q_string: Option<StringExclNull>,
+
+    /// Set to `yes` to include yanked crates.
+    #[param(example = "yes")]
+    include_yanked: Option<String>,
+
+    /// If set, only return crates that belong to this category, or one
+    /// of its subcategories.
+    #[param(inline)]
+    category: Option<StringExclNull>,
+
+    /// If set, only return crates matching all the given keywords.
+    ///
+    /// This parameter expects a space-separated list of keywords.
+    #[param(inline)]
+    all_keywords: Option<StringExclNull>,
+
+    /// If set, only return crates matching the given keyword
+    /// (ignored if `all_keywords` is set).
+    #[param(inline)]
+    keyword: Option<StringExclNull>,
+
+    /// If set, only return crates with names that start with the given letter
+    /// (ignored if `all_keywords` or `keyword` are set).
+    #[param(inline)]
+    letter: Option<StringExclNull>,
+
+    /// If set, only crates owned by the given crates.io user ID are returned
+    /// (ignored if `all_keywords`, `keyword`, or `letter` are set).
     user_id: Option<i32>,
+
+    /// If set, only crates owned by the given crates.io team ID are returned
+    /// (ignored if `all_keywords`, `keyword`, `letter`, or `user_id` are set).
     team_id: Option<i32>,
-    following: bool,
-    has_ids: bool,
-    _auth_user_id: OnceLock<i32>,
-    _ids: OnceLock<Option<Vec<String>>>,
+
+    /// If set, only crates owned by users the current user follows are returned
+    /// (ignored if `all_keywords`, `keyword`, `letter`, `user_id`,
+    /// or `team_id` are set).
+    ///
+    /// The exact value of this parameter is ignored, but it must not be empty.
+    #[param(example = "yes")]
+    following: Option<String>,
+
+    /// If set, only crates with the specified names are returned (ignored
+    /// if `all_keywords`, `keyword`, `letter`, `user_id`, `team_id`,
+    /// or `following` are set).
+    #[serde(rename = "ids[]", default)]
+    #[param(inline)]
+    ids: Vec<StringExclNull>,
 }
 
-impl<'a> FilterParams<'a> {
-    fn ids(&self, req: &Parts) -> Option<&[String]> {
-        self._ids
-            .get_or_init(|| {
-                if self.has_ids {
-                    let query_bytes = req.uri.query().unwrap_or("").as_bytes();
-                    let v = url::form_urlencoded::parse(query_bytes)
-                        .filter(|(key, _)| key == "ids[]")
-                        .map(|(_, value)| value.to_string())
-                        .collect::<Vec<_>>();
-                    Some(v)
-                } else {
-                    None
-                }
-            })
-            .as_deref()
+impl ListQueryParams {
+    pub fn include_yanked(&self) -> bool {
+        let include_yanked = self.include_yanked.as_ref();
+        include_yanked.map(|s| s == "yes").unwrap_or(true)
     }
 
+    pub fn following(&self) -> bool {
+        self.following.is_some()
+    }
+}
+
+struct FilterParams {
+    search_params: ListQueryParams,
+    _auth_user_id: OnceLock<i32>,
+}
+
+impl Deref for FilterParams {
+    type Target = ListQueryParams;
+
+    fn deref(&self) -> &Self::Target {
+        &self.search_params
+    }
+}
+
+impl From<ListQueryParams> for FilterParams {
+    fn from(search_params: ListQueryParams) -> Self {
+        Self {
+            search_params,
+            _auth_user_id: OnceLock::new(),
+        }
+    }
+}
+
+impl FilterParams {
     async fn authed_user_id(&self, req: &Parts, conn: &mut AsyncPgConnection) -> AppResult<i32> {
         if let Some(val) = self._auth_user_id.get() {
             return Ok(*val);
@@ -306,25 +360,25 @@ impl<'a> FilterParams<'a> {
     }
 
     async fn make_query(
-        &'a self,
+        &self,
         req: &Parts,
         conn: &mut AsyncPgConnection,
-    ) -> AppResult<crates::BoxedQuery<'a, diesel::pg::Pg>> {
+    ) -> AppResult<crates::BoxedQuery<'_, diesel::pg::Pg>> {
         let mut query = crates::table.into_boxed();
 
-        if let Some(q_string) = self.q_string {
+        if let Some(q_string) = &self.q_string {
             if !q_string.is_empty() {
                 let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string)
+                    .bind::<Text, _>(q_string.as_str())
                     .sql(")");
                 query = query.filter(
                     q.matches(crates::textsearchable_index_col)
-                        .or(Crate::loosly_matches_name(q_string)),
+                        .or(Crate::loosly_matches_name(q_string.as_str())),
                 );
             }
         }
 
-        if let Some(cat) = self.category {
+        if let Some(cat) = &self.category {
             query = query.filter(
                 crates::id.eq_any(
                     crates_categories::table
@@ -332,14 +386,14 @@ impl<'a> FilterParams<'a> {
                         .inner_join(categories::table)
                         .filter(
                             categories::slug
-                                .eq(cat)
+                                .eq(cat.as_str())
                                 .or(categories::slug.like(format!("{cat}::%"))),
                         ),
                 ),
             );
         }
 
-        if let Some(kws) = self.all_keywords {
+        if let Some(kws) = &self.all_keywords {
             let names: Vec<_> = kws
                 .split_whitespace()
                 .map(|name| name.to_lowercase())
@@ -353,16 +407,16 @@ impl<'a> FilterParams<'a> {
                     .single_value()
                     .contains(names),
             );
-        } else if let Some(kw) = self.keyword {
+        } else if let Some(kw) = &self.keyword {
             query = query.filter(
                 crates::id.eq_any(
                     crates_keywords::table
                         .select(crates_keywords::crate_id)
                         .inner_join(keywords::table)
-                        .filter(lower(keywords::keyword).eq(lower(kw))),
+                        .filter(lower(keywords::keyword).eq(lower(kw.as_str()))),
                 ),
             );
-        } else if let Some(letter) = self.letter {
+        } else if let Some(letter) = &self.letter {
             let pattern = format!(
                 "{}%",
                 letter
@@ -389,7 +443,7 @@ impl<'a> FilterParams<'a> {
                         .filter(crate_owners::owner_id.eq(team_id)),
                 ),
             );
-        } else if self.following {
+        } else if self.following() {
             let user_id = self.authed_user_id(req, conn).await?;
             query = query.filter(
                 crates::id.eq_any(
@@ -398,11 +452,11 @@ impl<'a> FilterParams<'a> {
                         .filter(follows::user_id.eq(user_id)),
                 ),
             );
-        } else if self.ids(req).is_some() {
-            query = query.filter(crates::name.eq_any(self.ids(req).unwrap()));
+        } else if !self.ids.is_empty() {
+            query = query.filter(crates::name.eq_any(self.ids.iter().map(|s| s.as_str())));
         }
 
-        if !self.include_yanked {
+        if !self.include_yanked() {
             query = query.filter(exists(
                 versions::table
                     .filter(versions::crate_id.eq(crates::id))
@@ -413,7 +467,7 @@ impl<'a> FilterParams<'a> {
         Ok(query)
     }
 
-    fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'a> {
+    fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'_> {
         use seek::*;
 
         let crates_aliased = alias!(crates as crates_aliased);
@@ -509,7 +563,7 @@ impl<'a> FilterParams<'a> {
                 // Equivalent of:
                 // `WHERE (exact_match = exact_match' AND name < name') OR exact_match <
                 // exact_match'`
-                let q_string = self.q_string.expect("q_string should not be None");
+                let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let name_exact_match = Crate::with_name(q_string);
                 vec![
                     Box::new(
@@ -530,12 +584,12 @@ impl<'a> FilterParams<'a> {
                 // `WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
                 //      OR (exact_match = exact_match' AND rank < rank')
                 //      OR exact_match < exact_match'`
-                let q_string = self.q_string.expect("q_string should not be None");
+                let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string)
+                    .bind::<Text, _>(q_string.as_str())
                     .sql(")");
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
-                let name_exact_match = Crate::with_name(q_string);
+                let name_exact_match = Crate::with_name(q_string.as_str());
                 vec![
                     Box::new(
                         name_exact_match

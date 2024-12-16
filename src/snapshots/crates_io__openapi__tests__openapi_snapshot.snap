@@ -160,6 +160,170 @@ snapshot_kind: text
       "get": {
         "description": "Called in a variety of scenarios in the front end, including:\n- Alphabetical listing of crates\n- List of crates under a specific owner\n- Listing a user's followed crates",
         "operationId": "list_crates",
+        "parameters": [
+          {
+            "description": "The sort order of the crates.\n\nValid values: `alphabetical`, `relevance`, `downloads`,\n`recent-downloads`, `recent-updates`, `new`.\n\nDefaults to `relevance` if `q` is set, otherwise `alphabetical`.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "A search query string.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "A string that does not contain null bytes (`\\0`).",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "description": "Set to `yes` to include yanked crates.",
+            "example": "yes",
+            "in": "query",
+            "name": "include_yanked",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "If set, only return crates that belong to this category, or one\nof its subcategories.",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "A string that does not contain null bytes (`\\0`).",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "description": "If set, only return crates matching all the given keywords.\n\nThis parameter expects a space-separated list of keywords.",
+            "in": "query",
+            "name": "all_keywords",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "A string that does not contain null bytes (`\\0`).",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "description": "If set, only return crates matching the given keyword\n(ignored if `all_keywords` is set).",
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "A string that does not contain null bytes (`\\0`).",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "description": "If set, only return crates with names that start with the given letter\n(ignored if `all_keywords` or `keyword` are set).",
+            "in": "query",
+            "name": "letter",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "description": "A string that does not contain null bytes (`\\0`).",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "description": "If set, only crates owned by the given crates.io user ID are returned\n(ignored if `all_keywords`, `keyword`, or `letter` are set).",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "If set, only crates owned by the given crates.io team ID are returned\n(ignored if `all_keywords`, `keyword`, `letter`, or `user_id` are set).",
+            "in": "query",
+            "name": "team_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "If set, only crates owned by users the current user follows are returned\n(ignored if `all_keywords`, `keyword`, `letter`, `user_id`,\nor `team_id` are set).\n\nThe exact value of this parameter is ignored, but it must not be empty.",
+            "example": "yes",
+            "in": "query",
+            "name": "following",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "If set, only crates with the specified names are returned (ignored\nif `all_keywords`, `keyword`, `letter`, `user_id`, `team_id`,\nor `following` are set).",
+            "in": "query",
+            "name": "ids[]",
+            "required": false,
+            "schema": {
+              "items": {
+                "description": "A string that does not contain null bytes (`\\0`).",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
