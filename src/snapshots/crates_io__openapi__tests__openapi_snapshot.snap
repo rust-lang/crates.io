@@ -95,6 +95,17 @@ snapshot_kind: text
     "/api/v1/categories/{category}": {
       "get": {
         "operationId": "find_category",
+        "parameters": [
+          {
+            "description": "Name of the category",
+            "in": "path",
+            "name": "category",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -123,6 +134,17 @@ snapshot_kind: text
     "/api/v1/confirm/{email_token}": {
       "put": {
         "operationId": "confirm_user_email",
+        "parameters": [
+          {
+            "description": "Secret verification token sent to the user's email address",
+            "in": "path",
+            "name": "email_token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -833,6 +855,17 @@ snapshot_kind: text
     "/api/v1/keywords/{keyword}": {
       "get": {
         "operationId": "find_keyword",
+        "parameters": [
+          {
+            "description": "The keyword to find",
+            "in": "path",
+            "name": "keyword",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -875,6 +908,17 @@ snapshot_kind: text
     "/api/v1/me/crate_owner_invitations/accept/{token}": {
       "put": {
         "operationId": "accept_crate_owner_invitation_with_token",
+        "parameters": [
+          {
+            "description": "Secret token sent to the user's email address",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -889,6 +933,18 @@ snapshot_kind: text
     "/api/v1/me/crate_owner_invitations/{crate_id}": {
       "put": {
         "operationId": "handle_crate_owner_invitation",
+        "parameters": [
+          {
+            "description": "ID of the crate",
+            "in": "path",
+            "name": "crate_id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -945,6 +1001,18 @@ snapshot_kind: text
     "/api/v1/me/tokens/{id}": {
       "delete": {
         "operationId": "revoke_api_token",
+        "parameters": [
+          {
+            "description": "ID of the API token",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -957,6 +1025,18 @@ snapshot_kind: text
       },
       "get": {
         "operationId": "find_api_token",
+        "parameters": [
+          {
+            "description": "ID of the API token",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -1015,6 +1095,18 @@ snapshot_kind: text
     "/api/v1/teams/{team}": {
       "get": {
         "operationId": "find_team",
+        "parameters": [
+          {
+            "description": "Name of the team",
+            "example": "github:rust-lang:crates-io",
+            "in": "path",
+            "name": "team",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -1044,6 +1136,18 @@ snapshot_kind: text
     "/api/v1/users/{id}/resend": {
       "put": {
         "operationId": "resend_email_verification",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -1059,6 +1163,18 @@ snapshot_kind: text
       "get": {
         "description": "This currently only returns the total number of downloads for crates owned\nby the user.",
         "operationId": "get_user_stats",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -1073,6 +1189,17 @@ snapshot_kind: text
     "/api/v1/users/{user}": {
       "get": {
         "operationId": "find_user",
+        "parameters": [
+          {
+            "description": "Login name of the user",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -1086,6 +1213,18 @@ snapshot_kind: text
       "put": {
         "description": "This endpoint allows users to update their email address and publish notifications settings.\n\nThe `id` parameter needs to match the ID of the currently authenticated user.",
         "operationId": "update_user",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"

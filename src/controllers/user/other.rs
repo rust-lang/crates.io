@@ -16,6 +16,9 @@ use crate::views::EncodablePublicUser;
 #[utoipa::path(
     get,
     path = "/api/v1/users/{user}",
+    params(
+        ("user" = String, Path, description = "Login name of the user"),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -41,6 +44,9 @@ pub async fn find_user(state: AppState, Path(user_name): Path<String>) -> AppRes
 #[utoipa::path(
     get,
     path = "/api/v1/users/{id}/stats",
+    params(
+        ("id" = i32, Path, description = "ID of the user"),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

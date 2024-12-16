@@ -12,6 +12,9 @@ use diesel_async::RunQueryDsl;
 #[utoipa::path(
     get,
     path = "/api/v1/teams/{team}",
+    params(
+        ("team" = String, Path, description = "Name of the team", example = "github:rust-lang:crates-io"),
+    ),
     tag = "teams",
     responses((status = 200, description = "Successful Response")),
 )]

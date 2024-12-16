@@ -181,6 +181,9 @@ pub async fn create_api_token(
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens/{id}",
+    params(
+        ("id" = i32, Path, description = "ID of the API token"),
+    ),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -205,6 +208,9 @@ pub async fn find_api_token(
 #[utoipa::path(
     delete,
     path = "/api/v1/me/tokens/{id}",
+    params(
+        ("id" = i32, Path, description = "ID of the API token"),
+    ),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
