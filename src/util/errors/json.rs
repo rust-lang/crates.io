@@ -52,7 +52,7 @@ pub(crate) struct TooManyRequests {
 
 impl AppError for TooManyRequests {
     fn response(&self) -> Response {
-        const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %H:%M:%S GMT";
+        const HTTP_DATE_FORMAT: &str = "%a, %d %b %Y %T GMT";
         let retry_after = self.retry_after.format(HTTP_DATE_FORMAT);
 
         let detail = format!(

@@ -49,7 +49,7 @@ pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
 
 pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppError {
     let detail = until
-        .map(|until| until.format("%Y-%m-%d at %H:%M:%S UTC"))
+        .map(|until| until.format("%F at %T UTC"))
         .map(|until| format!("This account is locked until {until}. Reason: {reason}"))
         .unwrap_or_else(|| format!("This account is indefinitely locked. Reason: {reason}"));
 

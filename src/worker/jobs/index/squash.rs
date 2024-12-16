@@ -25,7 +25,7 @@ impl BackgroundJob for SquashIndex {
         spawn_blocking(move || {
             let repo = env.lock_index()?;
 
-            let now = Utc::now().format("%Y-%m-%d");
+            let now = Utc::now().format("%F");
             let original_head = repo.head_oid()?.to_string();
             let msg = format!("Collapse index into one commit\n\n\
             Previous HEAD was {original_head}, now on the `snapshot-{now}` branch\n\n\
