@@ -372,7 +372,7 @@ mod tests {
         let mut conn = test_db.async_connect().await;
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
-        let now = NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%FT%T%.f").unwrap();
+        let now = NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%FT%T%.f")?;
 
         let rate = SampleRateLimiter {
             rate: Duration::from_millis(100),

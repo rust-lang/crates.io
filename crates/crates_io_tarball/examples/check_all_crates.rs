@@ -32,7 +32,9 @@ async fn main() -> anyhow::Result<()> {
     info!(path = %path.display(), "Searching for crate files");
 
     let pb = ProgressBar::new(u64::MAX);
-    pb.set_style(ProgressStyle::with_template("{human_pos} crate files found").unwrap());
+    pb.set_style(ProgressStyle::with_template(
+        "{human_pos} crate files found",
+    )?);
 
     let mut paths = WalkDir::new(path)
         .into_iter()
@@ -49,9 +51,9 @@ async fn main() -> anyhow::Result<()> {
     info!(%num_files, "Processing crate files");
 
     let pb = ProgressBar::new(num_files as u64);
-    pb.set_style(
-        ProgressStyle::with_template("{bar:60} ({pos}/{len}, ETA {eta}) {wide_msg}").unwrap(),
-    );
+    pb.set_style(ProgressStyle::with_template(
+        "{bar:60} ({pos}/{len}, ETA {eta}) {wide_msg}",
+    )?);
 
     stream::iter(paths.iter().progress_with(pb.clone()))
         .for_each_concurrent(None, |path| {
