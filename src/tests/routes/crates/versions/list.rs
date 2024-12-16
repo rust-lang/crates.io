@@ -109,10 +109,6 @@ async fn test_sorting() -> anyhow::Result<()> {
 
     // Sort by semver
     let url = "/api/v1/crates/foo_versions/versions?sort=semver";
-    let json: AllVersions = anon.get(url).await.good();
-    for (num, expect) in nums(&json.versions).iter().zip(expects) {
-        assert_eq!(num, expect);
-    }
     for (url, release_tracks) in [
         (url, None),
         (
@@ -120,6 +116,9 @@ async fn test_sorting() -> anyhow::Result<()> {
             release_tracks.as_ref(),
         ),
     ] {
+        let json: AllVersions = anon.get(url).await.good();
+        assert_eq!(nums(&json.versions), expects);
+        assert_eq!(json.meta.release_tracks.as_ref(), release_tracks);
         let (resp, calls) = page_with_seek(&anon, url).await;
         for (json, expect) in resp.iter().zip(expects) {
             assert_eq!(json.versions[0].num, expect);
@@ -131,11 +130,6 @@ async fn test_sorting() -> anyhow::Result<()> {
 
     // Sort by date
     let url = "/api/v1/crates/foo_versions/versions?sort=date";
-    let json: AllVersions = anon.get(url).await.good();
-    let expects = versions.iter().cloned().rev().collect::<Vec<_>>();
-    for (num, expect) in nums(&json.versions).iter().zip(&expects) {
-        assert_eq!(num, *expect);
-    }
     for (url, release_tracks) in [
         (url, None),
         (
@@ -143,6 +137,10 @@ async fn test_sorting() -> anyhow::Result<()> {
             release_tracks.as_ref(),
         ),
     ] {
+        let json: AllVersions = anon.get(url).await.good();
+        let expects = versions.iter().cloned().rev().collect::<Vec<_>>();
+        assert_eq!(nums(&json.versions), expects);
+        assert_eq!(json.meta.release_tracks.as_ref(), release_tracks);
         let (resp, calls) = page_with_seek(&anon, url).await;
         for (json, expect) in resp.iter().zip(&expects) {
             assert_eq!(json.versions[0].num, *expect);
@@ -364,6 +362,7 @@ async fn invalid_seek_parameter() {
 #[derive(Debug, Deserialize)]
 pub struct AllVersions {
     pub versions: Vec<EncodableVersion>,
+    pub meta: ResponseMeta,
 }
 
 #[derive(Debug, Deserialize)]

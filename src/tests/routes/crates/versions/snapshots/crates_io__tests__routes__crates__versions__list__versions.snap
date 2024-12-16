@@ -4,6 +4,10 @@ expression: response.json()
 snapshot_kind: text
 ---
 {
+  "meta": {
+    "next_page": null,
+    "total": 3
+  },
   "versions": [
     {
       "audit_actions": [],
