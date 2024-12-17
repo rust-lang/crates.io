@@ -5,13 +5,13 @@ use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use derive_more::Deref;
 use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
 use diesel::prelude::*;
 use diesel::sql_types::{Bool, Text};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel_full_text_search::*;
 use http::request::Parts;
-use std::ops::Deref;
 use tracing::Instrument;
 use utoipa::IntoParams;
 
@@ -317,17 +317,11 @@ impl ListQueryParams {
     }
 }
 
+#[derive(Deref)]
 struct FilterParams {
+    #[deref]
     search_params: ListQueryParams,
     auth_user_id: Option<i32>,
-}
-
-impl Deref for FilterParams {
-    type Target = ListQueryParams;
-
-    fn deref(&self) -> &Self::Target {
-        &self.search_params
-    }
 }
 
 impl FilterParams {
