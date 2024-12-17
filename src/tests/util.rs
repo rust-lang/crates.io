@@ -136,11 +136,10 @@ pub trait RequestHelper {
     /// Issue a PUT request
     async fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
-        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
         let mut request = self.request_builder(Method::PUT, path);
         *request.body_mut() = body;
-        if is_json {
+        if is_json_body(request.body()) {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
@@ -150,11 +149,10 @@ pub trait RequestHelper {
     /// Issue a PATCH request
     async fn patch<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
-        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
         let mut request = self.request_builder(Method::PATCH, path);
         *request.body_mut() = body;
-        if is_json {
+        if is_json_body(request.body()) {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
@@ -170,11 +168,10 @@ pub trait RequestHelper {
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
     async fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let body = body.into();
-        let is_json = body.starts_with(b"{") && body.ends_with(b"}");
 
         let mut request = self.request_builder(Method::DELETE, path);
         *request.body_mut() = body;
-        if is_json {
+        if is_json_body(request.body()) {
             request.header(header::CONTENT_TYPE, "application/json");
         }
 
@@ -258,6 +255,10 @@ fn req(method: Method, path: &str) -> MockRequest {
         .header(header::USER_AGENT, "conduit-test")
         .body(Bytes::new())
         .unwrap()
+}
+
+fn is_json_body(body: &Bytes) -> bool {
+    body.starts_with(b"{") && body.ends_with(b"}")
 }
 
 /// A type that can generate unauthenticated requests
