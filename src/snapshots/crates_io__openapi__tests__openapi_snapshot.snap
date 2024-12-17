@@ -1044,6 +1044,20 @@ snapshot_kind: text
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Only return download counts before this date.",
+            "example": "2024-06-28",
+            "in": "query",
+            "name": "before_date",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         ],
         "responses": {
