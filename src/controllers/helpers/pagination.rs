@@ -55,6 +55,30 @@ impl PaginationOptions {
     }
 }
 
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct PaginationQueryParams {
+    /// The page number to request.
+    ///
+    /// This parameter is mutually exclusive with `seek` and not supported for
+    /// all requests.
+    #[param(value_type = Option<u32>, minimum = 1)]
+    page: Option<NonZeroU32>,
+
+    /// The number of items to request per page.
+    #[param(value_type = Option<u32>, minimum = 1)]
+    per_page: Option<NonZeroU32>,
+
+    /// The seek key to request.
+    ///
+    /// This parameter is mutually exclusive with `page` and not supported for
+    /// all requests.
+    ///
+    /// The seek key can usually be found in the `meta.next_page` field of
+    /// paginated responses.
+    seek: Option<String>,
+}
+
 pub(crate) struct PaginationOptionsBuilder {
     limit_page_numbers: bool,
     enable_pages: bool,
@@ -80,14 +104,7 @@ impl PaginationOptionsBuilder {
     pub(crate) fn gather(self, parts: &Parts) -> AppResult<PaginationOptions> {
         use axum::extract::Query;
 
-        #[derive(Debug, Deserialize)]
-        struct QueryParams {
-            page: Option<NonZeroU32>,
-            per_page: Option<NonZeroU32>,
-            seek: Option<String>,
-        }
-
-        let Query(params) = Query::<QueryParams>::try_from_uri(&parts.uri)
+        let Query(params) = Query::<PaginationQueryParams>::try_from_uri(&parts.uri)
             .map_err(|err| bad_request(err.body_text()))?;
 
         if params.seek.is_some() && params.page.is_some() {

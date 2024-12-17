@@ -22,7 +22,7 @@ use crate::schema::*;
 use crate::util::errors::{bad_request, AppResult};
 use crate::views::EncodableCrate;
 
-use crate::controllers::helpers::pagination::{Page, PaginationOptions};
+use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
 use crate::sql::{array_agg, canon_crate_name, lower};
 use crate::util::string_excl_null::StringExclNull;
@@ -37,7 +37,7 @@ use crate::util::RequestUtils;
 #[utoipa::path(
     get,
     path = "/api/v1/crates",
-    params(ListQueryParams),
+    params(ListQueryParams, PaginationQueryParams),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
