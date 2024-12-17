@@ -203,7 +203,7 @@ pub async fn list_crates(
         )
     };
 
-    let crates = data.iter().map(|(c, ..)| c).collect::<Vec<_>>();
+    let crates = data.iter().map(|r| &r.krate).collect::<Vec<_>>();
 
     let span = info_span!("db.query", message = "SELECT ... FROM versions");
     let versions: Vec<Version> = Version::belonging_to(&crates)
@@ -219,19 +219,17 @@ pub async fn list_crates(
 
     let crates = versions
         .zip(data)
-        .map(
-            |(max_version, (krate, perfect_match, total, recent, _, default_version, yanked))| {
-                EncodableCrate::from_minimal(
-                    krate,
-                    default_version.as_deref(),
-                    yanked,
-                    Some(&max_version),
-                    perfect_match,
-                    total,
-                    Some(recent.unwrap_or(0)),
-                )
-            },
-        )
+        .map(|(max_version, record)| {
+            EncodableCrate::from_minimal(
+                record.krate,
+                record.default_version.as_deref(),
+                record.yanked,
+                Some(&max_version),
+                record.exact_match,
+                record.downloads,
+                Some(record.recent_downloads.unwrap_or(0)),
+            )
+        })
         .collect::<Vec<_>>();
 
     Ok(json!({
@@ -601,7 +599,6 @@ impl FilterParams {
 mod seek {
     use super::Record;
     use crate::controllers::helpers::pagination::seek;
-    use crate::models::Crate;
     use chrono::naive::serde::ts_microseconds;
 
     seek!(
@@ -641,19 +638,13 @@ mod seek {
 
     impl Seek {
         pub(crate) fn to_payload(&self, record: &Record) -> SeekPayload {
-            let (
-                Crate {
-                    id,
-                    updated_at,
-                    created_at,
-                    ..
-                },
-                exact_match,
-                downloads,
-                recent_downloads,
-                rank,
-                ..,
-            ) = *record;
+            let id = record.krate.id;
+            let updated_at = record.krate.updated_at;
+            let created_at = record.krate.created_at;
+            let exact_match = record.exact_match;
+            let downloads = record.downloads;
+            let recent_downloads = record.recent_downloads;
+            let rank = record.rank;
 
             match *self {
                 Seek::Name => SeekPayload::Name(Name { id }),
@@ -675,15 +666,16 @@ mod seek {
     }
 }
 
-type Record = (
-    Crate,
-    bool,
-    i64,
-    Option<i64>,
-    f32,
-    Option<String>,
-    Option<bool>,
-);
+#[derive(Debug, Clone, Queryable)]
+struct Record {
+    krate: Crate,
+    exact_match: bool,
+    downloads: i64,
+    recent_downloads: Option<i64>,
+    rank: f32,
+    default_version: Option<String>,
+    yanked: Option<bool>,
+}
 
 type QuerySource = LeftJoinQuerySource<
     LeftJoinQuerySource<
