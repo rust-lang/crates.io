@@ -8,7 +8,6 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{future, TryStreamExt};
 use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
-use std::cmp::Reverse;
 use std::str::FromStr;
 
 use crate::app::AppState;
@@ -73,10 +72,7 @@ pub async fn list_versions(state: AppState, path: CratePath, req: Parts) -> AppR
         .map(|((v, pb), aas)| EncodableVersion::from(v, &path.name, pb, aas))
         .collect::<Vec<_>>();
 
-    Ok(match pagination {
-        Some(_) => json!({ "versions": versions, "meta": versions_and_publishers.meta }),
-        None => json!({ "versions": versions }),
-    })
+    Ok(json!({ "versions": versions, "meta": versions_and_publishers.meta }))
 }
 
 /// Seek-based pagination of versions by date
@@ -99,7 +95,6 @@ async fn list_by_date(
         .select(<(Version, Option<User>)>::as_select())
         .into_boxed();
 
-    let mut release_tracks = None;
     if let Some(options) = options {
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
@@ -114,9 +109,20 @@ async fn list_by_date(
             )
         }
         query = query.limit(options.per_page);
+    }
 
-        if include.release_tracks {
-            let mut sorted_versions = IndexSet::new();
+    query = query.order((versions::created_at.desc(), versions::id.desc()));
+
+    let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
+    let mut next_page = None;
+    if let Some(options) = options {
+        next_page = next_seek_params(&data, options, |last| Seek::Date.to_payload(last))?
+            .map(|p| req.query_with_params(p));
+    };
+
+    let release_tracks = if include.release_tracks {
+        let mut sorted_versions = IndexSet::new();
+        if options.is_some() {
             versions::table
                 .filter(versions::crate_id.eq(crate_id))
                 .filter(not(versions::yanked))
@@ -130,21 +136,23 @@ async fn list_by_date(
                     future::ready(Ok(()))
                 })
                 .await?;
-
-            sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
-            release_tracks = Some(ReleaseTracks::from_sorted_semver_iter(
-                sorted_versions.iter(),
-            ));
+        } else {
+            sorted_versions = data
+                .iter()
+                .flat_map(|(version, _)| {
+                    (!version.yanked)
+                        .then_some(version)
+                        .and_then(|v| semver::Version::parse(&v.num).ok())
+                })
+                .collect();
         }
-    }
 
-    query = query.order((versions::created_at.desc(), versions::id.desc()));
-
-    let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
-    let mut next_page = None;
-    if let Some(options) = options {
-        next_page = next_seek_params(&data, options, |last| Seek::Date.to_payload(last))?
-            .map(|p| req.query_with_params(p));
+        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+        Some(ReleaseTracks::from_sorted_semver_iter(
+            sorted_versions.iter(),
+        ))
+    } else {
+        None
     };
 
     // Since the total count is retrieved through an additional query, to maintain consistency
@@ -269,15 +277,29 @@ async fn list_by_semver(
             (vec![], 0, release_tracks)
         }
     } else {
-        let mut data: Vec<(Version, Option<User>)> = versions::table
+        let mut data = IndexMap::new();
+        versions::table
             .filter(versions::crate_id.eq(crate_id))
             .left_outer_join(users::table)
             .select(<(Version, Option<User>)>::as_select())
-            .load(conn)
+            .load_stream::<(Version, Option<User>)>(conn)
+            .await?
+            .try_for_each(|row| {
+                if let Ok(semver) = semver::Version::parse(&row.0.num) {
+                    data.insert(semver, row);
+                };
+                future::ready(Ok(()))
+            })
             .await?;
-        data.sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
+        data.sort_unstable_by(|a, _, b, _| b.cmp(a));
         let total = data.len();
-        (data, total, None)
+        let release_tracks = include.release_tracks.then(|| {
+            ReleaseTracks::from_sorted_semver_iter(
+                data.iter()
+                    .flat_map(|(semver, (version, _))| (!version.yanked).then_some(semver)),
+            )
+        });
+        (data.into_values().collect(), total, release_tracks)
     };
 
     let mut next_page = None;
