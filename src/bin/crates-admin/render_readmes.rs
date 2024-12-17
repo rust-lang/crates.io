@@ -58,7 +58,7 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let start_time = Utc::now();
 
     let older_than = if let Some(ref time) = opts.older_than {
-        NaiveDateTime::parse_from_str(time, "%Y-%m-%d %H:%M:%S")
+        NaiveDateTime::parse_from_str(time, "%F %T")
             .context("Could not parse --older-than argument as a time")?
     } else {
         start_time.naive_utc()

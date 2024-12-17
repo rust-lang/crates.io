@@ -33,8 +33,7 @@ impl BackgroundJob for DumpDb {
 
             let export_dir = directory.path();
             info!(path = ?export_dir, "Creating tarball…");
-            let tarball_prefix =
-                PathBuf::from(directory.timestamp.format("%Y-%m-%d-%H%M%S").to_string());
+            let tarball_prefix = PathBuf::from(directory.timestamp.format("%F-%H%M%S").to_string());
             create_archives(export_dir, &tarball_prefix)
         })
         .await??;

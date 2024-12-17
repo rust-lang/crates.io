@@ -152,7 +152,7 @@ fn split(path: impl AsRef<Path>) -> anyhow::Result<Vec<NaiveDate>> {
             Entry::Occupied(ref mut occupied) => occupied.get_mut(),
             Entry::Vacant(vacant) => {
                 let date = std::str::from_utf8(date)?;
-                let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")?;
+                let date = NaiveDate::parse_from_str(date, "%F")?;
 
                 let path = parent_path.join(format!("{date}.csv"));
 
@@ -412,7 +412,7 @@ mod tests {
         date: &str,
         downloads: i32,
     ) {
-        let date = NaiveDate::parse_from_str(date, "%Y-%m-%d").unwrap();
+        let date = NaiveDate::parse_from_str(date, "%F").unwrap();
 
         diesel::insert_into(version_downloads::table)
             .values((
