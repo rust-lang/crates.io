@@ -64,7 +64,7 @@ fn main() -> anyhow::Result<()> {
     let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
 
     if var("HEROKU")?.is_some() {
-        ssh::write_known_hosts_file().unwrap();
+        ssh::write_known_hosts_file()?;
     }
 
     let repository_config = RepositoryConfig::from_environment()?;
@@ -86,7 +86,7 @@ fn main() -> anyhow::Result<()> {
 
     let manager_config = make_manager_config(config.db.enforce_tls);
     let manager = AsyncDieselConnectionManager::new_with_config(db_url, manager_config);
-    let deadpool = Pool::builder(manager).max_size(10).build().unwrap();
+    let deadpool = Pool::builder(manager).max_size(10).build()?;
 
     let environment = Environment::builder()
         .config(Arc::new(config))

@@ -53,7 +53,7 @@ fn main() -> anyhow::Result<()> {
         builder.max_blocking_threads(threads);
     }
 
-    let rt = builder.build().unwrap();
+    let rt = builder.build()?;
 
     let make_service = axum_router.into_make_service_with_connect_info::<SocketAddr>();
 
