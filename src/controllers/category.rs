@@ -3,23 +3,39 @@ use crate::app::AppState;
 use crate::models::Category;
 use crate::schema::categories;
 use crate::util::errors::AppResult;
-use crate::util::RequestUtils;
 use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
-use axum::extract::Path;
+use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct ListQueryParams {
+    /// The sort order of the categories.
+    ///
+    /// Valid values: `alpha`, and `crates`.
+    ///
+    /// Defaults to `alpha`.
+    sort: Option<String>,
+}
+
 /// List all categories.
 #[utoipa::path(
     get,
     path = "/api/v1/categories",
+    params(ListQueryParams, PaginationQueryParams),
     tag = "categories",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list_categories(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_categories(
+    app: AppState,
+    params: ListQueryParams,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
     // to paginate this.
@@ -27,8 +43,7 @@ pub async fn list_categories(app: AppState, req: Parts) -> AppResult<ErasedJson>
 
     let mut conn = app.db_read().await?;
 
-    let query = req.query();
-    let sort = query.get("sort").map_or("alpha", String::as_str);
+    let sort = params.sort.as_ref().map_or("alpha", String::as_str);
 
     let offset = options.offset().unwrap_or_default();
 

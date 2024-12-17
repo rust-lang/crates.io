@@ -81,6 +81,60 @@ snapshot_kind: text
     "/api/v1/categories": {
       "get": {
         "operationId": "list_categories",
+        "parameters": [
+          {
+            "description": "The sort order of the categories.\n\nValid values: `alpha`, and `crates`.\n\nDefaults to `alpha`.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
