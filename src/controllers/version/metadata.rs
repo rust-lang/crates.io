@@ -7,7 +7,6 @@
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use crates_io_database::schema::{crates, dependencies};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -19,12 +18,12 @@ use crate::app::AppState;
 use crate::auth::{AuthCheck, Authentication};
 use crate::models::token::EndpointScope;
 use crate::models::{
-    Crate, Dependency, NewVersionOwnerAction, Rights, Version, VersionAction, VersionOwnerAction,
+    Crate, NewVersionOwnerAction, Rights, Version, VersionAction, VersionOwnerAction,
 };
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::util::errors::{bad_request, custom, AppResult};
-use crate::views::{EncodableDependency, EncodableVersion};
+use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 
 use super::CrateVersionPath;
@@ -37,40 +36,6 @@ pub struct VersionUpdate {
 #[derive(Deserialize)]
 pub struct VersionUpdateRequest {
     version: VersionUpdate,
-}
-
-/// Get crate version dependencies.
-///
-/// This information can also be obtained directly from the index.
-///
-/// In addition to returning cached data from the index, this returns
-/// fields for `id`, `version_id`, and `downloads` (which appears to always
-/// be 0)
-#[utoipa::path(
-    get,
-    path = "/api/v1/crates/{name}/{version}/dependencies",
-    params(CrateVersionPath),
-    tag = "versions",
-    responses((status = 200, description = "Successful Response")),
-)]
-pub async fn get_version_dependencies(
-    state: AppState,
-    path: CrateVersionPath,
-) -> AppResult<ErasedJson> {
-    let mut conn = state.db_read().await?;
-    let version = path.load_version(&mut conn).await?;
-
-    let deps = Dependency::belonging_to(&version)
-        .inner_join(crates::table)
-        .select((Dependency::as_select(), crates::name))
-        .order((dependencies::optional, crates::name))
-        .load::<(Dependency, String)>(&mut conn)
-        .await?
-        .into_iter()
-        .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
-        .collect::<Vec<_>>();
-
-    Ok(json!({ "dependencies": deps }))
 }
 
 /// Get crate version authors.
