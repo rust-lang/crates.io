@@ -81,7 +81,7 @@ pub async fn list_crates(
 
     let mut seek: Option<Seek> = None;
     let mut query = filter_params
-        .make_query()?
+        .make_query()
         .inner_join(crate_downloads::table)
         .left_join(recent_crate_downloads::table)
         .left_join(default_versions::table)
@@ -179,7 +179,7 @@ pub async fn list_crates(
         //
         // If this becomes a problem in the future the crates count could be denormalized, at least
         // for the filterless happy path.
-        let count_query = filter_params.make_query()?.count();
+        let count_query = filter_params.make_query().count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
         let data = query.load::<Record>(&mut conn).instrument(span).await?;
@@ -191,7 +191,7 @@ pub async fn list_crates(
             data.into_iter().collect::<Vec<_>>(),
         )
     } else {
-        let count_query = filter_params.make_query()?.count();
+        let count_query = filter_params.make_query().count();
         let query = query.pages_pagination_with_count_query(pagination, count_query);
         let span = info_span!("db.query", message = "SELECT ..., COUNT(*) FROM crates");
         let data = query.load::<Record>(&mut conn).instrument(span).await?;
@@ -321,6 +321,7 @@ impl ListQueryParams {
 struct FilterParams {
     #[deref]
     search_params: ListQueryParams,
+    letter: Option<char>,
     auth_user_id: Option<i32>,
 }
 
@@ -330,6 +331,12 @@ impl FilterParams {
         parts: &Parts,
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Self> {
+        const LETTER_ERROR: &str = "letter value must contain 1 character";
+        let letter = match &search_params.letter {
+            Some(s) => Some(s.chars().next().ok_or_else(|| bad_request(LETTER_ERROR))?),
+            None => None,
+        };
+
         let auth_user_id = match search_params.following {
             Some(_) => Some(AuthCheck::default().check(parts, conn).await?.user_id()),
             None => None,
@@ -337,13 +344,14 @@ impl FilterParams {
 
         Ok(Self {
             search_params,
+            letter,
             auth_user_id,
         })
     }
 }
 
 impl FilterParams {
-    fn make_query(&self) -> AppResult<crates::BoxedQuery<'_, diesel::pg::Pg>> {
+    fn make_query(&self) -> crates::BoxedQuery<'_, diesel::pg::Pg> {
         let mut query = crates::table.into_boxed();
 
         if let Some(q_string) = &self.q_string {
@@ -396,16 +404,8 @@ impl FilterParams {
                         .filter(lower(keywords::keyword).eq(lower(kw.as_str()))),
                 ),
             );
-        } else if let Some(letter) = &self.letter {
-            let pattern = format!(
-                "{}%",
-                letter
-                    .chars()
-                    .next()
-                    .ok_or_else(|| bad_request("letter value must contain 1 character"))?
-                    .to_lowercase()
-                    .collect::<String>()
-            );
+        } else if let Some(letter) = self.letter {
+            let pattern = format!("{}%", letter.to_lowercase());
             query = query.filter(canon_crate_name(crates::name).like(pattern));
         } else if let Some(user_id) = self.user_id {
             query = query.filter(
@@ -443,7 +443,7 @@ impl FilterParams {
             ));
         }
 
-        Ok(query)
+        query
     }
 
     fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'_> {
