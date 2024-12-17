@@ -12,15 +12,29 @@ use crate::models::{
 };
 use crate::schema::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
-use crate::util::RequestUtils;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
+use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::request::Parts;
 use std::cmp::Reverse;
 use std::str::FromStr;
+
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct FindQueryParams {
+    /// Additional data to include in the response.
+    ///
+    /// Valid values: `versions`, `keywords`, `categories`, `badges`,
+    /// `downloads`, or `full`.
+    ///
+    /// Defaults to `full` for backwards compatibility.
+    ///
+    /// This parameter expects a comma-separated list of values.
+    include: Option<String>,
+}
 
 /// Get crate metadata (for the `new` crate).
 ///
@@ -32,26 +46,29 @@ use std::str::FromStr;
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn find_new_crate(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn find_new_crate(app: AppState, params: FindQueryParams) -> AppResult<ErasedJson> {
     let name = "new".to_string();
-    find_crate(app, CratePath { name }, req).await
+    find_crate(app, CratePath { name }, params).await
 }
 
 /// Get crate metadata.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}",
-    params(CratePath),
+    params(CratePath, FindQueryParams),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn find_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<ErasedJson> {
+pub async fn find_crate(
+    app: AppState,
+    path: CratePath,
+    params: FindQueryParams,
+) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
 
-    let include = req
-        .query()
-        .get("include")
-        .map(|mode| ShowIncludeMode::from_str(mode))
+    let include = params
+        .include
+        .map(|mode| ShowIncludeMode::from_str(&mode))
         .transpose()?
         .unwrap_or_default();
 

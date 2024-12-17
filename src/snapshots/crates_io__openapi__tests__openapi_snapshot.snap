@@ -560,6 +560,18 @@ snapshot_kind: text
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Additional data to include in the response.\n\nValid values: `versions`, `keywords`, `categories`, `badges`,\n`downloads`, or `full`.\n\nDefaults to `full` for backwards compatibility.\n\nThis parameter expects a comma-separated list of values.",
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         ],
         "responses": {
