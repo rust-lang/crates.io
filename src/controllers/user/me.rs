@@ -16,7 +16,6 @@ use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::util::errors::{bad_request, AppResult};
-use crate::util::BytesRequest;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Get the currently authenticated user.
@@ -140,6 +139,12 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
     ok_true()
 }
 
+#[derive(Deserialize)]
+pub struct CrateEmailNotifications {
+    id: i32,
+    email_notifications: bool,
+}
+
 /// Update email notification settings for the authenticated user.
 ///
 /// This endpoint was implemented for an experimental feature that was never
@@ -151,19 +156,14 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
     responses((status = 200, description = "Successful Response")),
 )]
 #[deprecated]
-pub async fn update_email_notifications(app: AppState, req: BytesRequest) -> AppResult<Response> {
+pub async fn update_email_notifications(
+    app: AppState,
+    parts: Parts,
+    Json(updates): Json<Vec<CrateEmailNotifications>>,
+) -> AppResult<Response> {
     use diesel::pg::upsert::excluded;
 
-    let (parts, body) = req.0.into_parts();
-
-    #[derive(Deserialize)]
-    struct CrateEmailNotifications {
-        id: i32,
-        email_notifications: bool,
-    }
-
-    let updates: HashMap<i32, bool> = serde_json::from_slice::<Vec<CrateEmailNotifications>>(&body)
-        .map_err(|_| bad_request("invalid json request"))?
+    let updates: HashMap<i32, bool> = updates
         .iter()
         .map(|c| (c.id, c.email_notifications))
         .collect();

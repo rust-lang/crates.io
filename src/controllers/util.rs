@@ -1,7 +1,6 @@
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
 use crate::util::errors::{forbidden, AppResult};
-use crate::util::BytesRequest;
 use http::request::Parts;
 use http::{header, Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version};
 
@@ -71,23 +70,5 @@ impl<B> RequestPartsExt for Request<B> {
     }
     fn extensions(&self) -> &Extensions {
         self.extensions()
-    }
-}
-
-impl RequestPartsExt for BytesRequest {
-    fn method(&self) -> &Method {
-        self.0.method()
-    }
-    fn uri(&self) -> &Uri {
-        self.0.uri()
-    }
-    fn version(&self) -> Version {
-        self.0.version()
-    }
-    fn headers(&self) -> &HeaderMap<HeaderValue> {
-        self.0.headers()
-    }
-    fn extensions(&self) -> &Extensions {
-        self.0.extensions()
     }
 }
