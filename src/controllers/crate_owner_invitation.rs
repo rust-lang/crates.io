@@ -4,7 +4,7 @@ use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::util::errors::{bad_request, forbidden, internal, AppResult};
+use crate::util::errors::{bad_request, forbidden, internal, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
@@ -101,14 +101,7 @@ pub async fn list_crate_owner_invitations(
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
-    let filter = if let Some(crate_name) = params.crate_name {
-        ListFilter::CrateName(crate_name.clone())
-    } else if let Some(id) = params.invitee_id {
-        ListFilter::InviteeId(id)
-    } else {
-        return Err(bad_request("missing or invalid filter"));
-    };
-
+    let filter = params.try_into()?;
     let list = prepare_list(&app, &req, auth, filter, &mut conn).await?;
     Ok(Json(list))
 }
@@ -116,6 +109,22 @@ pub async fn list_crate_owner_invitations(
 enum ListFilter {
     CrateName(String),
     InviteeId(i32),
+}
+
+impl TryFrom<ListQueryParams> for ListFilter {
+    type Error = BoxedAppError;
+
+    fn try_from(params: ListQueryParams) -> Result<Self, Self::Error> {
+        let filter = if let Some(crate_name) = params.crate_name {
+            ListFilter::CrateName(crate_name.clone())
+        } else if let Some(id) = params.invitee_id {
+            ListFilter::InviteeId(id)
+        } else {
+            return Err(bad_request("missing or invalid filter"));
+        };
+
+        Ok(filter)
+    }
 }
 
 async fn prepare_list(
