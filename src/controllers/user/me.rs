@@ -1,6 +1,4 @@
 use crate::auth::AuthCheck;
-use axum::extract::Path;
-use axum::response::Response;
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -10,11 +8,11 @@ use http::request::Parts;
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
-use crate::controllers::helpers::{ok_true, Paginate};
+use crate::controllers::helpers::Paginate;
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
-use crate::util::errors::{bad_request, AppResult};
+use crate::util::errors::AppResult;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 
 /// Get the currently authenticated user.
@@ -109,31 +107,4 @@ pub async fn get_authenticated_user_updates(app: AppState, req: Parts) -> AppRes
         "versions": versions,
         "meta": { "more": more },
     }))
-}
-
-/// Marks the email belonging to the given token as verified.
-#[utoipa::path(
-    put,
-    path = "/api/v1/confirm/{email_token}",
-    params(
-        ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
-    ),
-    tag = "users",
-    responses((status = 200, description = "Successful Response")),
-)]
-pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
-    use diesel::update;
-
-    let mut conn = state.db_write().await?;
-
-    let updated_rows = update(emails::table.filter(emails::token.eq(&token)))
-        .set(emails::verified.eq(true))
-        .execute(&mut conn)
-        .await?;
-
-    if updated_rows == 0 {
-        return Err(bad_request("Email belonging to token not found."));
-    }
-
-    ok_true()
 }

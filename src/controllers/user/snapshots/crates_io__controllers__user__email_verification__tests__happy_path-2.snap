@@ -1,5 +1,5 @@
 ---
-source: src/controllers/user/resend.rs
+source: src/controllers/user/email_verification.rs
 expression: app.emails_snapshot().await
 snapshot_kind: text
 ---

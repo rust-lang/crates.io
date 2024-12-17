@@ -14,6 +14,31 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
 
+/// Marks the email belonging to the given token as verified.
+#[utoipa::path(
+    put,
+    path = "/api/v1/confirm/{email_token}",
+    params(
+        ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
+    ),
+    tag = "users",
+    responses((status = 200, description = "Successful Response")),
+)]
+pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
+    let mut conn = state.db_write().await?;
+
+    let updated_rows = diesel::update(emails::table.filter(emails::token.eq(&token)))
+        .set(emails::verified.eq(true))
+        .execute(&mut conn)
+        .await?;
+
+    if updated_rows == 0 {
+        return Err(bad_request("Email belonging to token not found."));
+    }
+
+    ok_true()
+}
+
 /// Regenerate and send an email verification token.
 #[utoipa::path(
     put,
