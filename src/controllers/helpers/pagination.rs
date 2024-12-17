@@ -7,6 +7,7 @@ use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;
 use std::num::NonZeroU32;
 
+use axum::extract::FromRequestParts;
 use base64::{engine::general_purpose, Engine};
 use diesel::pg::Pg;
 use diesel::prelude::*;
@@ -55,7 +56,8 @@ impl PaginationOptions {
     }
 }
 
-#[derive(Debug, Deserialize, utoipa::IntoParams)]
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(axum::extract::Query))]
 #[into_params(parameter_in = Query)]
 pub struct PaginationQueryParams {
     /// The page number to request.
@@ -63,11 +65,11 @@ pub struct PaginationQueryParams {
     /// This parameter is mutually exclusive with `seek` and not supported for
     /// all requests.
     #[param(value_type = Option<u32>, minimum = 1)]
-    page: Option<NonZeroU32>,
+    pub page: Option<NonZeroU32>,
 
     /// The number of items to request per page.
     #[param(value_type = Option<u32>, minimum = 1)]
-    per_page: Option<NonZeroU32>,
+    pub per_page: Option<NonZeroU32>,
 
     /// The seek key to request.
     ///
@@ -76,7 +78,7 @@ pub struct PaginationQueryParams {
     ///
     /// The seek key can usually be found in the `meta.next_page` field of
     /// paginated responses.
-    seek: Option<String>,
+    pub seek: Option<String>,
 }
 
 pub(crate) struct PaginationOptionsBuilder {
