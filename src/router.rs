@@ -84,9 +84,9 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(user::email_verification::resend_email_verification))
         .routes(routes!(site_metadata::get_site_metadata))
         // Session management
-        .routes(routes!(user::session::begin_session))
-        .routes(routes!(user::session::authorize_session))
-        .routes(routes!(user::session::end_session))
+        .routes(routes!(session::begin_session))
+        .routes(routes!(session::authorize_session))
+        .routes(routes!(session::end_session))
         .split_for_parts();
 
     let mut router = router

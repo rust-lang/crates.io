@@ -8,6 +8,7 @@ pub mod github;
 pub mod keyword;
 pub mod krate;
 pub mod metrics;
+pub mod session;
 pub mod site_metadata;
 pub mod summary;
 pub mod team;

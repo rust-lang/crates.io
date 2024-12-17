@@ -128,7 +128,7 @@ pub async fn authorize_session(
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
 
-    super::me::get_authenticated_user(app, req).await
+    super::user::me::get_authenticated_user(app, req).await
 }
 
 async fn save_user_to_database(
