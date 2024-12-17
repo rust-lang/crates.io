@@ -22,6 +22,22 @@ export default class Crate extends Model {
   @attr max_version;
   @attr max_stable_version;
   @attr newest_version;
+  /**
+   * @typedef {Object} VersionsMeta
+   * @property {number} total
+   * @property {string | null} next_page
+   * @property {Object.<string, ReleaseTrackDetails>} release_tracks
+   *
+   * @typedef {Object} ReleaseTrackDetails
+   * @property {string} highest
+   **/
+  /**
+   * This isn't an attribute in the crate response.
+   * It's actually the `meta` attribute that belongs to `versions`
+   * and needs to be assigned to `crate` manually.
+   * @type {VersionsMeta | null}
+   **/
+  @attr versions_meta;
 
   @attr description;
   @attr homepage;
