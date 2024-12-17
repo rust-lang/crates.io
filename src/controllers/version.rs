@@ -1,3 +1,4 @@
+pub mod authors;
 pub mod dependencies;
 pub mod downloads;
 pub mod metadata;

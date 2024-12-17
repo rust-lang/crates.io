@@ -40,7 +40,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(version::readme::get_version_readme))
         .routes(routes!(version::dependencies::get_version_dependencies))
         .routes(routes!(version::downloads::get_version_downloads))
-        .routes(routes!(version::metadata::get_version_authors))
+        .routes(routes!(version::authors::get_version_authors))
         .routes(routes!(krate::downloads::get_crate_downloads))
         .routes(routes!(krate::versions::list_versions))
         .routes(routes!(
