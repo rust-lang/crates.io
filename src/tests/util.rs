@@ -258,7 +258,8 @@ fn req(method: Method, path: &str) -> MockRequest {
 }
 
 fn is_json_body(body: &Bytes) -> bool {
-    body.starts_with(b"{") && body.ends_with(b"}")
+    (body.starts_with(b"{") && body.ends_with(b"}"))
+        || (body.starts_with(b"[") && body.ends_with(b"]"))
 }
 
 /// A type that can generate unauthenticated requests
