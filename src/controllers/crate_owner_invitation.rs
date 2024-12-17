@@ -5,7 +5,7 @@ use crate::controllers::helpers::pagination::{Page, PaginationOptions};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::errors::{bad_request, forbidden, internal, AppResult};
-use crate::util::{BytesRequest, RequestUtils};
+use crate::util::RequestUtils;
 use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
     InvitationResponse,
@@ -279,7 +279,7 @@ struct ResponseMeta {
 }
 
 #[derive(Deserialize)]
-struct OwnerInvitation {
+pub struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
@@ -295,13 +295,9 @@ struct OwnerInvitation {
 )]
 pub async fn handle_crate_owner_invitation(
     state: AppState,
-    req: BytesRequest,
+    parts: Parts,
+    Json(crate_invite): Json<OwnerInvitation>,
 ) -> AppResult<ErasedJson> {
-    let (parts, body) = req.0.into_parts();
-
-    let crate_invite: OwnerInvitation =
-        serde_json::from_slice(&body).map_err(|_| bad_request("invalid json request"))?;
-
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
