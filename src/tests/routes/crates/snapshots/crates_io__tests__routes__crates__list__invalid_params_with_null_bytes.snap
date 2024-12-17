@@ -6,7 +6,7 @@ snapshot_kind: text
 {
   "errors": [
     {
-      "detail": "parameter q cannot contain a null byte"
+      "detail": "Failed to deserialize query string: string contains null byte"
     }
   ]
 }

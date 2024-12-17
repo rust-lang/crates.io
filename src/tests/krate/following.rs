@@ -76,6 +76,8 @@ async fn test_following() {
     // Follow the crate and check that we are now following it.
     follow(CRATE_NAME, &user).await;
     assert_is_following(CRATE_NAME, true, &user).await;
+    assert_that!(user.search("").await.crates, len(eq(1)));
+    assert_that!(user.search("following").await.crates, len(eq(1)));
     assert_that!(user.search("following=1").await.crates, len(eq(1)));
 
     // Follow the crate again and check that we are still following it
@@ -86,6 +88,9 @@ async fn test_following() {
     // Unfollow the crate and check that we are not following it anymore.
     unfollow(CRATE_NAME, &user).await;
     assert_is_following(CRATE_NAME, false, &user).await;
+    assert_that!(user.search("").await.crates, len(eq(1)));
+    // see https://github.com/jplatte/serde_html_form/issues/13
+    assert_that!(user.search("following").await.crates, len(eq(1)));
     assert_that!(user.search("following=1").await.crates, empty());
 
     // Unfollow the crate again and check that this call is also idempotent.

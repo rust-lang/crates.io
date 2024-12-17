@@ -49,7 +49,7 @@ aws-ip-ranges = "=0.954.0"
 aws-sdk-cloudfront = "=1.55.0"
 aws-sdk-sqs = "=1.50.0"
 axum = { version = "=0.7.9", features = ["macros", "matched-path"] }
-axum-extra = { version = "=0.9.6", features = ["cookie-signed", "erased-json", "typed-header"] }
+axum-extra = { version = "=0.9.6", features = ["cookie-signed", "erased-json", "query", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.7", features = ["serde"] }
 bon = "=3.3.0"
@@ -71,7 +71,7 @@ chrono = { version = "=0.4.39", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.23", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
-derive_more = { version = "=1.0.0", features = ["deref", "deref_mut"] }
+derive_more = { version = "=1.0.0", features = ["deref", "deref_mut", "display"] }
 dialoguer = "=0.11.0"
 diesel = { version = "=2.2.6", features = ["postgres", "serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.5.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
