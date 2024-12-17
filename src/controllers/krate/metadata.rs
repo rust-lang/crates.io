@@ -6,16 +6,14 @@
 
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
-use crate::controllers::version::CrateVersionPath;
 use crate::models::{
     Category, Crate, CrateCategory, CrateKeyword, Keyword, RecentCrateDownloads, User, Version,
     VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
-use crate::util::{redirect, RequestUtils};
+use crate::util::RequestUtils;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
-use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
@@ -239,22 +237,5 @@ impl FromStr for ShowIncludeMode {
             }
         }
         Ok(mode)
-    }
-}
-
-/// Get the readme of a crate version.
-#[utoipa::path(
-    get,
-    path = "/api/v1/crates/{name}/{version}/readme",
-    params(CrateVersionPath),
-    tag = "versions",
-    responses((status = 200, description = "Successful Response")),
-)]
-pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
-    let redirect_url = app.storage.readme_location(&path.name, &path.version);
-    if req.wants_json() {
-        json!({ "url": redirect_url }).into_response()
-    } else {
-        redirect(redirect_url)
     }
 }
