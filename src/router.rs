@@ -35,12 +35,12 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         ))
         .routes(routes!(
             version::metadata::find_version,
-            version::metadata::update_version
+            version::update::update_version
         ))
-        .routes(routes!(krate::metadata::get_version_readme))
-        .routes(routes!(version::metadata::get_version_dependencies))
+        .routes(routes!(version::readme::get_version_readme))
+        .routes(routes!(version::dependencies::get_version_dependencies))
         .routes(routes!(version::downloads::get_version_downloads))
-        .routes(routes!(version::metadata::get_version_authors))
+        .routes(routes!(version::authors::get_version_authors))
         .routes(routes!(krate::downloads::get_crate_downloads))
         .routes(routes!(krate::versions::list_versions))
         .routes(routes!(
@@ -50,7 +50,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(krate::follow::get_following_crate))
         .routes(routes!(krate::owners::get_team_owners))
         .routes(routes!(krate::owners::get_user_owners))
-        .routes(routes!(krate::metadata::list_reverse_dependencies))
+        .routes(routes!(krate::rev_deps::list_reverse_dependencies))
         .routes(routes!(keyword::list_keywords))
         .routes(routes!(keyword::find_keyword))
         .routes(routes!(category::list_categories))
@@ -76,15 +76,17 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(
             crate_owner_invitation::accept_crate_owner_invitation_with_token
         ))
-        .routes(routes!(user::me::update_email_notifications))
+        .routes(routes!(
+            user::email_notifications::update_email_notifications
+        ))
         .routes(routes!(summary::get_summary))
-        .routes(routes!(user::me::confirm_user_email))
-        .routes(routes!(user::resend::resend_email_verification))
+        .routes(routes!(user::email_verification::confirm_user_email))
+        .routes(routes!(user::email_verification::resend_email_verification))
         .routes(routes!(site_metadata::get_site_metadata))
         // Session management
-        .routes(routes!(user::session::begin_session))
-        .routes(routes!(user::session::authorize_session))
-        .routes(routes!(user::session::end_session))
+        .routes(routes!(session::begin_session))
+        .routes(routes!(session::authorize_session))
+        .routes(routes!(session::end_session))
         .split_for_parts();
 
     let mut router = router

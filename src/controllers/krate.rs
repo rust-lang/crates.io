@@ -12,6 +12,7 @@ pub mod follow;
 pub mod metadata;
 pub mod owners;
 pub mod publish;
+pub mod rev_deps;
 pub mod search;
 pub mod versions;
 

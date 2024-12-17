@@ -1,6 +1,6 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
-use super::metadata::{authenticate, perform_version_yank_update};
+use super::update::{authenticate, perform_version_yank_update};
 use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::controllers::helpers::ok_true;

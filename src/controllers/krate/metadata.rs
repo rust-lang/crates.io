@@ -5,20 +5,15 @@
 //! `Cargo.toml` file.
 
 use crate::app::AppState;
-use crate::controllers::helpers::pagination::PaginationOptions;
 use crate::controllers::krate::CratePath;
-use crate::controllers::version::CrateVersionPath;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, CrateName, Keyword, RecentCrateDownloads, User,
-    Version, VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, Keyword, RecentCrateDownloads, User, Version,
+    VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
-use crate::util::{redirect, RequestUtils};
-use crate::views::{
-    EncodableCategory, EncodableCrate, EncodableDependency, EncodableKeyword, EncodableVersion,
-};
-use axum::response::{IntoResponse, Response};
+use crate::util::RequestUtils;
+use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
@@ -243,81 +238,4 @@ impl FromStr for ShowIncludeMode {
         }
         Ok(mode)
     }
-}
-
-/// Get the readme of a crate version.
-#[utoipa::path(
-    get,
-    path = "/api/v1/crates/{name}/{version}/readme",
-    params(CrateVersionPath),
-    tag = "versions",
-    responses((status = 200, description = "Successful Response")),
-)]
-pub async fn get_version_readme(app: AppState, path: CrateVersionPath, req: Parts) -> Response {
-    let redirect_url = app.storage.readme_location(&path.name, &path.version);
-    if req.wants_json() {
-        json!({ "url": redirect_url }).into_response()
-    } else {
-        redirect(redirect_url)
-    }
-}
-
-/// List reverse dependencies of a crate.
-#[utoipa::path(
-    get,
-    path = "/api/v1/crates/{name}/reverse_dependencies",
-    params(CratePath),
-    tag = "crates",
-    responses((status = 200, description = "Successful Response")),
-)]
-pub async fn list_reverse_dependencies(
-    app: AppState,
-    path: CratePath,
-    req: Parts,
-) -> AppResult<ErasedJson> {
-    let mut conn = app.db_read().await?;
-
-    let pagination_options = PaginationOptions::builder().gather(&req)?;
-
-    let krate = path.load_crate(&mut conn).await?;
-
-    let (rev_deps, total) = krate
-        .reverse_dependencies(&mut conn, pagination_options)
-        .await?;
-
-    let rev_deps: Vec<_> = rev_deps
-        .into_iter()
-        .map(|dep| EncodableDependency::from_reverse_dep(dep, &krate.name))
-        .collect();
-
-    let version_ids: Vec<i32> = rev_deps.iter().map(|dep| dep.version_id).collect();
-
-    let versions_and_publishers: Vec<(Version, CrateName, Option<User>)> = versions::table
-        .filter(versions::id.eq_any(version_ids))
-        .inner_join(crates::table)
-        .left_outer_join(users::table)
-        .select(<(Version, CrateName, Option<User>)>::as_select())
-        .load(&mut conn)
-        .await?;
-
-    let versions = versions_and_publishers
-        .iter()
-        .map(|(v, ..)| v)
-        .collect::<Vec<_>>();
-
-    let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
-
-    let versions = versions_and_publishers
-        .into_iter()
-        .zip(actions)
-        .map(|((version, krate_name, published_by), actions)| {
-            EncodableVersion::from(version, &krate_name.name, published_by, actions)
-        })
-        .collect::<Vec<_>>();
-
-    Ok(json!({
-        "dependencies": rev_deps,
-        "versions": versions,
-        "meta": { "total": total },
-    }))
 }
