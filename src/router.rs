@@ -35,7 +35,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         ))
         .routes(routes!(
             version::metadata::find_version,
-            version::metadata::update_version
+            version::update::update_version
         ))
         .routes(routes!(version::readme::get_version_readme))
         .routes(routes!(version::dependencies::get_version_dependencies))

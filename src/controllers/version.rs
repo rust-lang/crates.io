@@ -3,6 +3,7 @@ pub mod dependencies;
 pub mod downloads;
 pub mod metadata;
 pub mod readme;
+pub mod update;
 pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
