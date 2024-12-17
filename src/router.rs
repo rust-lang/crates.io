@@ -50,7 +50,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(krate::follow::get_following_crate))
         .routes(routes!(krate::owners::get_team_owners))
         .routes(routes!(krate::owners::get_user_owners))
-        .routes(routes!(krate::metadata::list_reverse_dependencies))
+        .routes(routes!(krate::rev_deps::list_reverse_dependencies))
         .routes(routes!(keyword::list_keywords))
         .routes(routes!(keyword::find_keyword))
         .routes(routes!(category::list_categories))
