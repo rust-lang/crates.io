@@ -27,18 +27,11 @@ pub fn redirect(url: String) -> Response {
 }
 
 pub trait RequestUtils {
-    fn query(&self) -> IndexMap<String, String>;
     fn wants_json(&self) -> bool;
     fn query_with_params(&self, params: IndexMap<String, String>) -> String;
 }
 
 impl<T: RequestPartsExt> RequestUtils for T {
-    fn query(&self) -> IndexMap<String, String> {
-        url::form_urlencoded::parse(self.uri().query().unwrap_or("").as_bytes())
-            .into_owned()
-            .collect()
-    }
-
     fn wants_json(&self) -> bool {
         self.headers()
             .get_all(header::ACCEPT)
