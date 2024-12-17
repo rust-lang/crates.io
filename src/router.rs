@@ -76,7 +76,9 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(
             crate_owner_invitation::accept_crate_owner_invitation_with_token
         ))
-        .routes(routes!(user::me::update_email_notifications))
+        .routes(routes!(
+            user::email_notifications::update_email_notifications
+        ))
         .routes(routes!(summary::get_summary))
         .routes(routes!(user::me::confirm_user_email))
         .routes(routes!(user::resend::resend_email_verification))

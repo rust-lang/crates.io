@@ -1,3 +1,4 @@
+pub mod email_notifications;
 pub mod me;
 pub mod other;
 pub mod resend;
