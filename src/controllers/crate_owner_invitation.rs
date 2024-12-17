@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::auth::Authentication;
-use crate::controllers::helpers::pagination::{Page, PaginationOptions};
+use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::errors::{bad_request, forbidden, internal, AppResult};
@@ -10,7 +10,7 @@ use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
     InvitationResponse,
 };
-use axum::extract::Path;
+use axum::extract::{FromRequestParts, Path, Query};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -70,23 +70,40 @@ pub async fn list_crate_owner_invitations_for_user(
     }))
 }
 
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct ListQueryParams {
+    /// Filter crate owner invitations by crate name.
+    ///
+    /// Only crate owners can query pending invitations for their crate.
+    crate_name: Option<String>,
+
+    /// The ID of the user who was invited to be a crate owner.
+    ///
+    /// This parameter needs to match the authenticated user's ID.
+    invitee_id: Option<i32>,
+}
+
 /// List all crate owner invitations for a crate or user.
 #[utoipa::path(
     get,
     path = "/api/private/crate_owner_invitations",
+    params(ListQueryParams, PaginationQueryParams),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn list_crate_owner_invitations(
     app: AppState,
+    params: ListQueryParams,
     req: Parts,
 ) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
-    let filter = if let Some(crate_name) = req.query().get("crate_name") {
+    let filter = if let Some(crate_name) = params.crate_name {
         ListFilter::CrateName(crate_name.clone())
-    } else if let Some(id) = req.query().get("invitee_id").and_then(|i| i.parse().ok()) {
+    } else if let Some(id) = params.invitee_id {
         ListFilter::InviteeId(id)
     } else {
         return Err(bad_request("missing or invalid filter"));
