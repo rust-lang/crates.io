@@ -23,6 +23,73 @@ snapshot_kind: text
     "/api/private/crate_owner_invitations": {
       "get": {
         "operationId": "list_crate_owner_invitations",
+        "parameters": [
+          {
+            "description": "Filter crate owner invitations by crate name.\n\nOnly crate owners can query pending invitations for their crate.",
+            "in": "query",
+            "name": "crate_name",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The ID of the user who was invited to be a crate owner.\n\nThis parameter needs to match the authenticated user's ID.",
+            "in": "query",
+            "name": "invitee_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -81,6 +148,60 @@ snapshot_kind: text
     "/api/v1/categories": {
       "get": {
         "operationId": "list_categories",
+        "parameters": [
+          {
+            "description": "The sort order of the categories.\n\nValid values: `alpha`, and `crates`.\n\nDefaults to `alpha`.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
@@ -439,6 +560,18 @@ snapshot_kind: text
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Additional data to include in the response.\n\nValid values: `versions`, `keywords`, `categories`, `badges`,\n`downloads`, or `full`.\n\nDefaults to `full` for backwards compatibility.\n\nThis parameter expects a comma-separated list of values.",
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         ],
         "responses": {
@@ -709,6 +842,70 @@ snapshot_kind: text
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Additional data to include in the response.\n\nValid values: `release_tracks`.\n\nDefaults to no additional data.\n\nThis parameter expects a comma-separated list of values.",
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The sort order of the versions.\n\nValid values: `date`, and `semver`.\n\nDefaults to `semver`.",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         ],
         "responses": {
@@ -922,6 +1119,20 @@ snapshot_kind: text
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Only return download counts before this date.",
+            "example": "2024-06-28",
+            "in": "query",
+            "name": "before_date",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         ],

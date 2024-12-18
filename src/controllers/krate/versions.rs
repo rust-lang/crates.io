@@ -1,5 +1,6 @@
 //! Endpoint for versions of a crate
 
+use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::not;
@@ -11,7 +12,9 @@ use indexmap::{IndexMap, IndexSet};
 use std::str::FromStr;
 
 use crate::app::AppState;
-use crate::controllers::helpers::pagination::{encode_seek, Page, PaginationOptions};
+use crate::controllers::helpers::pagination::{
+    encode_seek, Page, PaginationOptions, PaginationQueryParams,
+};
 use crate::controllers::krate::CratePath;
 use crate::models::{User, Version, VersionOwnerAction};
 use crate::schema::{users, versions};
@@ -19,40 +22,65 @@ use crate::util::errors::{bad_request, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct ListQueryParams {
+    /// Additional data to include in the response.
+    ///
+    /// Valid values: `release_tracks`.
+    ///
+    /// Defaults to no additional data.
+    ///
+    /// This parameter expects a comma-separated list of values.
+    include: Option<String>,
+
+    /// The sort order of the versions.
+    ///
+    /// Valid values: `date`, and `semver`.
+    ///
+    /// Defaults to `semver`.
+    sort: Option<String>,
+}
+
 /// List all versions of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
-    params(CratePath),
+    params(CratePath, ListQueryParams, PaginationQueryParams),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn list_versions(state: AppState, path: CratePath, req: Parts) -> AppResult<ErasedJson> {
+pub async fn list_versions(
+    state: AppState,
+    path: CratePath,
+    params: ListQueryParams,
+    pagination: PaginationQueryParams,
+    req: Parts,
+) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
 
     let crate_id = path.load_crate_id(&mut conn).await?;
 
-    let mut pagination = None;
-    let params = req.query();
     // To keep backward compatibility, we paginate only if per_page is provided
-    if params.get("per_page").is_some() {
-        pagination = Some(
+    let pagination = match pagination.per_page {
+        Some(_) => Some(
             PaginationOptions::builder()
                 .enable_seek(true)
                 .enable_pages(false)
                 .gather(&req)?,
-        );
-    }
+        ),
+        None => None,
+    };
 
-    let include = req
-        .query()
-        .get("include")
-        .map(|mode| ShowIncludeMode::from_str(mode))
+    let include = params
+        .include
+        .map(|mode| ShowIncludeMode::from_str(&mode))
         .transpose()?
         .unwrap_or_default();
 
     // Sort by semver by default
-    let versions_and_publishers = match params.get("sort").map(|s| s.to_lowercase()).as_deref() {
+    let versions_and_publishers = match params.sort.map(|s| s.to_lowercase()).as_deref() {
         Some("date") => {
             list_by_date(crate_id, pagination.as_ref(), include, &req, &mut conn).await?
         }

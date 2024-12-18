@@ -9,6 +9,7 @@ use crate::schema::*;
 use crate::util::errors::AppResult;
 use crate::util::{redirect, RequestUtils};
 use crate::views::EncodableVersionDownload;
+use axum::extract::{FromRequestParts, Query};
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -41,29 +42,37 @@ pub async fn download_version(
     }
 }
 
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct DownloadsQueryParams {
+    /// Only return download counts before this date.
+    #[param(example = "2024-06-28")]
+    before_date: Option<NaiveDate>,
+}
+
 /// Get the download counts for a crate version.
 ///
 /// This includes the per-day downloads for the last 90 days.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}/downloads",
-    params(CrateVersionPath),
+    params(CrateVersionPath, DownloadsQueryParams),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn get_version_downloads(
     app: AppState,
     path: CrateVersionPath,
-    req: Parts,
+    params: DownloadsQueryParams,
 ) -> AppResult<ErasedJson> {
     let mut conn = app.db_read().await?;
     let version = path.load_version(&mut conn).await?;
 
-    let cutoff_end_date = req
-        .query()
-        .get("before_date")
-        .and_then(|d| NaiveDate::parse_from_str(d, "%F").ok())
+    let cutoff_end_date = params
+        .before_date
         .unwrap_or_else(|| Utc::now().date_naive());
+
     let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
     let downloads = VersionDownload::belonging_to(&version)
