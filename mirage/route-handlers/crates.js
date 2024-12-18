@@ -58,12 +58,15 @@ export function register(server) {
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
-
+    let serialized = this.serialize(crate);
     return {
-      ...this.serialize(crate),
-      ...this.serialize(crate.categories),
-      ...this.serialize(crate.keywords),
-      ...this.serialize(crate.versions.sort((a, b) => Number(b.id) - Number(a.id))),
+      categories: null,
+      keywords: null,
+      versions: null,
+      ...serialized,
+      ...(serialized.crate.categories && this.serialize(crate.categories)),
+      ...(serialized.crate.keywords && this.serialize(crate.keywords)),
+      ...(serialized.crate.versions && this.serialize(crate.versions.sort((a, b) => Number(b.id) - Number(a.id)))),
     };
   });
 
