@@ -18,6 +18,7 @@ pub struct AuthCheck {
     allow_token: bool,
     endpoint_scope: Option<EndpointScope>,
     crate_name: Option<String>,
+    only_admin: bool,
 }
 
 impl AuthCheck {
@@ -29,6 +30,7 @@ impl AuthCheck {
             allow_token: true,
             endpoint_scope: None,
             crate_name: None,
+            only_admin: false,
         }
     }
 
@@ -38,6 +40,7 @@ impl AuthCheck {
             allow_token: false,
             endpoint_scope: None,
             crate_name: None,
+            only_admin: false,
         }
     }
 
@@ -46,6 +49,7 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: Some(endpoint_scope),
             crate_name: self.crate_name.clone(),
+            only_admin: false,
         }
     }
 
@@ -54,7 +58,13 @@ impl AuthCheck {
             allow_token: self.allow_token,
             endpoint_scope: self.endpoint_scope,
             crate_name: Some(crate_name.to_string()),
+            only_admin: false,
         }
+    }
+
+    pub fn require_admin(mut self) -> Self {
+        self.only_admin = true;
+        self
     }
 
     #[instrument(name = "auth.check", skip_all)]
@@ -64,6 +74,15 @@ impl AuthCheck {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Authentication> {
         let auth = authenticate(parts, conn).await?;
+
+        if self.only_admin && !auth.user().is_admin {
+            let error_message = "User must be an admin to access this API";
+            parts.request_log().add("cause", error_message);
+
+            return Err(forbidden(
+                "this action can only be performed by a site admin",
+            ));
+        }
 
         if let Some(token) = auth.api_token() {
             if !self.allow_token {
