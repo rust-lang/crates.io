@@ -1,7 +1,7 @@
 import { Response } from 'miragejs';
 
 import { getSession } from '../utils/session';
-import { compareIsoDates, compareStrings, notFound, pageParams } from './-utils';
+import { compareIsoDates, compareStrings, notFound, pageParams, releaseTracks } from './-utils';
 
 export function list(schema, request) {
   const { start, end } = pageParams(request);
@@ -140,12 +140,23 @@ export function register(server) {
     return { ok: true };
   });
 
-  server.get('/api/v1/crates/:name/versions', (schema, request) => {
+  server.get('/api/v1/crates/:name/versions', function (schema, request) {
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    return crate.versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    let versions = crate.versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    let total = versions.length;
+    let include = request.queryParams?.include ?? '';
+    let release_tracks = include.split(',').includes('release_tracks') && releaseTracks(crate.versions);
+    let resp = {
+      ...this.serialize(versions),
+      meta: { total, next_page: null },
+    };
+    if (release_tracks && Object.keys(release_tracks).length !== 0) {
+      resp.meta.release_tracks = release_tracks;
+    }
+    return resp;
   });
 
   server.get('/api/v1/crates/:name/:version_num/authors', (schema, request) => {
