@@ -193,4 +193,34 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
       },
     ]);
   });
+
+  test('without versions included', async function (assert) {
+    this.server.create('category', { category: 'no-std' });
+    this.server.create('category', { category: 'cli' });
+    this.server.create('keyword', { keyword: 'no-std' });
+    this.server.create('keyword', { keyword: 'cli' });
+    let crate = this.server.create('crate', { name: 'rand', categoryIds: ['no-std'], keywordIds: ['no-std'] });
+    this.server.create('version', { crate, num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.1.0' });
+    this.server.create('version', { crate, num: '1.2.0' });
+
+    let req = await fetch('/api/v1/crates/rand');
+    let expected = await req.json();
+
+    let response = await fetch('/api/v1/crates/rand?include=keywords,categories');
+    assert.strictEqual(response.status, 200);
+
+    let responsePayload = await response.json();
+    assert.deepEqual(responsePayload, {
+      ...expected,
+      crate: {
+        ...expected.crate,
+        max_version: '0.0.0',
+        newest_version: '0.0.0',
+        max_stable_version: null,
+        versions: null,
+      },
+      versions: null,
+    });
+  });
 });
