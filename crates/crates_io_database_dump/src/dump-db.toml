@@ -48,6 +48,9 @@ description = "public"
 crates_cnt = "public"
 created_at = "public"
 path = "public"
+[categories.sequence]
+column = "id"
+name = "categories_id_seq"
 
 [crate_downloads.columns]
 crate_id = "public"
@@ -87,6 +90,9 @@ textsearchable_index_col = "private" # This Postgres specific and can be derived
 repository = "public"
 max_upload_size = "public"
 max_features = "public"
+[crates.sequence]
+column = "id"
+name = "packages_id_seq"
 
 [crates_categories]
 dependencies = ["categories", "crates"]
@@ -130,6 +136,9 @@ features = "public"
 target = "public"
 kind = "public"
 explicit_name = "public"
+[dependencies.sequence]
+column = "id"
+name = "dependencies_id_seq"
 
 [__diesel_schema_migrations.columns]
 version = "private"
@@ -152,6 +161,9 @@ id = "public"
 keyword = "public"
 crates_cnt = "public"
 created_at = "public"
+[keywords.sequence]
+column = "id"
+name = "keywords_id_seq"
 
 [metadata.columns]
 total_downloads = "public"
@@ -186,6 +198,9 @@ github_id = "public"
 name = "public"
 avatar = "public"
 org_id = "public"
+[teams.sequence]
+column = "id"
+name = "teams_id_seq"
 
 [users]
 filter = """
@@ -207,6 +222,9 @@ is_admin = "private"
 publish_notifications = "private"
 [users.column_defaults]
 gh_access_token = "''"
+[users.sequence]
+column = "id"
+name = "users_id_seq"
 
 [version_downloads]
 dependencies = ["versions"]
@@ -253,6 +271,9 @@ documentation = "public"
 repository = "public"
 categories = "public"
 keywords = "public"
+[versions.sequence]
+column = "id"
+name = "versions_id_seq"
 
 [versions_published_by.columns]
 version_id = "private"
