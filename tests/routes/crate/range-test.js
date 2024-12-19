@@ -119,11 +119,11 @@ module('Route | crate.range', function (hooks) {
 
     this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
 
-    // Load `crate` and then explicitly unload the side-loaded `versions`.
+    // Load `crate` and ensure all `versions` are not loaded.
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', 'foo');
-    let versions = crateRecord.hasMany('versions').value();
-    versions.forEach(record => record.unloadRecord());
+    let versionsRef = crateRecord.hasMany('versions');
+    assert.deepEqual(versionsRef.ids(), []);
 
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
