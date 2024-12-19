@@ -1,5 +1,5 @@
 use axum::{extract::Path, Json};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use crates_io_database::schema::{emails, users};
 use diesel::{pg::Pg, prelude::*};
 use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
@@ -89,6 +89,54 @@ pub async fn lock(
                         users::account_lock_reason.eq(reason),
                         users::account_lock_until.eq(until),
                     ))
+                    .returning(users::id)
+                    .get_result::<i32>(conn)
+                    .await?;
+
+                get_user(|query| query.filter(users::id.eq(id)), conn).await
+            }
+            .scope_boxed()
+        })
+        .await?;
+
+    Ok(Json(user))
+}
+
+/// Unlock the given user.
+///
+/// Only site admins can use this endpoint.
+#[utoipa::path(
+    delete,
+    path = "/api/v1/users/{user}/lock",
+    params(
+        ("user" = String, Path, description = "Login name of the user"),
+    ),
+    tags = ["admin", "users"],
+    responses((status = 200, description = "Successful Response")),
+)]
+pub async fn unlock(
+    state: AppState,
+    Path(user_name): Path<String>,
+    req: Parts,
+) -> AppResult<Json<EncodableAdminUser>> {
+    let mut conn = state.db_read_prefer_primary().await?;
+    AuthCheck::only_cookie()
+        .require_admin()
+        .check(&req, &mut conn)
+        .await?;
+
+    // Again, let's do this in a transaction, even though we _technically_ don't
+    // need to.
+    let user = conn
+        .transaction(|conn| {
+            // Although this is called via the `DELETE` method, this is
+            // implemented as a soft deletion by setting the lock until time to
+            // now, thereby allowing us to have some sense of history of whether
+            // an account has been locked in the past.
+            async move {
+                let id = diesel::update(users::table)
+                    .filter(lower(users::gh_login).eq(lower(user_name)))
+                    .set(users::account_lock_until.eq(Utc::now().naive_utc()))
                     .returning(users::id)
                     .get_result::<i32>(conn)
                     .await?;

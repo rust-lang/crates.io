@@ -1701,6 +1701,31 @@ expression: response.json()
       }
     },
     "/api/v1/users/{user}/lock": {
+      "delete": {
+        "description": "Only site admins can use this endpoint.",
+        "operationId": "unlock",
+        "parameters": [
+          {
+            "description": "Login name of the user",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Unlock the given user.",
+        "tags": [
+          "admin",
+          "users"
+        ]
+      },
       "put": {
         "description": "Only site admins can use this endpoint.",
         "operationId": "lock",

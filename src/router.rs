@@ -62,7 +62,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(user::me::get_authenticated_user))
         .routes(routes!(user::me::get_authenticated_user_updates))
         .routes(routes!(user::admin::get))
-        .routes(routes!(user::admin::lock))
+        .routes(routes!(user::admin::lock, user::admin::unlock))
         .routes(routes!(token::list_api_tokens, token::create_api_token))
         .routes(routes!(token::find_api_token, token::revoke_api_token))
         .routes(routes!(token::revoke_current_api_token))

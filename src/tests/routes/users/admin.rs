@@ -1,4 +1,5 @@
-use chrono::DateTime;
+use chrono::{DateTime, Utc};
+use crates_io_database::schema::users;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde_json::json;
@@ -155,6 +156,76 @@ mod lock {
     }
 }
 
+mod unlock {
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn unlock() {
+        let (app, anon, user) = TestApp::init().with_user().await;
+        let admin = app.db_new_admin_user("admin").await;
+
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+
+        // First up, let's lock the user.
+        let mut conn = app.db_conn().await;
+        diesel::update(user.as_model())
+            .set((
+                users::account_lock_reason.eq("naughty naughty"),
+                users::account_lock_until.eq(DateTime::parse_from_rfc3339("2050-01-01T01:02:03Z")
+                    .unwrap()
+                    .naive_utc()),
+            ))
+            .execute(&mut conn)
+            .await
+            .unwrap();
+
+        // Anonymous users should be forbidden.
+        let response = anon.delete::<()>("/api/v1/users/foo/lock").await;
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!("anonymous-found", response.text());
+
+        let response = anon.delete::<()>("/api/v1/users/bar/lock").await;
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!("anonymous-not-found", response.text());
+
+        // Regular users should also be forbidden, even if they're locking
+        // themself.
+        let response = user.delete::<()>("/api/v1/users/foo/lock").await;
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!("non-admin-found", response.text());
+
+        let response = user.delete::<()>("/api/v1/users/bar/lock").await;
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!("non-admin-not-found", response.text());
+
+        // Admin users are allowed, but still can't manifest users who don't
+        // exist.
+        let response = admin.delete::<()>("/api/v1/users/bar/lock").await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_snapshot!("admin-not-found", response.text());
+
+        // Admin users are allowed, and should be able to unlock the user.
+        let response = admin.delete::<()>("/api/v1/users/foo/lock").await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_json_snapshot!("admin-found", response.json(), {
+            ".lock.until" => "[datetime]",
+        });
+
+        // Get the user again and validate that they are now unlocked.
+        let mut conn = app.db_conn().await;
+        let unlocked_user = User::find(&mut conn, user.as_model().id).await.unwrap();
+        assert_user_is_unlocked(&unlocked_user);
+
+        // Unlocking an unlocked user should succeed silently.
+        let response = admin.delete::<()>("/api/v1/users/foo/lock").await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_json_snapshot!("admin-reunlock", response.json(), {
+            ".lock.until" => "[datetime]",
+        });
+    }
+}
+
 #[track_caller]
 fn assert_user_is_locked(user: &User, reason: &str, until: &str) {
     assert_eq!(user.account_lock_reason.as_deref(), Some(reason));
@@ -168,4 +239,15 @@ fn assert_user_is_locked(user: &User, reason: &str, until: &str) {
 fn assert_user_is_locked_indefinitely(user: &User, reason: &str) {
     assert_eq!(user.account_lock_reason.as_deref(), Some(reason));
     assert_none!(user.account_lock_until);
+}
+
+#[track_caller]
+fn assert_user_is_unlocked(user: &User) {
+    if user.account_lock_reason.is_some() {
+        if let Some(until) = user.account_lock_until {
+            assert_lt!(until, Utc::now().naive_utc());
+        } else {
+            panic!("user account is locked indefinitely");
+        }
+    }
 }
