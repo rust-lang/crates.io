@@ -11,7 +11,7 @@ use crate::util::errors::AppResult;
 
 use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
-use crate::sql::lower;
+use crates_io_diesel_helpers::lower;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]

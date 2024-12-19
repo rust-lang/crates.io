@@ -58,6 +58,7 @@ colored = "=2.2.0"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
 crates_io_database = { path = "crates/crates_io_database" }
 crates_io_database_dump = { path = "crates/crates_io_database_dump" }
+crates_io_diesel_helpers = { path = "crates/crates_io_diesel_helpers" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_github = { path = "crates/crates_io_github" }
 crates_io_index = { path = "crates/crates_io_index" }

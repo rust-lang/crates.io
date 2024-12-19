@@ -5,7 +5,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use crate::models::Crate;
 use crate::schema::*;
-use crate::sql::lower;
+use crates_io_diesel_helpers::lower;
 
 #[derive(Clone, Identifiable, Queryable, Debug, Selectable)]
 pub struct Keyword {

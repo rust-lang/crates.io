@@ -24,9 +24,9 @@ use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
-use crate::sql::{array_agg, canon_crate_name, lower};
 use crate::util::string_excl_null::StringExclNull;
 use crate::util::RequestUtils;
+use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
 
 /// Returns a list of crates.
 ///

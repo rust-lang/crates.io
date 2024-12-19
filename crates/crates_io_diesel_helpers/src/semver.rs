@@ -7,8 +7,8 @@ use diesel::Queryable;
 /// ## Example
 ///
 /// ```rust
-/// # use crates_io::sql::SemverVersion;
-/// # use crates_io::schema::versions;
+/// # use crates_io_diesel_helpers::SemverVersion;
+/// # use crates_io_database::schema::versions;
 /// # use diesel::prelude::*;
 /// #
 /// #[derive(Clone, Debug, Queryable, Selectable)]

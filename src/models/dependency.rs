@@ -2,7 +2,7 @@ use diesel::sql_types::{BigInt, Text};
 
 use crate::models::{Crate, Version};
 use crate::schema::*;
-use crate::sql::pg_enum;
+use crates_io_diesel_helpers::pg_enum;
 use crates_io_index::DependencyKind as IndexDependencyKind;
 
 #[derive(Identifiable, Associations, Debug, Queryable, QueryableByName, Selectable)]

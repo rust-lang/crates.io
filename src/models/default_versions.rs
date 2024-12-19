@@ -1,5 +1,5 @@
 use crate::schema::{default_versions, versions};
-use crate::sql::SemverVersion;
+use crates_io_diesel_helpers::SemverVersion;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 

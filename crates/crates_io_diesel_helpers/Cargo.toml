@@ -1,0 +1,16 @@
+[package]
+name = "crates_io_diesel_helpers"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+diesel = { version = "=2.2.6", features = ["postgres"] }
+semver = "=1.0.24"
+serde = { version = "=1.0.217", features = ["derive"] }
+
+[dev-dependencies]
+crates_io_database = { path = "../crates_io_database" }
