@@ -1,9 +1,6 @@
 use crate::models::{ApiToken, Email, NewUser, User};
-use crate::tests::{
-    new_user,
-    util::{MockCookieUser, RequestHelper},
-    TestApp,
-};
+use crate::tests::util::{MockCookieUser, RequestHelper};
+use crate::tests::{new_user, TestApp};
 use crate::util::token::HashedToken;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

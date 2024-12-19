@@ -1,7 +1,5 @@
-use typomania::{
-    checks::{Check, Squat},
-    Corpus, Package,
-};
+use typomania::checks::{Check, Squat};
+use typomania::{Corpus, Package};
 
 /// A typomania check that checks if commonly used prefixes or suffixes have been added to or
 /// removed from a package name.

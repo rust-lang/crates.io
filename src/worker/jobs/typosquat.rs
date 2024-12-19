@@ -5,11 +5,9 @@ use diesel_async::AsyncPgConnection;
 use typomania::Package;
 
 use crate::email::Email;
-use crate::{
-    typosquat::{Cache, Crate},
-    worker::Environment,
-    Emails,
-};
+use crate::typosquat::{Cache, Crate};
+use crate::worker::Environment;
+use crate::Emails;
 
 /// A job to check the name of a newly published crate against the most popular crates to see if
 /// the new crate might be typosquatting an existing, popular crate.

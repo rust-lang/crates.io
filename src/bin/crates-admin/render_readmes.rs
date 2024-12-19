@@ -1,9 +1,7 @@
 use anyhow::{anyhow, Context};
-use crates_io::{
-    db,
-    models::Version,
-    schema::{crates, readme_renderings, versions},
-};
+use crates_io::db;
+use crates_io::models::Version;
+use crates_io::schema::{crates, readme_renderings, versions};
 use futures_util::{StreamExt, TryStreamExt};
 use std::path::{Path, PathBuf};
 use std::{future, sync::Arc};

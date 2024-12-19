@@ -1,11 +1,9 @@
+use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User};
+use crate::schema::crate_owners;
 use crate::tests::util::{RequestHelper, TestApp};
-use crate::{
-    models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User},
-    schema::crate_owners,
-    views::{
-        EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
-        EncodableOwner, EncodableVersion, GoodCrate,
-    },
+use crate::views::{
+    EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
+    EncodableOwner, EncodableVersion, GoodCrate,
 };
 
 use crate::tests::util::github::next_gh_id;

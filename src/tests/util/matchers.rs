@@ -1,7 +1,5 @@
-use googletest::{
-    description::Description,
-    matcher::{Matcher, MatcherBase, MatcherResult},
-};
+use googletest::description::Description;
+use googletest::matcher::{Matcher, MatcherBase, MatcherResult};
 use http::StatusCode;
 
 pub fn is_success() -> SuccessMatcher {

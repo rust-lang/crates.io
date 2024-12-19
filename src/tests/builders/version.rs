@@ -1,8 +1,6 @@
-use crate::{
-    models::{Crate, NewVersion, Version},
-    schema::dependencies,
-    util::errors::AppResult,
-};
+use crate::models::{Crate, NewVersion, Version};
+use crate::schema::dependencies;
+use crate::util::errors::AppResult;
 use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;

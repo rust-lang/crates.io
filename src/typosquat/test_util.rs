@@ -1,11 +1,9 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
+use crate::models::{Crate, NewTeam, NewUser, Team, User};
+use crate::schema::users;
 use crate::tests::util::github::next_gh_id;
-use crate::{
-    models::{Crate, NewTeam, NewUser, Team, User},
-    schema::users,
-};
 
 pub mod faker {
     use super::*;

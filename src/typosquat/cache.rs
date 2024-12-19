@@ -1,10 +1,8 @@
 use diesel_async::AsyncPgConnection;
 use std::sync::Arc;
 use thiserror::Error;
-use typomania::{
-    checks::{Bitflips, Omitted, SwappedWords, Typos},
-    Harness,
-};
+use typomania::checks::{Bitflips, Omitted, SwappedWords, Typos};
+use typomania::Harness;
 
 use super::{checks::Affixes, config, database::TopCrates};
 

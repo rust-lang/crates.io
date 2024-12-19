@@ -1,9 +1,7 @@
 use crate::dialoguer;
-use crates_io::{
-    db,
-    models::{Crate, OwnerKind, User},
-    schema::{crate_owners, crates, users},
-};
+use crates_io::db;
+use crates_io::models::{Crate, OwnerKind, User};
+use crates_io::schema::{crate_owners, crates, users};
 
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
