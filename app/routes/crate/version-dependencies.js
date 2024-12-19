@@ -9,7 +9,7 @@ export default class VersionRoute extends Route {
 
     let versions;
     try {
-      versions = await crate.get('versions');
+      versions = await crate.loadVersionsTask.perform();
     } catch (error) {
       let title = `${crate.name}: Failed to load version data`;
       return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
