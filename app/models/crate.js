@@ -146,9 +146,18 @@ export default class Crate extends Model {
     return [...(teams ?? []), ...(users ?? [])];
   });
 
-  loadVersionsTask = task(async ({ reload = false } = {}) => {
+  /**
+   * @param {Object} [Options]
+   * @param {bool} [Options.reload]
+   * @param {bool} [Options.withReleaseTracks] - default: true if it has not yet been loaded else false
+   **/
+  loadVersionsTask = task(async ({ reload = false, withReleaseTracks } = {}) => {
     let versionsRef = this.hasMany('versions');
-    let fut = reload === true ? versionsRef.reload() : versionsRef.load();
+    let opts = { adapterOptions: { withReleaseTracks } };
+    if (opts.adapterOptions.withReleaseTracks == null) {
+      opts.adapterOptions.withReleaseTracks = this?.versions_meta?.release_tracks == null;
+    }
+    let fut = reload === true ? versionsRef.reload(opts) : versionsRef.load(opts);
     return (await fut) ?? [];
   });
 }

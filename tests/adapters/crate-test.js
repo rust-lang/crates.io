@@ -39,4 +39,27 @@ module('Adapter | crate', function (hooks) {
     await versionsRef.load();
     assert.deepEqual(versionsRef.ids(), [version.id]);
   });
+
+  test('findHasMany `versions` with `release_tracks` meta', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo' });
+    this.server.create('version', { crate, num: '0.0.1' });
+    this.server.create('version', { crate, num: '0.1.0' });
+    this.server.create('version', { crate, num: '1.0.0' });
+
+    let store = this.owner.lookup('service:store');
+
+    let foo = await store.findRecord('crate', 'foo');
+    assert.strictEqual(foo?.name, 'foo');
+    assert.strictEqual(foo?.versions_map?.release_tracks, undefined);
+
+    // load `versions` without `release_tracks` meta included
+    let versionsRef = foo.hasMany('versions');
+    await versionsRef.load();
+    assert.strictEqual(foo?.versions_meta?.release_tracks, undefined);
+
+    // reload `versions` with `release_tracks` meta included
+    let resp = await versionsRef.reload({ adapterOptions: { withReleaseTracks: true } });
+    let { meta } = resp;
+    assert.deepEqual(foo?.versions_meta?.release_tracks, meta.release_tracks);
+  });
 });
