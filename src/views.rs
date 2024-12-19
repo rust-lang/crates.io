@@ -467,6 +467,39 @@ pub struct EncodableMe {
     pub owned_crates: Vec<OwnedCrate>,
 }
 
+/// The admin's view of the serialisable user.
+///
+/// Essentially a superset of [`EncodablePrivateUser`] with the user's current
+/// lock status.
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableAdminUser {
+    #[serde(flatten)]
+    pub user: EncodablePrivateUser,
+    pub lock: Option<EncodableUserLock>,
+}
+
+impl EncodableAdminUser {
+    pub fn from(
+        mut user: User,
+        email: Option<String>,
+        email_verified: bool,
+        email_verification_sent: bool,
+    ) -> Self {
+        let lock = user
+            .account_lock_reason
+            .take()
+            .map(|reason| EncodableUserLock {
+                reason,
+                until: user.account_lock_until,
+            });
+
+        Self {
+            user: EncodablePrivateUser::from(user, email, email_verified, email_verification_sent),
+            lock,
+        }
+    }
+}
+
 /// The serialization format for the `User` model.
 /// Same as public user, except for addition of
 /// email field
@@ -548,6 +581,13 @@ impl From<User> for EncodablePublicUser {
             url,
         }
     }
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EncodableUserLock {
+    reason: String,
+    #[serde(with = "rfc3339::option")]
+    until: Option<NaiveDateTime>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
