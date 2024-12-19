@@ -83,16 +83,17 @@ export default class Crate extends Model {
     return Object.fromEntries(versions.slice().map(v => [v.id, v]));
   }
 
+  /**
+   * @type {Set<string>}
+   **/
   @cached get releaseTrackSet() {
-    let map = new Map();
-    let { versionsObj: versions, versionIdsBySemver } = this;
-    for (let id of versionIdsBySemver) {
-      let { releaseTrack, isPrerelease, yanked } = versions[id];
-      if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
-        map.set(releaseTrack, id);
-      }
-    }
-    return new Set(map.values());
+    let { release_tracks } = this.versions_meta ?? {};
+    assert(
+      '`loadVersionsTask.perform({ withReleaseTracks: true })` must be called before calling `releaseTrackSet`',
+      release_tracks != null,
+    );
+    let nums = Object.values(release_tracks ?? {}).map(it => it.highest) ?? [];
+    return new Set(nums);
   }
 
   hasOwnerUser(userId) {

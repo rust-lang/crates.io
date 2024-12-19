@@ -229,7 +229,7 @@ module('Model | Version', function (hooks) {
       this.server.create('version', { crate, num: '0.4.2' });
       this.server.create('version', { crate, num: '0.4.3', yanked: true });
       crateRecord = await this.store.findRecord('crate', crate.name, { reload: true });
-      versions = (await crateRecord.loadVersionsTask.perform({ reload: true })).slice();
+      versions = (await crateRecord.loadVersionsTask.perform({ reload: true, withReleaseTracks: true })).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
