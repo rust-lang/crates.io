@@ -127,14 +127,6 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
       server.get('/api/v1/crates/:crate_name/versions', {}, 500);
     });
 
-    await ember.addHook(async owner => {
-      // Load `crate` and then explicitly unload the side-loaded `versions`.
-      let store = owner.lookup('service:store');
-      let crateRecord = await store.findRecord('crate', 'foo');
-      let versions = crateRecord.hasMany('versions').value();
-      versions.forEach(record => record.unloadRecord());
-    });
-
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
