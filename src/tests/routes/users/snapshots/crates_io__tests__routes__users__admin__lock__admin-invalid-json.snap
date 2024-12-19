@@ -1,0 +1,5 @@
+---
+source: src/tests/routes/users/admin.rs
+expression: response.text()
+---
+{"errors":[{"detail":"Expected request with `Content-Type: application/json`"}]}
