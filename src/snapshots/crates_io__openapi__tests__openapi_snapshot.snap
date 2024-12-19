@@ -3,7 +3,30 @@ source: src/openapi.rs
 expression: response.json()
 ---
 {
-  "components": {},
+  "components": {
+    "schemas": {
+      "LockRequest": {
+        "properties": {
+          "reason": {
+            "description": "The reason for locking the account. This is visible to the user.",
+            "type": "string"
+          },
+          "until": {
+            "description": "When to lock the account until. If omitted, the lock will be indefinite.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      }
+    }
+  },
   "info": {
     "contact": {
       "email": "help@crates.io",
@@ -1671,6 +1694,43 @@ expression: response.json()
           }
         },
         "summary": "Find user by login, returning the admin's view of the user.",
+        "tags": [
+          "admin",
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{user}/lock": {
+      "put": {
+        "description": "Only site admins can use this endpoint.",
+        "operationId": "lock",
+        "parameters": [
+          {
+            "description": "Login name of the user",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Lock the given user.",
         "tags": [
           "admin",
           "users"
