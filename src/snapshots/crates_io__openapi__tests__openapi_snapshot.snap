@@ -30,10 +30,7 @@ snapshot_kind: text
             "name": "crate_name",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -43,10 +40,7 @@ snapshot_kind: text
             "required": false,
             "schema": {
               "format": "int32",
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -57,10 +51,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -71,10 +62,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -83,10 +71,7 @@ snapshot_kind: text
             "name": "seek",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -155,10 +140,7 @@ snapshot_kind: text
             "name": "sort",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -169,10 +151,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -183,10 +162,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -195,10 +171,7 @@ snapshot_kind: text
             "name": "seek",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -288,10 +261,7 @@ snapshot_kind: text
             "name": "sort",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -300,15 +270,8 @@ snapshot_kind: text
             "name": "q",
             "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "description": "A string that does not contain null bytes (`\\0`).",
-                  "type": "string"
-                }
-              ]
+              "description": "A string that does not contain null bytes (`\\0`).",
+              "type": "string"
             }
           },
           {
@@ -318,10 +281,7 @@ snapshot_kind: text
             "name": "include_yanked",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -330,15 +290,8 @@ snapshot_kind: text
             "name": "category",
             "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "description": "A string that does not contain null bytes (`\\0`).",
-                  "type": "string"
-                }
-              ]
+              "description": "A string that does not contain null bytes (`\\0`).",
+              "type": "string"
             }
           },
           {
@@ -347,15 +300,8 @@ snapshot_kind: text
             "name": "all_keywords",
             "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "description": "A string that does not contain null bytes (`\\0`).",
-                  "type": "string"
-                }
-              ]
+              "description": "A string that does not contain null bytes (`\\0`).",
+              "type": "string"
             }
           },
           {
@@ -364,15 +310,8 @@ snapshot_kind: text
             "name": "keyword",
             "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "description": "A string that does not contain null bytes (`\\0`).",
-                  "type": "string"
-                }
-              ]
+              "description": "A string that does not contain null bytes (`\\0`).",
+              "type": "string"
             }
           },
           {
@@ -381,15 +320,8 @@ snapshot_kind: text
             "name": "letter",
             "required": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "description": "A string that does not contain null bytes (`\\0`).",
-                  "type": "string"
-                }
-              ]
+              "description": "A string that does not contain null bytes (`\\0`).",
+              "type": "string"
             }
           },
           {
@@ -399,10 +331,7 @@ snapshot_kind: text
             "required": false,
             "schema": {
               "format": "int32",
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -412,10 +341,7 @@ snapshot_kind: text
             "required": false,
             "schema": {
               "format": "int32",
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -425,10 +351,7 @@ snapshot_kind: text
             "name": "following",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -452,10 +375,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -466,10 +386,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -478,10 +395,7 @@ snapshot_kind: text
             "name": "seek",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -567,10 +481,7 @@ snapshot_kind: text
             "name": "include",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -849,10 +760,7 @@ snapshot_kind: text
             "name": "include",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -861,10 +769,7 @@ snapshot_kind: text
             "name": "sort",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           },
           {
@@ -875,10 +780,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -889,10 +791,7 @@ snapshot_kind: text
             "schema": {
               "format": "int32",
               "minimum": 1,
-              "type": [
-                "integer",
-                "null"
-              ]
+              "type": "integer"
             }
           },
           {
@@ -901,10 +800,7 @@ snapshot_kind: text
             "name": "seek",
             "required": false,
             "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -1129,10 +1025,7 @@ snapshot_kind: text
             "required": false,
             "schema": {
               "format": "date",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             }
           }
         ],
