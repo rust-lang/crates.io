@@ -1,0 +1,17 @@
+---
+source: src/tests/routes/users/admin.rs
+expression: response.json()
+---
+{
+  "avatar": null,
+  "email": "foo@example.com",
+  "email_verification_sent": true,
+  "email_verified": true,
+  "id": 1,
+  "is_admin": false,
+  "lock": null,
+  "login": "foo",
+  "name": null,
+  "publish_notifications": true,
+  "url": "https://github.com/foo"
+}

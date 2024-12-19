@@ -1,7 +1,6 @@
 ---
 source: src/openapi.rs
 expression: response.json()
-snapshot_kind: text
 ---
 {
   "components": {},
@@ -1647,6 +1646,33 @@ snapshot_kind: text
         },
         "summary": "Update user settings.",
         "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{user}/admin": {
+      "get": {
+        "description": "Only site admins can use this endpoint.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "description": "Login name of the user",
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Find user by login, returning the admin's view of the user.",
+        "tags": [
+          "admin",
           "users"
         ]
       }
