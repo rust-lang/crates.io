@@ -1,14 +1,10 @@
 use anyhow::{anyhow, Context};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::{
-        tcp::{OwnedReadHalf, OwnedWriteHalf},
-        TcpListener, TcpStream,
-    },
-    sync::broadcast::Sender,
-};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::broadcast::Sender;
 use tracing::{debug, error};
 use url::Url;
 

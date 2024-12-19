@@ -1,12 +1,7 @@
-use crate::tests::{
-    add_team_to_crate,
-    builders::{CrateBuilder, PublishBuilder},
-    new_team, OwnerTeamsResponse, RequestHelper, TestApp,
-};
-use crate::{
-    models::{Crate, NewTeam},
-    schema::teams,
-};
+use crate::models::{Crate, NewTeam};
+use crate::schema::teams;
+use crate::tests::builders::{CrateBuilder, PublishBuilder};
+use crate::tests::{add_team_to_crate, new_team, OwnerTeamsResponse, RequestHelper, TestApp};
 
 use diesel::*;
 use diesel_async::RunQueryDsl;

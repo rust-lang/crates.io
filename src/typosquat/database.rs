@@ -1,9 +1,10 @@
 //! Types that bridge the crates.io database and typomania.
 
-use std::{
-    borrow::Borrow,
-    collections::{BTreeMap, HashMap, HashSet},
-};
+use crate::models;
+use crate::schema::{crate_downloads, crate_owners};
+
+use std::borrow::Borrow;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -20,11 +21,6 @@ pub struct TopCrates {
 impl TopCrates {
     /// Retrieves the `num` top crates from the database.
     pub async fn new(conn: &mut AsyncPgConnection, num: i64) -> QueryResult<Self> {
-        use crate::{
-            models,
-            schema::{crate_downloads, crate_owners},
-        };
-
         // We have to build up a data structure that contains the top crates, their owners in some
         // form that is easily compared, and that can be indexed by the crate name.
         //

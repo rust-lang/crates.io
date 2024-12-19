@@ -1,15 +1,11 @@
-use crate::tests::{
-    add_team_to_crate,
-    builders::{CrateBuilder, PublishBuilder},
-    new_team,
-    util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response},
-    TestApp,
+use crate::models::Crate;
+use crate::tests::builders::{CrateBuilder, PublishBuilder};
+use crate::tests::util::{
+    MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response,
 };
-use crate::{
-    models::Crate,
-    views::{
-        EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
-    },
+use crate::tests::{add_team_to_crate, new_team, TestApp};
+use crate::views::{
+    EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 
 use crate::schema::users;

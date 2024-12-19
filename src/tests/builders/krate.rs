@@ -1,12 +1,8 @@
-use crate::{
-    models::{Category, Crate, Keyword, NewCrate},
-    schema::{crates, version_downloads},
-    util::errors::AppResult,
-};
+use crate::models::{update_default_version, Category, Crate, Keyword, NewCrate};
+use crate::schema::{crate_downloads, crates, version_downloads};
+use crate::util::errors::AppResult;
 
 use super::VersionBuilder;
-use crate::models::update_default_version;
-use crate::schema::crate_downloads;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
