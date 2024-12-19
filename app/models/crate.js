@@ -130,8 +130,10 @@ export default class Crate extends Model {
     return [...(teams ?? []), ...(users ?? [])];
   });
 
-  loadVersionsTask = task(async () => {
-    return (await this.versions) ?? [];
+  loadVersionsTask = task(async ({ reload = false } = {}) => {
+    let versionsRef = this.hasMany('versions');
+    let fut = reload === true ? versionsRef.reload() : versionsRef.load();
+    return (await fut) ?? [];
   });
 }
 
