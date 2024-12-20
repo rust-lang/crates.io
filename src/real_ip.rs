@@ -38,50 +38,21 @@ fn is_cloud_front_ip(ip: &IpAddr) -> bool {
         .any(|trusted_proxy| trusted_proxy.contains(*ip))
 }
 
+/// Extracts the client IP address from the `X-Forwarded-For` header.
+///
+/// This function will return the last valid non-CloudFront IP address in the
+/// `X-Forwarded-For` header, if any.
 pub fn process_xff_headers(headers: &HeaderMap) -> Option<IpAddr> {
-    let mut xff_iter = headers.get_all(X_FORWARDED_FOR).iter();
-    let Some(first_header) = xff_iter.next() else {
-        debug!(target: "real_ip", "No X-Forwarded-For header found");
-        return None;
-    };
-
-    let has_more_headers = xff_iter.next().is_some();
-    if has_more_headers {
-        // This only happens for requests going directly to crates-io.herokuapp.com,
-        // since AWS CloudFront automatically merges these headers into one.
-        //
-        // The Heroku router has a bug where it currently (2023-10-25) appends
-        // the connecting IP to the **first** header instead of the last.
-        //
-        // In this specific scenario we will read the IP from the first header,
-        // instead of the last, to work around the Heroku bug. We also don't
-        // have to care about the trusted proxies, since the request was
-        // apparently sent to Heroku directly.
-
-        debug!(target: "real_ip", ?first_header, "Multiple X-Forwarded-For headers found, using the first one due to Heroku bug");
-
-        parse_xff_header(first_header)
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .next_back()
-    } else {
-        // If the request came in through CloudFront we only get a single,
-        // merged header.
-        //
-        // If the request came in through Heroku and only had a single header
-        // originally, then we also only get a single header.
-        //
-        // In this case return the right-most IP address that is not in the list
-        // of IPs from trusted proxies (i.e. CloudFront).
-
-        debug!(target: "real_ip", ?first_header, "Single X-Forwarded-For header found");
-
-        parse_xff_header(first_header)
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .filter(|ip| !is_cloud_front_ip(ip))
-            .next_back()
-    }
+    headers
+        .get_all(X_FORWARDED_FOR)
+        .iter()
+        .flat_map(|header| {
+            parse_xff_header(header)
+                .into_iter()
+                .filter_map(|r| r.ok())
+                .filter(|ip| !is_cloud_front_ip(ip))
+        })
+        .next_back()
 }
 
 /// Parses the content of an `X-Forwarded-For` header into a
@@ -142,11 +113,11 @@ mod tests {
         test(vec![b"1.1.1.1, 130.176.118.147"], Some("1.1.1.1"));
         test(vec![b"1.1.1.1, 2.2.2.2, 130.176.118.147"], Some("2.2.2.2"));
 
-        // Heroku workaround
-        test(vec![b"1.1.1.1, 2.2.2.2", b"3.3.3.3"], Some("2.2.2.2"));
+        // Multiple headers behavior
+        test(vec![b"1.1.1.1, 2.2.2.2", b"3.3.3.3"], Some("3.3.3.3"));
         test(
             vec![b"1.1.1.1, 130.176.118.147", b"3.3.3.3"],
-            Some("130.176.118.147"),
+            Some("3.3.3.3"),
         );
     }
 
