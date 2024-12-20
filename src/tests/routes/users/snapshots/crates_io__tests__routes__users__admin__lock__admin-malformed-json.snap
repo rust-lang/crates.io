@@ -1,0 +1,5 @@
+---
+source: src/tests/routes/users/admin.rs
+expression: response.text()
+---
+{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `reason` at line 1 column 17"}]}

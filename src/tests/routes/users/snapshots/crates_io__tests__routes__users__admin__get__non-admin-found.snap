@@ -1,0 +1,5 @@
+---
+source: src/tests/routes/users/admin.rs
+expression: response.text()
+---
+{"errors":[{"detail":"this action can only be performed by a site admin"}]}

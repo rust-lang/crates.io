@@ -1,0 +1,5 @@
+---
+source: src/tests/routes/users/admin.rs
+expression: response.text()
+---
+{"errors":[{"detail":"This account is locked until 2050-01-01 at 01:02:03 UTC. Reason: naughty naughty"}]}
