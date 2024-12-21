@@ -128,15 +128,16 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
     });
 
     await ember.addHook(async owner => {
-      // Load `crate` and then explicitly unload the side-loaded `versions`.
+      // Load `crate` and ensure all `versions` are not loaded.
       let store = owner.lookup('service:store');
       let crateRecord = await store.findRecord('crate', 'foo');
-      let versions = crateRecord.hasMany('versions').value();
-      versions.forEach(record => record.unloadRecord());
+      let versionsRef = crateRecord.hasMany('versions');
+      globalThis.version_ids = versionsRef.ids();
     });
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
+    await page.waitForFunction(() => globalThis.version_ids?.length === 0);
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
     await expect(page.locator('[data-test-title]')).toHaveText('foo: Failed to load version data');
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);

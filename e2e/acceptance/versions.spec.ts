@@ -13,6 +13,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     await page.goto('/crates/nanomsg/versions');
     await expect(page).toHaveURL('/crates/nanomsg/versions');
 
+    await expect(page.locator('[data-test-version]')).toHaveCount(4);
     let versions = await page.locator('[data-test-version]').evaluateAll(el => el.map(it => it.dataset.testVersion));
     expect(versions).toEqual(['0.2.1', '0.3.0', '0.2.0', '0.1.0']);
 

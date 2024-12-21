@@ -6,7 +6,7 @@ export default class VersionRoute extends Route {
 
   async model() {
     let crate = this.modelFor('crate');
-    let versions = await crate.get('versions');
+    let versions = await crate.loadVersionsTask.perform();
 
     let { default_version } = crate;
     let version = versions.find(version => version.num === default_version) ?? versions.lastObject;

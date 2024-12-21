@@ -106,7 +106,7 @@ export default class Version extends Model {
       return false;
     }
 
-    return this.crate?.releaseTrackSet.has(this.id);
+    return this.crate?.releaseTrackSet.has(this.num);
   }
 
   get featureList() {
