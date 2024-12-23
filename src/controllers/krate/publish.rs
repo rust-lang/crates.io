@@ -56,6 +56,10 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
 #[utoipa::path(
     put,
     path = "/api/v1/crates/new",
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "publish",
     responses((status = 200, description = "Successful Response")),
 )]

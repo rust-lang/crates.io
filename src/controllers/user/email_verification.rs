@@ -46,6 +46,10 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
     params(
         ("id" = i32, Path, description = "ID of the user"),
     ),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

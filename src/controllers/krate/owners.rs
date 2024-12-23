@@ -88,6 +88,10 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Eras
     put,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -105,6 +109,10 @@ pub async fn add_owners(
     delete,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]

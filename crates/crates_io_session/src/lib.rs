@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-static COOKIE_NAME: &str = "cargo_session";
+pub static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
 #[derive(Clone, FromRequestParts)]

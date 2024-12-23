@@ -39,6 +39,7 @@ impl GetParams {
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens",
+    security(("cookie" = [])),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -86,6 +87,7 @@ pub struct NewApiTokenRequest {
 #[utoipa::path(
     put,
     path = "/api/v1/me/tokens",
+    security(("cookie" = [])),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -184,6 +186,10 @@ pub async fn create_api_token(
     params(
         ("id" = i32, Path, description = "ID of the API token"),
     ),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -211,6 +217,10 @@ pub async fn find_api_token(
     params(
         ("id" = i32, Path, description = "ID of the API token"),
     ),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -237,6 +247,7 @@ pub async fn revoke_api_token(
 #[utoipa::path(
     delete,
     path = "/api/v1/tokens/current",
+    security(("api_token" = [])),
     tag = "api_tokens",
     responses((status = 200, description = "Successful Response")),
 )]

@@ -35,6 +35,10 @@ pub struct User {
     params(
         ("user" = i32, Path, description = "ID of the user"),
     ),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

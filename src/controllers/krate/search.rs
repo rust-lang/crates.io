@@ -38,6 +38,11 @@ use crate::util::RequestUtils;
     get,
     path = "/api/v1/crates",
     params(ListQueryParams, PaginationQueryParams),
+    security(
+        (),
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
