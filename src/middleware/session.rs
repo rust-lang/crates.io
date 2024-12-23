@@ -5,7 +5,6 @@ use axum_extra::extract::SignedCookieJar;
 use base64::{engine::general_purpose, Engine};
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
-use derive_more::Deref;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -13,7 +12,7 @@ use std::sync::Arc;
 static COOKIE_NAME: &str = "cargo_session";
 static MAX_AGE_DAYS: i64 = 90;
 
-#[derive(Clone, FromRequestParts, Deref)]
+#[derive(Clone, FromRequestParts)]
 #[from_request(via(Extension))]
 pub struct SessionExtension(Arc<RwLock<Session>>);
 
@@ -23,18 +22,18 @@ impl SessionExtension {
     }
 
     pub fn get(&self, key: &str) -> Option<String> {
-        let session = self.read();
+        let session = self.0.read();
         session.data.get(key).cloned()
     }
 
     pub fn insert(&self, key: String, value: String) -> Option<String> {
-        let mut session = self.write();
+        let mut session = self.0.write();
         session.dirty = true;
         session.data.insert(key, value)
     }
 
     pub fn remove(&self, key: &str) -> Option<String> {
-        let mut session = self.write();
+        let mut session = self.0.write();
         session.dirty = true;
         session.data.remove(key)
     }
@@ -53,7 +52,7 @@ pub async fn attach_session(jar: SignedCookieJar, mut req: Request, next: Next) 
     let response = next.run(req).await;
 
     // Check if the session data was mutated
-    let session = session.read();
+    let session = session.0.read();
     if session.dirty {
         // Return response with additional `Set-Cookie` header
         let encoded = encode(&session.data);
