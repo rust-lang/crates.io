@@ -19,7 +19,6 @@
 //! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
-use crate::middleware::session;
 use crate::models::{ApiToken, CreatedApiToken, User};
 use crate::tests::{
     CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
@@ -72,7 +71,7 @@ pub fn encode_session_header(session_key: &cookie::Key, user_id: i32) -> String 
     map.insert("user_id".into(), user_id.to_string());
 
     // encode the map into a cookie value string
-    let encoded = session::encode(&map);
+    let encoded = crates_io_session::encode(&map);
 
     // put the cookie into a signed cookie jar
     let cookie = Cookie::build((cookie_name, encoded));

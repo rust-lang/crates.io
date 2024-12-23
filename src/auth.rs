@@ -1,7 +1,6 @@
 use crate::controllers;
 use crate::controllers::util::RequestPartsExt;
 use crate::middleware::log_request::RequestLogExt;
-use crate::middleware::session::SessionExtension;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
@@ -9,6 +8,7 @@ use crate::util::errors::{
 };
 use crate::util::token::HashedToken;
 use chrono::Utc;
+use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::header;
 use http::request::Parts;

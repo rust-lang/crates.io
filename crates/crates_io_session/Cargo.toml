@@ -1,0 +1,17 @@
+[package]
+name = "crates_io_session"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+axum = { version = "=0.7.9", features = ["macros"] }
+axum-extra = { version = "=0.9.6", features = ["cookie-signed"] }
+base64 = "=0.22.1"
+cookie = { version = "=0.18.1", features = ["secure"] }
+parking_lot = "=0.12.3"
+
+[dev-dependencies]
