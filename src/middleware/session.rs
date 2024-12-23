@@ -1,4 +1,3 @@
-use crate::controllers::util::RequestPartsExt;
 use axum::extract::{Extension, FromRequestParts, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
@@ -80,18 +79,6 @@ pub struct Session {
 impl Session {
     fn new(data: HashMap<String, String>) -> Self {
         Self { data, dirty: false }
-    }
-}
-
-pub trait RequestSession {
-    fn session(&self) -> &SessionExtension;
-}
-
-impl<T: RequestPartsExt> RequestSession for T {
-    fn session(&self) -> &SessionExtension {
-        self.extensions()
-            .get::<SessionExtension>()
-            .expect("missing cookie session")
     }
 }
 
