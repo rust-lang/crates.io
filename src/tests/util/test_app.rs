@@ -150,6 +150,23 @@ impl TestApp {
         }
     }
 
+    pub async fn db_new_admin_user(&self, username: &str) -> MockCookieUser {
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+
+        let MockCookieUser { app, user } = self.db_new_user(username).await;
+
+        let mut conn = self.db_conn().await;
+        let user = diesel::update(users::table)
+            .filter(users::id.eq(user.id))
+            .set(users::is_admin.eq(true))
+            .get_result::<User>(&mut conn)
+            .await
+            .unwrap();
+
+        MockCookieUser { app, user }
+    }
+
     /// Obtain a reference to the upstream repository ("the index")
     pub fn upstream_index(&self) -> &UpstreamIndex {
         assert_some!(self.0.index.as_ref())
