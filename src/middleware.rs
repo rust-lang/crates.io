@@ -8,7 +8,6 @@ pub mod log_request;
 pub mod normalize_path;
 pub mod real_ip;
 mod require_user_agent;
-pub mod session;
 mod static_or_continue;
 mod update_metrics;
 
@@ -59,7 +58,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
             state.config.cargo_compat_status_code_config,
             cargo_compat::middleware,
         ))
-        .layer(from_fn_with_state(state.clone(), session::attach_session))
+        .layer(from_fn_with_state(
+            state.clone(),
+            crates_io_session::attach_session,
+        ))
         .layer(from_fn_with_state(
             state.clone(),
             require_user_agent::require_user_agent,

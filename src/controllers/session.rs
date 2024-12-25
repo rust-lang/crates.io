@@ -11,13 +11,13 @@ use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use crate::app::AppState;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::middleware::session::SessionExtension;
 use crate::models::{NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
+use crates_io_session::SessionExtension;
 
 /// Begin authentication flow.
 ///

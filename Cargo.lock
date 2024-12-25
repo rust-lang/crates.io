@@ -1063,6 +1063,7 @@ dependencies = [
  "crates_io_index",
  "crates_io_markdown",
  "crates_io_pagerduty",
+ "crates_io_session",
  "crates_io_tarball",
  "crates_io_team_repo",
  "crates_io_test_db",
@@ -1247,6 +1248,17 @@ dependencies = [
  "secrecy",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "crates_io_session"
+version = "0.0.0"
+dependencies = [
+ "axum",
+ "axum-extra",
+ "base64 0.22.1",
+ "cookie",
+ "parking_lot",
 ]
 
 [[package]]

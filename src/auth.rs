@@ -1,7 +1,6 @@
 use crate::controllers;
 use crate::controllers::util::RequestPartsExt;
 use crate::middleware::log_request::RequestLogExt;
-use crate::middleware::session::RequestSession;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
@@ -9,6 +8,7 @@ use crate::util::errors::{
 };
 use crate::util::token::HashedToken;
 use chrono::Utc;
+use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::header;
 use http::request::Parts;
@@ -176,11 +176,12 @@ async fn authenticate_via_cookie(
     parts: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<CookieAuthentication>> {
-    let user_id_from_session = parts
-        .session()
-        .get("user_id")
-        .and_then(|s| s.parse::<i32>().ok());
+    let session = parts
+        .extensions()
+        .get::<SessionExtension>()
+        .expect("missing cookie session");
 
+    let user_id_from_session = session.get("user_id").and_then(|s| s.parse::<i32>().ok());
     let Some(id) = user_id_from_session else {
         return Ok(None);
     };
