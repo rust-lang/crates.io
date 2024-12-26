@@ -11,7 +11,7 @@ _assert_heroku:
 
 # Squash the index (specify env=production or env=staging)
 squash-index: _assert_heroku
-    @echo Running an index sqaush against app: {{ app }}
+    @echo Running an index squash against app: {{ app }}
     heroku run -a {{ app }} -- target/release/crates-admin enqueue-job squash_index
     @echo
     @echo There are several steps that must be done by hand:
