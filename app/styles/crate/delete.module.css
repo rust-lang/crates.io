@@ -55,7 +55,8 @@
 
 .requirements {
     .or {
-        text-align: center;
+        padding-left: 3.5em;
+        padding-bottom: 0.3em;
         font-weight: bold;
         font-variant: small-caps;
     }
