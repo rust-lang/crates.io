@@ -27,6 +27,7 @@ use std::collections::{HashMap, HashSet};
 #[utoipa::path(
     get,
     path = "/api/v1/me/crate_owner_invitations",
+    security(("cookie" = [])),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -90,6 +91,7 @@ pub struct ListQueryParams {
     get,
     path = "/api/private/crate_owner_invitations",
     params(ListQueryParams, PaginationQueryParams),
+    security(("cookie" = [])),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -315,6 +317,10 @@ pub struct OwnerInvitation {
     path = "/api/v1/me/crate_owner_invitations/{crate_id}",
     params(
         ("crate_id" = i32, Path, description = "ID of the crate"),
+    ),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
     ),
     tag = "owners",
     responses((status = 200, description = "Successful Response")),

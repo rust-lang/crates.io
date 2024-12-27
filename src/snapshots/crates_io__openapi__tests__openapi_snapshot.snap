@@ -4,7 +4,22 @@ expression: response.json()
 snapshot_kind: text
 ---
 {
-  "components": {},
+  "components": {
+    "securitySchemes": {
+      "api_token": {
+        "description": "The API token is used to authenticate requests from cargo and other clients.",
+        "in": "header",
+        "name": "authorization",
+        "type": "apiKey"
+      },
+      "cookie": {
+        "description": "The session cookie is used by the web UI to authenticate users.",
+        "in": "cookie",
+        "name": "cargo_session",
+        "type": "apiKey"
+      }
+    }
+  },
   "info": {
     "contact": {
       "email": "help@crates.io",
@@ -80,6 +95,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "List all crate owner invitations for a crate or user.",
         "tags": [
           "owners"
@@ -94,6 +114,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "End the current session.",
         "tags": [
           "session"
@@ -404,6 +429,15 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {},
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Returns a list of crates.",
         "tags": [
           "crates"
@@ -432,6 +466,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Publish a new crate/version.",
         "tags": [
           "publish"
@@ -458,6 +500,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Delete a crate.",
         "tags": [
           "crates"
@@ -541,6 +588,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Unfollow a crate.",
         "tags": [
           "crates"
@@ -564,6 +619,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Follow a crate.",
         "tags": [
           "crates"
@@ -589,6 +652,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Check if a crate is followed.",
         "tags": [
           "crates"
@@ -664,6 +732,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Remove crate owners.",
         "tags": [
           "owners"
@@ -710,6 +786,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Add crate owners.",
         "tags": [
           "owners"
@@ -878,6 +962,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Update a crate version.",
         "tags": [
           "versions"
@@ -1104,6 +1196,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Unyank a crate version.",
         "tags": [
           "versions"
@@ -1140,6 +1240,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Yank a crate version.",
         "tags": [
           "versions"
@@ -1193,6 +1301,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Get the currently authenticated user.",
         "tags": [
           "users"
@@ -1207,6 +1320,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "List all crate owner invitations for the authenticated user.",
         "tags": [
           "owners"
@@ -1258,6 +1376,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Accept or decline a crate owner invitation.",
         "tags": [
           "owners"
@@ -1274,6 +1400,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Update email notification settings for the authenticated user.",
         "tags": [
           "users"
@@ -1288,6 +1422,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "List all API tokens of the authenticated user.",
         "tags": [
           "api_tokens"
@@ -1300,6 +1439,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Create a new API token.",
         "tags": [
           "api_tokens"
@@ -1326,6 +1470,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Revoke API token.",
         "tags": [
           "api_tokens"
@@ -1350,6 +1502,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Find API token by id.",
         "tags": [
           "api_tokens"
@@ -1364,6 +1524,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
         "summary": "List versions of crates that the authenticated user follows.",
         "tags": [
           "versions"
@@ -1435,6 +1600,11 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          }
+        ],
         "summary": "Revoke the current API token.",
         "tags": [
           "api_tokens"
@@ -1461,6 +1631,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Regenerate and send an email verification token.",
         "tags": [
           "users"
@@ -1538,6 +1716,14 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
         "summary": "Update user settings.",
         "tags": [
           "users"

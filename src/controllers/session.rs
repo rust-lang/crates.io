@@ -173,6 +173,7 @@ async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryRe
 #[utoipa::path(
     delete,
     path = "/api/private/session",
+    security(("cookie" = [])),
     tag = "session",
     responses((status = 200, description = "Successful Response")),
 )]

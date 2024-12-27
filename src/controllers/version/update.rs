@@ -37,6 +37,10 @@ pub struct VersionUpdateRequest {
     patch,
     path = "/api/v1/crates/{name}/{version}",
     params(CrateVersionPath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

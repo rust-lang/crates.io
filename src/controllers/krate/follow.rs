@@ -34,6 +34,10 @@ async fn follow_target(
     put,
     path = "/api/v1/crates/{name}/follow",
     params(CratePath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -55,6 +59,10 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
     delete,
     path = "/api/v1/crates/{name}/follow",
     params(CratePath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -72,6 +80,7 @@ pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppRe
     get,
     path = "/api/v1/crates/{name}/following",
     params(CratePath),
+    security(("cookie" = [])),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]

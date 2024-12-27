@@ -24,6 +24,10 @@ use http::request::Parts;
     delete,
     path = "/api/v1/crates/{name}/{version}/yank",
     params(CrateVersionPath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -40,6 +44,10 @@ pub async fn yank_version(
     put,
     path = "/api/v1/crates/{name}/{version}/unyank",
     params(CrateVersionPath),
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

@@ -19,6 +19,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
 #[utoipa::path(
     get,
     path = "/api/v1/me",
+    security(("cookie" = [])),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]
@@ -68,6 +69,7 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
 #[utoipa::path(
     get,
     path = "/api/v1/me/updates",
+    security(("cookie" = [])),
     tag = "versions",
     responses((status = 200, description = "Successful Response")),
 )]

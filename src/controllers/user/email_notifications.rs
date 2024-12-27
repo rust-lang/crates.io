@@ -24,6 +24,10 @@ pub struct CrateEmailNotifications {
 #[utoipa::path(
     put,
     path = "/api/v1/me/email_notifications",
+    security(
+        ("api_token" = []),
+        ("cookie" = []),
+    ),
     tag = "users",
     responses((status = 200, description = "Successful Response")),
 )]

@@ -31,6 +31,7 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
     delete,
     path = "/api/v1/crates/{name}",
     params(CratePath),
+    security(("cookie" = [])),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
