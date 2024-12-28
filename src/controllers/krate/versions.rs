@@ -43,6 +43,18 @@ pub struct ListQueryParams {
     sort: Option<String>,
 }
 
+impl ListQueryParams {
+    fn include(&self) -> AppResult<ShowIncludeMode> {
+        let include = self
+            .include
+            .as_ref()
+            .map(|mode| ShowIncludeMode::from_str(mode))
+            .transpose()?
+            .unwrap_or_default();
+        Ok(include)
+    }
+}
+
 /// List all versions of a crate.
 #[utoipa::path(
     get,
@@ -73,18 +85,12 @@ pub async fn list_versions(
         None => None,
     };
 
-    let include = params
-        .include
-        .map(|mode| ShowIncludeMode::from_str(&mode))
-        .transpose()?
-        .unwrap_or_default();
-
     // Sort by semver by default
-    let versions_and_publishers = match params.sort.map(|s| s.to_lowercase()).as_deref() {
+    let versions_and_publishers = match &params.sort.as_ref().map(|s| s.to_lowercase()).as_deref() {
         Some("date") => {
-            list_by_date(crate_id, pagination.as_ref(), include, &req, &mut conn).await?
+            list_by_date(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?
         }
-        _ => list_by_semver(crate_id, pagination.as_ref(), include, &req, &mut conn).await?,
+        _ => list_by_semver(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?,
     };
 
     let versions = versions_and_publishers
@@ -111,7 +117,7 @@ pub async fn list_versions(
 async fn list_by_date(
     crate_id: i32,
     options: Option<&PaginationOptions>,
-    include: ShowIncludeMode,
+    params: &ListQueryParams,
     req: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
@@ -148,7 +154,7 @@ async fn list_by_date(
             .map(|p| req.query_with_params(p));
     };
 
-    let release_tracks = if include.release_tracks {
+    let release_tracks = if params.include()?.release_tracks {
         let mut sorted_versions = IndexSet::new();
         if options.is_some() {
             versions::table
@@ -216,12 +222,13 @@ async fn list_by_date(
 async fn list_by_semver(
     crate_id: i32,
     options: Option<&PaginationOptions>,
-    include: ShowIncludeMode,
+    params: &ListQueryParams,
     req: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
+    let include = params.include()?;
     let (data, total, release_tracks) = if let Some(options) = options {
         // Since versions will only increase in the future and both sorting and pagination need to
         // happen on the app server, implementing it with fetching only the data needed for sorting
