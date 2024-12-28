@@ -856,6 +856,19 @@ expression: response.json()
             }
           },
           {
+            "description": "If set, only versions with the specified semver strings are returned.",
+            "in": "query",
+            "name": "nums[]",
+            "required": false,
+            "schema": {
+              "items": {
+                "description": "A string that does not contain null bytes (`\\0`).",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
             "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
             "in": "query",
             "name": "page",
