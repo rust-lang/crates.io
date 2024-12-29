@@ -523,7 +523,7 @@ snapshot_kind: text
             }
           },
           {
-            "description": "Additional data to include in the response.\n\nValid values: `versions`, `keywords`, `categories`, `badges`,\n`downloads`, or `full`.\n\nDefaults to `full` for backwards compatibility.\n\nThis parameter expects a comma-separated list of values.",
+            "description": "Additional data to include in the response.\n\nValid values: `versions`, `keywords`, `categories`, `badges`,\n`downloads`, `default_version`, or `full`.\n\nDefaults to `full` for backwards compatibility.\n\n**Note**: `versions` and `default_version` share the same key `versions`, therefore `default_version` will be ignored if both are provided.\n\nThis parameter expects a comma-separated list of values.",
             "in": "query",
             "name": "include",
             "required": false,

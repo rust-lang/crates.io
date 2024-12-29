@@ -28,9 +28,11 @@ pub struct FindQueryParams {
     /// Additional data to include in the response.
     ///
     /// Valid values: `versions`, `keywords`, `categories`, `badges`,
-    /// `downloads`, or `full`.
+    /// `downloads`, `default_version`, or `full`.
     ///
     /// Defaults to `full` for backwards compatibility.
+    ///
+    /// **Note**: `versions` and `default_version` share the same key `versions`, therefore `default_version` will be ignored if both are provided.
     ///
     /// This parameter expects a comma-separated list of values.
     include: Option<String>,
@@ -88,7 +90,7 @@ pub async fn find_crate(
             .optional()?
             .ok_or_else(|| crate_not_found(&path.name))?;
 
-    let versions_publishers_and_audit_actions = if include.versions {
+    let mut versions_publishers_and_audit_actions = if include.versions {
         let mut versions_and_publishers: Vec<(Version, Option<User>)> =
             Version::belonging_to(&krate)
                 .left_outer_join(users::table)
@@ -117,6 +119,18 @@ pub async fn find_crate(
     let ids = versions_publishers_and_audit_actions
         .as_ref()
         .map(|vps| vps.iter().map(|v| v.0.id).collect());
+
+    // Since `versions` and `default_version` share the same key (versions), we should only settle
+    // the `default_version` when `versions` is not included.
+    if let Some(default_version) = default_version
+        .as_ref()
+        .filter(|_| include.default_version && !include.versions)
+    {
+        let version = krate.find_version(&mut conn, default_version).await?;
+        let published_by = version.published_by(&mut conn).await?;
+        let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
+        versions_publishers_and_audit_actions = Some(vec![(version, published_by, actions)]);
+    };
 
     let kws = if include.keywords {
         Some(
@@ -202,6 +216,7 @@ struct ShowIncludeMode {
     categories: bool,
     badges: bool,
     downloads: bool,
+    default_version: bool,
 }
 
 impl Default for ShowIncludeMode {
@@ -213,13 +228,14 @@ impl Default for ShowIncludeMode {
             categories: true,
             badges: true,
             downloads: true,
+            default_version: true,
         }
     }
 }
 
 impl ShowIncludeMode {
     const INVALID_COMPONENT: &'static str =
-        "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', or 'full')";
+        "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', 'default_version', or 'full')";
 }
 
 impl FromStr for ShowIncludeMode {
@@ -232,6 +248,7 @@ impl FromStr for ShowIncludeMode {
             categories: false,
             badges: false,
             downloads: false,
+            default_version: false,
         };
         for component in s.split(',') {
             match component {
@@ -243,6 +260,7 @@ impl FromStr for ShowIncludeMode {
                         categories: true,
                         badges: true,
                         downloads: true,
+                        default_version: true,
                     }
                 }
                 "versions" => mode.versions = true,
@@ -250,6 +268,7 @@ impl FromStr for ShowIncludeMode {
                 "categories" => mode.categories = true,
                 "badges" => mode.badges = true,
                 "downloads" => mode.downloads = true,
+                "default_version" => mode.default_version = true,
                 _ => return Err(bad_request(Self::INVALID_COMPONENT)),
             }
         }
