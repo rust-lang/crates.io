@@ -11,7 +11,7 @@ workspace = true
 anyhow = "=1.0.95"
 reqwest = { version = "=0.12.11", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
-serde = { version = "=1.0.216", features = ["derive"] }
+serde = { version = "=1.0.217", features = ["derive"] }
 
 [dev-dependencies]
 clap = { version = "=4.5.23", features = ["derive", "env", "unicode", "wrap_help"] }
