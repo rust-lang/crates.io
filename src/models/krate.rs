@@ -17,9 +17,9 @@ use crate::models::{
     ReverseDependency, User, Version,
 };
 use crate::schema::*;
-use crate::sql::canon_crate_name;
 use crate::util::errors::{bad_request, version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
+use crates_io_diesel_helpers::canon_crate_name;
 
 use super::Team;
 

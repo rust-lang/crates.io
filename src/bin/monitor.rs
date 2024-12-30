@@ -7,6 +7,7 @@
 use anyhow::Result;
 use crates_io::worker::jobs;
 use crates_io::{db, schema::*};
+use crates_io_diesel_helpers::canon_crate_name;
 use crates_io_env_vars::{required_var, var, var_parsed};
 use crates_io_pagerduty as pagerduty;
 use crates_io_pagerduty::PagerdutyClient;
@@ -131,8 +132,6 @@ async fn check_spam_attack(
     conn: &mut AsyncPgConnection,
     pagerduty: &PagerdutyClient,
 ) -> Result<()> {
-    use crates_io::sql::canon_crate_name;
-
     const EVENT_KEY: &str = "spam_attack";
 
     println!("Checking for crates indicating someone is spamming us");

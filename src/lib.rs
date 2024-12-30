@@ -47,7 +47,6 @@ pub mod rate_limiter;
 mod real_ip;
 mod router;
 pub mod sentry;
-pub mod sql;
 pub mod sqs;
 pub mod ssh;
 pub mod storage;

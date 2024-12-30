@@ -6,7 +6,7 @@ use diesel_async::AsyncPgConnection;
 
 use crate::models::{Crate, Team, User};
 use crate::schema::crate_owners;
-use crate::sql::pg_enum;
+use crates_io_diesel_helpers::pg_enum;
 
 #[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
 #[diesel(

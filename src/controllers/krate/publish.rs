@@ -36,11 +36,11 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
-use crate::sql::canon_crate_name;
 use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
+use crates_io_diesel_helpers::canon_crate_name;
 
 const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
      If you believe this is a mistake, perhaps you need \
