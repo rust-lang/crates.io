@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 pub mod cloudfront;
 mod compression;
 mod download_map;
