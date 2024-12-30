@@ -1,6 +1,7 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::CratePath;
+use crate::email::Email;
 use crate::models::{NewDeletedCrate, Rights};
 use crate::schema::{crate_downloads, crates, dependencies};
 use crate::util::errors::{custom, AppResult, BoxedAppError};
@@ -80,6 +81,7 @@ pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppRe
         }
     }
 
+    let crate_name = krate.name.clone();
     conn.transaction(|conn| {
         async move {
             diesel::delete(crates::table.find(krate.id))
@@ -117,6 +119,23 @@ pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppRe
     })
     .await?;
 
+    let email_future = async {
+        if let Some(recipient) = user.email(&mut conn).await? {
+            let email = CrateDeletionEmail {
+                user: &user.gh_login,
+                krate: &crate_name,
+            };
+
+            app.emails.send(&recipient, email).await?
+        }
+
+        Ok::<_, anyhow::Error>(())
+    };
+
+    if let Err(err) = email_future.await {
+        error!("Failed to send crate deletion email: {err}");
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -146,6 +165,33 @@ async fn has_rev_dep(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult
         .optional()?;
 
     Ok(rev_dep.is_some())
+}
+
+/// Email template for notifying a crate owner about a crate being deleted.
+///
+/// The owner usually should be aware of the deletion since they initiated it,
+/// but this email can be helpful in detecting malicious account activity.
+#[derive(Debug, Clone)]
+struct CrateDeletionEmail<'a> {
+    user: &'a str,
+    krate: &'a str,
+}
+
+impl Email for CrateDeletionEmail<'_> {
+    fn subject(&self) -> String {
+        format!("crates.io: Deleted \"{}\" crate", self.krate)
+    }
+
+    fn body(&self) -> String {
+        format!(
+            "Hi {},
+
+your \"{}\" crate has been deleted, per your request.
+
+If you did not initiate this deletion, your account may have been compromised. Please contact us at help@crates.io.",
+            self.user, self.krate
+        )
+    }
 }
 
 #[cfg(test)]
@@ -186,6 +232,8 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
 
+        assert_snapshot!(app.emails_snapshot().await);
+
         // Assert that the crate no longer exists
         assert_crate_exists(&anon, "foo", false).await;
         assert!(!upstream.crate_exists("foo")?);
@@ -221,6 +269,8 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
 
+        assert_snapshot!(app.emails_snapshot().await);
+
         // Assert that the crate no longer exists
         assert_crate_exists(&anon, "foo", false).await;
         assert!(!upstream.crate_exists("foo")?);
@@ -255,6 +305,8 @@ mod tests {
         let response = delete_crate(&user, "foo").await;
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
         assert!(response.body().is_empty());
+
+        assert_snapshot!(app.emails_snapshot().await);
 
         // Assert that the crate no longer exists
         assert_crate_exists(&anon, "foo", false).await;
