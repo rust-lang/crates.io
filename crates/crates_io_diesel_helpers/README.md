@@ -12,5 +12,5 @@ Specifically, it contains:
 
 - a `pg_enum!()` macro to define an enum based on a PostgreSQL integer column
 
-This package was extracted from the main application to avoid repeated 
+This package was extracted from the main application to avoid repeated
 recompilation of these macros when the main application is recompiled.
