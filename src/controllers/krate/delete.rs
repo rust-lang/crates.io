@@ -15,7 +15,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use http::StatusCode;
 
-const DOWNLOADS_PER_MONTH_LIMIT: u64 = 100;
+const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;
 const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 
 /// Delete a crate.
@@ -25,7 +25,7 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 ///
 /// The crate can only be deleted by the owner of the crate, and only if the
 /// crate has been published for less than 72 hours, or if the crate has a
-/// single owner, has been downloaded less than 100 times for each month it has
+/// single owner, has been downloaded less than 500 times for each month it has
 /// been published, and is not depended upon by any other crate on crates.io.
 #[utoipa::path(
     delete,
@@ -385,7 +385,7 @@ mod tests {
 
         let response = delete_crate(&user, "foo").await;
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates with less than 100 downloads per month can be deleted after 72 hours"}]}"#);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates with less than 500 downloads per month can be deleted after 72 hours"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
 

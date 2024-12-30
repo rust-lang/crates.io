@@ -482,7 +482,7 @@ snapshot_kind: text
     },
     "/api/v1/crates/{name}": {
       "delete": {
-        "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 100 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
+        "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 500 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
         "operationId": "delete_crate",
         "parameters": [
           {
