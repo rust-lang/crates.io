@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use crates_io_env_vars::required_var_parsed;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
