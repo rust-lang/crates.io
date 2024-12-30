@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use anyhow::{anyhow, Result};
 use reqwest::{header, Client, StatusCode as Status};
 use secrecy::{ExposeSecret, SecretString};
