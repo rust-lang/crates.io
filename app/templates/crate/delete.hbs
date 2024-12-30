@@ -20,15 +20,18 @@
 
     <div local-class="requirements">
       <h3>Requirements:</h3>
-      <p>A crate can only be deleted if:</p>
-      <ol>
-        <li>the crate has been published for less than 72 hours, or</li>
+      <p>A crate can only be deleted if either:</p>
+      <ol local-class='first'>
+        <li>the crate has been published for less than 72 hours</li>
+      </ol>
+      <div local-class='or'>or</div>
+      <ol start="2" local-class='second'>
         <li>
-          <ul>
-            <li>the crate only has a single owner, and</li>
-            <li>the crate has been downloaded less than 500 times for each month it has been published, and</li>
+          <ol>
+            <li>the crate only has a single owner, <em>and</em></li>
+            <li>the crate has been downloaded less than 500 times for each month it has been published, <em>and</em></li>
             <li>the crate is not depended upon by any other crate on crates.io.</li>
-          </ul>
+          </ol>
         </li>
       </ol>
     </div>

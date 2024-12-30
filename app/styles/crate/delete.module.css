@@ -47,10 +47,31 @@
     }
 }
 
+@counter-style sub {
+    system: extends lower-alpha;
+    prefix: '(';
+    suffix: ') ';
+}
+
 .requirements {
-    ul {
-        list-style: none;
-        padding-left: 0;
+    .or {
+        padding-left: 3.5em;
+        padding-bottom: 0.3em;
+        font-weight: bold;
+        font-variant: small-caps;
+    }
+
+    .first {
+        margin-bottom: 0.5em;
+    }
+
+    .second {
+        margin-top: 0.5em;
+    }
+
+    ol ol {
+        list-style-type: sub;
+        padding-left: 1.5em;
     }
 }
 
