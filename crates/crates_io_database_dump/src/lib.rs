@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use anyhow::{anyhow, Context};
 use serde::Serialize;
 use std::fs;
