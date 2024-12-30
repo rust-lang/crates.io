@@ -22,6 +22,22 @@ export default class Crate extends Model {
   @attr max_version;
   @attr max_stable_version;
   @attr newest_version;
+  /**
+   * @typedef {Object} VersionsMeta
+   * @property {number} total
+   * @property {string | null} next_page
+   * @property {Object.<string, ReleaseTrackDetails>} release_tracks
+   *
+   * @typedef {Object} ReleaseTrackDetails
+   * @property {string} highest
+   **/
+  /**
+   * This isn't an attribute in the crate response.
+   * It's actually the `meta` attribute that belongs to `versions`
+   * and needs to be assigned to `crate` manually.
+   * @type {VersionsMeta | null}
+   **/
+  @attr versions_meta;
 
   @attr description;
   @attr homepage;
@@ -67,16 +83,17 @@ export default class Crate extends Model {
     return Object.fromEntries(versions.slice().map(v => [v.id, v]));
   }
 
+  /**
+   * @type {Set<string>}
+   **/
   @cached get releaseTrackSet() {
-    let map = new Map();
-    let { versionsObj: versions, versionIdsBySemver } = this;
-    for (let id of versionIdsBySemver) {
-      let { releaseTrack, isPrerelease, yanked } = versions[id];
-      if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
-        map.set(releaseTrack, id);
-      }
-    }
-    return new Set(map.values());
+    let { release_tracks } = this.versions_meta ?? {};
+    assert(
+      '`loadVersionsTask.perform({ withReleaseTracks: true })` must be called before calling `releaseTrackSet`',
+      release_tracks != null,
+    );
+    let nums = Object.values(release_tracks ?? {}).map(it => it.highest) ?? [];
+    return new Set(nums);
   }
 
   hasOwnerUser(userId) {
@@ -130,8 +147,19 @@ export default class Crate extends Model {
     return [...(teams ?? []), ...(users ?? [])];
   });
 
-  loadVersionsTask = task(async () => {
-    return (await this.versions) ?? [];
+  /**
+   * @param {Object} [Options]
+   * @param {bool} [Options.reload]
+   * @param {bool} [Options.withReleaseTracks] - default: true if it has not yet been loaded else false
+   **/
+  loadVersionsTask = task(async ({ reload = false, withReleaseTracks } = {}) => {
+    let versionsRef = this.hasMany('versions');
+    let opts = { adapterOptions: { withReleaseTracks } };
+    if (opts.adapterOptions.withReleaseTracks == null) {
+      opts.adapterOptions.withReleaseTracks = this?.versions_meta?.release_tracks == null;
+    }
+    let fut = reload === true ? versionsRef.reload(opts) : versionsRef.load(opts);
+    return (await fut) ?? [];
   });
 }
 

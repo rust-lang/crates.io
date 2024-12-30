@@ -15,7 +15,7 @@ export default class VersionRoute extends Route {
     let crate = this.modelFor('crate');
 
     try {
-      let versions = await crate.hasMany('versions').load();
+      let versions = await crate.loadVersionsTask.perform();
       let allVersionNums = versions.map(it => it.num);
       let unyankedVersionNums = versions.filter(it => !it.yanked).map(it => it.num);
 
