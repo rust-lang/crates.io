@@ -22,6 +22,7 @@ module('Mirage | GET /api/v1/crates/:id/versions', function (hooks) {
     assert.strictEqual(response.status, 200);
     assert.deepEqual(await response.json(), {
       versions: [],
+      meta: { total: 0, next_page: null },
     });
   });
 
@@ -103,6 +104,37 @@ module('Mirage | GET /api/v1/crates/:id/versions', function (hooks) {
           yank_message: null,
         },
       ],
+      meta: { total: 3, next_page: null },
+    });
+  });
+
+  test('include `release_tracks` meta', async function (assert) {
+    let user = this.server.create('user');
+    let crate = this.server.create('crate', { name: 'rand' });
+    this.server.create('version', { crate, num: '0.0.1' });
+    this.server.create('version', { crate, num: '0.0.2', yanked: true });
+    this.server.create('version', { crate, num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.1.0', publishedBy: user });
+    this.server.create('version', { crate, num: '1.2.0', rust_version: '1.69', yanked: true });
+
+    let req = await fetch('/api/v1/crates/rand/versions');
+    let expected = await req.json();
+
+    let response = await fetch('/api/v1/crates/rand/versions?include=release_tracks');
+    assert.strictEqual(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ...expected,
+      meta: {
+        ...expected.meta,
+        release_tracks: {
+          '0.0': {
+            highest: '0.0.1',
+          },
+          1: {
+            highest: '1.1.0',
+          },
+        },
+      },
     });
   });
 });
