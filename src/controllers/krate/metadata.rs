@@ -18,7 +18,6 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use std::cmp::Reverse;
 use std::str::FromStr;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -91,15 +90,12 @@ pub async fn find_crate(
             .ok_or_else(|| crate_not_found(&path.name))?;
 
     let mut versions_publishers_and_audit_actions = if include.versions {
-        let mut versions_and_publishers: Vec<(Version, Option<User>)> =
-            Version::belonging_to(&krate)
-                .left_outer_join(users::table)
-                .select(<(Version, Option<User>)>::as_select())
-                .load(&mut conn)
-                .await?;
-
-        versions_and_publishers
-            .sort_by_cached_key(|(version, _)| Reverse(semver::Version::parse(&version.num).ok()));
+        let versions_and_publishers: Vec<(Version, Option<User>)> = Version::belonging_to(&krate)
+            .left_outer_join(users::table)
+            .select(<(Version, Option<User>)>::as_select())
+            .order_by(versions::id)
+            .load(&mut conn)
+            .await?;
 
         let versions = versions_and_publishers
             .iter()
