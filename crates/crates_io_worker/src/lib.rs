@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 mod background_job;
 mod errors;
 mod job_registry;

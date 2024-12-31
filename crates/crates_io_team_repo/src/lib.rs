@@ -1,9 +1,4 @@
-//! The code in this module interacts with the
-//! <https://github.com/rust-lang/team/> repository.
-//!
-//! The [TeamRepo] trait is used to abstract away the HTTP client for testing
-//! purposes. The [TeamRepoImpl] struct is the actual implementation of
-//! the trait.
+#![doc = include_str!("../README.md")]
 
 use async_trait::async_trait;
 use reqwest::{Certificate, Client};

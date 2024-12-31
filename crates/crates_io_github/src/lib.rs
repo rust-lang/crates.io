@@ -1,4 +1,4 @@
-//! This module implements functionality for interacting with GitHub.
+#![doc = include_str!("../README.md")]
 
 #[macro_use]
 extern crate tracing;

@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use axum::extract::{Extension, FromRequestParts, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};

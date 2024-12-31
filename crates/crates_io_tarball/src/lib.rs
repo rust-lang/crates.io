@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 #[cfg(test)]
 #[macro_use]
 extern crate claims;
