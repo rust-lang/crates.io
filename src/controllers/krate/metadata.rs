@@ -7,8 +7,8 @@
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, Keyword, RecentCrateDownloads, User, Version,
-    VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, Keyword, RecentCrateDownloads, TopVersions, User,
+    Version, VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
@@ -160,8 +160,16 @@ pub async fn find_crate(
         None
     };
 
-    let top_versions = if include.versions {
-        Some(krate.top_versions(&mut conn).await?)
+    let top_versions = if let Some(versions) = versions_publishers_and_audit_actions
+        .as_ref()
+        .filter(|_| include.versions)
+    {
+        let pairs = versions
+            .iter()
+            .filter(|(v, _, _)| !v.yanked)
+            .cloned()
+            .map(|(v, _, _)| (v.created_at, v.num));
+        Some(TopVersions::from_date_version_pairs(pairs))
     } else {
         None
     };
