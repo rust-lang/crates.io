@@ -178,3 +178,44 @@ async fn test_new_name() {
         ".crate.updated_at" => "[datetime]",
     });
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_include_default_version() {
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    CrateBuilder::new("foo_default_version", user.id)
+        .description("description")
+        .documentation("https://example.com")
+        .homepage("http://example.com")
+        .version(VersionBuilder::new("1.0.0").yanked(true))
+        .version(VersionBuilder::new("0.5.0"))
+        .version(VersionBuilder::new("0.5.1"))
+        .keyword("kw1")
+        .downloads(20)
+        .recent_downloads(10)
+        .expect_build(&mut conn)
+        .await;
+
+    let response = anon
+        .get::<()>("/api/v1/crates/foo_default_version?include=default_version")
+        .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+        ".versions[].created_at" => "[datetime]",
+        ".versions[].updated_at" => "[datetime]",
+    });
+
+    let resp_versions = anon
+        .get::<()>("/api/v1/crates/foo_default_version?include=versions")
+        .await;
+    let resp_both = anon
+        .get::<()>("/api/v1/crates/foo_default_version?include=versions,default_version")
+        .await;
+    assert_eq!(resp_versions.status(), StatusCode::OK);
+    assert_eq!(resp_both.status(), StatusCode::OK);
+    assert_eq!(resp_versions.json(), resp_both.json());
+}

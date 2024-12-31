@@ -1,0 +1,79 @@
+---
+source: src/tests/routes/crates/read.rs
+expression: response.json()
+snapshot_kind: text
+---
+{
+  "categories": null,
+  "crate": {
+    "badges": [],
+    "categories": null,
+    "created_at": "[datetime]",
+    "default_version": "0.5.1",
+    "description": "description",
+    "documentation": "https://example.com",
+    "downloads": 20,
+    "exact_match": false,
+    "homepage": "http://example.com",
+    "id": "foo_default_version",
+    "keywords": null,
+    "links": {
+      "owner_team": "/api/v1/crates/foo_default_version/owner_team",
+      "owner_user": "/api/v1/crates/foo_default_version/owner_user",
+      "owners": "/api/v1/crates/foo_default_version/owners",
+      "reverse_dependencies": "/api/v1/crates/foo_default_version/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo_default_version/downloads",
+      "versions": "/api/v1/crates/foo_default_version/versions"
+    },
+    "max_stable_version": null,
+    "max_version": "0.0.0",
+    "name": "foo_default_version",
+    "newest_version": "0.0.0",
+    "recent_downloads": null,
+    "repository": null,
+    "updated_at": "[datetime]",
+    "versions": null,
+    "yanked": false
+  },
+  "keywords": null,
+  "versions": [
+    {
+      "audit_actions": [],
+      "bin_names": null,
+      "checksum": "                                                                ",
+      "crate": "foo_default_version",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "description": null,
+      "dl_path": "/api/v1/crates/foo_default_version/0.5.1/download",
+      "documentation": null,
+      "downloads": 0,
+      "edition": null,
+      "features": {},
+      "has_lib": null,
+      "homepage": null,
+      "id": 3,
+      "lib_links": null,
+      "license": null,
+      "links": {
+        "authors": "/api/v1/crates/foo_default_version/0.5.1/authors",
+        "dependencies": "/api/v1/crates/foo_default_version/0.5.1/dependencies",
+        "version_downloads": "/api/v1/crates/foo_default_version/0.5.1/downloads"
+      },
+      "num": "0.5.1",
+      "published_by": {
+        "avatar": null,
+        "id": 1,
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/foo_default_version/0.5.1/readme",
+      "repository": null,
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yank_message": null,
+      "yanked": false
+    }
+  ]
+}
