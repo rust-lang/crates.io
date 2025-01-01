@@ -51,10 +51,6 @@ impl<T> Response<T> {
         assert_ok!(from_utf8(bytes)).to_string()
     }
 
-    pub fn status(&self) -> StatusCode {
-        self.response.status()
-    }
-
     #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
         let headers = self.response.headers();
