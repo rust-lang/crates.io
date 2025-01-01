@@ -6,7 +6,13 @@ import semverSort from 'semver/functions/rsort';
 import { compareIsoDates } from '../route-handlers/-utils';
 import BaseSerializer from './application';
 
-const VALID_INCLUDE_MODEL = new Set(['versions', 'keywords', 'categories' /*, 'badges', 'downloads' */]);
+const VALID_INCLUDE_MODEL = new Set([
+  'versions',
+  'default_version',
+  'keywords',
+  'categories',
+  /*, 'badges', 'downloads' */
+]);
 
 export default BaseSerializer.extend({
   include(request) {
