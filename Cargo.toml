@@ -49,7 +49,7 @@ aws-ip-ranges = "=0.964.0"
 aws-sdk-cloudfront = "=1.58.0"
 aws-sdk-sqs = "=1.52.0"
 axum = { version = "=0.7.9", features = ["macros", "matched-path"] }
-axum-extra = { version = "=0.9.6", features = ["erased-json", "query", "typed-header"] }
+axum-extra = { version = "=0.10.0", features = ["erased-json", "query", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.7", features = ["serde"] }
 bon = "=3.3.2"
