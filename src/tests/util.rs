@@ -93,20 +93,26 @@ pub trait RequestHelper {
     /// Run a request that is expected to succeed
     async fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
         let app = self.app();
-        let router = app.router().clone();
-
-        // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
-        // extractor has something to extract.
-        let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
-        let router = router.layer(MockConnectInfo(mocket_addr));
-
         let request = request.map(Into::into);
-        let axum_response = router.oneshot(request).await.unwrap();
 
-        let (parts, body) = axum_response.into_parts();
-        let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
-        let bytes_response = axum::response::Response::from_parts(parts, bytes);
+        // This inner function is used to avoid long compile times
+        // due to monomorphization of the `run()` fn itself
+        async fn inner(app: &TestApp, request: Request<Body>) -> axum::response::Response<Bytes> {
+            let router = app.router().clone();
 
+            // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
+            // extractor has something to extract.
+            let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
+            let router = router.layer(MockConnectInfo(mocket_addr));
+
+            let axum_response = router.oneshot(request).await.unwrap();
+
+            let (parts, body) = axum_response.into_parts();
+            let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+            axum::response::Response::from_parts(parts, bytes)
+        }
+
+        let bytes_response = inner(app, request).await;
         Response::new(bytes_response)
     }
 
