@@ -24,6 +24,7 @@ use crate::tests::{
     CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
     OwnersResponse, VersionResponse,
 };
+use std::future::Future;
 
 use http::{Method, Request};
 
@@ -33,6 +34,7 @@ use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
+use futures_util::FutureExt;
 use http::header;
 use secrecy::ExposeSecret;
 use serde_json::json;
@@ -91,7 +93,7 @@ pub trait RequestHelper {
     fn app(&self) -> &TestApp;
 
     /// Run a request that is expected to succeed
-    async fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
+    fn run<T>(&self, request: Request<impl Into<Body>>) -> impl Future<Output = Response<T>> {
         let app = self.app();
         let request = request.map(Into::into);
 
@@ -112,8 +114,7 @@ pub trait RequestHelper {
             axum::response::Response::from_parts(parts, bytes)
         }
 
-        let bytes_response = inner(app, request).await;
-        Response::new(bytes_response)
+        inner(app, request).map(Response::new)
     }
 
     /// Create a get request
