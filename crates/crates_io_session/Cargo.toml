@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 axum = { version = "=0.8.1", features = ["macros"] }
-axum-extra = { version = "=0.9.6", features = ["cookie-signed"] }
+axum-extra = { version = "=0.10.0", features = ["cookie-signed"] }
 base64 = "=0.22.1"
 cookie = { version = "=0.18.1", features = ["secure"] }
 parking_lot = "=0.12.3"
