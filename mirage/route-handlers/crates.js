@@ -59,6 +59,8 @@ export function register(server) {
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
     let serialized = this.serialize(crate);
+    let includes = request.queryParams?.include ?? '';
+    let includeDefaultVersion = includes.includes('default_version') && !includes.includes('versions');
     return {
       categories: null,
       keywords: null,
@@ -67,6 +69,12 @@ export function register(server) {
       ...(serialized.crate.categories && this.serialize(crate.categories)),
       ...(serialized.crate.keywords && this.serialize(crate.keywords)),
       ...(serialized.crate.versions && this.serialize(crate.versions.sort((a, b) => Number(b.id) - Number(a.id)))),
+      // `default_version` share the same key `versions`
+      ...(includeDefaultVersion && {
+        versions: [serialized.crate.default_version].map(
+          num => this.serialize(schema.versions.findBy({ num })).version,
+        ),
+      }),
     };
   });
 

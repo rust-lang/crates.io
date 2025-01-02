@@ -223,4 +223,47 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
       versions: null,
     });
   });
+  test('includes default_version', async function (assert) {
+    let crate = this.server.create('crate', { name: 'rand' });
+    this.server.create('version', { crate, num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.1.0' });
+    this.server.create('version', { crate, num: '1.2.0' });
+
+    let req = await fetch('/api/v1/crates/rand');
+    let expected = await req.json();
+
+    let response = await fetch('/api/v1/crates/rand?include=default_version');
+    assert.strictEqual(response.status, 200);
+
+    let responsePayload = await response.json();
+    let default_version = expected.versions.find(it => it.num === responsePayload.crate.default_version);
+    assert.deepEqual(responsePayload, {
+      ...expected,
+      crate: {
+        ...expected.crate,
+        categories: null,
+        keywords: null,
+        max_version: '0.0.0',
+        newest_version: '0.0.0',
+        max_stable_version: null,
+        versions: null,
+      },
+      categories: null,
+      keywords: null,
+      versions: [default_version],
+    });
+
+    let resp_both = await fetch('/api/v1/crates/rand?include=versions,default_version');
+    assert.strictEqual(response.status, 200);
+    assert.deepEqual(await resp_both.json(), {
+      ...expected,
+      crate: {
+        ...expected.crate,
+        categories: null,
+        keywords: null,
+      },
+      categories: null,
+      keywords: null,
+    });
+  });
 });
