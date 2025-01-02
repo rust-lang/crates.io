@@ -25,8 +25,10 @@ use super::CrateVersionPath;
 pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<ErasedJson> {
     let mut conn = state.db_read().await?;
     let (version, krate) = path.load_version_and_crate(&mut conn).await?;
-    let published_by = version.published_by(&mut conn).await?;
-    let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
+    let (actions, published_by) = tokio::try_join!(
+        VersionOwnerAction::by_version(&mut conn, &version),
+        version.published_by(&mut conn),
+    )?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, actions);
     Ok(json!({ "version": version }))
