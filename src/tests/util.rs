@@ -24,6 +24,7 @@ use crate::tests::{
     CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
     OwnersResponse, VersionResponse,
 };
+use std::future::Future;
 
 use http::{Method, Request};
 
@@ -33,6 +34,7 @@ use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::NaiveDateTime;
 use cookie::Cookie;
+use futures_util::FutureExt;
 use http::header;
 use secrecy::ExposeSecret;
 use serde_json::json;
@@ -91,23 +93,28 @@ pub trait RequestHelper {
     fn app(&self) -> &TestApp;
 
     /// Run a request that is expected to succeed
-    async fn run<T>(&self, request: Request<impl Into<Body>>) -> Response<T> {
+    fn run<T>(&self, request: Request<impl Into<Body>>) -> impl Future<Output = Response<T>> {
         let app = self.app();
-        let router = app.router().clone();
-
-        // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
-        // extractor has something to extract.
-        let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
-        let router = router.layer(MockConnectInfo(mocket_addr));
-
         let request = request.map(Into::into);
-        let axum_response = router.oneshot(request).await.unwrap();
 
-        let (parts, body) = axum_response.into_parts();
-        let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
-        let bytes_response = axum::response::Response::from_parts(parts, bytes);
+        // This inner function is used to avoid long compile times
+        // due to monomorphization of the `run()` fn itself
+        async fn inner(app: &TestApp, request: Request<Body>) -> axum::response::Response<Bytes> {
+            let router = app.router().clone();
 
-        Response::new(bytes_response)
+            // Add a mock `SocketAddr` to the requests so that the `ConnectInfo`
+            // extractor has something to extract.
+            let mocket_addr = SocketAddr::from(([127, 0, 0, 1], 52381));
+            let router = router.layer(MockConnectInfo(mocket_addr));
+
+            let axum_response = router.oneshot(request).await.unwrap();
+
+            let (parts, body) = axum_response.into_parts();
+            let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap();
+            axum::response::Response::from_parts(parts, bytes)
+        }
+
+        inner(app, request).map(Response::new)
     }
 
     /// Create a get request
@@ -134,26 +141,18 @@ pub trait RequestHelper {
 
     /// Issue a PUT request
     async fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
-        let body = body.into();
-
-        let mut request = self.request_builder(Method::PUT, path);
-        *request.body_mut() = body;
-        if is_json_body(request.body()) {
-            request.header(header::CONTENT_TYPE, "application/json");
-        }
+        let request = self
+            .request_builder(Method::PUT, path)
+            .with_body(body.into());
 
         self.run(request).await
     }
 
     /// Issue a PATCH request
     async fn patch<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
-        let body = body.into();
-
-        let mut request = self.request_builder(Method::PATCH, path);
-        *request.body_mut() = body;
-        if is_json_body(request.body()) {
-            request.header(header::CONTENT_TYPE, "application/json");
-        }
+        let request = self
+            .request_builder(Method::PATCH, path)
+            .with_body(body.into());
 
         self.run(request).await
     }
@@ -166,13 +165,9 @@ pub trait RequestHelper {
 
     /// Issue a DELETE request with a body... yes we do it, for crate owner removal
     async fn delete_with_body<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
-        let body = body.into();
-
-        let mut request = self.request_builder(Method::DELETE, path);
-        *request.body_mut() = body;
-        if is_json_body(request.body()) {
-            request.header(header::CONTENT_TYPE, "application/json");
-        }
+        let request = self
+            .request_builder(Method::DELETE, path)
+            .with_body(body.into());
 
         self.run(request).await
     }
@@ -254,11 +249,6 @@ fn req(method: Method, path: &str) -> MockRequest {
         .header(header::USER_AGENT, "conduit-test")
         .body(Bytes::new())
         .unwrap()
-}
-
-fn is_json_body(body: &Bytes) -> bool {
-    (body.starts_with(b"{") && body.ends_with(b"}"))
-        || (body.starts_with(b"[") && body.ends_with(b"]"))
 }
 
 /// A type that can generate unauthenticated requests

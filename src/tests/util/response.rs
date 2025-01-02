@@ -51,10 +51,6 @@ impl<T> Response<T> {
         assert_ok!(from_utf8(bytes)).to_string()
     }
 
-    pub fn status(&self) -> StatusCode {
-        self.response.status()
-    }
-
     #[track_caller]
     pub fn assert_redirect_ends_with(&self, target: &str) -> &Self {
         let headers = self.response.headers();
@@ -105,21 +101,25 @@ fn json<T>(r: &hyper::Response<Bytes>) -> T
 where
     for<'de> T: serde::Deserialize<'de>,
 {
-    let headers = r.headers();
+    fn inner(r: &hyper::Response<Bytes>) -> &Bytes {
+        let headers = r.headers();
 
-    assert_some_eq!(headers.get(header::CONTENT_TYPE), "application/json");
+        assert_some_eq!(headers.get(header::CONTENT_TYPE), "application/json");
 
-    let content_length = assert_some!(
-        r.headers().get(header::CONTENT_LENGTH),
-        "Missing content-length header"
-    );
-    let content_length = assert_ok!(content_length.to_str());
-    let content_length: usize = assert_ok!(content_length.parse());
+        let content_length = assert_some!(
+            r.headers().get(header::CONTENT_LENGTH),
+            "Missing content-length header"
+        );
+        let content_length = assert_ok!(content_length.to_str());
+        let content_length: usize = assert_ok!(content_length.parse());
 
-    let bytes = r.body();
-    assert_that!(*bytes, len(eq(content_length)));
+        let bytes = r.body();
+        assert_that!(*bytes, len(eq(content_length)));
 
-    match serde_json::from_slice(bytes) {
+        bytes
+    }
+
+    match serde_json::from_slice(inner(r)) {
         Ok(t) => t,
         Err(e) => panic!("failed to decode: {e:?}"),
     }

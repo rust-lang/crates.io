@@ -1,10 +1,11 @@
 use axum::body::Bytes;
-use http::{header::IntoHeaderName, HeaderValue, Request};
+use http::{header, header::IntoHeaderName, HeaderValue, Request};
 
 pub type MockRequest = Request<Bytes>;
 
 pub trait MockRequestExt {
     fn header<K: IntoHeaderName>(&mut self, name: K, value: &str);
+    fn with_body(self, bytes: Bytes) -> Self;
 }
 
 impl MockRequestExt for MockRequest {
@@ -15,6 +16,20 @@ impl MockRequestExt for MockRequest {
         self.headers_mut()
             .append(name, HeaderValue::from_str(value).unwrap());
     }
+
+    fn with_body(mut self, bytes: Bytes) -> Self {
+        if is_json_body(&bytes) {
+            self.header(header::CONTENT_TYPE, "application/json");
+        }
+
+        *self.body_mut() = bytes;
+        self
+    }
+}
+
+fn is_json_body(body: &Bytes) -> bool {
+    (body.starts_with(b"{") && body.ends_with(b"}"))
+        || (body.starts_with(b"[") && body.ends_with(b"]"))
 }
 
 #[cfg(test)]
