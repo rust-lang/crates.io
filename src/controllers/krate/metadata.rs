@@ -123,8 +123,10 @@ pub async fn find_crate(
         .filter(|_| include.default_version && !include.versions)
     {
         let version = krate.find_version(&mut conn, default_version).await?;
-        let published_by = version.published_by(&mut conn).await?;
-        let actions = VersionOwnerAction::by_version(&mut conn, &version).await?;
+        let (actions, published_by) = tokio::try_join!(
+            VersionOwnerAction::by_version(&mut conn, &version),
+            version.published_by(&mut conn),
+        )?;
         versions_publishers_and_audit_actions = Some(vec![(version, published_by, actions)]);
     };
 
