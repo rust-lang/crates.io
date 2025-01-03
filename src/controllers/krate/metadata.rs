@@ -93,7 +93,7 @@ pub async fn find_crate(
         let versions_and_publishers: Vec<(Version, Option<User>)> = Version::belonging_to(&krate)
             .left_outer_join(users::table)
             .select(<(Version, Option<User>)>::as_select())
-            .order_by(versions::id)
+            .order_by(versions::id.desc())
             .load(&mut conn)
             .await?;
 
