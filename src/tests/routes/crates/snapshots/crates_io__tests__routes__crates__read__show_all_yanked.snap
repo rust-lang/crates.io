@@ -35,8 +35,8 @@ snapshot_kind: text
     "repository": null,
     "updated_at": "[datetime]",
     "versions": [
-      1,
-      2
+      2,
+      1
     ],
     "yanked": true
   },
@@ -49,44 +49,6 @@ snapshot_kind: text
     }
   ],
   "versions": [
-    {
-      "audit_actions": [],
-      "bin_names": null,
-      "checksum": "                                                                ",
-      "crate": "foo_show",
-      "crate_size": 0,
-      "created_at": "[datetime]",
-      "description": null,
-      "dl_path": "/api/v1/crates/foo_show/1.0.0/download",
-      "documentation": null,
-      "downloads": 0,
-      "edition": null,
-      "features": {},
-      "has_lib": null,
-      "homepage": null,
-      "id": 1,
-      "lib_links": null,
-      "license": null,
-      "links": {
-        "authors": "/api/v1/crates/foo_show/1.0.0/authors",
-        "dependencies": "/api/v1/crates/foo_show/1.0.0/dependencies",
-        "version_downloads": "/api/v1/crates/foo_show/1.0.0/downloads"
-      },
-      "num": "1.0.0",
-      "published_by": {
-        "avatar": null,
-        "id": 1,
-        "login": "foo",
-        "name": null,
-        "url": "https://github.com/foo"
-      },
-      "readme_path": "/api/v1/crates/foo_show/1.0.0/readme",
-      "repository": null,
-      "rust_version": null,
-      "updated_at": "[datetime]",
-      "yank_message": null,
-      "yanked": true
-    },
     {
       "audit_actions": [],
       "bin_names": null,
@@ -119,6 +81,44 @@ snapshot_kind: text
         "url": "https://github.com/foo"
       },
       "readme_path": "/api/v1/crates/foo_show/0.5.0/readme",
+      "repository": null,
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yank_message": null,
+      "yanked": true
+    },
+    {
+      "audit_actions": [],
+      "bin_names": null,
+      "checksum": "                                                                ",
+      "crate": "foo_show",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "description": null,
+      "dl_path": "/api/v1/crates/foo_show/1.0.0/download",
+      "documentation": null,
+      "downloads": 0,
+      "edition": null,
+      "features": {},
+      "has_lib": null,
+      "homepage": null,
+      "id": 1,
+      "lib_links": null,
+      "license": null,
+      "links": {
+        "authors": "/api/v1/crates/foo_show/1.0.0/authors",
+        "dependencies": "/api/v1/crates/foo_show/1.0.0/dependencies",
+        "version_downloads": "/api/v1/crates/foo_show/1.0.0/downloads"
+      },
+      "num": "1.0.0",
+      "published_by": {
+        "avatar": null,
+        "id": 1,
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/foo_show/1.0.0/readme",
       "repository": null,
       "rust_version": null,
       "updated_at": "[datetime]",
