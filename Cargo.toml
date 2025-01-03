@@ -43,7 +43,7 @@ doctest = true
 [dependencies]
 anyhow = "=1.0.95"
 async-compression = { version = "=0.4.18", default-features = false, features = ["gzip", "tokio"] }
-async-trait = "=0.1.83"
+async-trait = "=0.1.84"
 aws-credential-types = { version = "=1.2.1", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.964.0"
 aws-sdk-cloudfront = "=1.58.0"
