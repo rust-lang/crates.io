@@ -153,7 +153,12 @@ export function register(server) {
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    let versions = crate.versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    let versions = crate.versions;
+    let { nums } = request.queryParams;
+    if (nums) {
+      versions = versions.filter(version => nums.includes(version.num));
+    }
+    versions = versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
     let total = versions.length;
     let include = request.queryParams?.include ?? '';
     let release_tracks = include.split(',').includes('release_tracks') && releaseTracks(crate.versions);

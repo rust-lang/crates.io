@@ -108,6 +108,21 @@ module('Mirage | GET /api/v1/crates/:name/versions', function (hooks) {
     });
   });
 
+  test('supports multiple `ids[]` parameters', async function (assert) {
+    let user = this.server.create('user');
+    let crate = this.server.create('crate', { name: 'rand' });
+    this.server.create('version', { crate, num: '1.0.0' });
+    this.server.create('version', { crate, num: '1.1.0', publishedBy: user });
+    this.server.create('version', { crate, num: '1.2.0', rust_version: '1.69' });
+    let response = await fetch('/api/v1/crates/rand/versions?nums[]=1.0.0&nums[]=1.2.0');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(v => v.num),
+      ['1.0.0', '1.2.0'],
+    );
+  });
+
   test('include `release_tracks` meta', async function (assert) {
     let user = this.server.create('user');
     let crate = this.server.create('crate', { name: 'rand' });
