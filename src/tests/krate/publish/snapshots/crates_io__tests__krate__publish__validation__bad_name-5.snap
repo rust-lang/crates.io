@@ -1,7 +1,6 @@
 ---
 source: src/tests/krate/publish/validation.rs
 expression: response.json()
-snapshot_kind: text
 ---
 {
   "errors": [

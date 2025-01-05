@@ -1,7 +1,6 @@
 ---
 source: src/tests/krate/publish/basics.rs
 expression: crates
-snapshot_kind: text
 ---
 [
   {

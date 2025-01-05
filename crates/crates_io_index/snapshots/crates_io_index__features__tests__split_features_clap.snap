@@ -1,7 +1,6 @@
 ---
 source: crates/crates_io_index/features.rs
 expression: split_features(features)
-snapshot_kind: text
 ---
 (
     {

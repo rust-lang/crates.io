@@ -1,7 +1,6 @@
 ---
 source: src/index.rs
 expression: metadata
-snapshot_kind: text
 ---
 [
   {
