@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-axum = { version = "=0.7.9", features = ["macros"] }
+axum = { version = "=0.8.1", features = ["macros"] }
 axum-extra = { version = "=0.9.6", features = ["cookie-signed"] }
 base64 = "=0.22.1"
 cookie = { version = "=0.18.1", features = ["secure"] }
