@@ -1,7 +1,6 @@
 ---
 source: src/openapi.rs
 expression: response.json()
-snapshot_kind: text
 ---
 {
   "components": {

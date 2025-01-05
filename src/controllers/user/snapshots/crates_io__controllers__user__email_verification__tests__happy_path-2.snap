@@ -1,7 +1,6 @@
 ---
 source: src/controllers/user/email_verification.rs
 expression: app.emails_snapshot().await
-snapshot_kind: text
 ---
 To: foo@example.com
 From: crates.io <noreply@crates.io>

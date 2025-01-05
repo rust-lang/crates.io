@@ -1,7 +1,6 @@
 ---
 source: src/tests/routes/categories/get.rs
 expression: json
-snapshot_kind: text
 ---
 {
   "category": {

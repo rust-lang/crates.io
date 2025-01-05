@@ -1,7 +1,6 @@
 ---
 source: src/worker/jobs/downloads/queue/message.rs
 expression: event
-snapshot_kind: text
 ---
 Message {
     records: [],

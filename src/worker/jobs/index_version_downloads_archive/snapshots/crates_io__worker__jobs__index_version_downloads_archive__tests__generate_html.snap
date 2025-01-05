@@ -1,7 +1,6 @@
 ---
 source: src/worker/jobs/index_version_downloads_archive/mod.rs
 expression: "std::str::from_utf8(&index)?"
-snapshot_kind: text
 ---
 <!DOCTYPE HTML>
 <html>

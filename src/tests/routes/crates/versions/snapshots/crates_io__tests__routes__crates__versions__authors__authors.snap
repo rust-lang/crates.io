@@ -1,7 +1,6 @@
 ---
 source: src/tests/routes/crates/versions/authors.rs
 expression: json
-snapshot_kind: text
 ---
 {
   "meta": {
