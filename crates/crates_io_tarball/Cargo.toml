@@ -29,7 +29,7 @@ claims = "=0.8.0"
 clap = { version = "=4.5.23", features = ["derive", "unicode", "wrap_help"] }
 flate2 = { version = "=1.0.35" }
 indicatif = { version = "=0.17.9", features = ["rayon"] }
-insta = "=1.41.1"
+insta = "=1.42.0"
 rayon = "=1.10.0"
 tar = { version = "=0.4.43" }
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter"] }
