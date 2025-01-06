@@ -22,4 +22,21 @@ module('Adapter | crate', function (hooks) {
     assert.strictEqual(foo?.name, 'foo');
     assert.strictEqual(bar?.name, 'bar');
   });
+
+  test('findRecord requests do not include versions by default', async function (assert) {
+    let _foo = this.server.create('crate', { name: 'foo' });
+    let version = this.server.create('version', { crate: _foo });
+
+    let store = this.owner.lookup('service:store');
+
+    let foo = await store.findRecord('crate', 'foo');
+    assert.strictEqual(foo?.name, 'foo');
+
+    // versions should not be loaded yet
+    let versionsRef = foo.hasMany('versions');
+    assert.deepEqual(versionsRef.ids(), []);
+
+    await versionsRef.load();
+    assert.deepEqual(versionsRef.ids(), [version.id]);
+  });
 });
