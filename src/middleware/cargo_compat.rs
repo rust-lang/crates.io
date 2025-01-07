@@ -1,7 +1,7 @@
 use axum::extract::{MatchedPath, Request, State};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
+use axum::Json;
 use http::{header, Method, StatusCode};
 use std::str::FromStr;
 
@@ -36,12 +36,13 @@ impl FromStr for StatusCodeConfig {
 /// Convert plain text errors into JSON errors and adjust status codes.
 pub async fn middleware(
     State(config): State<StatusCodeConfig>,
-    matched_path: Option<Extension<MatchedPath>>,
     req: Request,
     next: Next,
 ) -> Response {
     let is_api_request = req.uri().path().starts_with("/api/");
-    let is_cargo_endpoint = matched_path
+    let is_cargo_endpoint = req
+        .extensions()
+        .get::<MatchedPath>()
         .map(|m| is_cargo_endpoint(req.method(), m.as_str()))
         .unwrap_or(false);
 
