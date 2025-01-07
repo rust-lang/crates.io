@@ -354,6 +354,23 @@ export function register(server) {
     return { ok: true, msg: 'owners successfully removed' };
   });
 
+  server.get('/api/v1/crates/:name/:version', function (schema, request) {
+    let { name } = request.params;
+    let crate = schema.crates.findBy({ name });
+    if (!crate) return notFound();
+
+    let num = request.params.version;
+    let version = schema.versions.findBy({ crateId: crate.id, num });
+    if (!version) {
+      return new Response(
+        404,
+        {},
+        { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] },
+      );
+    }
+    return this.serialize(version);
+  });
+
   server.patch('/api/v1/crates/:name/:version', function (schema, request) {
     let { user } = getSession(schema);
     if (!user) {
