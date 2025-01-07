@@ -19,7 +19,7 @@ env:
   # renovate: datasource=crate depName=grcov versioning=semver
   GRCOV_VERSION: 0.8.20
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 9.15.2
+  PNPM_VERSION: 9.15.3
   # renovate: datasource=docker depName=postgres
   POSTGRES_VERSION: 16
 
