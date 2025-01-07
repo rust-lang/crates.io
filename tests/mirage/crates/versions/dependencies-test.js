@@ -5,7 +5,7 @@ import fetch from 'fetch';
 import { setupTest } from '../../../helpers';
 import setupMirage from '../../../helpers/setup-mirage';
 
-module('Mirage | GET /api/v1/crates/:id/:version/dependencies', function (hooks) {
+module('Mirage | GET /api/v1/crates/:name/:version/dependencies', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
@@ -15,13 +15,11 @@ module('Mirage | GET /api/v1/crates/:id/:version/dependencies', function (hooks)
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
-  test('returns 200 for unknown versions', async function (assert) {
+  test('returns 404 for unknown versions', async function (assert) {
     this.server.create('crate', { name: 'rand' });
 
     let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
-    // we should probably return 404 for this, but the production API
-    // currently doesn't do this either
-    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
   });
 

@@ -5,7 +5,7 @@ import fetch from 'fetch';
 import { setupTest } from '../../../../helpers';
 import setupMirage from '../../../../helpers/setup-mirage';
 
-module('Mirage | DELETE /api/v1/crates/:crateId/yank', function (hooks) {
+module('Mirage | DELETE /api/v1/crates/:name/yank', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
