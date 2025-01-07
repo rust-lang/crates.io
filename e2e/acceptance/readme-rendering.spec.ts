@@ -100,6 +100,7 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await expect(readme.locator('ul > li')).toHaveCount(7);
     await expect(readme.locator('pre > code.language-rust.hljs')).toHaveCount(2);
     await expect(readme.locator('pre > code.language-mermaid svg')).toBeVisible();
+    await expect(readme.locator('pre > code.language-mermaid')).toHaveAttribute('data-processed', 'true');
 
     await percy.snapshot();
   });
