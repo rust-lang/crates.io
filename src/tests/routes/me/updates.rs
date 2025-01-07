@@ -103,5 +103,5 @@ async fn following() {
         .get_with_query::<()>("/api/v1/me/updates", "page=0")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize query string: page: invalid value: integer `0`, expected a nonzero u32"}]}"#);
 }
