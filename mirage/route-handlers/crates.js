@@ -167,12 +167,12 @@ export function register(server) {
     return resp;
   });
 
-  server.get('/api/v1/crates/:name/:version_num/authors', (schema, request) => {
+  server.get('/api/v1/crates/:name/:version/authors', (schema, request) => {
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    let num = request.params.version_num;
+    let num = request.params.version;
     let version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version)
       return new Response(
@@ -184,12 +184,12 @@ export function register(server) {
     return { meta: { names: [] }, users: [] };
   });
 
-  server.get('/api/v1/crates/:name/:version_num/dependencies', (schema, request) => {
+  server.get('/api/v1/crates/:name/:version/dependencies', (schema, request) => {
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    let num = request.params.version_num;
+    let num = request.params.version;
     let version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version)
       return new Response(
@@ -201,12 +201,12 @@ export function register(server) {
     return schema.dependencies.where({ versionId: version.id });
   });
 
-  server.get('/api/v1/crates/:name/:version_num/downloads', function (schema, request) {
+  server.get('/api/v1/crates/:name/:version/downloads', function (schema, request) {
     let { name } = request.params;
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    let num = request.params.version_num;
+    let num = request.params.version;
     let version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version)
       return new Response(
@@ -377,13 +377,13 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    const { name, version: versionNum } = request.params;
+    const { name, version: num } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
       return notFound();
     }
 
-    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    const version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version) {
       return notFound();
     }
@@ -403,13 +403,13 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    const { name, version: versionNum } = request.params;
+    const { name, version: num } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
       return notFound();
     }
 
-    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    const version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version) {
       return notFound();
     }
@@ -425,13 +425,13 @@ export function register(server) {
       return new Response(403, {}, { errors: [{ detail: 'must be logged in to perform that action' }] });
     }
 
-    const { name, version: versionNum } = request.params;
+    const { name, version: num } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
       return notFound();
     }
 
-    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    const version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version) {
       return notFound();
     }
@@ -442,13 +442,13 @@ export function register(server) {
   });
 
   server.get('/api/v1/crates/:name/:version/readme', (schema, request) => {
-    const { name, version: versionNum } = request.params;
+    const { name, version: num } = request.params;
     const crate = schema.crates.findBy({ name });
     if (!crate) {
       return new Response(403, { 'Content-Type': 'text/html' }, '');
     }
 
-    const version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
+    const version = schema.versions.findBy({ crateId: crate.id, num });
     if (!version || !version.readme) {
       return new Response(403, { 'Content-Type': 'text/html' }, '');
     }

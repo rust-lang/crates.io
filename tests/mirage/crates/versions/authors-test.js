@@ -5,7 +5,7 @@ import fetch from 'fetch';
 import { setupTest } from '../../../helpers';
 import setupMirage from '../../../helpers/setup-mirage';
 
-module('Mirage | GET /api/v1/crates/:id/:version/authors', function (hooks) {
+module('Mirage | GET /api/v1/crates/:name/:version/authors', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 

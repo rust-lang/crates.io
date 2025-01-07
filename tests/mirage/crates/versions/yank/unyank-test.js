@@ -5,7 +5,7 @@ import fetch from 'fetch';
 import { setupTest } from '../../../../helpers';
 import setupMirage from '../../../../helpers/setup-mirage';
 
-module('Mirage | PUT /api/v1/crates/:crateId/unyank', function (hooks) {
+module('Mirage | PUT /api/v1/crates/:name/unyank', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 

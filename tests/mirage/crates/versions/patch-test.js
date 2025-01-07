@@ -18,7 +18,7 @@ const UNYANK_BODY = JSON.stringify({
   },
 });
 
-module('Mirage | PATCH /api/v1/crates/:crate/:version', function (hooks) {
+module('Mirage | PATCH /api/v1/crates/:name/:version', function (hooks) {
   setupTest(hooks);
   setupMirage(hooks);
 
