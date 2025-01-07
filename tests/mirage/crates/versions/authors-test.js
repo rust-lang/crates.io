@@ -15,13 +15,11 @@ module('Mirage | GET /api/v1/crates/:id/:version/authors', function (hooks) {
     assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
   });
 
-  test('returns 200 for unknown versions', async function (assert) {
+  test('returns 404 for unknown versions', async function (assert) {
     this.server.create('crate', { name: 'rand' });
 
     let response = await fetch('/api/v1/crates/rand/1.0.0/authors');
-    // we should probably return 404 for this, but the production API
-    // currently doesn't do this either
-    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.status, 404);
     assert.deepEqual(await response.json(), { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
   });
 

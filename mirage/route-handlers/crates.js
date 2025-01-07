@@ -174,7 +174,12 @@ export function register(server) {
 
     let num = request.params.version_num;
     let version = schema.versions.findBy({ crateId: crate.id, num });
-    if (!version) return { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] };
+    if (!version)
+      return new Response(
+        404,
+        {},
+        { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] },
+      );
 
     return { meta: { names: [] }, users: [] };
   });
@@ -186,7 +191,12 @@ export function register(server) {
 
     let num = request.params.version_num;
     let version = schema.versions.findBy({ crateId: crate.id, num });
-    if (!version) return { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] };
+    if (!version)
+      return new Response(
+        404,
+        {},
+        { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] },
+      );
 
     return schema.dependencies.where({ versionId: version.id });
   });
@@ -196,9 +206,14 @@ export function register(server) {
     let crate = schema.crates.findBy({ name });
     if (!crate) return notFound();
 
-    let versionNum = request.params.version_num;
-    let version = schema.versions.findBy({ crateId: crate.id, num: versionNum });
-    if (!version) return { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${versionNum}\`` }] };
+    let num = request.params.version_num;
+    let version = schema.versions.findBy({ crateId: crate.id, num });
+    if (!version)
+      return new Response(
+        404,
+        {},
+        { errors: [{ detail: `crate \`${crate.name}\` does not have a version \`${num}\`` }] },
+      );
 
     return schema.versionDownloads.where({ versionId: version.id });
   });
