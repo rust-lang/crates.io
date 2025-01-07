@@ -6,7 +6,7 @@ use http::request::Parts;
 use http::{header, StatusCode};
 use prometheus::TextEncoder;
 
-/// Handles the `GET /api/private/metrics/:kind` endpoint.
+/// Handles the `GET /api/private/metrics/{kind}` endpoint.
 pub async fn prometheus(app: AppState, Path(kind): Path<String>, req: Parts) -> AppResult<String> {
     if let Some(expected_token) = &app.config.metrics_authorization_token {
         let provided_token = req

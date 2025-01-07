@@ -7,7 +7,7 @@ use insta::assert_snapshot;
 
 // This is testing Cargo functionality! ! !
 // specifically functions modify_owners and add_owners
-// which call the `PUT /crates/:crate_id/owners` route
+// which call the `PUT /crates/{crate_id}/owners` route
 #[tokio::test(flavor = "multi_thread")]
 async fn test_cargo_invite_owners() {
     let (app, _, owner) = TestApp::init().with_user().await;

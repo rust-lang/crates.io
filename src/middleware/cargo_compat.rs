@@ -75,11 +75,11 @@ pub async fn middleware(
 fn is_cargo_endpoint(method: &Method, path: &str) -> bool {
     const CARGO_ENDPOINTS: &[(Method, &str)] = &[
         (Method::PUT, "/api/v1/crates/new"),
-        (Method::DELETE, "/api/v1/crates/:crate_id/:version/yank"),
-        (Method::PUT, "/api/v1/crates/:crate_id/:version/unyank"),
-        (Method::GET, "/api/v1/crates/:crate_id/owners"),
-        (Method::PUT, "/api/v1/crates/:crate_id/owners"),
-        (Method::DELETE, "/api/v1/crates/:crate_id/owners"),
+        (Method::DELETE, "/api/v1/crates/{crate_id}/{version}/yank"),
+        (Method::PUT, "/api/v1/crates/{crate_id}/{version}/unyank"),
+        (Method::GET, "/api/v1/crates/{crate_id}/owners"),
+        (Method::PUT, "/api/v1/crates/{crate_id}/owners"),
+        (Method::DELETE, "/api/v1/crates/{crate_id}/owners"),
         (Method::GET, "/api/v1/crates"),
     ];
 
@@ -154,7 +154,7 @@ mod tests {
             .route("/500", internal)
             .route("/api/v1/crates/new", put(|| async { StatusCode::CREATED }))
             .route(
-                "/api/v1/crates/:crate_id/owners",
+                "/api/v1/crates/{crate_id}/owners",
                 get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
             )
             .layer(from_fn_with_state(StatusCodeConfig::AdjustAll, middleware))
