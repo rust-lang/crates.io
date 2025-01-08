@@ -155,8 +155,8 @@ importers:
         specifier: 3.0.4
         version: 3.0.4(@ember-data/model@4.12.8)(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)))(ember-data@4.12.8(@babel/core@7.26.0)(@ember/string@3.1.1)(@glimmer/tracking@1.1.2)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))(webpack@5.97.1))(ember-qunit@9.0.1(@ember/test-helpers@4.0.4(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))(qunit@2.23.1))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))(miragejs@0.1.48)(webpack@5.97.1)
       ember-cli-notifications:
-        specifier: 9.0.0
-        version: 9.0.0
+        specifier: 9.1.0
+        version: 9.1.0(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))
       ember-click-outside:
         specifier: 6.1.1
         version: 6.1.1(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1))
@@ -4132,8 +4132,10 @@ packages:
   ember-cli-normalize-entity-name@1.0.0:
     resolution: {integrity: sha512-rF4P1rW2P1gVX1ynZYPmuIf7TnAFDiJmIUFI1Xz16VYykUAyiOCme0Y22LeZq8rTzwBMiwBwoE3RO4GYWehXZA==}
 
-  ember-cli-notifications@9.0.0:
-    resolution: {integrity: sha512-ytGHRLmIsr/WkKDGtPHwqtV27T4PAuikW2NP8IdreaOsnvoEY6v2vZJEJEU79z2kQ1XgrNRXWVg4R4KrdR3m8Q==}
+  ember-cli-notifications@9.1.0:
+    resolution: {integrity: sha512-Vr3/3y6dIbfFZB7OJuKrQCwMzL48Ym1tnJUGiElvg3G75gr/FUZ88O8gTo5HqCSASmqp2HFw4bQpvtmq2GHqjg==}
+    peerDependencies:
+      ember-source: '>= 3.8.0'
 
   ember-cli-path-utils@1.0.0:
     resolution: {integrity: sha512-Qq0vvquzf4cFHoDZavzkOy3Izc893r/5spspWgyzLCPTaG78fM3HsrjZm7UWEltbXUqwHHYrqZd/R0jS08NqSA==}
@@ -14032,10 +14034,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-notifications@9.0.0:
+  ember-cli-notifications@9.1.0(@babel/core@7.26.0)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)):
     dependencies:
       '@embroider/addon-shim': 1.9.0
+      decorator-transforms: 2.3.0(@babel/core@7.26.0)
+      ember-source: 6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.97.1)
     transitivePeerDependencies:
+      - '@babel/core'
       - supports-color
 
   ember-cli-path-utils@1.0.0: {}
