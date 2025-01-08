@@ -48,3 +48,7 @@
 .remove-button {
     composes: small yellow-button from '../shared/buttons.module.css';
 }
+
+.delete-button {
+    composes: red-button from '../shared/buttons.module.css';
+}
