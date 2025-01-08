@@ -6,6 +6,8 @@ use crate::models::{NewDeletedCrate, Rights};
 use crate::schema::{crate_downloads, crates, dependencies};
 use crate::util::errors::{custom, AppResult, BoxedAppError};
 use crate::worker::jobs;
+use axum::extract::rejection::QueryRejection;
+use axum::extract::{FromRequestParts, Query};
 use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
 use crates_io_database::schema::deleted_crates;
@@ -19,6 +21,19 @@ use http::StatusCode;
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;
 const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query), rejection(QueryRejection))]
+#[into_params(parameter_in = Query)]
+pub struct DeleteQueryParams {
+    message: Option<String>,
+}
+
+impl DeleteQueryParams {
+    pub fn message(&self) -> Option<&str> {
+        self.message.as_deref().filter(|m| !m.is_empty())
+    }
+}
+
 /// Delete a crate.
 ///
 /// The crate is immediately deleted from the database, and with a small delay
@@ -31,12 +46,17 @@ const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
 #[utoipa::path(
     delete,
     path = "/api/v1/crates/{name}",
-    params(CratePath),
+    params(CratePath, DeleteQueryParams),
     security(("cookie" = [])),
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppResult<StatusCode> {
+pub async fn delete_crate(
+    path: CratePath,
+    params: DeleteQueryParams,
+    parts: Parts,
+    app: AppState,
+) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
 
     // Check that the user is authenticated
@@ -96,6 +116,7 @@ pub async fn delete_crate(path: CratePath, parts: Parts, app: AppState) -> AppRe
                 .deleted_at(&deleted_at)
                 .deleted_by(user.id)
                 .available_at(&available_at)
+                .maybe_message(params.message())
                 .build();
 
             diesel::insert_into(deleted_crates::table)
@@ -200,11 +221,35 @@ mod tests {
     use crate::models::OwnerKind;
     use crate::tests::builders::{DependencyBuilder, PublishBuilder};
     use crate::tests::util::{RequestHelper, Response, TestApp};
+    use axum::RequestPartsExt;
     use crates_io_database::schema::crate_owners;
     use diesel_async::AsyncPgConnection;
-    use http::StatusCode;
+    use http::{Request, StatusCode};
     use insta::assert_snapshot;
     use serde_json::json;
+
+    #[tokio::test]
+    async fn test_query_params() -> anyhow::Result<()> {
+        let check = |uri| async move {
+            let request = Request::builder().uri(uri).body(())?;
+            let (mut parts, _) = request.into_parts();
+            Ok::<_, anyhow::Error>(parts.extract::<DeleteQueryParams>().await?)
+        };
+
+        let params = check("/api/v1/crates/foo").await?;
+        assert_none!(params.message);
+
+        let params = check("/api/v1/crates/foo?").await?;
+        assert_none!(params.message);
+
+        let params = check("/api/v1/crates/foo?message=").await?;
+        assert_eq!(assert_some!(params.message), "");
+
+        let params = check("/api/v1/crates/foo?message=hello%20world").await?;
+        assert_eq!(assert_some!(params.message), "hello world");
+
+        Ok(())
+    }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_happy_path_new_crate() -> anyhow::Result<()> {
