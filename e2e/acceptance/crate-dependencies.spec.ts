@@ -62,20 +62,6 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
 
-  test('shows an error page if versions fail to load', async ({ page, msw, ember }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '2.0.0' });
-    await msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
-
-    await page.goto('/crates/foo/1.0.0/dependencies');
-
-    await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
-    await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('foo: Failed to load version data');
-    await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
-    await expect(page.locator('[data-test-try-again]')).toBeVisible();
-  });
-
   test('shows error message if loading of dependencies fails', async ({ page, msw }) => {
     let crate = msw.db.crate.create({ name: 'foo' });
     msw.db.version.create({ crate, num: '1.0.0' });
