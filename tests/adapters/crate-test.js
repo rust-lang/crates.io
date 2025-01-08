@@ -29,18 +29,26 @@ module('Adapter | crate', function (hooks) {
 
   test('findRecord requests do not include versions by default', async function (assert) {
     let _foo = this.db.crate.create({ name: 'foo' });
-    let version = this.db.version.create({ crate: _foo });
+    this.db.version.create({ crate: _foo, num: '0.0.1' });
+    this.db.version.create({ crate: _foo, num: '0.0.2' });
+    this.db.version.create({ crate: _foo, num: '0.0.3' });
+
+    let versions = this.db.version.getAll().reverse();
+    let default_version = versions.find(it => it.num === '0.0.3');
 
     let store = this.owner.lookup('service:store');
 
     let foo = await store.findRecord('crate', 'foo');
     assert.strictEqual(foo?.name, 'foo');
 
-    // versions should not be loaded yet
+    // Only `defaul_version` should be loaded
     let versionsRef = foo.hasMany('versions');
-    assert.deepEqual(versionsRef.ids(), []);
+    assert.deepEqual(versionsRef.ids(), [`${default_version.id}`]);
 
     await versionsRef.load();
-    assert.deepEqual(versionsRef.ids(), [`${version.id}`]);
+    assert.deepEqual(
+      versionsRef.ids(),
+      versions.map(it => `${it.id}`),
+    );
   });
 });

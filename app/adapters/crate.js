@@ -49,7 +49,7 @@ export default class CrateAdapter extends ApplicationAdapter {
 function setDefaultInclude(query) {
   if (query.include === undefined) {
     // This ensures `crate.versions` are always fetched from another request.
-    query.include = 'keywords,categories,downloads';
+    query.include = 'keywords,categories,downloads,default_version';
   }
 
   return query;
