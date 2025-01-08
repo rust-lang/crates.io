@@ -134,7 +134,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 }
 
 /// Given a crates.io user, check that the user's email can be
-/// updated in the database (PUT /user/:user_id), then check
+/// updated in the database (PUT /user/{user_id}), then check
 /// that the updated email is sent back to the user (GET /me).
 #[tokio::test(flavor = "multi_thread")]
 async fn test_email_get_and_put() -> anyhow::Result<()> {
@@ -155,7 +155,7 @@ async fn test_email_get_and_put() -> anyhow::Result<()> {
 
 /// Given a new user, test that their email can be added
 /// to the email table and a token for the email is generated
-/// and added to the token table. When /confirm/:email_token is
+/// and added to the token table. When /confirm/{email_token} is
 /// requested, check that the response back is ok, and that
 /// the email_verified field on user is now set to true.
 #[tokio::test(flavor = "multi_thread")]

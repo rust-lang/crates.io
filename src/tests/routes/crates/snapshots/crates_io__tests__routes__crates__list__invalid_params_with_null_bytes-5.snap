@@ -5,7 +5,7 @@ expression: response.json()
 {
   "errors": [
     {
-      "detail": "Failed to deserialize query string: string contains null byte"
+      "detail": "Failed to deserialize query string: letter: string contains null byte"
     }
   ]
 }

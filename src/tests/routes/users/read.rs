@@ -32,7 +32,7 @@ async fn show_latest_user_case_insensitively() {
     // available for anyone to take. We need to support having multiple user accounts
     // with the same gh_login in crates.io. `gh_id` is stable across renames, so that field
     // should be used for uniquely identifying GitHub accounts whenever possible. For the
-    // crates.io/user/:username pages, the best we can do is show the last crates.io account
+    // crates.io/user/{username} pages, the best we can do is show the last crates.io account
     // created with that username.
 
     let user1 = NewUser::new(

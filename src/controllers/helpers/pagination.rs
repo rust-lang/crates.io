@@ -558,10 +558,10 @@ mod tests {
     fn page_param_parsing() {
         let error = |query| pagination_error(PaginationOptions::builder(), query);
 
-        assert_snapshot!(error("page="), @"Failed to deserialize query string: cannot parse integer from empty string");
-        assert_snapshot!(error("page=not_a_number"), @"Failed to deserialize query string: invalid digit found in string");
-        assert_snapshot!(error("page=1.0"), @"Failed to deserialize query string: invalid digit found in string");
-        assert_snapshot!(error("page=0"), @"Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32");
+        assert_snapshot!(error("page="), @"Failed to deserialize query string: page: cannot parse integer from empty string");
+        assert_snapshot!(error("page=not_a_number"), @"Failed to deserialize query string: page: invalid digit found in string");
+        assert_snapshot!(error("page=1.0"), @"Failed to deserialize query string: page: invalid digit found in string");
+        assert_snapshot!(error("page=0"), @"Failed to deserialize query string: page: invalid value: integer `0`, expected a nonzero u32");
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("page=5"))
@@ -573,11 +573,11 @@ mod tests {
     fn per_page_param_parsing() {
         let error = |query| pagination_error(PaginationOptions::builder(), query);
 
-        assert_snapshot!(error("per_page="), @"Failed to deserialize query string: cannot parse integer from empty string");
-        assert_snapshot!(error("per_page=not_a_number"), @"Failed to deserialize query string: invalid digit found in string");
-        assert_snapshot!(error("per_page=1.0"), @"Failed to deserialize query string: invalid digit found in string");
+        assert_snapshot!(error("per_page="), @"Failed to deserialize query string: per_page: cannot parse integer from empty string");
+        assert_snapshot!(error("per_page=not_a_number"), @"Failed to deserialize query string: per_page: invalid digit found in string");
+        assert_snapshot!(error("per_page=1.0"), @"Failed to deserialize query string: per_page: invalid digit found in string");
         assert_snapshot!(error("per_page=101"), @"cannot request more than 100 items");
-        assert_snapshot!(error("per_page=0"), @"Failed to deserialize query string: invalid value: integer `0`, expected a nonzero u32");
+        assert_snapshot!(error("per_page=0"), @"Failed to deserialize query string: per_page: invalid value: integer `0`, expected a nonzero u32");
 
         let pagination = PaginationOptions::builder()
             .gather(&mock("per_page=5"))
