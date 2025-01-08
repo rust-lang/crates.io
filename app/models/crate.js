@@ -67,6 +67,14 @@ export default class Crate extends Model {
     return Object.fromEntries(versions.slice().map(v => [v.id, v]));
   }
 
+  /** @return {Map<string, import("../models/version").default>} */
+  @cached
+  get loadedVersionsByNum() {
+    let versionsRef = this.hasMany('versions');
+    let values = versionsRef.value();
+    return new Map(values?.map(ref => [ref.num, ref]));
+  }
+
   @cached get releaseTrackSet() {
     let map = new Map();
     let { versionsObj: versions, versionIdsBySemver } = this;
