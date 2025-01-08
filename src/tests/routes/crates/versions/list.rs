@@ -154,6 +154,71 @@ async fn test_sorting() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn multiple_ids() -> anyhow::Result<()> {
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+    let mut builder = CrateBuilder::new("foo_versions", user.id);
+
+    let versions = [
+        "2.0.0",
+        "2.0.0-alpha",
+        "1.0.0-alpha.beta",
+        "1.0.0-beta.11",
+        "1.0.0-beta",
+        "1.0.0",
+        "0.5.1",
+        "0.5.0",
+    ];
+    for version in versions {
+        builder = builder.version(version);
+    }
+    builder.expect_build(&mut conn).await;
+
+    // Sort by semver without pagination
+    let url = "/api/v1/crates/foo_versions/versions";
+    let query = [
+        "nums[]=0.5.1",
+        "nums[]=1.0.0-alpha.beta",
+        "nums[]=1.0.0-beta",
+        "nums[]=2.0.0",
+        "nums[]=unknown",
+    ]
+    .join("&");
+    let json: VersionList = anon.get_with_query(url, &query).await.good();
+    let expects = ["2.0.0", "1.0.0-beta", "1.0.0-alpha.beta", "0.5.1"];
+    assert_eq!(nums(&json.versions), expects);
+    assert!(json.meta.next_page.is_none());
+    assert_eq!(json.meta.total as usize, expects.len());
+    assert_eq!(json.meta.release_tracks, None);
+
+    let (resp, calls) = page_with_seek(&anon, &format!("{url}?{query}")).await;
+    for (json, expect) in resp.iter().zip(expects) {
+        assert_eq!(json.versions[0].num, expect);
+        assert_eq!(json.meta.total as usize, expects.len());
+    }
+    assert_eq!(calls as usize, expects.len() + 1);
+
+    // Sort by date without pagination
+    let query = format!("{query}&sort=date");
+    let json: VersionList = anon.get_with_query(url, &query).await.good();
+    let expects = ["0.5.1", "1.0.0-beta", "1.0.0-alpha.beta", "2.0.0"];
+    assert_eq!(nums(&json.versions), expects);
+    assert!(json.meta.next_page.is_none());
+    assert_eq!(json.meta.total as usize, expects.len());
+    assert_eq!(json.meta.release_tracks, None);
+
+    let (resp, calls) = page_with_seek(&anon, &format!("{url}?{query}")).await;
+    for (json, expect) in resp.iter().zip(expects) {
+        assert_eq!(json.versions[0].num, expect);
+        assert_eq!(json.meta.total as usize, expects.len());
+    }
+    assert_eq!(calls as usize, expects.len() + 1);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
     let (app, anon, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;

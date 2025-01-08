@@ -1,6 +1,7 @@
 //! Endpoint for versions of a crate
 
-use axum::extract::{FromRequestParts, Query};
+use axum::extract::FromRequestParts;
+use axum_extra::extract::Query;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::dsl::not;
@@ -19,6 +20,7 @@ use crate::controllers::krate::CratePath;
 use crate::models::{User, Version, VersionOwnerAction};
 use crate::schema::{users, versions};
 use crate::util::errors::{bad_request, AppResult, BoxedAppError};
+use crate::util::string_excl_null::StringExclNull;
 use crate::util::RequestUtils;
 use crate::views::EncodableVersion;
 
@@ -41,6 +43,11 @@ pub struct ListQueryParams {
     ///
     /// Defaults to `semver`.
     sort: Option<String>,
+
+    /// If set, only versions with the specified semver strings are returned.
+    #[serde(rename = "nums[]", default)]
+    #[param(inline)]
+    nums: Vec<StringExclNull>,
 }
 
 impl ListQueryParams {
@@ -123,11 +130,20 @@ async fn list_by_date(
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
-    let mut query = versions::table
-        .filter(versions::crate_id.eq(crate_id))
-        .left_outer_join(users::table)
-        .select(<(Version, Option<User>)>::as_select())
-        .into_boxed();
+    let make_base_query = || {
+        let mut query = versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .left_outer_join(users::table)
+            .select(<(Version, Option<User>)>::as_select())
+            .into_boxed();
+
+        if !params.nums.is_empty() {
+            query = query.filter(versions::num.eq_any(params.nums.iter().map(|s| s.as_str())));
+        }
+        query
+    };
+
+    let mut query = make_base_query();
 
     if let Some(options) = options {
         assert!(
@@ -192,11 +208,7 @@ async fn list_by_date(
     // Since the total count is retrieved through an additional query, to maintain consistency
     // with other pagination methods, we only make a count query while data is not empty.
     let total = if !data.is_empty() {
-        versions::table
-            .filter(versions::crate_id.eq(crate_id))
-            .count()
-            .get_result(conn)
-            .await?
+        make_base_query().count().get_result(conn).await?
     } else {
         0
     };
@@ -229,6 +241,14 @@ async fn list_by_semver(
     use seek::*;
 
     let include = params.include()?;
+    let mut query = versions::table
+        .filter(versions::crate_id.eq(crate_id))
+        .into_boxed();
+
+    if !params.nums.is_empty() {
+        query = query.filter(versions::num.eq_any(params.nums.iter().map(|s| s.as_str())));
+    }
+
     let (data, total, release_tracks) = if let Some(options) = options {
         // Since versions will only increase in the future and both sorting and pagination need to
         // happen on the app server, implementing it with fetching only the data needed for sorting
@@ -239,8 +259,7 @@ async fn list_by_semver(
         // while id values are significantly smaller.
 
         let mut sorted_versions = IndexMap::new();
-        versions::table
-            .filter(versions::crate_id.eq(crate_id))
+        query
             .select((versions::id, versions::num, versions::yanked))
             .load_stream::<(i32, String, bool)>(conn)
             .await?
@@ -313,8 +332,7 @@ async fn list_by_semver(
         }
     } else {
         let mut data = IndexMap::new();
-        versions::table
-            .filter(versions::crate_id.eq(crate_id))
+        query
             .left_outer_join(users::table)
             .select(<(Version, Option<User>)>::as_select())
             .load_stream::<(Version, Option<User>)>(conn)
