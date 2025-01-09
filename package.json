@@ -24,7 +24,6 @@
     "precompress": "node ./script/precompress-assets.mjs",
     "prettier:check": "prettier --check package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
     "prettier:write": "prettier --write package.json '**/*.js' '**/*.mjs' '**/*.ts' '**/*.md'",
-    "start": "ember serve",
     "start:docker": "ember serve --proxy http://backend:8888",
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
