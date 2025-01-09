@@ -12,10 +12,7 @@ const DOMAIN_BLOCKLIST: &[&str] = &[
 /// Return `None` if the documentation URL host matches a blocked host
 pub fn remove_blocked_urls(url: Option<String>) -> Option<String> {
     // Handles if documentation URL is None
-    let url = match url {
-        Some(url) => url,
-        None => return None,
-    };
+    let url = url?;
 
     // Handles unsuccessful parsing of documentation URL
     let parsed_url = match Url::parse(&url) {
@@ -24,10 +21,7 @@ pub fn remove_blocked_urls(url: Option<String>) -> Option<String> {
     };
 
     // Extract host string from documentation URL
-    let url_host = match parsed_url.host_str() {
-        Some(url_host) => url_host,
-        None => return None,
-    };
+    let url_host = parsed_url.host_str()?;
 
     // Match documentation URL host against blocked host array elements
     if domain_is_blocked(url_host) {

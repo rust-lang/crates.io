@@ -43,7 +43,7 @@ pub struct NewTeam<'a> {
     pub org_id: i32,
 }
 
-impl<'a> NewTeam<'a> {
+impl NewTeam<'_> {
     pub async fn create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
         use diesel::insert_into;
 

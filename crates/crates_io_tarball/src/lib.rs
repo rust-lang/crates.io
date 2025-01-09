@@ -111,7 +111,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
                 let mut contents = String::new();
                 entry.read_to_string(&mut contents).await?;
                 vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-            } else if entry_file.to_ascii_lowercase() == "cargo.toml" {
+            } else if entry_file.eq_ignore_ascii_case("cargo.toml") {
                 // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
                 // cannot be read.
                 let owned_entry_path = entry_path.into_owned();
