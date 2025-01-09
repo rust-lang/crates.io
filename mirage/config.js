@@ -1,10 +1,20 @@
 import { createServer } from 'miragejs';
 
+import factories from './factories';
+import fixtures from './fixtures';
+import models from './models';
 import * as RouteHandlers from './route-handlers';
+import serializers from './serializers';
 
 export default function makeServer(config) {
   let server = createServer({
     ...config,
+
+    factories,
+    fixtures,
+    models,
+    serializers,
+
     routes() {
       RouteHandlers.register(this);
 
