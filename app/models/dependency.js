@@ -1,8 +1,7 @@
 import Model, { attr, belongsTo } from '@ember-data/model';
+import { irregular } from '@ember-data/request-utils/string';
 
-import Inflector from 'ember-inflector';
-
-Inflector.inflector.irregular('dependency', 'dependencies');
+irregular('dependency', 'dependencies');
 
 export default class Dependency extends Model {
   @attr crate_id;
