@@ -106,7 +106,7 @@ pub struct NewCrate<'a> {
     pub max_features: Option<i16>,
 }
 
-impl<'a> NewCrate<'a> {
+impl NewCrate<'_> {
     pub async fn update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Crate> {
         use diesel::update;
 
