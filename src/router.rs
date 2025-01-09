@@ -104,7 +104,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     // or from the sparse index CDN https://index.crates.io.
     if state.config.env() == Env::Development {
         router = router.route(
-            "/git/index/*path",
+            "/git/index/{*path}",
             get(git::http_backend).post(git::http_backend),
         );
     }
