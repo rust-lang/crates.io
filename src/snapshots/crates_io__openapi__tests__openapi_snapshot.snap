@@ -492,6 +492,14 @@ expression: response.json()
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "message",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
