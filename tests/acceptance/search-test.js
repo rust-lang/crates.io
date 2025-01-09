@@ -10,8 +10,8 @@ import { getPageTitle } from 'ember-page-title/test-support';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
-import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';
+import { list as listCrates } from '../mirage/route-handlers/crates';
 
 module('Acceptance | search', function (hooks) {
   setupApplicationTest(hooks);

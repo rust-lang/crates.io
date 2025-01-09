@@ -9,8 +9,8 @@ import { getPageTitle } from 'ember-page-title/test-support';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
-import { summary } from '../../mirage/route-handlers/summary';
 import axeConfig from '../axe-config';
+import { summary } from '../mirage/route-handlers/summary';
 
 module('Acceptance | front page', function (hooks) {
   setupApplicationTest(hooks);

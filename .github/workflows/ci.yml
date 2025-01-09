@@ -39,7 +39,6 @@ jobs:
           files_ignore: |
             app/**
             e2e/**
-            mirage/**
             public/**
             tests/**
             .eslintrc

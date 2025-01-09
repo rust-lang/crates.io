@@ -9,6 +9,11 @@ import Application from '../app';
 import config from '../config/environment';
 import registerMatchJsonAssertion from './helpers/match-json';
 
+QUnit.config.urlConfig.push({
+  id: 'mirageLogging',
+  label: 'Mirage logging',
+});
+
 setup(QUnit.assert);
 registerMatchJsonAssertion(QUnit.assert);
 

@@ -109,7 +109,7 @@ module.exports = {
 
     // mirage files
     {
-      files: ['mirage/**/*.js'],
+      files: ['tests/mirage/**/*.js'],
       rules: {
         // disabled because of different `.find()` meaning
         'unicorn/no-array-callback-reference': 'off',
