@@ -1,5 +1,3 @@
-import { assert } from '@ember/debug';
-
 import prerelease from 'semver/functions/prerelease';
 import semverSort from 'semver/functions/rsort';
 
@@ -67,7 +65,9 @@ export default BaseSerializer.extend({
 
   _adjust(hash, includes) {
     let versions = this.schema.versions.where({ crateId: hash.id });
-    assert(`crate \`${hash.name}\` has no associated versions`, versions.length !== 0);
+    if (versions.length === 0) {
+      throw new Error(`crate \`${hash.name}\` has no associated versions`);
+    }
 
     let versionsByNum = Object.fromEntries(versions.models.map(it => [it.num, it]));
     let versionNums = Object.keys(versionsByNum);
