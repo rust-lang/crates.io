@@ -12,7 +12,7 @@ export default class CrateRoute extends Route {
     let crateName = params.crate_id;
 
     try {
-      return await this.store.findRecord('crate', crateName);
+      return this.store.peekRecord('crate', crateName) || (await this.store.queryRecord('crate', { name: crateName }));
     } catch (error) {
       if (error instanceof NotFoundError) {
         let title = `${crateName}: Crate not found`;

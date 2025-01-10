@@ -6,12 +6,23 @@ export default class CrateAdapter extends ApplicationAdapter {
   coalesceFindRequests = true;
 
   findRecord(store, type, id, snapshot) {
-    let { include } = snapshot;
-    // This ensures `crate.versions` are always fetched from another request.
-    if (include === undefined) {
-      snapshot.include = 'keywords,categories,downloads';
+    return super.findRecord(store, type, id, setDefaultInclude(snapshot));
+  }
+
+  queryRecord(store, type, query, adapterOptions) {
+    return super.queryRecord(store, type, setDefaultInclude(query), adapterOptions);
+  }
+
+  /** Removes the `name` query parameter and turns it into a path parameter instead */
+  urlForQueryRecord(query) {
+    let baseUrl = super.urlForQueryRecord(...arguments);
+    if (!query.name) {
+      return baseUrl;
     }
-    return super.findRecord(store, type, id, snapshot);
+
+    let crateName = query.name;
+    delete query.name;
+    return `${baseUrl}/${crateName}`;
   }
 
   groupRecordsForFindMany(store, snapshots) {
@@ -21,4 +32,13 @@ export default class CrateAdapter extends ApplicationAdapter {
     }
     return result;
   }
+}
+
+function setDefaultInclude(query) {
+  if (query.include === undefined) {
+    // This ensures `crate.versions` are always fetched from another request.
+    query.include = 'keywords,categories,downloads';
+  }
+
+  return query;
 }
