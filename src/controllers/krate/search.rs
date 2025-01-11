@@ -562,7 +562,7 @@ impl FilterParams {
             SeekPayload::Query(Query { exact_match, id }) => {
                 // Equivalent of:
                 // ```
-                // WHERE (exact_match = exact_match' AND name < name') OR exact_match < exact_match'
+                // WHERE (exact_match = exact_match' AND name > name') OR exact_match < exact_match'
                 // ORDER BY exact_match DESC, NAME ASC
                 // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
