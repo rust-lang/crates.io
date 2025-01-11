@@ -462,12 +462,18 @@ impl FilterParams {
         let conditions: Vec<BoxedCondition<'_>> = match *seek_payload {
             SeekPayload::Name(Name { id }) => {
                 // Equivalent of:
-                // `WHERE name > name'`
+                // ```
+                // WHERE name > name'
+                // ORDER BY name ASC
+                // ```
                 vec![Box::new(crates::name.nullable().gt(crate_name_by_id(id)))]
             }
             SeekPayload::New(New { created_at, id }) => {
                 // Equivalent of:
-                // `WHERE (created_at = created_at' AND id < id') OR created_at < created_at'`
+                // ```
+                // WHERE (created_at = created_at' AND id < id') OR created_at < created_at'
+                // ORDER BY created_at DESC, id DESC
+                // ```
                 vec![
                     Box::new(
                         crates::created_at
@@ -480,7 +486,10 @@ impl FilterParams {
             }
             SeekPayload::RecentUpdates(RecentUpdates { updated_at, id }) => {
                 // Equivalent of:
-                // `WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'`
+                // ```
+                // WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'
+                // ORDER BY updated_at DESC, id DESC
+                // ```
                 vec![
                     Box::new(
                         crates::updated_at
@@ -497,10 +506,16 @@ impl FilterParams {
             }) => {
                 // Equivalent of:
                 // for recent_downloads is not None:
-                // `WHERE (recent_downloads = recent_downloads' AND id < id')
-                //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)`
+                // ```
+                // WHERE (recent_downloads = recent_downloads' AND id < id')
+                //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)
+                // ORDER BY recent_downloads DESC NULLS LAST, id DESC
+                // ```
                 // for recent_downloads is None:
-                // `WHERE (recent_downloads IS NULL AND id < id')`
+                // ```
+                // WHERE (recent_downloads IS NULL AND id < id')
+                // ORDER BY recent_downloads DESC NULLS LAST, id DESC
+                // ```
                 match recent_downloads {
                     Some(dl) => {
                         vec![
@@ -530,7 +545,10 @@ impl FilterParams {
             }
             SeekPayload::Downloads(Downloads { downloads, id }) => {
                 // Equivalent of:
-                // `WHERE (downloads = downloads' AND id < id') OR downloads < downloads'`
+                // ```
+                // WHERE (downloads = downloads' AND id < id') OR downloads < downloads'
+                // ORDER BY downloads DESC, id DESC
+                // ```
                 vec![
                     Box::new(
                         crate_downloads::downloads
@@ -543,8 +561,10 @@ impl FilterParams {
             }
             SeekPayload::Query(Query { exact_match, id }) => {
                 // Equivalent of:
-                // `WHERE (exact_match = exact_match' AND name < name') OR exact_match <
-                // exact_match'`
+                // ```
+                // WHERE (exact_match = exact_match' AND name < name') OR exact_match < exact_match'
+                // ORDER BY exact_match DESC, NAME ASC
+                // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let name_exact_match = Crate::with_name(q_string);
                 vec![
@@ -563,9 +583,12 @@ impl FilterParams {
                 id,
             }) => {
                 // Equivalent of:
-                // `WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
+                // ```
+                // WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
                 //      OR (exact_match = exact_match' AND rank < rank')
-                //      OR exact_match < exact_match'`
+                //      OR exact_match < exact_match'
+                // ORDER BY exact_match DESC, rank DESC, name ASC
+                // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let q = sql::<TsQuery>("plainto_tsquery('english', ")
                     .bind::<Text, _>(q_string.as_str())
