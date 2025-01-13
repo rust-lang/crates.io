@@ -19,10 +19,6 @@ expression: tarball_info.manifest.bin
         harness: true,
         edition: None,
         required_features: [],
-        crate_type: Some(
-            [
-                "bin",
-            ],
-        ),
+        crate_type: None,
     },
 ]

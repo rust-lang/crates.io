@@ -53,7 +53,7 @@ axum-extra = { version = "=0.10.0", features = ["erased-json", "query", "typed-h
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.7", features = ["serde"] }
 bon = "=3.3.2"
-cargo-manifest = "=0.18.0"
+cargo-manifest = "=0.18.1"
 colored = "=3.0.0"
 crates_io_cdn_logs = { path = "crates/crates_io_cdn_logs" }
 crates_io_database = { path = "crates/crates_io_database" }
