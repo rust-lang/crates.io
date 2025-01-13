@@ -20,6 +20,7 @@ export default class SettingsRoute extends AuthenticatedRoute {
 
   setupController(controller) {
     super.setupController(...arguments);
+    controller.set('reason', '');
     controller.set('isConfirmed', false);
   }
 }

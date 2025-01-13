@@ -36,6 +36,20 @@
       </ol>
     </div>
 
+    <div local-class="reason">
+      <h3>Reason:</h3>
+        <label>
+          <p>Please tell us why you are deleting this crate:</p>
+          <Input
+            @type="text"
+            @value={{this.reason}}
+            required={{true}}
+            local-class="reason-input"
+            data-test-reason
+          />
+        </label>
+    </div>
+
     <label local-class="confirmation">
       <Input
         @type="checkbox"

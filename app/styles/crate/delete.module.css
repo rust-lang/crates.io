@@ -75,6 +75,15 @@
     }
 }
 
+.reason {
+    margin-bottom: var(--space-m);
+}
+
+.reason-input {
+    composes: base-input from '../../styles/settings/tokens/new.module.css';
+    width: 100%;
+}
+
 .confirmation {
     composes: warning-block;
     display: block;

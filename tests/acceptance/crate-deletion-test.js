@@ -1,4 +1,4 @@
-import { click, currentURL } from '@ember/test-helpers';
+import { click, currentURL, fillIn } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
@@ -29,6 +29,7 @@ module('Acceptance | crate deletion', function (hooks) {
     assert.dom('[data-test-title]').hasText('Delete the foo crate?');
     assert.dom('[data-test-delete-button]').isDisabled();
 
+    await fillIn('[data-test-reason]', "I don't need this crate anymore");
     await click('[data-test-confirmation-checkbox]');
     assert.dom('[data-test-delete-button]').isEnabled();
 

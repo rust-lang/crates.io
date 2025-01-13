@@ -9,6 +9,7 @@ export default class CrateSettingsController extends Controller {
   @service notifications;
   @service router;
 
+  @tracked reason = '';
   @tracked isConfirmed;
 
   @action toggleConfirmation() {
@@ -16,8 +17,10 @@ export default class CrateSettingsController extends Controller {
   }
 
   deleteTask = task(async () => {
+    let { reason } = this;
+
     try {
-      await this.model.destroyRecord();
+      await this.model.destroyRecord({ adapterOptions: { reason } });
       this.notifications.success(`Crate ${this.model.name} has been successfully deleted.`);
       this.router.transitionTo('index');
     } catch (error) {

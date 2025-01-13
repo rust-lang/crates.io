@@ -50,6 +50,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-title]')).toHaveText('Delete the foo crate?');
     await percy.snapshot();
 
+    await page.fill('[data-test-reason]', "I don't need this crate anymore");
     await expect(page.locator('[data-test-delete-button]')).toBeDisabled();
     await page.click('[data-test-confirmation-checkbox]');
     await expect(page.locator('[data-test-delete-button]')).toBeEnabled();
@@ -72,6 +73,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     });
 
     await page.goto('/crates/foo/delete');
+    await page.fill('[data-test-reason]', "I don't need this crate anymore");
     await page.click('[data-test-confirmation-checkbox]');
     await page.click('[data-test-delete-button]');
     await expect(page.locator('[data-test-spinner]')).toBeVisible();
@@ -90,6 +92,7 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     });
 
     await page.goto('/crates/foo/delete');
+    await page.fill('[data-test-reason]', "I don't need this crate anymore");
     await page.click('[data-test-confirmation-checkbox]');
     await page.click('[data-test-delete-button]');
     await expect(page).toHaveURL('/crates/foo/delete');

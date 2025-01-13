@@ -24,6 +24,7 @@ test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-title]')).toHaveText('Delete the foo crate?');
     await expect(page.locator('[data-test-delete-button]')).toBeDisabled();
 
+    await page.fill('[data-test-reason]', "I don't need this crate anymore");
     await page.click('[data-test-confirmation-checkbox]');
     await expect(page.locator('[data-test-delete-button]')).toBeEnabled();
 

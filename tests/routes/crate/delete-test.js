@@ -1,4 +1,4 @@
-import { click, currentURL, waitFor } from '@ember/test-helpers';
+import { click, currentURL, fillIn, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
@@ -58,6 +58,7 @@ module('Route: crate.delete', function (hooks) {
     assert.dom('[data-test-title]').hasText('Delete the foo crate?');
     await percySnapshot(assert);
 
+    await fillIn('[data-test-reason]', "I don't need this crate anymore");
     assert.dom('[data-test-delete-button]').isDisabled();
     await click('[data-test-confirmation-checkbox]');
     assert.dom('[data-test-delete-button]').isEnabled();
@@ -79,6 +80,7 @@ module('Route: crate.delete', function (hooks) {
     this.server.delete('/api/v1/crates/foo', deferred.promise);
 
     await visit('/crates/foo/delete');
+    await fillIn('[data-test-reason]', "I don't need this crate anymore");
     await click('[data-test-confirmation-checkbox]');
     let clickPromise = click('[data-test-delete-button]');
     await waitFor('[data-test-spinner]');
@@ -98,6 +100,7 @@ module('Route: crate.delete', function (hooks) {
     this.server.delete('/api/v1/crates/foo', payload, 422);
 
     await visit('/crates/foo/delete');
+    await fillIn('[data-test-reason]', "I don't need this crate anymore");
     await click('[data-test-confirmation-checkbox]');
     await click('[data-test-delete-button]');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
