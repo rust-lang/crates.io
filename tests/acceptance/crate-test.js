@@ -131,6 +131,19 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-try-again]').exists();
   });
 
+  test('works for non-canonical names', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo-bar' });
+    this.server.create('version', { crate });
+
+    await visit('/crates/foo_bar');
+
+    assert.strictEqual(currentURL(), '/crates/foo_bar');
+    assert.strictEqual(currentRouteName(), 'crate.index');
+    assert.strictEqual(getPageTitle(), 'foo-bar - crates.io: Rust Package Registry');
+
+    assert.dom('[data-test-heading] [data-test-crate-name]').hasText('foo-bar');
+  });
+
   test('navigating to the all versions page', async function (assert) {
     this.server.loadFixtures();
 

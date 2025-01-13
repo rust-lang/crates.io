@@ -3,6 +3,10 @@ import { Response } from 'miragejs';
 import { getSession } from '../utils/session';
 import { compareIsoDates, compareStrings, notFound, pageParams, releaseTracks } from './-utils';
 
+function toCanonicalName(name) {
+  return name.toLowerCase().replace(/-/g, '_');
+}
+
 export function list(schema, request) {
   const { start, end } = pageParams(request);
 
@@ -56,7 +60,8 @@ export function register(server) {
 
   server.get('/api/v1/crates/:name', function (schema, request) {
     let { name } = request.params;
-    let crate = schema.crates.findBy({ name });
+    let canonicalName = toCanonicalName(name);
+    let crate = schema.crates.all().models.find(it => toCanonicalName(it.name) === canonicalName);
     if (!crate) return notFound();
     let serialized = this.serialize(crate);
     let includes = request.queryParams?.include ?? '';

@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test('visiting a crate page from the front page', async ({ page, mirage }) => {
@@ -137,6 +137,20 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Failed to load version data');
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
+  });
+
+  test('works for non-canonical names', async ({ page, mirage }) => {
+    await mirage.addHook(server => {
+      let crate = server.create('crate', { name: 'foo-bar' });
+      server.create('version', { crate });
+    });
+
+    await page.goto('/crates/foo_bar');
+
+    await expect(page).toHaveURL('/crates/foo_bar');
+    await expect(page).toHaveTitle('foo-bar - crates.io: Rust Package Registry');
+
+    await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('foo-bar');
   });
 
   test('navigating to the all versions page', async ({ page, mirage }) => {

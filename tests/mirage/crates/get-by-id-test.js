@@ -76,6 +76,67 @@ module('Mirage | GET /api/v1/crates/:id', function (hooks) {
     });
   });
 
+  test('works for non-canonical names', async function (assert) {
+    let crate = this.server.create('crate', { name: 'foo-bar' });
+    this.server.create('version', { crate, num: '1.0.0-beta.1' });
+
+    let response = await fetch('/api/v1/crates/foo_bar');
+    assert.strictEqual(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      categories: [],
+      crate: {
+        badges: [],
+        categories: [],
+        created_at: '2010-06-16T21:30:45Z',
+        default_version: '1.0.0-beta.1',
+        description: 'This is the description for the crate called "foo-bar"',
+        documentation: null,
+        downloads: 0,
+        homepage: null,
+        id: 'foo-bar',
+        keywords: [],
+        links: {
+          owner_team: '/api/v1/crates/foo-bar/owner_team',
+          owner_user: '/api/v1/crates/foo-bar/owner_user',
+          reverse_dependencies: '/api/v1/crates/foo-bar/reverse_dependencies',
+          version_downloads: '/api/v1/crates/foo-bar/downloads',
+          versions: '/api/v1/crates/foo-bar/versions',
+        },
+        max_version: '1.0.0-beta.1',
+        max_stable_version: null,
+        name: 'foo-bar',
+        newest_version: '1.0.0-beta.1',
+        repository: null,
+        updated_at: '2017-02-24T12:34:56Z',
+        versions: ['1'],
+        yanked: false,
+      },
+      keywords: [],
+      versions: [
+        {
+          id: '1',
+          crate: 'foo-bar',
+          crate_size: 0,
+          created_at: '2010-06-16T21:30:45Z',
+          dl_path: '/api/v1/crates/foo-bar/1.0.0-beta.1/download',
+          downloads: 0,
+          license: 'MIT/Apache-2.0',
+          links: {
+            dependencies: '/api/v1/crates/foo-bar/1.0.0-beta.1/dependencies',
+            version_downloads: '/api/v1/crates/foo-bar/1.0.0-beta.1/downloads',
+          },
+          num: '1.0.0-beta.1',
+          published_by: null,
+          readme_path: '/api/v1/crates/foo-bar/1.0.0-beta.1/readme',
+          rust_version: null,
+          updated_at: '2017-02-24T12:34:56Z',
+          yanked: false,
+          yank_message: null,
+        },
+      ],
+    });
+  });
+
   test('includes related versions', async function (assert) {
     let crate = this.server.create('crate', { name: 'rand' });
     this.server.create('version', { crate, num: '1.0.0' });
