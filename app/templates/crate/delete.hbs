@@ -1,5 +1,5 @@
 <div local-class="wrapper">
-  <div local-class="content">
+  <form local-class="content" {{on "submit" (prevent-default (perform this.deleteTask))}}>
     <h1 local-class="title" data-test-title>Delete the {{@model.name}} crate?</h1>
 
     <p>Are you sure you want to delete the crate "{{@model.name}}"?</p>
@@ -53,7 +53,6 @@
         disabled={{or (not this.isConfirmed) this.deleteTask.isRunning}}
         local-class="delete-button"
         data-test-delete-button
-        {{on "click" (perform this.deleteTask)}}
       >
         Delete this crate
       </button>
@@ -63,5 +62,5 @@
         </div>
       {{/if}}
     </div>
-  </div>
+  </form>
 </div>
