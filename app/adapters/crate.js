@@ -25,13 +25,13 @@ export default class CrateAdapter extends ApplicationAdapter {
     return `${baseUrl}/${crateName}`;
   }
 
-  /** Adds a `reason` query parameter to the URL, if set in the `adapterOptions`. */
+  /** Adds a `message` query parameter to the URL, if set in the `adapterOptions`. */
   urlForDeleteRecord(id, modelName, snapshot) {
     let url = super.urlForDeleteRecord(...arguments);
 
-    let reason = snapshot.adapterOptions.reason;
-    if (reason) {
-      url += `?reason=${encodeURIComponent(reason)}`;
+    let message = snapshot.adapterOptions.message;
+    if (message) {
+      url += `?message=${encodeURIComponent(message)}`;
     }
 
     return url;

@@ -17,10 +17,8 @@ export default class CrateSettingsController extends Controller {
   }
 
   deleteTask = task(async () => {
-    let { reason } = this;
-
     try {
-      await this.model.destroyRecord({ adapterOptions: { reason } });
+      await this.model.destroyRecord({ adapterOptions: { message: this.reason } });
       this.notifications.success(`Crate ${this.model.name} has been successfully deleted.`);
       this.router.transitionTo('index');
     } catch (error) {
