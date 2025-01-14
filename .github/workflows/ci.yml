@@ -233,6 +233,8 @@ jobs:
 
       - run: pnpm install
 
+      - run: pnpm --filter "@crates-io/msw" test
+
       - if: github.repository == 'rust-lang/crates.io'
         run: pnpm percy exec --parallel -- pnpm test-coverage
 
