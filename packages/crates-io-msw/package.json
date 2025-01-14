@@ -18,6 +18,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@mswjs/data": "^0.16.2",
     "msw": "^2.7.0"
   },
   "devDependencies": {
