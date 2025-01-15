@@ -151,10 +151,8 @@ impl PublishBuilder {
         match self.manifest {
             Manifest::None => {}
             Manifest::Generated => {
-                let mut package = cargo_manifest::Package::<()>::new(
-                    self.krate_name.clone(),
-                    self.version.to_string(),
-                );
+                let mut package =
+                    cargo_manifest::Package::new(self.krate_name.clone(), self.version.to_string());
                 package.categories = self.categories.none_or_filled().map(MaybeInherited::Local);
                 package.description = self.desc.map(MaybeInherited::Local);
                 package.documentation = self.doc_url.map(MaybeInherited::Local);
@@ -175,7 +173,7 @@ impl PublishBuilder {
                     };
                 }
 
-                let manifest = cargo_manifest::Manifest {
+                let manifest = cargo_manifest::Manifest::<(), ()> {
                     package: Some(package),
                     build_dependencies: build_deps.none_or_filled(),
                     dependencies: deps.none_or_filled(),
