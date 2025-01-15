@@ -76,20 +76,15 @@
     For security reasons, the crates.io team will not transfer ownership of existing crates without the explicit
     approval of the current owner.</p>
 
-  <p>Crate deletion by their owners is not possible to keep the registry as immutable as possible. If you want to flag
-    your crate as open for transferring ownership to others, you can publish a new version with a message in the README or
-    description communicating to the crates.io support team that you consent to transfer the crate to the first person who
-    asks for it:</p>
+  <p>If you are the author of a crate that another person wants to take over: keep in mind that the new owner might
+    develop your crate in a way you never intended it, or might completely repurpose your crate. Transferring a crate
+    to a malicious user could have a significant impact for any existing users of your crate.</p>
 
-  <blockquote>
-    I consent to the transfer of this crate to the first person who asks
-    help@crates.io for it.
-  </blockquote>
-
-  <p>
-    Keep in mind that the new owner might develop your crate in a way you never intended it, or might completely
-    repurpose your crate. Transferring the crate to a malicious user could have a significant impact for any
-    existing users of your crate.</p>
+  <p>Crate owners can delete their crates under certain conditions: the crate has been published for less than 72 hours, or
+    the crate only has a single owner, the crate has been downloaded less than 500 times for each month it has been
+    published, and the crate is not depended upon by any other crate on crates.io. If these conditions are not met, the
+    crate will not be deleted. In exceptional cases crate owners may contact <a href="mailto:help@crates.io">the crates.io
+    team</a> to request deletion of a crate that does not meet these conditions.</p>
 
   <p>The crates.io team may delete crates from the registry that do not comply with the policies on this document. In
     larger cases of squatting attacks this may happen without prior notification to the author, but in most cases the team
