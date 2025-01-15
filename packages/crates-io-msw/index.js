@@ -1,4 +1,4 @@
-import { factory } from '@mswjs/data';
+import { factory } from './utils/factory.js';
 
 export const handlers = [];
 
