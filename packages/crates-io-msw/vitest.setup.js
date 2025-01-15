@@ -9,4 +9,11 @@ const server = setupServer(...handlers);
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterEach(() => drop(db));
+afterEach(() => {
+  Object.values(db).forEach(model => {
+    if (model.counter) {
+      model.counter = 0;
+    }
+  });
+});
 afterAll(() => server.close());
