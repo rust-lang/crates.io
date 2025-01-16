@@ -1,3 +1,4 @@
+use crate::controllers::helpers::pagination::decode_seek;
 use crate::models::Category;
 use crate::schema::{crates, users};
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
@@ -412,12 +413,6 @@ async fn index_sorting() -> anyhow::Result<()> {
     assert_eq!(calls, 5);
 
     use std::cmp::Reverse;
-
-    fn decode_seek<D: for<'a> serde::Deserialize<'a>>(seek: &str) -> anyhow::Result<D> {
-        use base64::{engine::general_purpose, Engine};
-        let decoded = serde_json::from_slice(&general_purpose::URL_SAFE_NO_PAD.decode(seek)?)?;
-        Ok(decoded)
-    }
 
     // Sort by alpha with query
     for query in ["sort=alpha&q=bar_sort", "sort=alpha&q=sort"] {
