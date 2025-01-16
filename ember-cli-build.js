@@ -6,6 +6,17 @@ module.exports = function (defaults) {
   let env = EmberApp.env();
   let isProd = env === 'production';
 
+  let extraPublicTrees = [];
+  if (!isProd) {
+    const path = require('node:path');
+    const funnel = require('broccoli-funnel');
+
+    let mswPath = require.resolve('msw/mockServiceWorker.js');
+    let mswParentPath = path.dirname(mswPath);
+
+    extraPublicTrees.push(funnel(mswParentPath, { include: ['mockServiceWorker.js'] }));
+  }
+
   let browsers = require('./config/targets').browsers;
 
   let app = new EmberApp(defaults, {
@@ -63,6 +74,7 @@ module.exports = function (defaults) {
 
   const { Webpack } = require('@embroider/webpack');
   return require('@embroider/compat').compatBuild(app, Webpack, {
+    extraPublicTrees,
     staticAddonTrees: true,
     staticAddonTestSupportTrees: true,
     staticModifiers: true,
