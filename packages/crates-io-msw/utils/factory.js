@@ -37,5 +37,17 @@ export function factory(models) {
     };
   }
 
+  db.reset = function () {
+    for (let model of Object.values(db)) {
+      if (model.deleteMany) {
+        model.deleteMany({ where: {} });
+      }
+
+      if (model.counter) {
+        model.counter = 0;
+      }
+    }
+  };
+
   return db;
 }
