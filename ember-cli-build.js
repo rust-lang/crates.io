@@ -78,22 +78,5 @@ module.exports = function (defaults) {
         },
       },
     },
-    packageRules: [
-      // see https://github.com/embroider-build/embroider/issues/1322
-      {
-        package: '@ember-data/store',
-        addonModules: {
-          '-private.js': {
-            dependsOnModules: [],
-          },
-          '-private/system/core-store.js': {
-            dependsOnModules: [],
-          },
-          '-private/system/model/internal-model.js': {
-            dependsOnModules: [],
-          },
-        },
-      },
-    ],
   });
 };
