@@ -1,4 +1,3 @@
-use crate::controllers::helpers::pagination::decode_seek;
 use crate::models::Category;
 use crate::schema::{crates, users};
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
@@ -412,8 +411,6 @@ async fn index_sorting() -> anyhow::Result<()> {
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
 
-    use std::cmp::Reverse;
-
     // Sort by alpha with query
     // ordering (exact match desc, name asc)
     let query = "sort=alpha&q=bar_sort";
@@ -438,39 +435,51 @@ async fn index_sorting() -> anyhow::Result<()> {
     assert_eq!(calls, 5);
 
     // Sort by relevance
-    // Add query containing a space to ensure tsquery works
-    for query in ["q=foo_sort", "q=sort", "q=foo%20sort"] {
-        let (resp, calls) = page_with_seek(&anon, query).await;
-        assert_eq!(calls, resp[0].meta.total + 1);
-        let decoded_seeks = resp
-            .iter()
-            .filter_map(|cl| {
-                cl.meta
-                    .next_page
-                    .as_ref()
-                    .map(|next_page| (next_page, cl.crates[0].name.to_owned()))
-            })
-            .filter_map(|(q, name)| {
-                let query = url::form_urlencoded::parse(q.trim_start_matches('?').as_bytes())
-                    .into_owned()
-                    .collect::<indexmap::IndexMap<String, String>>();
-                query.get("seek").map(|s| {
-                    let d = decode_seek::<(bool, f32, i32)>(s).unwrap();
-                    (d.0, (d.1 * 1e12) as i64, name)
-                })
-            })
-            .collect::<Vec<_>>();
-        // ordering (exact match desc, rank desc, name asc)
-        let mut sorted = decoded_seeks.clone();
-        sorted.sort_by_key(|k| (Reverse(k.0), Reverse(k.1), k.2.to_owned()));
-        assert_eq!(sorted, decoded_seeks);
-        for json in search_both(&anon, query).await {
-            assert_eq!(json.meta.total, resp[0].meta.total);
-            for (c, r) in json.crates.iter().zip(&resp) {
-                assert_eq!(c.name, r.crates[0].name);
-            }
-        }
+    // ordering (exact match desc, rank desc, name asc)
+    let query = "q=foo_sort";
+    let (resp, calls) = page_with_seek(&anon, query).await;
+    for json in search_both(&anon, query).await {
+        assert_eq!(json.meta.total, 3);
+        assert_eq!(resp[0].crates[0].name, "foo_sort");
+        // same rank, by name asc
+        assert_eq!(resp[1].crates[0].name, "bar_sort");
+        assert_eq!(resp[2].crates[0].name, "baz_sort");
     }
+    assert_eq!(calls, 4);
+    let ranks = querystring_rank(&mut conn, "foo_sort").await;
+    assert_eq!(ranks.get("bar_sort"), ranks.get("baz_sort"));
+
+    // Add query containing a space to ensure tsquery works
+    // "foo_sort" and "foo sort" would generate same tsquery
+    let query = "q=foo%20sort";
+    let (resp, calls) = page_with_seek(&anon, query).await;
+    for json in search_both(&anon, query).await {
+        assert_eq!(json.meta.total, 3);
+        assert_eq!(resp[0].crates[0].name, "foo_sort");
+        // same rank, by name asc
+        assert_eq!(resp[1].crates[0].name, "bar_sort");
+        assert_eq!(resp[2].crates[0].name, "baz_sort");
+    }
+    assert_eq!(calls, 4);
+    let ranks = querystring_rank(&mut conn, "foo%20sort").await;
+    assert_eq!(ranks.get("bar_sort"), ranks.get("baz_sort"));
+
+    let query = "q=sort";
+    let (resp, calls) = page_with_seek(&anon, query).await;
+    for json in search_both(&anon, query).await {
+        assert_eq!(json.meta.total, 4);
+        // by rank desc (items with more "sort" should have a hider rank value)
+        assert_eq!(resp[0].crates[0].name, "baz_sort");
+        assert_eq!(resp[1].crates[0].name, "bar_sort");
+        assert_eq!(resp[2].crates[0].name, "foo_sort");
+        assert_eq!(resp[3].crates[0].name, "other_sort");
+    }
+    assert_eq!(calls, 5);
+    let ranks = querystring_rank(&mut conn, "sort").await;
+    assert_eq!(
+        ranks.keys().collect::<Vec<_>>(),
+        ["baz_sort", "bar_sort", "foo_sort", "other_sort"]
+    );
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
@@ -1274,4 +1283,29 @@ fn default_versions_iter(
 
 fn yanked_iter(crates: &[crate::tests::EncodableCrate]) -> impl Iterator<Item = &bool> {
     crates.iter().map(|c| &c.yanked)
+}
+
+async fn querystring_rank(
+    conn: &mut diesel_async::AsyncPgConnection,
+    q: &str,
+) -> indexmap::IndexMap<String, f32> {
+    use diesel_full_text_search::configuration::TsConfigurationByName;
+    use diesel_full_text_search::{plainto_tsquery_with_search_config, ts_rank_cd};
+    use futures_util::future::ready;
+    use futures_util::TryStreamExt;
+
+    let tsquery = plainto_tsquery_with_search_config(TsConfigurationByName("english"), q);
+    let rank = ts_rank_cd(crates::textsearchable_index_col, tsquery);
+    crates::table
+        .select((crates::name, rank))
+        .order_by(rank.desc())
+        .load_stream::<(String, f32)>(conn)
+        .await
+        .unwrap()
+        .try_fold(indexmap::IndexMap::new(), |mut map, (name, id)| {
+            map.insert(name, id);
+            ready(Ok(map))
+        })
+        .await
+        .unwrap()
 }
