@@ -6,11 +6,11 @@ use axum_extra::extract::Query;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use derive_more::Deref;
-use diesel::dsl::{exists, sql, InnerJoinQuerySource, LeftJoinQuerySource};
+use diesel::dsl::{exists, InnerJoinQuerySource, LeftJoinQuerySource};
 use diesel::prelude::*;
-use diesel::sql_types::{Bool, Text};
+use diesel::sql_types::Bool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use diesel_full_text_search::*;
+use diesel_full_text_search::{configuration::TsConfigurationByName, *};
 use http::request::Parts;
 use tracing::Instrument;
 use utoipa::IntoParams;
@@ -102,16 +102,15 @@ pub async fn list_crates(
             query = query.order(Crate::with_name(q_string).desc());
 
             if sort == "relevance" {
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string)
-                    .sql(")");
+                let q =
+                    plainto_tsquery_with_search_config(TsConfigurationByName("english"), q_string);
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 query = query.select((
                     ALL_COLUMNS,
                     Crate::with_name(q_string),
                     crate_downloads::downloads,
                     recent_crate_downloads::downloads.nullable(),
-                    rank.clone(),
+                    rank,
                     versions::num.nullable(),
                     versions::yanked.nullable(),
                 ));
@@ -359,9 +358,10 @@ impl FilterParams {
 
         if let Some(q_string) = &self.q_string {
             if !q_string.is_empty() {
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string.as_str())
-                    .sql(")");
+                let q = plainto_tsquery_with_search_config(
+                    TsConfigurationByName("english"),
+                    q_string.as_str(),
+                );
                 query = query.filter(
                     q.matches(crates::textsearchable_index_col)
                         .or(Crate::loosly_matches_name(q_string.as_str())),
@@ -590,16 +590,17 @@ impl FilterParams {
                 // ORDER BY exact_match DESC, rank DESC, name ASC
                 // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
-                let q = sql::<TsQuery>("plainto_tsquery('english', ")
-                    .bind::<Text, _>(q_string.as_str())
-                    .sql(")");
+                let q = plainto_tsquery_with_search_config(
+                    TsConfigurationByName("english"),
+                    q_string.as_str(),
+                );
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 let name_exact_match = Crate::with_name(q_string.as_str());
                 vec![
                     Box::new(
                         name_exact_match
                             .eq(exact)
-                            .and(rank.clone().eq(rank_in))
+                            .and(rank.eq(rank_in))
                             .and(crates::name.nullable().gt(crate_name_by_id(id)))
                             .nullable(),
                     ),
