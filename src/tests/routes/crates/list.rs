@@ -415,38 +415,27 @@ async fn index_sorting() -> anyhow::Result<()> {
     use std::cmp::Reverse;
 
     // Sort by alpha with query
-    for query in ["sort=alpha&q=bar_sort", "sort=alpha&q=sort"] {
-        let (resp, calls) = page_with_seek(&anon, query).await;
-        assert_eq!(calls, resp[0].meta.total + 1);
-        let decoded_seeks = resp
-            .iter()
-            .filter_map(|cl| {
-                cl.meta
-                    .next_page
-                    .as_ref()
-                    .map(|next_page| (next_page, cl.crates[0].name.to_owned()))
-            })
-            .filter_map(|(q, name)| {
-                let query = url::form_urlencoded::parse(q.trim_start_matches('?').as_bytes())
-                    .into_owned()
-                    .collect::<indexmap::IndexMap<String, String>>();
-                query.get("seek").map(|s| {
-                    let d = decode_seek::<(bool, i32)>(s).unwrap();
-                    (d.0, name)
-                })
-            })
-            .collect::<Vec<_>>();
-        // ordering (exact match desc, name asc)
-        let mut sorted = decoded_seeks.to_vec();
-        sorted.sort_by_key(|k| (Reverse(k.0), k.1.to_owned()));
-        assert_eq!(sorted, decoded_seeks);
-        for json in search_both(&anon, query).await {
-            assert_eq!(json.meta.total, resp[0].meta.total);
-            for (c, r) in json.crates.iter().zip(&resp) {
-                assert_eq!(c.name, r.crates[0].name);
-            }
-        }
+    // ordering (exact match desc, name asc)
+    let query = "sort=alpha&q=bar_sort";
+    let (resp, calls) = page_with_seek(&anon, query).await;
+    for json in search_both(&anon, query).await {
+        assert_eq!(json.meta.total, 3);
+        assert_eq!(resp[0].crates[0].name, "bar_sort");
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "foo_sort");
     }
+    assert_eq!(calls, 4);
+
+    let query = "sort=alpha&q=sort";
+    let (resp, calls) = page_with_seek(&anon, query).await;
+    for json in search_both(&anon, query).await {
+        assert_eq!(json.meta.total, 4);
+        assert_eq!(resp[0].crates[0].name, "bar_sort");
+        assert_eq!(resp[1].crates[0].name, "baz_sort");
+        assert_eq!(resp[2].crates[0].name, "foo_sort");
+        assert_eq!(resp[3].crates[0].name, "other_sort");
+    }
+    assert_eq!(calls, 5);
 
     // Sort by relevance
     // Add query containing a space to ensure tsquery works
