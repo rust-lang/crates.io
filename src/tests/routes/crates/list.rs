@@ -308,7 +308,7 @@ async fn index_sorting() -> anyhow::Result<()> {
         .await;
 
     let krate3 = CrateBuilder::new("baz_sort", user.id)
-        .description("foo_sort bar_sort foo_sort bar_sort foo_sort bar_sort const")
+        .description("foo_sort bar_sort foo_sort bar_sort bar_sort const")
         .downloads(100_000)
         .recent_downloads(50)
         .expect_build(&mut conn)
