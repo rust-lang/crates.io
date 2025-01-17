@@ -293,8 +293,8 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       tracked-built-ins:
-        specifier: 3.4.0
-        version: 3.4.0(@babel/core@7.26.0)
+        specifier: 4.0.0
+        version: 4.0.0(@babel/core@7.26.0)
       typescript:
         specifier: 5.7.3
         version: 5.7.3
@@ -8192,8 +8192,8 @@ packages:
     resolution: {integrity: sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==}
     engines: {node: '>=18'}
 
-  tracked-built-ins@3.4.0:
-    resolution: {integrity: sha512-aRwWQXC3VkY50oYxS7wKZiavkjf3uaN+UYUH30D5gxUqbxDN2LnNsfWyDfckmxHUGw4gJDH5lpRS0jX/tim0vw==}
+  tracked-built-ins@4.0.0:
+    resolution: {integrity: sha512-0Jl43A1SDZd+yYCJvXfgDSn4Wk/zcawkyFTBPqOETU5UJRngnVEnQ8oOjawqPRg6qja3sKjIQ8z6X9xJzcUTUA==}
 
   tree-sync@1.4.0:
     resolution: {integrity: sha512-YvYllqh3qrR5TAYZZTXdspnIhlKAYezPYw11ntmweoceu4VK+keN356phHRIIo1d+RDmLpHZrUlmxga2gc9kSQ==}
@@ -19286,7 +19286,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  tracked-built-ins@3.4.0(@babel/core@7.26.0):
+  tracked-built-ins@4.0.0(@babel/core@7.26.0):
     dependencies:
       '@embroider/addon-shim': 1.9.0
       decorator-transforms: 2.3.0(@babel/core@7.26.0)
