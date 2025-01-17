@@ -55,6 +55,9 @@ importers:
       '@babel/plugin-proposal-decorators':
         specifier: 7.25.9
         version: 7.25.9(@babel/core@7.26.7)
+      '@crates-io/msw':
+        specifier: workspace:*
+        version: link:packages/crates-io-msw
       '@ember/optional-features':
         specifier: 2.2.0
         version: 2.2.0

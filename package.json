@@ -56,6 +56,7 @@
     "@babel/core": "7.26.7",
     "@babel/eslint-parser": "7.26.5",
     "@babel/plugin-proposal-decorators": "7.25.9",
+    "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
     "@ember/render-modifiers": "2.1.0",
     "@ember/string": "3.1.1",
