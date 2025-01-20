@@ -3,6 +3,7 @@ import category from './models/category.js';
 import crateOwnerInvitation from './models/crate-owner-invitation.js';
 import crateOwnership from './models/crate-ownership.js';
 import crate from './models/crate.js';
+import dependency from './models/dependency.js';
 import keyword from './models/keyword.js';
 import mswSession from './models/msw-session.js';
 import team from './models/team.js';
@@ -19,6 +20,7 @@ export const db = factory({
   crateOwnerInvitation,
   crateOwnership,
   crate,
+  dependency,
   keyword,
   mswSession,
   team,
