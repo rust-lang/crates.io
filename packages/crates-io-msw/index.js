@@ -5,6 +5,7 @@ import keyword from './models/keyword.js';
 import mswSession from './models/msw-session.js';
 import team from './models/team.js';
 import user from './models/user.js';
+import versionDownload from './models/version-download.js';
 import version from './models/version.js';
 import { factory } from './utils/factory.js';
 
@@ -18,5 +19,6 @@ export const db = factory({
   mswSession,
   team,
   user,
+  versionDownload,
   version,
 });
