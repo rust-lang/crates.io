@@ -1,5 +1,6 @@
 import apiToken from './models/api-token.js';
 import category from './models/category.js';
+import crateOwnerInvitation from './models/crate-owner-invitation.js';
 import crate from './models/crate.js';
 import keyword from './models/keyword.js';
 import mswSession from './models/msw-session.js';
@@ -14,6 +15,7 @@ export const handlers = [];
 export const db = factory({
   apiToken,
   category,
+  crateOwnerInvitation,
   crate,
   keyword,
   mswSession,
