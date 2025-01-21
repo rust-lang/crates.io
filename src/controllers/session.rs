@@ -5,7 +5,6 @@ use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
-use oauth2::reqwest::async_http_client;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 
 use crate::app::AppState;
@@ -107,10 +106,14 @@ pub async fn authorize_session(
     }
 
     // Fetch the access token from GitHub using the code we just got
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
     let token = app
         .github_oauth
         .exchange_code(query.code)
-        .request_async(async_http_client)
+        .request_async(&client)
         .await
         .map_err(|err| {
             req.request_log().add("cause", err);

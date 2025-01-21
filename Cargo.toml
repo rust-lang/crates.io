@@ -95,7 +95,7 @@ lettre = { version = "=0.11.11", default-features = false, features = ["file-tra
 minijinja = "=2.6.0"
 mockall = "=0.13.1"
 native-tls = "=0.2.12"
-oauth2 = "=4.4.2"
+oauth2 = "=5.0.0"
 object_store = { version = "=0.11.2", features = ["aws"] }
 p256 = "=0.13.2"
 parking_lot = "=0.12.3"
