@@ -1,3 +1,9 @@
+import { HttpResponse } from 'msw';
+
+export function notFound() {
+  return HttpResponse.json({ errors: [{ detail: 'Not Found' }] }, { status: 404 });
+}
+
 export function pageParams(request) {
   let url = new URL(request.url);
 
