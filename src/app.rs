@@ -16,6 +16,7 @@ use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::AsyncPgConnection;
 use oauth2::basic::BasicClient;
+use oauth2::{EndpointNotSet, EndpointSet};
 
 type DeadpoolResult = Result<
     diesel_async::pooled_connection::deadpool::Object<AsyncPgConnection>,
@@ -35,7 +36,8 @@ pub struct App {
     pub github: Box<dyn GitHubClient>,
 
     /// The GitHub OAuth2 configuration
-    pub github_oauth: BasicClient,
+    pub github_oauth:
+        BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>,
 
     /// The server configuration
     pub config: Arc<config::Server>,
@@ -70,14 +72,15 @@ impl App {
         let instance_metrics =
             InstanceMetrics::new().expect("could not initialize instance metrics");
 
-        let github_oauth = BasicClient::new(
-            config.gh_client_id.clone(),
-            Some(config.gh_client_secret.clone()),
-            AuthUrl::new(String::from("https://github.com/login/oauth/authorize")).unwrap(),
-            Some(
-                TokenUrl::new(String::from("https://github.com/login/oauth/access_token")).unwrap(),
-            ),
-        );
+        let auth_url = "https://github.com/login/oauth/authorize";
+        let auth_url = AuthUrl::new(auth_url.into()).unwrap();
+        let token_url = "https://github.com/login/oauth/access_token";
+        let token_url = TokenUrl::new(token_url.into()).unwrap();
+
+        let github_oauth = BasicClient::new(config.gh_client_id.clone())
+            .set_client_secret(config.gh_client_secret.clone())
+            .set_auth_uri(auth_url)
+            .set_token_uri(token_url);
 
         let primary_database = {
             use secrecy::ExposeSecret;
