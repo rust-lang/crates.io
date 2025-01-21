@@ -14,5 +14,5 @@ secrecy = "=0.10.3"
 serde = { version = "=1.0.217", features = ["derive"] }
 
 [dev-dependencies]
-clap = { version = "=4.5.26", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.5.27", features = ["derive", "env", "unicode", "wrap_help"] }
 tokio = { version = "=1.43.0", features = ["macros", "rt-multi-thread"] }
