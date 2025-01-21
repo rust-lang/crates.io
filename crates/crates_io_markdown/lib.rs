@@ -77,7 +77,9 @@ impl<'a> MarkdownRenderer<'a> {
             .build();
 
         let extension_options = ComrakExtensionOptions::builder()
+            .alerts(true)
             .autolink(true)
+            .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
             .tagfilter(true)
