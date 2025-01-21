@@ -1,5 +1,6 @@
 import categoryHandlers from './handlers/categories.js';
 import docsRsHandlers from './handlers/docs-rs.js';
+import keywordHandlers from './handlers/keywords.js';
 import apiToken from './models/api-token.js';
 import category from './models/category.js';
 import crateOwnerInvitation from './models/crate-owner-invitation.js';
@@ -14,7 +15,7 @@ import versionDownload from './models/version-download.js';
 import version from './models/version.js';
 import { factory } from './utils/factory.js';
 
-export const handlers = [...categoryHandlers, ...docsRsHandlers];
+export const handlers = [...categoryHandlers, ...docsRsHandlers, ...keywordHandlers];
 
 export const db = factory({
   apiToken,
