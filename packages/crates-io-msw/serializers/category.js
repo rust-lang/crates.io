@@ -8,3 +8,11 @@ export function serializeCategory(category) {
 
   return serialized;
 }
+
+export function serializeCategorySlug(category) {
+  return {
+    id: category.id,
+    slug: category.slug,
+    description: category.description,
+  };
+}
