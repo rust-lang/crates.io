@@ -4,6 +4,7 @@ import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
 import sessionHandlers from './handlers/sessions.js';
 import teamHandlers from './handlers/teams.js';
+import userHandlers from './handlers/users.js';
 import apiToken from './models/api-token.js';
 import category from './models/category.js';
 import crateOwnerInvitation from './models/crate-owner-invitation.js';
@@ -25,6 +26,7 @@ export const handlers = [
   ...metadataHandlers,
   ...sessionHandlers,
   ...teamHandlers,
+  ...userHandlers,
 ];
 
 export const db = factory({
