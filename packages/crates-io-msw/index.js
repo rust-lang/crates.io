@@ -1,3 +1,4 @@
+import categoryHandlers from './handlers/categories.js';
 import docsRsHandlers from './handlers/docs-rs.js';
 import apiToken from './models/api-token.js';
 import category from './models/category.js';
@@ -13,7 +14,7 @@ import versionDownload from './models/version-download.js';
 import version from './models/version.js';
 import { factory } from './utils/factory.js';
 
-export const handlers = [...docsRsHandlers];
+export const handlers = [...categoryHandlers, ...docsRsHandlers];
 
 export const db = factory({
   apiToken,
