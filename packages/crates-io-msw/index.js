@@ -1,5 +1,6 @@
 import categoryHandlers from './handlers/categories.js';
 import docsRsHandlers from './handlers/docs-rs.js';
+import inviteHandlers from './handlers/invites.js';
 import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
 import sessionHandlers from './handlers/sessions.js';
@@ -22,6 +23,7 @@ import { factory } from './utils/factory.js';
 export const handlers = [
   ...categoryHandlers,
   ...docsRsHandlers,
+  ...inviteHandlers,
   ...keywordHandlers,
   ...metadataHandlers,
   ...sessionHandlers,
