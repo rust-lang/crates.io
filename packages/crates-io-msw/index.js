@@ -1,3 +1,4 @@
+import apiTokenHandlers from './handlers/api-tokens.js';
 import categoryHandlers from './handlers/categories.js';
 import docsRsHandlers from './handlers/docs-rs.js';
 import inviteHandlers from './handlers/invites.js';
@@ -21,6 +22,7 @@ import version from './models/version.js';
 import { factory } from './utils/factory.js';
 
 export const handlers = [
+  ...apiTokenHandlers,
   ...categoryHandlers,
   ...docsRsHandlers,
   ...inviteHandlers,
