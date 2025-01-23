@@ -1,3 +1,4 @@
+import addOwners from './crates/add-owners.js';
 import deleteCrate from './crates/delete.js';
 import downloads from './crates/downloads.js';
 import followCrate from './crates/follow.js';
@@ -16,6 +17,7 @@ export default [
   following,
   followCrate,
   unfollowCrate,
+  addOwners,
   userOwners,
   teamOwners,
   reverseDependencies,
