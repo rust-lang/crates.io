@@ -310,6 +310,9 @@ importers:
       msw:
         specifier: ^2.7.0
         version: 2.7.0(@types/node@22.10.10)(typescript@5.7.3)
+      semver:
+        specifier: ^7.6.3
+        version: 7.6.3
     devDependencies:
       happy-dom:
         specifier: 16.5.3
