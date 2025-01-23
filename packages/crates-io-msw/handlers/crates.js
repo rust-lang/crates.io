@@ -4,6 +4,7 @@ import followCrate from './crates/follow.js';
 import following from './crates/following.js';
 import getCrate from './crates/get.js';
 import listCrates from './crates/list.js';
+import reverseDependencies from './crates/reverse-dependencies.js';
 import teamOwners from './crates/team-owners.js';
 import unfollowCrate from './crates/unfollow.js';
 import userOwners from './crates/user-owners.js';
@@ -17,5 +18,6 @@ export default [
   unfollowCrate,
   userOwners,
   teamOwners,
+  reverseDependencies,
   downloads,
 ];
