@@ -73,7 +73,7 @@
     "@playwright/test": "1.49.1",
     "@sinonjs/fake-timers": "14.0.0",
     "@types/ember": "4.0.11",
-    "@types/node": "22.10.8",
+    "@types/node": "22.10.9",
     "@types/sinonjs__fake-timers": "8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
