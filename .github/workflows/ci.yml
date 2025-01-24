@@ -169,7 +169,7 @@ jobs:
       - run: rustup component add llvm-tools
       - run: ./grcov . --binary-path ${CARGO_TARGET_DIR}/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" --ignore "${CARGO_TARGET_DIR}/debug/build/**" -o ${CARGO_TARGET_DIR}/coverage.lcov
 
-      - uses: codecov/codecov-action@5a605bd92782ce0810fa3b8acc235c921b497052 # v5.2.0
+      - uses: codecov/codecov-action@0da7aa657d958d32c117fc47e1f977e7524753c7 # v5.3.0
         with:
           files: ${CARGO_TARGET_DIR}/coverage.lcov
         env:
