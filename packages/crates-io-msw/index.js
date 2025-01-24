@@ -5,6 +5,7 @@ import docsRsHandlers from './handlers/docs-rs.js';
 import inviteHandlers from './handlers/invites.js';
 import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
+import playgroundHandlers from './handlers/playground.js';
 import sessionHandlers from './handlers/sessions.js';
 import summaryHandlers from './handlers/summary.js';
 import teamHandlers from './handlers/teams.js';
@@ -32,6 +33,7 @@ export const handlers = [
   ...inviteHandlers,
   ...keywordHandlers,
   ...metadataHandlers,
+  ...playgroundHandlers,
   ...sessionHandlers,
   ...summaryHandlers,
   ...teamHandlers,
