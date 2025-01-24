@@ -6,15 +6,15 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate deletion', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('happy path', async function (assert) {
-    let user = this.server.create('user');
+    let user = this.db.user.create();
     this.authenticateAs(user);
 
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate });
-    this.server.create('crate-ownership', { crate, user });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate });
+    this.db.crateOwnership.create({ crate, user });
 
     await visit('/crates/foo');
     assert.strictEqual(currentURL(), '/crates/foo');
@@ -39,7 +39,7 @@ module('Acceptance | crate deletion', function (hooks) {
     let message = 'Crate foo has been successfully deleted.';
     assert.dom('[data-test-notification-message="success"]').hasText(message);
 
-    crate = this.server.schema.crates.findBy({ name: 'foo' });
+    crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
     assert.strictEqual(crate, null);
   });
 });
