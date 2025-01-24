@@ -3,21 +3,22 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { keyDown } from 'ember-keyboard/test-support/test-helpers';
 import { getPageTitle } from 'ember-page-title/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
-import { list as listCrates } from '../../mirage/route-handlers/crates';
 import axeConfig from '../axe-config';
 
 module('Acceptance | search', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('searching for "rust"', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
@@ -45,7 +46,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('searching for "rust" from query', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/search?q=rust');
 
@@ -58,7 +59,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('clearing search results', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/search?q=rust');
 
@@ -72,7 +73,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('pressing S key to focus the search bar', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/');
 
@@ -98,7 +99,7 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('check search results are by default displayed by relevance', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
@@ -108,10 +109,11 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the frontpage', async function (assert) {
-    let crate = this.server.create('crate', { name: 'rust' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'rust' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
-    this.server.get('/api/v1/crates', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates', () => error));
 
     await visit('/');
     await fillIn('[data-test-search-input]', 'rust');
@@ -121,10 +123,8 @@ module('Acceptance | search', function (hooks) {
     assert.dom('[data-test-try-again-button]').isEnabled();
 
     let deferred = defer();
-    this.server.get('/api/v1/crates', async function (schema, request) {
-      await deferred.promise;
-      return listCrates.call(this, schema, request);
-    });
+    this.worker.resetHandlers();
+    this.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     click('[data-test-try-again-button]');
     await waitFor('[data-test-page-header] [data-test-spinner]');
@@ -140,15 +140,16 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('error handling when searching from the search page', async function (assert) {
-    let crate = this.server.create('crate', { name: 'rust' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'rust' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/search?q=rust');
     assert.dom('[data-test-crate-row]').exists({ count: 1 });
     assert.dom('[data-test-error-message]').doesNotExist();
     assert.dom('[data-test-try-again-button]').doesNotExist();
 
-    this.server.get('/api/v1/crates', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates', () => error));
 
     await fillIn('[data-test-search-input]', 'ru');
     await triggerEvent('[data-test-search-form]', 'submit');
@@ -157,10 +158,8 @@ module('Acceptance | search', function (hooks) {
     assert.dom('[data-test-try-again-button]').isEnabled();
 
     let deferred = defer();
-    this.server.get('/api/v1/crates', async function (schema, request) {
-      await deferred.promise;
-      return listCrates.call(this, schema, request);
-    });
+    this.worker.resetHandlers();
+    this.worker.use(http.get('/api/v1/crates', () => deferred.promise));
 
     click('[data-test-try-again-button]');
     await waitFor('[data-test-page-header] [data-test-spinner]');
@@ -174,64 +173,73 @@ module('Acceptance | search', function (hooks) {
   });
 
   test('passes query parameters to the backend', async function (assert) {
-    this.server.get('/api/v1/crates', function (schema, request) {
-      assert.step('/api/v1/crates');
+    this.worker.use(
+      http.get('/api/v1/crates', function ({ request }) {
+        assert.step('/api/v1/crates');
 
-      assert.deepEqual(request.queryParams, {
-        all_keywords: 'fire ball',
-        page: '3',
-        per_page: '15',
-        q: 'rust',
-        sort: 'new',
-      });
+        let url = new URL(request.url);
+        assert.deepEqual(Object.fromEntries(url.searchParams.entries()), {
+          all_keywords: 'fire ball',
+          page: '3',
+          per_page: '15',
+          q: 'rust',
+          sort: 'new',
+        });
 
-      return { crates: [], meta: { total: 0 } };
-    });
+        return HttpResponse.json({ crates: [], meta: { total: 0 } });
+      }),
+    );
 
     await visit('/search?q=rust&page=3&per_page=15&sort=new&all_keywords=fire ball');
     assert.verifySteps(['/api/v1/crates']);
   });
 
   test('supports `keyword:bla` filters', async function (assert) {
-    this.server.get('/api/v1/crates', function (schema, request) {
-      assert.step('/api/v1/crates');
+    this.worker.use(
+      http.get('/api/v1/crates', function ({ request }) {
+        assert.step('/api/v1/crates');
 
-      assert.deepEqual(request.queryParams, {
-        all_keywords: 'fire ball',
-        page: '3',
-        per_page: '15',
-        q: 'rust',
-        sort: 'new',
-      });
+        let url = new URL(request.url);
+        assert.deepEqual(Object.fromEntries(url.searchParams.entries()), {
+          all_keywords: 'fire ball',
+          page: '3',
+          per_page: '15',
+          q: 'rust',
+          sort: 'new',
+        });
 
-      return { crates: [], meta: { total: 0 } };
-    });
+        return HttpResponse.json({ crates: [], meta: { total: 0 } });
+      }),
+    );
 
     await visit('/search?q=rust keyword:fire keyword:ball&page=3&per_page=15&sort=new');
     assert.verifySteps(['/api/v1/crates']);
   });
 
   test('`all_keywords` query parameter takes precedence over `keyword` filters', async function (assert) {
-    this.server.get('/api/v1/crates', function (schema, request) {
-      assert.step('/api/v1/crates');
+    this.worker.use(
+      http.get('/api/v1/crates', function ({ request }) {
+        assert.step('/api/v1/crates');
 
-      assert.deepEqual(request.queryParams, {
-        all_keywords: 'fire ball',
-        page: '3',
-        per_page: '15',
-        q: 'rust keywords:foo',
-        sort: 'new',
-      });
+        let url = new URL(request.url);
+        assert.deepEqual(Object.fromEntries(url.searchParams.entries()), {
+          all_keywords: 'fire ball',
+          page: '3',
+          per_page: '15',
+          q: 'rust keywords:foo',
+          sort: 'new',
+        });
 
-      return { crates: [], meta: { total: 0 } };
-    });
+        return HttpResponse.json({ crates: [], meta: { total: 0 } });
+      }),
+    );
 
     await visit('/search?q=rust keywords:foo&page=3&per_page=15&sort=new&all_keywords=fire ball');
     assert.verifySteps(['/api/v1/crates']);
   });
 
   test('visiting without query parameters works', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/search');
 
