@@ -4,19 +4,18 @@ import { module, test } from 'qunit';
 import { hbs } from 'ember-cli-htmlbars';
 
 import { setupRenderingTest } from 'crates-io/tests/helpers';
-
-import setupMirage from '../helpers/setup-mirage';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Component | OwnersList', function (hooks) {
   setupRenderingTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   test('single user', async function (assert) {
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate });
 
-    let user = this.server.create('user');
-    this.server.create('crate-ownership', { crate, user });
+    let user = this.db.user.create();
+    this.db.crateOwnership.create({ crate, user });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -35,11 +34,11 @@ module('Component | OwnersList', function (hooks) {
   });
 
   test('user without `name`', async function (assert) {
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate });
 
-    let user = this.server.create('user', { name: null, login: 'anonymous' });
-    this.server.create('crate-ownership', { crate, user });
+    let user = this.db.user.create({ name: null, login: 'anonymous' });
+    this.db.crateOwnership.create({ crate, user });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -58,12 +57,12 @@ module('Component | OwnersList', function (hooks) {
   });
 
   test('five users', async function (assert) {
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate });
 
     for (let i = 0; i < 5; i++) {
-      let user = this.server.create('user');
-      this.server.create('crate-ownership', { crate, user });
+      let user = this.db.user.create();
+      this.db.crateOwnership.create({ crate, user });
     }
 
     let store = this.owner.lookup('service:store');
@@ -80,12 +79,12 @@ module('Component | OwnersList', function (hooks) {
   });
 
   test('six users', async function (assert) {
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate });
 
     for (let i = 0; i < 6; i++) {
-      let user = this.server.create('user');
-      this.server.create('crate-ownership', { crate, user });
+      let user = this.db.user.create();
+      this.db.crateOwnership.create({ crate, user });
     }
 
     let store = this.owner.lookup('service:store');
@@ -102,16 +101,16 @@ module('Component | OwnersList', function (hooks) {
   });
 
   test('teams mixed with users', async function (assert) {
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate });
 
     for (let i = 0; i < 3; i++) {
-      let user = this.server.create('user');
-      this.server.create('crate-ownership', { crate, user });
+      let user = this.db.user.create();
+      this.db.crateOwnership.create({ crate, user });
     }
     for (let i = 0; i < 2; i++) {
-      let team = this.server.create('team', { org: 'crates-io' });
-      this.server.create('crate-ownership', { crate, team });
+      let team = this.db.team.create({ org: 'crates-io' });
+      this.db.crateOwnership.create({ crate, team });
     }
 
     let store = this.owner.lookup('service:store');
