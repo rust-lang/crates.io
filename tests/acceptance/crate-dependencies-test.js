@@ -1,9 +1,11 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
@@ -11,10 +13,10 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate dependencies page', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('shows the lists of dependencies', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg/dependencies');
     assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
@@ -29,8 +31,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('empty list case', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/dependencies');
 
@@ -50,7 +52,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows an error page if crate fails to load', async function (assert) {
-    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+    this.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
@@ -61,8 +63,8 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows an error page if version is not found', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '2.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '2.0.0' });
 
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
@@ -73,10 +75,10 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows an error page if versions fail to load', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '2.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '2.0.0' });
 
-    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+    this.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
 
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
@@ -87,10 +89,12 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('shows error message if loading of dependencies fails', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
-    this.server.get('/api/v1/crates/:crate_name/:version_num/dependencies', {}, 500);
+    this.worker.use(
+      http.get('/api/v1/crates/:crate_name/:version_num/dependencies', () => HttpResponse.json({}, { status: 500 })),
+    );
 
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
@@ -101,18 +105,18 @@ module('Acceptance | crate dependencies page', function (hooks) {
   });
 
   test('hides description if loading of dependency details fails', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    let version = this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    let version = this.db.version.create({ crate, num: '0.6.1' });
 
-    let foo = this.server.create('crate', { name: 'foo', description: 'This is the foo crate' });
-    this.server.create('version', { crate: foo, num: '1.0.0' });
-    this.server.create('dependency', { crate: foo, version, req: '^1.0.0', kind: 'normal' });
+    let foo = this.db.crate.create({ name: 'foo', description: 'This is the foo crate' });
+    this.db.version.create({ crate: foo, num: '1.0.0' });
+    this.db.dependency.create({ crate: foo, version, req: '^1.0.0', kind: 'normal' });
 
-    let bar = this.server.create('crate', { name: 'bar', description: 'This is the bar crate' });
-    this.server.create('version', { crate: bar, num: '2.3.4' });
-    this.server.create('dependency', { crate: bar, version, req: '^2.0.0', kind: 'normal' });
+    let bar = this.db.crate.create({ name: 'bar', description: 'This is the bar crate' });
+    this.db.version.create({ crate: bar, num: '2.3.4' });
+    this.db.dependency.create({ crate: bar, version, req: '^2.0.0', kind: 'normal' });
 
-    this.server.get('/api/v1/crates', {}, 500);
+    this.worker.use(http.get('/api/v1/crates', () => HttpResponse.json({}, { status: 500 })));
 
     await visit('/crates/nanomsg/dependencies');
     assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.1/dependencies');
