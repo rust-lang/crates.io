@@ -1,12 +1,14 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { http, HttpResponse } from 'msw';
+
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | team', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test("shows an error message if the user can't be found", async function (assert) {
     await visit('/teams/foo');
@@ -18,7 +20,8 @@ module('Route | team', function (hooks) {
   });
 
   test('server error causes the error page to be shown', async function (assert) {
-    this.server.get('/api/v1/teams/:id', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/teams/:id', () => error));
 
     await visit('/teams/foo');
     assert.strictEqual(currentURL(), '/teams/foo');
