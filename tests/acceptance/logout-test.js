@@ -7,11 +7,11 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Logout', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
   setupWindowMock(hooks);
 
   test('successful logout', async function (assert) {
-    let user = this.server.create('user', { name: 'John Doe' });
+    let user = this.db.user.create({ name: 'John Doe' });
     this.authenticateAs(user);
 
     await visit('/crates');
