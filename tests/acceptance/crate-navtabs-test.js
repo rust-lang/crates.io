@@ -10,11 +10,11 @@ const TAB_REV_DEPS = '[data-test-rev-deps-tab] a';
 const TAB_SETTINGS = '[data-test-settings-tab] a';
 
 module('Acceptance | crate navigation tabs', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('basic navigation between tabs works as expected', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg');
     assert.strictEqual(currentURL(), '/crates/nanomsg');
