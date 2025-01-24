@@ -1,6 +1,7 @@
 import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
@@ -9,10 +10,10 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | user page', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('has user display', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 
@@ -23,7 +24,7 @@ module('Acceptance | user page', function (hooks) {
   });
 
   test('has link to github in user header', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 
@@ -31,7 +32,7 @@ module('Acceptance | user page', function (hooks) {
   });
 
   test('user details has github profile icon', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 
