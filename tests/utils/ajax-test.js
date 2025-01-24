@@ -1,32 +1,35 @@
 import { module, test } from 'qunit';
 
-import { setupTest } from 'crates-io/tests/helpers';
-import ajax, { AjaxError, HttpError } from 'crates-io/utils/ajax';
+import { http, HttpResponse } from 'msw';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupTest } from 'crates-io/tests/helpers';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
+import ajax, { AjaxError, HttpError } from 'crates-io/utils/ajax';
 
 module('ajax()', function (hooks) {
   setupTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
   setupFetchRestore(hooks);
 
-  test('fetches a JSON document from the server', async function (assert) {
-    this.server.get('/foo', { foo: 42 });
+  test('fetches a JSON document from the worker', async function (assert) {
+    this.worker.use(http.get('/foo', () => HttpResponse.json({ foo: 42 })));
 
     let response = await ajax('/foo');
     assert.deepEqual(response, { foo: 42 });
   });
 
   test('passes additional options to `fetch()`', async function (assert) {
-    this.server.get('/foo', { foo: 42 });
-    this.server.put('/foo', { foo: 'bar' });
+    this.worker.use(
+      http.get('/foo', () => HttpResponse.json({ foo: 42 })),
+      http.put('/foo', () => HttpResponse.json({ foo: 'bar' })),
+    );
 
     let response = await ajax('/foo', { method: 'PUT' });
     assert.deepEqual(response, { foo: 'bar' });
   });
 
   test('throws an `HttpError` for 5xx responses', async function (assert) {
-    this.server.get('/foo', { foo: 42 }, 500);
+    this.worker.use(http.get('/foo', () => HttpResponse.json({ foo: 42 }, { status: 500 })));
 
     await assert.rejects(ajax('/foo'), function (error) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: HttpError: GET /foo failed with: 500 Internal Server Error';
@@ -50,13 +53,13 @@ module('ajax()', function (hooks) {
       assert.strictEqual(cause.method, 'GET');
       assert.strictEqual(cause.url, '/foo');
       assert.ok(cause.response);
-      assert.strictEqual(cause.response.url, '/foo');
+      assert.ok(cause.response.url.endsWith('/foo'));
       return true;
     });
   });
 
   test('throws an `HttpError` for 4xx responses', async function (assert) {
-    this.server.get('/foo', { foo: 42 }, 404);
+    this.worker.use(http.get('/foo', () => HttpResponse.json({ foo: 42 }, { status: 404 })));
 
     await assert.rejects(ajax('/foo'), function (error) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: HttpError: GET /foo failed with: 404 Not Found';
@@ -80,13 +83,13 @@ module('ajax()', function (hooks) {
       assert.strictEqual(cause.method, 'GET');
       assert.strictEqual(cause.url, '/foo');
       assert.ok(cause.response);
-      assert.strictEqual(cause.response.url, '/foo');
+      assert.ok(cause.response.url.endsWith('/foo'));
       return true;
     });
   });
 
   test('throws an error for invalid JSON responses', async function (assert) {
-    this.server.get('/foo', () => '{ foo: 42');
+    this.worker.use(http.get('/foo', () => HttpResponse.text('{ foo: 42')));
 
     await assert.rejects(ajax('/foo'), function (error) {
       let expectedMessage = 'GET /foo failed\n\ncaused by: SyntaxError';
@@ -150,7 +153,7 @@ module('ajax()', function (hooks) {
 
   module('json()', function () {
     test('resolves with the JSON payload', async function (assert) {
-      this.server.get('/foo', { foo: 42 }, 500);
+      this.worker.use(http.get('/foo', () => HttpResponse.json({ foo: 42 }, { status: 500 })));
 
       let error;
       await assert.rejects(ajax('/foo'), function (_error) {
@@ -163,7 +166,7 @@ module('ajax()', function (hooks) {
     });
 
     test('resolves with `undefined` if there is no JSON payload', async function (assert) {
-      this.server.get('/foo', () => '{ foo: 42', 500);
+      this.worker.use(http.get('/foo', () => HttpResponse.text('{ foo: 42', { status: 500 })));
 
       let error;
       await assert.rejects(ajax('/foo'), function (_error) {
