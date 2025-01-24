@@ -1,12 +1,13 @@
 import { module, test } from 'qunit';
 
-import { setupTest } from 'crates-io/tests/helpers';
+import { http, HttpResponse } from 'msw';
 
-import setupMirage from '../helpers/setup-mirage';
+import { setupTest } from 'crates-io/tests/helpers';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Model | User', function (hooks) {
   setupTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
@@ -14,7 +15,7 @@ module('Model | User', function (hooks) {
 
   module('changeEmail()', function () {
     test('happy path', async function (assert) {
-      let user = this.server.create('user', { email: 'old@email.com' });
+      let user = this.db.user.create({ email: 'old@email.com' });
 
       this.authenticateAs(user);
 
@@ -30,11 +31,12 @@ module('Model | User', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = this.server.create('user', { email: 'old@email.com' });
+      let user = this.db.user.create({ email: 'old@email.com' });
 
       this.authenticateAs(user);
 
-      this.server.put('/api/v1/users/:user_id', {}, 500);
+      let error = HttpResponse.json({}, { status: 500 });
+      this.worker.use(http.put('/api/v1/users/:user_id', () => error));
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
@@ -55,7 +57,7 @@ module('Model | User', function (hooks) {
     test('happy path', async function (assert) {
       assert.expect(0);
 
-      let user = this.server.create('user', { emailVerificationToken: 'secret123' });
+      let user = this.db.user.create({ emailVerificationToken: 'secret123' });
       this.authenticateAs(user);
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
@@ -64,10 +66,11 @@ module('Model | User', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = this.server.create('user', { emailVerificationToken: 'secret123' });
+      let user = this.db.user.create({ emailVerificationToken: 'secret123' });
       this.authenticateAs(user);
 
-      this.server.put('/api/v1/users/:user_id/resend', {}, 500);
+      let error = HttpResponse.json({}, { status: 500 });
+      this.worker.use(http.put('/api/v1/users/:user_id/resend', () => error));
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
