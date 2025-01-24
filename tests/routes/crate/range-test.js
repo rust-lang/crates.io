@@ -1,19 +1,21 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { http, HttpResponse } from 'msw';
+
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../../helpers/visit-ignoring-abort';
 
 module('Route | crate.range', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('happy path', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
-    this.server.create('version', { crate, num: '1.1.0' });
-    this.server.create('version', { crate, num: '1.2.0' });
-    this.server.create('version', { crate, num: '1.2.3' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
+    this.db.version.create({ crate, num: '1.1.0' });
+    this.db.version.create({ crate, num: '1.2.0' });
+    this.db.version.create({ crate, num: '1.2.3' });
 
     await visit('/crates/foo/range/^1.1.0');
     assert.strictEqual(currentURL(), `/crates/foo/1.2.3`);
@@ -23,11 +25,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('happy path with tilde range', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
-    this.server.create('version', { crate, num: '1.1.0' });
-    this.server.create('version', { crate, num: '1.1.1' });
-    this.server.create('version', { crate, num: '1.2.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
+    this.db.version.create({ crate, num: '1.1.0' });
+    this.db.version.create({ crate, num: '1.1.1' });
+    this.db.version.create({ crate, num: '1.2.0' });
 
     await visit('/crates/foo/range/~1.1.0');
     assert.strictEqual(currentURL(), `/crates/foo/1.1.1`);
@@ -37,11 +39,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('happy path with cargo style and', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.4.2' });
-    this.server.create('version', { crate, num: '1.3.4' });
-    this.server.create('version', { crate, num: '1.3.3' });
-    this.server.create('version', { crate, num: '1.2.6' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.4.2' });
+    this.db.version.create({ crate, num: '1.3.4' });
+    this.db.version.create({ crate, num: '1.3.3' });
+    this.db.version.create({ crate, num: '1.2.6' });
 
     await visit('/crates/foo/range/>=1.3.0, <1.4.0');
     assert.strictEqual(currentURL(), `/crates/foo/1.3.4`);
@@ -51,11 +53,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('ignores yanked versions if possible', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
-    this.server.create('version', { crate, num: '1.1.0' });
-    this.server.create('version', { crate, num: '1.1.1' });
-    this.server.create('version', { crate, num: '1.2.0', yanked: true });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
+    this.db.version.create({ crate, num: '1.1.0' });
+    this.db.version.create({ crate, num: '1.1.1' });
+    this.db.version.create({ crate, num: '1.2.0', yanked: true });
 
     await visit('/crates/foo/range/^1.0.0');
     assert.strictEqual(currentURL(), `/crates/foo/1.1.1`);
@@ -65,11 +67,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('falls back to yanked version if necessary', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0', yanked: true });
-    this.server.create('version', { crate, num: '1.1.0', yanked: true });
-    this.server.create('version', { crate, num: '1.1.1', yanked: true });
-    this.server.create('version', { crate, num: '2.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0', yanked: true });
+    this.db.version.create({ crate, num: '1.1.0', yanked: true });
+    this.db.version.create({ crate, num: '1.1.1', yanked: true });
+    this.db.version.create({ crate, num: '2.0.0' });
 
     await visit('/crates/foo/range/^1.0.0');
     assert.strictEqual(currentURL(), `/crates/foo/1.1.1`);
@@ -88,7 +90,8 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('shows an error page if crate fails to load', async function (assert) {
-    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates/:crate_name', () => error));
 
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
@@ -99,11 +102,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('shows an error page if no match found', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
-    this.server.create('version', { crate, num: '1.1.0' });
-    this.server.create('version', { crate, num: '1.1.1' });
-    this.server.create('version', { crate, num: '2.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
+    this.db.version.create({ crate, num: '1.1.0' });
+    this.db.version.create({ crate, num: '1.1.1' });
+    this.db.version.create({ crate, num: '2.0.0' });
 
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
@@ -114,10 +117,11 @@ module('Route | crate.range', function (hooks) {
   });
 
   test('shows an error page if versions fail to load', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '3.2.1' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '3.2.1' });
 
-    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => error));
 
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
