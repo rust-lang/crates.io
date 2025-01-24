@@ -6,14 +6,14 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../../../helpers/visit-ignoring-abort';
 
 module('Route | crate.version | model() hook', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   module('with explicit version number in the URL', function () {
     test('shows yanked versions', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0' });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1' });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0' });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo/1.2.3');
       assert.strictEqual(currentURL(), `/crates/foo/1.2.3`);
@@ -26,10 +26,10 @@ module('Route | crate.version | model() hook', function (hooks) {
     });
 
     test('shows error page for unknown versions', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0' });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1' });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0' });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo/2.0.0');
       assert.strictEqual(currentURL(), `/crates/foo/2.0.0`);
@@ -42,11 +42,11 @@ module('Route | crate.version | model() hook', function (hooks) {
 
   module('without version number in the URL', function () {
     test('defaults to the highest stable version', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0' });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1' });
-      this.server.create('version', { crate, num: '2.0.0' });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0' });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1' });
+      this.db.version.create({ crate, num: '2.0.0' });
 
       await visit('/crates/foo');
       assert.strictEqual(currentURL(), `/crates/foo`);
@@ -59,10 +59,10 @@ module('Route | crate.version | model() hook', function (hooks) {
     });
 
     test('defaults to the highest stable version, even if there are higher prereleases', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0' });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1' });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0' });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await visit('/crates/foo');
       assert.strictEqual(currentURL(), `/crates/foo`);
@@ -75,12 +75,12 @@ module('Route | crate.version | model() hook', function (hooks) {
     });
 
     test('defaults to the highest not-yanked version', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0', yanked: true });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1' });
-      this.server.create('version', { crate, num: '2.0.0-beta.2' });
-      this.server.create('version', { crate, num: '2.0.0', yanked: true });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0', yanked: true });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1' });
+      this.db.version.create({ crate, num: '2.0.0-beta.2' });
+      this.db.version.create({ crate, num: '2.0.0', yanked: true });
 
       await visit('/crates/foo');
       assert.strictEqual(currentURL(), `/crates/foo`);
@@ -93,10 +93,10 @@ module('Route | crate.version | model() hook', function (hooks) {
     });
 
     test('if there are only yanked versions, it defaults to the latest version', async function (assert) {
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '1.0.0', yanked: true });
-      this.server.create('version', { crate, num: '1.2.3', yanked: true });
-      this.server.create('version', { crate, num: '2.0.0-beta.1', yanked: true });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '1.0.0', yanked: true });
+      this.db.version.create({ crate, num: '1.2.3', yanked: true });
+      this.db.version.create({ crate, num: '2.0.0-beta.1', yanked: true });
 
       await visit('/crates/foo');
       assert.strictEqual(currentURL(), `/crates/foo`);
