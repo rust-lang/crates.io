@@ -1,10 +1,13 @@
 import { module, test } from 'qunit';
 
-import { setupMirage, setupTest } from 'crates-io/tests/helpers';
+import { http, HttpResponse } from 'msw';
+
+import { setupTest } from 'crates-io/tests/helpers';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Service | Playground', function (hooks) {
   setupTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   hooks.beforeEach(function () {
     this.playground = this.owner.lookup('service:playground');
@@ -21,14 +24,16 @@ module('Service | Playground', function (hooks) {
       { name: 'ansi_term', version: '0.11.0', id: 'ansi_term_0_11_0' },
     ];
 
-    this.server.get('https://play.rust-lang.org/meta/crates', { crates }, 200);
+    let response = HttpResponse.json({ crates });
+    this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => response));
 
     await this.playground.loadCratesTask.perform();
     assert.deepEqual(this.playground.crates, crates);
   });
 
   test('loadCratesTask fails on HTTP error', async function (assert) {
-    this.server.get('https://play.rust-lang.org/meta/crates', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => error));
 
     await assert.rejects(this.playground.loadCratesTask.perform());
     assert.notOk(this.playground.crates);
