@@ -1,12 +1,14 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { http, HttpResponse } from 'msw';
+
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | keyword', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('shows an empty list if the keyword does not exist on the server', async function (assert) {
     await visit('/keywords/foo');
@@ -15,7 +17,8 @@ module('Route | keyword', function (hooks) {
   });
 
   test('server error causes the error page to be shown', async function (assert) {
-    this.server.get('/api/v1/crates', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates', () => error));
 
     await visit('/keywords/foo');
     assert.strictEqual(currentURL(), '/keywords/foo');
