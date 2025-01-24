@@ -1,6 +1,7 @@
 import { visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
@@ -9,10 +10,10 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | team page', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('has team organization display', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 
@@ -24,7 +25,7 @@ module('Acceptance | team page', function (hooks) {
   });
 
   test('has link to github in team header', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 
@@ -32,7 +33,7 @@ module('Acceptance | team page', function (hooks) {
   });
 
   test('team organization details has github profile icon', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 
