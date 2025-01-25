@@ -153,8 +153,8 @@ module('Model | Version', function (hooks) {
         '0.3.3',
         '0.3.2',
         '0.3.1',
-        '0.3.0-alpha.01',
         '0.3.0',
+        '0.3.0-alpha.01',
         '0.2.1',
         '0.2.0',
         '0.1.2',
@@ -181,8 +181,8 @@ module('Model | Version', function (hooks) {
           { num: '0.3.3', isHighestOfReleaseTrack: false },
           { num: '0.3.2', isHighestOfReleaseTrack: false },
           { num: '0.3.1', isHighestOfReleaseTrack: false },
-          { num: '0.3.0-alpha.01', isHighestOfReleaseTrack: false },
           { num: '0.3.0', isHighestOfReleaseTrack: false },
+          { num: '0.3.0-alpha.01', isHighestOfReleaseTrack: false },
           { num: '0.2.1', isHighestOfReleaseTrack: true },
           { num: '0.2.0', isHighestOfReleaseTrack: false },
           { num: '0.1.2', isHighestOfReleaseTrack: true },
@@ -203,9 +203,9 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
-          { num: '0.4.1', isHighestOfReleaseTrack: true },
           { num: '0.4.2', isHighestOfReleaseTrack: false },
+          { num: '0.4.1', isHighestOfReleaseTrack: true },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
     });
@@ -221,8 +221,8 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
           { num: '0.4.1', isHighestOfReleaseTrack: true },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
 
@@ -234,10 +234,10 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
-          { num: '0.4.1', isHighestOfReleaseTrack: false },
-          { num: '0.4.2', isHighestOfReleaseTrack: true },
           { num: '0.4.3', isHighestOfReleaseTrack: false },
+          { num: '0.4.2', isHighestOfReleaseTrack: true },
+          { num: '0.4.1', isHighestOfReleaseTrack: false },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
     });

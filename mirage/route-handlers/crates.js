@@ -1,7 +1,7 @@
 import { Response } from 'miragejs';
 
 import { getSession } from '../utils/session';
-import { compareIsoDates, compareStrings, notFound, pageParams, releaseTracks } from './-utils';
+import { compareIsoDates, compareSemvers, compareStrings, notFound, pageParams, releaseTracks } from './-utils';
 
 function toCanonicalName(name) {
   return name.toLowerCase().replace(/-/g, '_');
@@ -159,11 +159,14 @@ export function register(server) {
     if (!crate) return notFound();
 
     let versions = crate.versions;
-    let { nums } = request.queryParams;
+    let { nums, sort } = request.queryParams;
     if (nums) {
       versions = versions.filter(version => nums.includes(version.num));
     }
-    versions = versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at));
+    versions =
+      sort == 'date'
+        ? versions.sort((a, b) => compareIsoDates(b.created_at, a.created_at))
+        : versions.sort((a, b) => compareSemvers(b.num, a.num));
     let total = versions.length;
     let include = request.queryParams?.include ?? '';
     let release_tracks = include.split(',').includes('release_tracks') && releaseTracks(crate.versions);

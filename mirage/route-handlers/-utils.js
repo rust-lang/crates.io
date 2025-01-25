@@ -47,3 +47,5 @@ export function releaseTracks(versions) {
   }
   return tracks;
 }
+
+export { default as compareSemvers } from 'semver/functions/compare-loose';

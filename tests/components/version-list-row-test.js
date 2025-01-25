@@ -75,17 +75,17 @@ module('Component | VersionList::Row', function (hooks) {
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.loadVersionsTask.perform()).slice();
     await crateRecord.loadOwnerUserTask.perform();
-    this.firstVersion = versions[0];
-    this.secondVersion = versions[1];
-    this.thirdVersion = versions[2];
+    this.firstVersion = versions.find(it => it.num == '0.3.0');
+    this.secondVersion = versions.find(it => it.num == '0.2.0');
+    this.thirdVersion = versions.find(it => it.num == '0.1.0');
 
     await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
-    assert.dom('[data-test-feature-list]').doesNotExist();
+    assert.dom('[data-test-feature-list]').hasText('2 Features');
 
     await render(hbs`<VersionList::Row @version={{this.secondVersion}} />`);
     assert.dom('[data-test-feature-list]').hasText('1 Feature');
 
     await render(hbs`<VersionList::Row @version={{this.thirdVersion}} />`);
-    assert.dom('[data-test-feature-list]').hasText('2 Features');
+    assert.dom('[data-test-feature-list]').doesNotExist();
   });
 });
