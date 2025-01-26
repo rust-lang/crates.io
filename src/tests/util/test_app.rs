@@ -11,6 +11,7 @@ use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
+use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
@@ -101,6 +102,7 @@ impl TestApp {
             use_chaos_proxy: false,
             team_repo: MockTeamRepo::new(),
             github: None,
+            docs_rs: None,
         }
     }
 
@@ -242,6 +244,7 @@ pub struct TestAppBuilder {
     use_chaos_proxy: bool,
     team_repo: MockTeamRepo,
     github: Option<MockGitHubClient>,
+    docs_rs: Option<MockDocsRsClient>,
 }
 
 impl TestAppBuilder {
@@ -299,6 +302,7 @@ impl TestAppBuilder {
                 .storage(app.storage.clone())
                 .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
+                .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
                 .team_repo(Box::new(self.team_repo))
                 .build();
 
@@ -380,6 +384,11 @@ impl TestAppBuilder {
 
     pub fn with_chaos_proxy(mut self) -> Self {
         self.use_chaos_proxy = true;
+        self
+    }
+
+    pub fn with_docs_rs(mut self, docs_rs: MockDocsRsClient) -> Self {
+        self.docs_rs = Some(docs_rs);
         self
     }
 
