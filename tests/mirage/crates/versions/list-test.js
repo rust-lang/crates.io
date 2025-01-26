@@ -147,6 +147,85 @@ module('Mirage | GET /api/v1/crates/:name/versions', function (hooks) {
     }
   });
 
+  test('supports seek pagination', async function (assert) {
+    let user = this.server.create('user');
+    let crate = this.server.create('crate', { name: 'rand' });
+    this.server.create('version', { crate, num: '1.0.0', created_at: '2010-06-16T21:30:45Z' });
+    this.server.create('version', { crate, num: '1.2.0', rust_version: '1.69', created_at: '2010-06-16T21:30:46Z' });
+    this.server.create('version', { crate, num: '1.1.0', publishedBy: user, created_at: '2010-06-16T21:30:47Z' });
+
+    async function seek_forwards(queryParams) {
+      let calls = 0;
+      let next_page;
+      let responses = [];
+      let base_url = '/api/v1/crates/rand/versions';
+      let params = new URLSearchParams(queryParams);
+      let url = `${base_url}?${params}`;
+      while ((calls == 0 || next_page) && calls < 10) {
+        if (next_page) {
+          url = `${base_url}${next_page}`;
+        }
+        let response = await fetch(url);
+        calls += 1;
+        assert.strictEqual(response.status, 200);
+        let json = await response.json();
+        responses.push(json);
+        next_page = json.meta.next_page;
+        if (next_page == null) {
+          break;
+        }
+      }
+      return responses;
+    }
+
+    // sort by `semver` by default
+    {
+      let responses = await seek_forwards({ per_page: 1 });
+      assert.deepEqual(
+        responses.map(it => it.versions.map(v => v.num)),
+        [['1.2.0'], ['1.1.0'], ['1.0.0'], []],
+      );
+      assert.deepEqual(
+        responses.map(it => it.meta.next_page),
+        ['?per_page=1&seek=1.2.0', '?per_page=1&seek=1.1.0', '?per_page=1&seek=1.0.0', null],
+      );
+    }
+
+    {
+      let responses = await seek_forwards({ per_page: 1, sort: 'semver' });
+      assert.deepEqual(
+        responses.map(it => it.versions.map(v => v.num)),
+        [['1.2.0'], ['1.1.0'], ['1.0.0'], []],
+      );
+      assert.deepEqual(
+        responses.map(it => it.meta.next_page),
+        [
+          '?per_page=1&sort=semver&seek=1.2.0',
+          '?per_page=1&sort=semver&seek=1.1.0',
+          '?per_page=1&sort=semver&seek=1.0.0',
+          null,
+        ],
+      );
+    }
+
+    {
+      let responses = await seek_forwards({ per_page: 1, sort: 'date' });
+      assert.deepEqual(
+        responses.map(it => it.versions.map(v => v.num)),
+        [['1.1.0'], ['1.2.0'], ['1.0.0'], []],
+      );
+      assert.deepEqual(
+        responses.map(it => it.meta.next_page),
+        [
+          '?per_page=1&sort=date&seek=1.1.0',
+          '?per_page=1&sort=date&seek=1.2.0',
+          '?per_page=1&sort=date&seek=1.0.0',
+          null,
+        ],
+      );
+    }
+  });
+
   test('supports multiple `ids[]` parameters', async function (assert) {
     let user = this.server.create('user');
     let crate = this.server.create('crate', { name: 'rand' });

@@ -159,7 +159,7 @@ export function register(server) {
     if (!crate) return notFound();
 
     let versions = crate.versions;
-    let { nums, sort } = request.queryParams;
+    let { nums, sort, per_page, seek } = request.queryParams;
     if (nums) {
       versions = versions.filter(version => nums.includes(version.num));
     }
@@ -170,9 +170,32 @@ export function register(server) {
     let total = versions.length;
     let include = request.queryParams?.include ?? '';
     let release_tracks = include.split(',').includes('release_tracks') && releaseTracks(crate.versions);
+
+    // seek pagination
+    // A simplified seek encoding is applied here for testing purposes only. It should be opaque
+    // in real-world scenarios.
+    let next_seek = null;
+    if (per_page != null) {
+      if (seek != null) {
+        let idx = versions.models.findIndex(it => it.num === seek);
+        versions = versions.slice(idx + 1);
+      }
+      versions = versions.slice(0, per_page);
+
+      if (versions.length >= per_page) {
+        let last = versions.models.at(-1);
+        next_seek = last.num;
+      }
+    }
+    let next_page = null;
+    if (next_seek) {
+      next_page = new URLSearchParams({ ...request.queryParams, seek: next_seek });
+      next_page = `?${next_page}`;
+    }
+
     let resp = {
       ...this.serialize(versions),
-      meta: { total, next_page: null },
+      meta: { total, next_page },
     };
     if (release_tracks && Object.keys(release_tracks).length !== 0) {
       resp.meta.release_tracks = release_tracks;
