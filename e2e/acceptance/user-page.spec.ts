@@ -1,10 +1,9 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { loadFixtures } from '@crates-io/msw/fixtures';
 
 test.describe('Acceptance | user page', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.loadFixtures();
-    });
+  test.beforeEach(async ({ page, msw }) => {
+    loadFixtures(msw.db);
     await page.goto('/users/thehydroimpulse');
   });
 
