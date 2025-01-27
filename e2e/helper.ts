@@ -1,9 +1,9 @@
 import { test as base } from '@playwright/test';
 import type { MockServiceWorker } from 'playwright-msw';
-import { http, HttpResponse } from 'msw';
 import { createWorker } from 'playwright-msw';
 import { db, handlers } from '@crates-io/msw';
 
+import * as pwFakeTimers from '@sinonjs/fake-timers';
 import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
 import { MiragePage } from './fixtures/mirage';
 import { PercyPage } from './fixtures/percy';
@@ -33,11 +33,23 @@ export const test = base.extend<AppOptions & AppFixtures>({
   emberOptions: [{ setTesting: true, mockSentry: true }, { option: true }],
   clock: [
     async ({ page, clockOptions }, use) => {
+      let now = clockOptions.now;
+      if (typeof now === 'string') {
+        now = Date.parse(now);
+      }
+
+      let pwClock = pwFakeTimers.install({
+        ...clockOptions,
+        now,
+        toFake: ['Date'],
+      });
+
       let clock = new FakeTimers(page);
       if (clockOptions != null) {
         await clock.setup(clockOptions);
       }
       await use(clock);
+      pwClock?.uninstall();
     },
     { auto: true, scope: 'test' },
   ],
