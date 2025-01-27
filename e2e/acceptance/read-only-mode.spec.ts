@@ -1,4 +1,5 @@
 import { test, expect, AppFixtures } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ context }) => {
@@ -12,29 +13,26 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
   });
 
-  test('notification is shown for read-only mode', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/site_metadata', { read_only: true });
-    });
+  test('notification is shown for read-only mode', async ({ page, msw }) => {
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
+
+    await msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({ read_only: true })));
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toContainText('read-only mode');
   });
 
-  test('server errors are handled gracefully', async ({ page, mirage, ember }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/site_metadata', {}, 500);
-    });
+  test('server errors are handled gracefully', async ({ page, msw, ember }) => {
+    await msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 500 })));
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
     await checkSentryEventsNumber(ember, 0);
   });
 
-  test('client errors are reported on sentry', async ({ page, mirage, ember }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/site_metadata', {}, 404);
-    });
+  test('client errors are reported on sentry', async ({ page, msw, ember }) => {
+    await msw.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({}, { status: 404 })));
     await page.goto('/');
 
     await expect(page.locator('[data-test-notification-message="info"]')).toHaveCount(0);
