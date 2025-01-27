@@ -49,6 +49,7 @@ export class MiragePage {
   }
 
   async setup() {
+    await this.page.addInitScript('window.startMirage = true');
     await this.addHelpers();
   }
 }
