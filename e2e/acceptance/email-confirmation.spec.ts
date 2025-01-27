@@ -1,31 +1,25 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | Email Confirmation', { tag: '@acceptance' }, () => {
-  test('unauthenticated happy path', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { emailVerificationToken: 'badc0ffee' });
-      globalThis.user = user;
-    });
+  test('unauthenticated happy path', async ({ page, msw }) => {
+    let user = msw.db.user.create({ emailVerificationToken: 'badc0ffee' });
 
     await page.goto('/confirm/badc0ffee');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, false);
+    await expect(user.emailVerified).toBe(false);
     await expect(page).toHaveURL('/');
     await expect(page.locator('[data-test-notification-message="success"]')).toBeVisible();
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, true);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.emailVerified).toBe(true);
   });
 
-  test('authenticated happy path', async ({ page, mirage, ember }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { emailVerificationToken: 'badc0ffee' });
+  test('authenticated happy path', async ({ page, msw, ember }) => {
+    let user = msw.db.user.create({ emailVerificationToken: 'badc0ffee' });
 
-      authenticateAs(user);
-      globalThis.user = user;
-    });
+    await msw.authenticateAs(user);
 
     await page.goto('/confirm/badc0ffee');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, false);
+    await expect(user.emailVerified).toBe(false);
     await expect(page).toHaveURL('/');
     await expect(page.locator('[data-test-notification-message="success"]')).toBeVisible();
 
@@ -35,8 +29,8 @@ test.describe('Acceptance | Email Confirmation', { tag: '@acceptance' }, () => {
     });
     expect(emailVerified).toBe(true);
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, true);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.emailVerified).toBe(true);
   });
 
   test('error case', async ({ page }) => {
