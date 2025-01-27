@@ -37,7 +37,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
       await mirage.setup();
       await use(mirage);
     },
-    { auto: true, scope: 'test' },
+    { scope: 'test' },
   ],
   ember: [
     async ({ page, emberOptions }, use) => {
