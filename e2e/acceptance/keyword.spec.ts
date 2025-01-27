@@ -1,10 +1,8 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | keywords', { tag: '@acceptance' }, () => {
-  test('keyword/:keyword_id index default sort is recent-downloads', async ({ page, mirage, percy, a11y }) => {
-    await mirage.addHook(server => {
-      server.create('keyword', { keyword: 'network' });
-    });
+  test('keyword/:keyword_id index default sort is recent-downloads', async ({ page, msw, percy, a11y }) => {
+    msw.db.keyword.create({ keyword: 'network' });
 
     await page.goto('/keywords/network');
 
