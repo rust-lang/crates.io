@@ -1,22 +1,20 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | Settings', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      let user1 = server.create('user', { name: 'blabaere' });
-      let user2 = server.create('user', { name: 'thehydroimpulse' });
-      let team1 = server.create('team', { org: 'org', name: 'blabaere' });
-      let team2 = server.create('team', { org: 'org', name: 'thehydroimpulse' });
+  test.beforeEach(async ({ msw }) => {
+    let user1 = msw.db.user.create({ name: 'blabaere' });
+    let user2 = msw.db.user.create({ name: 'thehydroimpulse' });
+    let team1 = msw.db.team.create({ org: 'org', name: 'blabaere' });
+    let team2 = msw.db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '1.0.0' });
-      server.create('crate-ownership', { crate, user: user1 });
-      server.create('crate-ownership', { crate, user: user2 });
-      server.create('crate-ownership', { crate, team: team1 });
-      server.create('crate-ownership', { crate, team: team2 });
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate, num: '1.0.0' });
+    msw.db.crateOwnership.create({ crate, user: user1 });
+    msw.db.crateOwnership.create({ crate, user: user2 });
+    msw.db.crateOwnership.create({ crate, team: team1 });
+    msw.db.crateOwnership.create({ crate, team: team2 });
 
-      authenticateAs(user1);
-    });
+    await msw.authenticateAs(user1);
   });
 
   test('listing crate owners', async ({ page, percy, a11y }) => {
