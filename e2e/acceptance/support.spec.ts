@@ -31,13 +31,10 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   });
 
   test.describe('reporting a crate from support page', () => {
-    test.beforeEach(async ({ page, mirage }) => {
-      await mirage.config({ trackRequests: true });
-      await mirage.addHook(server => {
-        globalThis._routes = server._config.routes;
-        let crate = server.create('crate', { name: 'nanomsg' });
-        server.create('version', { crate, num: '0.6.0' });
-      });
+    test.beforeEach(async ({ page, msw }) => {
+      let crate = msw.db.crate.create({ name: 'nanomsg' });
+      msw.db.version.create({ crate, num: '0.6.0' });
+
       // mock `window.open()`
       await page.addInitScript(() => {
         globalThis.open = (url, target, features) => {
@@ -195,13 +192,10 @@ test detail
   });
 
   test.describe('reporting a crate from crate page', () => {
-    test.beforeEach(async ({ page, mirage }) => {
-      await mirage.config({ trackRequests: true });
-      await mirage.addHook(server => {
-        globalThis._routes = server._config.routes;
-        let crate = server.create('crate', { name: 'nanomsg' });
-        server.create('version', { crate, num: '0.6.0' });
-      });
+    test.beforeEach(async ({ page, msw }) => {
+      let crate = msw.db.crate.create({ name: 'nanomsg' });
+      msw.db.version.create({ crate, num: '0.6.0' });
+
       // mock `window.open()`
       await page.addInitScript(() => {
         globalThis.open = (url, target, features) => {
