@@ -1,4 +1,5 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () => {
   test('visiting to /accept-invite shows 404 page', async ({ page }) => {
@@ -23,44 +24,23 @@ test.describe('Acceptance | /accept-invite/:token', { tag: '@acceptance' }, () =
     );
   });
 
-  test('shows error for expired token', async ({ page, mirage }) => {
+  test('shows error for expired token', async ({ page, msw }) => {
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
-    await page.exposeBinding('_errorMessage', () => errorMessage);
-    await mirage.addHook(server => {
-      server.put(
-        '/api/v1/me/crate_owner_invitations/accept/:token',
-        async () => {
-          let errorMessage = await globalThis._errorMessage();
-          let payload = { errors: [{ detail: errorMessage }] };
-          return payload;
-        },
-        410,
-      );
-    });
+    let error = HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 410 });
+    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/accept/:token', () => error));
 
     await page.goto('/accept-invite/secret123');
     await expect(page).toHaveURL('/accept-invite/secret123');
     await expect(page.locator('[data-test-error-message]')).toHaveText(errorMessage);
   });
 
-  test('shows success for known token', async ({ page, mirage, percy }) => {
-    await mirage.addHook(server => {
-      let inviter = server.create('user');
-      let invitee = server.create('user');
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate });
-      let invite = server.create('crate-owner-invitation', { crate, invitee, inviter });
-
-      globalThis.invite = invite;
-    });
-
-    // NOTE: Because the current implementation only works with the miragejs server running in the
-    // browser, we need to navigate to a random page to trigger the server startup and generate a
-    // token. This step will not be necessary in production or once we migrate the miragejs server
-    // to run in nodejs.
-    await page.goto(`/accept-invite/123`);
-    const invite = await page.evaluate(() => ({ token: globalThis.invite.token }));
+  test('shows success for known token', async ({ page, msw, percy }) => {
+    let inviter = msw.db.user.create();
+    let invitee = msw.db.user.create();
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate });
+    let invite = msw.db.crateOwnerInvitation.create({ crate, invitee, inviter });
 
     await page.goto(`/accept-invite/${invite.token}`);
     await expect(page).toHaveURL(`/accept-invite/${invite.token}`);
