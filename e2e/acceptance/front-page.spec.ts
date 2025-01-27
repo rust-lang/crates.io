@@ -1,11 +1,12 @@
-import { test, expect } from '@/e2e/helper';
+import { defer } from '@/e2e/deferred';
+import { expect, test } from '@/e2e/helper';
+import { loadFixtures } from '@crates-io/msw/fixtures';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
   test.use({ locale: 'en' });
-  test('visiting /', async ({ page, mirage, percy, a11y }) => {
-    await mirage.addHook(server => {
-      server.loadFixtures();
-    });
+  test('visiting /', async ({ page, msw, percy, a11y }) => {
+    loadFixtures(msw.db);
 
     await page.goto('/');
 
@@ -19,10 +20,10 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-total-downloads] [data-test-value]')).toHaveText('143,345');
     await expect(page.locator('[data-test-total-crates] [data-test-value]')).toHaveText('23');
 
-    await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toHaveText('Inflector v1.0.0');
+    await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toHaveText('serde v1.0.0');
     await expect(page.locator('[data-test-new-crates] [data-test-crate-link="0"]')).toHaveAttribute(
       'href',
-      '/crates/Inflector',
+      '/crates/serde',
     );
 
     await expect(page.locator('[data-test-most-downloaded] [data-test-crate-link="0"]')).toHaveText('serde');
@@ -41,22 +42,18 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await a11y.audit();
   });
 
-  test('error handling', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      // Snapshot the routes so we can restore it later
-      globalThis._routes = server._config.routes;
-      server.get('/api/v1/summary', {}, 500);
-    });
+  test('error handling', async ({ page, msw }) => {
+    await msw.worker.use(http.get('/api/v1/summary', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/');
     await expect(page.locator('[data-test-lists]')).toHaveCount(0);
     await expect(page.locator('[data-test-error-message]')).toBeVisible();
     await expect(page.locator('[data-test-try-again-button]')).toBeEnabled();
 
-    await page.evaluate(() => {
-      globalThis.deferred = require('rsvp').defer();
-      server.get('/api/v1/summary', () => globalThis.deferred.promise);
-    });
+    await msw.worker.resetHandlers();
+
+    let deferred = defer();
+    msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
 
     const button = page.locator('[data-test-try-again-button]');
     await button.click();
@@ -65,12 +62,8 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-error-message]')).toBeVisible();
     await expect(page.locator('[data-test-try-again-button]')).toBeDisabled();
 
-    await page.evaluate(async () => {
-      // Restore the routes
-      globalThis._routes.call(server);
-      const data = await globalThis.fetch('/api/v1/summary').then(r => r.json());
-      return globalThis.deferred.resolve(data);
-    });
+    deferred.resolve();
+
     await expect(page.locator('[data-test-lists]')).toBeVisible();
     await expect(page.locator('[data-test-error-message]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again-button]')).toHaveCount(0);
