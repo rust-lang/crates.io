@@ -2,33 +2,32 @@ import { test, expect } from '@/e2e/helper';
 import { format } from 'date-fns/format';
 
 test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      const isAdmin = globalThis.isAdmin;
-      const user = server.create('user', {
-        login: 'johnnydee',
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-        isAdmin,
-      });
-
-      const crate = server.create('crate', {
-        name: 'foo',
-        newest_version: '0.1.0',
-      });
-
-      const version = server.create('version', {
-        crate,
-        num: '0.1.0',
-      });
-
-      authenticateAs(user);
+  async function prepare(msw, { isAdmin = false } = {}) {
+    let user = msw.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
+      isAdmin,
     });
-  });
 
-  test('non-admin users do not see any controls', async ({ page }) => {
-    await page.addInitScript(() => (globalThis.isAdmin = false));
+    let crate = msw.db.crate.create({
+      name: 'foo',
+      newest_version: '0.1.0',
+    });
+
+    let version = msw.db.version.create({
+      crate,
+      num: '0.1.0',
+    });
+
+    await msw.authenticateAs(user);
+
+    return { user, crate, version };
+  }
+
+  test('non-admin users do not see any controls', async ({ page, msw }) => {
+    await prepare(msw);
 
     await page.goto('/crates/foo/versions');
 
@@ -41,8 +40,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-version-yank-button="0.1.0"]')).toHaveCount(0);
   });
 
-  test('admin user is not initially in sudo mode', async ({ page }) => {
-    await page.addInitScript(() => (globalThis.isAdmin = true));
+  test('admin user is not initially in sudo mode', async ({ page, msw }) => {
+    await prepare(msw, { isAdmin: true });
 
     await page.goto('/crates/foo/versions');
 
@@ -64,8 +63,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-version-yank-button="0.1.0"]')).toBeVisible();
   });
 
-  test('admin user can enter sudo mode', async ({ page }) => {
-    await page.addInitScript(() => (globalThis.isAdmin = true));
+  test('admin user can enter sudo mode', async ({ page, msw }) => {
+    await prepare(msw, { isAdmin: true });
     await page.exposeFunction('format', ((date, options) => format(date, options)) as typeof format);
 
     await page.goto('/crates/foo/versions');
@@ -99,8 +98,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-version-yank-button="0.1.0"]')).toBeVisible();
   });
 
-  test('admin can yank a crate in sudo mode', async ({ page }) => {
-    await page.addInitScript(() => (globalThis.isAdmin = true));
+  test('admin can yank a crate in sudo mode', async ({ page, msw }) => {
+    let { version } = await prepare(msw, { isAdmin: true });
 
     await page.goto('/crates/foo/versions');
 
@@ -113,21 +112,15 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await yankButton.click();
 
     // Verify backend state after yanking
-    const yankedVersion = await page.evaluate(() => {
-      const crate = server.schema['crates'].findBy({ name: 'foo' });
-      return server.schema['versions'].findBy({ crateId: crate.id, num: '0.1.0', yanked: true });
-    });
-    expect(yankedVersion, 'The version should be yanked').toBeTruthy();
+    version = msw.db.version.findFirst({ where: { id: { equals: version.id } } });
+    expect(version.yanked, 'The version should be yanked').toBe(true);
 
     await expect(unyankButton).toBeVisible();
     await unyankButton.click();
 
     // Verify backend state after unyanking
-    const unyankedVersion = await page.evaluate(() => {
-      const crate = server.schema['crates'].findBy({ name: 'foo' });
-      return server.schema['versions'].findBy({ crateId: crate.id, num: '0.1.0', yanked: false });
-    });
-    expect(unyankedVersion, 'The version should be unyanked').toBeTruthy();
+    version = msw.db.version.findFirst({ where: { id: { equals: version.id } } });
+    expect(version.yanked, 'The version should be unyanked').toBe(false);
 
     await expect(yankButton).toBeVisible();
   });
