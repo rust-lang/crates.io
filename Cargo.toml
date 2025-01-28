@@ -87,7 +87,7 @@ http = "=1.2.0"
 http-body-util = "=0.1.2"
 hyper = { version = "=1.5.2", features = ["client", "http1"] }
 indexmap = { version = "=2.7.1", features = ["serde"] }
-indicatif = "=0.17.9"
+indicatif = "=0.17.10"
 ipnetwork = "=0.21.1"
 json-subscriber = "=0.2.4"
 krata-tokio-tar = "=0.4.2"
