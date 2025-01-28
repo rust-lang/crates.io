@@ -1,16 +1,14 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Bug #4506', { tag: '@bugs' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      server.create('keyword', { keyword: 'no-std' });
+  test.beforeEach(async ({ msw }) => {
+    let noStd = msw.db.keyword.create({ keyword: 'no-std' });
 
-      let foo = server.create('crate', { name: 'foo', keywordIds: ['no-std'] });
-      server.create('version', { crate: foo });
+    let foo = msw.db.crate.create({ name: 'foo', keywords: [noStd] });
+    msw.db.version.create({ crate: foo });
 
-      let bar = server.create('crate', { name: 'bar', keywordIds: ['no-std'] });
-      server.create('version', { crate: bar });
-    });
+    let bar = msw.db.crate.create({ name: 'bar', keywords: [noStd] });
+    msw.db.version.create({ crate: bar });
   });
 
   test('is fixed', async ({ page }) => {
