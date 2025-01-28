@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context};
 use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
+use url::Url;
 
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::Env;
@@ -11,11 +12,12 @@ use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::CdnLogQueueConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
-use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
+use crates_io_env_vars::{list, list_parsed, required_var, required_var_parsed, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::net::IpAddr;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -71,9 +73,21 @@ pub struct Server {
     /// Should the server serve the frontend assets in the `dist` directory?
     pub serve_dist: bool,
 
-    /// Should the server serve the frontend `index.html` for all
-    /// non-API requests?
-    pub serve_html: bool,
+    /// If set the server serves the frontend `index.html` for all
+    /// non-API requests using the Jinja template at the given path.
+    /// Setting this parameter requires setting
+    /// [`Self::og_image_base_url`] as well.
+    pub index_html_template_path: Option<PathBuf>,
+
+    /// Base URL for the service from which the OpenGraph images
+    /// for crates are loaded. Required if
+    /// [`Self::index_html_template_path`] is set.
+    pub og_image_base_url: Option<Url>,
+
+    /// Maximum number of items that the HTML render
+    /// cache in `crate::middleware::ember_html::serve_html`
+    /// can hold. Defaults to 1024.
+    pub html_render_cache_max_capacity: u64,
 
     pub content_security_policy: Option<HeaderValue>,
 }
@@ -171,6 +185,15 @@ impl Server {
             cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
         );
 
+        let index_html_template_path = var_parsed("INDEX_HTML_TEMPLATE_PATH")?;
+        let og_image_base_url = match index_html_template_path {
+            Some(_) => Some(
+                required_var_parsed("OG_IMAGE_BASE_URL")
+                    .context("OG_IMAGE_BASE_URL must be set when using INDEX_HTML_TEMPLATE_PATH")?,
+            ),
+            None => None,
+        };
+
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
@@ -214,7 +237,9 @@ impl Server {
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
-            serve_html: true,
+            index_html_template_path,
+            og_image_base_url,
+            html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
         })
     }

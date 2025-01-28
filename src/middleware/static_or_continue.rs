@@ -18,7 +18,10 @@ pub async fn serve_dist(request: Request, next: Next) -> Response {
 }
 
 async fn serve<P: AsRef<Path>>(path: P, request: Request, next: Next) -> Response {
-    if request.method() == Method::GET || request.method() == Method::HEAD {
+    // index.html is a Jinja template, which is to be rendered by `ember_html::serve_html`.
+    if matches!(*request.method(), Method::GET | Method::HEAD)
+        && !matches!(request.uri().path().as_bytes(), b"/" | b"/index.html")
+    {
         let mut static_req = Request::new(());
         *static_req.method_mut() = request.method().clone();
         *static_req.uri_mut() = request.uri().clone();
