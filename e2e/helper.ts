@@ -5,7 +5,6 @@ import { db, handlers } from '@crates-io/msw';
 
 import * as pwFakeTimers from '@sinonjs/fake-timers';
 import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
-import { MiragePage } from './fixtures/mirage';
 import { PercyPage } from './fixtures/percy';
 import { A11yPage } from './fixtures/a11y';
 import { EmberPage, EmberPageOptions } from './fixtures/ember';
@@ -17,7 +16,6 @@ export type AppOptions = {
 };
 export interface AppFixtures {
   clock: FakeTimers;
-  mirage: MiragePage;
   msw: {
     worker: MockServiceWorker;
     db: typeof db;
@@ -52,14 +50,6 @@ export const test = base.extend<AppOptions & AppFixtures>({
       pwClock?.uninstall();
     },
     { auto: true, scope: 'test' },
-  ],
-  mirage: [
-    async ({ page }, use) => {
-      let mirage = new MiragePage(page);
-      await mirage.setup();
-      await use(mirage);
-    },
-    { scope: 'test' },
   ],
   // MockServiceWorker integration via `playwright-msw`.
   //

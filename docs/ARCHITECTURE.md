@@ -51,8 +51,8 @@ These files have to do with the frontend:
 - `.ember-cli` - Settings for the `ember` command line interface
 - `ember-cli-build.js` - Contains the build specification for Broccoli
 - `.eslintrc.js` - Defines Javascript coding style guidelines (enforced during CI???)
-- `mirage/` - A mock backend used during development and testing
 - `node_modules/` - npm dependencies - (ignored in `.gitignore`)
+- `packages/crates-io-msw` - A mock backend used for testing
 - `package.json` - Defines the npm package and its dependencies
 - `package-lock.json` - Locks dependencies to specific versions providing consistency across
   development and deployment
