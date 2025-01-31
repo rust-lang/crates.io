@@ -18,9 +18,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@mswjs/data": "^0.16.2",
-    "msw": "^2.7.0",
-    "semver": "^7.6.3"
+    "@mswjs/data": "0.16.2",
+    "msw": "2.7.0",
+    "semver": "7.7.0"
   },
   "devDependencies": {
     "happy-dom": "16.5.3",
