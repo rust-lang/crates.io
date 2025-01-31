@@ -23,7 +23,7 @@
     "semver": "7.7.0"
   },
   "devDependencies": {
-    "happy-dom": "16.7.3",
+    "happy-dom": "16.8.1",
     "vitest": "3.0.4"
   }
 }
