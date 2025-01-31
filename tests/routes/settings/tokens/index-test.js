@@ -6,10 +6,10 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../../../helpers/visit-ignoring-abort';
 
 module('/settings/tokens', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context) {
-    let user = context.server.create('user', {
+    let user = context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -24,7 +24,7 @@ module('/settings/tokens', function (hooks) {
   test('reloads all tokens from the server', async function (assert) {
     let { user } = prepare(this);
 
-    this.server.create('api-token', { user, name: 'token-1' });
+    this.db.apiToken.create({ user, name: 'token-1' });
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');

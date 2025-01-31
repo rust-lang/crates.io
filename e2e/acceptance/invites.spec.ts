@@ -1,4 +1,5 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => {
   test('shows "page requires authentication" error when not logged in', async ({ page }) => {
@@ -10,38 +11,38 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 });
 
 test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      let inviter = server.create('user', { name: 'janed' });
-      let inviter2 = server.create('user', { name: 'wycats' });
+  async function prepare(msw) {
+    let inviter = msw.db.user.create({ name: 'janed' });
+    let inviter2 = msw.db.user.create({ name: 'wycats' });
 
-      let user = server.create('user');
+    let user = msw.db.user.create();
 
-      let nanomsg = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate: nanomsg });
-      server.create('crate-owner-invitation', {
-        crate: nanomsg,
-        createdAt: '2016-12-24T12:34:56Z',
-        invitee: user,
-        inviter,
-      });
-
-      let ember = server.create('crate', { name: 'ember-rs' });
-      server.create('version', { crate: ember });
-      server.create('crate-owner-invitation', {
-        crate: ember,
-        createdAt: '2020-12-31T12:34:56Z',
-        invitee: user,
-        inviter: inviter2,
-      });
-
-      authenticateAs(user);
-
-      Object.assign(globalThis, { nanomsg, user });
+    let nanomsg = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate: nanomsg });
+    msw.db.crateOwnerInvitation.create({
+      crate: nanomsg,
+      createdAt: '2016-12-24T12:34:56Z',
+      invitee: user,
+      inviter,
     });
-  });
 
-  test('list all pending crate owner invites', async ({ page }) => {
+    let ember = msw.db.crate.create({ name: 'ember-rs' });
+    msw.db.version.create({ crate: ember });
+    msw.db.crateOwnerInvitation.create({
+      crate: ember,
+      createdAt: '2020-12-31T12:34:56Z',
+      invitee: user,
+      inviter: inviter2,
+    });
+
+    await msw.authenticateAs(user);
+
+    return { nanomsg, user };
+  }
+
+  test('list all pending crate owner invites', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
     await expect(page.locator('[data-test-invite]')).toHaveCount(2);
@@ -67,10 +68,9 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-declined-message]')).toHaveCount(0);
   });
 
-  test('shows empty list message', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.schema['crateOwnerInvitations'].all().destroy();
-    });
+  test('shows empty list message', async ({ page, msw }) => {
+    await prepare(msw);
+    msw.db.crateOwnerInvitation.deleteMany({});
 
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
@@ -78,52 +78,64 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-empty-state]')).toBeVisible();
   });
 
-  test('invites can be declined', async ({ page }) => {
+  test('invites can be declined', async ({ page, msw }) => {
+    let { nanomsg, user } = await prepare(msw);
+
+    let invites = msw.db.crateOwnerInvitation.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        invitee: { id: { equals: user.id } },
+      },
+    });
+    expect(invites.length).toBe(1);
+
+    let owners = msw.db.crateOwnership.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        user: { id: { equals: user.id } },
+      },
+    });
+    expect(owners.length).toBe(0);
+
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
 
-    await page.waitForFunction(expect => {
-      const { crateOwnerInvitations }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length === expect;
-    }, 1);
-
-    await page.waitForFunction(expect => {
-      const { crateOwnerships }: any = server.schema;
-      return crateOwnerships.where({ crateId: globalThis.nanomsg.id, userId: globalThis.user.id }).length === expect;
-    }, 0);
-
-    const nanomsg = page.locator('[data-test-invite="nanomsg"]');
-    await nanomsg.locator('[data-test-decline-button]').click();
-    await expect(nanomsg.and(page.locator('[data-test-declined-message]'))).toHaveText(
+    const nanomsgL = page.locator('[data-test-invite="nanomsg"]');
+    await nanomsgL.locator('[data-test-decline-button]').click();
+    await expect(nanomsgL.and(page.locator('[data-test-declined-message]'))).toHaveText(
       'Declined. You have not been added as an owner of crate nanomsg.',
     );
-    await expect(nanomsg.locator('[data-test-crate-link]')).toHaveCount(0);
-    await expect(nanomsg.locator('[data-test-inviter-link]')).toHaveCount(0);
+    await expect(nanomsgL.locator('[data-test-crate-link]')).toHaveCount(0);
+    await expect(nanomsgL.locator('[data-test-inviter-link]')).toHaveCount(0);
 
     await expect(page.locator('[data-test-error-message]')).toHaveCount(0);
     await expect(page.locator('[data-test-accepted-message]')).toHaveCount(0);
 
-    await page.waitForFunction(expect => {
-      const { crateOwnerInvitations }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length === expect;
-    }, 0);
+    invites = msw.db.crateOwnerInvitation.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        invitee: { id: { equals: user.id } },
+      },
+    });
+    expect(invites.length).toBe(0);
 
-    await page.waitForFunction(expect => {
-      const { crateOwnerships }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length === expect;
-    }, 0);
+    owners = msw.db.crateOwnership.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        user: { id: { equals: user.id } },
+      },
+    });
+    expect(owners.length).toBe(0);
   });
 
-  test('error message is shown if decline request fails', async ({ page, mirage }) => {
+  test('error message is shown if decline request fails', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
 
-    await page.evaluate(() => {
-      server.put('/api/v1/me/crate_owner_invitations/:crate_id', {}, 500);
-    });
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
 
     await page.click('[data-test-invite="nanomsg"] [data-test-decline-button]');
     await expect(page.locator('[data-test-notification-message="error"]')).toContainText('Error in declining invite');
@@ -131,21 +143,27 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-declined-message]')).toHaveCount(0);
   });
 
-  test('invites can be accepted', async ({ page, percy }) => {
+  test('invites can be accepted', async ({ page, percy, msw }) => {
+    let { nanomsg, user } = await prepare(msw);
+
+    let invites = msw.db.crateOwnerInvitation.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        invitee: { id: { equals: user.id } },
+      },
+    });
+    expect(invites.length).toBe(1);
+
+    let owners = msw.db.crateOwnership.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        user: { id: { equals: user.id } },
+      },
+    });
+    expect(owners.length).toBe(0);
+
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
-
-    await page.waitForFunction(expect => {
-      const { crateOwnerInvitations }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length === expect;
-    }, 1);
-
-    await page.waitForFunction(expect => {
-      const { crateOwnerships }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length === expect;
-    }, 0);
 
     await page.click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     await expect(page.locator('[data-test-error-message]')).toHaveCount(0);
@@ -158,26 +176,31 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 
     await percy.snapshot();
 
-    await page.waitForFunction(expect => {
-      const { crateOwnerInvitations }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerInvitations.where({ crateId: nanomsg.id, inviteeId: user.id }).length === expect;
-    }, 0);
+    invites = msw.db.crateOwnerInvitation.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        invitee: { id: { equals: user.id } },
+      },
+    });
+    expect(invites.length).toBe(0);
 
-    await page.waitForFunction(expect => {
-      const { crateOwnerships }: any = server.schema;
-      const { nanomsg, user }: any = globalThis;
-      return crateOwnerships.where({ crateId: nanomsg.id, userId: user.id }).length === expect;
-    }, 1);
+    owners = msw.db.crateOwnership.findMany({
+      where: {
+        crate: { id: { equals: nanomsg.id } },
+        user: { id: { equals: user.id } },
+      },
+    });
+    expect(owners.length).toBe(1);
   });
 
-  test('error message is shown if accept request fails', async ({ page }) => {
+  test('error message is shown if accept request fails', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
 
-    page.evaluate(() => {
-      server.put('/api/v1/me/crate_owner_invitations/:crate_id', {}, 500);
-    });
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
 
     await page.click('[data-test-invite="nanomsg"] [data-test-accept-button]');
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText('Error in accepting invite');
@@ -185,15 +208,13 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-declined-message]')).toHaveCount(0);
   });
 
-  test('specific error message is shown if accept request fails', async ({ page, mirage }) => {
+  test('specific error message is shown if accept request fails', async ({ page, msw }) => {
+    await prepare(msw);
+
     let errorMessage =
       'The invitation to become an owner of the demo_crate crate expired. Please reach out to an owner of the crate to request a new invitation.';
-    await page.exposeBinding('_errorMessage', () => errorMessage);
-    await mirage.addHook(async server => {
-      let errorMessage = await globalThis._errorMessage();
-      let payload = { errors: [{ detail: errorMessage }] };
-      server.put('/api/v1/me/crate_owner_invitations/:crate_id', payload, 410);
-    });
+    let error = HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 410 });
+    await msw.worker.use(http.put('/api/v1/me/crate_owner_invitations/:crate_id', () => error));
 
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');

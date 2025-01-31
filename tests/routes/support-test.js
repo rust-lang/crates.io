@@ -8,7 +8,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | support', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('should not retain query params when exiting and then returning', async function (assert) {
     await visit('/support?inquire=crate-violation');

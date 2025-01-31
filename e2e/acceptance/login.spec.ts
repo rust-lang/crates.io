@@ -1,7 +1,8 @@
 import { test, expect } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
-  test('successful login', async ({ page, mirage }) => {
+  test('successful login', async ({ page, msw }) => {
     // mock `window.open()`
     await page.addInitScript(() => {
       globalThis.open = (url, target, features) => {
@@ -10,28 +11,32 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    await mirage.config({ trackRequests: true });
-    await mirage.addHook(server => {
-      server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
+    msw.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', ({ request }) => {
+        let url = new URL(request.url);
+        expect([...url.searchParams.keys()]).toEqual(['code', 'state']);
+        expect(url.searchParams.get('code')).toBe('901dd10e07c7e9fa1cd5');
+        expect(url.searchParams.get('state')).toBe('fYcUY3FMdUUz00FC7vLT7A');
 
-      server.get('/api/private/session/authorize', () => {
-        let user = server.create('user');
-        server.create('mirage-session', { user });
-        return { ok: true };
-      });
-
-      server.get('/api/v1/me', () => ({
-        user: {
-          id: 42,
-          login: 'johnnydee',
-          name: 'John Doe',
-          email: 'john@doe.name',
-          avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
-          url: 'https://github.com/johnnydee',
-        },
-        owned_crates: [],
-      }));
-    });
+        let user = msw.db.user.create();
+        msw.db.mswSession.create({ user });
+        return HttpResponse.json({ ok: true });
+      }),
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({
+          user: {
+            id: 42,
+            login: 'johnnydee',
+            name: 'John Doe',
+            email: 'john@doe.name',
+            avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
+            url: 'https://github.com/johnnydee',
+          },
+          owned_crates: [],
+        }),
+      ),
+    );
 
     await page.goto('/');
     await expect(page).toHaveURL('/');
@@ -52,16 +57,10 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       window.postMessage(message, window.location.origin);
     }, message);
 
-    const queryParams = await page.evaluate(
-      () =>
-        server.pretender.handledRequests.find(req => req.url.startsWith('/api/private/session/authorize')).queryParams,
-    );
-    expect(queryParams).toEqual(message);
-
     await expect(page.locator('[data-test-user-menu] [data-test-toggle]')).toHaveText('John Doe');
   });
 
-  test('failed login', async ({ page, mirage }) => {
+  test('failed login', async ({ page, msw }) => {
     // mock `window.open()`
     await page.addInitScript(() => {
       globalThis.open = (url, target, features) => {
@@ -70,12 +69,12 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    await mirage.addHook(server => {
-      server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
-
-      let payload = { errors: [{ detail: 'Forbidden' }] };
-      server.get('/api/private/session/authorize', payload, 403);
-    });
+    msw.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', () =>
+        HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),
+      ),
+    );
 
     await page.goto('/');
     await expect(page).toHaveURL('/');

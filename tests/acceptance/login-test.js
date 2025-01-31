@@ -5,14 +5,16 @@ import { defer } from 'rsvp';
 
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Login', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
   setupWindowMock(hooks);
 
   test('successful login', async function (assert) {
+    let { db } = this;
     let deferred = defer();
 
     window.open = (url, target, features) => {
@@ -26,30 +28,32 @@ module('Acceptance | Login', function (hooks) {
       return { document: { write() {}, close() {} }, close() {} };
     };
 
-    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
+    this.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', ({ request }) => {
+        let url = new URL(request.url);
+        assert.deepEqual([...url.searchParams.keys()], ['code', 'state']);
+        assert.strictEqual(url.searchParams.get('code'), '901dd10e07c7e9fa1cd5');
+        assert.strictEqual(url.searchParams.get('state'), 'fYcUY3FMdUUz00FC7vLT7A');
 
-    this.server.get('/api/private/session/authorize', (schema, request) => {
-      assert.deepEqual(request.queryParams, {
-        code: '901dd10e07c7e9fa1cd5',
-        state: 'fYcUY3FMdUUz00FC7vLT7A',
-      });
-
-      let user = this.server.create('user');
-      this.server.create('mirage-session', { user });
-      return { ok: true };
-    });
-
-    this.server.get('/api/v1/me', () => ({
-      user: {
-        id: 42,
-        login: 'johnnydee',
-        name: 'John Doe',
-        email: 'john@doe.name',
-        avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
-        url: 'https://github.com/johnnydee',
-      },
-      owned_crates: [],
-    }));
+        let user = db.user.create();
+        db.mswSession.create({ user });
+        return HttpResponse.json({ ok: true });
+      }),
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({
+          user: {
+            id: 42,
+            login: 'johnnydee',
+            name: 'John Doe',
+            email: 'john@doe.name',
+            avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',
+            url: 'https://github.com/johnnydee',
+          },
+          owned_crates: [],
+        }),
+      ),
+    );
 
     await visit('/');
     assert.strictEqual(currentURL(), '/');
@@ -78,10 +82,12 @@ module('Acceptance | Login', function (hooks) {
       return { document: { write() {}, close() {} }, close() {} };
     };
 
-    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
-
-    let payload = { errors: [{ detail: 'Forbidden' }] };
-    this.server.get('/api/private/session/authorize', payload, 403);
+    this.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', () =>
+        HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),
+      ),
+    );
 
     await visit('/');
     assert.strictEqual(currentURL(), '/');

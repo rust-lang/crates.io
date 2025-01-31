@@ -1,12 +1,14 @@
 import { currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { http, HttpResponse } from 'msw';
+
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | category', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test("shows an error message if the category can't be found", async function (assert) {
     await visit('/categories/foo');
@@ -18,7 +20,8 @@ module('Route | category', function (hooks) {
   });
 
   test('server error causes the error page to be shown', async function (assert) {
-    this.server.get('/api/v1/categories/:categoryId', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/categories/:categoryId', () => error));
 
     await visit('/categories/foo');
     assert.strictEqual(currentURL(), '/categories/foo');
@@ -29,7 +32,7 @@ module('Route | category', function (hooks) {
   });
 
   test('updates the search field when the categories route is accessed', async function (assert) {
-    this.server.create('category', { category: 'foo' });
+    this.db.category.create({ category: 'foo' });
 
     await visit('/');
     assert.dom('[data-test-search-input]').hasValue('');

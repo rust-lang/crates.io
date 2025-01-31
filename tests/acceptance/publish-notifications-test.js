@@ -3,15 +3,15 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | publish notifications', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('unsubscribe and resubscribe', async function (assert) {
-    let user = this.server.create('user');
+    let user = this.db.user.create();
 
     this.authenticateAs(user);
     assert.true(user.publishNotifications);
@@ -24,20 +24,22 @@ module('Acceptance | publish notifications', function (hooks) {
     assert.dom('[data-test-notifications] input[type=checkbox]').isNotChecked();
 
     await click('[data-test-notifications] button');
-    assert.false(user.reload().publishNotifications);
+    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    assert.false(user.publishNotifications);
 
     await click('[data-test-notifications] input[type=checkbox]');
     assert.dom('[data-test-notifications] input[type=checkbox]').isChecked();
 
     await click('[data-test-notifications] button');
-    assert.true(user.reload().publishNotifications);
+    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    assert.true(user.publishNotifications);
   });
 
   test('loading and error state', async function (assert) {
-    let user = this.server.create('user');
+    let user = this.db.user.create();
 
     let deferred = defer();
-    this.server.put('/api/v1/users/:user_id', deferred.promise);
+    this.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));
 
     this.authenticateAs(user);
     assert.true(user.publishNotifications);
@@ -52,7 +54,7 @@ module('Acceptance | publish notifications', function (hooks) {
     assert.dom('[data-test-notifications] input[type=checkbox]').isDisabled();
     assert.dom('[data-test-notifications] button').isDisabled();
 
-    deferred.resolve(new Response(500));
+    deferred.resolve(HttpResponse.json({}, { status: 500 }));
     await clickPromise;
 
     assert

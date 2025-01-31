@@ -1,25 +1,25 @@
 import { test, expect } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Bug #2329', { tag: '@bugs' }, () => {
-  test.skip('is fixed', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user');
+  test.skip('is fixed', async ({ page, msw }) => {
+    let user = msw.db.user.create();
 
-      let foobar = server.create('crate', { name: 'foo-bar' });
-      server.create('crate-ownership', { crate: foobar, user, emailNotifications: true });
-      server.create('version', { crate: foobar });
+    let foobar = msw.db.crate.create({ name: 'foo-bar' });
+    msw.db.crateOwnership.create({ crate: foobar, user, emailNotifications: true });
+    msw.db.version.create({ crate: foobar });
 
-      let bar = server.create('crate', { name: 'barrrrr' });
-      server.create('crate-ownership', { crate: bar, user, emailNotifications: false });
-      server.create('version', { crate: bar });
+    let bar = msw.db.crate.create({ name: 'barrrrr' });
+    msw.db.crateOwnership.create({ crate: bar, user, emailNotifications: false });
+    msw.db.version.create({ crate: bar });
 
-      server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
-
-      server.get('/api/private/session/authorize', () => {
-        authenticateAs(user);
-        return { ok: true };
-      });
-    });
+    msw.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', () => {
+        msw.db.mswSession.create({ user });
+        return HttpResponse.json({ ok: true });
+      }),
+    );
 
     await page.addInitScript(() => {
       let fakeWindow = { document: { write() {}, close() {} }, close() {} };

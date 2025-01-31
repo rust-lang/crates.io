@@ -4,14 +4,14 @@ import { module, test } from 'qunit';
 import { defer } from 'rsvp';
 
 import { hbs } from 'ember-cli-htmlbars';
+import { http, HttpResponse } from 'msw';
 
 import { setupRenderingTest } from 'crates-io/tests/helpers';
-
-import setupMirage from '../../helpers/setup-mirage';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Component | CrateSidebar | Playground Button', function (hooks) {
   setupRenderingTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   hooks.beforeEach(function () {
     let crates = [
@@ -24,12 +24,13 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
       { name: 'ansi_term', version: '0.11.0', id: 'ansi_term_0_11_0' },
     ];
 
-    this.server.get('https://play.rust-lang.org/meta/crates', { crates });
+    let response = HttpResponse.json({ crates });
+    this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => response));
   });
 
   test('button is hidden for unavailable crates', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -41,8 +42,8 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is visible for available crates', async function (assert) {
-    let crate = this.server.create('crate', { name: 'aho-corasick' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'aho-corasick' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -57,11 +58,11 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
   });
 
   test('button is hidden while Playground request is pending', async function (assert) {
-    let crate = this.server.create('crate', { name: 'aho-corasick' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'aho-corasick' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     let deferred = defer();
-    this.server.get('https://play.rust-lang.org/meta/crates', deferred.promise);
+    this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => deferred.promise));
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -72,15 +73,16 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     await waitFor('[data-test-owners]');
     assert.dom('[data-test-playground-button]').doesNotExist();
 
-    deferred.resolve({ crates: [] });
+    deferred.resolve();
     await settled();
   });
 
   test('button is hidden if the Playground request fails', async function (assert) {
-    let crate = this.server.create('crate', { name: 'aho-corasick' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'aho-corasick' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
-    this.server.get('https://play.rust-lang.org/meta/crates', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => error));
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);

@@ -63,8 +63,6 @@ module.exports = function (environment) {
 
   if (environment === 'production') {
     // here you can enable a production-specific feature
-    delete ENV['ember-cli-mirage'];
-
     ENV.sentry = {
       dsn: process.env.SENTRY_DSN_WEB,
     };

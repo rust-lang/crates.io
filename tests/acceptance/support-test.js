@@ -12,7 +12,7 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | support', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('shows an inquire list', async function (assert) {
     await visit('/support');
@@ -49,9 +49,9 @@ module('Acceptance | support', function (hooks) {
     setupWindowMock(hooks);
 
     async function prepare(context, assert) {
-      let server = context.server;
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '0.6.0' });
+      let { db } = context;
+      let crate = db.crate.create({ name: 'nanomsg' });
+      db.version.create({ crate, num: '0.6.0' });
 
       window.open = (url, target, features) => {
         window.openKwargs = { url, target, features };
@@ -195,9 +195,9 @@ test detail
     setupWindowMock(hooks);
 
     async function prepare(context, assert) {
-      let server = context.server;
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '0.6.0' });
+      let { db } = context;
+      let crate = db.crate.create({ name: 'nanomsg' });
+      db.version.create({ crate, num: '0.6.0' });
 
       window.open = (url, target, features) => {
         window.openKwargs = { url, target, features };

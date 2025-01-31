@@ -1,15 +1,20 @@
 import { setupApplicationTest as upstreamSetupApplicationTest } from 'ember-qunit';
 
 import { setupSentryMock } from './sentry';
-import setupMirage from './setup-mirage';
+import setupMSW from './setup-msw';
 
-export { default as setupMirage } from './setup-mirage';
 export { setupTest, setupRenderingTest } from 'ember-qunit';
 
 // see http://emberjs.github.io/rfcs/0637-customizable-test-setups.html
-export function setupApplicationTest(hooks, options) {
+export function setupApplicationTest(hooks, options = {}) {
+  let { msw } = options;
+
   upstreamSetupApplicationTest(hooks, options);
-  setupMirage(hooks);
+
+  if (msw) {
+    setupMSW(hooks);
+  }
+
   setupSentryMock(hooks);
   setupAppTestDataAttr(hooks);
 }

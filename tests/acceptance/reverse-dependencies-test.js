@@ -1,25 +1,27 @@
 import { click, currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { http, HttpResponse } from 'msw';
+
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
-  function prepare({ server }) {
-    let foo = server.create('crate', { name: 'foo' });
-    server.create('version', { crate: foo });
+  function prepare({ db }) {
+    let foo = db.crate.create({ name: 'foo' });
+    db.version.create({ crate: foo });
 
-    let bar = server.create('crate', { name: 'bar' });
-    server.create('version', { crate: bar });
+    let bar = db.crate.create({ name: 'bar' });
+    let barVersion = db.version.create({ crate: bar });
 
-    let baz = server.create('crate', { name: 'baz' });
-    server.create('version', { crate: baz });
+    let baz = db.crate.create({ name: 'baz' });
+    let bazVersion = db.version.create({ crate: baz });
 
-    server.create('dependency', { crate: foo, version: bar.versions.models[0] });
-    server.create('dependency', { crate: foo, version: baz.versions.models[0] });
+    db.dependency.create({ crate: foo, version: barVersion });
+    db.dependency.create({ crate: foo, version: bazVersion });
 
     return { foo, bar, baz };
   }
@@ -30,19 +32,19 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     await visit(`/crates/${foo.name}/reverse_dependencies`);
     assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
     assert.dom('[data-test-row]').exists({ count: 2 });
-    assert.dom('[data-test-row="0"] [data-test-crate-name]').hasText(bar.name);
-    assert.dom('[data-test-row="0"] [data-test-description]').hasText(bar.description);
-    assert.dom('[data-test-row="1"] [data-test-crate-name]').hasText(baz.name);
-    assert.dom('[data-test-row="1"] [data-test-description]').hasText(baz.description);
+    assert.dom('[data-test-row="0"] [data-test-crate-name]').hasText(baz.name);
+    assert.dom('[data-test-row="0"] [data-test-description]').hasText(baz.description);
+    assert.dom('[data-test-row="1"] [data-test-crate-name]').hasText(bar.name);
+    assert.dom('[data-test-row="1"] [data-test-description]').hasText(bar.description);
   });
 
   test('supports pagination', async function (assert) {
     let { foo } = prepare(this);
 
     for (let i = 0; i < 20; i++) {
-      let crate = this.server.create('crate');
-      let version = this.server.create('version', { crate });
-      this.server.create('dependency', { crate: foo, version });
+      let crate = this.db.crate.create();
+      let version = this.db.version.create({ crate });
+      this.db.dependency.create({ crate: foo, version });
     }
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
@@ -67,7 +69,8 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   test('shows a generic error if the server is broken', async function (assert) {
     let { foo } = prepare(this);
 
-    this.server.get('/api/v1/crates/:crate_id/reverse_dependencies', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
     assert.strictEqual(currentURL(), '/');
@@ -79,8 +82,8 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
   test('shows a detailed error if available', async function (assert) {
     let { foo } = prepare(this);
 
-    let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
-    this.server.get('/api/v1/crates/:crate_id/reverse_dependencies', payload, 400);
+    let error = HttpResponse.json({ errors: [{ detail: 'cannot request more than 100 items' }] }, { status: 400 });
+    this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
     assert.strictEqual(currentURL(), '/');

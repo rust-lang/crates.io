@@ -56,6 +56,7 @@
     "@babel/core": "7.26.7",
     "@babel/eslint-parser": "7.26.5",
     "@babel/plugin-proposal-decorators": "7.25.9",
+    "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
     "@ember/render-modifiers": "2.1.0",
     "@ember/string": "3.1.1",
@@ -77,6 +78,7 @@
     "@types/sinonjs__fake-timers": "8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
+    "broccoli-funnel": "3.0.8",
     "ember-a11y-testing": "7.0.2",
     "ember-auto-import": "2.10.0",
     "ember-cli": "6.1.0",
@@ -88,7 +90,6 @@
     "ember-cli-head": "2.0.0",
     "ember-cli-htmlbars": "6.3.0",
     "ember-cli-inject-live-reload": "2.1.0",
-    "ember-cli-mirage": "3.0.4",
     "ember-cli-notifications": "9.1.0",
     "ember-click-outside": "6.1.1",
     "ember-concurrency": "4.0.2",
@@ -99,6 +100,7 @@
     "ember-event-helpers": "0.1.1",
     "ember-exam": "9.0.0",
     "ember-fetch": "8.1.2",
+    "ember-inflector": "5.0.2",
     "ember-keyboard": "9.0.1",
     "ember-link": "3.3.0",
     "ember-load-initializers": "3.0.1",
@@ -127,9 +129,10 @@
     "globby": "14.0.2",
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
-    "miragejs": "0.1.48",
+    "msw": "2.7.0",
     "normalize.css": "8.0.1",
     "nyc": "17.1.0",
+    "playwright-msw": "3.0.1",
     "postcss-preset-env": "10.1.3",
     "prettier": "3.4.2",
     "qunit": "2.24.1",
@@ -143,8 +146,7 @@
     "ember-get-config": "2.1.1",
     "ember-inflector": "5.0.2",
     "ember-modifier": "4.2.0",
-    "ember-svg-jar>cheerio": "1.0.0-rc.12",
-    "miragejs": "0.1.48"
+    "ember-svg-jar>cheerio": "1.0.0-rc.12"
   },
   "pnpm": {
     "peerDependencyRules": {

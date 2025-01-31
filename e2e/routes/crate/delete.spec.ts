@@ -1,23 +1,21 @@
+import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Route: crate.delete', { tag: '@routes' }, () => {
-  async function prepare({ mirage }) {
-    await mirage.addHook(server => {
-      let user = server.create('user');
+  async function prepare(msw) {
+    let user = msw.db.user.create();
 
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate });
-      server.create('crate-ownership', { crate, user });
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate });
+    msw.db.crateOwnership.create({ crate, user });
 
-      authenticateAs(user);
-    });
+    await msw.authenticateAs(user);
   }
 
-  test('unauthenticated', async ({ mirage, page }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate });
-    });
+  test('unauthenticated', async ({ msw, page }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate });
 
     await page.goto('/crates/foo/delete');
     await expect(page).toHaveURL('/crates/foo/delete');
@@ -25,16 +23,14 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-login]')).toBeVisible();
   });
 
-  test('not an owner', async ({ mirage, page }) => {
-    await mirage.addHook(server => {
-      let user1 = server.create('user');
-      authenticateAs(user1);
+  test('not an owner', async ({ msw, page }) => {
+    let user1 = msw.db.user.create();
+    await msw.authenticateAs(user1);
 
-      let user2 = server.create('user');
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate });
-      server.create('crate-ownership', { crate, user: user2 });
-    });
+    let user2 = msw.db.user.create();
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate });
+    msw.db.crateOwnership.create({ crate, user: user2 });
 
     await page.goto('/crates/foo/delete');
     await expect(page).toHaveURL('/crates/foo/delete');
@@ -42,8 +38,8 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
   });
 
-  test('happy path', async ({ mirage, page, percy }) => {
-    await prepare({ mirage });
+  test('happy path', async ({ msw, page, percy }) => {
+    await prepare(msw);
 
     await page.goto('/crates/foo/delete');
     await expect(page).toHaveURL('/crates/foo/delete');
@@ -61,16 +57,15 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     let message = 'Crate foo has been successfully deleted.';
     await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(message);
 
-    let crate = await page.evaluate(() => server.schema.crates.findBy({ name: 'foo' }));
+    let crate = msw.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
     expect(crate).toBeNull();
   });
 
-  test('loading state', async ({ page, mirage }) => {
-    await prepare({ mirage });
-    await mirage.addHook(server => {
-      globalThis.deferred = require('rsvp').defer();
-      server.delete('/api/v1/crates/foo', () => globalThis.deferred.promise);
-    });
+  test('loading state', async ({ page, msw }) => {
+    await prepare(msw);
+
+    let deferred = defer();
+    msw.worker.use(http.delete('/api/v1/crates/:name', () => deferred.promise));
 
     await page.goto('/crates/foo/delete');
     await page.fill('[data-test-reason]', "I don't need this crate anymore");
@@ -80,16 +75,15 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-confirmation-checkbox]')).toBeDisabled();
     await expect(page.locator('[data-test-delete-button]')).toBeDisabled();
 
-    await page.evaluate(async () => globalThis.deferred.resolve());
+    deferred.resolve();
     await expect(page).toHaveURL('/');
   });
 
-  test('error state', async ({ page, mirage }) => {
-    await prepare({ mirage });
-    await mirage.addHook(server => {
-      let payload = { errors: [{ detail: 'only crates without reverse dependencies can be deleted after 72 hours' }] };
-      server.delete('/api/v1/crates/foo', payload, 422);
-    });
+  test('error state', async ({ page, msw }) => {
+    await prepare(msw);
+
+    let payload = { errors: [{ detail: 'only crates without reverse dependencies can be deleted after 72 hours' }] };
+    msw.worker.use(http.delete('/api/v1/crates/:name', () => HttpResponse.json(payload, { status: 422 })));
 
     await page.goto('/crates/foo/delete');
     await page.fill('[data-test-reason]', "I don't need this crate anymore");

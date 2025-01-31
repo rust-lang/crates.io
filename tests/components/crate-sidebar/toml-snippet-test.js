@@ -4,16 +4,15 @@ import { module, test } from 'qunit';
 import { hbs } from 'ember-cli-htmlbars';
 
 import { setupRenderingTest } from 'crates-io/tests/helpers';
-
-import setupMirage from '../../helpers/setup-mirage';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Component | CrateSidebar | toml snippet', function (hooks) {
   setupRenderingTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   test('show version number with `=` prefix', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -30,8 +29,8 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
   });
 
   test('show version number without build metadata', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0+abcdef' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0+abcdef' });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
@@ -43,8 +42,8 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
   });
 
   test('show pre-release version number without build', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '1.0.0-alpha+abcdef' });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '1.0.0-alpha+abcdef' });
 
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);

@@ -1,22 +1,24 @@
+import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', {
-        login: 'johnnydee',
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-      });
-
-      authenticateAs(user);
-      globalThis.user = user;
+  async function prepare(msw) {
+    let user = msw.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
-  });
 
-  test('can navigate to the route', async ({ page }) => {
+    await msw.authenticateAs(user);
+
+    return { user };
+  }
+
+  test('can navigate to the route', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/');
     await expect(page).toHaveURL('/');
 
@@ -31,7 +33,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new');
   });
 
-  test('happy path', async ({ page }) => {
+  test('happy path', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -40,10 +44,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => {
-      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
-      return JSON.parse(JSON.stringify(token));
-    });
+    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
     expect(token.name).toBe('token-name');
     expect(token.expiredAt).toBe(null);
@@ -60,7 +61,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
   });
 
-  test('crate scopes', async ({ page }) => {
+  test('crate scopes', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -130,10 +133,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
 
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => {
-      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
-      return JSON.parse(JSON.stringify(token));
-    });
+    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
     expect(token.name).toBe('token-name');
     expect(token.crateScopes).toEqual(['serde-*', 'serde']);
@@ -151,14 +151,14 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
   });
 
-  test('token expiry', async ({ page }) => {
+  test('token expiry', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
     await expect(page.locator('[data-test-name]')).toHaveValue('');
     await expect(page.locator('[data-test-expiry]')).toHaveValue('90');
-    let expiryDate = new Date('2018-02-18T00:00:00');
-    let expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
-    let expectedDescription = `The token will expire on ${expectedDate}`;
+    let expectedDescription = `The token will expire on February 18, 2018`;
     await expect(page.locator('[data-test-expiry-description]')).toHaveText(expectedDescription);
 
     await page.fill('[data-test-name]', 'token-name');
@@ -166,18 +166,13 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-expiry-description]')).toHaveText('The token will never expire');
 
     await page.locator('[data-test-expiry]').selectOption('30');
-    expiryDate = new Date('2017-12-20T00:00:00');
-    expectedDate = expiryDate.toLocaleDateString(undefined, { dateStyle: 'long' });
-    expectedDescription = `The token will expire on ${expectedDate}`;
+    expectedDescription = `The token will expire on December 20, 2017`;
     await expect(page.locator('[data-test-expiry-description]')).toHaveText(expectedDescription);
 
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => {
-      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
-      return JSON.parse(JSON.stringify(token));
-    });
+    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
     expect(token.name).toBe('token-name');
     expect(token.expiredAt.slice(0, 10)).toBe('2017-12-20');
@@ -196,7 +191,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     );
   });
 
-  test('token expiry with custom date', async ({ page }) => {
+  test('token expiry with custom date', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -215,10 +212,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
 
     await page.click('[data-test-generate]');
 
-    let token = await page.evaluate(() => {
-      let token = server.schema['apiTokens'].findBy({ name: 'token-name' });
-      return JSON.parse(JSON.stringify(token));
-    });
+    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     expect(token, 'API token has been created in the backend database').toBeTruthy();
     expect(token.name).toBe('token-name');
     expect(token.expiredAt.slice(0, 10)).toBe('2024-05-04');
@@ -237,12 +231,11 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     );
   });
 
-  test('loading and error state', async ({ page, mirage }) => {
-    await page.exposeBinding('resp500', () => new Response(500));
-    await mirage.addHook(server => {
-      globalThis.deferred = require('rsvp').defer();
-      server.put('/api/v1/me/tokens', () => globalThis.deferred.promise);
-    });
+  test('loading and error state', async ({ page, msw }) => {
+    await prepare(msw);
+
+    let deferred = defer();
+    msw.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
 
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
@@ -254,7 +247,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-name]')).toBeDisabled();
     await expect(page.locator('[data-test-generate]')).toBeDisabled();
 
-    await page.evaluate(async () => globalThis.deferred.resolve(await globalThis.resp500));
+    deferred.resolve(HttpResponse.json({}, { status: 500 }));
 
     let message = 'An error has occurred while generating your API token. Please try again later!';
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(message);
@@ -262,7 +255,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-generate]')).toBeEnabled();
   });
 
-  test('cancel button navigates back to the token list', async ({ page }) => {
+  test('cancel button navigates back to the token list', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -270,7 +265,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens');
   });
 
-  test('empty name shows an error', async ({ page }) => {
+  test('empty name shows an error', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -282,7 +279,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-scopes-group] [data-test-error]')).toHaveCount(0);
   });
 
-  test('no scopes selected shows an error', async ({ page }) => {
+  test('no scopes selected shows an error', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');
 
@@ -293,19 +292,17 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-scopes-group] [data-test-error]')).toBeVisible();
   });
 
-  test('prefill with the exist token', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      const user = globalThis.user;
+  test('prefill with the exist token', async ({ page, msw }) => {
+    let { user } = await prepare(msw);
 
-      server.create('apiToken', {
-        user: user,
-        id: '1',
-        name: 'foo',
-        token: 'test',
-        createdAt: '2017-08-01T12:34:56',
-        lastUsedAt: '2017-11-02T01:45:14',
-        endpointScopes: ['publish-update'],
-      });
+    msw.db.apiToken.create({
+      user: user,
+      id: 1,
+      name: 'foo',
+      token: 'test',
+      createdAt: '2017-08-01T12:34:56',
+      lastUsedAt: '2017-11-02T01:45:14',
+      endpointScopes: ['publish-update'],
     });
 
     await page.goto('/settings/tokens/new?from=1');
@@ -323,10 +320,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     );
     await page.click('[data-test-generate]');
 
-    let newToken = await page.evaluate(() => {
-      let newToken = server.schema['apiTokens'].findBy({ name: 'foo', crateScopes: ['serde'] });
-      return JSON.parse(JSON.stringify(newToken));
-    });
+    let newToken = msw.db.apiToken.findFirst({ where: { name: { equals: 'foo' } } });
     expect(newToken, 'New API token has been created in the backend database').toBeTruthy();
 
     await expect(page).toHaveURL('/settings/tokens');
@@ -335,7 +329,9 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new');
   });
 
-  test('token not found', async ({ page }) => {
+  test('token not found', async ({ page, msw }) => {
+    await prepare(msw);
+
     await page.goto('/settings/tokens/new?from=1');
     await expect(page).toHaveURL('/settings/tokens/new?from=1');
     await expect(page.locator('[data-test-title]')).toHaveText('Token not found');

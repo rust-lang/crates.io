@@ -1,5 +1,5 @@
 import { expect, test } from '@/e2e/helper';
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 const README_HTML = `
 <p><strong>Serde is a framework for <em>ser</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
@@ -85,14 +85,9 @@ graph TD;
 `;
 
 test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
-  test('it works', async ({ page, mirage, percy }) => {
-    await page.addInitScript(readmeHTML => {
-      globalThis.readmeHTML = readmeHTML;
-    }, README_HTML);
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'serde' });
-      server.create('version', { crate, num: '1.0.0', readme: globalThis.readmeHTML });
-    });
+  test('it works', async ({ page, msw, percy }) => {
+    let crate = msw.db.crate.create({ name: 'serde' });
+    msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
 
     await page.goto('/crates/serde');
     const readme = page.locator('[data-test-readme]');
@@ -105,38 +100,28 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
     await percy.snapshot();
   });
 
-  test('it shows a fallback if no readme is available', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'serde' });
-      server.create('version', { crate, num: '1.0.0' });
-    });
+  test('it shows a fallback if no readme is available', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'serde' });
+    msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/serde');
     await expect(page.locator('[data-test-no-readme]')).toBeVisible();
   });
 
-  test('it shows an error message and retry button if loading fails', async ({ page, mirage }) => {
-    await page.exposeBinding('resp200', () => new Response(200, { 'Content-Type': 'text/html' }, 'foo'));
+  test('it shows an error message and retry button if loading fails', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'serde' });
+    msw.db.version.create({ crate, num: '1.0.0', readme: 'foo' });
 
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'serde' });
-      server.create('version', { crate, num: '1.0.0' });
-
-      server.logging = true;
-      // Simulate a server error when fetching the README
-      server.get('/api/v1/crates/:name/:version/readme', {}, 500);
-    });
+    // Simulate a server error when fetching the README
+    msw.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })));
 
     await page.goto('/crates/serde');
     await expect(page.locator('[data-test-readme-error]')).toBeVisible();
     await expect(page.locator('[data-test-retry-button]')).toBeVisible();
 
-    await page.evaluate(() => {
-      // Simulate a successful response when fetching the README
-      server.get('/api/v1/crates/:name/:version/readme', {});
-    });
+    await msw.worker.resetHandlers();
 
     await page.click('[data-test-retry-button]');
-    await expect(page.locator('[data-test-readme]')).toHaveText('{}');
+    await expect(page.locator('[data-test-readme]')).toHaveText('foo');
   });
 });

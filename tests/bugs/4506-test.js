@@ -6,18 +6,18 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #4506', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context) {
-    let { server } = context;
+    let { db } = context;
 
-    server.create('keyword', { keyword: 'no-std' });
+    let noStd = db.keyword.create({ keyword: 'no-std' });
 
-    let foo = server.create('crate', { name: 'foo', keywordIds: ['no-std'] });
-    server.create('version', { crate: foo });
+    let foo = db.crate.create({ name: 'foo', keywords: [noStd] });
+    db.version.create({ crate: foo });
 
-    let bar = server.create('crate', { name: 'bar', keywordIds: ['no-std'] });
-    server.create('version', { crate: bar });
+    let bar = db.crate.create({ name: 'bar', keywords: [noStd] });
+    db.version.create({ crate: bar });
   }
 
   test('is fixed', async function (assert) {

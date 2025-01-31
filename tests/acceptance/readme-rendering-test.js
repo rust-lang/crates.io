@@ -2,7 +2,7 @@ import { click } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
@@ -92,11 +92,11 @@ graph TD;
 `;
 
 module('Acceptance | README rendering', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('it works', async function (assert) {
-    let crate = this.server.create('crate', { name: 'serde' });
-    this.server.create('version', { crate, num: '1.0.0', readme: README_HTML });
+    let crate = this.db.crate.create({ name: 'serde' });
+    this.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
 
     await visit('/crates/serde');
     assert.dom('[data-test-readme]').exists();
@@ -108,29 +108,26 @@ module('Acceptance | README rendering', function (hooks) {
   });
 
   test('it shows a fallback if no readme is available', async function (assert) {
-    let crate = this.server.create('crate', { name: 'serde' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'serde' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/serde');
     assert.dom('[data-test-no-readme]').exists();
   });
 
   test('it shows an error message and retry button if loading fails', async function (assert) {
-    let crate = this.server.create('crate', { name: 'serde' });
-    this.server.create('version', { crate, num: '1.0.0' });
+    let crate = this.db.crate.create({ name: 'serde' });
+    this.db.version.create({ crate, num: '1.0.0' });
 
     // Simulate a server error when fetching the README
-    this.server.get('/api/v1/crates/:name/:version/readme', {}, 500);
+    this.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })));
 
     await visit('/crates/serde');
     assert.dom('[data-test-readme-error]').exists();
     assert.dom('[data-test-retry-button]').exists();
 
     // Simulate a successful response when fetching the README
-    this.server.get(
-      '/api/v1/crates/:name/:version/readme',
-      () => new Response(200, { 'Content-Type': 'text/html' }, 'foo'),
-    );
+    this.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('foo')));
 
     await click('[data-test-retry-button]');
     assert.dom('[data-test-readme]').hasText('foo');

@@ -33,6 +33,8 @@ export default defineConfig({
 
     /* Set a custom test id that is also compatible with `ember-test-selectors` */
     testIdAttribute: 'data-test-id',
+
+    locale: 'en-US',
   },
 
   /* Configure projects for major browsers */

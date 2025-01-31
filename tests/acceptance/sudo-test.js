@@ -8,10 +8,10 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | sudo', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context, isAdmin) {
-    const user = context.server.create('user', {
+    const user = context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -19,12 +19,12 @@ module('Acceptance | sudo', function (hooks) {
       isAdmin,
     });
 
-    const crate = context.server.create('crate', {
+    const crate = context.db.crate.create({
       name: 'foo',
       newest_version: '0.1.0',
     });
 
-    const version = context.server.create('version', {
+    const version = context.db.version.create({
       crate,
       num: '0.1.0',
     });
@@ -104,12 +104,12 @@ module('Acceptance | sudo', function (hooks) {
     await click('[data-test-version-yank-button="0.1.0"]');
 
     await waitFor('[data-test-version-unyank-button="0.1.0"]');
-    const crate = this.server.schema.crates.findBy({ name: 'foo' });
-    const version = this.server.schema.versions.findBy({ crateId: crate.id, num: '0.1.0' });
+    const crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
+    const version = this.db.version.findFirst({ crate: { id: { equals: crate.id } }, num: { equals: '0.1.0' } });
     assert.true(version.yanked, 'The version should be yanked');
     assert.dom('[data-test-version-unyank-button="0.1.0"]').exists();
     await click('[data-test-version-unyank-button="0.1.0"]');
-    const updatedVersion = this.server.schema.versions.findBy({ crateId: crate.id, num: '0.1.0' });
+    const updatedVersion = this.db.version.findFirst({ crate: { id: { equals: crate.id } }, num: { equals: '0.1.0' } });
     assert.false(updatedVersion.yanked, 'The version should be unyanked');
 
     await waitFor('[data-test-version-yank-button="0.1.0"]');

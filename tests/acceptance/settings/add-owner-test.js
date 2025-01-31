@@ -4,22 +4,22 @@ import { module, test } from 'qunit';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Settings | Add Owner', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context) {
-    let { server } = context;
+    let { db } = context;
 
-    let user1 = server.create('user', { name: 'blabaere' });
-    let user2 = server.create('user', { name: 'thehydroimpulse' });
-    let team1 = server.create('team', { org: 'org', name: 'blabaere' });
-    let team2 = server.create('team', { org: 'org', name: 'thehydroimpulse' });
+    let user1 = db.user.create({ name: 'blabaere' });
+    let user2 = db.user.create({ name: 'thehydroimpulse' });
+    let team1 = db.team.create({ org: 'org', name: 'blabaere' });
+    let team2 = db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-    let crate = server.create('crate', { name: 'nanomsg' });
-    server.create('version', { crate, num: '1.0.0' });
-    server.create('crate-ownership', { crate, user: user1 });
-    server.create('crate-ownership', { crate, user: user2 });
-    server.create('crate-ownership', { crate, team: team1 });
-    server.create('crate-ownership', { crate, team: team2 });
+    let crate = db.crate.create({ name: 'nanomsg' });
+    db.version.create({ crate, num: '1.0.0' });
+    db.crateOwnership.create({ crate, user: user1 });
+    db.crateOwnership.create({ crate, user: user2 });
+    db.crateOwnership.create({ crate, team: team1 });
+    db.crateOwnership.create({ crate, team: team2 });
 
     context.authenticateAs(user1);
 
@@ -51,7 +51,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
   test('add a new owner', async function (assert) {
     prepare(this);
 
-    this.server.create('user', { name: 'iain8' });
+    this.db.user.create({ name: 'iain8' });
 
     await visit('/crates/nanomsg/settings');
     await fillIn('input[name="username"]', 'iain8');
@@ -65,8 +65,8 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
   test('add a team owner', async function (assert) {
     prepare(this);
 
-    this.server.create('user', { name: 'iain8' });
-    this.server.create('team', { org: 'rust-lang', name: 'crates-io' });
+    this.db.user.create({ name: 'iain8' });
+    this.db.team.create({ org: 'rust-lang', name: 'crates-io' });
 
     await visit('/crates/nanomsg/settings');
     await fillIn('input[name="username"]', 'github:rust-lang:crates-io');

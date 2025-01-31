@@ -1,15 +1,13 @@
 import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
-  test('happy path', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user');
-      authenticateAs(user);
+  test('happy path', async ({ page, msw }) => {
+    let user = msw.db.user.create();
+    await msw.authenticateAs(user);
 
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate });
-      server.create('crate-ownership', { crate, user });
-    });
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate });
+    msw.db.crateOwnership.create({ crate, user });
 
     await page.goto('/crates/foo');
     await expect(page).toHaveURL('/crates/foo');
@@ -34,7 +32,7 @@ test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
     let message = 'Crate foo has been successfully deleted.';
     await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(message);
 
-    let crate = await page.evaluate(() => server.schema.crates.findBy({ name: 'foo' }));
+    crate = msw.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
     expect(crate).toBeNull();
   });
 });

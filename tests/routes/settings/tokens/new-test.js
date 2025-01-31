@@ -3,17 +3,17 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../../../helpers/visit-ignoring-abort';
 
 module('/settings/tokens/new', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context) {
-    let user = context.server.create('user', {
+    let user = context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -60,7 +60,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
-    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt, null);
@@ -133,7 +133,7 @@ module('/settings/tokens/new', function (hooks) {
 
     await click('[data-test-generate]');
 
-    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.deepEqual(token.crateScopes, ['serde-*', 'serde']);
@@ -173,7 +173,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-scope="publish-update"]');
     await click('[data-test-generate]');
 
-    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt.slice(0, 10), '2017-12-20');
@@ -209,7 +209,7 @@ module('/settings/tokens/new', function (hooks) {
 
     await click('[data-test-generate]');
 
-    let token = this.server.schema.apiTokens.findBy({ name: 'token-name' });
+    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'token-name' } } });
     assert.ok(Boolean(token), 'API token has been created in the backend database');
     assert.strictEqual(token.name, 'token-name');
     assert.strictEqual(token.expiredAt.slice(0, 10), '2024-05-04');
@@ -228,7 +228,7 @@ module('/settings/tokens/new', function (hooks) {
     prepare(this);
 
     let deferred = defer();
-    this.server.put('/api/v1/me/tokens', deferred.promise);
+    this.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
 
     await visit('/settings/tokens/new');
     assert.strictEqual(currentURL(), '/settings/tokens/new');
@@ -240,7 +240,7 @@ module('/settings/tokens/new', function (hooks) {
     assert.dom('[data-test-name]').isDisabled();
     assert.dom('[data-test-generate]').isDisabled();
 
-    deferred.resolve(new Response(500));
+    deferred.resolve(HttpResponse.json({}, { status: 500 }));
     await clickPromise;
 
     let message = 'An error has occurred while generating your API token. Please try again later!';
@@ -289,7 +289,7 @@ module('/settings/tokens/new', function (hooks) {
   test('prefill with the exist token', async function (assert) {
     let { user } = prepare(this);
 
-    let token = this.server.create('api-token', {
+    let token = this.db.apiToken.create({
       user,
       name: 'foo',
       createdAt: '2017-08-01T12:34:56',
@@ -310,7 +310,7 @@ module('/settings/tokens/new', function (hooks) {
     await click('[data-test-generate]');
     assert.strictEqual(currentURL(), '/settings/tokens');
 
-    let tokens = this.server.schema.apiTokens.where({ name: 'foo' });
+    let tokens = this.db.apiToken.findMany({ where: { name: { equals: 'foo' } } });
     assert.strictEqual(tokens.length, 2, 'New API token has been created in the backend database');
 
     // It should reset the token ID query parameter.
@@ -321,7 +321,7 @@ module('/settings/tokens/new', function (hooks) {
   test('prefilled: crate scoped can be added', async function (assert) {
     let { user } = prepare(this);
 
-    let token = this.server.create('api-token', {
+    let token = this.db.apiToken.create({
       user,
       name: 'serde',
       crateScopes: ['serde', 'serde-*'],
