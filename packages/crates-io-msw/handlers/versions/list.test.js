@@ -104,6 +104,45 @@ test('returns all versions belonging to the specified crate', async function () 
   });
 });
 
+test('supports `sort` parameters', async function () {
+  let user = db.user.create();
+  let crate = db.crate.create({ name: 'rand' });
+  db.version.create({ crate, num: '1.0.0' });
+  db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
+  db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
+
+  // sort by `semver` by default
+  {
+    let response = await fetch('/api/v1/crates/rand/versions');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['2.0.0-alpha', '1.1.0', '1.0.0'],
+    );
+  }
+
+  {
+    let response = await fetch('/api/v1/crates/rand/versions?sort=semver');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['2.0.0-alpha', '1.1.0', '1.0.0'],
+    );
+  }
+
+  {
+    let response = await fetch('/api/v1/crates/rand/versions?sort=date');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['1.1.0', '2.0.0-alpha', '1.0.0'],
+    );
+  }
+});
+
 test('supports multiple `ids[]` parameters', async function () {
   let user = db.user.create();
   let crate = db.crate.create({ name: 'rand' });

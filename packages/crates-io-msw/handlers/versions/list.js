@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import compareSemver from 'semver/functions/compare-loose.js';
 
 import { db } from '../../index.js';
 import { serializeVersion } from '../../serializers/version.js';
@@ -18,7 +19,10 @@ export default http.get('/api/v1/crates/:name/versions', async ({ request, param
     versions = versions.filter(v => nums.includes(v.num));
   }
 
-  versions.sort((a, b) => b.id - a.id);
+  let sort = url.searchParams.get('sort');
+  versions =
+    sort == 'date' ? versions.sort((a, b) => b.id - a.id) : versions.sort((a, b) => compareSemver(b.num, a.num));
+
   let total = versions.length;
 
   let include = url.searchParams.get('include') ?? '';
