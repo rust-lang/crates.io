@@ -91,7 +91,7 @@ indicatif = "=0.17.11"
 ipnetwork = "=0.21.1"
 json-subscriber = "=0.2.4"
 krata-tokio-tar = "=0.4.2"
-lettre = { version = "=0.11.11", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
+lettre = { version = "=0.11.12", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = "=2.7.0"
 mockall = "=0.13.1"
 native-tls = "=0.2.13"
