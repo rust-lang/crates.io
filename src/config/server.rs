@@ -17,7 +17,6 @@ use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::net::IpAddr;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -73,15 +72,15 @@ pub struct Server {
     /// Should the server serve the frontend assets in the `dist` directory?
     pub serve_dist: bool,
 
-    /// If set the server serves the frontend `index.html` for all
-    /// non-API requests using the Jinja template at the given path.
+    /// Should the server serve the frontend `index.html` for all
+    /// non-API requests?
     /// Setting this parameter requires setting
     /// [`Self::og_image_base_url`] as well.
-    pub index_html_template_path: Option<PathBuf>,
+    pub serve_html: bool,
 
     /// Base URL for the service from which the OpenGraph images
     /// for crates are loaded. Required if
-    /// [`Self::index_html_template_path`] is set.
+    /// [`Self::serve_html`] is set.
     pub og_image_base_url: Option<Url>,
 
     /// Maximum number of items that the HTML render
@@ -185,14 +184,13 @@ impl Server {
             cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
         );
 
-        let index_html_template_path = var_parsed("INDEX_HTML_TEMPLATE_PATH")?;
-        let og_image_base_url = match index_html_template_path {
-            Some(_) => Some(
+        let serve_html = var_parsed("SERVE_HTML")?.unwrap_or(true);
+        let og_image_base_url = serve_html
+            .then(|| {
                 required_var_parsed("OG_IMAGE_BASE_URL")
-                    .context("OG_IMAGE_BASE_URL must be set when using INDEX_HTML_TEMPLATE_PATH")?,
-            ),
-            None => None,
-        };
+                    .context("OG_IMAGE_BASE_URL must be set when using INDEX_HTML_TEMPLATE_PATH")
+            })
+            .transpose()?;
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -237,7 +235,7 @@ impl Server {
             cargo_compat_status_code_config: var_parsed("CARGO_COMPAT_STATUS_CODES")?
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
-            index_html_template_path,
+            serve_html: true,
             og_image_base_url,
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),

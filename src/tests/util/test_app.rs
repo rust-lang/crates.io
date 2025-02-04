@@ -481,7 +481,7 @@ fn simple_config() -> config::Server {
 
         // The frontend code is not needed for the backend tests.
         serve_dist: false,
-        index_html_template_path: None,
+        serve_html: false,
         og_image_base_url: None,
         html_render_cache_max_capacity: 1024,
         content_security_policy: None,
