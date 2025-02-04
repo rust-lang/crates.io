@@ -8,7 +8,7 @@ use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use std::sync::Arc;
 
 pub trait Email {
@@ -99,7 +99,7 @@ impl Emails {
         // replace it when it relays the message.
         let message_id = format!(
             "<{}@{}>",
-            Alphanumeric.sample_string(&mut rand::thread_rng(), 32),
+            Alphanumeric.sample_string(&mut rand::rng(), 32),
             self.domain,
         );
 

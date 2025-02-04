@@ -216,9 +216,9 @@ fn run_migrations(conn: &mut PgConnection) -> diesel::migration::Result<()> {
 }
 
 fn generate_name() -> String {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     std::iter::repeat(())
-        .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+        .map(|_| rng.sample(rand::distr::Alphanumeric) as char)
         .take(16)
         .collect()
 }
