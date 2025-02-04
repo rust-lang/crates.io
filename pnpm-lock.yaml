@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@ember/test-helpers': 5.1.0
   ember-get-config: 2.1.1
   ember-inflector: 5.0.2
   ember-modifier: 4.2.0
@@ -4458,7 +4459,7 @@ packages:
     resolution: {integrity: sha512-Nv7+WIPkkILYMarLQHiXiHwnRtmtAOq2r4d8DZptKJPrl7mLdD1fM3gwzpbG0mTu81LtDmG+yULD+mBYxzP13A==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
-      '@ember/test-helpers': ^3.0.3 || ^4.0.2
+      '@ember/test-helpers': 5.1.0
       qunit: '>= 2'
     peerDependenciesMeta:
       qunit:
@@ -4625,7 +4626,7 @@ packages:
     resolution: {integrity: sha512-x2or7O+vFx2xgfq5v/j1WDerwG6Wqvl6nYF1YMKPeislDheFd+6XZQ5I6joMr7MV0SsCQuAudxeslNCPPtYCFA==}
     engines: {node: '>= 18.20.4'}
     peerDependencies:
-      '@ember/test-helpers': ^3.3.0 || ^4.0.4
+      '@ember/test-helpers': 5.1.0
       '@ember/test-waiters': ^3.1.0 || ^4.0.0
       ember-source: 3.28.12 || ^4.0.4 || ^5.0.0 || ^6.0.0
       qunit: ^2.18.0
@@ -4691,7 +4692,7 @@ packages:
   ember-keyboard@9.0.1:
     resolution: {integrity: sha512-zCIrs8ktI8nxDTBLodASYrWtg5I5ZTZ7hdfFr+upfyRKzbLub5Pnvlj60zpvSAVDyNJBlQJ7eSn3sZlwEA01wQ==}
     peerDependencies:
-      '@ember/test-helpers': ^2.6.0 || ^3.0.0 || >= 4.0.0
+      '@ember/test-helpers': 5.1.0
     peerDependenciesMeta:
       '@ember/test-helpers':
         optional: true
@@ -4700,7 +4701,7 @@ packages:
     resolution: {integrity: sha512-QwKlpR05YvBS2c+UV++U115lTg7VanZ3vnrplbORYl8M6BDgtlC1P4KZo31mmGsDqNqiy0J84zWgfuhSEzz53Q==}
     engines: {node: '>= 20.*'}
     peerDependencies:
-      '@ember/test-helpers': ^2.9.3 || ^3.0.0
+      '@ember/test-helpers': 5.1.0
       '@glimmer/tracking': ^1.1.2
 
   ember-load-initializers@3.0.1:
@@ -4730,7 +4731,7 @@ packages:
   ember-qunit@9.0.1:
     resolution: {integrity: sha512-9DgjczFG7ZjINmwWFYDtUF8McbYqQir82hyFp/ZbMOLkpFvHCKPw1mtKcpcdLnLAAYJpwR2/MCyPNiEMkR11aA==}
     peerDependencies:
-      '@ember/test-helpers': '>=3.0.3'
+      '@ember/test-helpers': 5.1.0
       ember-source: '>=4.0.0'
       qunit: ^2.13.0
 
