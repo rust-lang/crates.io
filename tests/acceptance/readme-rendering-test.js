@@ -66,6 +66,22 @@ graph TD;
     C-->D;
 </code></pre>
 
+<h3>GitHub Style Alert</h3>
+<div class="markdown-alert markdown-alert-note">
+<p class="markdown-alert-title">Note</p>
+<p>Something of note</p>
+</div>
+
+<h3>GitLab Style Multiline Block Quotes</h3>
+<p>Paragraph one</p>
+<blockquote>
+<p>Paragraph two</p>
+<ul>
+<li>one</li>
+<li>two</li>
+</ul>
+</blockquote>
+
 <ul>
   <li>
     <p>Delegate to a method with a different name</p>

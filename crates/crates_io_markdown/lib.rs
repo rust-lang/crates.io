@@ -672,4 +672,30 @@ There can also be some text in between!
         </picture>
         "#);
     }
+
+    #[test]
+    fn markdown_alerts() {
+        let text = "> [!note]\n> Something of note";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <div class="markdown-alert markdown-alert-note">
+        <p class="markdown-alert-title">Note</p>
+        <p>Something of note</p>
+        </div>
+        "#);
+    }
+
+    #[test]
+    fn markdown_multiline_block_quotes_complex() {
+        let text = "Paragraph one\n\n>>>\nParagraph two\n\n- one\n- two\n>>>";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <p>Paragraph one</p>
+        <blockquote>
+        <p>Paragraph two</p>
+        <ul>
+        <li>one</li>
+        <li>two</li>
+        </ul>
+        </blockquote>
+        "#);
+    }
 }
