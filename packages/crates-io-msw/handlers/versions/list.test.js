@@ -104,6 +104,45 @@ test('returns all versions belonging to the specified crate', async function () 
   });
 });
 
+test('supports `sort` parameters', async function () {
+  let user = db.user.create();
+  let crate = db.crate.create({ name: 'rand' });
+  db.version.create({ crate, num: '1.0.0' });
+  db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
+  db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
+
+  // sort by `semver` by default
+  {
+    let response = await fetch('/api/v1/crates/rand/versions');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['2.0.0-alpha', '1.1.0', '1.0.0'],
+    );
+  }
+
+  {
+    let response = await fetch('/api/v1/crates/rand/versions?sort=semver');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['2.0.0-alpha', '1.1.0', '1.0.0'],
+    );
+  }
+
+  {
+    let response = await fetch('/api/v1/crates/rand/versions?sort=date');
+    assert.strictEqual(response.status, 200);
+    let json = await response.json();
+    assert.deepEqual(
+      json.versions.map(it => it.num),
+      ['1.1.0', '2.0.0-alpha', '1.0.0'],
+    );
+  }
+});
+
 test('supports multiple `ids[]` parameters', async function () {
   let user = db.user.create();
   let crate = db.crate.create({ name: 'rand' });
@@ -117,6 +156,85 @@ test('supports multiple `ids[]` parameters', async function () {
     json.versions.map(v => v.num),
     ['1.2.0', '1.0.0'],
   );
+});
+
+test('supports seek pagination', async function () {
+  let user = db.user.create();
+  let crate = db.crate.create({ name: 'rand' });
+  db.version.create({ crate, num: '1.0.0' });
+  db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
+  db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
+
+  async function seek_forwards(queryParams) {
+    let calls = 0;
+    let next_page;
+    let responses = [];
+    let base_url = '/api/v1/crates/rand/versions';
+    let params = new URLSearchParams(queryParams);
+    let url = `${base_url}?${params}`;
+    while ((calls == 0 || next_page) && calls < 50) {
+      if (next_page) {
+        url = `${base_url}${next_page}`;
+      }
+      let response = await fetch(url);
+      calls += 1;
+      assert.strictEqual(response.status, 200);
+      let json = await response.json();
+      responses.push(json);
+      next_page = json.meta.next_page;
+      if (next_page == null) {
+        break;
+      }
+    }
+    return responses;
+  }
+
+  // sort by `semver` by default
+  {
+    let responses = await seek_forwards({ per_page: 1 });
+    assert.deepEqual(
+      responses.map(it => it.versions.map(v => v.num)),
+      [['2.0.0-alpha'], ['1.1.0'], ['1.0.0'], []],
+    );
+    assert.deepEqual(
+      responses.map(it => it.meta.next_page),
+      ['?per_page=1&seek=2.0.0-alpha', '?per_page=1&seek=1.1.0', '?per_page=1&seek=1.0.0', null],
+    );
+  }
+
+  {
+    let responses = await seek_forwards({ per_page: 1, sort: 'semver' });
+    assert.deepEqual(
+      responses.map(it => it.versions.map(v => v.num)),
+      [['2.0.0-alpha'], ['1.1.0'], ['1.0.0'], []],
+    );
+    assert.deepEqual(
+      responses.map(it => it.meta.next_page),
+      [
+        '?per_page=1&sort=semver&seek=2.0.0-alpha',
+        '?per_page=1&sort=semver&seek=1.1.0',
+        '?per_page=1&sort=semver&seek=1.0.0',
+        null,
+      ],
+    );
+  }
+
+  {
+    let responses = await seek_forwards({ per_page: 1, sort: 'date' });
+    assert.deepEqual(
+      responses.map(it => it.versions.map(v => v.num)),
+      [['1.1.0'], ['2.0.0-alpha'], ['1.0.0'], []],
+    );
+    assert.deepEqual(
+      responses.map(it => it.meta.next_page),
+      [
+        '?per_page=1&sort=date&seek=1.1.0',
+        '?per_page=1&sort=date&seek=2.0.0-alpha',
+        '?per_page=1&sort=date&seek=1.0.0',
+        null,
+      ],
+    );
+  }
 });
 
 test('include `release_tracks` meta', async function () {
