@@ -8,7 +8,7 @@
 //! likely to be removed in the future.
 
 use std::borrow::Cow;
-use std::path::Path;
+use std::ops::Not;
 use std::sync::{Arc, OnceLock};
 
 use axum::extract::Request;
@@ -18,6 +18,7 @@ use futures_util::future::{BoxFuture, Shared};
 use futures_util::FutureExt;
 use http::{header, HeaderMap, HeaderValue, Method, StatusCode};
 use minijinja::{context, Environment};
+use url::Url;
 
 use crate::app::AppState;
 
@@ -73,24 +74,11 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
             return (StatusCode::METHOD_NOT_ALLOWED, headers).into_response();
         }
 
-        // Come up with an Open Graph image URL. In case a crate page is requested,
-        // we use the crate's name and the OG image base URL from config to
-        // generate one, otherwise we use the fallback image.
-        let og_image_url = 'og: {
-            if let Some(suffix) = path.strip_prefix(PATH_PREFIX_CRATES) {
-                let len = suffix.find('/').unwrap_or(suffix.len());
-                let krate = &suffix[..len];
-
-                // `state.config.og_image_base_url` will always be `Some` as that's required
-                // if `state.config.index_html_template_path` is `Some`, and otherwise this
-                // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
-                if let Ok(og_img_url) = state.config.og_image_base_url.as_ref().unwrap().join(krate)
-                {
-                    break 'og Cow::from(og_img_url.to_string());
-                }
-            }
-            OG_IMAGE_FALLBACK_URL.into()
-        };
+        // `state.config.og_image_base_url` will always be `Some` as that's required
+        // if `state.config.index_html_template_path` is `Some`, and otherwise this
+        // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
+        let og_image_base_url = state.config.og_image_base_url.as_ref().unwrap();
+        let og_image_url = generate_og_image_url(path, og_image_base_url);
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
         let html = RENDERED_HTML_CACHE
@@ -120,16 +108,93 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
             .await;
 
         // Serve static Ember page to bootstrap the frontend
-        Response::builder()
-            .header(header::CONTENT_TYPE, "text/html")
-            .header(header::CONTENT_LENGTH, html.len())
-            .body(axum::body::Body::new(html))
-            .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+        axum::response::Html(html).into_response()
     } else {
         // Return a 404 to crawlers that don't send `Accept: text/hml`.
         // This is to preserve legacy behavior and will likely change.
         // Most of these crawlers probably won't execute our frontend JS anyway, but
         // it would be nice to bootstrap the app for crawlers that do execute JS.
         StatusCode::NOT_FOUND.into_response()
+    }
+}
+
+/// Extract the crate name from the path, by stripping [`PATH_PREFIX_CRATES`]
+/// prefix, and returning the firsts path segment from the result.
+/// Returns `None` if the path was not prefixed with [`PATH_PREFIX_CRATES`].
+fn extract_crate_name(path: &str) -> Option<&str> {
+    path.strip_prefix(PATH_PREFIX_CRATES).and_then(|suffix| {
+        let len = suffix.find('/').unwrap_or(suffix.len());
+        let krate = &suffix[..len];
+        krate.is_empty().not().then_some(krate)
+    })
+}
+
+/// Come up with an Open Graph image URL. In case a crate page is requested,
+/// we use the crate's name as extracted from the request path and the OG image
+/// base URL from config to generate one, otherwise we use the fallback image.
+fn generate_og_image_url(path: &str, og_image_base_url: &Url) -> Cow<'static, str> {
+    if let Some(krate) = extract_crate_name(path) {
+        if let Ok(og_img_url) = og_image_base_url
+            .join(krate)
+            .map(|url_without_extrrension| format!("{url_without_extrrension}.png"))
+        {
+            return og_img_url.into();
+        }
+    }
+
+    OG_IMAGE_FALLBACK_URL.into()
+}
+
+#[cfg(test)]
+mod tests {
+    use googletest::{assert_that, prelude::eq};
+    use url::Url;
+
+    use crate::middleware::ember_html::{
+        extract_crate_name, generate_og_image_url, OG_IMAGE_FALLBACK_URL,
+    };
+
+    #[test]
+    fn test_extract_crate_name() {
+        const PATHS: &[(&str, Option<&str>)] = &[
+            ("/crates/tokio", Some("tokio")),
+            ("/crates/tokio/versions", Some("tokio")),
+            ("/crates/tokio/", Some("tokio")),
+            ("/", None),
+            ("/crates", None),
+            ("/crates/", None),
+            ("/dashboard/", None),
+            ("/settings/profile", None),
+        ];
+
+        for (path, expected) in PATHS.iter().copied() {
+            assert_that!(extract_crate_name(path), eq(expected));
+        }
+    }
+
+    #[test]
+    fn test_generate_og_image_url() {
+        const PATHS: &[(&str, &str)] = &[
+            ("/crates/tokio", "http://localhost:3000/og/tokio.png"),
+            (
+                "/crates/tokio/versions",
+                "http://localhost:3000/og/tokio.png",
+            ),
+            ("/crates/tokio/", "http://localhost:3000/og/tokio.png"),
+            ("/", OG_IMAGE_FALLBACK_URL),
+            ("/crates", OG_IMAGE_FALLBACK_URL),
+            ("/crates/", OG_IMAGE_FALLBACK_URL),
+            ("/dashboard/", OG_IMAGE_FALLBACK_URL),
+            ("/settings/profile", OG_IMAGE_FALLBACK_URL),
+        ];
+
+        let og_image_base_url: Url = "http://localhost:3000/og/".parse().unwrap();
+
+        for (path, expected) in PATHS.iter().copied() {
+            assert_that!(
+                generate_og_image_url(path, &og_image_base_url),
+                eq(expected)
+            );
+        }
     }
 }
