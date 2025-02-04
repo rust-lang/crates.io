@@ -1,35 +1,32 @@
-import { test, expect } from '@/e2e/helper';
+import { defer } from '@/e2e/deferred';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    let hook = String(server => {
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '0.6.0' });
+  async function prepare(msw, { skipLogin = false, following = false } = {}) {
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate, num: '0.6.0' });
 
-      let loggedIn = !globalThis.skipLogin;
-      if (loggedIn) {
-        let followedCrates = !!globalThis.following ? [crate] : [];
-        let user = server.create('user', { followedCrates });
-        globalThis.authenticateAs(user);
-      }
-    });
-    await mirage.addHook(hook);
-  });
+    let loggedIn = !skipLogin;
+    if (loggedIn) {
+      let followedCrates = following ? [crate] : [];
+      let user = msw.db.user.create({ followedCrates });
+      await msw.authenticateAs(user);
+    }
+  }
 
-  test("unauthenticated users don't see the follow button", async ({ page }) => {
-    await page.addInitScript(() => {
-      globalThis.skipLogin = true;
-    });
+  test("unauthenticated users don't see the follow button", async ({ page, msw }) => {
+    await prepare(msw, { skipLogin: true });
+
     await page.goto('/crates/nanomsg');
     await expect(page.locator('[data-test-follow-button]')).toHaveCount(0);
   });
 
-  test('authenticated users see a loading spinner and can follow/unfollow crates', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      globalThis.defer = require('rsvp').defer;
-      globalThis.followingDeferred = globalThis.defer();
-      server.get('/api/v1/crates/:crate_id/following', globalThis.followingDeferred.promise);
-    });
+  test('authenticated users see a loading spinner and can follow/unfollow crates', async ({ page, msw }) => {
+    await prepare(msw);
+
+    let followingDeferred = defer();
+    await msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => followingDeferred.promise));
 
     await page.goto('/crates/nanomsg');
 
@@ -39,44 +36,41 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 
-    await page.evaluate(() => globalThis.followingDeferred.resolve({ following: false }));
+    followingDeferred.resolve(HttpResponse.json({ following: false }));
     await expect(followButton).toHaveText('Follow');
     await expect(followButton).toBeEnabled();
     await expect(spinner).toHaveCount(0);
 
-    await page.evaluate(() => {
-      globalThis.followDeferred = globalThis.defer();
-      server.put('/api/v1/crates/:crate_id/follow', globalThis.followDeferred.promise);
-    });
+    let followDeferred = defer();
+    await msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => followDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 
-    await page.evaluate(() => globalThis.followDeferred.resolve({ ok: true }));
+    followDeferred.resolve(HttpResponse.json({ ok: true }));
     await expect(followButton).toHaveText('Unfollow');
     await expect(followButton).toBeEnabled();
     await expect(spinner).toHaveCount(0);
 
-    await page.evaluate(() => {
-      globalThis.unfollowDeferred = globalThis.defer();
-      server.delete('/api/v1/crates/:crate_id/follow', globalThis.unfollowDeferred.promise);
-    });
+    let unfollowDeferred = defer();
+    await msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => unfollowDeferred.promise));
     await followButton.click();
     await expect(followButton).toHaveText('Loading…');
     await expect(followButton).toBeDisabled();
     await expect(spinner).toBeVisible();
 
-    await page.evaluate(() => globalThis.unfollowDeferred.resolve({ ok: true }));
+    unfollowDeferred.resolve(HttpResponse.json({ ok: true }));
     await expect(followButton).toHaveText('Follow');
     await expect(followButton).toBeEnabled();
     await expect(spinner).toHaveCount(0);
   });
 
-  test('error handling when loading following state fails', async ({ mirage, page }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/crates/:crate_id/following', {}, 500);
-    });
+  test('error handling when loading following state fails', async ({ msw, page }) => {
+    await prepare(msw);
+
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.get('/api/v1/crates/:crate_id/following', () => error));
 
     await page.goto('/crates/nanomsg');
     const followButton = page.locator('[data-test-follow-button]');
@@ -87,10 +81,11 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     );
   });
 
-  test('error handling when follow fails', async ({ mirage, page }) => {
-    await mirage.addHook(server => {
-      server.put('/api/v1/crates/:crate_id/follow', {}, 500);
-    });
+  test('error handling when follow fails', async ({ msw, page }) => {
+    await prepare(msw);
+
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => error));
 
     await page.goto('/crates/nanomsg');
     await page.locator('[data-test-follow-button]').click();
@@ -99,13 +94,11 @@ test.describe('Acceptance | Crate following', { tag: '@acceptance' }, () => {
     );
   });
 
-  test('error handling when unfollow fails', async ({ mirage, page }) => {
-    await page.addInitScript(() => {
-      globalThis.following = true;
-    });
-    await mirage.addHook(server => {
-      server.del('/api/v1/crates/:crate_id/follow', {}, 500);
-    });
+  test('error handling when unfollow fails', async ({ msw, page }) => {
+    await prepare(msw, { following: true });
+
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => error));
 
     await page.goto('/crates/nanomsg');
     await page.locator('[data-test-follow-button]').click();

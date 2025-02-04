@@ -11,18 +11,18 @@ if (s.has('devmode')) {
    * @link http://localhost:4200/tests/?notrycatch&devmode&filter=Development%20Mode
    */
   module('Development Mode', function (hooks) {
-    setupApplicationTest(hooks);
+    setupApplicationTest(hooks, { msw: true });
 
     test('authenticated', async function () {
-      let user = this.server.create('user');
+      let user = this.db.user.create();
       this.authenticateAs(user);
 
-      let crate = this.server.create('crate', { name: 'foo' });
-      this.server.create('version', { crate, num: '0.1.0' });
-      this.server.create('crate-ownership', { crate, user });
+      let crate = this.db.crate.create({ name: 'foo' });
+      this.db.version.create({ crate, num: '0.1.0' });
+      this.db.crateOwnership.create({ crate, user });
 
-      crate = this.server.create('crate', { name: 'bar' });
-      this.server.create('version', { crate, num: '1.0.0' });
+      crate = this.db.crate.create({ name: 'bar' });
+      this.db.version.create({ crate, num: '1.0.0' });
 
       let router = this.owner.lookup('service:router');
       router.on('routeDidChange', () => {

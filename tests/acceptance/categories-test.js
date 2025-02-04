@@ -9,17 +9,17 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | categories', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('listing categories', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
-    this.server.create('category', { category: 'API bindings' });
-    this.server.create('category', { category: 'Algorithms' });
-    this.server.createList('crate', 1, { categoryIds: ['algorithms'] });
-    this.server.create('category', { category: 'Asynchronous' });
-    this.server.createList('crate', 15, { categoryIds: ['asynchronous'] });
-    this.server.create('category', { category: 'Everything', crates_cnt: 1234 });
+    this.db.category.create({ category: 'API bindings' });
+    let algos = this.db.category.create({ category: 'Algorithms' });
+    this.db.crate.create({ categories: [algos] });
+    let async = this.db.category.create({ category: 'Asynchronous' });
+    Array.from({ length: 15 }, () => this.db.crate.create({ categories: [async] }));
+    this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
 
     await visit('/categories');
 
@@ -35,14 +35,14 @@ module('Acceptance | categories', function (hooks) {
   test('listing categories (locale: de)', async function (assert) {
     this.owner.lookup('service:intl').locale = 'de';
 
-    this.server.create('category', { category: 'Everything', crates_cnt: 1234 });
+    this.db.category.create({ category: 'Everything', crates_cnt: 1234 });
 
     await visit('/categories');
     assert.dom('[data-test-category="everything"] [data-test-crate-count]').hasText('1.234 crates');
   });
 
   test('category/:category_id index default sort is recent-downloads', async function (assert) {
-    this.server.create('category', { category: 'Algorithms' });
+    this.db.category.create({ category: 'Algorithms' });
 
     await visit('/categories/algorithms');
 
@@ -53,8 +53,8 @@ module('Acceptance | categories', function (hooks) {
   });
 
   test('listing category slugs', async function (assert) {
-    this.server.create('category', { category: 'Algorithms', description: 'Crates for algorithms' });
-    this.server.create('category', { category: 'Asynchronous', description: 'Async crates' });
+    this.db.category.create({ category: 'Algorithms', description: 'Crates for algorithms' });
+    this.db.category.create({ category: 'Asynchronous', description: 'Async crates' });
 
     await visit('/category_slugs');
 

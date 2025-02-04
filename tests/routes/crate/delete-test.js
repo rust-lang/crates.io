@@ -4,21 +4,21 @@ import { module, test } from 'qunit';
 import { defer } from 'rsvp';
 
 import percySnapshot from '@percy/ember';
-import { Response } from 'miragejs';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../../helpers/visit-ignoring-abort';
 
 module('Route: crate.delete', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   function prepare(context) {
-    let user = context.server.create('user');
+    let user = context.db.user.create();
 
-    let crate = context.server.create('crate', { name: 'foo' });
-    context.server.create('version', { crate });
-    context.server.create('crate-ownership', { crate, user });
+    let crate = context.db.crate.create({ name: 'foo' });
+    context.db.version.create({ crate });
+    context.db.crateOwnership.create({ crate, user });
 
     context.authenticateAs(user);
 
@@ -26,8 +26,8 @@ module('Route: crate.delete', function (hooks) {
   }
 
   test('unauthenticated', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate });
 
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
@@ -36,13 +36,13 @@ module('Route: crate.delete', function (hooks) {
   });
 
   test('not an owner', async function (assert) {
-    let user1 = this.server.create('user');
+    let user1 = this.db.user.create();
     this.authenticateAs(user1);
 
-    let user2 = this.server.create('user');
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate });
-    this.server.create('crate-ownership', { crate, user: user2 });
+    let user2 = this.db.user.create();
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate });
+    this.db.crateOwnership.create({ crate, user: user2 });
 
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
@@ -69,7 +69,7 @@ module('Route: crate.delete', function (hooks) {
     let message = 'Crate foo has been successfully deleted.';
     assert.dom('[data-test-notification-message="success"]').hasText(message);
 
-    let crate = this.server.schema.crates.findBy({ name: 'foo' });
+    let crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
     assert.strictEqual(crate, null);
   });
 
@@ -77,7 +77,7 @@ module('Route: crate.delete', function (hooks) {
     prepare(this);
 
     let deferred = defer();
-    this.server.delete('/api/v1/crates/foo', deferred.promise);
+    this.worker.use(http.delete('/api/v1/crates/foo', () => deferred.promise));
 
     await visit('/crates/foo/delete');
     await fillIn('[data-test-reason]', "I don't need this crate anymore");
@@ -87,7 +87,7 @@ module('Route: crate.delete', function (hooks) {
     assert.dom('[data-test-confirmation-checkbox]').isDisabled();
     assert.dom('[data-test-delete-button]').isDisabled();
 
-    deferred.resolve(new Response(204));
+    deferred.resolve();
     await clickPromise;
 
     assert.strictEqual(currentURL(), '/');
@@ -97,7 +97,8 @@ module('Route: crate.delete', function (hooks) {
     prepare(this);
 
     let payload = { errors: [{ detail: 'only crates without reverse dependencies can be deleted after 72 hours' }] };
-    this.server.delete('/api/v1/crates/foo', payload, 422);
+    let error = HttpResponse.json(payload, { status: 422 });
+    this.worker.use(http.delete('/api/v1/crates/foo', () => error));
 
     await visit('/crates/foo/delete');
     await fillIn('[data-test-reason]', "I don't need this crate anymore");

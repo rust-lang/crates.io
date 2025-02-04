@@ -1,6 +1,7 @@
 import { click, currentURL, visit } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
@@ -10,13 +11,13 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | crates page', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   // should match the default set in the crates controller
   const per_page = 50;
 
   test('visiting the crates page from the front page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/');
     await click('[data-test-all-crates-link]');
@@ -29,7 +30,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('visiting the crates page directly', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates');
     await click('[data-test-all-crates-link]');
@@ -40,8 +41,8 @@ module('Acceptance | crates page', function (hooks) {
 
   test('listing crates', async function (assert) {
     for (let i = 1; i <= per_page; i++) {
-      let crate = this.server.create('crate');
-      this.server.create('version', { crate });
+      let crate = this.db.crate.create();
+      this.db.version.create({ crate });
     }
 
     await visit('/crates');
@@ -52,8 +53,8 @@ module('Acceptance | crates page', function (hooks) {
 
   test('navigating to next page of crates', async function (assert) {
     for (let i = 1; i <= per_page + 2; i++) {
-      let crate = this.server.create('crate');
-      this.server.create('version', { crate });
+      let crate = this.db.crate.create();
+      this.db.version.create({ crate });
     }
     const page_start = per_page + 1;
     const total = per_page + 2;
@@ -67,7 +68,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('crates default sort is by recent downloads', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates');
 
@@ -75,7 +76,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('downloads appears for each crate on crate list', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates');
 
@@ -84,7 +85,7 @@ module('Acceptance | crates page', function (hooks) {
   });
 
   test('recent downloads appears for each crate on crate list', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates');
 

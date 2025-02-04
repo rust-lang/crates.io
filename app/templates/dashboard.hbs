@@ -45,7 +45,7 @@
     </h2>
 
     <div local-class="feed">
-      <ul local-class="feed-list">
+      <ul local-class="feed-list" data-test-feed-list>
         {{#each this.myFeed as |version|}}
           <li local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>

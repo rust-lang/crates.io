@@ -4,12 +4,11 @@ import { module, test } from 'qunit';
 import { hbs } from 'ember-cli-htmlbars';
 
 import { setupRenderingTest } from 'crates-io/tests/helpers';
-
-import setupMirage from '../helpers/setup-mirage';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Component | PrivilegedAction', hooks => {
   setupRenderingTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   hooks.beforeEach(function () {
     // Adds a utility function that renders a PrivilegedAction with all the
@@ -34,7 +33,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('unprivileged block is shown to a logged in user without access', async function (assert) {
-    const user = this.server.create('user');
+    const user = this.db.user.create();
     this.authenticateAs(user);
 
     await this.renderComponent(false);
@@ -44,7 +43,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in user with access', async function (assert) {
-    const user = this.server.create('user');
+    const user = this.db.user.create();
     this.authenticateAs(user);
 
     await this.renderComponent(true);
@@ -54,7 +53,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('placeholder block is shown to a logged in admin without sudo', async function (assert) {
-    const user = this.server.create('user', { isAdmin: true });
+    const user = this.db.user.create({ isAdmin: true });
     this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
@@ -69,7 +68,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin without sudo with access', async function (assert) {
-    const user = this.server.create('user', { isAdmin: true });
+    const user = this.db.user.create({ isAdmin: true });
     this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
@@ -84,7 +83,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in admin with sudo', async function (assert) {
-    const user = this.server.create('user', { isAdmin: true });
+    const user = this.db.user.create({ isAdmin: true });
     this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');
@@ -100,7 +99,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('automatic placeholder block', async function (assert) {
-    const user = this.server.create('user', { isAdmin: true });
+    const user = this.db.user.create({ isAdmin: true });
     this.authenticateAs(user);
 
     const session = this.owner.lookup('service:session');

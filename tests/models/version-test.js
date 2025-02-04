@@ -1,20 +1,21 @@
 import { module, test } from 'qunit';
 
-import { setupMirage, setupTest } from 'crates-io/tests/helpers';
+import { setupTest } from 'crates-io/tests/helpers';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Model | Version', function (hooks) {
   setupTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
   });
 
   test('isNew', async function (assert) {
-    let { server, store } = this;
+    let { db, store } = this;
 
-    let crate = server.create('crate');
-    server.create('version', { crate, created_at: '2010-06-16T21:30:45Z' });
+    let crate = db.crate.create();
+    db.version.create({ crate, created_at: '2010-06-16T21:30:45Z' });
 
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.versions).slice();
@@ -69,10 +70,10 @@ module('Model | Version', function (hooks) {
 
   module('semver', function () {
     async function prepare(context, { num }) {
-      let { server, store } = context;
+      let { db, store } = context;
 
-      let crate = server.create('crate');
-      server.create('version', { crate, num });
+      let crate = db.crate.create();
+      db.version.create({ crate, num });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();
@@ -153,17 +154,17 @@ module('Model | Version', function (hooks) {
         '0.3.3',
         '0.3.2',
         '0.3.1',
-        '0.3.0-alpha.01',
         '0.3.0',
+        '0.3.0-alpha.01',
         '0.2.1',
         '0.2.0',
         '0.1.2',
         '0.1.1',
       ];
 
-      let crate = this.server.create('crate');
-      for (let num of nums) {
-        this.server.create('version', { crate, num });
+      let crate = this.db.crate.create();
+      for (let num of nums.toReversed()) {
+        this.db.version.create({ crate, num });
       }
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
@@ -181,8 +182,8 @@ module('Model | Version', function (hooks) {
           { num: '0.3.3', isHighestOfReleaseTrack: false },
           { num: '0.3.2', isHighestOfReleaseTrack: false },
           { num: '0.3.1', isHighestOfReleaseTrack: false },
-          { num: '0.3.0-alpha.01', isHighestOfReleaseTrack: false },
           { num: '0.3.0', isHighestOfReleaseTrack: false },
+          { num: '0.3.0-alpha.01', isHighestOfReleaseTrack: false },
           { num: '0.2.1', isHighestOfReleaseTrack: true },
           { num: '0.2.0', isHighestOfReleaseTrack: false },
           { num: '0.1.2', isHighestOfReleaseTrack: true },
@@ -192,10 +193,10 @@ module('Model | Version', function (hooks) {
     });
 
     test('ignores yanked versions', async function (assert) {
-      let crate = this.server.create('crate');
-      this.server.create('version', { crate, num: '0.4.0' });
-      this.server.create('version', { crate, num: '0.4.1' });
-      this.server.create('version', { crate, num: '0.4.2', yanked: true });
+      let crate = this.db.crate.create();
+      this.db.version.create({ crate, num: '0.4.0' });
+      this.db.version.create({ crate, num: '0.4.1' });
+      this.db.version.create({ crate, num: '0.4.2', yanked: true });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
@@ -203,17 +204,17 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
-          { num: '0.4.1', isHighestOfReleaseTrack: true },
           { num: '0.4.2', isHighestOfReleaseTrack: false },
+          { num: '0.4.1', isHighestOfReleaseTrack: true },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
     });
 
     test('handles newly released versions correctly', async function (assert) {
-      let crate = this.server.create('crate');
-      this.server.create('version', { crate, num: '0.4.0' });
-      this.server.create('version', { crate, num: '0.4.1' });
+      let crate = this.db.crate.create();
+      this.db.version.create({ crate, num: '0.4.0' });
+      this.db.version.create({ crate, num: '0.4.1' });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
@@ -221,23 +222,23 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
           { num: '0.4.1', isHighestOfReleaseTrack: true },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
 
-      this.server.create('version', { crate, num: '0.4.2' });
-      this.server.create('version', { crate, num: '0.4.3', yanked: true });
+      this.db.version.create({ crate, num: '0.4.2' });
+      this.db.version.create({ crate, num: '0.4.3', yanked: true });
       crateRecord = await this.store.findRecord('crate', crate.name, { reload: true });
       versions = (await crateRecord.loadVersionsTask.perform({ reload: true })).slice();
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
         [
-          { num: '0.4.0', isHighestOfReleaseTrack: false },
-          { num: '0.4.1', isHighestOfReleaseTrack: false },
-          { num: '0.4.2', isHighestOfReleaseTrack: true },
           { num: '0.4.3', isHighestOfReleaseTrack: false },
+          { num: '0.4.2', isHighestOfReleaseTrack: true },
+          { num: '0.4.1', isHighestOfReleaseTrack: false },
+          { num: '0.4.0', isHighestOfReleaseTrack: false },
         ],
       );
     });
@@ -245,10 +246,10 @@ module('Model | Version', function (hooks) {
 
   module('featuresList', function () {
     async function prepare(context, { features }) {
-      let { server, store } = context;
+      let { db, store } = context;
 
-      let crate = server.create('crate');
-      server.create('version', { crate, features });
+      let crate = db.crate.create();
+      db.version.create({ crate, features });
 
       let crateRecord = await store.findRecord('crate', crate.name);
       let versions = (await crateRecord.versions).slice();
@@ -260,8 +261,8 @@ module('Model | Version', function (hooks) {
       assert.deepEqual(version.featureList, []);
     });
 
-    test('`features: null` results in empty list', async function (assert) {
-      let version = await prepare(this, { features: null });
+    test('`features: undefined` results in empty list', async function (assert) {
+      let version = await prepare(this, { features: undefined });
       assert.deepEqual(version.featureList, []);
     });
 
@@ -325,10 +326,10 @@ module('Model | Version', function (hooks) {
   });
 
   test('`published_by` relationship is assigned correctly', async function (assert) {
-    let user = this.server.create('user', { name: 'JD' });
+    let user = this.db.user.create({ name: 'JD' });
 
-    let crate = this.server.create('crate');
-    this.server.create('version', { crate, publishedBy: user });
+    let crate = this.db.crate.create();
+    this.db.version.create({ crate, publishedBy: user });
 
     let crateRecord = await this.store.findRecord('crate', crate.name);
     assert.ok(crateRecord);

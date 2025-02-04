@@ -1,0 +1,29 @@
+{
+  "name": "@crates-io/msw",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "main": "index.js",
+  "homepage": "https://github.com/rust-lang/crates.io#readme",
+  "bugs": {
+    "url": "https://github.com/rust-lang/crates.io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-lang/crates.io.git"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "author": "",
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@mswjs/data": "0.16.2",
+    "msw": "2.7.0",
+    "semver": "7.7.1"
+  },
+  "devDependencies": {
+    "happy-dom": "16.8.1",
+    "vitest": "3.0.5"
+  }
+}

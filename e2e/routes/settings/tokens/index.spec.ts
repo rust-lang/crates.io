@@ -1,26 +1,17 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('/settings/tokens', { tag: '@routes' }, () => {
-  test.beforeEach(async ({ mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', {
-        login: 'johnnydee',
-        name: 'John Doe',
-        email: 'john@doe.com',
-        avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
-      });
-
-      authenticateAs(user);
-
-      globalThis.user = user;
+  test('reloads all tokens from the server', async ({ page, msw }) => {
+    let user = msw.db.user.create({
+      login: 'johnnydee',
+      name: 'John Doe',
+      email: 'john@doe.com',
+      avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
-  });
 
-  test('reloads all tokens from the server', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      const user = globalThis.user;
-      server.create('api-token', { user, name: 'token-1' });
-    });
+    await msw.authenticateAs(user);
+
+    msw.db.apiToken.create({ user, name: 'token-1' });
 
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');

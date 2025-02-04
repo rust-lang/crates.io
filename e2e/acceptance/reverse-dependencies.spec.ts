@@ -1,71 +1,51 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@acceptance' }, () => {
-  test.beforeEach(async ({ page, mirage }) => {
-    await page.addInitScript(() => {
-      globalThis.foo = { name: 'foo' };
-      globalThis.bar = { name: 'bar' };
-      globalThis.baz = { name: 'baz' };
-    });
-    await mirage.addHook(server => {
-      console.log('[>>>] mirage');
-      let foo = server.create('crate', globalThis.foo);
-      server.create('version', { crate: foo });
+  function prepare(msw) {
+    let foo = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate: foo });
 
-      let bar = server.create('crate', globalThis.bar);
-      server.create('version', { crate: bar });
+    let bar = msw.db.crate.create({ name: 'bar' });
+    let barV = msw.db.version.create({ crate: bar });
 
-      let baz = server.create('crate', globalThis.baz);
-      server.create('version', { crate: baz });
+    let baz = msw.db.crate.create({ name: 'baz' });
+    let bazV = msw.db.version.create({ crate: baz });
 
-      server.create('dependency', { crate: foo, version: bar.versions.models[0] });
-      server.create('dependency', { crate: foo, version: baz.versions.models[0] });
+    msw.db.dependency.create({ crate: foo, version: barV });
+    msw.db.dependency.create({ crate: foo, version: bazV });
 
-      globalThis.foo = foo;
-      globalThis.bar = bar;
-      globalThis.baz = baz;
-    });
+    return { foo, bar, baz };
+  }
 
-    // this allows us to evaluate the name before goingo to the actual page
-    await page.goto('about:blank');
-  });
-
-  test('shows a list of crates depending on the selected crate', async ({ page }) => {
-    const foo = await page.evaluate(() => globalThis.foo);
+  test('shows a list of crates depending on the selected crate', async ({ page, msw }) => {
+    let { foo, bar, baz } = prepare(msw);
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
 
-    const { bar, baz } = await page.evaluate(() => {
-      const val = item => ({ name: item.name, description: item.description });
-      return { bar: val(bar), baz: val(baz) };
-    });
-
     await expect(page.locator('[data-test-row]')).toHaveCount(2);
     const row0 = page.locator('[data-test-row="0"]');
-    await expect(row0.locator('[data-test-crate-name]')).toHaveText(bar.name);
-    await expect(row0.locator('[data-test-description]')).toHaveText(bar.description);
+    await expect(row0.locator('[data-test-crate-name]')).toHaveText(baz.name);
+    await expect(row0.locator('[data-test-description]')).toHaveText(baz.description);
     const row1 = page.locator('[data-test-row="1"]');
-    await expect(row1.locator('[data-test-crate-name]')).toHaveText(baz.name);
-    await expect(row1.locator('[data-test-description]')).toHaveText(baz.description);
+    await expect(row1.locator('[data-test-crate-name]')).toHaveText(bar.name);
+    await expect(row1.locator('[data-test-description]')).toHaveText(bar.description);
   });
 
-  test('supports pagination', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let foo = globalThis.foo;
+  test('supports pagination', async ({ page, msw }) => {
+    let { foo } = prepare(msw);
 
-      for (let i = 0; i < 20; i++) {
-        let crate = server.create('crate');
-        let version = server.create('version', { crate });
-        server.create('dependency', { crate: foo, version });
-      }
-    });
+    for (let i = 0; i < 20; i++) {
+      let crate = msw.db.crate.create();
+      let version = msw.db.version.create({ crate });
+      msw.db.dependency.create({ crate: foo, version });
+    }
 
     const row = page.locator('[data-test-row]');
     const currentRows = page.locator('[data-test-current-rows]');
     const totalRows = page.locator('[data-test-total-rows]');
 
-    const foo = await page.evaluate(() => globalThis.foo);
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
     await expect(row).toHaveCount(10);
@@ -85,12 +65,11 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await expect(totalRows).toHaveText('22');
   });
 
-  test('shows a generic error if the server is broken', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/crates/:crate_id/reverse_dependencies', {}, 500);
-    });
+  test('shows a generic error if the server is broken', async ({ page, msw }) => {
+    let { foo } = prepare(msw);
 
-    const foo = await page.evaluate(() => globalThis.foo);
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL('/');
@@ -99,13 +78,12 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     );
   });
 
-  test('shows a detailed error if available', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
-      server.get('/api/v1/crates/:crate_id/reverse_dependencies', payload, 400);
-    });
+  test('shows a detailed error if available', async ({ page, msw }) => {
+    let { foo } = prepare(msw);
 
-    const foo = await page.evaluate(() => globalThis.foo);
+    let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
+    let error = HttpResponse.json(payload, { status: 400 });
+    await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL('/');

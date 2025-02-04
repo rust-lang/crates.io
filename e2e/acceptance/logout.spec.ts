@@ -1,11 +1,9 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | Logout', { tag: '@acceptance' }, () => {
-  test('successful logout', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { name: 'John Doe' });
-      authenticateAs(user);
-    });
+  test('successful logout', async ({ page, msw }) => {
+    let user = msw.db.user.create({ name: 'John Doe' });
+    await msw.authenticateAs(user);
 
     await page.goto('/crates');
     await expect(page).toHaveURL('/crates');

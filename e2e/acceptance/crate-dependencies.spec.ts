@@ -1,10 +1,10 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { loadFixtures } from '@crates-io/msw/fixtures';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, () => {
-  test('shows the lists of dependencies', async ({ page, mirage, percy, a11y }) => {
-    await mirage.addHook(server => {
-      server.loadFixtures();
-    });
+  test('shows the lists of dependencies', async ({ page, msw, percy, a11y }) => {
+    loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg/dependencies');
     await expect(page).toHaveURL('/crates/nanomsg/0.6.1/dependencies');
@@ -18,11 +18,9 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await a11y.audit();
   });
 
-  test('empty list case', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '0.6.1' });
-    });
+  test('empty list case', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate, num: '0.6.1' });
 
     await page.goto('/crates/nanomsg/dependencies');
 
@@ -41,10 +39,8 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
 
-  test('shows an error page if crate fails to load', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/crates/:crate_name', {}, 500);
-    });
+  test('shows an error page if crate fails to load', async ({ page, msw }) => {
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
@@ -54,11 +50,9 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
 
-  test('shows an error page if version is not found', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate, num: '2.0.0' });
-    });
+  test('shows an error page if version is not found', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate, num: '2.0.0' });
 
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
@@ -68,12 +62,10 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
 
-  test('shows an error page if versions fail to load', async ({ page, mirage, ember }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate, num: '2.0.0' });
-      server.get('/api/v1/crates/:crate_name/versions', {}, 500);
-    });
+  test('shows an error page if versions fail to load', async ({ page, msw, ember }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate, num: '2.0.0' });
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/1.0.0/dependencies');
 
@@ -84,13 +76,12 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
 
-  test('shows error message if loading of dependencies fails', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'foo' });
-      server.create('version', { crate, num: '1.0.0' });
+  test('shows error message if loading of dependencies fails', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate, num: '1.0.0' });
 
-      server.get('/api/v1/crates/:crate_name/:version_num/dependencies', {}, 500);
-    });
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name/:version_num/dependencies', () => error));
 
     await page.goto('/crates/foo/1.0.0/dependencies');
     await expect(page).toHaveURL('/crates/foo/1.0.0/dependencies');
@@ -100,21 +91,20 @@ test.describe('Acceptance | crate dependencies page', { tag: '@acceptance' }, ()
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
 
-  test('hides description if loading of dependency details fails', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'nanomsg' });
-      let version = server.create('version', { crate, num: '0.6.1' });
+  test('hides description if loading of dependency details fails', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    let version = msw.db.version.create({ crate, num: '0.6.1' });
 
-      let foo = server.create('crate', { name: 'foo', description: 'This is the foo crate' });
-      server.create('version', { crate: foo, num: '1.0.0' });
-      server.create('dependency', { crate: foo, version, req: '^1.0.0', kind: 'normal' });
+    let foo = msw.db.crate.create({ name: 'foo', description: 'This is the foo crate' });
+    msw.db.version.create({ crate: foo, num: '1.0.0' });
+    msw.db.dependency.create({ crate: foo, version, req: '^1.0.0', kind: 'normal' });
 
-      let bar = server.create('crate', { name: 'bar', description: 'This is the bar crate' });
-      server.create('version', { crate: bar, num: '2.3.4' });
-      server.create('dependency', { crate: bar, version, req: '^2.0.0', kind: 'normal' });
+    let bar = msw.db.crate.create({ name: 'bar', description: 'This is the bar crate' });
+    msw.db.version.create({ crate: bar, num: '2.3.4' });
+    msw.db.dependency.create({ crate: bar, version, req: '^2.0.0', kind: 'normal' });
 
-      server.get('/api/v1/crates', {}, 500);
-    });
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.get('/api/v1/crates', () => error));
 
     await page.goto('/crates/nanomsg/dependencies');
     await expect(page).toHaveURL('/crates/nanomsg/0.6.1/dependencies');

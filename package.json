@@ -42,24 +42,25 @@
   },
   "dependencies": {
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/ember": "8.50.0",
+    "@sentry/ember": "8.54.0",
     "chart.js": "4.4.7",
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
     "mermaid": "11.4.1",
     "pretty-bytes": "6.1.1",
-    "semver": "7.6.3"
+    "semver": "7.7.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.1",
-    "@babel/core": "7.26.0",
+    "@babel/core": "7.26.7",
     "@babel/eslint-parser": "7.26.5",
     "@babel/plugin-proposal-decorators": "7.25.9",
+    "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
     "@ember/render-modifiers": "2.1.0",
     "@ember/string": "3.1.1",
-    "@ember/test-helpers": "4.0.4",
+    "@ember/test-helpers": "4.0.5",
     "@ember/test-waiters": "3.1.0",
     "@embroider/compat": "3.8.0",
     "@embroider/core": "3.5.0",
@@ -67,16 +68,17 @@
     "@glimmer/component": "2.0.0",
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.6.0",
-    "@percy/cli": "1.30.6",
+    "@percy/cli": "1.30.7",
     "@percy/ember": "4.2.0",
     "@percy/playwright": "1.0.7",
-    "@playwright/test": "1.49.1",
+    "@playwright/test": "1.50.1",
     "@sinonjs/fake-timers": "14.0.0",
     "@types/ember": "4.0.11",
-    "@types/node": "22.10.7",
+    "@types/node": "22.13.1",
     "@types/sinonjs__fake-timers": "8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
+    "broccoli-funnel": "3.0.8",
     "ember-a11y-testing": "7.0.2",
     "ember-auto-import": "2.10.0",
     "ember-cli": "6.1.0",
@@ -88,17 +90,17 @@
     "ember-cli-head": "2.0.0",
     "ember-cli-htmlbars": "6.3.0",
     "ember-cli-inject-live-reload": "2.1.0",
-    "ember-cli-mirage": "3.0.4",
     "ember-cli-notifications": "9.1.0",
     "ember-click-outside": "6.1.1",
     "ember-concurrency": "4.0.2",
     "ember-css-modules": "2.1.0",
-    "ember-data": "5.3.9",
+    "ember-data": "5.3.10",
     "ember-disable-prototype-extensions": "1.1.3",
     "ember-error-route": "0.2.0",
     "ember-event-helpers": "0.1.1",
     "ember-exam": "9.0.0",
     "ember-fetch": "8.1.2",
+    "ember-inflector": "5.0.2",
     "ember-keyboard": "9.0.1",
     "ember-link": "3.3.0",
     "ember-load-initializers": "3.0.1",
@@ -115,9 +117,9 @@
     "ember-truth-helpers": "4.0.3",
     "ember-web-app": "5.0.1",
     "ember-window-mock": "1.0.2",
-    "eslint": "9.18.0",
+    "eslint": "9.19.0",
     "eslint-config-prettier": "10.0.1",
-    "eslint-plugin-ember": "12.3.3",
+    "eslint-plugin-ember": "12.5.0",
     "eslint-plugin-ember-concurrency": "0.5.1",
     "eslint-plugin-import-helpers": "2.0.1",
     "eslint-plugin-prettier": "5.2.3",
@@ -127,12 +129,13 @@
     "globby": "14.0.2",
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
-    "miragejs": "0.1.48",
+    "msw": "2.7.0",
     "normalize.css": "8.0.1",
     "nyc": "17.1.0",
+    "playwright-msw": "3.0.1",
     "postcss-preset-env": "10.1.3",
     "prettier": "3.4.2",
-    "qunit": "2.24.0",
+    "qunit": "2.24.1",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.4.0",
     "tracked-built-ins": "4.0.0",
@@ -143,8 +146,7 @@
     "ember-get-config": "2.1.1",
     "ember-inflector": "5.0.2",
     "ember-modifier": "4.2.0",
-    "ember-svg-jar>cheerio": "1.0.0-rc.12",
-    "miragejs": "0.1.48"
+    "ember-svg-jar>cheerio": "1.0.0-rc.12"
   },
   "pnpm": {
     "peerDependencyRules": {
@@ -158,13 +160,13 @@
     }
   },
   "engines": {
-    "node": "22.13.0",
-    "pnpm": "9.15.4"
+    "node": "22.13.1",
+    "pnpm": "9.15.5"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "22.13.0"
+    "node": "22.13.1"
   }
 }

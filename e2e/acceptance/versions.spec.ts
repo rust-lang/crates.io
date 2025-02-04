@@ -1,14 +1,12 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => {
-  test('show versions sorted by date', async ({ page, mirage, percy }) => {
-    await mirage.addHook(server => {
-      let crate = server.create('crate', { name: 'nanomsg' });
-      server.create('version', { crate, num: '0.1.0', created_at: '2017-01-01' });
-      server.create('version', { crate, num: '0.2.0', created_at: '2018-01-01' });
-      server.create('version', { crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-      server.create('version', { crate, num: '0.2.1', created_at: '2020-01-01' });
-    });
+  test('show versions sorted by date', async ({ page, msw, percy }) => {
+    let crate = msw.db.crate.create({ name: 'nanomsg' });
+    msw.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    msw.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    msw.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    msw.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await page.goto('/crates/nanomsg/versions');
     await expect(page).toHaveURL('/crates/nanomsg/versions');

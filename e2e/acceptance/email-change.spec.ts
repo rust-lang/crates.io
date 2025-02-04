@@ -1,12 +1,10 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
-  test('happy path', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { email: 'old@email.com' });
-      globalThis.user = user;
-      authenticateAs(user);
-    });
+  test('happy path', async ({ page, msw }) => {
+    let user = msw.db.user.create({ email: 'old@email.com' });
+    await msw.authenticateAs(user);
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');
@@ -39,19 +37,15 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     await expect(emailInput.locator('[data-test-verification-sent]')).toBeVisible();
     await expect(emailInput.locator('[data-test-resend-button]')).toBeEnabled();
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.email === expect, 'new@email.com');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, false);
-    await page.waitForFunction(() => !!globalThis.user.emailVerificationToken);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.email).toBe('new@email.com');
+    await expect(user.emailVerified).toBe(false);
+    await expect(user.emailVerificationToken).toBeDefined();
   });
 
-  test('happy path with `email: null`', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { email: undefined });
-
-      authenticateAs(user);
-      globalThis.user = user;
-    });
+  test('happy path with `email: null`', async ({ page, msw }) => {
+    let user = msw.db.user.create({ email: undefined });
+    await msw.authenticateAs(user);
 
     await page.goto('/settings/profile');
     await expect(page).toHaveURL('/settings/profile');
@@ -80,19 +74,15 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     await expect(emailInput.locator('[data-test-verification-sent]')).toBeVisible();
     await expect(emailInput.locator('[data-test-resend-button]')).toBeEnabled();
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.email === expect, 'new@email.com');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, false);
-    await page.waitForFunction(() => !!globalThis.user.emailVerificationToken);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.email).toBe('new@email.com');
+    await expect(user.emailVerified).toBe(false);
+    await expect(user.emailVerificationToken).toBeDefined();
   });
 
-  test('cancel button', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { email: 'old@email.com' });
-
-      authenticateAs(user);
-      globalThis.user = user;
-    });
+  test('cancel button', async ({ page, msw }) => {
+    let user = msw.db.user.create({ email: 'old@email.com' });
+    await msw.authenticateAs(user);
 
     await page.goto('/settings/profile');
     const emailInput = page.locator('[data-test-email-input]');
@@ -106,21 +96,18 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
     await expect(emailInput.locator('[data-test-not-verified]')).toHaveCount(0);
     await expect(emailInput.locator('[data-test-verification-sent]')).toHaveCount(0);
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.email === expect, 'old@email.com');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, true);
-    await page.waitForFunction(() => !globalThis.user.emailVerificationToken);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.email).toBe('old@email.com');
+    await expect(user.emailVerified).toBe(true);
+    await expect(user.emailVerificationToken).toBe(null);
   });
 
-  test('server error', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      let user = server.create('user', { email: 'old@email.com' });
+  test('server error', async ({ page, msw }) => {
+    let user = msw.db.user.create({ email: 'old@email.com' });
+    await msw.authenticateAs(user);
 
-      authenticateAs(user);
-      globalThis.user = user;
-
-      server.put('/api/v1/users/:user_id', {}, 500);
-    });
+    let error = HttpResponse.json({}, { status: 500 });
+    await msw.worker.use(http.put('/api/v1/users/:user_id', () => error));
 
     await page.goto('/settings/profile');
     const emailInput = page.locator('[data-test-email-input]');
@@ -134,19 +121,16 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
       'Error in saving email: An unknown error occurred while saving this email.',
     );
 
-    await page.evaluate(() => globalThis.user.reload());
-    await page.waitForFunction(expect => globalThis.user.email === expect, 'old@email.com');
-    await page.waitForFunction(expect => globalThis.user.emailVerified === expect, true);
-    await page.waitForFunction(() => !globalThis.user.emailVerificationToken);
+    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    await expect(user.email).toBe('old@email.com');
+    await expect(user.emailVerified).toBe(true);
+    await expect(user.emailVerificationToken).toBe(null);
   });
 
   test.describe('Resend button', function () {
-    test('happy path', async ({ page, mirage }) => {
-      await mirage.addHook(server => {
-        let user = server.create('user', { email: 'john@doe.com', emailVerificationToken: 'secret123' });
-
-        authenticateAs(user);
-      });
+    test('happy path', async ({ page, msw }) => {
+      let user = msw.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
+      await msw.authenticateAs(user);
 
       await page.goto('/settings/profile');
       await expect(page).toHaveURL('/settings/profile');
@@ -165,14 +149,12 @@ test.describe('Acceptance | Email Change', { tag: '@acceptance' }, () => {
       await expect(button).toHaveText('Sent!');
     });
 
-    test('server error', async ({ page, mirage }) => {
-      await mirage.addHook(server => {
-        let user = server.create('user', { email: 'john@doe.com', emailVerificationToken: 'secret123' });
+    test('server error', async ({ page, msw }) => {
+      let user = msw.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
+      await msw.authenticateAs(user);
 
-        authenticateAs(user);
-
-        server.put('/api/v1/users/:user_id/resend', {}, 500);
-      });
+      let error = HttpResponse.json({}, { status: 500 });
+      await msw.worker.use(http.put('/api/v1/users/:user_id/resend', () => error));
 
       await page.goto('/settings/profile');
       await expect(page).toHaveURL('/settings/profile');

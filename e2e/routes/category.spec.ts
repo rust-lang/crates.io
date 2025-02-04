@@ -1,4 +1,5 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Route | category', { tag: '@routes' }, () => {
   test("shows an error message if the category can't be found", async ({ page }) => {
@@ -10,10 +11,8 @@ test.describe('Route | category', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
 
-  test('server error causes the error page to be shown', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.get('/api/v1/categories/:categoryId', {}, 500);
-    });
+  test('server error causes the error page to be shown', async ({ page, msw }) => {
+    msw.worker.use(http.get('/api/v1/categories/:categoryId', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/categories/foo');
     await expect(page).toHaveURL('/categories/foo');
@@ -23,10 +22,8 @@ test.describe('Route | category', { tag: '@routes' }, () => {
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
 
-  test('updates the search field when the categories route is accessed', async ({ page, mirage }) => {
-    await mirage.addHook(server => {
-      server.create('category', { category: 'foo' });
-    });
+  test('updates the search field when the categories route is accessed', async ({ page, msw }) => {
+    msw.db.category.create({ category: 'foo' });
 
     const searchInput = page.locator('[data-test-search-input]');
     await page.goto('/');

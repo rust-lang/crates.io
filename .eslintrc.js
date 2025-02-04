@@ -107,15 +107,6 @@ module.exports = {
       },
     },
 
-    // mirage files
-    {
-      files: ['mirage/**/*.js'],
-      rules: {
-        // disabled because of different `.find()` meaning
-        'unicorn/no-array-callback-reference': 'off',
-      },
-    },
-
     // node files
     {
       files: [

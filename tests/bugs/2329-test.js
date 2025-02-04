@@ -3,32 +3,36 @@ import { module, test } from 'qunit';
 
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #2329', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
   setupWindowMock(hooks);
 
   test('is fixed', async function (assert) {
-    let user = this.server.create('user');
+    let { db } = this;
 
-    let foobar = this.server.create('crate', { name: 'foo-bar' });
-    this.server.create('crate-ownership', { crate: foobar, user, emailNotifications: true });
-    this.server.create('version', { crate: foobar });
+    let user = this.db.user.create();
 
-    let bar = this.server.create('crate', { name: 'barrrrr' });
-    this.server.create('crate-ownership', { crate: bar, user, emailNotifications: false });
-    this.server.create('version', { crate: bar });
+    let foobar = this.db.crate.create({ name: 'foo-bar' });
+    this.db.crateOwnership.create({ crate: foobar, user, emailNotifications: true });
+    this.db.version.create({ crate: foobar });
 
-    this.server.get('/api/private/session/begin', { url: 'url-to-github-including-state-secret' });
+    let bar = this.db.crate.create({ name: 'barrrrr' });
+    this.db.crateOwnership.create({ crate: bar, user, emailNotifications: false });
+    this.db.version.create({ crate: bar });
 
-    this.server.get('/api/private/session/authorize', () => {
-      this.server.create('mirage-session', { user });
-      return { ok: true };
-    });
+    this.worker.use(
+      http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
+      http.get('/api/private/session/authorize', () => {
+        db.mswSession.create({ user });
+        return HttpResponse.json({ ok: true });
+      }),
+    );
 
     let fakeWindow = { document: { write() {}, close() {} }, close() {} };
     window.open = () => fakeWindow;

@@ -4,24 +4,23 @@ import { module, test } from 'qunit';
 import { hbs } from 'ember-cli-htmlbars';
 
 import { setupRenderingTest } from 'crates-io/tests/helpers';
-
-import setupMirage from '../helpers/setup-mirage';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Component | VersionList::Row', function (hooks) {
   setupRenderingTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   test('handle non-standard semver strings', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate, num: '0.4.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
-    this.server.create('version', { crate, num: '0.3.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '0.4.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
+    this.db.version.create({ crate, num: '0.3.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.loadVersionsTask.perform()).slice();
     await crateRecord.loadOwnerUserTask.perform();
-    this.firstVersion = versions[0];
-    this.secondVersion = versions[1];
+    this.firstVersion = versions.find(it => it.num === '0.4.0-alpha.01');
+    this.secondVersion = versions.find(it => it.num === '0.3.0-alpha.01');
 
     await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
     assert.dom('[data-test-release-track] svg').exists();
@@ -33,9 +32,9 @@ module('Component | VersionList::Row', function (hooks) {
   });
 
   test('handle node-semver parsing errors', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
+    let crate = this.db.crate.create({ name: 'foo' });
     let version = '18446744073709551615.18446744073709551615.18446744073709551615';
-    this.server.create('version', { crate, num: version });
+    this.db.version.create({ crate, num: version });
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
@@ -48,22 +47,22 @@ module('Component | VersionList::Row', function (hooks) {
   });
 
   test('pluralize "feature" only when appropriate', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', {
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({
       crate,
       num: '0.1.0',
       features: {},
       created_at: Date.now(),
       updated_at: Date.now(),
     });
-    this.server.create('version', {
+    this.db.version.create({
       crate,
       num: '0.2.0',
       features: { one: [] },
       created_at: Date.now(),
       updated_at: Date.now(),
     });
-    this.server.create('version', {
+    this.db.version.create({
       crate,
       num: '0.3.0',
       features: { one: [], two: [] },
@@ -75,9 +74,9 @@ module('Component | VersionList::Row', function (hooks) {
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.loadVersionsTask.perform()).slice();
     await crateRecord.loadOwnerUserTask.perform();
-    this.firstVersion = versions[0];
-    this.secondVersion = versions[1];
-    this.thirdVersion = versions[2];
+    this.firstVersion = versions.find(it => it.num === '0.1.0');
+    this.secondVersion = versions.find(it => it.num === '0.2.0');
+    this.thirdVersion = versions.find(it => it.num === '0.3.0');
 
     await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
     assert.dom('[data-test-feature-list]').doesNotExist();

@@ -6,6 +6,17 @@ module.exports = function (defaults) {
   let env = EmberApp.env();
   let isProd = env === 'production';
 
+  let extraPublicTrees = [];
+  if (!isProd) {
+    const path = require('node:path');
+    const funnel = require('broccoli-funnel');
+
+    let mswPath = require.resolve('msw/mockServiceWorker.js');
+    let mswParentPath = path.dirname(mswPath);
+
+    extraPublicTrees.push(funnel(mswParentPath, { include: ['mockServiceWorker.js'] }));
+  }
+
   let browsers = require('./config/targets').browsers;
 
   let app = new EmberApp(defaults, {
@@ -63,11 +74,25 @@ module.exports = function (defaults) {
 
   const { Webpack } = require('@embroider/webpack');
   return require('@embroider/compat').compatBuild(app, Webpack, {
+    extraPublicTrees,
     staticAddonTrees: true,
     staticAddonTestSupportTrees: true,
     staticModifiers: true,
     packagerOptions: {
       webpackConfig: {
+        externals: ({ request, context }, callback) => {
+          // Prevent `@mswjs/data` from bundling the `msw` package.
+          //
+          // `@crates-io/msw` is importing the ESM build of the `msw` package, but
+          // `@mswjs/data` is trying to import the CJS build instead. This is causing
+          // a conflict within webpack. Since we don't need the functionality within
+          // `@mswjs/data` that requires the `msw` package, we can safely ignore this
+          // import.
+          if (request == 'msw' && context.includes('@mswjs/data')) {
+            return callback(null, request, 'global');
+          }
+          callback();
+        },
         resolve: {
           fallback: {
             // disables `crypto` import warning in `axe-core`

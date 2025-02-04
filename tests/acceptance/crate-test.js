@@ -1,9 +1,11 @@
 import { click, currentRouteName, currentURL, waitFor } from '@ember/test-helpers';
 import { module, skip, test } from 'qunit';
 
+import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
@@ -11,11 +13,11 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate page', function (hooks) {
-  setupApplicationTest(hooks);
+  setupApplicationTest(hooks, { msw: true });
 
   test('visiting a crate page from the front page', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg', newest_version: '0.6.1' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -28,9 +30,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1', rust_version: '1.69' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+    this.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
 
     await visit('/crates/nanomsg');
 
@@ -47,9 +49,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/');
 
@@ -63,9 +65,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/0.6.0', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
 
@@ -91,7 +93,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('other crate loading error shows an error message', async function (assert) {
-    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+    this.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await visit('/crates/nanomsg');
     assert.strictEqual(currentURL(), '/crates/nanomsg');
@@ -102,9 +104,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.7.0');
 
@@ -116,11 +118,11 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('other versions loading error shows an error message', async function (assert) {
-    let crate = this.server.create('crate', { name: 'nanomsg' });
-    this.server.create('version', { crate, num: '0.6.0' });
-    this.server.create('version', { crate, num: '0.6.1' });
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+    this.db.version.create({ crate, num: '0.6.1' });
 
-    this.server.get('/api/v1/crates/:crate_name/versions', {}, 500);
+    this.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -132,8 +134,8 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('works for non-canonical names', async function (assert) {
-    let crate = this.server.create('crate', { name: 'foo-bar' });
-    this.server.create('version', { crate });
+    let crate = this.db.crate.create({ name: 'foo-bar' });
+    this.db.version.create({ crate });
 
     await visit('/crates/foo_bar');
 
@@ -145,7 +147,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the all versions page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-versions-tab] a');
@@ -154,7 +156,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the reverse dependencies page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-rev-deps-tab] a');
@@ -164,7 +166,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to a user page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="blabaere"]');
@@ -174,7 +176,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to a team page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]');
@@ -184,7 +186,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates having user-owners', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -196,7 +198,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates having team-owners', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -205,7 +207,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates license is supplied by version', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-license]').hasText('Apache-2.0');
@@ -215,9 +217,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   skip('crates can be yanked by owner', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
-    let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
+    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg/0.5.0');
@@ -234,7 +236,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the owners page when not logged in', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -242,9 +244,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the owners page when not an owner', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
-    let user = this.server.schema.users.findBy({ login: 'iain8' });
+    let user = this.db.user.findFirst({ where: { login: { equals: 'iain8' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
@@ -253,9 +255,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the settings page', async function (assert) {
-    this.server.loadFixtures();
+    loadFixtures(this.db);
 
-    let user = this.server.schema.users.findBy({ login: 'thehydroimpulse' });
+    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');

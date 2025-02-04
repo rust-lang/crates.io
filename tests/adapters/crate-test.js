@@ -1,20 +1,24 @@
 import { module, test } from 'qunit';
 
-import { setupMirage, setupTest } from 'crates-io/tests/helpers';
+import { http, HttpResponse } from 'msw';
+
+import { setupTest } from 'crates-io/tests/helpers';
+import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
 module('Adapter | crate', function (hooks) {
   setupTest(hooks);
-  setupMirage(hooks);
+  setupMsw(hooks);
 
   test('findRecord requests are coalesced', async function (assert) {
-    let _foo = this.server.create('crate', { name: 'foo' });
-    this.server.create('version', { crate: _foo });
-    let _bar = this.server.create('crate', { name: 'bar' });
-    this.server.create('version', { crate: _bar });
+    let _foo = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate: _foo });
+    let _bar = this.db.crate.create({ name: 'bar' });
+    this.db.version.create({ crate: _bar });
 
     // if request coalescing works correctly, then this regular API endpoint
     // should not be hit in this case
-    this.server.get('/api/v1/crates/:crate_name', {}, 500);
+    let error = HttpResponse.json({}, { status: 500 });
+    this.worker.use(http.get('/api/v1/crates/:crate_name', () => error));
 
     let store = this.owner.lookup('service:store');
 
@@ -24,8 +28,8 @@ module('Adapter | crate', function (hooks) {
   });
 
   test('findRecord requests do not include versions by default', async function (assert) {
-    let _foo = this.server.create('crate', { name: 'foo' });
-    let version = this.server.create('version', { crate: _foo });
+    let _foo = this.db.crate.create({ name: 'foo' });
+    let version = this.db.version.create({ crate: _foo });
 
     let store = this.owner.lookup('service:store');
 
@@ -37,6 +41,6 @@ module('Adapter | crate', function (hooks) {
     assert.deepEqual(versionsRef.ids(), []);
 
     await versionsRef.load();
-    assert.deepEqual(versionsRef.ids(), [version.id]);
+    assert.deepEqual(versionsRef.ids(), [`${version.id}`]);
   });
 });
