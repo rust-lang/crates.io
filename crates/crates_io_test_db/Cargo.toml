@@ -12,6 +12,6 @@ crates_io_env_vars = { path = "../crates_io_env_vars" }
 diesel = { version = "=2.2.7", features = ["postgres", "r2d2"] }
 diesel-async = { version = "=0.5.2", features = ["postgres"] }
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
-rand = "=0.8.5"
+rand = "=0.9.0"
 tracing = "=0.1.41"
 url = "=2.5.4"
