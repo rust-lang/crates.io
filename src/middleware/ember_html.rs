@@ -9,7 +9,7 @@
 
 use std::borrow::Cow;
 use std::ops::Not;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, LazyLock, OnceLock};
 
 use axum::extract::Request;
 use axum::middleware::Next;
@@ -32,14 +32,12 @@ const PATH_PREFIX_CRATES: &str = "/crates/";
 type TemplateEnvFut = Shared<BoxFuture<'static, Arc<minijinja::Environment<'static>>>>;
 type TemplateCache = moka::future::Cache<Cow<'static, str>, String>;
 
-/// Initialize [`minijinja::Environment`] given the path to the index.html file. This should
-/// only be done once as it will load said file from persistent storage.
-async fn init_template_env(
-    index_html_template_path: impl AsRef<Path>,
-) -> Arc<minijinja::Environment<'static>> {
-    let template_j2 = tokio::fs::read_to_string(index_html_template_path.as_ref())
+/// Initialize [`minijinja::Environment`] given the index.html file at `dist/index.html`.
+/// This should only be done once as it will load said file from persistent storage.
+async fn init_template_env() -> Arc<minijinja::Environment<'static>> {
+    let template_j2 = tokio::fs::read_to_string("dist/index.html")
         .await
-        .expect("Error loading index.html template. Is the frontend package built yet?");
+        .expect("Error loading dist/index.html template. Is the frontend package built yet?");
 
     let mut env = Environment::empty();
     env.add_template_owned(INDEX_TEMPLATE_NAME, template_j2)
@@ -55,7 +53,8 @@ fn init_html_cache(max_capacity: u64) -> TemplateCache {
 }
 
 pub async fn serve_html(state: AppState, request: Request, next: Next) -> Response {
-    static TEMPLATE_ENV: OnceLock<TemplateEnvFut> = OnceLock::new();
+    static TEMPLATE_ENV: LazyLock<TemplateEnvFut> =
+        LazyLock::new(|| init_template_env().boxed().shared());
     static RENDERED_HTML_CACHE: OnceLock<TemplateCache> = OnceLock::new();
 
     let path = &request.uri().path();
@@ -75,7 +74,7 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         }
 
         // `state.config.og_image_base_url` will always be `Some` as that's required
-        // if `state.config.index_html_template_path` is `Some`, and otherwise this
+        // if `state.config.serve_html` is `true`, and otherwise this
         // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
         let og_image_base_url = state.config.og_image_base_url.as_ref().unwrap();
         let og_image_url = generate_og_image_url(path, og_image_base_url);
@@ -84,16 +83,10 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         let html = RENDERED_HTML_CACHE
             .get_or_init(|| init_html_cache(state.config.html_render_cache_max_capacity))
             .get_with_by_ref(&og_image_url, async {
-                // `OnceLock::get_or_init` blocks as long as its intializer is running in another thread.
+                // `LazyLock::deref` blocks as long as its intializer is running in another thread.
                 // Note that this won't take long, as the constructed Futures are not awaited
                 // during initialization.
-                let template_env = TEMPLATE_ENV.get_or_init(|| {
-                    // At this point we can safely assume `state.config.index_html_template_path` is `Some`,
-                    // as this middleware won't be executed otherwise; see `crate::middleware::apply_axum_middleware`.
-                    init_template_env(state.config.index_html_template_path.clone().unwrap())
-                        .boxed()
-                        .shared()
-                });
+                let template_env = &*TEMPLATE_ENV;
 
                 // Render the HTML given the OG image URL
                 let env = template_env.clone().await;

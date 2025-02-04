@@ -77,10 +77,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         .layer(conditional_layer(config.serve_dist, || {
             from_fn(static_or_continue::serve_dist)
         }))
-        .layer(conditional_layer(
-            config.index_html_template_path.is_some(),
-            || from_fn_with_state(state.clone(), ember_html::serve_html),
-        ))
+        .layer(conditional_layer(config.serve_html, || {
+            from_fn_with_state(state.clone(), ember_html::serve_html)
+        }))
         .layer(AddExtensionLayer::new(state.clone()));
 
     router
