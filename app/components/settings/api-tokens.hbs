@@ -48,7 +48,7 @@
 
                 {{#each (this.listToParts token.endpoint_scopes) as |part|~}}
                   {{#if (eq part.type "element")}}
-                    <strong>{{part.value}}<EmberTooltip @text={{this.scopeDescription part.value}} /></strong>
+                    <strong>{{part.value}}<Tooltip @text={{this.scopeDescription part.value}} /></strong>
                     {{~else~}}
                     {{part.value}}
                   {{/if}}
@@ -62,7 +62,7 @@
 
                 {{#each (this.listToParts token.crate_scopes) as |part|~}}
                   {{#if (eq part.type "element")}}
-                    <strong>{{part.value}}<EmberTooltip @text={{this.patternDescription part.value}} /></strong>
+                    <strong>{{part.value}}<Tooltip @text={{this.patternDescription part.value}} /></strong>
                     {{~else~}}
                     {{part.value}}
                   {{/if}}
