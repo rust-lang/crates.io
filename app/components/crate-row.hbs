@@ -28,7 +28,7 @@
       <span>
         <span>
           All-Time:
-          <EmberTooltip @text="Total number of downloads"/>
+          <Tooltip @text="Total number of downloads"/>
         </span>
         {{ format-num @crate.downloads }}
       </span>
@@ -38,7 +38,7 @@
       <span>
         <span>
           Recent:
-          <EmberTooltip @text="Downloads in the last 90 days"/>
+          <Tooltip @text="Downloads in the last 90 days"/>
         </span>
         {{ format-num @crate.recent_downloads }}
       </span>
@@ -48,11 +48,11 @@
       <span>
         <span>
           Updated:
-          <EmberTooltip @text="The last time the crate was updated" />
+          <Tooltip @text="The last time the crate was updated" />
         </span>
         <time datetime="{{date-format-iso @crate.updated_at}}" data-test-updated-at>
           {{date-format-distance-to-now @crate.updated_at addSuffix=true}}
-          <EmberTooltip @text={{ @crate.updated_at }}/>
+          <Tooltip @text={{ @crate.updated_at }}/>
         </time>
       </span>
     </div>
