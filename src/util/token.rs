@@ -1,5 +1,5 @@
 use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
-use rand::{distributions::Uniform, rngs::OsRng, Rng};
+use rand::distr::{Alphanumeric, SampleString};
 use secrecy::{ExposeSecret, SecretSlice, SecretString};
 use sha2::{Digest, Sha256};
 
@@ -84,13 +84,7 @@ impl ExposeSecret<str> for PlainToken {
 }
 
 fn generate_secure_alphanumeric_string(len: usize) -> String {
-    const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    OsRng
-        .sample_iter(Uniform::from(0..CHARS.len()))
-        .map(|idx| CHARS[idx] as char)
-        .take(len)
-        .collect()
+    Alphanumeric.sample_string(&mut rand::rng(), len)
 }
 
 #[cfg(test)]

@@ -3,8 +3,7 @@ use crates_io::{db, schema::version_downloads};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -27,11 +26,10 @@ async fn update(opts: Opts, conn: &mut AsyncPgConnection) -> QueryResult<()> {
     use diesel::dsl::*;
 
     for id in opts.version_ids {
-        let mut rng = StdRng::from_entropy();
-        let mut dls = rng.gen_range(5_000i32..10_000);
+        let mut dls = rand::rng().random_range(5_000i32..10_000);
 
         for day in 0..90 {
-            dls += rng.gen_range(-100..100);
+            dls += rand::rng().random_range(-100..100);
 
             diesel::insert_into(version_downloads::table)
                 .values((
