@@ -13,7 +13,7 @@
       {{svg-jar "calendar"}}
       <span>
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
-        <EmberTooltip @text={{date-format @version.created_at 'PPP'}} />
+        <Tooltip @text={{date-format @version.created_at 'PPP'}} />
       </span>
     </time>
 
@@ -120,7 +120,7 @@
         Try on Rust Playground
 
         {{#if this.canHover}}
-          <EmberTooltip
+          <Tooltip
             @text="The top 100 crates are available on the Rust Playground for you to try out directly in your browser." />
         {{/if}}
       </a>
