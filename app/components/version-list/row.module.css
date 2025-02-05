@@ -40,12 +40,15 @@
         --hover-bg-color: light-dark(hsl(0, 92%, 98%), hsl(0, 10%, 11%));
         --fg-color: light-dark(hsl(0, 84%, 32%), hsl(0, 92%, 90%));
     }
+}
 
-    [title], :global(.ember-tooltip-target) {
-        position: relative;
-        z-index: 1;
-        cursor: help;
-    }
+.release-track, .date, .num-features {
+    z-index: 1;
+    cursor: help;
+}
+
+.date, .num-features {
+    position: relative;
 }
 
 .version {
@@ -53,7 +56,7 @@
     grid-template-columns: auto auto;
     place-items: center;
 
-    :global(.ember-tooltip) {
+    .tooltip {
         word-break: break-all;
     }
 
@@ -158,7 +161,7 @@
         margin-bottom: -.1em;
     }
 
-    :global(.ember-tooltip) {
+    .tooltip {
         text-transform: none;
         letter-spacing: normal;
     }
@@ -199,7 +202,7 @@
     }
 }
 
-.date.new, :global(.tooltip) .new {
+.date.new, .tooltip .new {
     color: hsl(39, 98%, 47%);
 }
 
@@ -221,7 +224,7 @@
 
 .feature-list {
     padding: 0;
-    margin: var(--space-xs) var(--space-2xs);
+    margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
 }
 

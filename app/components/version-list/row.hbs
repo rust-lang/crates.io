@@ -20,9 +20,9 @@
         {{@version.releaseTrack}}
       {{/if}}
 
-      <EmberTooltip @side="right" data-test-release-track-title>
+      <Tooltip @side="right" local-class="tooltip" data-test-release-track-title>
         {{this.releaseTrackTitle}}
-      </EmberTooltip>
+      </Tooltip>
     </div>
 
     <LinkTo
@@ -56,12 +56,12 @@
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
 
-        <EmberTooltip>
+        <Tooltip local-class="tooltip">
           {{date-format @version.created_at 'PPP'}}
           {{#if @version.isNew}}
             (<span local-class="new">new</span>)
           {{/if}}
-        </EmberTooltip>
+        </Tooltip>
       </time>
     </div>
 
@@ -98,7 +98,7 @@
             {{svg-jar "checkbox"}}
             {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
 
-            <EmberTooltip>
+            <Tooltip local-class="tooltip">
               <ul local-class="feature-list">
                 {{#each @version.featureList as |feature|}}
                   <li>
@@ -107,7 +107,7 @@
                   </li>
                 {{/each}}
               </ul>
-            </EmberTooltip>
+            </Tooltip>
           </span>
         {{/if}}
       </div>
