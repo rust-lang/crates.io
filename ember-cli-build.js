@@ -99,6 +99,8 @@ module.exports = function (defaults) {
             crypto: false,
             // disables `timers` import warning in `@sinon/fake-timers`
             timers: false,
+            // disables `util` import warning in `@sinon/fake-timers`
+            util: false,
           },
         },
       },
