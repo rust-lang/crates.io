@@ -1,22 +1,26 @@
+import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 
 import { didCancel } from 'ember-concurrency';
-import semverSort from 'semver/functions/rsort';
 
 import { AjaxError } from '../../utils/ajax';
 
 export default class VersionRoute extends Route {
   @service router;
   @service sentry;
+  @service store;
 
   async model(params, transition) {
     let crate = this.modelFor('crate');
 
-    let versions;
+    // TODO: Resolved version without waiting for versions to be resolved
+    // The main blocker for this right now is that we have a "belongsTo" relationship between
+    // `version-download` and `version` in sync mode. This requires us to wait for `versions` to
+    // exist before `version-download` can be created.
     try {
-      versions = await crate.loadVersionsTask.perform();
+      await crate.loadVersionsTask.perform();
     } catch (error) {
       let title = `${crate.name}: Failed to load version data`;
       return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
@@ -24,21 +28,25 @@ export default class VersionRoute extends Route {
 
     let version;
     let requestedVersion = params.version_num;
-    if (requestedVersion) {
-      version = versions.find(version => version.num === requestedVersion);
-      if (!version) {
-        let title = `${crate.name}: Version ${requestedVersion} not found`;
+    let num = requestedVersion || crate.default_version;
+
+    try {
+      version =
+        crate.loadedVersionsByNum.get(num) ??
+        (await crate.store.queryRecord('version', {
+          name: crate.id,
+          num,
+        }));
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        let title =
+          requestedVersion == null
+            ? `${crate.name}: Failed to find default version`
+            : `${crate.name}: Version ${requestedVersion} not found`;
         return this.router.replaceWith('catch-all', { transition, title });
-      }
-    } else {
-      let { default_version } = crate;
-      version = versions.find(version => version.num === default_version);
-
-      if (!version) {
-        let versionNums = versions.map(it => it.num);
-        semverSort(versionNums, { loose: true });
-
-        version = versions.find(version => version.num === versionNums[0]);
+      } else {
+        let title = `${crate.name}: Failed to load version data`;
+        return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
     }
 

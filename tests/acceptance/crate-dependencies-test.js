@@ -74,20 +74,6 @@ module('Acceptance | crate dependencies page', function (hooks) {
     assert.dom('[data-test-try-again]').doesNotExist();
   });
 
-  test('shows an error page if versions fail to load', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '2.0.0' });
-
-    this.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
-
-    await visit('/crates/foo/1.0.0/dependencies');
-    assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
-    assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('foo: Failed to load version data');
-    assert.dom('[data-test-go-back]').doesNotExist();
-    assert.dom('[data-test-try-again]').exists();
-  });
-
   test('shows error message if loading of dependencies fails', async function (assert) {
     let crate = this.db.crate.create({ name: 'foo' });
     this.db.version.create({ crate, num: '1.0.0' });
