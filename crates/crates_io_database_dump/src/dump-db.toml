@@ -105,6 +105,7 @@ dependencies = ["crates", "versions"]
 [default_versions.columns]
 crate_id = "public"
 version_id = "public"
+num_versions = "public"
 
 [deleted_crates]
 dependencies = ["users"]
