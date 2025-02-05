@@ -45,6 +45,7 @@
     "@sentry/ember": "8.54.0",
     "chart.js": "4.4.7",
     "date-fns": "4.1.0",
+    "@floating-ui/dom": "1.6.13",
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
     "mermaid": "11.4.1",
