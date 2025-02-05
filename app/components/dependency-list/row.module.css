@@ -31,13 +31,13 @@
         --placeholder-opacity: 0.15;
     }
 
-    [title], :global(.ember-tooltip-target) {
+    [title], .features-label {
         position: relative;
         z-index: 1;
         cursor: help;
     }
 
-    :global(.ember-tooltip) {
+    .tooltip {
         word-break: break-all;
     }
 
@@ -112,7 +112,7 @@
         margin-bottom: -.1em;
     }
 
-    :global(.ember-tooltip) {
+    .tooltip {
         text-transform: none;
         letter-spacing: normal;
     }
@@ -133,7 +133,7 @@
 
 .feature-list {
     padding: 0;
-    margin: 10px 5px;
+    margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
 
     svg {

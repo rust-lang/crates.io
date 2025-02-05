@@ -36,23 +36,20 @@
 
       {{#if this.featuresDescription}}
         <span local-class="features-label" data-test-features>
-          {{! extra <span> for better tooltip alignment }}
-          <span>
-            {{this.featuresDescription}}
+          {{this.featuresDescription}}
 
-            <EmberTooltip>
-              <ul local-class="feature-list">
+          <Tooltip local-class="tooltip">
+            <ul local-class="feature-list">
+              <li>
+                {{svg-jar (if @dependency.default_features "checkbox" "checkbox-empty")}} default features
+              </li>
+              {{#each @dependency.features as |feature|}}
                 <li>
-                  {{svg-jar (if @dependency.default_features "checkbox" "checkbox-empty")}} default features
+                  {{svg-jar "checkbox"}} {{feature}}
                 </li>
-                {{#each @dependency.features as |feature|}}
-                  <li>
-                    {{svg-jar "checkbox"}} {{feature}}
-                  </li>
-                {{/each}}
-              </ul>
-            </EmberTooltip>
-          </span>
+              {{/each}}
+            </ul>
+          </Tooltip>
         </span>
       {{/if}}
     </div>
