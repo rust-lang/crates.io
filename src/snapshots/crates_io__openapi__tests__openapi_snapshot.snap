@@ -24,7 +24,7 @@ expression: response.json()
       "email": "help@crates.io",
       "name": "the crates.io team"
     },
-    "description": "API documentation for the [crates.io](https://crates.io/) package registry",
+    "description": "\n__Experimental API documentation for the [crates.io](https://crates.io/)\npackage registry.__\n\nThis document describes the API used by the crates.io website, cargo\nclient, and other third-party tools to interact with the crates.io\nregistry.\n\n__The API is under active development and may change at any time__,\nthough we will try to avoid breaking changes where possible.\n\nSome parts of the API follow the \"Registry Web API\" spec documented\nat <https://doc.rust-lang.org/cargo/reference/registry-web-api.html>\nand can be considered stable.\n\nMost parts of the API do not require authentication. The endpoints\nthat do require authentication are marked as such in the documentation,\nwith some requiring cookie authentication (useable only by the web UI)\nand others requiring API token authentication (useable by cargo and\nother clients).\n",
     "license": {
       "name": ""
     },
