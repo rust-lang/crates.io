@@ -26,6 +26,12 @@ unescaped_backticks = "warn"
 dbg_macro = "warn"
 todo = "warn"
 
+[package.metadata.cargo-machete]
+ignored = ["krata-tokio-tar"]
+
+[workspace.metadata.cargo-machete]
+ignored = ["krata-tokio-tar"]
+
 [lints]
 workspace = true
 
@@ -84,7 +90,6 @@ flate2 = "=1.0.35"
 futures-util = "=0.3.31"
 hex = "=0.4.3"
 http = "=1.2.0"
-http-body-util = "=0.1.2"
 hyper = { version = "=1.6.0", features = ["client", "http1"] }
 indexmap = { version = "=2.7.1", features = ["serde"] }
 indicatif = "=0.17.11"
