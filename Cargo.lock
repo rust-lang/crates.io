@@ -1340,7 +1340,6 @@ dependencies = [
  "anyhow",
  "claims",
  "crates_io_test_db",
- "deadpool-diesel",
  "diesel",
  "diesel-async",
  "futures-util",
