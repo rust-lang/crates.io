@@ -16,6 +16,8 @@ env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.16.4
+  # renovate: datasource=crate depName=cargo-machete versioning=semver
+  CARGO_MACHETE_VERSION: 0.7.0
   # renovate: datasource=crate depName=grcov versioning=semver
   GRCOV_VERSION: 0.8.20
   # renovate: datasource=npm depName=pnpm
@@ -111,8 +113,18 @@ jobs:
       - run: cargo clippy --all-targets --all-features --workspace
       - run: cargo doc --no-deps --document-private-items
 
+  # to make https://github.com/rust-lang/team/blob/651fb3f9c64c934c9073472765d745a606dd9daf/repos/rust-lang/crates.io.toml#L17 happy until we migrated it…
   backend-cargo-deny:
     name: Backend / cargo-deny
+    runs-on: ubuntu-24.04
+    if: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+  backend-deps:
+    name: Backend / dependencies
     runs-on: ubuntu-24.04
     needs: changed-files
     if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
@@ -126,6 +138,9 @@ jobs:
 
       - run: cargo install cargo-deny --vers ${CARGO_DENY_VERSION}
       - run: cargo deny check
+
+      - run: cargo install cargo-machete --vers ${CARGO_MACHETE_VERSION}
+      - run: cargo machete
 
   backend-test:
     name: Backend / Test
