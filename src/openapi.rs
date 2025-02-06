@@ -33,7 +33,7 @@ other clients).
         description = DESCRIPTION,
         terms_of_service = "https://crates.io/policies",
         contact(name = "the crates.io team", email = "help@crates.io"),
-        license(),
+        license(name = "MIT OR Apache-2.0", url = "https://github.com/rust-lang/crates.io/blob/main/README.md#%EF%B8%8F-license"),
         version = "0.0.0",
     ),
     modifiers(&SecurityAddon),
