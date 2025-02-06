@@ -26,6 +26,12 @@ unescaped_backticks = "warn"
 dbg_macro = "warn"
 todo = "warn"
 
+[package.metadata.cargo-machete]
+ignored = ["krata-tokio-tar"]
+
+[workspace.metadata.cargo-machete]
+ignored = ["krata-tokio-tar"]
+
 [lints]
 workspace = true
 
