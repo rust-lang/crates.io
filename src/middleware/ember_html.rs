@@ -76,8 +76,7 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         // `state.config.og_image_base_url` will always be `Some` as that's required
         // if `state.config.serve_html` is `true`, and otherwise this
         // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
-        let og_image_base_url = state.config.og_image_base_url.as_ref().unwrap();
-        let og_image_url = generate_og_image_url(path, og_image_base_url);
+        let og_image_url = generate_og_image_url(path, &state.config.og_image_base_url);
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
         let html = RENDERED_HTML_CACHE
@@ -125,7 +124,11 @@ fn extract_crate_name(path: &str) -> Option<&str> {
 /// Come up with an Open Graph image URL. In case a crate page is requested,
 /// we use the crate's name as extracted from the request path and the OG image
 /// base URL from config to generate one, otherwise we use the fallback image.
-fn generate_og_image_url(path: &str, og_image_base_url: &Url) -> Cow<'static, str> {
+fn generate_og_image_url(path: &str, og_image_base_url: &Option<Url>) -> Cow<'static, str> {
+    let Some(og_image_base_url) = og_image_base_url else {
+        return OG_IMAGE_FALLBACK_URL.into();
+    };
+
     if let Some(krate) = extract_crate_name(path) {
         if let Ok(og_img_url) = og_image_base_url
             .join(krate)
@@ -182,6 +185,7 @@ mod tests {
         ];
 
         let og_image_base_url: Url = "http://localhost:3000/og/".parse().unwrap();
+        let og_image_base_url = Some(og_image_base_url);
 
         for (path, expected) in PATHS.iter().copied() {
             assert_that!(

@@ -12,7 +12,7 @@ use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::CdnLogQueueConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
-use crates_io_env_vars::{list, list_parsed, required_var, required_var_parsed, var, var_parsed};
+use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
 use http::HeaderValue;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
@@ -74,8 +74,6 @@ pub struct Server {
 
     /// Should the server serve the frontend `index.html` for all
     /// non-API requests?
-    /// Setting this parameter requires setting
-    /// [`Self::og_image_base_url`] as well.
     pub serve_html: bool,
 
     /// Base URL for the service from which the OpenGraph images
@@ -184,14 +182,6 @@ impl Server {
             cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
         );
 
-        let serve_html = var_parsed("SERVE_HTML")?.unwrap_or(true);
-        let og_image_base_url = serve_html
-            .then(|| {
-                required_var_parsed("OG_IMAGE_BASE_URL")
-                    .context("OG_IMAGE_BASE_URL must be set when using INDEX_HTML_TEMPLATE_PATH")
-            })
-            .transpose()?;
-
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
@@ -236,7 +226,7 @@ impl Server {
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
             serve_html: true,
-            og_image_base_url,
+            og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
         })
