@@ -76,7 +76,9 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         // `state.config.og_image_base_url` will always be `Some` as that's required
         // if `state.config.serve_html` is `true`, and otherwise this
         // middleware won't be executed; see `crate::middleware::apply_axum_middleware`.
-        let og_image_url = generate_og_image_url(path, &state.config.og_image_base_url);
+        let og_image_url = generate_og_image_url(path, state.config.og_image_base_url.as_ref())
+            .map(|url| Cow::Owned(url.to_string()))
+            .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
         let html = RENDERED_HTML_CACHE
@@ -123,19 +125,13 @@ fn extract_crate_name(path: &str) -> Option<&str> {
 /// Come up with an Open Graph image URL. In case a crate page is requested,
 /// we use the crate's name as extracted from the request path and the OG image
 /// base URL from config to generate one, otherwise we use the fallback image.
-fn generate_og_image_url(path: &str, og_image_base_url: &Option<Url>) -> Cow<'static, str> {
-    let Some(og_image_base_url) = og_image_base_url else {
-        return OG_IMAGE_FALLBACK_URL.into();
-    };
+fn generate_og_image_url(path: &str, og_image_base_url: Option<&Url>) -> Option<Url> {
+    let og_image_base_url = og_image_base_url?;
 
-    if let Some(krate) = extract_crate_name(path) {
-        let filename = format!("{krate}.png");
-        if let Ok(og_img_url) = og_image_base_url.join(&filename) {
-            return og_img_url.into();
-        }
-    }
+    let krate = extract_crate_name(path)?;
 
-    OG_IMAGE_FALLBACK_URL.into()
+    let filename = format!("{krate}.png");
+    og_image_base_url.join(&filename).ok()
 }
 
 #[cfg(test)]
@@ -143,9 +139,7 @@ mod tests {
     use googletest::{assert_that, prelude::eq};
     use url::Url;
 
-    use crate::middleware::ember_html::{
-        extract_crate_name, generate_og_image_url, OG_IMAGE_FALLBACK_URL,
-    };
+    use crate::middleware::ember_html::{extract_crate_name, generate_og_image_url};
 
     #[test]
     fn test_extract_crate_name() {
@@ -167,27 +161,27 @@ mod tests {
 
     #[test]
     fn test_generate_og_image_url() {
-        const PATHS: &[(&str, &str)] = &[
-            ("/crates/tokio", "http://localhost:3000/og/tokio.png"),
+        const PATHS: &[(&str, Option<&str>)] = &[
+            ("/crates/tokio", Some("http://localhost:3000/og/tokio.png")),
             (
                 "/crates/tokio/versions",
-                "http://localhost:3000/og/tokio.png",
+                Some("http://localhost:3000/og/tokio.png"),
             ),
-            ("/crates/tokio/", "http://localhost:3000/og/tokio.png"),
-            ("/", OG_IMAGE_FALLBACK_URL),
-            ("/crates", OG_IMAGE_FALLBACK_URL),
-            ("/crates/", OG_IMAGE_FALLBACK_URL),
-            ("/dashboard/", OG_IMAGE_FALLBACK_URL),
-            ("/settings/profile", OG_IMAGE_FALLBACK_URL),
+            ("/crates/tokio/", Some("http://localhost:3000/og/tokio.png")),
+            ("/", None),
+            ("/crates", None),
+            ("/crates/", None),
+            ("/dashboard/", None),
+            ("/settings/profile", None),
         ];
 
         let og_image_base_url: Url = "http://localhost:3000/og/".parse().unwrap();
-        let og_image_base_url = Some(og_image_base_url);
+        let og_image_base_url = Some(&og_image_base_url);
 
-        for (path, expected) in PATHS.iter().copied() {
-            assert_that!(
-                generate_og_image_url(path, &og_image_base_url),
-                eq(expected)
+        for (path, expected) in PATHS.iter() {
+            assert_eq!(
+                generate_og_image_url(path, og_image_base_url),
+                expected.map(|url| Url::parse(url).unwrap())
             );
         }
     }
