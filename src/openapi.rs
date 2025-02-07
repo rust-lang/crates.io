@@ -4,14 +4,36 @@ use utoipa::openapi::security::{ApiKey, ApiKeyValue, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_axum::router::OpenApiRouter;
 
+const DESCRIPTION: &str = r#"
+__Experimental API documentation for the [crates.io](https://crates.io/)
+package registry.__
+
+This document describes the API used by the crates.io website, cargo
+client, and other third-party tools to interact with the crates.io
+registry.
+
+__The API is under active development and may change at any time__,
+though we will try to avoid breaking changes where possible.
+
+Some parts of the API follow the "Registry Web API" spec documented
+at <https://doc.rust-lang.org/cargo/reference/registry-web-api.html>
+and can be considered stable.
+
+Most parts of the API do not require authentication. The endpoints
+that do require authentication are marked as such in the documentation,
+with some requiring cookie authentication (usable only by the web UI)
+and others requiring API token authentication (usable by cargo and
+other clients).
+"#;
+
 #[derive(OpenApi)]
 #[openapi(
     info(
         title = "crates.io",
-        description = "API documentation for the [crates.io](https://crates.io/) package registry",
+        description = DESCRIPTION,
         terms_of_service = "https://crates.io/policies",
         contact(name = "the crates.io team", email = "help@crates.io"),
-        license(),
+        license(name = "MIT OR Apache-2.0", url = "https://github.com/rust-lang/crates.io/blob/main/README.md#%EF%B8%8F-license"),
         version = "0.0.0",
     ),
     modifiers(&SecurityAddon),
