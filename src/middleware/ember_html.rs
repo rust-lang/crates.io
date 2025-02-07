@@ -80,9 +80,12 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
             .unwrap_or(Cow::Borrowed(OG_IMAGE_FALLBACK_URL));
 
         // Fetch the HTML from cache given `og_image_url` as key or render it
-        let html = RENDERED_HTML_CACHE
-            .get_or_init(|| init_html_cache(state.config.html_render_cache_max_capacity))
-            .get_with_by_ref(&og_image_url, async {
+        let html_cache = RENDERED_HTML_CACHE
+            .get_or_init(|| init_html_cache(state.config.html_render_cache_max_capacity));
+
+        let render_result = html_cache
+            .entry_by_ref(&og_image_url)
+            .or_try_insert_with::<_, minijinja::Error>(async {
                 // `LazyLock::deref` blocks as long as its intializer is running in another thread.
                 // Note that this won't take long, as the constructed Futures are not awaited
                 // during initialization.
@@ -91,17 +94,23 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
                 // Render the HTML given the OG image URL
                 let env = template_env.clone().await;
                 let html = env
-                    .get_template(INDEX_TEMPLATE_NAME)
-                    .unwrap()
-                    .render(minijinja::context! { og_image_url})
-                    .expect("Error rendering index");
+                    .get_template(INDEX_TEMPLATE_NAME)?
+                    .render(minijinja::context! { og_image_url})?;
 
-                html
+                Ok(html)
             })
             .await;
 
-        // Serve static Ember page to bootstrap the frontend
-        axum::response::Html(html).into_response()
+        match render_result {
+            Ok(entry) => {
+                // Serve static Ember page to bootstrap the frontend
+                axum::response::Html(entry.into_value()).into_response()
+            }
+            Err(err) => {
+                tracing::error!("Error rendering HTML: {:?}", err);
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        }
     } else {
         // Return a 404 to crawlers that don't send `Accept: text/hml`.
         // This is to preserve legacy behavior and will likely change.
