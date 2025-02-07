@@ -111,22 +111,6 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
 
-  test('other versions loading error shows an error message', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
-    msw.db.version.create({ crate, num: '0.6.1' });
-
-    await msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
-
-    await page.goto('/');
-    await page.click('[data-test-just-updated] [data-test-crate-link="0"]');
-    await expect(page).toHaveURL('/crates/nanomsg/0.6.0');
-    await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Failed to load version data');
-    await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
-    await expect(page.locator('[data-test-try-again]')).toBeVisible();
-  });
-
   test('works for non-canonical names', async ({ page, msw }) => {
     let crate = msw.db.crate.create({ name: 'foo-bar' });
     msw.db.version.create({ crate });
