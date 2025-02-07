@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context};
 use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
+use url::Url;
 
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::Env;
@@ -74,6 +75,16 @@ pub struct Server {
     /// Should the server serve the frontend `index.html` for all
     /// non-API requests?
     pub serve_html: bool,
+
+    /// Base URL for the service from which the OpenGraph images
+    /// for crates are loaded. Required if
+    /// [`Self::serve_html`] is set.
+    pub og_image_base_url: Option<Url>,
+
+    /// Maximum number of items that the HTML render
+    /// cache in `crate::middleware::ember_html::serve_html`
+    /// can hold. Defaults to 1024.
+    pub html_render_cache_max_capacity: u64,
 
     pub content_security_policy: Option<HeaderValue>,
 }
@@ -215,6 +226,8 @@ impl Server {
                 .unwrap_or(StatusCodeConfig::AdjustAll),
             serve_dist: true,
             serve_html: true,
+            og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
+            html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
         })
     }
