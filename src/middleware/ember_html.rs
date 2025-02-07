@@ -114,11 +114,10 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
 /// prefix, and returning the firsts path segment from the result.
 /// Returns `None` if the path was not prefixed with [`PATH_PREFIX_CRATES`].
 fn extract_crate_name(path: &str) -> Option<&str> {
-    path.strip_prefix(PATH_PREFIX_CRATES).and_then(|suffix| {
-        let len = suffix.find('/').unwrap_or(suffix.len());
-        let krate = &suffix[..len];
-        krate.is_empty().not().then_some(krate)
-    })
+    let suffix = path.strip_prefix(PATH_PREFIX_CRATES)?;
+    let len = suffix.find('/').unwrap_or(suffix.len());
+    let krate = &suffix[..len];
+    krate.is_empty().not().then_some(krate)
 }
 
 /// Come up with an Open Graph image URL. In case a crate page is requested,
