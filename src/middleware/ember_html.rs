@@ -27,7 +27,7 @@ const PATH_PREFIX_CRATES: &str = "/crates/";
 
 /// The [`Shared`] allows for multiple tasks to wait on a single future, [`BoxFuture`] allows
 /// us to name the type in the declaration of static variables, and the [`Arc`] ensures
-/// the [`minijinja::Environment`] doensn't get cloned each request.
+/// the [`minijinja::Environment`] doesn't get cloned each request.
 type TemplateEnvFut = Shared<BoxFuture<'static, Arc<minijinja::Environment<'static>>>>;
 type TemplateCache = moka::future::Cache<Cow<'static, str>, String>;
 
@@ -86,7 +86,7 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         let render_result = html_cache
             .entry_by_ref(&og_image_url)
             .or_try_insert_with::<_, minijinja::Error>(async {
-                // `LazyLock::deref` blocks as long as its intializer is running in another thread.
+                // `LazyLock::deref` blocks as long as its initializer is running in another thread.
                 // Note that this won't take long, as the constructed Futures are not awaited
                 // during initialization.
                 let template_env = &*TEMPLATE_ENV;
