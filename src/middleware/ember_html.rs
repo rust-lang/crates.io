@@ -17,7 +17,6 @@ use axum::response::{IntoResponse, Response};
 use futures_util::future::{BoxFuture, Shared};
 use futures_util::FutureExt;
 use http::{header, HeaderMap, HeaderValue, Method, StatusCode};
-use minijinja::{context, Environment};
 use url::Url;
 
 use crate::app::AppState;
@@ -39,7 +38,7 @@ async fn init_template_env() -> Arc<minijinja::Environment<'static>> {
         .await
         .expect("Error loading dist/index.html template. Is the frontend package built yet?");
 
-    let mut env = Environment::empty();
+    let mut env = minijinja::Environment::empty();
     env.add_template_owned(INDEX_TEMPLATE_NAME, template_j2)
         .expect("Error loading template");
     Arc::new(env)
@@ -94,7 +93,7 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
                 let html = env
                     .get_template(INDEX_TEMPLATE_NAME)
                     .unwrap()
-                    .render(context! { og_image_url})
+                    .render(minijinja::context! { og_image_url})
                     .expect("Error rendering index");
 
                 html
