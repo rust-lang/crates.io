@@ -60,7 +60,7 @@
     "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
     "@ember/render-modifiers": "2.1.0",
-    "@ember/string": "3.1.1",
+    "@ember/string": "4.0.0",
     "@ember/test-helpers": "4.0.5",
     "@ember/test-waiters": "3.1.0",
     "@embroider/compat": "3.8.0",
