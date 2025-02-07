@@ -21,8 +21,8 @@ and can be considered stable.
 
 Most parts of the API do not require authentication. The endpoints
 that do require authentication are marked as such in the documentation,
-with some requiring cookie authentication (useable only by the web UI)
-and others requiring API token authentication (useable by cargo and
+with some requiring cookie authentication (usable only by the web UI)
+and others requiring API token authentication (usable by cargo and
 other clients).
 "#;
 
