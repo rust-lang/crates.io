@@ -207,7 +207,7 @@ impl Email for CrateDeletionEmail<'_> {
         format!(
             "Hi {},
 
-your \"{}\" crate has been deleted, per your request.
+Your \"{}\" crate has been deleted, per your request.
 
 If you did not initiate this deletion, your account may have been compromised. Please contact us at help@crates.io.",
             self.user, self.krate
