@@ -129,10 +129,8 @@ fn generate_og_image_url(path: &str, og_image_base_url: &Option<Url>) -> Cow<'st
     };
 
     if let Some(krate) = extract_crate_name(path) {
-        if let Ok(og_img_url) = og_image_base_url
-            .join(krate)
-            .map(|url_without_extrrension| format!("{url_without_extrrension}.png"))
-        {
+        let filename = format!("{krate}.png");
+        if let Ok(og_img_url) = og_image_base_url.join(&filename) {
             return og_img_url.into();
         }
     }
