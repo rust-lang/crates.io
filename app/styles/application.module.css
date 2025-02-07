@@ -202,8 +202,3 @@ noscript {
     flex-direction: column;
     padding: var(--main-layout-padding);
 }
-
-:global(.ember-tooltip) {
-    max-width: 300px;
-    font-weight: normal;
-}

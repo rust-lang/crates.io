@@ -1,0 +1,22 @@
+.tooltip {
+    display: none;
+    width: max-content;
+    max-width: 300px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #3a3c47;
+    color: white;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: normal;
+    overflow: hidden;
+    text-wrap: auto;
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--space-3xs);
+    z-index: 2;
+
+    strong {
+        color: unset;
+    }
+}
