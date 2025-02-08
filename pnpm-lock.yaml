@@ -324,11 +324,11 @@ importers:
         version: 7.7.1
     devDependencies:
       happy-dom:
-        specifier: 17.0.0
-        version: 17.0.0
+        specifier: 17.0.2
+        version: 17.0.2
       vitest:
         specifier: 3.0.5
-        version: 3.0.5(@types/node@22.13.1)(happy-dom@17.0.0)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0)
+        version: 3.0.5(@types/node@22.13.1)(happy-dom@17.0.2)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0)
 
 packages:
 
@@ -5408,8 +5408,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@17.0.0:
-    resolution: {integrity: sha512-jGuUr3UrgMzt1Mopyof3RzD49/GudAp1suP5KFU+EvNXmqUAMXpxux2zEJbabE1YXs0APrY61iRZ0BKMMWCGTg==}
+  happy-dom@17.0.2:
+    resolution: {integrity: sha512-PWXllOadphR7angD3ndG5/Ax3yg1PFRvnN8Zu+xVtRsZjJE4RtJF1RBeWN9JFvF5EJmHOCiekdYVTxJr2NBibA==}
     engines: {node: '>=18.0.0'}
 
   has-ansi@2.0.0:
@@ -15844,7 +15844,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  happy-dom@17.0.0:
+  happy-dom@17.0.2:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
@@ -19367,7 +19367,7 @@ snapshots:
       terser: 5.37.0
       yaml: 2.7.0
 
-  vitest@3.0.5(@types/node@22.13.1)(happy-dom@17.0.0)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0):
+  vitest@3.0.5(@types/node@22.13.1)(happy-dom@17.0.2)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0):
     dependencies:
       '@vitest/expect': 3.0.5
       '@vitest/mocker': 3.0.5(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(vite@6.0.11(@types/node@22.13.1)(terser@5.37.0)(yaml@2.7.0))
@@ -19391,7 +19391,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.13.1
-      happy-dom: 17.0.0
+      happy-dom: 17.0.2
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
