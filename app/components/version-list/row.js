@@ -10,6 +10,7 @@ export default class VersionRow extends Component {
   @service session;
 
   @tracked focused = false;
+  @tracked featuresOpen = false;
 
   get releaseTrackTitle() {
     let { version } = this.args;
@@ -54,5 +55,9 @@ export default class VersionRow extends Component {
 
   @action setFocused(value) {
     this.focused = value;
+  }
+
+  @action toggleDropdown() {
+    this.featuresOpen = !this.featuresOpen;
   }
 }
