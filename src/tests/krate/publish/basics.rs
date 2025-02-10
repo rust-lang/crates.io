@@ -116,11 +116,22 @@ async fn new_krate_twice() {
 // The primary purpose is to verify that the `default_version` we provide is as expected.
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice_alt() {
+    use crate::schema::default_versions;
+
     let (app, _, _, token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
     token.publish_crate(crate_to_publish).await.good();
+
+    let num_versions = default_versions::table
+        .select(default_versions::num_versions)
+        .load::<Option<i32>>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(num_versions.len(), 1);
+    assert_eq!(num_versions[0], Some(1));
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
     let response = token.publish_crate(crate_to_publish).await;
@@ -129,6 +140,14 @@ async fn new_krate_twice_alt() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
+
+    let num_versions = default_versions::table
+        .select(default_versions::num_versions)
+        .load::<Option<i32>>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(num_versions.len(), 1);
+    assert_eq!(num_versions[0], Some(2));
 
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);

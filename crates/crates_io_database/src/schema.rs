@@ -408,6 +408,8 @@ diesel::table! {
         crate_id -> Int4,
         /// Reference to the version in the `versions` table.
         version_id -> Int4,
+        /// The total number of versions.
+        num_versions -> Nullable<Int4>,
     }
 }
 

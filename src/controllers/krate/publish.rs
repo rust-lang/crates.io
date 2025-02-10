@@ -445,7 +445,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         // Upsert the `default_value` determined by the existing `default_value` and the
         // published version. Note that this could potentially write an outdated version
         // (although this should not happen regularly), as we might be comparing to an
-        // outdated value.
+        // outdated value. The initial record will be handled by the trigger function.
         //
         // Compared to only using a background job, this prevents us from getting into a
         // situation where a crate exists in the `crates` table but doesn't have a default
@@ -470,14 +470,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             // Update the default version asynchronously in a background job
             // to ensure correctness and eventual consistency.
             UpdateDefaultVersion::new(krate.id).enqueue(conn).await?;
-        } else {
-            diesel::insert_into(default_versions::table)
-                .values((
-                    default_versions::crate_id.eq(krate.id),
-                    default_versions::version_id.eq(version.id),
-                ))
-                .execute(conn)
-                .await?;
         }
 
         // Update all keywords for this crate
