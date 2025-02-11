@@ -1,6 +1,8 @@
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::category::{Category, CrateCategory, NewCategory};
-pub use self::crate_owner_invitation::{CrateOwnerInvitation, NewCrateOwnerInvitationOutcome};
+pub use self::crate_owner_invitation::{
+    CrateOwnerInvitation, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome,
+};
 pub use self::default_versions::{update_default_version, verify_default_version};
 pub use self::deleted_crate::NewDeletedCrate;
 pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
