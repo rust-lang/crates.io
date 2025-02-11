@@ -4,7 +4,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
 
-use crate::models::{Crate, Team, User};
+use crate::models::{Crate, CrateOwnerInvitation, Team, User};
 use crate::schema::crate_owners;
 use crates_io_diesel_helpers::pg_enum;
 
@@ -35,6 +35,16 @@ impl CrateOwner {
             .filter(crate_owners::deleted.eq(false))
             .filter(crate_owners::owner_kind.eq(kind))
             .into_boxed()
+    }
+
+    pub fn from_invite(invite: &CrateOwnerInvitation) -> Self {
+        Self {
+            crate_id: invite.crate_id,
+            owner_id: invite.invited_user_id,
+            created_by: invite.invited_by_user_id,
+            owner_kind: OwnerKind::User,
+            email_notifications: true,
+        }
     }
 }
 
