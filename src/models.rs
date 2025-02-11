@@ -22,7 +22,7 @@ pub mod helpers;
 
 mod action;
 pub mod category;
-mod crate_owner_invitation;
+pub mod crate_owner_invitation;
 pub mod default_versions;
 mod deleted_crate;
 pub mod dependency;
