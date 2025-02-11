@@ -1,11 +1,11 @@
 use chrono::NaiveDateTime;
 use secrecy::ExposeSecret;
 
+use crate::controllers::token::CreatedApiToken;
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
-    ApiToken, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
-    Keyword, Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
-    VersionOwnerAction,
+    ApiToken, Category, Crate, CrateOwnerInvitation, Dependency, DependencyKind, Keyword, Owner,
+    ReverseDependency, Team, TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crate::util::rfc3339;
 use crates_io_github as github;

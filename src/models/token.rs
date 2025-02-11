@@ -61,31 +61,6 @@ pub struct ApiToken {
 }
 
 impl ApiToken {
-    pub async fn insert_with_scopes(
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-        name: &str,
-        crate_scopes: Option<Vec<CrateScope>>,
-        endpoint_scopes: Option<Vec<EndpointScope>>,
-        expired_at: Option<NaiveDateTime>,
-    ) -> QueryResult<CreatedApiToken> {
-        let token = PlainToken::generate();
-
-        let new_token = NewApiToken::builder()
-            .user_id(user_id)
-            .name(name)
-            .token(token.hashed())
-            .maybe_crate_scopes(crate_scopes)
-            .maybe_endpoint_scopes(endpoint_scopes)
-            .maybe_expired_at(expired_at)
-            .build();
-
-        Ok(CreatedApiToken {
-            plaintext: token,
-            model: new_token.insert(conn).await?,
-        })
-    }
-
     pub async fn find_by_api_token(
         conn: &mut AsyncPgConnection,
         token: &HashedToken,
@@ -118,12 +93,6 @@ impl ApiToken {
         };
         token
     }
-}
-
-#[derive(Debug)]
-pub struct CreatedApiToken {
-    pub model: ApiToken,
-    pub plaintext: PlainToken,
 }
 
 #[cfg(test)]
