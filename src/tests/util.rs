@@ -50,7 +50,6 @@ mod mock_request;
 mod response;
 mod test_app;
 
-use crate::controllers::token::CreatedApiToken;
 use mock_request::MockRequest;
 pub use mock_request::MockRequestExt;
 pub use response::Response;
@@ -332,14 +331,12 @@ impl MockCookieUser {
             .maybe_expired_at(expired_at)
             .build();
 
-        let token = CreatedApiToken {
-            plaintext,
-            model: new_token.insert(&mut conn).await.unwrap(),
-        };
+        let token = new_token.insert(&mut conn).await.unwrap();
 
         MockTokenUser {
             app: self.app.clone(),
             token,
+            plaintext,
         }
     }
 }
@@ -347,13 +344,14 @@ impl MockCookieUser {
 /// A type that can generate token authenticated requests
 pub struct MockTokenUser {
     app: TestApp,
-    token: CreatedApiToken,
+    token: ApiToken,
+    plaintext: PlainToken,
 }
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = req(method, path);
-        request.header(header::AUTHORIZATION, self.token.plaintext.expose_secret());
+        request.header(header::AUTHORIZATION, self.plaintext.expose_secret());
         request
     }
 
@@ -365,10 +363,10 @@ impl RequestHelper for MockTokenUser {
 impl MockTokenUser {
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
-        &self.token.model
+        &self.token
     }
 
     pub fn plaintext(&self) -> &PlainToken {
-        &self.token.plaintext
+        &self.plaintext
     }
 }
