@@ -9,7 +9,6 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 use thiserror::Error;
 
-use crate::controllers::helpers::pagination::*;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
@@ -491,17 +490,17 @@ impl Crate {
     pub(crate) async fn reverse_dependencies(
         &self,
         conn: &mut AsyncPgConnection,
-        options: PaginationOptions,
+        offset: i64,
+        limit: i64,
     ) -> QueryResult<(Vec<ReverseDependency>, i64)> {
         use diesel::sql_query;
         use diesel::sql_types::{BigInt, Integer};
 
-        let offset = options.offset().unwrap_or_default();
         let rows: Vec<WithCount<ReverseDependency>> =
             sql_query(include_str!("krate_reverse_dependencies.sql"))
                 .bind::<Integer, _>(self.id)
                 .bind::<BigInt, _>(offset)
-                .bind::<BigInt, _>(options.per_page)
+                .bind::<BigInt, _>(limit)
                 .load(conn)
                 .await?;
 
