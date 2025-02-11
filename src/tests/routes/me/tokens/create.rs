@@ -1,4 +1,4 @@
-use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::models::ApiToken;
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
@@ -46,7 +46,9 @@ async fn create_token_exceeded_tokens_per_user() {
     let id = user.as_model().id;
 
     for i in 0..1000 {
-        assert_ok!(ApiToken::insert(&mut conn, id, &format!("token {i}")).await);
+        let name = format!("token {i}");
+        let new_token = NewApiToken::builder().name(name).user_id(id).build();
+        assert_ok!(new_token.insert(&mut conn).await);
     }
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;

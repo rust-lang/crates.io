@@ -1,5 +1,4 @@
-use crate::models::token::{CrateScope, EndpointScope};
-use crate::models::ApiToken;
+use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
@@ -33,32 +32,26 @@ async fn list_tokens() {
     let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
-    assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);
-    assert_ok!(
-        ApiToken::insert_with_scopes(
-            &mut conn,
-            id,
-            "baz",
-            Some(vec![
-                CrateScope::try_from("serde").unwrap(),
-                CrateScope::try_from("serde-*").unwrap()
-            ]),
-            Some(vec![EndpointScope::PublishUpdate]),
-            None
-        )
-        .await
-    );
-    assert_ok!(
-        ApiToken::insert_with_scopes(
-            &mut conn,
-            id,
-            "qux",
-            None,
-            None,
-            Some((Utc::now() - Duration::days(1)).naive_utc()),
-        )
-        .await
-    );
+    let new_token = NewApiToken::builder().name("bar").user_id(id).build();
+    assert_ok!(new_token.insert(&mut conn).await);
+
+    let new_token = NewApiToken::builder()
+        .name("baz")
+        .user_id(id)
+        .crate_scopes(vec![
+            CrateScope::try_from("serde").unwrap(),
+            CrateScope::try_from("serde-*").unwrap(),
+        ])
+        .endpoint_scopes(vec![EndpointScope::PublishUpdate])
+        .build();
+    assert_ok!(new_token.insert(&mut conn).await);
+
+    let new_token = NewApiToken::builder()
+        .name("qux")
+        .user_id(id)
+        .expired_at((Utc::now() - Duration::days(1)).naive_utc())
+        .build();
+    assert_ok!(new_token.insert(&mut conn).await);
 
     let response = user.get::<()>("/api/v1/me/tokens").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -80,32 +73,27 @@ async fn list_recently_expired_tokens() {
     let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
-    assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);
-    assert_ok!(
-        ApiToken::insert_with_scopes(
-            &mut conn,
-            id,
-            "ancient",
-            Some(vec![
-                CrateScope::try_from("serde").unwrap(),
-                CrateScope::try_from("serde-*").unwrap()
-            ]),
-            Some(vec![EndpointScope::PublishUpdate]),
-            Some((Utc::now() - Duration::days(31)).naive_utc()),
-        )
-        .await
-    );
-    assert_ok!(
-        ApiToken::insert_with_scopes(
-            &mut conn,
-            id,
-            "recent",
-            None,
-            None,
-            Some((Utc::now() - Duration::days(1)).naive_utc()),
-        )
-        .await
-    );
+    let new_token = NewApiToken::builder().name("bar").user_id(id).build();
+    assert_ok!(new_token.insert(&mut conn).await);
+
+    let new_token = NewApiToken::builder()
+        .name("ancient")
+        .user_id(id)
+        .crate_scopes(vec![
+            CrateScope::try_from("serde").unwrap(),
+            CrateScope::try_from("serde-*").unwrap(),
+        ])
+        .endpoint_scopes(vec![EndpointScope::PublishUpdate])
+        .expired_at((Utc::now() - Duration::days(31)).naive_utc())
+        .build();
+    assert_ok!(new_token.insert(&mut conn).await);
+
+    let new_token = NewApiToken::builder()
+        .name("recent")
+        .user_id(id)
+        .expired_at((Utc::now() - Duration::days(1)).naive_utc())
+        .build();
+    assert_ok!(new_token.insert(&mut conn).await);
 
     let response = user.get::<()>("/api/v1/me/tokens?expired_days=30").await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -131,8 +119,11 @@ async fn list_tokens_exclude_revoked() {
     let mut conn = app.db_conn().await;
     let id = user.as_model().id;
 
-    let token1 = assert_ok!(ApiToken::insert(&mut conn, id, "bar").await);
-    assert_ok!(ApiToken::insert(&mut conn, id, "baz").await);
+    let new_token = NewApiToken::builder().name("bar").user_id(id).build();
+    let token1 = assert_ok!(new_token.insert(&mut conn).await);
+
+    let new_token = NewApiToken::builder().name("baz").user_id(id).build();
+    assert_ok!(new_token.insert(&mut conn).await);
 
     // List tokens expecting them all to be there.
     let response = user.get::<()>("/api/v1/me/tokens").await;
@@ -143,7 +134,7 @@ async fn list_tokens_exclude_revoked() {
 
     // Revoke the first token.
     let response = user
-        .delete::<()>(&format!("/api/v1/me/tokens/{}", token1.model.id))
+        .delete::<()>(&format!("/api/v1/me/tokens/{}", token1.id))
         .await;
     assert_eq!(response.status(), StatusCode::OK);
 

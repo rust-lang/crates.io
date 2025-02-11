@@ -61,15 +61,6 @@ pub struct ApiToken {
 }
 
 impl ApiToken {
-    /// Generates a new named API token for a user
-    pub async fn insert(
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-        name: &str,
-    ) -> QueryResult<CreatedApiToken> {
-        Self::insert_with_scopes(conn, user_id, name, None, None, None).await
-    }
-
     pub async fn insert_with_scopes(
         conn: &mut AsyncPgConnection,
         user_id: i32,
