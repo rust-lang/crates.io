@@ -702,10 +702,11 @@ mod tests {
     async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
 
-        let user = NewUser {
-            gh_login,
-            ..NewUser::default()
-        };
+        let user = NewUser::builder()
+            .gh_id(0)
+            .gh_login(gh_login)
+            .gh_access_token("some random token")
+            .build();
 
         diesel::insert_into(users::table)
             .values(user)

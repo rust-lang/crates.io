@@ -770,13 +770,11 @@ async fn inactive_users_dont_get_invitations() {
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
-    let user = NewUser {
-        gh_id: -1,
-        gh_login: invited_gh_login,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token",
-    };
+    let user = NewUser::builder()
+        .gh_id(-1)
+        .gh_login(invited_gh_login)
+        .gh_access_token("some random token")
+        .build();
 
     diesel::insert_into(users::table)
         .values(user)

@@ -1,3 +1,4 @@
+use bon::Builder;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -106,7 +107,7 @@ impl User {
 }
 
 /// Represents a new user record insertable to the `users` table
-#[derive(Insertable, Debug, Default)]
+#[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
@@ -124,13 +125,13 @@ impl<'a> NewUser<'a> {
         gh_avatar: Option<&'a str>,
         gh_access_token: &'a str,
     ) -> Self {
-        NewUser {
-            gh_id,
-            gh_login,
-            name,
-            gh_avatar,
-            gh_access_token,
-        }
+        NewUser::builder()
+            .gh_id(gh_id)
+            .gh_login(gh_login)
+            .maybe_name(name)
+            .maybe_gh_avatar(gh_avatar)
+            .gh_access_token(gh_access_token)
+            .build()
     }
 
     /// Inserts the user into the database, or updates an existing one.

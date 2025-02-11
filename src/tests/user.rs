@@ -76,12 +76,13 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         .await;
 
     // Simulate the same user logging in via GitHub again, still with no email in GitHub.
-    let u = NewUser {
+    let u = NewUser::builder()
         // Use the same github ID to link to the existing account
-        gh_id: user_without_github_email_model.gh_id,
-        // new_user uses a None email; the rest of the fields are arbitrary
-        ..new_user("arbitrary_username")
-    };
+        .gh_id(user_without_github_email_model.gh_id)
+        .gh_login("arbitrary_username")
+        .gh_access_token("some random token")
+        .build();
+
     let u = u
         .create_or_update(None, &app.as_inner().emails, &mut conn)
         .await?;
@@ -115,12 +116,13 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let emails = app.as_inner().emails.clone();
 
-    let u = NewUser {
+    let u = NewUser::builder()
         // Use the same github ID to link to the existing account
-        gh_id: model.gh_id,
-        // the rest of the fields are arbitrary
-        ..new_user("arbitrary_username")
-    };
+        .gh_id(model.gh_id)
+        .gh_login("arbitrary_username")
+        .gh_access_token("some random token")
+        .build();
+
     let u = u
         .create_or_update(Some(new_github_email), &emails, &mut conn)
         .await?;
