@@ -16,6 +16,14 @@ pub enum NewCrateOwnerInvitationOutcome {
     InviteCreated { plaintext_token: SecretString },
 }
 
+#[derive(Clone, Debug, Insertable)]
+#[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
+pub struct NewCrateOwnerInvitation {
+    pub invited_user_id: i32,
+    pub invited_by_user_id: i32,
+    pub crate_id: i32,
+}
+
 /// The model representing a row in the `crate_owner_invitations` database table.
 #[derive(Clone, Debug, Identifiable, Queryable)]
 #[diesel(primary_key(invited_user_id, crate_id))]
@@ -36,14 +44,6 @@ impl CrateOwnerInvitation {
         conn: &mut AsyncPgConnection,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
-        #[derive(Insertable, Clone, Copy, Debug)]
-        #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
-        struct NewRecord {
-            invited_user_id: i32,
-            invited_by_user_id: i32,
-            crate_id: i32,
-        }
-
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
         // expired, instead of returning "already exists".
@@ -70,7 +70,7 @@ impl CrateOwnerInvitation {
         .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
-            .values(&NewRecord {
+            .values(&NewCrateOwnerInvitation {
                 invited_user_id,
                 invited_by_user_id,
                 crate_id,
