@@ -2,7 +2,7 @@ use crate::schema::versions_published_by;
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::QueryDsl;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use googletest::prelude::*;
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
@@ -116,22 +116,11 @@ async fn new_krate_twice() {
 // The primary purpose is to verify that the `default_version` we provide is as expected.
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_twice_alt() {
-    use crate::schema::default_versions;
-
     let (app, _, _, token) = TestApp::full().with_token().await;
-    let mut conn = app.db_conn().await;
 
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
     token.publish_crate(crate_to_publish).await.good();
-
-    let num_versions = default_versions::table
-        .select(default_versions::num_versions)
-        .load::<Option<i32>>(&mut conn)
-        .await
-        .unwrap();
-    assert_eq!(num_versions.len(), 1);
-    assert_eq!(num_versions[0], Some(1));
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
     let response = token.publish_crate(crate_to_publish).await;
@@ -140,14 +129,6 @@ async fn new_krate_twice_alt() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-
-    let num_versions = default_versions::table
-        .select(default_versions::num_versions)
-        .load::<Option<i32>>(&mut conn)
-        .await
-        .unwrap();
-    assert_eq!(num_versions.len(), 1);
-    assert_eq!(num_versions[0], Some(2));
 
     let crates = app.crates_from_index_head("foo_twice");
     assert_json_snapshot!(crates);
@@ -179,4 +160,34 @@ async fn new_krate_duplicate_version() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate version `1.0.0` is already uploaded"}]}"#);
 
     assert_that!(app.stored_files().await, empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_advance_num_versions() {
+    use crate::schema::default_versions;
+
+    let (app, _, _, token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+
+    async fn assert_num_versions(conn: &mut AsyncPgConnection, expected: i32) {
+        let num_versions = default_versions::table
+            .select(default_versions::num_versions)
+            .load::<Option<i32>>(conn)
+            .await
+            .unwrap();
+        assert_eq!(num_versions.len(), 1);
+        assert_eq!(num_versions[0], Some(expected));
+    }
+
+    let crate_to_publish = PublishBuilder::new("foo", "2.0.0").description("2.0.0 description");
+    token.publish_crate(crate_to_publish).await.good();
+    assert_num_versions(&mut conn, 1).await;
+
+    let crate_to_publish = PublishBuilder::new("foo", "2.0.1").description("2.0.1 description");
+    token.publish_crate(crate_to_publish).await.good();
+    assert_num_versions(&mut conn, 2).await;
+
+    let crate_to_publish = PublishBuilder::new("foo", "2.0.2").description("2.0.2 description");
+    token.publish_crate(crate_to_publish).await.good();
+    assert_num_versions(&mut conn, 3).await;
 }
