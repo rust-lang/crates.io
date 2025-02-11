@@ -1,5 +1,6 @@
 mod scopes;
 
+use bon::Builder;
 use chrono::NaiveDateTime;
 use diesel::dsl::now;
 use diesel::prelude::*;
@@ -12,11 +13,13 @@ use crate::schema::api_tokens;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, Builder)]
 #[diesel(table_name = api_tokens, check_for_backend(diesel::pg::Pg))]
 pub struct NewApiToken {
     pub user_id: i32,
+    #[builder(into)]
     pub name: String,
+    #[builder(default = PlainToken::generate().hashed())]
     pub token: HashedToken,
     /// `None` or a list of crate scope patterns (see RFC #2947)
     pub crate_scopes: Option<Vec<CrateScope>>,
@@ -77,14 +80,14 @@ impl ApiToken {
     ) -> QueryResult<CreatedApiToken> {
         let token = PlainToken::generate();
 
-        let new_token = NewApiToken {
-            user_id,
-            name: name.to_string(),
-            token: token.hashed(),
-            crate_scopes,
-            endpoint_scopes,
-            expired_at,
-        };
+        let new_token = NewApiToken::builder()
+            .user_id(user_id)
+            .name(name)
+            .token(token.hashed())
+            .maybe_crate_scopes(crate_scopes)
+            .maybe_endpoint_scopes(endpoint_scopes)
+            .maybe_expired_at(expired_at)
+            .build();
 
         Ok(CreatedApiToken {
             plaintext: token,
