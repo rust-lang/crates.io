@@ -25,6 +25,16 @@ pub struct NewApiToken {
     pub expired_at: Option<NaiveDateTime>,
 }
 
+impl NewApiToken {
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<ApiToken> {
+        diesel::insert_into(api_tokens::table)
+            .values(self)
+            .returning(ApiToken::as_returning())
+            .get_result(conn)
+            .await
+    }
+}
+
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Debug, Identifiable, Queryable, Selectable, Associations, Serialize)]
 #[diesel(belongs_to(User))]
@@ -76,15 +86,9 @@ impl ApiToken {
             expired_at,
         };
 
-        let model: ApiToken = diesel::insert_into(api_tokens::table)
-            .values(new_token)
-            .returning(ApiToken::as_returning())
-            .get_result(conn)
-            .await?;
-
         Ok(CreatedApiToken {
             plaintext: token,
-            model,
+            model: new_token.insert(conn).await?,
         })
     }
 
