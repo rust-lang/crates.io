@@ -59,7 +59,6 @@ invited_by_user_id = "private"
 crate_id = "private"
 created_at = "private"
 token = "private"
-token_generated_at = "private"
 
 [crate_owners]
 dependencies = ["crates", "users"]
