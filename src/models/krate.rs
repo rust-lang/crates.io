@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
@@ -11,12 +11,8 @@ use thiserror::Error;
 
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
-use crate::models::{
-    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
-    ReverseDependency, User, Version,
-};
+use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
 use crate::schema::*;
-use crate::{app::App, util::errors::BoxedAppError};
 use crates_io_diesel_helpers::canon_crate_name;
 
 use super::Team;
@@ -383,62 +379,6 @@ impl Crate {
         Ok(users.chain(teams).collect())
     }
 
-    /// Invite `login` as an owner of this crate, returning the created
-    /// [`NewOwnerInvite`].
-    pub async fn owner_add(
-        &self,
-        app: &App,
-        conn: &mut AsyncPgConnection,
-        req_user: &User,
-        login: &str,
-    ) -> Result<NewOwnerInvite, OwnerAddError> {
-        use diesel::insert_into;
-
-        let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
-        match owner {
-            // Users are invited and must accept before being added
-            Owner::User(user) => {
-                let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
-                let invite = NewCrateOwnerInvitation {
-                    invited_user_id: user.id,
-                    invited_by_user_id: req_user.id,
-                    crate_id: self.id,
-                    expires_at,
-                };
-
-                let creation_ret = invite.create(conn).await.map_err(BoxedAppError::from)?;
-
-                match creation_ret {
-                    NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                        Ok(NewOwnerInvite::User(user, plaintext_token))
-                    }
-                    NewCrateOwnerInvitationOutcome::AlreadyExists => {
-                        Err(OwnerAddError::AlreadyInvited(Box::new(user)))
-                    }
-                }
-            }
-            // Teams are added as owners immediately
-            Owner::Team(team) => {
-                insert_into(crate_owners::table)
-                    .values(&CrateOwner {
-                        crate_id: self.id,
-                        owner_id: team.id,
-                        created_by: req_user.id,
-                        owner_kind: OwnerKind::Team,
-                        email_notifications: true,
-                    })
-                    .on_conflict(crate_owners::table.primary_key())
-                    .do_update()
-                    .set(crate_owners::deleted.eq(false))
-                    .execute(conn)
-                    .await
-                    .map_err(BoxedAppError::from)?;
-
-                Ok(NewOwnerInvite::Team(team))
-            }
-        }
-    }
-
     pub async fn owner_remove(
         &self,
         conn: &mut AsyncPgConnection,
@@ -519,21 +459,6 @@ pub enum NewOwnerInvite {
     Team(Team),
 }
 
-/// Error results from a [`Crate::owner_add()`] model call.
-#[derive(Debug, Error)]
-pub enum OwnerAddError {
-    /// An opaque [`BoxedAppError`].
-    #[error("{0}")] // AppError does not impl Error
-    AppError(BoxedAppError),
-
-    /// The requested invitee already has a pending invite.
-    ///
-    /// Note: Teams are always immediately added, so they cannot have a pending
-    /// invite to cause this error.
-    #[error("user already has pending invite")]
-    AlreadyInvited(Box<User>),
-}
-
 #[derive(Debug, Error)]
 pub enum OwnerRemoveError {
     #[error(transparent)]
@@ -546,14 +471,6 @@ impl OwnerRemoveError {
     pub fn not_found(login: &str) -> Self {
         let login = login.to_string();
         Self::NotFound { login }
-    }
-}
-
-/// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual
-/// [`From`] impl.
-impl From<BoxedAppError> for OwnerAddError {
-    fn from(value: BoxedAppError) -> Self {
-        Self::AppError(value)
     }
 }
 
