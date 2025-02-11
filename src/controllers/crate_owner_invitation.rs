@@ -14,7 +14,7 @@ use axum::extract::{FromRequestParts, Path, Query};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
@@ -175,7 +175,7 @@ async fn prepare_list(
         };
 
     // Load all the non-expired invitations matching the filter.
-    let expire_cutoff = Duration::days(config.ownership_invitations_expiration_days as i64);
+    let expire_cutoff = config.ownership_invitations_expiration;
     let query = crate_owner_invitations::table
         .filter(sql_filter)
         .filter(crate_owner_invitations::created_at.gt((Utc::now() - expire_cutoff).naive_utc()))

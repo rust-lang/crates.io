@@ -57,7 +57,7 @@ pub struct Server {
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
     pub downloads_persist_interval: Duration,
-    pub ownership_invitations_expiration_days: u64,
+    pub ownership_invitations_expiration: chrono::Duration,
     pub metrics_authorization_token: Option<String>,
     pub instance_metrics_log_every_seconds: Option<u64>,
     pub blocked_routes: HashSet<String>,
@@ -211,7 +211,7 @@ impl Server {
             downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
                 .map(Duration::from_millis)
                 .unwrap_or(Duration::from_secs(60)),
-            ownership_invitations_expiration_days: 30,
+            ownership_invitations_expiration: chrono::Duration::days(30),
             metrics_authorization_token: var("METRICS_AUTHORIZATION_TOKEN")?,
             instance_metrics_log_every_seconds: var_parsed("INSTANCE_METRICS_LOG_EVERY_SECONDS")?,
             blocked_routes: HashSet::from_iter(list("BLOCKED_ROUTES")?),

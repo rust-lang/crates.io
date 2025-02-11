@@ -9,7 +9,7 @@ use crate::views::{
 };
 
 use crate::schema::users;
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -625,8 +625,8 @@ pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
 
     let mut conn = app.db_conn().await;
 
-    let expiration = app.as_inner().config.ownership_invitations_expiration_days as i64;
-    let created_at = (Utc::now() - Duration::days(expiration)).naive_utc();
+    let expiration = app.as_inner().config.ownership_invitations_expiration;
+    let created_at = (Utc::now() - expiration).naive_utc();
 
     diesel::update(crate_owner_invitations::table)
         .set(crate_owner_invitations::created_at.eq(created_at))
