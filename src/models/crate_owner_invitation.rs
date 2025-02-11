@@ -6,7 +6,7 @@ use http::StatusCode;
 use secrecy::SecretString;
 
 use crate::config;
-use crate::models::{CrateOwner, OwnerKind};
+use crate::models::CrateOwner;
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
 use crate::util::errors::{custom, AppResult};
 
@@ -131,13 +131,7 @@ impl CrateOwnerInvitation {
         conn.transaction(|conn| {
             async move {
                 diesel::insert_into(crate_owners::table)
-                    .values(&CrateOwner {
-                        crate_id: self.crate_id,
-                        owner_id: self.invited_user_id,
-                        created_by: self.invited_by_user_id,
-                        owner_kind: OwnerKind::User,
-                        email_notifications: true,
-                    })
+                    .values(CrateOwner::from_invite(&self))
                     .on_conflict(crate_owners::table.primary_key())
                     .do_update()
                     .set(crate_owners::deleted.eq(false))
