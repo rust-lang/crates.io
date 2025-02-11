@@ -1,4 +1,6 @@
 use chrono::NaiveDateTime;
+use diesel::{OptionalExtension, QueryResult};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::models::User;
@@ -22,4 +24,22 @@ pub struct NewEmail<'a> {
     pub user_id: i32,
     pub email: &'a str,
     pub verified: bool,
+}
+
+impl NewEmail<'_> {
+    /// Inserts the email into the database and returns the confirmation token,
+    /// or does nothing if it already exists and returns `None`.
+    pub async fn insert_if_missing(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Option<SecretString>> {
+        diesel::insert_into(emails::table)
+            .values(self)
+            .on_conflict_do_nothing()
+            .returning(emails::token)
+            .get_result::<String>(conn)
+            .await
+            .map(Into::into)
+            .optional()
+    }
 }
