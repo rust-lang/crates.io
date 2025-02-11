@@ -1,7 +1,5 @@
 use chrono::NaiveDateTime;
-use secrecy::ExposeSecret;
 
-use crate::controllers::token::CreatedApiToken;
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
     ApiToken, Category, Crate, CrateOwnerInvitation, Dependency, DependencyKind, Keyword, Owner,
@@ -443,15 +441,6 @@ pub struct EncodableApiTokenWithToken {
     pub token: ApiToken,
     #[serde(rename = "token")]
     pub plaintext: String,
-}
-
-impl From<CreatedApiToken> for EncodableApiTokenWithToken {
-    fn from(token: CreatedApiToken) -> Self {
-        EncodableApiTokenWithToken {
-            token: token.model,
-            plaintext: token.plaintext.expose_secret().to_string(),
-        }
-    }
 }
 
 #[derive(Deserialize, Serialize, Debug)]

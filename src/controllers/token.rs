@@ -20,6 +20,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use http::StatusCode;
+use secrecy::ExposeSecret;
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -176,20 +177,12 @@ pub async fn create_api_token(
         }
     }
 
-    let created_token = CreatedApiToken {
-        plaintext,
-        model: new_token.insert(&mut conn).await?,
+    let api_token = EncodableApiTokenWithToken {
+        token: new_token.insert(&mut conn).await?,
+        plaintext: plaintext.expose_secret().to_string(),
     };
 
-    let api_token = EncodableApiTokenWithToken::from(created_token);
-
     Ok(json!({ "api_token": api_token }))
-}
-
-#[derive(Debug)]
-pub struct CreatedApiToken {
-    pub model: ApiToken,
-    pub plaintext: PlainToken,
 }
 
 /// Find API token by id.
