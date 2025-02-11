@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
@@ -401,10 +401,12 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
+                let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
                 let invite = NewCrateOwnerInvitation {
                     invited_user_id: user.id,
                     invited_by_user_id: req_user.id,
                     crate_id: self.id,
+                    expires_at,
                 };
 
                 let creation_ret = invite
