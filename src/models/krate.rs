@@ -16,7 +16,6 @@ use crate::models::{
     ReverseDependency, User, Version,
 };
 use crate::schema::*;
-use crate::util::errors::{version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
 use crates_io_diesel_helpers::canon_crate_name;
 
@@ -208,14 +207,13 @@ impl Crate {
         &self,
         conn: &mut AsyncPgConnection,
         version: &str,
-    ) -> AppResult<Version> {
+    ) -> QueryResult<Option<Version>> {
         Version::belonging_to(self)
             .filter(versions::num.eq(version))
             .select(Version::as_select())
             .first(conn)
             .await
-            .optional()?
-            .ok_or_else(|| version_not_found(&self.name, version))
+            .optional()
     }
 
     // Validates the name is a valid crate name.
