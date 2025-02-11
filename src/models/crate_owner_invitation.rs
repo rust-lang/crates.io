@@ -2,13 +2,11 @@ use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use http::StatusCode;
 use secrecy::SecretString;
 
 use crate::config;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
-use crate::util::errors::{custom, AppResult};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -109,7 +107,7 @@ impl CrateOwnerInvitation {
         self,
         conn: &mut AsyncPgConnection,
         config: &config::Server,
-    ) -> AppResult<()> {
+    ) -> Result<(), AcceptError> {
         use diesel_async::scoped_futures::ScopedFutureExt;
         use diesel_async::{AsyncConnection, RunQueryDsl};
 
@@ -120,12 +118,7 @@ impl CrateOwnerInvitation {
                 .first(conn)
                 .await?;
 
-            let detail = format!(
-                "The invitation to become an owner of the {crate_name} crate expired. \
-                Please reach out to an owner of the crate to request a new invitation.",
-            );
-
-            return Err(custom(StatusCode::GONE, detail));
+            return Err(AcceptError::Expired { crate_name });
         }
 
         conn.transaction(|conn| {
@@ -169,4 +162,12 @@ impl CrateOwnerInvitation {
     pub fn expires_at(&self, config: &config::Server) -> NaiveDateTime {
         self.created_at + config.ownership_invitations_expiration
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AcceptError {
+    #[error(transparent)]
+    Diesel(#[from] diesel::result::Error),
+    #[error("The invitation has expired")]
+    Expired { crate_name: String },
 }

@@ -2,9 +2,10 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::auth::Authentication;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
+use crate::models::crate_owner_invitation::AcceptError;
 use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
 use crate::schema::{crate_owner_invitations, crates, users};
-use crate::util::errors::{bad_request, forbidden, internal, AppResult, BoxedAppError};
+use crate::util::errors::{bad_request, custom, forbidden, internal, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
 use crate::views::{
     EncodableCrateOwnerInvitation, EncodableCrateOwnerInvitationV1, EncodablePublicUser,
@@ -20,6 +21,7 @@ use diesel::prelude::*;
 use diesel::sql_types::Bool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
+use http::StatusCode;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
@@ -379,4 +381,20 @@ pub async fn accept_crate_owner_invitation_with_token(
             "accepted": true,
         },
     }))
+}
+
+impl From<AcceptError> for BoxedAppError {
+    fn from(error: AcceptError) -> Self {
+        match error {
+            AcceptError::Diesel(error) => error.into(),
+            AcceptError::Expired { crate_name } => {
+                let detail = format!(
+                    "The invitation to become an owner of the {crate_name} crate expired. \
+                    Please reach out to an owner of the crate to request a new invitation.",
+                );
+
+                custom(StatusCode::GONE, detail)
+            }
+        }
+    }
 }
