@@ -281,6 +281,32 @@ async fn modify_owners(
     Ok(json!({ "msg": comma_sep_msg, "ok": true }))
 }
 
+/// Finds the owner by name. Always recreates teams to get the most
+/// up-to-date GitHub ID. Fails out if the user isn't found in the
+/// database, the team isn't found on GitHub, or if the user isn't a member
+/// of the team on GitHub.
+///
+/// May be a user's GH login or a full team name. This is case
+/// sensitive.
+pub async fn find_or_create_owner(
+    app: &App,
+    conn: &mut AsyncPgConnection,
+    req_user: &User,
+    name: &str,
+) -> AppResult<Owner> {
+    if name.contains(':') {
+        Ok(Owner::Team(
+            Team::create_or_update(app, conn, name, req_user).await?,
+        ))
+    } else {
+        User::find_by_login(conn, name)
+            .await
+            .optional()?
+            .map(Owner::User)
+            .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))
+    }
+}
+
 /// Invite `login` as an owner of this crate, returning the created
 /// [`NewOwnerInvite`].
 async fn add_owner(
@@ -292,7 +318,7 @@ async fn add_owner(
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     use diesel::insert_into;
 
-    let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
+    let owner = find_or_create_owner(app, conn, req_user, login).await?;
     match owner {
         // Users are invited and must accept before being added
         Owner::User(user) => {

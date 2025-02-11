@@ -1,8 +1,5 @@
-use crate::app::App;
-use crate::util::errors::{bad_request, AppResult};
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel_async::AsyncPgConnection;
 
 use crate::models::{Crate, CrateOwnerInvitation, Team, User};
 use crate::schema::crate_owners;
@@ -63,32 +60,6 @@ pub enum Owner {
 }
 
 impl Owner {
-    /// Finds the owner by name. Always recreates teams to get the most
-    /// up-to-date GitHub ID. Fails out if the user isn't found in the
-    /// database, the team isn't found on GitHub, or if the user isn't a member
-    /// of the team on GitHub.
-    ///
-    /// May be a user's GH login or a full team name. This is case
-    /// sensitive.
-    pub async fn find_or_create_by_login(
-        app: &App,
-        conn: &mut AsyncPgConnection,
-        req_user: &User,
-        name: &str,
-    ) -> AppResult<Owner> {
-        if name.contains(':') {
-            Ok(Owner::Team(
-                Team::create_or_update(app, conn, name, req_user).await?,
-            ))
-        } else {
-            User::find_by_login(conn, name)
-                .await
-                .optional()?
-                .map(Owner::User)
-                .ok_or_else(|| bad_request(format_args!("could not find user with login `{name}`")))
-        }
-    }
-
     pub fn kind(&self) -> i32 {
         match self {
             Owner::User(_) => OwnerKind::User as i32,
