@@ -118,22 +118,6 @@ pub struct NewUser<'a> {
 }
 
 impl<'a> NewUser<'a> {
-    pub fn new(
-        gh_id: i32,
-        gh_login: &'a str,
-        name: Option<&'a str>,
-        gh_avatar: Option<&'a str>,
-        gh_access_token: &'a str,
-    ) -> Self {
-        NewUser::builder()
-            .gh_id(gh_id)
-            .gh_login(gh_login)
-            .maybe_name(name)
-            .maybe_gh_avatar(gh_avatar)
-            .gh_access_token(gh_access_token)
-            .build()
-    }
-
     /// Inserts the user into the database, or updates an existing one.
     pub async fn create_or_update(
         &self,

@@ -111,7 +111,12 @@ mod tests {
     use diesel_async::AsyncConnection;
 
     async fn user(conn: &mut AsyncPgConnection) -> User {
-        let user = NewUser::new(2, "login", None, None, "access_token");
+        let user = NewUser::builder()
+            .gh_id(2)
+            .gh_login("login")
+            .gh_access_token("access_token")
+            .build();
+
         diesel::insert_into(users::table)
             .values(user)
             .get_result(conn)

@@ -35,21 +35,19 @@ async fn show_latest_user_case_insensitively() {
     // crates.io/user/{username} pages, the best we can do is show the last crates.io account
     // created with that username.
 
-    let user1 = NewUser::new(
-        1,
-        "foobar",
-        Some("I was first then deleted my github account"),
-        None,
-        "bar",
-    );
+    let user1 = NewUser::builder()
+        .gh_id(1)
+        .gh_login("foobar")
+        .name("I was first then deleted my github account")
+        .gh_access_token("bar")
+        .build();
 
-    let user2 = NewUser::new(
-        2,
-        "FOOBAR",
-        Some("I was second, I took the foobar username on github"),
-        None,
-        "bar",
-    );
+    let user2 = NewUser::builder()
+        .gh_id(2)
+        .gh_login("FOOBAR")
+        .name("I was second, I took the foobar username on github")
+        .gh_access_token("bar")
+        .build();
 
     assert_ok!(
         diesel::insert_into(users::table)

@@ -26,7 +26,11 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
 
     // Reuse gh_id but use new gh_login and gh_access_token
     assert_ok!(
-        NewUser::new(gh_id, "bar", None, None, "bar_token")
+        NewUser::builder()
+            .gh_id(gh_id)
+            .gh_login("bar")
+            .gh_access_token("bar_token")
+            .build()
             .create_or_update(None, &app.as_inner().emails, &mut conn)
             .await
     );

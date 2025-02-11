@@ -40,7 +40,11 @@ pub mod faker {
     }
 
     pub async fn user(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
-        let user = NewUser::new(next_gh_id(), login, None, None, "token");
+        let user = NewUser::builder()
+            .gh_id(next_gh_id())
+            .gh_login(login)
+            .gh_access_token("token")
+            .build();
 
         diesel::insert_into(users::table)
             .values(user)

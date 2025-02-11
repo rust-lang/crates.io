@@ -178,7 +178,11 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user = NewUser::new(0, "a", None, None, "token");
+        let user = NewUser::builder()
+            .gh_id(0)
+            .gh_login("a")
+            .gh_access_token("token")
+            .build();
         let emails = Emails::new_in_memory();
         let user = user
             .create_or_update(Some("testuser@test.com"), &emails, &mut conn)
