@@ -13,7 +13,7 @@ use crate::controllers::helpers::pagination::*;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
-    CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
+    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
     ReverseDependency, User, Version,
 };
 use crate::schema::*;
@@ -401,10 +401,16 @@ impl Crate {
         match owner {
             // Users are invited and must accept before being added
             Owner::User(user) => {
-                let creation_ret =
-                    CrateOwnerInvitation::create(user.id, req_user.id, self.id, conn, &app.config)
-                        .await
-                        .map_err(BoxedAppError::from)?;
+                let invite = NewCrateOwnerInvitation {
+                    invited_user_id: user.id,
+                    invited_by_user_id: req_user.id,
+                    crate_id: self.id,
+                };
+
+                let creation_ret = invite
+                    .create(conn, &app.config)
+                    .await
+                    .map_err(BoxedAppError::from)?;
 
                 match creation_ret {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {

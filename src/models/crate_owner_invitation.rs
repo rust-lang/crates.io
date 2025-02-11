@@ -16,34 +16,20 @@ pub enum NewCrateOwnerInvitationOutcome {
     InviteCreated { plaintext_token: SecretString },
 }
 
-/// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Debug, Identifiable, Queryable)]
-#[diesel(primary_key(invited_user_id, crate_id))]
-pub struct CrateOwnerInvitation {
+#[derive(Clone, Debug, Insertable)]
+#[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
+pub struct NewCrateOwnerInvitation {
     pub invited_user_id: i32,
     pub invited_by_user_id: i32,
     pub crate_id: i32,
-    pub created_at: NaiveDateTime,
-    #[diesel(deserialize_as = String)]
-    pub token: SecretString,
 }
 
-impl CrateOwnerInvitation {
+impl NewCrateOwnerInvitation {
     pub async fn create(
-        invited_user_id: i32,
-        invited_by_user_id: i32,
-        crate_id: i32,
+        &self,
         conn: &mut AsyncPgConnection,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
-        #[derive(Insertable, Clone, Copy, Debug)]
-        #[diesel(table_name = crate_owner_invitations, check_for_backend(diesel::pg::Pg))]
-        struct NewRecord {
-            invited_user_id: i32,
-            invited_by_user_id: i32,
-            crate_id: i32,
-        }
-
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
         // expired, instead of returning "already exists".
@@ -52,7 +38,7 @@ impl CrateOwnerInvitation {
                 // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
                 // use the model's `is_expired` method, centralizing our expiration checking logic.
                 let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
-                    .find((invited_user_id, crate_id))
+                    .find((self.invited_user_id, self.crate_id))
                     .for_update()
                     .first(conn)
                     .await
@@ -70,11 +56,7 @@ impl CrateOwnerInvitation {
         .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
-            .values(&NewRecord {
-                invited_user_id,
-                invited_by_user_id,
-                crate_id,
-            })
+            .values(self)
             // The ON CONFLICT DO NOTHING clause results in not creating the invite if another one
             // already exists. This does not cause problems with expired invitation as those are
             // deleted before doing this INSERT.
@@ -90,7 +72,21 @@ impl CrateOwnerInvitation {
             None => NewCrateOwnerInvitationOutcome::AlreadyExists,
         })
     }
+}
 
+/// The model representing a row in the `crate_owner_invitations` database table.
+#[derive(Clone, Debug, Identifiable, Queryable)]
+#[diesel(primary_key(invited_user_id, crate_id))]
+pub struct CrateOwnerInvitation {
+    pub invited_user_id: i32,
+    pub invited_by_user_id: i32,
+    pub crate_id: i32,
+    pub created_at: NaiveDateTime,
+    #[diesel(deserialize_as = String)]
+    pub token: SecretString,
+}
+
+impl CrateOwnerInvitation {
     pub async fn find_by_id(
         user_id: i32,
         crate_id: i32,
