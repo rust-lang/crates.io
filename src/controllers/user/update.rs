@@ -96,6 +96,7 @@ pub async fn update_user(
         let new_email = NewEmail {
             user_id: user.id,
             email: user_email,
+            verified: false,
         };
 
         let token = diesel::insert_into(emails::table)

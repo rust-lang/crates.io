@@ -4,7 +4,7 @@ use crate::config::{
 };
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::models::User;
+use crate::models::{NewEmail, User};
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::schema::users;
 use crate::storage::StorageConfig;
@@ -121,7 +121,6 @@ impl TestApp {
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
         use crate::schema::emails;
-        use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
 
         let mut conn = self.db_conn().await;
@@ -134,12 +133,14 @@ impl TestApp {
             .await
             .unwrap();
 
+        let new_email = NewEmail {
+            user_id: user.id,
+            email: &email,
+            verified: true,
+        };
+
         diesel::insert_into(emails::table)
-            .values((
-                emails::user_id.eq(user.id),
-                emails::email.eq(email),
-                emails::verified.eq(true),
-            ))
+            .values(new_email)
             .execute(&mut conn)
             .await
             .unwrap();

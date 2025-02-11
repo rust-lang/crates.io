@@ -174,6 +174,7 @@ impl<'a> NewUser<'a> {
                     let new_email = NewEmail {
                         user_id: user.id,
                         email: user_email,
+                        verified: false,
                     };
 
                     let token = insert_into(emails::table)
