@@ -12,6 +12,19 @@ use crate::schema::api_tokens;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
 
+#[derive(Debug, Insertable)]
+#[diesel(table_name = api_tokens, check_for_backend(diesel::pg::Pg))]
+pub struct NewApiToken {
+    pub user_id: i32,
+    pub name: String,
+    pub token: HashedToken,
+    /// `None` or a list of crate scope patterns (see RFC #2947)
+    pub crate_scopes: Option<Vec<CrateScope>>,
+    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
+    pub endpoint_scopes: Option<Vec<EndpointScope>>,
+    pub expired_at: Option<NaiveDateTime>,
+}
+
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Debug, Identifiable, Queryable, Selectable, Associations, Serialize)]
 #[diesel(belongs_to(User))]
@@ -54,15 +67,17 @@ impl ApiToken {
     ) -> QueryResult<CreatedApiToken> {
         let token = PlainToken::generate();
 
+        let new_token = NewApiToken {
+            user_id,
+            name: name.to_string(),
+            token: token.hashed(),
+            crate_scopes,
+            endpoint_scopes,
+            expired_at,
+        };
+
         let model: ApiToken = diesel::insert_into(api_tokens::table)
-            .values((
-                api_tokens::user_id.eq(user_id),
-                api_tokens::name.eq(name),
-                api_tokens::token.eq(token.hashed()),
-                api_tokens::crate_scopes.eq(crate_scopes),
-                api_tokens::endpoint_scopes.eq(endpoint_scopes),
-                api_tokens::expired_at.eq(expired_at),
-            ))
+            .values(new_token)
             .returning(ApiToken::as_returning())
             .get_result(conn)
             .await?;
