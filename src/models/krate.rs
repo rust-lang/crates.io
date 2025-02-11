@@ -13,8 +13,8 @@ use crate::controllers::helpers::pagination::*;
 use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{
-    CrateOwner, CrateOwnerInvitation, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome,
-    Owner, OwnerKind, ReverseDependency, User, Version,
+    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, Owner, OwnerKind,
+    ReverseDependency, User, Version,
 };
 use crate::schema::*;
 use crate::util::errors::{bad_request, version_not_found, AppResult};
@@ -407,7 +407,8 @@ impl Crate {
                     crate_id: self.id,
                 };
 
-                let creation_ret = CrateOwnerInvitation::create(&invite, conn, &app.config)
+                let creation_ret = invite
+                    .create(conn, &app.config)
                     .await
                     .map_err(BoxedAppError::from)?;
 

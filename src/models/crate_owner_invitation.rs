@@ -24,21 +24,9 @@ pub struct NewCrateOwnerInvitation {
     pub crate_id: i32,
 }
 
-/// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Debug, Identifiable, Queryable)]
-#[diesel(primary_key(invited_user_id, crate_id))]
-pub struct CrateOwnerInvitation {
-    pub invited_user_id: i32,
-    pub invited_by_user_id: i32,
-    pub crate_id: i32,
-    pub created_at: NaiveDateTime,
-    #[diesel(deserialize_as = String)]
-    pub token: SecretString,
-}
-
-impl CrateOwnerInvitation {
+impl NewCrateOwnerInvitation {
     pub async fn create(
-        invite: &NewCrateOwnerInvitation,
+        &self,
         conn: &mut AsyncPgConnection,
         config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
@@ -50,7 +38,7 @@ impl CrateOwnerInvitation {
                 // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
                 // use the model's `is_expired` method, centralizing our expiration checking logic.
                 let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
-                    .find((invite.invited_user_id, invite.crate_id))
+                    .find((self.invited_user_id, self.crate_id))
                     .for_update()
                     .first(conn)
                     .await
@@ -68,7 +56,7 @@ impl CrateOwnerInvitation {
         .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
-            .values(invite)
+            .values(self)
             // The ON CONFLICT DO NOTHING clause results in not creating the invite if another one
             // already exists. This does not cause problems with expired invitation as those are
             // deleted before doing this INSERT.
@@ -84,7 +72,21 @@ impl CrateOwnerInvitation {
             None => NewCrateOwnerInvitationOutcome::AlreadyExists,
         })
     }
+}
 
+/// The model representing a row in the `crate_owner_invitations` database table.
+#[derive(Clone, Debug, Identifiable, Queryable)]
+#[diesel(primary_key(invited_user_id, crate_id))]
+pub struct CrateOwnerInvitation {
+    pub invited_user_id: i32,
+    pub invited_by_user_id: i32,
+    pub crate_id: i32,
+    pub created_at: NaiveDateTime,
+    #[diesel(deserialize_as = String)]
+    pub token: SecretString,
+}
+
+impl CrateOwnerInvitation {
     pub async fn find_by_id(
         user_id: i32,
         crate_id: i32,
