@@ -106,20 +106,17 @@ async fn batch_update(batch_size: i64, conn: &mut AsyncPgConnection) -> QueryRes
 mod tests {
     use super::*;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
-    use crate::schema::{crate_downloads, crates, users, versions};
+    use crate::schema::{crate_downloads, crates, versions};
     use crates_io_test_db::TestDatabase;
     use diesel_async::AsyncConnection;
 
     async fn user(conn: &mut AsyncPgConnection) -> User {
-        let user = NewUser::builder()
+        NewUser::builder()
             .gh_id(2)
             .gh_login("login")
             .gh_access_token("access_token")
-            .build();
-
-        diesel::insert_into(users::table)
-            .values(user)
-            .get_result(conn)
+            .build()
+            .insert(conn)
             .await
             .unwrap()
     }

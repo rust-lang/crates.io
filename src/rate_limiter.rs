@@ -183,7 +183,6 @@ struct Bucket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::schema::users;
     use crates_io_test_db::TestDatabase;
 
     #[tokio::test]
@@ -702,17 +701,14 @@ mod tests {
     async fn new_user(conn: &mut AsyncPgConnection, gh_login: &str) -> QueryResult<i32> {
         use crate::models::NewUser;
 
-        let user = NewUser::builder()
+        NewUser::builder()
             .gh_id(0)
             .gh_login(gh_login)
             .gh_access_token("some random token")
-            .build();
-
-        diesel::insert_into(users::table)
-            .values(user)
-            .returning(users::id)
-            .get_result(conn)
+            .build()
+            .insert(conn)
             .await
+            .map(|user| user.id)
     }
 
     async fn new_user_bucket(

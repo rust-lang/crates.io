@@ -4,9 +4,8 @@ use crate::config::{
 };
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::models::{NewEmail, User};
+use crate::models::NewEmail;
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crate::schema::users;
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
@@ -120,15 +119,12 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
-        use diesel_async::RunQueryDsl;
-
         let mut conn = self.db_conn().await;
 
         let email = format!("{username}@example.com");
 
-        let user: User = diesel::insert_into(users::table)
-            .values(crate::tests::new_user(username))
-            .get_result(&mut conn)
+        let user = crate::tests::new_user(username)
+            .insert(&mut conn)
             .await
             .unwrap();
 

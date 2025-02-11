@@ -121,6 +121,14 @@ pub struct NewUser<'a> {
 }
 
 impl<'a> NewUser<'a> {
+    /// Inserts the user into the database, or fails if the user already exists.
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
+        diesel::insert_into(users::table)
+            .values(self)
+            .get_result(conn)
+            .await
+    }
+
     /// Inserts the user into the database, or updates an existing one.
     pub async fn insert_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
         diesel::insert_into(users::table)
