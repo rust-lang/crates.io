@@ -26,7 +26,6 @@ pub struct CrateOwnerInvitation {
     pub created_at: NaiveDateTime,
     #[diesel(deserialize_as = String)]
     pub token: SecretString,
-    pub token_created_at: Option<NaiveDateTime>,
 }
 
 impl CrateOwnerInvitation {

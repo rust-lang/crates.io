@@ -1,0 +1,3 @@
+DROP TRIGGER trigger_crate_owner_invitations_set_token_generated_at ON crate_owner_invitations;
+DROP FUNCTION crate_owner_invitations_set_token_generated_at();
+ALTER TABLE crate_owner_invitations DROP COLUMN token_generated_at;
