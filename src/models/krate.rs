@@ -16,7 +16,7 @@ use crate::models::{
     ReverseDependency, User, Version,
 };
 use crate::schema::*;
-use crate::util::errors::{bad_request, version_not_found, AppResult};
+use crate::util::errors::{version_not_found, AppResult};
 use crate::{app::App, util::errors::BoxedAppError};
 use crates_io_diesel_helpers::canon_crate_name;
 
@@ -441,7 +441,11 @@ impl Crate {
         }
     }
 
-    pub async fn owner_remove(&self, conn: &mut AsyncPgConnection, login: &str) -> AppResult<()> {
+    pub async fn owner_remove(
+        &self,
+        conn: &mut AsyncPgConnection,
+        login: &str,
+    ) -> Result<(), OwnerRemoveError> {
         let query = diesel::sql_query(
             r#"WITH crate_owners_with_login AS (
                 SELECT
@@ -477,8 +481,7 @@ impl Crate {
             .await?;
 
         if num_updated_rows == 0 {
-            let error = format!("could not find owner with login `{login}`");
-            return Err(bad_request(error));
+            return Err(OwnerRemoveError::not_found(login));
         }
 
         Ok(())
@@ -531,6 +534,21 @@ pub enum OwnerAddError {
     /// invite to cause this error.
     #[error("user already has pending invite")]
     AlreadyInvited(Box<User>),
+}
+
+#[derive(Debug, Error)]
+pub enum OwnerRemoveError {
+    #[error(transparent)]
+    Diesel(#[from] diesel::result::Error),
+    #[error("Could not find owner with login `{login}`")]
+    NotFound { login: String },
+}
+
+impl OwnerRemoveError {
+    pub fn not_found(login: &str) -> Self {
+        let login = login.to_string();
+        Self::NotFound { login }
+    }
 }
 
 /// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual

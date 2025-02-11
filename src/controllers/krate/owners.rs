@@ -1,9 +1,10 @@
 //! All routes related to managing owners of a crate
 
 use crate::controllers::krate::CratePath;
+use crate::models::krate::OwnerRemoveError;
 use crate::models::{krate::NewOwnerInvite, token::EndpointScope};
 use crate::models::{Crate, Owner, Rights, Team, User};
-use crate::util::errors::{bad_request, crate_not_found, custom, AppResult};
+use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, models::krate::OwnerAddError};
 use crate::{auth::AuthCheck, email::Email};
@@ -272,6 +273,17 @@ async fn modify_owners(
     }
 
     Ok(json!({ "msg": comma_sep_msg, "ok": true }))
+}
+
+impl From<OwnerRemoveError> for BoxedAppError {
+    fn from(error: OwnerRemoveError) -> Self {
+        match error {
+            OwnerRemoveError::Diesel(error) => error.into(),
+            OwnerRemoveError::NotFound { login } => {
+                bad_request(format!("could not find owner with login `{login}`"))
+            }
+        }
+    }
 }
 
 pub struct OwnerInviteEmail {
