@@ -1,14 +1,15 @@
+use bon::Builder;
 use chrono::NaiveDateTime;
+use diesel::dsl::sql;
 use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel::sql_types::Integer;
+use diesel::upsert::excluded;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use crate::app::App;
-use crate::controllers::user::update::UserConfirmEmail;
-use crate::email::Emails;
 use crate::util::errors::AppResult;
 
-use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
 
@@ -106,7 +107,7 @@ impl User {
 }
 
 /// Represents a new user record insertable to the `users` table
-#[derive(Insertable, Debug, Default)]
+#[derive(Insertable, Debug, Builder)]
 #[diesel(table_name = users, check_for_backend(diesel::pg::Pg))]
 pub struct NewUser<'a> {
     pub gh_id: i32,
@@ -116,80 +117,36 @@ pub struct NewUser<'a> {
     pub gh_access_token: &'a str,
 }
 
-impl<'a> NewUser<'a> {
-    pub fn new(
-        gh_id: i32,
-        gh_login: &'a str,
-        name: Option<&'a str>,
-        gh_avatar: Option<&'a str>,
-        gh_access_token: &'a str,
-    ) -> Self {
-        NewUser {
-            gh_id,
-            gh_login,
-            name,
-            gh_avatar,
-            gh_access_token,
-        }
+impl NewUser<'_> {
+    /// Inserts the user into the database, or fails if the user already exists.
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
+        diesel::insert_into(users::table)
+            .values(self)
+            .get_result(conn)
+            .await
     }
 
     /// Inserts the user into the database, or updates an existing one.
-    pub async fn create_or_update(
-        &self,
-        email: Option<&'a str>,
-        emails: &Emails,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<User> {
-        use diesel::dsl::sql;
-        use diesel::insert_into;
-        use diesel::pg::upsert::excluded;
-        use diesel::sql_types::Integer;
-
-        conn.transaction(|conn| {
-            async move {
-                let user: User = insert_into(users::table)
-                    .values(self)
-                    // We need the `WHERE gh_id > 0` condition here because `gh_id` set
-                    // to `-1` indicates that we were unable to find a GitHub ID for
-                    // the associated GitHub login at the time that we backfilled
-                    // GitHub IDs. Therefore, there are multiple records in production
-                    // that have a `gh_id` of `-1` so we need to exclude those when
-                    // considering uniqueness of `gh_id` values. The `> 0` condition isn't
-                    // necessary for most fields in the database to be used as a conflict
-                    // target :)
-                    .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
-                    .do_update()
-                    .set((
-                        users::gh_login.eq(excluded(users::gh_login)),
-                        users::name.eq(excluded(users::name)),
-                        users::gh_avatar.eq(excluded(users::gh_avatar)),
-                        users::gh_access_token.eq(excluded(users::gh_access_token)),
-                    ))
-                    .get_result(conn)
-                    .await?;
-
-                // To send the user an account verification email
-                if let Some(user_email) = email {
-                    let new_email = NewEmail::builder()
-                        .user_id(user.id)
-                        .email(user_email)
-                        .build();
-
-                    if let Some(token) = new_email.insert_if_missing(conn).await? {
-                        // Swallows any error. Some users might insert an invalid email address here.
-                        let email = UserConfirmEmail {
-                            user_name: &user.gh_login,
-                            domain: &emails.domain,
-                            token,
-                        };
-                        let _ = emails.send(user_email, email).await;
-                    }
-                }
-
-                Ok(user)
-            }
-            .scope_boxed()
-        })
-        .await
+    pub async fn insert_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
+        diesel::insert_into(users::table)
+            .values(self)
+            // We need the `WHERE gh_id > 0` condition here because `gh_id` set
+            // to `-1` indicates that we were unable to find a GitHub ID for
+            // the associated GitHub login at the time that we backfilled
+            // GitHub IDs. Therefore, there are multiple records in production
+            // that have a `gh_id` of `-1` so we need to exclude those when
+            // considering uniqueness of `gh_id` values. The `> 0` condition isn't
+            // necessary for most fields in the database to be used as a conflict
+            // target :)
+            .on_conflict(sql::<Integer>("(gh_id) WHERE gh_id > 0"))
+            .do_update()
+            .set((
+                users::gh_login.eq(excluded(users::gh_login)),
+                users::name.eq(excluded(users::name)),
+                users::gh_avatar.eq(excluded(users::gh_avatar)),
+                users::gh_access_token.eq(excluded(users::gh_access_token)),
+            ))
+            .get_result(conn)
+            .await
     }
 }

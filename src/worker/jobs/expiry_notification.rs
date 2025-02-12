@@ -166,7 +166,7 @@ The crates.io team"#,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::NewUser;
+    use crate::models::{NewEmail, NewUser};
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
     use diesel::dsl::IntervalDsl;
@@ -178,10 +178,19 @@ mod tests {
         let mut conn = test_db.async_connect().await;
 
         // Set up a user and a token that is about to expire.
-        let user = NewUser::new(0, "a", None, None, "token");
-        let emails = Emails::new_in_memory();
-        let user = user
-            .create_or_update(Some("testuser@test.com"), &emails, &mut conn)
+        let user = NewUser::builder()
+            .gh_id(0)
+            .gh_login("a")
+            .gh_access_token("token")
+            .build()
+            .insert(&mut conn)
+            .await?;
+
+        NewEmail::builder()
+            .user_id(user.id)
+            .email("testuser@test.com")
+            .build()
+            .insert(&mut conn)
             .await?;
 
         let token = PlainToken::generate();

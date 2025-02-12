@@ -1,7 +1,10 @@
-use crate::models::{ApiToken, Email, NewUser, User};
+use crate::controllers::session;
+use crate::models::{ApiToken, Email, User};
+use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
-use crate::tests::{new_user, TestApp};
+use crate::tests::TestApp;
 use crate::util::token::HashedToken;
+use crates_io_github::GithubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -20,16 +23,20 @@ impl crate::tests::util::MockCookieUser {
 #[tokio::test(flavor = "multi_thread")]
 async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> {
     let (app, _, user, token) = TestApp::init().with_token().await;
+    let emails = &app.as_inner().emails;
     let mut conn = app.db_conn().await;
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
     // Reuse gh_id but use new gh_login and gh_access_token
-    assert_ok!(
-        NewUser::new(gh_id, "bar", None, None, "bar_token")
-            .create_or_update(None, &app.as_inner().emails, &mut conn)
-            .await
-    );
+    let gh_user = GithubUser {
+        id: gh_id,
+        login: "bar".to_string(),
+        name: None,
+        email: None,
+        avatar_url: None,
+    };
+    assert_ok!(session::save_user_to_database(&gh_user, "bar_token", emails, &mut conn).await);
 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token.expose_secret()));
@@ -54,17 +61,26 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
     let (app, _) = TestApp::init().empty().await;
+    let emails = &app.as_inner().emails;
     let mut conn = app.db_conn().await;
 
     // Simulate logging in via GitHub with an account that has no email.
+
     // Because faking GitHub is terrible, call what GithubUser::save_to_database does directly.
     // Don't use app.db_new_user because it adds a verified email.
-    let u = new_user("arbitrary_username")
-        .create_or_update(None, &app.as_inner().emails, &mut conn)
-        .await?;
+    let gh_id = next_gh_id();
+    let gh_user = GithubUser {
+        id: gh_id,
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: None,
+        avatar_url: None,
+    };
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
-    let user_without_github_email_model = user_without_github_email.as_model();
 
     let json = user_without_github_email.show_me().await;
     // Check that the setup is correct and the user indeed has no email
@@ -76,15 +92,18 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         .await;
 
     // Simulate the same user logging in via GitHub again, still with no email in GitHub.
-    let u = NewUser {
-        // Use the same github ID to link to the existing account
-        gh_id: user_without_github_email_model.gh_id,
-        // new_user uses a None email; the rest of the fields are arbitrary
-        ..new_user("arbitrary_username")
+
+    let gh_user = GithubUser {
+        id: gh_id,
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: None,
+        avatar_url: None,
     };
-    let u = u
-        .create_or_update(None, &app.as_inner().emails, &mut conn)
-        .await?;
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
     let json = again_user_without_github_email.show_me().await;
@@ -115,15 +134,17 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let emails = app.as_inner().emails.clone();
 
-    let u = NewUser {
+    let gh_user = GithubUser {
         // Use the same github ID to link to the existing account
-        gh_id: model.gh_id,
-        // the rest of the fields are arbitrary
-        ..new_user("arbitrary_username")
+        id: model.gh_id,
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(new_github_email.to_string()),
+        avatar_url: None,
     };
-    let u = u
-        .create_or_update(Some(new_github_email), &emails, &mut conn)
-        .await?;
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", &emails, &mut conn).await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
@@ -169,10 +190,18 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
     // email directly into the database and we want to test the verification flow here.
     let email = "potato2@example.com";
 
-    let emails = app.as_inner().emails.clone();
-    let u = new_user("arbitrary_username")
-        .create_or_update(Some(email), &emails, &mut conn)
-        .await?;
+    let emails = &app.as_inner().emails;
+
+    let gh_user = GithubUser {
+        id: next_gh_id(),
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: None,
+    };
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -208,10 +237,18 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     // email directly into the database and we want to test the verification flow here.
     let email = "potahto@example.com";
 
-    let emails = app.as_inner().emails.clone();
-    let u = new_user("arbitrary_username")
-        .create_or_update(Some(email), &emails, &mut conn)
-        .await?;
+    let emails = &app.as_inner().emails;
+
+    let gh_user = GithubUser {
+        id: next_gh_id(),
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: None,
+    };
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have

@@ -8,7 +8,6 @@ use crate::views::{
     EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 
-use crate::schema::users;
 use chrono::Utc;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -770,17 +769,12 @@ async fn inactive_users_dont_get_invitations() {
     let invited_gh_login = "user_bar";
     let krate_name = "inactive_test";
 
-    let user = NewUser {
-        gh_id: -1,
-        gh_login: invited_gh_login,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token",
-    };
-
-    diesel::insert_into(users::table)
-        .values(user)
-        .execute(&mut conn)
+    NewUser::builder()
+        .gh_id(-1)
+        .gh_login(invited_gh_login)
+        .gh_access_token("some random token")
+        .build()
+        .insert(&mut conn)
         .await
         .unwrap();
 

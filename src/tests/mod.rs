@@ -93,13 +93,11 @@ pub struct OwnerResp {
 }
 
 fn new_user(login: &str) -> NewUser<'_> {
-    NewUser {
-        gh_id: next_gh_id(),
-        gh_login: login,
-        name: None,
-        gh_avatar: None,
-        gh_access_token: "some random token",
-    }
+    NewUser::builder()
+        .gh_id(next_gh_id())
+        .gh_login(login)
+        .gh_access_token("some random token")
+        .build()
 }
 
 fn new_team(login: &str) -> NewTeam<'_> {

@@ -1,5 +1,5 @@
 use crate::models::Category;
-use crate::schema::{crates, users};
+use crate::schema::crates;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::{new_category, new_user};
@@ -22,11 +22,7 @@ async fn index() -> anyhow::Result<()> {
         assert_eq!(json.meta.total, 0);
     }
 
-    let user_id = insert_into(users::table)
-        .values(new_user("foo"))
-        .returning(users::id)
-        .get_result(&mut conn)
-        .await?;
+    let user_id = new_user("foo").insert(&mut conn).await?.id;
 
     let krate = CrateBuilder::new("fooindex", user_id)
         .expect_build(&mut conn)
