@@ -1,21 +1,28 @@
 //! All routes related to managing owners of a crate
 
 use crate::controllers::krate::CratePath;
-use crate::models::{krate::NewOwnerInvite, token::EndpointScope};
+use crate::models::krate::OwnerRemoveError;
+use crate::models::{
+    krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
+    NewCrateOwnerInvitationOutcome, OwnerKind,
+};
 use crate::models::{Crate, Owner, Rights, Team, User};
-use crate::util::errors::{bad_request, crate_not_found, custom, AppResult};
+use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
 use crate::views::EncodableOwner;
-use crate::{app::AppState, models::krate::OwnerAddError};
+use crate::{app::AppState, App};
 use crate::{auth::AuthCheck, email::Email};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use chrono::Utc;
+use crates_io_database::schema::crate_owners;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use http::StatusCode;
 use secrecy::{ExposeSecret, SecretString};
+use thiserror::Error;
 
 /// List crate owners.
 #[utoipa::path(
@@ -199,7 +206,7 @@ async fn modify_owners(
                             return Err(bad_request(format_args!("`{login}` is already an owner")));
                         }
 
-                        match krate.owner_add(&app, conn, user, login).await {
+                        match add_owner(&app, conn, user, &krate, login).await {
                             // A user was successfully invited, and they must accept
                             // the invite, and a best-effort attempt should be made
                             // to email them the invite token for one-click
@@ -272,6 +279,96 @@ async fn modify_owners(
     }
 
     Ok(json!({ "msg": comma_sep_msg, "ok": true }))
+}
+
+/// Invite `login` as an owner of this crate, returning the created
+/// [`NewOwnerInvite`].
+async fn add_owner(
+    app: &App,
+    conn: &mut AsyncPgConnection,
+    req_user: &User,
+    krate: &Crate,
+    login: &str,
+) -> Result<NewOwnerInvite, OwnerAddError> {
+    use diesel::insert_into;
+
+    let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
+    match owner {
+        // Users are invited and must accept before being added
+        Owner::User(user) => {
+            let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
+            let invite = NewCrateOwnerInvitation {
+                invited_user_id: user.id,
+                invited_by_user_id: req_user.id,
+                crate_id: krate.id,
+                expires_at,
+            };
+
+            let creation_ret = invite.create(conn).await.map_err(BoxedAppError::from)?;
+
+            match creation_ret {
+                NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
+                    Ok(NewOwnerInvite::User(user, plaintext_token))
+                }
+                NewCrateOwnerInvitationOutcome::AlreadyExists => {
+                    Err(OwnerAddError::AlreadyInvited(Box::new(user)))
+                }
+            }
+        }
+        // Teams are added as owners immediately
+        Owner::Team(team) => {
+            insert_into(crate_owners::table)
+                .values(&CrateOwner {
+                    crate_id: krate.id,
+                    owner_id: team.id,
+                    created_by: req_user.id,
+                    owner_kind: OwnerKind::Team,
+                    email_notifications: true,
+                })
+                .on_conflict(crate_owners::table.primary_key())
+                .do_update()
+                .set(crate_owners::deleted.eq(false))
+                .execute(conn)
+                .await
+                .map_err(BoxedAppError::from)?;
+
+            Ok(NewOwnerInvite::Team(team))
+        }
+    }
+}
+
+/// Error results from a [`add_owner()`] model call.
+#[derive(Debug, Error)]
+enum OwnerAddError {
+    /// An opaque [`BoxedAppError`].
+    #[error("{0}")] // AppError does not impl Error
+    AppError(BoxedAppError),
+
+    /// The requested invitee already has a pending invite.
+    ///
+    /// Note: Teams are always immediately added, so they cannot have a pending
+    /// invite to cause this error.
+    #[error("user already has pending invite")]
+    AlreadyInvited(Box<User>),
+}
+
+/// A [`BoxedAppError`] does not impl [`std::error::Error`] so it needs a manual
+/// [`From`] impl.
+impl From<BoxedAppError> for OwnerAddError {
+    fn from(value: BoxedAppError) -> Self {
+        Self::AppError(value)
+    }
+}
+
+impl From<OwnerRemoveError> for BoxedAppError {
+    fn from(error: OwnerRemoveError) -> Self {
+        match error {
+            OwnerRemoveError::Diesel(error) => error.into(),
+            OwnerRemoveError::NotFound { login } => {
+                bad_request(format!("could not find owner with login `{login}`"))
+            }
+        }
+    }
 }
 
 pub struct OwnerInviteEmail {

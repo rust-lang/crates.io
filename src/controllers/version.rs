@@ -14,7 +14,7 @@ use utoipa::IntoParams;
 
 use crate::controllers::krate::load_crate;
 use crate::models::{Crate, Version};
-use crate::util::errors::AppResult;
+use crate::util::errors::{version_not_found, AppResult};
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]
 #[into_params(parameter_in = Path)]
@@ -47,7 +47,10 @@ async fn version_and_crate(
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
     let krate = load_crate(conn, crate_name).await?;
-    let version = krate.find_version(conn, semver).await?;
+    let version = krate
+        .find_version(conn, semver)
+        .await?
+        .ok_or_else(|| version_not_found(crate_name, semver))?;
 
     Ok((version, krate))
 }

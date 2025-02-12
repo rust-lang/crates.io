@@ -11,7 +11,9 @@ use crate::models::{
     Version, VersionOwnerAction,
 };
 use crate::schema::*;
-use crate::util::errors::{bad_request, crate_not_found, AppResult, BoxedAppError};
+use crate::util::errors::{
+    bad_request, crate_not_found, version_not_found, AppResult, BoxedAppError,
+};
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
 use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
@@ -123,6 +125,8 @@ pub async fn find_crate(
         .filter(|_| include.default_version && !include.versions)
     {
         let version = krate.find_version(&mut conn, default_version).await?;
+        let version = version.ok_or_else(|| version_not_found(&krate.name, default_version))?;
+
         let (actions, published_by) = tokio::try_join!(
             VersionOwnerAction::by_version(&mut conn, &version),
             version.published_by(&mut conn),
