@@ -5,7 +5,8 @@
 
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
-use crate::models::{Version, VersionDownload};
+use crate::models::download::Version;
+use crate::models::VersionDownload;
 use crate::schema::{version_downloads, versions};
 use crate::util::errors::AppResult;
 use crate::views::EncodableVersionDownload;
@@ -42,7 +43,7 @@ pub async fn get_crate_downloads(state: AppState, path: CratePath) -> AppResult<
         .load(&mut conn)
         .await?;
 
-    versions.sort_by_cached_key(|version| cmp::Reverse(semver::Version::parse(&version.num).ok()));
+    versions.sort_unstable_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
     let downloads = VersionDownload::belonging_to(latest_five)
