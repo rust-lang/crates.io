@@ -287,8 +287,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(@playwright/test@1.50.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))
       postcss-preset-env:
-        specifier: 10.1.3
-        version: 10.1.3(postcss@8.5.1)
+        specifier: 10.1.4
+        version: 10.1.4(postcss@8.5.1)
       prettier:
         specifier: 3.5.0
         version: 3.5.0
@@ -1075,8 +1075,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@csstools/postcss-initial@2.0.0':
-    resolution: {integrity: sha512-dv2lNUKR+JV+OOhZm9paWzYBXOCi+rJPqJ2cJuhh9xd8USVrd0cBEPczla81HNOyThMQWeCcdln3gZkQV2kYxA==}
+  '@csstools/postcss-initial@2.0.1':
+    resolution: {integrity: sha512-L1wLVMSAZ4wovznquK0xmC7QSctzO4D0Is590bxpGqhqjboLXYA16dWZpfwImkdOgACdQ9PqXsuRroW6qPlEsg==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -7242,8 +7242,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.1.3:
-    resolution: {integrity: sha512-9qzVhcMFU/MnwYHyYpJz4JhGku/4+xEiPTmhn0hj3IxnUYlEF9vbh7OC1KoLAnenS6Fgg43TKNp9xcuMeAi4Zw==}
+  postcss-preset-env@10.1.4:
+    resolution: {integrity: sha512-awWKS3CwyY7I4Eb3YSWOZisbj3qXyuQCrylYiu2vSHxnSZAj3LHStN6jOcpCrc6EjYunLwbeNto3M5/JBtXpzg==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -9872,7 +9872,7 @@ snapshots:
       postcss: 8.5.1
       postcss-value-parser: 4.2.0
 
-  '@csstools/postcss-initial@2.0.0(postcss@8.5.1)':
+  '@csstools/postcss-initial@2.0.1(postcss@8.5.1)':
     dependencies:
       postcss: 8.5.1
 
@@ -11409,26 +11409,6 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
-  '@types/ember@4.0.11':
-    dependencies:
-      '@types/ember__application': 4.0.11(@babel/core@7.26.8)
-      '@types/ember__array': 4.0.10(@babel/core@7.26.8)
-      '@types/ember__component': 4.0.22
-      '@types/ember__controller': 4.0.12(@babel/core@7.26.8)
-      '@types/ember__debug': 4.0.8(@babel/core@7.26.8)
-      '@types/ember__engine': 4.0.11(@babel/core@7.26.8)
-      '@types/ember__error': 4.0.6
-      '@types/ember__object': 4.0.12(@babel/core@7.26.8)
-      '@types/ember__polyfills': 4.0.6
-      '@types/ember__routing': 4.0.22(@babel/core@7.26.8)
-      '@types/ember__runloop': 4.0.10(@babel/core@7.26.8)
-      '@types/ember__service': 4.0.9(@babel/core@7.26.8)
-      '@types/ember__string': 3.0.15
-      '@types/ember__template': 4.0.7
-      '@types/ember__test': 4.0.6(@babel/core@7.26.8)
-      '@types/ember__utils': 4.0.7(@babel/core@7.26.8)
-      '@types/rsvp': 4.0.9
-
   '@types/ember@4.0.11(@babel/core@7.26.8)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.26.8)
@@ -11461,7 +11441,7 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.26.8)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.26.8)
-      '@types/ember': 4.0.11
+      '@types/ember': 4.0.11(@babel/core@7.26.8)
       '@types/ember__engine': 4.0.11(@babel/core@7.26.8)
       '@types/ember__object': 4.0.12(@babel/core@7.26.8)
       '@types/ember__owner': 4.0.9
@@ -11486,11 +11466,6 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.32
-
-  '@types/ember__component@4.0.22':
-    dependencies:
-      '@types/ember': 4.0.11
-      '@types/ember__object': 4.0.12(@babel/core@7.26.8)
 
   '@types/ember__component@4.0.22(@babel/core@7.26.8)':
     dependencies:
@@ -17876,7 +17851,7 @@ snapshots:
       postcss: 8.5.1
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.1.3(postcss@8.5.1):
+  postcss-preset-env@10.1.4(postcss@8.5.1):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.1(postcss@8.5.1)
       '@csstools/postcss-color-function': 4.0.7(postcss@8.5.1)
@@ -17888,7 +17863,7 @@ snapshots:
       '@csstools/postcss-gradients-interpolation-method': 5.0.7(postcss@8.5.1)
       '@csstools/postcss-hwb-function': 4.0.7(postcss@8.5.1)
       '@csstools/postcss-ic-unit': 4.0.0(postcss@8.5.1)
-      '@csstools/postcss-initial': 2.0.0(postcss@8.5.1)
+      '@csstools/postcss-initial': 2.0.1(postcss@8.5.1)
       '@csstools/postcss-is-pseudo-class': 5.0.1(postcss@8.5.1)
       '@csstools/postcss-light-dark-function': 2.0.7(postcss@8.5.1)
       '@csstools/postcss-logical-float-and-clear': 3.0.0(postcss@8.5.1)
