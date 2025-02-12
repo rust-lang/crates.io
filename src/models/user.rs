@@ -4,15 +4,12 @@ use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use crate::app::App;
-use crate::controllers::user::update::UserConfirmEmail;
-use crate::email::Emails;
 use crate::util::errors::AppResult;
 
-use crate::models::{Crate, CrateOwner, Email, NewEmail, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
 
@@ -120,7 +117,7 @@ pub struct NewUser<'a> {
     pub gh_access_token: &'a str,
 }
 
-impl<'a> NewUser<'a> {
+impl NewUser<'_> {
     /// Inserts the user into the database, or fails if the user already exists.
     pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
         diesel::insert_into(users::table)
@@ -151,44 +148,5 @@ impl<'a> NewUser<'a> {
             ))
             .get_result(conn)
             .await
-    }
-
-    /// Inserts the user into the database, or updates an existing one.
-    ///
-    /// This method also inserts the email address into the `emails` table
-    /// and sends a confirmation email to the user.
-    pub async fn create_or_update(
-        &self,
-        email: Option<&'a str>,
-        emails: &Emails,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<User> {
-        conn.transaction(|conn| {
-            async move {
-                let user = self.insert_or_update(conn).await?;
-
-                // To send the user an account verification email
-                if let Some(user_email) = email {
-                    let new_email = NewEmail::builder()
-                        .user_id(user.id)
-                        .email(user_email)
-                        .build();
-
-                    if let Some(token) = new_email.insert_if_missing(conn).await? {
-                        // Swallows any error. Some users might insert an invalid email address here.
-                        let email = UserConfirmEmail {
-                            user_name: &user.gh_login,
-                            domain: &emails.domain,
-                            token,
-                        };
-                        let _ = emails.send(user_email, email).await;
-                    }
-                }
-
-                Ok(user)
-            }
-            .scope_boxed()
-        })
-        .await
     }
 }

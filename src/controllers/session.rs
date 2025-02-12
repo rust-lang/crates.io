@@ -3,14 +3,16 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 
 use crate::app::AppState;
+use crate::controllers::user::update::UserConfirmEmail;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewUser, User};
+use crate::models::{NewEmail, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{bad_request, server_error, AppResult};
@@ -148,10 +150,7 @@ pub async fn save_user_to_database(
         .gh_access_token(access_token)
         .build();
 
-    match new_user
-        .create_or_update(user.email.as_deref(), emails, conn)
-        .await
-    {
+    match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
         Ok(user) => Ok(user),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
@@ -160,6 +159,45 @@ pub async fn save_user_to_database(
         }
         Err(error) => Err(error),
     }
+}
+
+/// Inserts the user into the database, or updates an existing one.
+///
+/// This method also inserts the email address into the `emails` table
+/// and sends a confirmation email to the user.
+async fn create_or_update_user(
+    new_user: &NewUser<'_>,
+    email: Option<&str>,
+    emails: &Emails,
+    conn: &mut AsyncPgConnection,
+) -> QueryResult<User> {
+    conn.transaction(|conn| {
+        async move {
+            let user = new_user.insert_or_update(conn).await?;
+
+            // To send the user an account verification email
+            if let Some(user_email) = email {
+                let new_email = NewEmail::builder()
+                    .user_id(user.id)
+                    .email(user_email)
+                    .build();
+
+                if let Some(token) = new_email.insert_if_missing(conn).await? {
+                    // Swallows any error. Some users might insert an invalid email address here.
+                    let email = UserConfirmEmail {
+                        user_name: &user.gh_login,
+                        domain: &emails.domain,
+                        token,
+                    };
+                    let _ = emails.send(user_email, email).await;
+                }
+            }
+
+            Ok(user)
+        }
+        .scope_boxed()
+    })
+    .await
 }
 
 async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
