@@ -166,7 +166,7 @@ The crates.io team"#,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::NewUser;
+    use crate::models::{NewEmail, NewUser};
     use crate::{models::token::ApiToken, schema::api_tokens, util::token::PlainToken};
     use crates_io_test_db::TestDatabase;
     use diesel::dsl::IntervalDsl;
@@ -182,10 +182,15 @@ mod tests {
             .gh_id(0)
             .gh_login("a")
             .gh_access_token("token")
-            .build();
-        let emails = Emails::new_in_memory();
-        let user = user
-            .create_or_update(Some("testuser@test.com"), &emails, &mut conn)
+            .build()
+            .insert(&mut conn)
+            .await?;
+
+        NewEmail::builder()
+            .user_id(user.id)
+            .email("testuser@test.com")
+            .build()
+            .insert(&mut conn)
             .await?;
 
         let token = PlainToken::generate();
