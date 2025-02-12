@@ -244,6 +244,7 @@ async fn modify_owners(
                         )),
 
                             // An opaque error occurred.
+                            Err(OwnerAddError::Diesel(e)) => return Err(e.into()),
                             Err(OwnerAddError::AppError(e)) => return Err(e),
                         }
                     }
@@ -290,56 +291,78 @@ async fn add_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    use diesel::insert_into;
+    if login.contains(':') {
+        add_team_owner(app, conn, req_user, krate, login).await
+    } else {
+        invite_user_owner(app, conn, req_user, krate, login).await
+    }
+}
 
-    let owner = Owner::find_or_create_by_login(app, conn, req_user, login).await?;
-    match owner {
-        // Users are invited and must accept before being added
-        Owner::User(user) => {
-            let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
-            let invite = NewCrateOwnerInvitation {
-                invited_user_id: user.id,
-                invited_by_user_id: req_user.id,
-                crate_id: krate.id,
-                expires_at,
-            };
+async fn invite_user_owner(
+    app: &App,
+    conn: &mut AsyncPgConnection,
+    req_user: &User,
+    krate: &Crate,
+    login: &str,
+) -> Result<NewOwnerInvite, OwnerAddError> {
+    let user = User::find_by_login(conn, login)
+        .await
+        .optional()?
+        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
 
-            let creation_ret = invite.create(conn).await.map_err(BoxedAppError::from)?;
+    // Users are invited and must accept before being added
+    let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
+    let invite = NewCrateOwnerInvitation {
+        invited_user_id: user.id,
+        invited_by_user_id: req_user.id,
+        crate_id: krate.id,
+        expires_at,
+    };
 
-            match creation_ret {
-                NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
-                    Ok(NewOwnerInvite::User(user, plaintext_token))
-                }
-                NewCrateOwnerInvitationOutcome::AlreadyExists => {
-                    Err(OwnerAddError::AlreadyInvited(Box::new(user)))
-                }
-            }
+    match invite.create(conn).await? {
+        NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {
+            Ok(NewOwnerInvite::User(user, plaintext_token))
         }
-        // Teams are added as owners immediately
-        Owner::Team(team) => {
-            insert_into(crate_owners::table)
-                .values(&CrateOwner {
-                    crate_id: krate.id,
-                    owner_id: team.id,
-                    created_by: req_user.id,
-                    owner_kind: OwnerKind::Team,
-                    email_notifications: true,
-                })
-                .on_conflict(crate_owners::table.primary_key())
-                .do_update()
-                .set(crate_owners::deleted.eq(false))
-                .execute(conn)
-                .await
-                .map_err(BoxedAppError::from)?;
-
-            Ok(NewOwnerInvite::Team(team))
+        NewCrateOwnerInvitationOutcome::AlreadyExists => {
+            Err(OwnerAddError::AlreadyInvited(Box::new(user)))
         }
     }
+}
+
+async fn add_team_owner(
+    app: &App,
+    conn: &mut AsyncPgConnection,
+    req_user: &User,
+    krate: &Crate,
+    login: &str,
+) -> Result<NewOwnerInvite, OwnerAddError> {
+    // Always recreate teams to get the most up-to-date GitHub ID
+    let team = Team::create_or_update(app, conn, login, req_user).await?;
+
+    // Teams are added as owners immediately, since the above call ensures
+    // the user is a team member.
+    diesel::insert_into(crate_owners::table)
+        .values(&CrateOwner {
+            crate_id: krate.id,
+            owner_id: team.id,
+            created_by: req_user.id,
+            owner_kind: OwnerKind::Team,
+            email_notifications: true,
+        })
+        .on_conflict(crate_owners::table.primary_key())
+        .do_update()
+        .set(crate_owners::deleted.eq(false))
+        .execute(conn)
+        .await?;
+
+    Ok(NewOwnerInvite::Team(team))
 }
 
 /// Error results from a [`add_owner()`] model call.
 #[derive(Debug, Error)]
 enum OwnerAddError {
+    #[error(transparent)]
+    Diesel(#[from] diesel::result::Error),
     /// An opaque [`BoxedAppError`].
     #[error("{0}")] // AppError does not impl Error
     AppError(BoxedAppError),
