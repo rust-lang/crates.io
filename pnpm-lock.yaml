@@ -324,11 +324,11 @@ importers:
         version: 7.7.1
     devDependencies:
       happy-dom:
-        specifier: 17.0.3
-        version: 17.0.3
+        specifier: 17.1.0
+        version: 17.1.0
       vitest:
         specifier: 3.0.5
-        version: 3.0.5(@types/node@22.13.1)(happy-dom@17.0.3)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0)
+        version: 3.0.5(@types/node@22.13.1)(happy-dom@17.1.0)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0)
 
 packages:
 
@@ -5437,8 +5437,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@17.0.3:
-    resolution: {integrity: sha512-1vWCwpeguN02wQF8kGeaj69FDX19bXKQXmyUKcE+O0WLY0uhS0RPTLCJR8Omy8hrjMHwV3dUJ24JUrK07aOA9Q==}
+  happy-dom@17.1.0:
+    resolution: {integrity: sha512-9tUhXyePCjzUMycaHS/IzrIpF69xiq/laAT7golk4MtZ6t8ft5+Rv7U3lfrs2b4NMH0JTL3EhZzjfahrPmOnaQ==}
     engines: {node: '>=18.0.0'}
 
   has-ansi@2.0.0:
@@ -11409,6 +11409,26 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
+  '@types/ember@4.0.11':
+    dependencies:
+      '@types/ember__application': 4.0.11(@babel/core@7.26.8)
+      '@types/ember__array': 4.0.10(@babel/core@7.26.8)
+      '@types/ember__component': 4.0.22
+      '@types/ember__controller': 4.0.12(@babel/core@7.26.8)
+      '@types/ember__debug': 4.0.8(@babel/core@7.26.8)
+      '@types/ember__engine': 4.0.11(@babel/core@7.26.8)
+      '@types/ember__error': 4.0.6
+      '@types/ember__object': 4.0.12(@babel/core@7.26.8)
+      '@types/ember__polyfills': 4.0.6
+      '@types/ember__routing': 4.0.22(@babel/core@7.26.8)
+      '@types/ember__runloop': 4.0.10(@babel/core@7.26.8)
+      '@types/ember__service': 4.0.9(@babel/core@7.26.8)
+      '@types/ember__string': 3.0.15
+      '@types/ember__template': 4.0.7
+      '@types/ember__test': 4.0.6(@babel/core@7.26.8)
+      '@types/ember__utils': 4.0.7(@babel/core@7.26.8)
+      '@types/rsvp': 4.0.9
+
   '@types/ember@4.0.11(@babel/core@7.26.8)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.26.8)
@@ -11441,7 +11461,7 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.26.8)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.26.8)
-      '@types/ember': 4.0.11(@babel/core@7.26.8)
+      '@types/ember': 4.0.11
       '@types/ember__engine': 4.0.11(@babel/core@7.26.8)
       '@types/ember__object': 4.0.12(@babel/core@7.26.8)
       '@types/ember__owner': 4.0.9
@@ -11466,6 +11486,11 @@ snapshots:
     dependencies:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.32
+
+  '@types/ember__component@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12(@babel/core@7.26.8)
 
   '@types/ember__component@4.0.22(@babel/core@7.26.8)':
     dependencies:
@@ -15921,7 +15946,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  happy-dom@17.0.3:
+  happy-dom@17.1.0:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
@@ -19448,7 +19473,7 @@ snapshots:
       terser: 5.37.0
       yaml: 2.7.0
 
-  vitest@3.0.5(@types/node@22.13.1)(happy-dom@17.0.3)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0):
+  vitest@3.0.5(@types/node@22.13.1)(happy-dom@17.1.0)(jsdom@25.0.1)(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(terser@5.37.0)(yaml@2.7.0):
     dependencies:
       '@vitest/expect': 3.0.5
       '@vitest/mocker': 3.0.5(msw@2.7.0(@types/node@22.13.1)(typescript@5.7.3))(vite@6.0.11(@types/node@22.13.1)(terser@5.37.0)(yaml@2.7.0))
@@ -19472,7 +19497,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.13.1
-      happy-dom: 17.0.3
+      happy-dom: 17.1.0
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
