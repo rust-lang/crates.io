@@ -14,7 +14,7 @@ use crates_io_diesel_helpers::lower;
 use crates_io_github::GitHubClient;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
+#[derive(Clone, Debug, Queryable, Identifiable, AsChangeset, Selectable)]
 pub struct User {
     pub id: i32,
     pub gh_access_token: String,
