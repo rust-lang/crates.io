@@ -30,9 +30,9 @@ pub async fn list_reverse_dependencies(
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let (rev_deps, total) = krate
-        .reverse_dependencies(&mut conn, pagination_options)
-        .await?;
+    let offset = pagination_options.offset().unwrap_or_default();
+    let limit = pagination_options.per_page;
+    let (rev_deps, total) = krate.reverse_dependencies(&mut conn, offset, limit).await?;
 
     let rev_deps: Vec<_> = rev_deps
         .into_iter()
