@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::NewEmail;
-use crate::schema::{emails, users};
+use crate::schema::users;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use axum::extract::Path;
 use axum::response::Response;
@@ -99,16 +99,8 @@ pub async fn update_user(
             verified: false,
         };
 
-        let token = diesel::insert_into(emails::table)
-            .values(&new_email)
-            .on_conflict(emails::user_id)
-            .do_update()
-            .set(&new_email)
-            .returning(emails::token)
-            .get_result::<String>(&mut conn)
-            .await
-            .map(SecretString::from)
-            .map_err(|_| server_error("Error in creating token"))?;
+        let token = new_email.insert_or_update(&mut conn).await;
+        let token = token.map_err(|_| server_error("Error in creating token"))?;
 
         // This swallows any errors that occur while attempting to send the email. Some users have
         // an invalid email set in their GitHub profile, and we should let them sign in even though

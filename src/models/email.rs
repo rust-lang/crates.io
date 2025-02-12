@@ -51,4 +51,19 @@ impl NewEmail<'_> {
             .map(Into::into)
             .optional()
     }
+
+    pub async fn insert_or_update(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<SecretString> {
+        diesel::insert_into(emails::table)
+            .values(self)
+            .on_conflict(emails::user_id)
+            .do_update()
+            .set(self)
+            .returning(emails::token)
+            .get_result::<String>(conn)
+            .await
+            .map(Into::into)
+    }
 }
