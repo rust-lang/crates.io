@@ -408,10 +408,7 @@ impl Crate {
                     expires_at,
                 };
 
-                let creation_ret = invite
-                    .create(conn, &app.config)
-                    .await
-                    .map_err(BoxedAppError::from)?;
+                let creation_ret = invite.create(conn).await.map_err(BoxedAppError::from)?;
 
                 match creation_ret {
                     NewCrateOwnerInvitationOutcome::InviteCreated { plaintext_token } => {

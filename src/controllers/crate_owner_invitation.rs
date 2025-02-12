@@ -265,7 +265,6 @@ async fn prepare_list(
     }
 
     // Turn `CrateOwnerInvitation`s into `EncodablePrivateCrateOwnerInvitation`.
-    let config = &state.config;
     let mut invitations = Vec::new();
     let mut users_in_response = HashSet::new();
     for invitation in raw_invitations.into_iter() {
@@ -278,7 +277,7 @@ async fn prepare_list(
                 .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?
                 .clone(),
             created_at: invitation.created_at,
-            expires_at: invitation.expires_at(config),
+            expires_at: invitation.expires_at.naive_utc(),
         });
         users_in_response.insert(invitation.invited_user_id);
         users_in_response.insert(invitation.invited_by_user_id);
@@ -342,10 +341,8 @@ pub async fn handle_crate_owner_invitation(
     let invitation =
         CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &mut conn).await?;
 
-    let config = &state.config;
-
     if crate_invite.accepted {
-        invitation.accept(&mut conn, config).await?;
+        invitation.accept(&mut conn).await?;
     } else {
         invitation.decline(&mut conn).await?;
     }
@@ -370,10 +367,8 @@ pub async fn accept_crate_owner_invitation_with_token(
     let mut conn = state.db_write().await?;
     let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
 
-    let config = &state.config;
-
     let crate_id = invitation.crate_id;
-    invitation.accept(&mut conn, config).await?;
+    invitation.accept(&mut conn).await?;
 
     Ok(json!({
         "crate_owner_invitation": {

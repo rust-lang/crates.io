@@ -626,10 +626,15 @@ pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
     let mut conn = app.db_conn().await;
 
     let expiration = app.as_inner().config.ownership_invitations_expiration;
-    let created_at = (Utc::now() - expiration).naive_utc();
+
+    let now = Utc::now();
+    let created_at = (now - expiration).naive_utc();
 
     diesel::update(crate_owner_invitations::table)
-        .set(crate_owner_invitations::created_at.eq(created_at))
+        .set((
+            crate_owner_invitations::created_at.eq(created_at),
+            crate_owner_invitations::expires_at.eq(now),
+        ))
         .filter(crate_owner_invitations::crate_id.eq(crate_id))
         .execute(&mut conn)
         .await

@@ -4,7 +4,6 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
-use crate::config;
 use crate::models::CrateOwner;
 use crate::schema::{crate_owner_invitations, crate_owners, crates};
 
@@ -27,32 +26,16 @@ impl NewCrateOwnerInvitation {
     pub async fn create(
         &self,
         conn: &mut AsyncPgConnection,
-        config: &config::Server,
     ) -> QueryResult<NewCrateOwnerInvitationOutcome> {
         // Before actually creating the invite, check if an expired invitation already exists
         // and delete it from the database. This allows obtaining a new invite if the old one
         // expired, instead of returning "already exists".
-        conn.transaction(|conn| {
-            async move {
-                // This does a SELECT FOR UPDATE + DELETE instead of a DELETE with a WHERE clause to
-                // use the model's `is_expired` method, centralizing our expiration checking logic.
-                let existing: Option<CrateOwnerInvitation> = crate_owner_invitations::table
-                    .find((self.invited_user_id, self.crate_id))
-                    .for_update()
-                    .first(conn)
-                    .await
-                    .optional()?;
-
-                if let Some(existing) = existing {
-                    if existing.is_expired(config) {
-                        diesel::delete(&existing).execute(conn).await?;
-                    }
-                }
-                QueryResult::Ok(())
-            }
-            .scope_boxed()
-        })
-        .await?;
+        diesel::delete(crate_owner_invitations::table)
+            .filter(crate_owner_invitations::invited_user_id.eq(self.invited_user_id))
+            .filter(crate_owner_invitations::crate_id.eq(self.crate_id))
+            .filter(crate_owner_invitations::expires_at.le(Utc::now()))
+            .execute(conn)
+            .await?;
 
         let res: Option<CrateOwnerInvitation> = diesel::insert_into(crate_owner_invitations::table)
             .values(self)
@@ -83,7 +66,7 @@ pub struct CrateOwnerInvitation {
     pub created_at: NaiveDateTime,
     #[diesel(deserialize_as = String)]
     pub token: SecretString,
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: DateTime<Utc>,
 }
 
 impl CrateOwnerInvitation {
@@ -105,15 +88,8 @@ impl CrateOwnerInvitation {
             .await
     }
 
-    pub async fn accept(
-        self,
-        conn: &mut AsyncPgConnection,
-        config: &config::Server,
-    ) -> Result<(), AcceptError> {
-        use diesel_async::scoped_futures::ScopedFutureExt;
-        use diesel_async::{AsyncConnection, RunQueryDsl};
-
-        if self.is_expired(config) {
+    pub async fn accept(self, conn: &mut AsyncPgConnection) -> Result<(), AcceptError> {
+        if self.is_expired() {
             let crate_name: String = crates::table
                 .find(self.crate_id)
                 .select(crates::name)
@@ -151,12 +127,8 @@ impl CrateOwnerInvitation {
         Ok(())
     }
 
-    pub fn is_expired(&self, config: &config::Server) -> bool {
-        self.expires_at(config) <= Utc::now().naive_utc()
-    }
-
-    pub fn expires_at(&self, config: &config::Server) -> NaiveDateTime {
-        self.created_at + config.ownership_invitations_expiration
+    pub fn is_expired(&self) -> bool {
+        self.expires_at <= Utc::now()
     }
 }
 
