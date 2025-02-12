@@ -1,11 +1,9 @@
 use chrono::NaiveDateTime;
-use secrecy::ExposeSecret;
 
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
-    ApiToken, Category, Crate, CrateOwnerInvitation, CreatedApiToken, Dependency, DependencyKind,
-    Keyword, Owner, ReverseDependency, Team, TopVersions, User, Version, VersionDownload,
-    VersionOwnerAction,
+    ApiToken, Category, Crate, CrateOwnerInvitation, Dependency, DependencyKind, Keyword, Owner,
+    ReverseDependency, Team, TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crate::util::rfc3339;
 use crates_io_github as github;
@@ -443,15 +441,6 @@ pub struct EncodableApiTokenWithToken {
     pub token: ApiToken,
     #[serde(rename = "token")]
     pub plaintext: String,
-}
-
-impl From<CreatedApiToken> for EncodableApiTokenWithToken {
-    fn from(token: CreatedApiToken) -> Self {
-        EncodableApiTokenWithToken {
-            token: token.model,
-            plaintext: token.plaintext.expose_secret().to_string(),
-        }
-    }
 }
 
 #[derive(Deserialize, Serialize, Debug)]

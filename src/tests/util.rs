@@ -19,7 +19,7 @@
 //! `MockCookieUser` and `MockTokenUser` provide an `as_model` function which returns a reference
 //! to the underlying database model value (`User` and `ApiToken` respectively).
 
-use crate::models::{ApiToken, CreatedApiToken, User};
+use crate::models::{ApiToken, User};
 use crate::tests::{
     CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
     OwnersResponse, VersionResponse,
@@ -28,7 +28,7 @@ use std::future::Future;
 
 use http::{Method, Request};
 
-use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::util::token::PlainToken;
 use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
@@ -320,20 +320,23 @@ impl MockCookieUser {
     ) -> MockTokenUser {
         let mut conn = self.app().db_conn().await;
 
-        let token = ApiToken::insert_with_scopes(
-            &mut conn,
-            self.user.id,
-            name,
-            crate_scopes,
-            endpoint_scopes,
-            expired_at,
-        )
-        .await
-        .unwrap();
+        let plaintext = PlainToken::generate();
+
+        let new_token = NewApiToken::builder()
+            .user_id(self.user.id)
+            .name(name)
+            .token(plaintext.hashed())
+            .maybe_crate_scopes(crate_scopes)
+            .maybe_endpoint_scopes(endpoint_scopes)
+            .maybe_expired_at(expired_at)
+            .build();
+
+        let token = new_token.insert(&mut conn).await.unwrap();
 
         MockTokenUser {
             app: self.app.clone(),
             token,
+            plaintext,
         }
     }
 }
@@ -341,13 +344,14 @@ impl MockCookieUser {
 /// A type that can generate token authenticated requests
 pub struct MockTokenUser {
     app: TestApp,
-    token: CreatedApiToken,
+    token: ApiToken,
+    plaintext: PlainToken,
 }
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = req(method, path);
-        request.header(header::AUTHORIZATION, self.token.plaintext.expose_secret());
+        request.header(header::AUTHORIZATION, self.plaintext.expose_secret());
         request
     }
 
@@ -359,10 +363,10 @@ impl RequestHelper for MockTokenUser {
 impl MockTokenUser {
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
-        &self.token.model
+        &self.token
     }
 
     pub fn plaintext(&self) -> &PlainToken {
-        &self.token.plaintext
+        &self.plaintext
     }
 }

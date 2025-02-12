@@ -7,6 +7,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::util::errors::{bad_request, AppResult};
+use crate::util::token::PlainToken;
 use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -19,6 +20,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use http::StatusCode;
+use secrecy::ExposeSecret;
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -148,15 +150,16 @@ pub async fn create_api_token(
 
     let recipient = user.email(&mut conn).await?;
 
-    let api_token = ApiToken::insert_with_scopes(
-        &mut conn,
-        user.id,
-        &new.api_token.name,
-        crate_scopes,
-        endpoint_scopes,
-        new.api_token.expired_at,
-    )
-    .await?;
+    let plaintext = PlainToken::generate();
+
+    let new_token = crate::models::token::NewApiToken::builder()
+        .user_id(user.id)
+        .name(&new.api_token.name)
+        .token(plaintext.hashed())
+        .maybe_crate_scopes(crate_scopes)
+        .maybe_endpoint_scopes(endpoint_scopes)
+        .maybe_expired_at(new.api_token.expired_at)
+        .build();
 
     if let Some(recipient) = recipient {
         let email = NewTokenEmail {
@@ -174,7 +177,10 @@ pub async fn create_api_token(
         }
     }
 
-    let api_token = EncodableApiTokenWithToken::from(api_token);
+    let api_token = EncodableApiTokenWithToken {
+        token: new_token.insert(&mut conn).await?,
+        plaintext: plaintext.expose_secret().to_string(),
+    };
 
     Ok(json!({ "api_token": api_token }))
 }

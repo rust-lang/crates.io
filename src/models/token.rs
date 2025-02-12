@@ -1,5 +1,6 @@
 mod scopes;
 
+use bon::Builder;
 use chrono::NaiveDateTime;
 use diesel::dsl::now;
 use diesel::prelude::*;
@@ -11,6 +12,31 @@ use crate::models::User;
 use crate::schema::api_tokens;
 use crate::util::rfc3339;
 use crate::util::token::{HashedToken, PlainToken};
+
+#[derive(Debug, Insertable, Builder)]
+#[diesel(table_name = api_tokens, check_for_backend(diesel::pg::Pg))]
+pub struct NewApiToken {
+    pub user_id: i32,
+    #[builder(into)]
+    pub name: String,
+    #[builder(default = PlainToken::generate().hashed())]
+    pub token: HashedToken,
+    /// `None` or a list of crate scope patterns (see RFC #2947)
+    pub crate_scopes: Option<Vec<CrateScope>>,
+    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
+    pub endpoint_scopes: Option<Vec<EndpointScope>>,
+    pub expired_at: Option<NaiveDateTime>,
+}
+
+impl NewApiToken {
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<ApiToken> {
+        diesel::insert_into(api_tokens::table)
+            .values(self)
+            .returning(ApiToken::as_returning())
+            .get_result(conn)
+            .await
+    }
+}
 
 /// The model representing a row in the `api_tokens` database table.
 #[derive(Debug, Identifiable, Queryable, Selectable, Associations, Serialize)]
@@ -35,44 +61,6 @@ pub struct ApiToken {
 }
 
 impl ApiToken {
-    /// Generates a new named API token for a user
-    pub async fn insert(
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-        name: &str,
-    ) -> QueryResult<CreatedApiToken> {
-        Self::insert_with_scopes(conn, user_id, name, None, None, None).await
-    }
-
-    pub async fn insert_with_scopes(
-        conn: &mut AsyncPgConnection,
-        user_id: i32,
-        name: &str,
-        crate_scopes: Option<Vec<CrateScope>>,
-        endpoint_scopes: Option<Vec<EndpointScope>>,
-        expired_at: Option<NaiveDateTime>,
-    ) -> QueryResult<CreatedApiToken> {
-        let token = PlainToken::generate();
-
-        let model: ApiToken = diesel::insert_into(api_tokens::table)
-            .values((
-                api_tokens::user_id.eq(user_id),
-                api_tokens::name.eq(name),
-                api_tokens::token.eq(token.hashed()),
-                api_tokens::crate_scopes.eq(crate_scopes),
-                api_tokens::endpoint_scopes.eq(endpoint_scopes),
-                api_tokens::expired_at.eq(expired_at),
-            ))
-            .returning(ApiToken::as_returning())
-            .get_result(conn)
-            .await?;
-
-        Ok(CreatedApiToken {
-            plaintext: token,
-            model,
-        })
-    }
-
     pub async fn find_by_api_token(
         conn: &mut AsyncPgConnection,
         token: &HashedToken,
@@ -105,12 +93,6 @@ impl ApiToken {
         };
         token
     }
-}
-
-#[derive(Debug)]
-pub struct CreatedApiToken {
-    pub model: ApiToken,
-    pub plaintext: PlainToken,
 }
 
 #[cfg(test)]
