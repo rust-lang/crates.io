@@ -134,7 +134,7 @@ pub async fn authorize_session(
     super::user::me::get_authenticated_user(app, req).await
 }
 
-async fn save_user_to_database(
+pub async fn save_user_to_database(
     user: &GithubUser,
     access_token: &str,
     emails: &Emails,
