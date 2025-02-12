@@ -139,7 +139,7 @@ async fn save_user_to_database(
     access_token: &str,
     emails: &Emails,
     conn: &mut AsyncPgConnection,
-) -> AppResult<User> {
+) -> QueryResult<User> {
     let new_user = NewUser::builder()
         .gh_id(user.id)
         .gh_login(&user.login)
@@ -156,11 +156,9 @@ async fn save_user_to_database(
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
             // just look for an existing user
-            find_user_by_gh_id(conn, user.id)
-                .await?
-                .ok_or_else(|| error.into())
+            find_user_by_gh_id(conn, user.id).await?.ok_or(error)
         }
-        Err(error) => Err(error.into()),
+        Err(error) => Err(error),
     }
 }
 
