@@ -1,3 +1,4 @@
+use bon::Builder;
 use chrono::NaiveDateTime;
 use diesel::{OptionalExtension, QueryResult};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -18,11 +19,12 @@ pub struct Email {
     pub token_generated_at: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, Insertable, AsChangeset)]
+#[derive(Debug, Insertable, AsChangeset, Builder)]
 #[diesel(table_name = emails, check_for_backend(diesel::pg::Pg))]
 pub struct NewEmail<'a> {
     pub user_id: i32,
     pub email: &'a str,
+    #[builder(default = false)]
     pub verified: bool,
 }
 

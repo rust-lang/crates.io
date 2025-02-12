@@ -93,11 +93,10 @@ pub async fn update_user(
             .parse::<Address>()
             .map_err(|_| bad_request("invalid email address"))?;
 
-        let new_email = NewEmail {
-            user_id: user.id,
-            email: user_email,
-            verified: false,
-        };
+        let new_email = NewEmail::builder()
+            .user_id(user.id)
+            .email(user_email)
+            .build();
 
         let token = new_email.insert_or_update(&mut conn).await;
         let token = token.map_err(|_| server_error("Error in creating token"))?;

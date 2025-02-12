@@ -170,11 +170,10 @@ impl<'a> NewUser<'a> {
 
                 // To send the user an account verification email
                 if let Some(user_email) = email {
-                    let new_email = NewEmail {
-                        user_id: user.id,
-                        email: user_email,
-                        verified: false,
-                    };
+                    let new_email = NewEmail::builder()
+                        .user_id(user.id)
+                        .email(user_email)
+                        .build();
 
                     if let Some(token) = new_email.insert_if_missing(conn).await? {
                         // Swallows any error. Some users might insert an invalid email address here.
