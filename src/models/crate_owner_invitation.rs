@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -20,6 +20,7 @@ pub struct NewCrateOwnerInvitation {
     pub invited_user_id: i32,
     pub invited_by_user_id: i32,
     pub crate_id: i32,
+    pub expires_at: DateTime<Utc>,
 }
 
 impl NewCrateOwnerInvitation {
@@ -82,6 +83,7 @@ pub struct CrateOwnerInvitation {
     pub created_at: NaiveDateTime,
     #[diesel(deserialize_as = String)]
     pub token: SecretString,
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
 impl CrateOwnerInvitation {
