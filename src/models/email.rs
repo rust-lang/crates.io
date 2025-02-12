@@ -27,6 +27,15 @@ pub struct NewEmail<'a> {
 }
 
 impl NewEmail<'_> {
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+        diesel::insert_into(emails::table)
+            .values(self)
+            .execute(conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Inserts the email into the database and returns the confirmation token,
     /// or does nothing if it already exists and returns `None`.
     pub async fn insert_if_missing(

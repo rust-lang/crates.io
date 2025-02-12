@@ -120,7 +120,6 @@ impl TestApp {
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
-        use crate::schema::emails;
         use diesel_async::RunQueryDsl;
 
         let mut conn = self.db_conn().await;
@@ -139,11 +138,7 @@ impl TestApp {
             verified: true,
         };
 
-        diesel::insert_into(emails::table)
-            .values(new_email)
-            .execute(&mut conn)
-            .await
-            .unwrap();
+        new_email.insert(&mut conn).await.unwrap();
 
         MockCookieUser {
             app: self.clone(),
