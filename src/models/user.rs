@@ -2,7 +2,6 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use secrecy::SecretString;
 
 use crate::app::App;
 use crate::controllers::user::update::UserConfirmEmail;
@@ -171,21 +170,12 @@ impl<'a> NewUser<'a> {
 
                 // To send the user an account verification email
                 if let Some(user_email) = email {
-                    let new_email = NewEmail {
-                        user_id: user.id,
-                        email: user_email,
-                    };
+                    let new_email = NewEmail::builder()
+                        .user_id(user.id)
+                        .email(user_email)
+                        .build();
 
-                    let token = insert_into(emails::table)
-                        .values(&new_email)
-                        .on_conflict_do_nothing()
-                        .returning(emails::token)
-                        .get_result::<String>(conn)
-                        .await
-                        .optional()?
-                        .map(SecretString::from);
-
-                    if let Some(token) = token {
+                    if let Some(token) = new_email.insert_if_missing(conn).await? {
                         // Swallows any error. Some users might insert an invalid email address here.
                         let email = UserConfirmEmail {
                             user_name: &user.gh_login,
