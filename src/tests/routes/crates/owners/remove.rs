@@ -1,7 +1,6 @@
 use crate::models::CrateOwner;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use crates_io_database::schema::crate_owners;
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use http::StatusCode;
 use insta::assert_snapshot;
@@ -83,8 +82,6 @@ async fn test_unknown_team() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remove_uppercase_user() {
-    use diesel_async::RunQueryDsl;
-
     let (app, _, cookie) = TestApp::full().with_user().await;
     let user2 = app.db_new_user("user2").await;
     let mut conn = app.db_conn().await;
@@ -93,15 +90,12 @@ async fn test_remove_uppercase_user() {
         .expect_build(&mut conn)
         .await;
 
-    let owner = CrateOwner::builder()
+    CrateOwner::builder()
         .crate_id(krate.id)
         .user_id(user2.as_model().id)
         .created_by(cookie.as_model().id)
-        .build();
-
-    diesel::insert_into(crate_owners::table)
-        .values(owner)
-        .execute(&mut conn)
+        .build()
+        .insert(&mut conn)
         .await
         .unwrap();
 

@@ -5,7 +5,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::models::CrateOwner;
-use crate::schema::{crate_owner_invitations, crate_owners, crates};
+use crate::schema::{crate_owner_invitations, crates};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -101,13 +101,7 @@ impl CrateOwnerInvitation {
 
         conn.transaction(|conn| {
             async move {
-                diesel::insert_into(crate_owners::table)
-                    .values(CrateOwner::from_invite(&self))
-                    .on_conflict(crate_owners::table.primary_key())
-                    .do_update()
-                    .set(crate_owners::deleted.eq(false))
-                    .execute(conn)
-                    .await?;
+                CrateOwner::from_invite(&self).insert(conn).await?;
 
                 diesel::delete(&self).execute(conn).await?;
 

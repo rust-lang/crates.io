@@ -15,7 +15,6 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::Utc;
-use crates_io_database::schema::crate_owners;
 use crates_io_github::GitHubClient;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -342,18 +341,12 @@ async fn add_team_owner(
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
-    let crate_owner = CrateOwner::builder()
+    CrateOwner::builder()
         .crate_id(krate.id)
         .team_id(team.id)
         .created_by(req_user.id)
-        .build();
-
-    diesel::insert_into(crate_owners::table)
-        .values(&crate_owner)
-        .on_conflict(crate_owners::table.primary_key())
-        .do_update()
-        .set(crate_owners::deleted.eq(false))
-        .execute(conn)
+        .build()
+        .insert(conn)
         .await?;
 
     Ok(NewOwnerInvite::Team(team))

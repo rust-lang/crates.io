@@ -1,6 +1,7 @@
 use bon::Builder;
 use diesel::pg::Pg;
 use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 use self::crate_owner_builder::{SetOwnerId, SetOwnerKind};
 use crate::models::{Crate, CrateOwnerInvitation, Team, User};
@@ -63,6 +64,19 @@ impl CrateOwner {
             .user_id(invite.invited_user_id)
             .created_by(invite.invited_by_user_id)
             .build()
+    }
+
+    /// Inserts the crate owner into the database, or removes the `deleted` flag
+    /// if the record already exists.
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+        diesel::insert_into(crate_owners::table)
+            .values(self)
+            .on_conflict(crate_owners::table.primary_key())
+            .do_update()
+            .set(crate_owners::deleted.eq(false))
+            .execute(conn)
+            .await
+            .map(|_| ())
     }
 }
 
