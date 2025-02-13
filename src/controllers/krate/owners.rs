@@ -16,6 +16,7 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::Utc;
 use crates_io_database::schema::crate_owners;
+use crates_io_github::GitHubClient;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -176,7 +177,7 @@ async fn modify_owners(
 
                 let owners = krate.owners(conn).await?;
 
-                match user.rights(&app, &owners).await? {
+                match user.rights(&*app.github, &owners).await? {
                     Rights::Full => {}
                     // Yes!
                     Rights::Publish => {
@@ -292,7 +293,7 @@ async fn add_owner(
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     if login.contains(':') {
-        add_team_owner(app, conn, req_user, krate, login).await
+        add_team_owner(&*app.github, conn, req_user, krate, login).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await
     }
@@ -330,14 +331,14 @@ async fn invite_user_owner(
 }
 
 async fn add_team_owner(
-    app: &App,
+    gh_client: &dyn GitHubClient,
     conn: &mut AsyncPgConnection,
     req_user: &User,
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // Always recreate teams to get the most up-to-date GitHub ID
-    let team = Team::create_or_update(app, conn, login, req_user).await?;
+    let team = Team::create_or_update(gh_client, conn, login, req_user).await?;
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.

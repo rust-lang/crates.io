@@ -122,7 +122,7 @@ pub async fn perform_version_yank_update(
 
     let yanked = yanked.unwrap_or(version.yanked);
 
-    if user.rights(state, &owners).await? < Rights::Publish {
+    if user.rights(&*state.github, &owners).await? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(
