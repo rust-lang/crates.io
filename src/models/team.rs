@@ -1,15 +1,11 @@
 use bon::Builder;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use http::StatusCode;
-
-use crate::util::errors::{bad_request, custom, AppResult};
 
 use crates_io_github::{GitHubClient, GitHubError};
 use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 
-use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
+use crate::models::{Crate, CrateOwner, Owner, OwnerKind};
 use crate::schema::{crate_owners, teams};
 
 /// For now, just a Github Team. Can be upgraded to other teams
@@ -58,65 +54,6 @@ impl NewTeam<'_> {
 }
 
 impl Team {
-    /// Tries to create or update a Github Team. Assumes `org` and `team` are
-    /// correctly parsed out of the full `name`. `name` is passed as a
-    /// convenience to avoid rebuilding it.
-    pub async fn create_or_update_github_team(
-        gh_client: &dyn GitHubClient,
-        conn: &mut AsyncPgConnection,
-        login: &str,
-        org_name: &str,
-        team_name: &str,
-        req_user: &User,
-    ) -> AppResult<Self> {
-        // GET orgs/:org/teams
-        // check that `team` is the `slug` in results, and grab its data
-
-        // "sanitization"
-        fn is_allowed_char(c: char) -> bool {
-            matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
-        }
-
-        if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
-            return Err(bad_request(format_args!(
-                "organization cannot contain special \
-                 characters like {c}"
-            )));
-        }
-
-        let token = AccessToken::new(req_user.gh_access_token.expose_secret().to_string());
-        let team = gh_client.team_by_name(org_name, team_name, &token).await
-            .map_err(|_| {
-                bad_request(format_args!(
-                    "could not find the github team {org_name}/{team_name}. \
-                    Make sure that you have the right permissions in GitHub. \
-                    See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
-                ))
-            })?;
-
-        let org_id = team.organization.id;
-
-        if !can_add_team(gh_client, org_id, team.id, &req_user.gh_login, &token).await? {
-            return Err(custom(
-                StatusCode::FORBIDDEN,
-                "only members of a team or organization owners can add it as an owner",
-            ));
-        }
-
-        let org = gh_client.org_by_name(org_name, &token).await?;
-
-        NewTeam::builder()
-            .login(&login.to_lowercase())
-            .org_id(org_id)
-            .github_id(team.id)
-            .maybe_name(team.name.as_deref())
-            .maybe_avatar(org.avatar_url.as_deref())
-            .build()
-            .create_or_update(conn)
-            .await
-            .map_err(Into::into)
-    }
-
     /// Phones home to Github to ask if this User is a member of the given team.
     /// Note that we're assuming that the given user is the one interested in
     /// the answer. If this is not the case, then we could accidentally leak
@@ -145,7 +82,7 @@ impl Team {
     }
 }
 
-async fn can_add_team(
+pub async fn can_add_team(
     gh_client: &dyn GitHubClient,
     org_id: i32,
     team_id: i32,

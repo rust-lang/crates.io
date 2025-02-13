@@ -33,7 +33,7 @@ mod keyword;
 pub mod krate;
 mod owner;
 mod rights;
-mod team;
+pub mod team;
 pub mod token;
 pub mod user;
 pub mod version;
