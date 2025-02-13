@@ -44,7 +44,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let user = assert_ok!(User::find(&mut conn, api_token.user_id).await);
 
     assert_eq!(user.gh_login, "bar");
-    assert_eq!(user.gh_access_token, "bar_token");
+    assert_eq!(user.gh_access_token.expose_secret(), "bar_token");
 
     Ok(())
 }
