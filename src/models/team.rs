@@ -167,7 +167,7 @@ impl Team {
         &self,
         gh_client: &dyn GitHubClient,
         user: &User,
-    ) -> AppResult<bool> {
+    ) -> Result<bool, GitHubError> {
         match self.org_id {
             Some(org_id) => {
                 team_with_gh_id_contains_user(gh_client, org_id, self.github_id, user).await
@@ -200,7 +200,7 @@ async fn can_add_team(
     org_id: i32,
     team_id: i32,
     user: &User,
-) -> AppResult<bool> {
+) -> Result<bool, GitHubError> {
     Ok(
         team_with_gh_id_contains_user(gh_client, org_id, team_id, user).await?
             || is_gh_org_owner(gh_client, org_id, user).await?,
@@ -211,7 +211,7 @@ async fn is_gh_org_owner(
     gh_client: &dyn GitHubClient,
     org_id: i32,
     user: &User,
-) -> AppResult<bool> {
+) -> Result<bool, GitHubError> {
     let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
     match gh_client
         .org_membership(org_id, &user.gh_login, &token)
@@ -219,7 +219,7 @@ async fn is_gh_org_owner(
     {
         Ok(membership) => Ok(membership.state == "active" && membership.role == "admin"),
         Err(GitHubError::NotFound(_)) => Ok(false),
-        Err(e) => Err(e.into()),
+        Err(e) => Err(e),
     }
 }
 
@@ -228,7 +228,7 @@ async fn team_with_gh_id_contains_user(
     github_org_id: i32,
     github_team_id: i32,
     user: &User,
-) -> AppResult<bool> {
+) -> Result<bool, GitHubError> {
     // GET /organizations/:org_id/team/:team_id/memberships/:username
     // check that "state": "active"
 

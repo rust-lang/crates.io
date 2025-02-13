@@ -7,12 +7,10 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
-use crate::util::errors::AppResult;
-
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
-use crates_io_github::GitHubClient;
+use crates_io_github::{GitHubClient, GitHubError};
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
@@ -69,7 +67,7 @@ impl User {
         &self,
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
-    ) -> AppResult<Rights> {
+    ) -> Result<Rights, GitHubError> {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
