@@ -82,20 +82,7 @@ impl Team {
     }
 }
 
-pub async fn can_add_team(
-    gh_client: &dyn GitHubClient,
-    org_id: i32,
-    team_id: i32,
-    gh_login: &str,
-    token: &AccessToken,
-) -> Result<bool, GitHubError> {
-    Ok(
-        team_with_gh_id_contains_user(gh_client, org_id, team_id, gh_login, token).await?
-            || is_gh_org_owner(gh_client, org_id, gh_login, token).await?,
-    )
-}
-
-async fn is_gh_org_owner(
+pub async fn is_gh_org_owner(
     gh_client: &dyn GitHubClient,
     org_id: i32,
     gh_login: &str,
@@ -105,7 +92,7 @@ async fn is_gh_org_owner(
     Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
-async fn team_with_gh_id_contains_user(
+pub async fn team_with_gh_id_contains_user(
     gh_client: &dyn GitHubClient,
     github_org_id: i32,
     github_team_id: i32,
