@@ -6,12 +6,12 @@ use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-use crate::app::App;
 use crate::util::errors::AppResult;
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
+use crates_io_github::GitHubClient;
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
@@ -63,7 +63,11 @@ impl User {
     /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
     /// Sweet free optimization if teams are proving burdensome to check.
     /// More than one team isn't really expected, though.
-    pub async fn rights(&self, app: &App, owners: &[Owner]) -> AppResult<Rights> {
+    pub async fn rights(
+        &self,
+        gh_client: &dyn GitHubClient,
+        owners: &[Owner],
+    ) -> AppResult<Rights> {
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
@@ -73,7 +77,7 @@ impl User {
                     }
                 }
                 Owner::Team(ref team) => {
-                    if team.contains_user(app, self).await? {
+                    if team.contains_user(gh_client, self).await? {
                         best = Rights::Publish;
                     }
                 }

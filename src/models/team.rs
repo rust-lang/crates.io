@@ -3,10 +3,9 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 
-use crate::app::App;
 use crate::util::errors::{bad_request, custom, AppResult};
 
-use crates_io_github::GitHubError;
+use crates_io_github::{GitHubClient, GitHubError};
 use oauth2::AccessToken;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
@@ -64,7 +63,7 @@ impl Team {
     ///
     /// This function will panic if login contains less than 2 `:` characters.
     pub async fn create_or_update(
-        app: &App,
+        gh_client: &dyn GitHubClient,
         conn: &mut AsyncPgConnection,
         login: &str,
         req_user: &User,
@@ -84,7 +83,7 @@ impl Team {
                     )
                 })?;
                 Team::create_or_update_github_team(
-                    app,
+                    gh_client,
                     conn,
                     &login.to_lowercase(),
                     org,
@@ -104,7 +103,7 @@ impl Team {
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
     async fn create_or_update_github_team(
-        app: &App,
+        gh_client: &dyn GitHubClient,
         conn: &mut AsyncPgConnection,
         login: &str,
         org_name: &str,
@@ -127,7 +126,7 @@ impl Team {
         }
 
         let token = AccessToken::new(req_user.gh_access_token.clone());
-        let team = app.github.team_by_name(org_name, team_name, &token).await
+        let team = gh_client.team_by_name(org_name, team_name, &token).await
             .map_err(|_| {
                 bad_request(format_args!(
                     "could not find the github team {org_name}/{team_name}. \
@@ -138,14 +137,14 @@ impl Team {
 
         let org_id = team.organization.id;
 
-        if !can_add_team(app, org_id, team.id, req_user).await? {
+        if !can_add_team(gh_client, org_id, team.id, req_user).await? {
             return Err(custom(
                 StatusCode::FORBIDDEN,
                 "only members of a team or organization owners can add it as an owner",
             ));
         }
 
-        let org = app.github.org_by_name(org_name, &token).await?;
+        let org = gh_client.org_by_name(org_name, &token).await?;
 
         NewTeam::builder()
             .login(&login.to_lowercase())
@@ -163,9 +162,15 @@ impl Team {
     /// Note that we're assuming that the given user is the one interested in
     /// the answer. If this is not the case, then we could accidentally leak
     /// private membership information here.
-    pub async fn contains_user(&self, app: &App, user: &User) -> AppResult<bool> {
+    pub async fn contains_user(
+        &self,
+        gh_client: &dyn GitHubClient,
+        user: &User,
+    ) -> AppResult<bool> {
         match self.org_id {
-            Some(org_id) => team_with_gh_id_contains_user(app, org_id, self.github_id, user).await,
+            Some(org_id) => {
+                team_with_gh_id_contains_user(gh_client, org_id, self.github_id, user).await
+            }
             // This means we don't have an org_id on file for the `self` team. It much
             // probably was deleted from github by the time we backfilled the database.
             // Short-circuiting to false since a non-existent team cannot contain any
@@ -189,17 +194,25 @@ impl Team {
     }
 }
 
-async fn can_add_team(app: &App, org_id: i32, team_id: i32, user: &User) -> AppResult<bool> {
+async fn can_add_team(
+    gh_client: &dyn GitHubClient,
+    org_id: i32,
+    team_id: i32,
+    user: &User,
+) -> AppResult<bool> {
     Ok(
-        team_with_gh_id_contains_user(app, org_id, team_id, user).await?
-            || is_gh_org_owner(app, org_id, user).await?,
+        team_with_gh_id_contains_user(gh_client, org_id, team_id, user).await?
+            || is_gh_org_owner(gh_client, org_id, user).await?,
     )
 }
 
-async fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool> {
+async fn is_gh_org_owner(
+    gh_client: &dyn GitHubClient,
+    org_id: i32,
+    user: &User,
+) -> AppResult<bool> {
     let token = AccessToken::new(user.gh_access_token.clone());
-    match app
-        .github
+    match gh_client
         .org_membership(org_id, &user.gh_login, &token)
         .await
     {
@@ -210,7 +223,7 @@ async fn is_gh_org_owner(app: &App, org_id: i32, user: &User) -> AppResult<bool>
 }
 
 async fn team_with_gh_id_contains_user(
-    app: &App,
+    gh_client: &dyn GitHubClient,
     github_org_id: i32,
     github_team_id: i32,
     user: &User,
@@ -219,8 +232,7 @@ async fn team_with_gh_id_contains_user(
     // check that "state": "active"
 
     let token = AccessToken::new(user.gh_access_token.clone());
-    let membership = match app
-        .github
+    let membership = match gh_client
         .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
         .await
     {
