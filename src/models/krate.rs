@@ -128,17 +128,12 @@ impl NewCrate<'_> {
                     .get_result(conn)
                     .await?;
 
-                let owner = CrateOwner {
-                    crate_id: krate.id,
-                    owner_id: user_id,
-                    created_by: user_id,
-                    owner_kind: OwnerKind::User,
-                    email_notifications: true,
-                };
-
-                diesel::insert_into(crate_owners::table)
-                    .values(&owner)
-                    .execute(conn)
+                CrateOwner::builder()
+                    .crate_id(krate.id)
+                    .user_id(user_id)
+                    .created_by(user_id)
+                    .build()
+                    .insert(conn)
                     .await?;
 
                 Ok(krate)

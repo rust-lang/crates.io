@@ -4,7 +4,7 @@ use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
 use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
-    NewCrateOwnerInvitationOutcome, OwnerKind,
+    NewCrateOwnerInvitationOutcome,
 };
 use crate::models::{Crate, Owner, Rights, Team, User};
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
@@ -15,7 +15,6 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::Utc;
-use crates_io_database::schema::crate_owners;
 use crates_io_github::GitHubClient;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -342,18 +341,12 @@ async fn add_team_owner(
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
-    diesel::insert_into(crate_owners::table)
-        .values(&CrateOwner {
-            crate_id: krate.id,
-            owner_id: team.id,
-            created_by: req_user.id,
-            owner_kind: OwnerKind::Team,
-            email_notifications: true,
-        })
-        .on_conflict(crate_owners::table.primary_key())
-        .do_update()
-        .set(crate_owners::deleted.eq(false))
-        .execute(conn)
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .team_id(team.id)
+        .created_by(req_user.id)
+        .build()
+        .insert(conn)
         .await?;
 
     Ok(NewOwnerInvite::Team(team))

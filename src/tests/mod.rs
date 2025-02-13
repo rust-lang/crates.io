@@ -1,5 +1,4 @@
-use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User};
-use crate::schema::crate_owners;
+use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{
     EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
@@ -8,7 +7,7 @@ use crate::views::{
 
 use crate::tests::util::github::next_gh_id;
 use diesel::prelude::*;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel_async::AsyncPgConnection;
 
 mod account_lock;
 mod authentication;
@@ -114,23 +113,13 @@ pub async fn add_team_to_crate(
     u: &User,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
-    let crate_owner = CrateOwner {
-        crate_id: krate.id,
-        owner_id: t.id,
-        created_by: u.id,
-        owner_kind: OwnerKind::Team,
-        email_notifications: true,
-    };
-
-    diesel::insert_into(crate_owners::table)
-        .values(&crate_owner)
-        .on_conflict(crate_owners::table.primary_key())
-        .do_update()
-        .set(crate_owners::deleted.eq(false))
-        .execute(conn)
-        .await?;
-
-    Ok(())
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .team_id(t.id)
+        .created_by(u.id)
+        .build()
+        .insert(conn)
+        .await
 }
 
 fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {

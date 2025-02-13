@@ -1,7 +1,7 @@
-use crate::models::{CrateOwner, OwnerKind};
+use crate::models::CrateOwner;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use crates_io_database::schema::{crate_owners, users};
+use crates_io_database::schema::users;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -23,15 +23,12 @@ async fn test_issue_2736() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    diesel::insert_into(crate_owners::table)
-        .values(CrateOwner {
-            crate_id: krate.id,
-            owner_id: foo1.as_model().id,
-            created_by: someone_else.as_model().id,
-            owner_kind: OwnerKind::User,
-            email_notifications: true,
-        })
-        .execute(&mut conn)
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(foo1.as_model().id)
+        .created_by(someone_else.as_model().id)
+        .build()
+        .insert(&mut conn)
         .await?;
 
     // - `foo` deleted their GitHub account (but crates.io has no real knowledge of this)

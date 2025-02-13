@@ -1,11 +1,14 @@
+use bon::Builder;
 use diesel::pg::Pg;
 use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
+use self::crate_owner_builder::{SetOwnerId, SetOwnerKind};
 use crate::models::{Crate, CrateOwnerInvitation, Team, User};
 use crate::schema::crate_owners;
 use crates_io_diesel_helpers::pg_enum;
 
-#[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy)]
+#[derive(Insertable, Associations, Identifiable, Debug, Clone, Copy, Builder)]
 #[diesel(
     table_name = crate_owners,
     check_for_backend(diesel::pg::Pg),
@@ -16,10 +19,31 @@ use crates_io_diesel_helpers::pg_enum;
 )]
 pub struct CrateOwner {
     pub crate_id: i32,
+    #[builder(setters(vis = "pub(self)"))]
     pub owner_id: i32,
     pub created_by: i32,
+    #[builder(setters(vis = "pub(self)"))]
     pub owner_kind: OwnerKind,
+    #[builder(default = true)]
     pub email_notifications: bool,
+}
+
+impl<S: crate_owner_builder::State> CrateOwnerBuilder<S> {
+    pub fn team_id(self, team_id: i32) -> CrateOwnerBuilder<SetOwnerId<SetOwnerKind<S>>>
+    where
+        S::OwnerId: crate_owner_builder::IsUnset,
+        S::OwnerKind: crate_owner_builder::IsUnset,
+    {
+        self.owner_kind(OwnerKind::Team).owner_id(team_id)
+    }
+
+    pub fn user_id(self, user_id: i32) -> CrateOwnerBuilder<SetOwnerId<SetOwnerKind<S>>>
+    where
+        S::OwnerId: crate_owner_builder::IsUnset,
+        S::OwnerKind: crate_owner_builder::IsUnset,
+    {
+        self.owner_kind(OwnerKind::User).owner_id(user_id)
+    }
 }
 
 type BoxedQuery<'a> = crate_owners::BoxedQuery<'a, Pg, crate_owners::SqlType>;
@@ -35,13 +59,24 @@ impl CrateOwner {
     }
 
     pub fn from_invite(invite: &CrateOwnerInvitation) -> Self {
-        Self {
-            crate_id: invite.crate_id,
-            owner_id: invite.invited_user_id,
-            created_by: invite.invited_by_user_id,
-            owner_kind: OwnerKind::User,
-            email_notifications: true,
-        }
+        CrateOwner::builder()
+            .crate_id(invite.crate_id)
+            .user_id(invite.invited_user_id)
+            .created_by(invite.invited_by_user_id)
+            .build()
+    }
+
+    /// Inserts the crate owner into the database, or removes the `deleted` flag
+    /// if the record already exists.
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+        diesel::insert_into(crate_owners::table)
+            .values(self)
+            .on_conflict(crate_owners::table.primary_key())
+            .do_update()
+            .set(crate_owners::deleted.eq(false))
+            .execute(conn)
+            .await
+            .map(|_| ())
     }
 }
 
