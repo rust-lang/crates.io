@@ -58,52 +58,10 @@ impl NewTeam<'_> {
 }
 
 impl Team {
-    /// Tries to create the Team in the DB (assumes a `:` has already been found).
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if login contains less than 2 `:` characters.
-    pub async fn create_or_update(
-        gh_client: &dyn GitHubClient,
-        conn: &mut AsyncPgConnection,
-        login: &str,
-        req_user: &User,
-    ) -> AppResult<Self> {
-        // must look like system:xxxxxxx
-        let mut chunks = login.split(':');
-        // unwrap is okay, split on an empty string still has 1 chunk
-        match chunks.next().unwrap() {
-            // github:rust-lang:owners
-            "github" => {
-                // unwrap is documented above as part of the calling contract
-                let org = chunks.next().unwrap();
-                let team = chunks.next().ok_or_else(|| {
-                    bad_request(
-                        "missing github team argument; \
-                         format is github:org:team",
-                    )
-                })?;
-                Team::create_or_update_github_team(
-                    gh_client,
-                    conn,
-                    &login.to_lowercase(),
-                    org,
-                    team,
-                    req_user,
-                )
-                .await
-            }
-            _ => Err(bad_request(
-                "unknown organization handler, \
-                 only 'github:org:team' is supported",
-            )),
-        }
-    }
-
     /// Tries to create or update a Github Team. Assumes `org` and `team` are
     /// correctly parsed out of the full `name`. `name` is passed as a
     /// convenience to avoid rebuilding it.
-    async fn create_or_update_github_team(
+    pub async fn create_or_update_github_team(
         gh_client: &dyn GitHubClient,
         conn: &mut AsyncPgConnection,
         login: &str,
