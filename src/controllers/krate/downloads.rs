@@ -15,6 +15,7 @@ use axum_extra::response::ErasedJson;
 use crates_io_diesel_helpers::to_char;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use futures_util::FutureExt;
 use std::cmp;
 
 /// Get the download counts for a crate.
@@ -46,29 +47,32 @@ pub async fn get_crate_downloads(state: AppState, path: CratePath) -> AppResult<
     versions.sort_unstable_by(|a, b| b.num.cmp(&a.num));
     let (latest_five, rest) = versions.split_at(cmp::min(5, versions.len()));
 
-    let downloads = VersionDownload::belonging_to(latest_five)
-        .filter(version_downloads::date.gt(date(now - 90.days())))
-        .order((
-            version_downloads::date.asc(),
-            version_downloads::version_id.desc(),
-        ))
-        .load(&mut conn)
-        .await?
+    let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
+    let (downloads, extra) = tokio::try_join!(
+        VersionDownload::belonging_to(latest_five)
+            .filter(version_downloads::date.gt(date(now - 90.days())))
+            .order((
+                version_downloads::date.asc(),
+                version_downloads::version_id.desc(),
+            ))
+            .load(&mut conn)
+            .boxed(),
+        VersionDownload::belonging_to(rest)
+            .select((
+                to_char(version_downloads::date, "YYYY-MM-DD"),
+                sum_downloads,
+            ))
+            .filter(version_downloads::date.gt(date(now - 90.days())))
+            .group_by(version_downloads::date)
+            .order(version_downloads::date.asc())
+            .load::<ExtraDownload>(&mut conn)
+            .boxed(),
+    )?;
+
+    let downloads = downloads
         .into_iter()
         .map(VersionDownload::into)
         .collect::<Vec<EncodableVersionDownload>>();
-
-    let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-    let extra: Vec<ExtraDownload> = VersionDownload::belonging_to(rest)
-        .select((
-            to_char(version_downloads::date, "YYYY-MM-DD"),
-            sum_downloads,
-        ))
-        .filter(version_downloads::date.gt(date(now - 90.days())))
-        .group_by(version_downloads::date)
-        .order(version_downloads::date.asc())
-        .load(&mut conn)
-        .await?;
 
     #[derive(Serialize, Queryable)]
     struct ExtraDownload {
