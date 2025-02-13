@@ -75,21 +75,27 @@ pub async fn find_crate(
         .transpose()?
         .unwrap_or_default();
 
-    let (krate, downloads, default_version, yanked): (Crate, i64, Option<String>, Option<bool>) =
-        Crate::by_name(&path.name)
-            .inner_join(crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
-            .select((
-                Crate::as_select(),
-                crate_downloads::downloads,
-                versions::num.nullable(),
-                versions::yanked.nullable(),
-            ))
-            .first(&mut conn)
-            .await
-            .optional()?
-            .ok_or_else(|| crate_not_found(&path.name))?;
+    let (krate, downloads, default_version, yanked, num_versions): (
+        Crate,
+        i64,
+        Option<String>,
+        Option<bool>,
+        Option<i32>,
+    ) = Crate::by_name(&path.name)
+        .inner_join(crate_downloads::table)
+        .left_join(default_versions::table)
+        .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+        .select((
+            Crate::as_select(),
+            crate_downloads::downloads,
+            versions::num.nullable(),
+            versions::yanked.nullable(),
+            default_versions::num_versions.nullable(),
+        ))
+        .first(&mut conn)
+        .await
+        .optional()?
+        .ok_or_else(|| crate_not_found(&path.name))?;
 
     let mut versions_publishers_and_audit_actions = if include.versions {
         let versions_and_publishers: Vec<(Version, Option<User>)> = Version::belonging_to(&krate)
@@ -183,6 +189,7 @@ pub async fn find_crate(
     let encodable_crate = EncodableCrate::from(
         krate.clone(),
         default_version.as_deref(),
+        num_versions.unwrap_or_default(),
         yanked,
         top_versions.as_ref(),
         ids,

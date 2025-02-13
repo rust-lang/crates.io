@@ -135,6 +135,8 @@ struct Record {
     default_version: Option<String>,
     #[diesel(select_expression = versions::columns::yanked.nullable())]
     yanked: Option<bool>,
+    #[diesel(select_expression = default_versions::columns::num_versions.nullable())]
+    num_versions: Option<i32>,
 }
 
 fn encode_crates(
@@ -165,6 +167,7 @@ fn encode_crates(
                 Ok(EncodableCrate::from_minimal(
                     record.krate,
                     record.default_version.as_deref(),
+                    record.num_versions.unwrap_or_default(),
                     record.yanked,
                     Some(&top_versions),
                     false,

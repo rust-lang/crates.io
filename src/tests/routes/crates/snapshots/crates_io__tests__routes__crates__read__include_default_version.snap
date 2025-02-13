@@ -28,6 +28,7 @@ expression: response.json()
     "max_version": "0.0.0",
     "name": "foo_default_version",
     "newest_version": "0.0.0",
+    "num_versions": 3,
     "recent_downloads": null,
     "repository": null,
     "updated_at": "[datetime]",
