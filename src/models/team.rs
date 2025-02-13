@@ -7,6 +7,7 @@ use crate::util::errors::{bad_request, custom, AppResult};
 
 use crates_io_github::{GitHubClient, GitHubError};
 use oauth2::AccessToken;
+use secrecy::ExposeSecret;
 
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind, User};
 use crate::schema::{crate_owners, teams};
@@ -125,7 +126,7 @@ impl Team {
             )));
         }
 
-        let token = AccessToken::new(req_user.gh_access_token.clone());
+        let token = AccessToken::new(req_user.gh_access_token.expose_secret().to_string());
         let team = gh_client.team_by_name(org_name, team_name, &token).await
             .map_err(|_| {
                 bad_request(format_args!(
@@ -211,7 +212,7 @@ async fn is_gh_org_owner(
     org_id: i32,
     user: &User,
 ) -> AppResult<bool> {
-    let token = AccessToken::new(user.gh_access_token.clone());
+    let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
     match gh_client
         .org_membership(org_id, &user.gh_login, &token)
         .await
@@ -231,7 +232,7 @@ async fn team_with_gh_id_contains_user(
     // GET /organizations/:org_id/team/:team_id/memberships/:username
     // check that "state": "active"
 
-    let token = AccessToken::new(user.gh_access_token.clone());
+    let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
     let membership = match gh_client
         .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
         .await

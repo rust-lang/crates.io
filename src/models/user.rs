@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use secrecy::SecretString;
 
 use crate::util::errors::AppResult;
 
@@ -14,10 +15,11 @@ use crates_io_diesel_helpers::lower;
 use crates_io_github::GitHubClient;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Identifiable, AsChangeset, Selectable)]
+#[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
 pub struct User {
     pub id: i32,
-    pub gh_access_token: String,
+    #[diesel(deserialize_as = String)]
+    pub gh_access_token: SecretString,
     pub gh_login: String,
     pub name: Option<String>,
     pub gh_avatar: Option<String>,
