@@ -336,37 +336,32 @@ async fn add_team_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
-    // Always recreate teams to get the most up-to-date GitHub ID
+    // github:rust-lang:owners
     let mut chunks = login.split(':');
-    let team = match chunks.next().unwrap() {
-        // github:rust-lang:owners
-        "github" => {
-            // unwrap is documented above as part of the calling contract
-            let org = chunks.next().unwrap();
-            let team = chunks.next().ok_or_else(|| {
-                bad_request(
-                    "missing github team argument; \
-                         format is github:org:team",
-                )
-            })?;
-            Team::create_or_update_github_team(
-                gh_client,
-                conn,
-                &login.to_lowercase(),
-                org,
-                team,
-                req_user,
-            )
-            .await?
-        }
-        _ => {
-            return Err(bad_request(
-                "unknown organization handler, \
-                 only 'github:org:team' is supported",
-            )
-            .into());
-        }
-    };
+
+    let team_system = chunks.next().unwrap();
+    if team_system != "github" {
+        let error = "unknown organization handler, only 'github:org:team' is supported";
+        return Err(bad_request(error).into());
+    }
+
+    // unwrap is documented above as part of the calling contract
+    let org = chunks.next().unwrap();
+    let team = chunks.next().ok_or_else(|| {
+        let error = "missing github team argument; format is github:org:team";
+        bad_request(error)
+    })?;
+
+    // Always recreate teams to get the most up-to-date GitHub ID
+    let team = Team::create_or_update_github_team(
+        gh_client,
+        conn,
+        &login.to_lowercase(),
+        org,
+        team,
+        req_user,
+    )
+    .await?;
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
