@@ -27,6 +27,8 @@ export function serializeCrate(
     versionNums.find(it => !versionsByNum[it].yanked) ??
     versionNums[0];
 
+  serialized.num_versions = versions.length;
+
   serialized.yanked = versionsByNum[serialized.default_version]?.yanked ?? false;
 
   serialized.links = {
