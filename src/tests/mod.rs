@@ -1,4 +1,4 @@
-use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, OwnerKind, Team, User};
+use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User};
 use crate::schema::crate_owners;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{
@@ -114,13 +114,11 @@ pub async fn add_team_to_crate(
     u: &User,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<()> {
-    let crate_owner = CrateOwner {
-        crate_id: krate.id,
-        owner_id: t.id,
-        created_by: u.id,
-        owner_kind: OwnerKind::Team,
-        email_notifications: true,
-    };
+    let crate_owner = CrateOwner::builder()
+        .crate_id(krate.id)
+        .team_id(t.id)
+        .created_by(u.id)
+        .build();
 
     diesel::insert_into(crate_owners::table)
         .values(&crate_owner)

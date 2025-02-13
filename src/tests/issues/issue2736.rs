@@ -1,4 +1,4 @@
-use crate::models::{CrateOwner, OwnerKind};
+use crate::models::CrateOwner;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_database::schema::{crate_owners, users};
@@ -23,14 +23,14 @@ async fn test_issue_2736() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
+    let owner = CrateOwner::builder()
+        .crate_id(krate.id)
+        .user_id(foo1.as_model().id)
+        .created_by(someone_else.as_model().id)
+        .build();
+
     diesel::insert_into(crate_owners::table)
-        .values(CrateOwner {
-            crate_id: krate.id,
-            owner_id: foo1.as_model().id,
-            created_by: someone_else.as_model().id,
-            owner_kind: OwnerKind::User,
-            email_notifications: true,
-        })
+        .values(owner)
         .execute(&mut conn)
         .await?;
 
