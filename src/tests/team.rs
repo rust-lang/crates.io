@@ -1,5 +1,4 @@
-use crate::models::{Crate, NewTeam};
-use crate::schema::teams;
+use crate::models::{Crate, CrateOwner, NewTeam};
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::{add_team_to_crate, new_team, OwnerTeamsResponse, RequestHelper, TestApp};
 
@@ -284,17 +283,27 @@ async fn remove_nonexistent_team() {
     let (app, _, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
 
-    CrateBuilder::new("foo_remove_nonexistent", user.as_model().id)
+    let krate = CrateBuilder::new("foo_remove_nonexistent", user.as_model().id)
         .expect_build(&mut conn)
         .await;
-    insert_into(teams::table)
-        .values((
-            teams::login.eq("github:test-org:this-does-not-exist"),
-            teams::github_id.eq(5678),
-        ))
-        .execute(&mut conn)
+
+    let team = NewTeam::builder()
+        .login("github:test-org:this-does-not-exist")
+        .github_id(5678)
+        .org_id(1234)
+        .build()
+        .create_or_update(&mut conn)
         .await
         .expect("couldn't insert nonexistent team");
+
+    CrateOwner::builder()
+        .crate_id(krate.id)
+        .team_id(team.id)
+        .created_by(user.as_model().id)
+        .build()
+        .insert(&mut conn)
+        .await
+        .unwrap();
 
     let response = token
         .remove_named_owner(
@@ -302,8 +311,8 @@ async fn remove_nonexistent_team() {
             "github:test-org:this-does-not-exist",
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:test-org:this-does-not-exist`"}]}"#);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
 
 /// Test trying to publish a crate we don't own
