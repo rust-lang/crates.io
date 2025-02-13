@@ -436,11 +436,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let existing_default_version = default_versions::table
             .inner_join(versions::table)
             .filter(default_versions::crate_id.eq(krate.id))
-            .select(DefaultVersion::as_select())
-            .first(conn)
+            .select((DefaultVersion::as_select(), default_versions::num_versions))
+            .first::<(DefaultVersion, Option<i32>)>(conn)
             .await
             .optional()?;
 
+        let num_versions = existing_default_version.as_ref().and_then(|t|t.1).unwrap_or_default();
         let mut default_version = None;
         // Upsert the `default_value` determined by the existing `default_value` and the
         // published version. Note that this could potentially write an outdated version
@@ -450,7 +451,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         // Compared to only using a background job, this prevents us from getting into a
         // situation where a crate exists in the `crates` table but doesn't have a default
         // version in the `default_versions` table.
-        if let Some(existing_default_version) = existing_default_version {
+        if let Some((existing_default_version, _)) = existing_default_version {
             let published_default_version = DefaultVersion {
                 id: version.id,
                 num: semver,
@@ -562,6 +563,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             krate: EncodableCrate::from_minimal(
                 krate,
                 default_version.or(Some(version_string)).as_deref(),
+                num_versions,
                 Some(false),
                 Some(&top_versions),
                 false,

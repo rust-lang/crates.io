@@ -18,6 +18,7 @@ export default class Crate extends Model {
    * @type {string | null}
    */
   @attr default_version;
+  @attr num_versions;
   @attr yanked;
   @attr max_version;
   @attr max_stable_version;

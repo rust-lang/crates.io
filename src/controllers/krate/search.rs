@@ -82,6 +82,7 @@ pub async fn list_crates(
         0_f32.into_sql::<Float>(),
         versions::num.nullable(),
         versions::yanked.nullable(),
+        default_versions::num_versions.nullable(),
     );
 
     let mut seek: Option<Seek> = None;
@@ -113,6 +114,7 @@ pub async fn list_crates(
                     rank,
                     versions::num.nullable(),
                     versions::yanked.nullable(),
+                    default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Relevance);
                 query = query.then_order_by(rank.desc())
@@ -125,6 +127,7 @@ pub async fn list_crates(
                     0_f32.into_sql::<Float>(),
                     versions::num.nullable(),
                     versions::yanked.nullable(),
+                    default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Query);
             }
@@ -227,6 +230,7 @@ pub async fn list_crates(
             EncodableCrate::from_minimal(
                 record.krate,
                 record.default_version.as_deref(),
+                record.num_versions.unwrap_or_default(),
                 record.yanked,
                 Some(&max_version),
                 record.exact_match,
@@ -704,6 +708,7 @@ struct Record {
     rank: f32,
     default_version: Option<String>,
     yanked: Option<bool>,
+    num_versions: Option<i32>,
 }
 
 type QuerySource = LeftJoinQuerySource<

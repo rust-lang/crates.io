@@ -30,6 +30,7 @@ expression: response.json()
     "max_version": "1.0.0",
     "name": "foo_show",
     "newest_version": "0.5.1",
+    "num_versions": 3,
     "recent_downloads": 10,
     "repository": null,
     "updated_at": "[datetime]",
