@@ -26,7 +26,7 @@ pub mod crate_owner_invitation;
 pub mod default_versions;
 mod deleted_crate;
 pub mod dependency;
-mod download;
+pub mod download;
 mod email;
 mod follow;
 mod keyword;
