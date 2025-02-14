@@ -213,14 +213,11 @@ async fn is_gh_org_owner(
     user: &User,
 ) -> Result<bool, GitHubError> {
     let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
-    match gh_client
+    let membership = gh_client
         .org_membership(org_id, &user.gh_login, &token)
-        .await
-    {
-        Ok(membership) => Ok(membership.state == "active" && membership.role == "admin"),
-        Err(GitHubError::NotFound(_)) => Ok(false),
-        Err(e) => Err(e),
-    }
+        .await?;
+
+    Ok(membership.is_some_and(|m| m.state == "active" && m.role == "admin"))
 }
 
 async fn team_with_gh_id_contains_user(

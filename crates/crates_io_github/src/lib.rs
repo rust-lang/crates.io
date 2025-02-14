@@ -39,7 +39,7 @@ pub trait GitHubClient: Send + Sync {
         org_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubOrgMembership>;
+    ) -> Result<Option<GitHubOrgMembership>>;
     async fn public_keys(&self, username: &str, password: &str) -> Result<Vec<GitHubPublicKey>>;
 }
 
@@ -135,12 +135,13 @@ impl GitHubClient for RealGitHubClient {
         org_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubOrgMembership> {
-        self.request(
-            &format!("/organizations/{org_id}/memberships/{username}"),
-            auth,
-        )
-        .await
+    ) -> Result<Option<GitHubOrgMembership>> {
+        let url = format!("/organizations/{org_id}/memberships/{username}");
+        match self.request(&url, auth).await {
+            Ok(membership) => Ok(Some(membership)),
+            Err(GitHubError::NotFound(_)) => Ok(None),
+            Err(err) => Err(err),
+        }
     }
 
     /// Returns the list of public keys that can be used to verify GitHub secret alert signatures

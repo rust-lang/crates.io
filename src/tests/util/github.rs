@@ -143,28 +143,28 @@ impl MockData {
         &self,
         org_id: i32,
         username: &str,
-    ) -> Result<GitHubOrgMembership, GitHubError> {
+    ) -> Result<Option<GitHubOrgMembership>, GitHubError> {
         let org = self
             .orgs
             .iter()
             .find(|org| org.id == org_id)
             .ok_or_else(not_found)?;
         if org.owners.contains(&username) {
-            Ok(GitHubOrgMembership {
+            Ok(Some(GitHubOrgMembership {
                 state: "active".into(),
                 role: "admin".into(),
-            })
+            }))
         } else if org
             .teams
             .iter()
             .any(|team| team.members.contains(&username))
         {
-            Ok(GitHubOrgMembership {
+            Ok(Some(GitHubOrgMembership {
                 state: "active".into(),
                 role: "member".into(),
-            })
+            }))
         } else {
-            Err(not_found())
+            Ok(None)
         }
     }
 }
