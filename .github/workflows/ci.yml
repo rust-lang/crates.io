@@ -106,6 +106,8 @@ jobs:
       - run: rustup component add clippy
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - run: cargo fmt --check --all
       - run: cargo clippy --all-targets --all-features --workspace
@@ -133,6 +135,8 @@ jobs:
           persist-credentials: false
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - run: cargo install cargo-deny --vers ${CARGO_DENY_VERSION}
       - run: cargo deny check
@@ -161,6 +165,8 @@ jobs:
       - run: sudo rm -rf /usr/local/lib/android
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # Update `pg_dump` to the same version as the running PostgreSQL server
       - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${POSTGRES_VERSION} -i -p
