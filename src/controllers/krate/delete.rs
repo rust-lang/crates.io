@@ -94,11 +94,14 @@ pub async fn delete_crate(
             let msg = format!("only crates with less than {DOWNLOADS_PER_MONTH_LIMIT} downloads per month can be deleted after 72 hours");
             return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
         }
+    }
 
-        if has_rev_dep(&mut conn, krate.id).await? {
-            let msg = "only crates without reverse dependencies can be deleted after 72 hours";
-            return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
-        }
+    // Temporary hack to mitigate https://github.com/rust-lang/crates.io/issues/10538: all crates
+    // with reverse dependencies are currently blocked from being deleted to avoid unexpected
+    // historical index changes.
+    if has_rev_dep(&mut conn, krate.id).await? {
+        let msg = "only crates without reverse dependencies can be deleted";
+        return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
     }
 
     let crate_name = krate.name.clone();
@@ -491,11 +494,9 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_rev_deps() -> anyhow::Result<()> {
-        let (app, anon, user) = TestApp::full().with_user().await;
-        let mut conn = app.db_conn().await;
+        let (_app, anon, user) = TestApp::full().with_user().await;
 
         publish_crate(&user, "foo").await;
-        adjust_creation_date(&mut conn, "foo", 73).await?;
 
         // Publish another crate
         let pb = PublishBuilder::new("bar", "1.0.0").dependency(DependencyBuilder::new("foo"));
@@ -504,7 +505,7 @@ mod tests {
 
         let response = delete_crate(&user, "foo").await;
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates without reverse dependencies can be deleted after 72 hours"}]}"#);
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates without reverse dependencies can be deleted"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
 
