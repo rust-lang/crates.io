@@ -30,7 +30,7 @@ pub struct Team {
     pub name: Option<String>,
     pub avatar: Option<String>,
     /// The GitHub Organization ID this team sits under
-    pub org_id: Option<i32>,
+    pub org_id: i32,
 }
 
 #[derive(Insertable, AsChangeset, Debug, Builder)]
@@ -169,17 +169,7 @@ impl Team {
         gh_login: &str,
         token: &AccessToken,
     ) -> Result<bool, GitHubError> {
-        match self.org_id {
-            Some(org_id) => {
-                team_with_gh_id_contains_user(gh_client, org_id, self.github_id, gh_login, token)
-                    .await
-            }
-            // This means we don't have an org_id on file for the `self` team. It much
-            // probably was deleted from github by the time we backfilled the database.
-            // Short-circuiting to false since a non-existent team cannot contain any
-            // user
-            None => Ok(false),
-        }
+        team_with_gh_id_contains_user(gh_client, self.org_id, self.github_id, gh_login, token).await
     }
 
     pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
