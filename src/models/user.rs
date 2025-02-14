@@ -5,7 +5,8 @@ use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use secrecy::SecretString;
+use oauth2::AccessToken;
+use secrecy::{ExposeSecret, SecretString};
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
 use crate::schema::{crate_owners, emails, users};
@@ -68,6 +69,8 @@ impl User {
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
     ) -> Result<Rights, GitHubError> {
+        let token = AccessToken::new(self.gh_access_token.expose_secret().to_string());
+
         let mut best = Rights::None;
         for owner in owners {
             match *owner {
@@ -77,7 +80,8 @@ impl User {
                     }
                 }
                 Owner::Team(ref team) => {
-                    if team.contains_user(gh_client, self).await? {
+                    let gh_login = &self.gh_login;
+                    if team.contains_user(gh_client, gh_login, &token).await? {
                         best = Rights::Publish;
                     }
                 }
