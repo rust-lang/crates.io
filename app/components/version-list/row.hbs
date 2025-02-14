@@ -94,21 +94,15 @@
         {{/if}}
 
         {{#if @version.featureList}}
-          <span local-class="num-features" data-test-feature-list>
-            {{svg-jar "checkbox"}}
-            {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
-
-            <Tooltip local-class="tooltip">
-              <ul local-class="feature-list">
-                {{#each @version.featureList as |feature|}}
-                  <li>
-                    {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
-                    {{feature.name}}
-                  </li>
-                {{/each}}
-              </ul>
-            </Tooltip>
-          </span>
+            <button
+              type="button"
+              local-class="features-button"
+              {{on "click" this.toggleDropdown}}
+            >
+              <span local-class="num-features" data-test-feature-list>
+                {{svg-jar "checkbox"}}
+                {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}</span>
+            </button>
         {{/if}}
       </div>
     {{/if}}
@@ -118,3 +112,24 @@
     <YankButton @version={{@version}} local-class="yank-button" />
   </PrivilegedAction>
 </div>
+
+{{#if this.featuresOpen}}
+  <div
+    local-class="
+    row
+    features-panel
+    {{if @version.isHighestOfReleaseTrack "latest"}}
+    {{if @version.yanked "yanked"}}
+    {{if @version.isPrerelease "prerelease"}}
+    {{if this.focused "focused"}}
+  ">
+    <ul local-class="feature-list">
+      {{#each @version.featureList as |feature|}}
+        <li>
+          {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
+          {{feature.name}}
+        </li>
+      {{/each}}
+    </ul>
+  </div>
+{{/if}}
