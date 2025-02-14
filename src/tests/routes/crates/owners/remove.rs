@@ -138,9 +138,9 @@ async fn test_remove_uppercase_team() {
         .expect_team_membership()
         .with(eq(1), eq(2), eq("foo"), always())
         .returning(|_, _, _, _| {
-            Ok(GitHubTeamMembership {
+            Ok(Some(GitHubTeamMembership {
                 state: "active".to_string(),
-            })
+            }))
         });
 
     let (app, _, cookie) = TestApp::full().with_github(github_mock).with_user().await;

@@ -33,13 +33,13 @@ pub trait GitHubClient: Send + Sync {
         team_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubTeamMembership>;
+    ) -> Result<Option<GitHubTeamMembership>>;
     async fn org_membership(
         &self,
         org_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubOrgMembership>;
+    ) -> Result<Option<GitHubOrgMembership>>;
     async fn public_keys(&self, username: &str, password: &str) -> Result<Vec<GitHubPublicKey>>;
 }
 
@@ -120,9 +120,14 @@ impl GitHubClient for RealGitHubClient {
         team_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubTeamMembership> {
+    ) -> Result<Option<GitHubTeamMembership>> {
         let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
-        self.request(&url, auth).await
+        match self.request(&url, auth).await {
+            Ok(membership) => Ok(Some(membership)),
+            // Officially how `false` is returned
+            Err(GitHubError::NotFound(_)) => Ok(None),
+            Err(err) => Err(err),
+        }
     }
 
     async fn org_membership(
@@ -130,12 +135,13 @@ impl GitHubClient for RealGitHubClient {
         org_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubOrgMembership> {
-        self.request(
-            &format!("/organizations/{org_id}/memberships/{username}"),
-            auth,
-        )
-        .await
+    ) -> Result<Option<GitHubOrgMembership>> {
+        let url = format!("/organizations/{org_id}/memberships/{username}");
+        match self.request(&url, auth).await {
+            Ok(membership) => Ok(Some(membership)),
+            Err(GitHubError::NotFound(_)) => Ok(None),
+            Err(err) => Err(err),
+        }
     }
 
     /// Returns the list of public keys that can be used to verify GitHub secret alert signatures
