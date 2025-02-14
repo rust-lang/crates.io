@@ -117,22 +117,6 @@ module('Acceptance | crate page', function (hooks) {
     assert.dom('[data-test-try-again]').doesNotExist();
   });
 
-  test('other versions loading error shows an error message', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
-    this.db.version.create({ crate, num: '0.6.1' });
-
-    this.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
-
-    await visit('/');
-    await click('[data-test-just-updated] [data-test-crate-link="0"]');
-    assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.0');
-    assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('nanomsg: Failed to load version data');
-    assert.dom('[data-test-go-back]').doesNotExist();
-    assert.dom('[data-test-try-again]').exists();
-  });
-
   test('works for non-canonical names', async function (assert) {
     let crate = this.db.crate.create({ name: 'foo-bar' });
     this.db.version.create({ crate });

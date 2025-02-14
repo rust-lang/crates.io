@@ -9,6 +9,15 @@ export default class CrateAdapter extends ApplicationAdapter {
     return super.findRecord(store, type, id, setDefaultInclude(snapshot));
   }
 
+  findHasMany(store, snapshot, url, relationship) {
+    if (relationship.key === 'version_downloads') {
+      // This ensures that related versions are included so we don't have to wait for versions
+      // request to finish for `belongsTo` relationships.
+      url += '?include=versions';
+    }
+    return super.findHasMany(store, snapshot, url, relationship);
+  }
+
   queryRecord(store, type, query, adapterOptions) {
     return super.queryRecord(store, type, setDefaultInclude(query), adapterOptions);
   }

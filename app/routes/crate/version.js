@@ -15,17 +15,6 @@ export default class VersionRoute extends Route {
   async model(params, transition) {
     let crate = this.modelFor('crate');
 
-    // TODO: Resolved version without waiting for versions to be resolved
-    // The main blocker for this right now is that we have a "belongsTo" relationship between
-    // `version-download` and `version` in sync mode. This requires us to wait for `versions` to
-    // exist before `version-download` can be created.
-    try {
-      await crate.loadVersionsTask.perform();
-    } catch (error) {
-      let title = `${crate.name}: Failed to load version data`;
-      return this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
-    }
-
     let version;
     let requestedVersion = params.version_num;
     let num = requestedVersion || crate.default_version;
