@@ -77,7 +77,9 @@ impl<'a> MarkdownRenderer<'a> {
             .build();
 
         let extension_options = ComrakExtensionOptions::builder()
+            .alerts(true)
             .autolink(true)
+            .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
             .tagfilter(true)
@@ -668,6 +670,32 @@ There can also be some text in between!
             <source media="(prefers-color-scheme: dark)" srcset="https://test.crates.io/logo_dark.svg">
             <img src="https://test.crates.io/logo.svg" alt="logo" width="200">
         </picture>
+        "#);
+    }
+
+    #[test]
+    fn markdown_alerts() {
+        let text = "> [!note]\n> Something of note";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <div class="markdown-alert markdown-alert-note">
+        <p class="markdown-alert-title">Note</p>
+        <p>Something of note</p>
+        </div>
+        "#);
+    }
+
+    #[test]
+    fn markdown_multiline_block_quotes_complex() {
+        let text = "Paragraph one\n\n>>>\nParagraph two\n\n- one\n- two\n>>>";
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <p>Paragraph one</p>
+        <blockquote>
+        <p>Paragraph two</p>
+        <ul>
+        <li>one</li>
+        <li>two</li>
+        </ul>
+        </blockquote>
         "#);
     }
 }
