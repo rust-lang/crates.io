@@ -20,7 +20,16 @@
 
     <div local-class="requirements">
       <h3>Requirements:</h3>
-      <p>A crate can only be deleted if either:</p>
+      <p>
+        A crate can only be deleted if it is not depended upon by any other crate on crates.io. (This is a temporary
+        restriction due to
+        <a
+          href='https://github.com/rust-lang/crates.io/issues/10538'
+          target='_blank'
+          rel='noopener noreferrer'
+        >#10538</a>.)
+      </p>
+      <p>Additionally, a crate can only be deleted if either:</p>
       <ol local-class='first'>
         <li>the crate has been published for less than 72 hours</li>
       </ol>
@@ -29,8 +38,7 @@
         <li>
           <ol>
             <li>the crate only has a single owner, <em>and</em></li>
-            <li>the crate has been downloaded less than 500 times for each month it has been published, <em>and</em></li>
-            <li>the crate is not depended upon by any other crate on crates.io.</li>
+            <li>the crate has been downloaded less than 500 times for each month it has been published.</li>
           </ol>
         </li>
       </ol>
