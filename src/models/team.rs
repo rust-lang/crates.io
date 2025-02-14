@@ -236,5 +236,5 @@ async fn team_with_gh_id_contains_user(
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
-    Ok(membership.is_some_and(|m| m.state == "active"))
+    Ok(membership.is_some_and(|m| m.is_active()))
 }

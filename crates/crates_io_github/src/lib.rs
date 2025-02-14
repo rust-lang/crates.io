@@ -206,6 +206,12 @@ pub struct GitHubTeamMembership {
     pub state: String,
 }
 
+impl GitHubTeamMembership {
+    pub fn is_active(&self) -> bool {
+        self.state == "active"
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct GitHubOrgMembership {
     pub state: String,
