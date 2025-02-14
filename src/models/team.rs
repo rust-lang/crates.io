@@ -233,16 +233,11 @@ async fn team_with_gh_id_contains_user(
     // check that "state": "active"
 
     let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
-    let membership = match gh_client
+    let membership = gh_client
         .team_membership(github_org_id, github_team_id, &user.gh_login, &token)
-        .await
-    {
-        // Officially how `false` is returned
-        Err(GitHubError::NotFound(_)) => return Ok(false),
-        x => x?,
-    };
+        .await?;
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
-    Ok(membership.state == "active")
+    Ok(membership.is_some_and(|m| m.state == "active"))
 }

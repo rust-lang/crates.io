@@ -120,7 +120,7 @@ impl MockData {
         org_id: i32,
         team_id: i32,
         username: &str,
-    ) -> Result<GitHubTeamMembership, GitHubError> {
+    ) -> Result<Option<GitHubTeamMembership>, GitHubError> {
         let team = self
             .orgs
             .iter()
@@ -131,11 +131,11 @@ impl MockData {
             .find(|team| team.id == team_id)
             .ok_or_else(not_found)?;
         if team.members.contains(&username) {
-            Ok(GitHubTeamMembership {
+            Ok(Some(GitHubTeamMembership {
                 state: "active".into(),
-            })
+            }))
         } else {
-            Err(not_found())
+            Ok(None)
         }
     }
 

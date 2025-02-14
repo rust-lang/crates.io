@@ -33,7 +33,7 @@ pub trait GitHubClient: Send + Sync {
         team_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubTeamMembership>;
+    ) -> Result<Option<GitHubTeamMembership>>;
     async fn org_membership(
         &self,
         org_id: i32,
@@ -120,9 +120,14 @@ impl GitHubClient for RealGitHubClient {
         team_id: i32,
         username: &str,
         auth: &AccessToken,
-    ) -> Result<GitHubTeamMembership> {
+    ) -> Result<Option<GitHubTeamMembership>> {
         let url = format!("/organizations/{org_id}/team/{team_id}/memberships/{username}");
-        self.request(&url, auth).await
+        match self.request(&url, auth).await {
+            Ok(membership) => Ok(Some(membership)),
+            // Officially how `false` is returned
+            Err(GitHubError::NotFound(_)) => Ok(None),
+            Err(err) => Err(err),
+        }
     }
 
     async fn org_membership(

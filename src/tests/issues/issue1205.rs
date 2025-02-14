@@ -74,7 +74,7 @@ fn github_mock() -> MockGitHubClient {
     github_mock
         .expect_team_membership()
         .with(eq(1), eq(2), eq("foo"), always())
-        .returning(|_, _, _, _| Ok(active_membership()));
+        .returning(|_, _, _, _| Ok(Some(active_membership())));
 
     github_mock
 }
