@@ -217,7 +217,7 @@ async fn is_gh_org_owner(
     token: &AccessToken,
 ) -> Result<bool, GitHubError> {
     let membership = gh_client.org_membership(org_id, gh_login, token).await?;
-    Ok(membership.is_some_and(|m| m.state == "active" && m.role == "admin"))
+    Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
 async fn team_with_gh_id_contains_user(
@@ -236,5 +236,5 @@ async fn team_with_gh_id_contains_user(
 
     // There is also `state: pending` for which we could possibly give
     // some feedback, but it's not obvious how that should work.
-    Ok(membership.is_some_and(|m| m.state == "active"))
+    Ok(membership.is_some_and(|m| m.is_active()))
 }
