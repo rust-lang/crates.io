@@ -217,7 +217,7 @@ async fn is_gh_org_owner(
     token: &AccessToken,
 ) -> Result<bool, GitHubError> {
     let membership = gh_client.org_membership(org_id, gh_login, token).await?;
-    Ok(membership.is_some_and(|m| m.state == "active" && m.role == "admin"))
+    Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
 async fn team_with_gh_id_contains_user(

@@ -218,6 +218,12 @@ pub struct GitHubOrgMembership {
     pub role: String,
 }
 
+impl GitHubOrgMembership {
+    pub fn is_active_admin(&self) -> bool {
+        self.state == "active" && self.role == "admin"
+    }
+}
+
 #[derive(Debug, Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct GitHubPublicKey {
     pub key_identifier: String,
