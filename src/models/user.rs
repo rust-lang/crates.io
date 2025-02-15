@@ -80,8 +80,16 @@ impl User {
                     }
                 }
                 Owner::Team(ref team) => {
-                    let gh_login = &self.gh_login;
-                    if team.contains_user(gh_client, gh_login, &token).await? {
+                    // Phones home to GitHub to ask if this User is a member of the given team.
+                    // Note that we're assuming that the given user is the one interested in
+                    // the answer. If this is not the case, then we could accidentally leak
+                    // private membership information here.
+                    let is_team_member = gh_client
+                        .team_membership(team.org_id, team.github_id, &self.gh_login, &token)
+                        .await?
+                        .is_some_and(|m| m.is_active());
+
+                    if is_team_member {
                         best = Rights::Publish;
                     }
                 }

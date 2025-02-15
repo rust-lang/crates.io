@@ -2,9 +2,6 @@ use bon::Builder;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-use crates_io_github::{GitHubClient, GitHubError};
-use oauth2::AccessToken;
-
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind};
 use crate::schema::{crate_owners, teams};
 
@@ -54,22 +51,6 @@ impl NewTeam<'_> {
 }
 
 impl Team {
-    /// Phones home to Github to ask if this User is a member of the given team.
-    /// Note that we're assuming that the given user is the one interested in
-    /// the answer. If this is not the case, then we could accidentally leak
-    /// private membership information here.
-    pub async fn contains_user(
-        &self,
-        gh_client: &dyn GitHubClient,
-        gh_login: &str,
-        token: &AccessToken,
-    ) -> Result<bool, GitHubError> {
-        Ok(gh_client
-            .team_membership(self.org_id, self.github_id, gh_login, token)
-            .await?
-            .is_some_and(|m| m.is_active()))
-    }
-
     pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
         let base_query = CrateOwner::belonging_to(krate).filter(crate_owners::deleted.eq(false));
         let teams = base_query
