@@ -41,6 +41,7 @@ impl From<VersionAction> for String {
     belongs_to(Version),
     belongs_to(User, foreign_key = user_id),
     belongs_to(ApiToken, foreign_key = api_token_id),
+    belongs_to(crate::models::download::Version, foreign_key = version_id),
 )]
 pub struct VersionOwnerAction {
     pub id: i32,

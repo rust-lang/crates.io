@@ -564,6 +564,15 @@ expression: response.json()
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Additional data to include in the response.\n\nValid values: `versions`.\n\nDefaults to no additional data.\n\nThis parameter expects a comma-separated list of values.",
+            "in": "query",
+            "name": "include",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

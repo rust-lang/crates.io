@@ -13,7 +13,7 @@ use crate::schema::*;
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
-#[diesel(belongs_to(Crate))]
+#[diesel(belongs_to(Crate), belongs_to(crate::models::download::Version, foreign_key=id))]
 pub struct Version {
     pub id: i32,
     pub crate_id: i32,
