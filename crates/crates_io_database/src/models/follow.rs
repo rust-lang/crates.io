@@ -1,5 +1,6 @@
 use crate::models::User;
 use crate::schema::follows;
+use diesel::prelude::*;
 
 #[derive(Insertable, Queryable, Identifiable, Associations, Clone, Copy, Debug)]
 #[diesel(
