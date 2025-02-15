@@ -2,7 +2,6 @@
 
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::team::team_with_gh_id_contains_user;
 use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
     NewCrateOwnerInvitationOutcome, NewTeam,
@@ -411,9 +410,13 @@ pub async fn create_or_update_github_team(
     let org_id = team.organization.id;
     let gh_login = &req_user.gh_login;
 
-    let can_add_team = team_with_gh_id_contains_user(gh_client, org_id, team.id, gh_login, &token)
+    let is_team_member = gh_client
+        .team_membership(org_id, team.id, gh_login, &token)
         .await?
-        || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
+        .is_some_and(|m| m.is_active());
+
+    let can_add_team =
+        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
 
     if !can_add_team {
         return Err(custom(

@@ -64,7 +64,10 @@ impl Team {
         gh_login: &str,
         token: &AccessToken,
     ) -> Result<bool, GitHubError> {
-        team_with_gh_id_contains_user(gh_client, self.org_id, self.github_id, gh_login, token).await
+        Ok(gh_client
+            .team_membership(self.org_id, self.github_id, gh_login, token)
+            .await?
+            .is_some_and(|m| m.is_active()))
     }
 
     pub async fn owning(krate: &Crate, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Owner>> {
@@ -80,23 +83,4 @@ impl Team {
 
         Ok(teams.collect())
     }
-}
-
-pub async fn team_with_gh_id_contains_user(
-    gh_client: &dyn GitHubClient,
-    github_org_id: i32,
-    github_team_id: i32,
-    gh_login: &str,
-    token: &AccessToken,
-) -> Result<bool, GitHubError> {
-    // GET /organizations/:org_id/team/:team_id/memberships/:username
-    // check that "state": "active"
-
-    let membership = gh_client
-        .team_membership(github_org_id, github_team_id, gh_login, token)
-        .await?;
-
-    // There is also `state: pending` for which we could possibly give
-    // some feedback, but it's not obvious how that should work.
-    Ok(membership.is_some_and(|m| m.is_active()))
 }
