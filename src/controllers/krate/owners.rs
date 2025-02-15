@@ -1,12 +1,13 @@
 //! All routes related to managing owners of a crate
 
+use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
 use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
     NewCrateOwnerInvitationOutcome, NewTeam,
 };
-use crate::models::{Crate, Owner, Rights, Team, User};
+use crate::models::{Crate, Owner, Team, User};
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, App};
@@ -177,7 +178,7 @@ async fn modify_owners(
 
                 let owners = krate.owners(conn).await?;
 
-                match user.rights(&*app.github, &owners).await? {
+                match Rights::get(user, &*app.github, &owners).await? {
                     Rights::Full => {}
                     // Yes!
                     Rights::Publish => {

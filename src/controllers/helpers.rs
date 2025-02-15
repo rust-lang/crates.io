@@ -2,6 +2,7 @@ use crate::util::errors::AppResult;
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 
+pub mod authorization;
 pub(crate) mod pagination;
 
 pub(crate) use self::pagination::Paginate;

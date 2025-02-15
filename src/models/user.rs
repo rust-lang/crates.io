@@ -5,13 +5,11 @@ use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use oauth2::AccessToken;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 
-use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind, Rights};
+use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
-use crates_io_github::{GitHubClient, GitHubError};
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
@@ -54,48 +52,6 @@ impl User {
             .map(Owner::User);
 
         Ok(users.collect())
-    }
-
-    /// Given this set of owners, determines the strongest rights the
-    /// user has.
-    ///
-    /// Shortcircuits on `Full` because you can't beat it. In practice we'll always
-    /// see `[user, user, user, ..., team, team, team]`, so we could shortcircuit on
-    /// `Publish` as well, but this is a non-obvious invariant so we don't bother.
-    /// Sweet free optimization if teams are proving burdensome to check.
-    /// More than one team isn't really expected, though.
-    pub async fn rights(
-        &self,
-        gh_client: &dyn GitHubClient,
-        owners: &[Owner],
-    ) -> Result<Rights, GitHubError> {
-        let token = AccessToken::new(self.gh_access_token.expose_secret().to_string());
-
-        let mut best = Rights::None;
-        for owner in owners {
-            match *owner {
-                Owner::User(ref other_user) => {
-                    if other_user.id == self.id {
-                        return Ok(Rights::Full);
-                    }
-                }
-                Owner::Team(ref team) => {
-                    // Phones home to GitHub to ask if this User is a member of the given team.
-                    // Note that we're assuming that the given user is the one interested in
-                    // the answer. If this is not the case, then we could accidentally leak
-                    // private membership information here.
-                    let is_team_member = gh_client
-                        .team_membership(team.org_id, team.github_id, &self.gh_login, &token)
-                        .await?
-                        .is_some_and(|m| m.is_active());
-
-                    if is_team_member {
-                        best = Rights::Publish;
-                    }
-                }
-            }
-        }
-        Ok(best)
     }
 
     /// Queries the database for the verified emails

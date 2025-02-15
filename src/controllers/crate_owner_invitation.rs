@@ -1,9 +1,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::auth::Authentication;
+use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
-use crate::models::{Crate, CrateOwnerInvitation, Rights, User};
+use crate::models::{Crate, CrateOwnerInvitation, User};
 use crate::schema::{crate_owner_invitations, crates, users};
 use crate::util::errors::{bad_request, custom, forbidden, internal, AppResult, BoxedAppError};
 use crate::util::RequestUtils;
@@ -157,7 +158,7 @@ async fn prepare_list(
                 // Only allow crate owners to query pending invitations for their crate.
                 let krate: Crate = Crate::by_name(&crate_name).first(conn).await?;
                 let owners = krate.owners(conn).await?;
-                if user.rights(&*state.github, &owners).await? != Rights::Full {
+                if Rights::get(user, &*state.github, &owners).await? != Rights::Full {
                     let detail = "only crate owners can query pending invitations for their crate";
                     return Err(forbidden(detail));
                 }

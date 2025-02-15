@@ -1,8 +1,9 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
+use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::email::Email;
-use crate::models::{NewDeletedCrate, Rights};
+use crate::models::NewDeletedCrate;
 use crate::schema::{crate_downloads, crates, dependencies};
 use crate::util::errors::{custom, AppResult, BoxedAppError};
 use crate::worker::jobs;
@@ -68,7 +69,7 @@ pub async fn delete_crate(
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
     let owners = krate.owners(&mut conn).await?;
-    match user.rights(&*app.github, &owners).await? {
+    match Rights::get(user, &*app.github, &owners).await? {
         Rights::Full => {}
         Rights::Publish => {
             let msg = "team members don't have permission to delete crates";

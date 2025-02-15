@@ -28,9 +28,10 @@ use url::Url;
 
 use crate::models::{
     default_versions::Version as DefaultVersion, Category, Crate, DependencyKind, Keyword,
-    NewCrate, NewVersion, NewVersionOwnerAction, Rights, VersionAction,
+    NewCrate, NewVersion, NewVersionOwnerAction, VersionAction,
 };
 
+use crate::controllers::helpers::authorization::Rights;
 use crate::licenses::parse_license_expr;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
@@ -356,7 +357,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         };
 
         let owners = krate.owners(conn).await?;
-        if user.rights(&*app.github, &owners).await? < Rights::Publish {
+        if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
             return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
         }
 
