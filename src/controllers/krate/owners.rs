@@ -2,7 +2,7 @@
 
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::team::{is_gh_org_owner, team_with_gh_id_contains_user};
+use crate::models::team::team_with_gh_id_contains_user;
 use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
     NewCrateOwnerInvitationOutcome, NewTeam,
@@ -16,7 +16,7 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::Utc;
-use crates_io_github::GitHubClient;
+use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -434,6 +434,16 @@ pub async fn create_or_update_github_team(
         .create_or_update(conn)
         .await
         .map_err(Into::into)
+}
+
+async fn is_gh_org_owner(
+    gh_client: &dyn GitHubClient,
+    org_id: i32,
+    gh_login: &str,
+    token: &AccessToken,
+) -> Result<bool, GitHubError> {
+    let membership = gh_client.org_membership(org_id, gh_login, token).await?;
+    Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
 /// Error results from a [`add_owner()`] model call.

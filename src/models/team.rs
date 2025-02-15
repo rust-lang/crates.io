@@ -82,16 +82,6 @@ impl Team {
     }
 }
 
-pub async fn is_gh_org_owner(
-    gh_client: &dyn GitHubClient,
-    org_id: i32,
-    gh_login: &str,
-    token: &AccessToken,
-) -> Result<bool, GitHubError> {
-    let membership = gh_client.org_membership(org_id, gh_login, token).await?;
-    Ok(membership.is_some_and(|m| m.is_active_admin()))
-}
-
 pub async fn team_with_gh_id_contains_user(
     gh_client: &dyn GitHubClient,
     github_org_id: i32,
