@@ -1,10 +1,9 @@
 use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::auth::{AuthCheck, Authentication};
+use crate::controllers::helpers::authorization::Rights;
 use crate::models::token::EndpointScope;
-use crate::models::{
-    Crate, NewVersionOwnerAction, Rights, Version, VersionAction, VersionOwnerAction,
-};
+use crate::models::{Crate, NewVersionOwnerAction, Version, VersionAction, VersionOwnerAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
 use crate::util::errors::{bad_request, custom, AppResult};
@@ -122,7 +121,7 @@ pub async fn perform_version_yank_update(
 
     let yanked = yanked.unwrap_or(version.yanked);
 
-    if user.rights(&*state.github, &owners).await? < Rights::Publish {
+    if Rights::get(user, &*state.github, &owners).await? < Rights::Publish {
         if user.is_admin {
             let action = if yanked { "yanking" } else { "unyanking" };
             warn!(

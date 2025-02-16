@@ -1,12 +1,13 @@
 //! All routes related to managing owners of a crate
 
+use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
 use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
-    NewCrateOwnerInvitationOutcome,
+    NewCrateOwnerInvitationOutcome, NewTeam,
 };
-use crate::models::{Crate, Owner, Rights, Team, User};
+use crate::models::{Crate, Owner, Team, User};
 use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
 use crate::views::EncodableOwner;
 use crate::{app::AppState, App};
@@ -15,12 +16,13 @@ use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::Utc;
-use crates_io_github::GitHubClient;
+use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
 use http::StatusCode;
+use oauth2::AccessToken;
 use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;
 
@@ -176,7 +178,7 @@ async fn modify_owners(
 
                 let owners = krate.owners(conn).await?;
 
-                match user.rights(&*app.github, &owners).await? {
+                match Rights::get(user, &*app.github, &owners).await? {
                     Rights::Full => {}
                     // Yes!
                     Rights::Publish => {
@@ -336,8 +338,26 @@ async fn add_team_owner(
     krate: &Crate,
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
+    // github:rust-lang:owners
+    let mut chunks = login.split(':');
+
+    let team_system = chunks.next().unwrap();
+    if team_system != "github" {
+        let error = "unknown organization handler, only 'github:org:team' is supported";
+        return Err(bad_request(error).into());
+    }
+
+    // unwrap is documented above as part of the calling contract
+    let org = chunks.next().unwrap();
+    let team = chunks.next().ok_or_else(|| {
+        let error = "missing github team argument; format is github:org:team";
+        bad_request(error)
+    })?;
+
     // Always recreate teams to get the most up-to-date GitHub ID
-    let team = Team::create_or_update(gh_client, conn, login, req_user).await?;
+    let team =
+        create_or_update_github_team(gh_client, conn, &login.to_lowercase(), org, team, req_user)
+            .await?;
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
@@ -350,6 +370,84 @@ async fn add_team_owner(
         .await?;
 
     Ok(NewOwnerInvite::Team(team))
+}
+
+/// Tries to create or update a Github Team. Assumes `org` and `team` are
+/// correctly parsed out of the full `name`. `name` is passed as a
+/// convenience to avoid rebuilding it.
+pub async fn create_or_update_github_team(
+    gh_client: &dyn GitHubClient,
+    conn: &mut AsyncPgConnection,
+    login: &str,
+    org_name: &str,
+    team_name: &str,
+    req_user: &User,
+) -> AppResult<Team> {
+    // GET orgs/:org/teams
+    // check that `team` is the `slug` in results, and grab its data
+
+    // "sanitization"
+    fn is_allowed_char(c: char) -> bool {
+        matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
+    }
+
+    if let Some(c) = org_name.chars().find(|c| !is_allowed_char(*c)) {
+        return Err(bad_request(format_args!(
+            "organization cannot contain special \
+                 characters like {c}"
+        )));
+    }
+
+    let token = AccessToken::new(req_user.gh_access_token.expose_secret().to_string());
+    let team = gh_client.team_by_name(org_name, team_name, &token).await
+        .map_err(|_| {
+            bad_request(format_args!(
+                "could not find the github team {org_name}/{team_name}. \
+                    Make sure that you have the right permissions in GitHub. \
+                    See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"
+            ))
+        })?;
+
+    let org_id = team.organization.id;
+    let gh_login = &req_user.gh_login;
+
+    let is_team_member = gh_client
+        .team_membership(org_id, team.id, gh_login, &token)
+        .await?
+        .is_some_and(|m| m.is_active());
+
+    let can_add_team =
+        is_team_member || is_gh_org_owner(gh_client, org_id, gh_login, &token).await?;
+
+    if !can_add_team {
+        return Err(custom(
+            StatusCode::FORBIDDEN,
+            "only members of a team or organization owners can add it as an owner",
+        ));
+    }
+
+    let org = gh_client.org_by_name(org_name, &token).await?;
+
+    NewTeam::builder()
+        .login(&login.to_lowercase())
+        .org_id(org_id)
+        .github_id(team.id)
+        .maybe_name(team.name.as_deref())
+        .maybe_avatar(org.avatar_url.as_deref())
+        .build()
+        .create_or_update(conn)
+        .await
+        .map_err(Into::into)
+}
+
+async fn is_gh_org_owner(
+    gh_client: &dyn GitHubClient,
+    org_id: i32,
+    gh_login: &str,
+    token: &AccessToken,
+) -> Result<bool, GitHubError> {
+    let membership = gh_client.org_membership(org_id, gh_login, token).await?;
+    Ok(membership.is_some_and(|m| m.is_active_admin()))
 }
 
 /// Error results from a [`add_owner()`] model call.
