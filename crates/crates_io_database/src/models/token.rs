@@ -10,8 +10,8 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
-use crate::util::rfc3339;
-use crate::util::token::{HashedToken, PlainToken};
+use crate::utils::rfc3339;
+use crate::utils::token::{HashedToken, PlainToken};
 
 #[derive(Debug, Insertable, Builder)]
 #[diesel(table_name = api_tokens, check_for_backend(diesel::pg::Pg))]
@@ -39,7 +39,7 @@ impl NewApiToken {
 }
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(Debug, Identifiable, Queryable, Selectable, Associations, Serialize)]
+#[derive(Debug, Identifiable, Queryable, Selectable, Associations, serde::Serialize)]
 #[diesel(belongs_to(User))]
 pub struct ApiToken {
     pub id: i32,
@@ -99,6 +99,7 @@ impl ApiToken {
 mod tests {
     use super::*;
     use chrono::NaiveDate;
+    use claims::assert_some;
 
     #[test]
     fn api_token_serializes_to_rfc3339() {

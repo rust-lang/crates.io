@@ -1,4 +1,9 @@
+use crate::models::helpers::with_count::*;
+use crate::models::version::TopVersions;
+use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
+use crate::schema::*;
 use chrono::NaiveDateTime;
+use crates_io_diesel_helpers::canon_crate_name;
 use diesel::associations::Identifiable;
 use diesel::dsl;
 use diesel::pg::Pg;
@@ -8,12 +13,7 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 use thiserror::Error;
-
-use crate::models::helpers::with_count::*;
-use crate::models::version::TopVersions;
-use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
-use crate::schema::*;
-use crates_io_diesel_helpers::canon_crate_name;
+use tracing::instrument;
 
 use super::Team;
 
@@ -422,7 +422,7 @@ impl Crate {
 
     /// Returns (dependency, dependent crate name, dependent crate downloads)
     #[instrument(skip_all, fields(krate.name = %self.name))]
-    pub(crate) async fn reverse_dependencies(
+    pub async fn reverse_dependencies(
         &self,
         conn: &mut AsyncPgConnection,
         offset: i64,
@@ -546,6 +546,7 @@ pub enum InvalidDependencyName {
 #[cfg(test)]
 mod tests {
     use crate::models::Crate;
+    use claims::{assert_err_eq, assert_ok};
 
     #[test]
     fn validate_crate_name() {

@@ -7,7 +7,7 @@ use crate::schema::{crate_owners, teams};
 
 /// For now, just a Github Team. Can be upgraded to other teams
 /// later if desirable.
-#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Selectable)]
+#[derive(Queryable, Identifiable, serde::Serialize, serde::Deserialize, Debug, Selectable)]
 pub struct Team {
     /// Unique table id
     pub id: i32,

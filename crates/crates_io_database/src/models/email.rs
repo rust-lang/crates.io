@@ -1,6 +1,6 @@
 use bon::Builder;
 use chrono::NaiveDateTime;
-use diesel::{OptionalExtension, QueryResult};
+use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 

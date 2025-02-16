@@ -1,4 +1,8 @@
-use diesel::{deserialize::FromSql, pg::Pg, serialize::ToSql, sql_types::Bytea};
+use diesel::deserialize::FromSql;
+use diesel::pg::Pg;
+use diesel::serialize::ToSql;
+use diesel::sql_types::Bytea;
+use diesel::{AsExpression, FromSqlRow};
 use rand::distr::{Alphanumeric, SampleString};
 use secrecy::{ExposeSecret, SecretSlice, SecretString};
 use sha2::{Digest, Sha256};
@@ -60,7 +64,7 @@ impl FromSql<Bytea, Pg> for HashedToken {
 pub struct PlainToken(SecretString);
 
 impl PlainToken {
-    pub(crate) fn generate() -> Self {
+    pub fn generate() -> Self {
         let plaintext = format!(
             "{}{}",
             TOKEN_PREFIX,
@@ -90,6 +94,7 @@ fn generate_secure_alphanumeric_string(len: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::assert_err;
     use googletest::prelude::*;
 
     #[test]

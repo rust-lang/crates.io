@@ -132,7 +132,6 @@ tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.4"
-unicode-xid = "=0.2.6"
 utoipa = { version = "=5.3.1", features = ["chrono"] }
 utoipa-axum = "=0.2.0"
 

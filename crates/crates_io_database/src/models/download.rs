@@ -2,6 +2,7 @@ use crate::models::Version as FullVersion;
 use crate::schema::{version_downloads, versions};
 use chrono::NaiveDate;
 use crates_io_diesel_helpers::SemverVersion;
+use diesel::prelude::*;
 
 #[derive(Queryable, Identifiable, Associations, Debug, Clone, Copy)]
 #[diesel(

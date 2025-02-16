@@ -1,14 +1,11 @@
+use crate::models::Crate;
+use crate::schema::*;
 use chrono::NaiveDateTime;
-use diesel::{
-    delete, dsl, insert_into, sql_query, ExpressionMethods, QueryDsl, QueryResult,
-    TextExpressionMethods,
-};
+use diesel::dsl;
+use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use std::future::Future;
-
-use crate::models::Crate;
-use crate::schema::*;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
@@ -21,7 +18,7 @@ pub struct Category {
     pub created_at: NaiveDateTime,
 }
 
-type WithSlug<'a> = diesel::dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<&'a str>>;
+type WithSlug<'a> = dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<&'a str>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[diesel(
@@ -73,12 +70,12 @@ impl Category {
                     })
                     .collect::<Vec<_>>();
 
-                delete(crates_categories::table)
+                diesel::delete(crates_categories::table)
                     .filter(crates_categories::crate_id.eq(crate_id))
                     .execute(conn)
                     .await?;
 
-                insert_into(crates_categories::table)
+                diesel::insert_into(crates_categories::table)
                     .values(&crate_categories)
                     .execute(conn)
                     .await?;
@@ -113,7 +110,7 @@ impl Category {
 
         // Collect all the top-level categories and sum up the crates_cnt of
         // the crates in all subcategories
-        sql_query(format!(include_str!("toplevel.sql"), sort_sql))
+        diesel::sql_query(format!(include_str!("toplevel.sql"), sort_sql))
             .bind::<Int8, _>(limit)
             .bind::<Int8, _>(offset)
             .load(conn)
@@ -122,7 +119,7 @@ impl Category {
     pub async fn subcategories(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
-        sql_query(include_str!("../subcategories.sql"))
+        diesel::sql_query(include_str!("subcategories.sql"))
             .bind::<Text, _>(&self.category)
             .load(conn)
             .await
@@ -138,7 +135,7 @@ impl Category {
     ) -> QueryResult<Vec<Category>> {
         use diesel::sql_types::Text;
 
-        sql_query(include_str!("../parent_categories.sql"))
+        diesel::sql_query(include_str!("parent_categories.sql"))
             .bind::<Text, _>(&self.slug)
             .load(conn)
             .await
@@ -168,7 +165,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 (
                     categories::category.eq("Cat 2"),
@@ -212,7 +209,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 0),
                 new_cat("Cat 2", "cat2", 2),
@@ -243,7 +240,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 (
                     categories::category.eq("Cat 1"),
@@ -292,7 +289,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
                 new_cat("Cat 1::sub", "cat1::sub", 2),
@@ -334,7 +331,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
                 new_cat("Cat 1::sub", "cat1::sub", 2),
@@ -381,7 +378,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        insert_into(categories::table)
+        diesel::insert_into(categories::table)
             .values(&vec![
                 new_cat("Cat 1", "cat1", 1),
                 new_cat("Cat 1::sub1", "cat1::sub1", 2),

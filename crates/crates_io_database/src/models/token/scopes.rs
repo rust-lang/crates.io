@@ -5,7 +5,7 @@ use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::Text;
 use std::io::Write;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, AsExpression, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, diesel::AsExpression, serde::Serialize)]
 #[diesel(sql_type = Text)]
 #[serde(rename_all = "kebab-case")]
 pub enum EndpointScope {
@@ -54,7 +54,7 @@ impl FromSql<Text, Pg> for EndpointScope {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 #[serde(transparent)]
 pub struct CrateScope {
     pattern: String,
@@ -126,6 +126,7 @@ impl CrateScope {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::assert_ok;
     use googletest::prelude::*;
 
     #[googletest::test]

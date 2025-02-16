@@ -15,7 +15,7 @@ extern crate serde;
 extern crate tracing;
 
 pub use crate::{app::App, email::Emails};
-pub use crates_io_database::schema;
+pub use crates_io_database::{models, schema};
 use std::sync::Arc;
 
 use crate::app::AppState;
@@ -41,7 +41,6 @@ pub mod index;
 mod licenses;
 pub mod metrics;
 pub mod middleware;
-pub mod models;
 pub mod openapi;
 pub mod rate_limiter;
 mod real_ip;

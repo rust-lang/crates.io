@@ -1136,7 +1136,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "typomania",
- "unicode-xid",
  "url",
  "utoipa",
  "utoipa-axum",
@@ -1168,11 +1167,28 @@ dependencies = [
 name = "crates_io_database"
 version = "0.0.0"
 dependencies = [
+ "bon",
+ "chrono",
+ "claims",
+ "crates_io_diesel_helpers",
+ "crates_io_index",
  "crates_io_test_db",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
+ "futures-util",
+ "googletest",
+ "insta",
+ "rand 0.9.0",
+ "secrecy",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.11",
  "tokio",
+ "tracing",
+ "unicode-xid",
 ]
 
 [[package]]
