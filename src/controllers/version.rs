@@ -7,14 +7,15 @@ pub mod update;
 pub mod yank;
 
 use axum::extract::{FromRequestParts, Path};
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use utoipa::IntoParams;
 
-use crate::controllers::krate::load_crate;
 use crate::models::{Crate, Version};
-use crate::util::errors::{AppResult, version_not_found};
+use crate::schema::{crates, versions};
+use crate::util::errors::{AppResult, crate_not_found, version_not_found};
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]
 #[into_params(parameter_in = Path)]
@@ -46,12 +47,19 @@ async fn version_and_crate(
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
-    let krate = load_crate(conn, crate_name).await?;
-    let version = krate
-        .find_version(conn, semver)
-        .await?
-        .ok_or_else(|| version_not_found(crate_name, semver))?;
+    let (krate, version) = Crate::by_name(crate_name)
+        .left_join(
+            versions::table.on(crates::id
+                .eq(versions::crate_id)
+                .and(versions::num.eq(semver))),
+        )
+        .select(<(Crate, Option<Version>)>::as_select())
+        .first(conn)
+        .await
+        .optional()?
+        .ok_or_else(|| crate_not_found(crate_name))?;
 
+    let version = version.ok_or_else(|| version_not_found(crate_name, semver))?;
     Ok((version, krate))
 }
 
