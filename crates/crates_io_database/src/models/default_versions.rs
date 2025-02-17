@@ -2,6 +2,7 @@ use crate::schema::{default_versions, versions};
 use crates_io_diesel_helpers::SemverVersion;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use tracing::{debug, instrument, warn};
 
 /// A subset of the columns of the `versions` table.
 ///
@@ -137,6 +138,7 @@ async fn calculate_default_version(
 mod tests {
     use super::*;
     use crate::schema::crates;
+    use claims::assert_some;
     use crates_io_test_db::TestDatabase;
     use insta::assert_snapshot;
     use std::fmt::Write;

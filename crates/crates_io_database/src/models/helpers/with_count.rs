@@ -1,11 +1,12 @@
+use diesel::prelude::*;
 use diesel::sql_types::BigInt;
 
 #[derive(QueryableByName, Queryable, Debug)]
 pub struct WithCount<T> {
     #[diesel(embed)]
-    pub(crate) record: T,
+    pub record: T,
     #[diesel(sql_type = BigInt)]
-    pub(crate) total: i64,
+    pub total: i64,
 }
 
 pub trait WithCountExtension<T> {
