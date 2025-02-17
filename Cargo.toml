@@ -110,7 +110,7 @@ postgres-native-tls = "=0.5.1"
 prometheus = { version = "=0.13.4", default-features = false }
 rand = "=0.9.0"
 reqwest = { version = "=0.12.12", features = ["gzip", "json"] }
-rss = { version = "=2.0.11", default-features = false, features = ["atom"] }
+rss = { version = "=2.0.12", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.25", features = ["serde"] }
 sentry = { version = "=0.36.0", features = ["tracing", "tower", "tower-axum-matched-path", "tower-http"] }
