@@ -19,7 +19,7 @@ env:
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.7.0
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 10.4.0
+  PNPM_VERSION: 10.4.1
   # renovate: datasource=docker depName=postgres
   POSTGRES_VERSION: 16
 
