@@ -15,7 +15,7 @@ use utoipa::IntoParams;
 
 use crate::models::{Crate, Version};
 use crate::schema::{crates, versions};
-use crate::util::errors::{AppResult, crate_not_found, version_not_found};
+use crate::util::errors::AppResult;
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]
 #[into_params(parameter_in = Path)]
@@ -54,9 +54,7 @@ async fn version_and_crate(
         .first(conn)
         .await
         .optional()?
-        .ok_or_else(|| crate_not_found(crate_name))?;
-
-    let version = version.ok_or_else(|| version_not_found(crate_name, semver))?;
+        .gather(crate_name, semver)?;
     Ok((version, krate))
 }
 
@@ -68,6 +66,7 @@ fn deserialize_version<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Str
 
 mod ext {
     use super::*;
+    use crate::util::errors::{crate_not_found, version_not_found};
     use crates_io_diesel_helpers::canon_crate_name;
 
     #[diesel::dsl::auto_type()]
@@ -88,6 +87,23 @@ mod ext {
     impl CrateVersionPathExt for CrateVersionPath {
         fn crate_and_version(&self) -> crate_and_version_query<'_> {
             crate_and_version_query(&self.name, &self.version)
+        }
+    }
+
+    pub trait CrateVersionHelper<C, V> {
+        fn gather(self, crate_name: &str, semver: &str) -> AppResult<(C, V)>;
+        fn gather_from_path(self, path: &CrateVersionPath) -> AppResult<(C, V)>;
+    }
+
+    impl<C, V> CrateVersionHelper<C, V> for Option<(C, Option<V>)> {
+        fn gather(self, crate_name: &str, semver: &str) -> AppResult<(C, V)> {
+            let (krate, version) = self.ok_or_else(|| crate_not_found(crate_name))?;
+            let version = version.ok_or_else(|| version_not_found(crate_name, semver))?;
+            Ok((krate, version))
+        }
+
+        fn gather_from_path(self, path: &CrateVersionPath) -> AppResult<(C, V)> {
+            self.gather(&path.name, &path.version)
         }
     }
 }
