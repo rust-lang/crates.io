@@ -8,8 +8,8 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
-use crate::schema::{crate_owners, emails, users};
-use crates_io_diesel_helpers::lower;
+use crate::schema::{crate_owners, emails, linked_accounts, users};
+use crates_io_diesel_helpers::{lower, pg_enum};
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
@@ -76,6 +76,31 @@ impl User {
             .await
             .optional()
     }
+}
+
+// Supported OAuth providers. Currently only GitHub.
+pg_enum! {
+    pub enum AccountProvider {
+        Github = 0,
+    }
+}
+
+/// Represents an OAuth account record linked to a user record.
+#[derive(Associations, Identifiable, Selectable, Queryable, Debug, Clone)]
+#[diesel(
+    table_name = linked_accounts,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(provider, account_id),
+    belongs_to(User),
+)]
+pub struct LinkedAccount {
+    pub user_id: i32,
+    pub provider: AccountProvider,
+    pub account_id: i32, // corresponds to user.gh_id
+    #[diesel(deserialize_as = String)]
+    pub access_token: SecretString, // corresponds to user.gh_access_token
+    pub login: String,   // corresponds to user.gh_login
+    pub avatar: Option<String>, // corresponds to user.gh_avatar
 }
 
 /// Represents a new user record insertable to the `users` table
