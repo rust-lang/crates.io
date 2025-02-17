@@ -80,4 +80,14 @@ mod ext {
             )
             .filter(canon_crate_name(crates::name).eq(canon_crate_name(crate_name)))
     }
+
+    pub trait CrateVersionPathExt {
+        fn crate_and_version(&self) -> crate_and_version_query<'_>;
+    }
+
+    impl CrateVersionPathExt for CrateVersionPath {
+        fn crate_and_version(&self) -> crate_and_version_query<'_> {
+            crate_and_version_query(&self.name, &self.version)
+        }
+    }
 }
