@@ -32,7 +32,7 @@ use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::util::token::PlainToken;
 use axum::body::{Body, Bytes};
 use axum::extract::connect_info::MockConnectInfo;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use cookie::Cookie;
 use futures_util::FutureExt;
 use http::header;
@@ -316,7 +316,7 @@ impl MockCookieUser {
         name: &str,
         crate_scopes: Option<Vec<CrateScope>>,
         endpoint_scopes: Option<Vec<EndpointScope>>,
-        expired_at: Option<NaiveDateTime>,
+        expired_at: Option<DateTime<Utc>>,
     ) -> MockTokenUser {
         let mut conn = self.app().db_conn().await;
 

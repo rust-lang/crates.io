@@ -374,7 +374,8 @@ async fn list_by_semver(
 mod seek {
     use crate::controllers::helpers::pagination::seek;
     use crate::models::{User, Version};
-    use chrono::naive::serde::ts_microseconds;
+    use chrono::serde::ts_microseconds;
+    use chrono::Utc;
 
     // We might consider refactoring this to use named fields, which would be clearer and more
     // flexible. It's also worth noting that we currently encode seek compactly as a Vec, which
@@ -386,7 +387,7 @@ mod seek {
             },
             Date {
                 #[serde(with = "ts_microseconds")]
-                created_at: chrono::NaiveDateTime,
+                created_at: chrono::DateTime<Utc>,
                 id: i32,
             },
         }

@@ -13,6 +13,7 @@ use crates_io_tarball::{process_tarball, TarballError};
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, select};
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryFutureExt;
@@ -586,7 +587,7 @@ async fn count_versions_published_today(
 
     versions::table
         .filter(versions::crate_id.eq(crate_id))
-        .filter(versions::created_at.gt(now - 24.hours()))
+        .filter(versions::created_at.gt(now.into_sql::<Timestamptz>() - 24.hours()))
         .count()
         .get_result(conn)
         .await

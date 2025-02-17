@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -12,7 +12,7 @@ pub struct Keyword {
     pub id: i32,
     pub keyword: String,
     pub crates_cnt: i32,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]

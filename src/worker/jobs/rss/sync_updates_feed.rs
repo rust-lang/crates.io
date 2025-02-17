@@ -1,7 +1,7 @@
 use crate::schema::{crates, versions};
 use crate::storage::FeedId;
 use crate::worker::Environment;
-use chrono::Duration;
+use chrono::{Duration, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -115,7 +115,7 @@ struct VersionUpdate {
     #[diesel(select_expression = crates::columns::description)]
     description: Option<String>,
     #[diesel(select_expression = versions::columns::created_at)]
-    time: chrono::NaiveDateTime,
+    time: chrono::DateTime<Utc>,
 }
 
 impl VersionUpdate {
@@ -125,7 +125,7 @@ impl VersionUpdate {
             self.name, self.version
         );
         let link = format!("https://{domain}/crates/{}/{}", self.name, self.version);
-        let pub_date = self.time.and_utc().to_rfc2822();
+        let pub_date = self.time.to_rfc2822();
 
         let guid = rss::Guid {
             value: link.clone(),
@@ -167,7 +167,7 @@ impl VersionUpdate {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDateTime;
+    use chrono::{DateTime, Utc};
     use crates_io_test_db::TestDatabase;
     use futures_util::future::join_all;
     use insta::assert_debug_snapshot;
@@ -181,7 +181,7 @@ mod tests {
         let db = TestDatabase::new();
         let mut conn = db.async_connect().await;
 
-        let now = chrono::Utc::now().naive_utc();
+        let now = chrono::Utc::now();
 
         let updates = assert_ok!(load_version_updates(&mut conn).await);
         assert_eq!(updates.len(), 0);
@@ -241,7 +241,7 @@ mod tests {
         conn: &mut AsyncPgConnection,
         crate_id: i32,
         version: impl Into<Cow<'static, str>>,
-        publish_time: NaiveDateTime,
+        publish_time: DateTime<Utc>,
     ) -> impl Future<Output = i32> {
         let version = version.into();
         let future = diesel::insert_into(versions::table)

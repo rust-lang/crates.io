@@ -1,5 +1,5 @@
 use bon::Builder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
@@ -16,7 +16,7 @@ pub struct Email {
     pub verified: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
-    pub token_generated_at: Option<NaiveDateTime>,
+    pub token_generated_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Insertable, AsChangeset, Builder)]

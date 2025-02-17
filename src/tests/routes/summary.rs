@@ -35,7 +35,7 @@ async fn summary_new_crates() {
 
     conn.transaction(|conn| {
         async move {
-            let now_ = Utc::now().naive_utc();
+            let now_ = Utc::now();
             let now_plus_two = now_ + chrono::Duration::seconds(2);
 
             insert_into(categories::table)

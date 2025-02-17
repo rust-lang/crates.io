@@ -1,6 +1,6 @@
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::util::errors::{AppResult, TooManyRequests};
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use crates_io_diesel_helpers::{date_part, floor, greatest, interval_part, least, pg_enum};
 use diesel::dsl::IntervalDsl;
 use diesel::prelude::*;
@@ -81,7 +81,7 @@ impl RateLimiter {
         conn: &mut AsyncPgConnection,
     ) -> AppResult<()> {
         let bucket = self
-            .take_token(uploader, performed_action, Utc::now().naive_utc(), conn)
+            .take_token(uploader, performed_action, Utc::now(), conn)
             .await?;
         if bucket.tokens >= 1 {
             Ok(())
@@ -107,7 +107,7 @@ impl RateLimiter {
         &self,
         uploader: i32,
         performed_action: LimitedAction,
-        now: NaiveDateTime,
+        now: DateTime<Utc>,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Bucket> {
         let config = self.config_for_action(performed_action);
@@ -176,13 +176,14 @@ impl RateLimiter {
 struct Bucket {
     user_id: i32,
     tokens: i32,
-    last_refill: NaiveDateTime,
+    last_refill: DateTime<Utc>,
     action: LimitedAction,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::NaiveDateTime;
     use crates_io_test_db::TestDatabase;
 
     #[tokio::test]
@@ -371,7 +372,8 @@ mod tests {
         let mut conn = test_db.async_connect().await;
         // Subsecond rates have floating point rounding issues, so use a known
         // timestamp that rounds fine
-        let now = NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%FT%T%.f")?;
+        let now =
+            NaiveDateTime::parse_from_str("2019-03-19T21:11:24.620401", "%FT%T%.f")?.and_utc();
 
         let rate = SampleRateLimiter {
             rate: Duration::from_millis(100),
@@ -714,7 +716,7 @@ mod tests {
     async fn new_user_bucket(
         conn: &mut AsyncPgConnection,
         tokens: i32,
-        now: NaiveDateTime,
+        now: DateTime<Utc>,
     ) -> QueryResult<Bucket> {
         diesel::insert_into(publish_limit_buckets::table)
             .values(Bucket {
@@ -751,9 +753,9 @@ mod tests {
     /// precision, but some platforms (notably Linux) provide nanosecond
     /// precision, meaning that round tripping through the database would
     /// change the value.
-    fn now() -> NaiveDateTime {
+    fn now() -> DateTime<Utc> {
         let now = Utc::now();
         let nanos = now.timestamp_subsec_nanos();
-        now.naive_utc() - chrono::Duration::nanoseconds(nanos.into())
+        now - chrono::Duration::nanoseconds(nanos.into())
     }
 }

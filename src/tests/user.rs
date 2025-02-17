@@ -4,6 +4,7 @@ use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
 use crate::tests::TestApp;
 use crate::util::token::HashedToken;
+use chrono::{DateTime, Utc};
 use crates_io_github::GithubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -227,7 +228,6 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_existing_user_email() -> anyhow::Result<()> {
     use crate::schema::emails;
-    use chrono::NaiveDateTime;
     use diesel::update;
 
     let (app, _) = TestApp::init().empty().await;
@@ -253,7 +253,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
         // `NULL` in the `token_generated_at` column.
-        .set(emails::token_generated_at.eq(None::<NaiveDateTime>))
+        .set(emails::token_generated_at.eq(None::<DateTime<Utc>>))
         .execute(&mut conn)
         .await?;
     let user = MockCookieUser::new(&app, u);

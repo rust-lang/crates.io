@@ -1,5 +1,5 @@
 use bon::Builder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
@@ -22,7 +22,7 @@ pub struct User {
     pub gh_avatar: Option<String>,
     pub gh_id: i32,
     pub account_lock_reason: Option<String>,
-    pub account_lock_until: Option<NaiveDateTime>,
+    pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
 }

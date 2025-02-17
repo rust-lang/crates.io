@@ -544,6 +544,7 @@ pub(crate) use seek;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Utc;
     use http::{Method, Request, StatusCode};
     use insta::assert_snapshot;
 
@@ -638,7 +639,9 @@ mod tests {
     }
 
     mod seek {
-        use chrono::naive::serde::ts_microseconds;
+        use chrono::serde::ts_microseconds;
+        use chrono::Utc;
+
         seek!(
             pub(super) enum Seek {
                 Id {
@@ -646,7 +649,7 @@ mod tests {
                 },
                 New {
                     #[serde(with = "ts_microseconds")]
-                    dt: chrono::NaiveDateTime,
+                    dt: chrono::DateTime<Utc>,
                     id: i32,
                 },
                 RecentDownloads {
@@ -659,8 +662,8 @@ mod tests {
 
     #[test]
     fn test_seek_macro_encode_and_decode() {
-        use chrono::naive::serde::ts_microseconds;
-        use chrono::{NaiveDate, NaiveDateTime};
+        use chrono::serde::ts_microseconds;
+        use chrono::NaiveDate;
         use seek::*;
 
         let assert_decode_after = |seek: Seek, query: &str, expect| {
@@ -678,10 +681,11 @@ mod tests {
         let query = format!("seek={}", encode_seek(&payload).unwrap());
         assert_decode_after(seek, &query, Some(payload));
 
-        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
+        let dt = NaiveDate::from_ymd_opt(2016, 7, 8)
             .unwrap()
             .and_hms_opt(9, 10, 11)
-            .unwrap();
+            .unwrap()
+            .and_utc();
         let seek = Seek::New;
         let payload = SeekPayload::New(New { dt, id });
         let query = format!("seek={}", encode_seek(&payload).unwrap());
@@ -711,7 +715,7 @@ mod tests {
         // Ensures it still encodes compactly with a field struct
         #[derive(Debug, Default, Serialize, PartialEq)]
         struct NewTuple(
-            #[serde(with = "ts_microseconds")] chrono::NaiveDateTime,
+            #[serde(with = "ts_microseconds")] chrono::DateTime<Utc>,
             i32,
         );
         assert_eq!(
@@ -722,15 +726,16 @@ mod tests {
 
     #[test]
     fn test_seek_macro_conv() {
-        use chrono::{NaiveDate, NaiveDateTime};
+        use chrono::NaiveDate;
         use seek::*;
         let id = 1234;
         assert_eq!(Seek::from(SeekPayload::Id(Id { id })), Seek::Id);
 
-        let dt: NaiveDateTime = NaiveDate::from_ymd_opt(2016, 7, 8)
+        let dt = NaiveDate::from_ymd_opt(2016, 7, 8)
             .unwrap()
             .and_hms_opt(9, 10, 11)
-            .unwrap();
+            .unwrap()
+            .and_utc();
         assert_eq!(Seek::from(SeekPayload::New(New { dt, id })), Seek::New);
 
         let downloads = None;

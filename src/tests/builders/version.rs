@@ -3,13 +3,13 @@ use crate::schema::dependencies;
 use crate::util::errors::AppResult;
 use std::collections::BTreeMap;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 /// A builder to create version records for the purpose of inserting directly into the database.
 pub struct VersionBuilder {
-    created_at: Option<NaiveDateTime>,
+    created_at: Option<DateTime<Utc>>,
     dependencies: Vec<(i32, Option<&'static str>)>,
     features: BTreeMap<String, Vec<String>>,
     license: Option<String>,
@@ -49,7 +49,7 @@ impl VersionBuilder {
     }
 
     /// Sets the version's `created_at` value.
-    pub fn created_at(mut self, created_at: NaiveDateTime) -> Self {
+    pub fn created_at(mut self, created_at: DateTime<Utc>) -> Self {
         self.created_at = Some(created_at);
         self
     }

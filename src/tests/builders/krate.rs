@@ -3,7 +3,7 @@ use crate::schema::{crate_downloads, crates, version_downloads};
 use crate::util::errors::AppResult;
 
 use super::VersionBuilder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
@@ -17,7 +17,7 @@ pub struct CrateBuilder<'a> {
     krate: NewCrate<'a>,
     owner_id: i32,
     recent_downloads: Option<i32>,
-    updated_at: Option<NaiveDateTime>,
+    updated_at: Option<DateTime<Utc>>,
     versions: Vec<VersionBuilder>,
 }
 
@@ -104,7 +104,7 @@ impl<'a> CrateBuilder<'a> {
     }
 
     /// Sets the crate's `updated_at` value.
-    pub fn updated_at(mut self, updated_at: NaiveDateTime) -> Self {
+    pub fn updated_at(mut self, updated_at: DateTime<Utc>) -> Self {
         self.updated_at = Some(updated_at);
         self
     }

@@ -20,7 +20,7 @@ use std::error::Error;
 use std::fmt;
 
 use axum::Extension;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use http::StatusCode;
 use tokio::task::JoinError;
@@ -47,7 +47,7 @@ pub fn bad_request<S: ToString>(error: S) -> BoxedAppError {
     custom(StatusCode::BAD_REQUEST, error.to_string())
 }
 
-pub fn account_locked(reason: &str, until: Option<NaiveDateTime>) -> BoxedAppError {
+pub fn account_locked(reason: &str, until: Option<DateTime<Utc>>) -> BoxedAppError {
     let detail = until
         .map(|until| until.format("%F at %T UTC"))
         .map(|until| format!("This account is locked until {until}. Reason: {reason}"))

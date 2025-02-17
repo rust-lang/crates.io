@@ -1,11 +1,10 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
     ApiToken, Category, Crate, CrateOwnerInvitation, Dependency, DependencyKind, Keyword, Owner,
     ReverseDependency, Team, TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
-use crate::util::rfc3339;
 use crates_io_github as github;
 
 pub mod krate_publish;
@@ -17,8 +16,7 @@ pub struct EncodableCategory {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     pub crates_cnt: i32,
 }
 
@@ -49,8 +47,7 @@ pub struct EncodableCategoryWithSubcategories {
     pub category: String,
     pub slug: String,
     pub description: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     pub crates_cnt: i32,
     pub subcategories: Vec<EncodableCategory>,
     pub parent_categories: Vec<EncodableCategory>,
@@ -64,10 +61,8 @@ pub struct EncodableCrateOwnerInvitationV1 {
     pub invited_by_username: String,
     pub crate_name: String,
     pub crate_id: i32,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
-    #[serde(with = "rfc3339")]
-    pub expires_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
 }
 
 impl EncodableCrateOwnerInvitationV1 {
@@ -75,7 +70,7 @@ impl EncodableCrateOwnerInvitationV1 {
         invitation: CrateOwnerInvitation,
         inviter_name: String,
         crate_name: String,
-        expires_at: NaiveDateTime,
+        expires_at: DateTime<Utc>,
     ) -> Self {
         Self {
             invitee_id: invitation.invited_user_id,
@@ -95,10 +90,8 @@ pub struct EncodableCrateOwnerInvitation {
     pub inviter_id: i32,
     pub crate_id: i32,
     pub crate_name: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
-    #[serde(with = "rfc3339")]
-    pub expires_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone)]
@@ -169,8 +162,7 @@ impl From<VersionDownload> for EncodableVersionDownload {
 pub struct EncodableKeyword {
     pub id: String,
     pub keyword: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     pub crates_cnt: i32,
 }
 
@@ -195,14 +187,12 @@ impl From<Keyword> for EncodableKeyword {
 pub struct EncodableCrate {
     pub id: String,
     pub name: String,
-    #[serde(with = "rfc3339")]
-    pub updated_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
     pub versions: Option<Vec<i32>>,
     pub keywords: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
     pub badges: [(); 0],
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i64,
     pub recent_downloads: Option<i64>,
@@ -549,8 +539,7 @@ impl From<User> for EncodablePublicUser {
 pub struct EncodableAuditAction {
     pub action: String,
     pub user: EncodablePublicUser,
-    #[serde(with = "rfc3339")]
-    pub time: NaiveDateTime,
+    pub time: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -561,10 +550,8 @@ pub struct EncodableVersion {
     pub num: String,
     pub dl_path: String,
     pub readme_path: String,
-    #[serde(with = "rfc3339")]
-    pub updated_at: NaiveDateTime,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
     // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
     pub downloads: i32,
     pub features: serde_json::Value,
@@ -700,12 +687,11 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
     }
 
     #[test]
@@ -719,14 +705,13 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             subcategories: vec![],
             parent_categories: vec![],
         };
         let json = serde_json::to_string(&cat).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
     }
 
     #[test]
@@ -737,13 +722,12 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             crates_cnt: 0,
         };
         let json = serde_json::to_string(&key).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
     }
 
     #[test]
@@ -757,11 +741,13 @@ mod tests {
             updated_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 12)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             downloads: 0,
             features: serde_json::from_str("{}").unwrap(),
             yanked: false,
@@ -796,17 +782,14 @@ mod tests {
                 time: NaiveDate::from_ymd_opt(2017, 1, 6)
                     .unwrap()
                     .and_hms_opt(14, 23, 12)
-                    .unwrap(),
+                    .unwrap()
+                    .and_utc(),
             }],
         };
         let json = serde_json::to_string(&ver).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#));
-        assert_some!(json.as_str().find(r#""time":"2017-01-06T14:23:12+00:00""#));
+        assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:12Z""#));
+        assert_some!(json.as_str().find(r#""time":"2017-01-06T14:23:12Z""#));
     }
 
     #[test]
@@ -817,7 +800,8 @@ mod tests {
             updated_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             versions: None,
             keywords: None,
             categories: None,
@@ -825,7 +809,8 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 12)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             downloads: 0,
             recent_downloads: None,
             default_version: None,
@@ -849,12 +834,8 @@ mod tests {
             exact_match: false,
         };
         let json = serde_json::to_string(&crt).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""updated_at":"2017-01-06T14:23:11+00:00""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:12+00:00""#));
+        assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:12Z""#));
     }
 
     #[test]
@@ -868,18 +849,16 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
             expires_at: NaiveDate::from_ymd_opt(2020, 10, 24)
                 .unwrap()
                 .and_hms_opt(16, 30, 00)
-                .unwrap(),
+                .unwrap()
+                .and_utc(),
         };
         let json = serde_json::to_string(&inv).unwrap();
-        assert_some!(json
-            .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""expires_at":"2020-10-24T16:30:00+00:00""#));
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
+        assert_some!(json.as_str().find(r#""expires_at":"2020-10-24T16:30:00Z""#));
     }
 }

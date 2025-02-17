@@ -8,7 +8,7 @@ use super::{AppError, BoxedAppError};
 
 use crate::middleware::log_request::CauseField;
 use crate::rate_limiter::LimitedAction;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use http::{header, StatusCode};
 
 /// Generates a response with the provided status and description as JSON
@@ -47,7 +47,7 @@ impl AppError for CustomApiError {
 #[derive(Debug)]
 pub(crate) struct TooManyRequests {
     pub action: LimitedAction,
-    pub retry_after: NaiveDateTime,
+    pub retry_after: DateTime<Utc>,
 }
 
 impl AppError for TooManyRequests {

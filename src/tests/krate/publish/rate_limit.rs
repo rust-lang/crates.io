@@ -2,7 +2,7 @@ use crate::rate_limiter::LimitedAction;
 use crate::schema::{publish_limit_buckets, publish_rate_overrides};
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -104,7 +104,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
         .values((
             publish_rate_overrides::user_id.eq(token.as_model().user_id),
             publish_rate_overrides::burst.eq(2),
-            publish_rate_overrides::expires_at.eq(None::<NaiveDateTime>),
+            publish_rate_overrides::expires_at.eq(None::<DateTime<Utc>>),
             publish_rate_overrides::action.eq(LimitedAction::PublishNew),
         ))
         .execute(&mut conn)

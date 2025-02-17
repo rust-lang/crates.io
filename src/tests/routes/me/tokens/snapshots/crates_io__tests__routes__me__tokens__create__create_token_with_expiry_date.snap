@@ -7,7 +7,7 @@ expression: response.json()
     "crate_scopes": null,
     "created_at": "[datetime]",
     "endpoint_scopes": null,
-    "expired_at": "2024-12-24T07:34:56+00:00",
+    "expired_at": "2024-12-24T07:34:56Z",
     "id": "[id]",
     "last_used_at": "[datetime]",
     "name": "bar",

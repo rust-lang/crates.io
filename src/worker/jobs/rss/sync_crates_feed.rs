@@ -1,7 +1,7 @@
 use crate::schema::crates;
 use crate::storage::FeedId;
 use crate::worker::Environment;
-use chrono::Duration;
+use chrono::{Duration, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -111,14 +111,14 @@ struct NewCrate {
     #[diesel(select_expression = crates::columns::description)]
     description: Option<String>,
     #[diesel(select_expression = crates::columns::created_at)]
-    time: chrono::NaiveDateTime,
+    time: chrono::DateTime<Utc>,
 }
 
 impl NewCrate {
     fn into_rss_item(self, domain: &str) -> rss::Item {
         let title = format!("New crate created: {}", self.name);
         let link = format!("https://{domain}/crates/{}", self.name);
-        let pub_date = self.time.and_utc().to_rfc2822();
+        let pub_date = self.time.to_rfc2822();
 
         let guid = rss::Guid {
             value: link.clone(),
@@ -151,7 +151,7 @@ impl NewCrate {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::NaiveDateTime;
+    use chrono::DateTime;
     use crates_io_test_db::TestDatabase;
     use diesel_async::AsyncPgConnection;
     use futures_util::future::join_all;
@@ -166,7 +166,7 @@ mod tests {
         let db = TestDatabase::new();
         let mut conn = db.async_connect().await;
 
-        let now = chrono::Utc::now().naive_utc();
+        let now = chrono::Utc::now();
 
         let new_crates = assert_ok!(load_new_crates(&mut conn).await);
         assert_eq!(new_crates.len(), 0);
@@ -214,7 +214,7 @@ mod tests {
     fn create_crate(
         conn: &mut AsyncPgConnection,
         name: impl Into<Cow<'static, str>>,
-        publish_time: NaiveDateTime,
+        publish_time: DateTime<Utc>,
     ) -> impl Future<Output = i32> {
         let future = diesel::insert_into(crates::table)
             .values((

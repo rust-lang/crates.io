@@ -1,6 +1,6 @@
 use crate::dialoguer;
 use anyhow::Context;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use colored::Colorize;
 use crates_io::models::{NewDeletedCrate, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
@@ -86,9 +86,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
             let id = crate_info.id;
 
-            let created_at = crate_info.created_at.and_utc();
             let deleted_crate = NewDeletedCrate::builder(name)
-                .created_at(&created_at)
+                .created_at(&crate_info.created_at)
                 .deleted_at(&now)
                 .deleted_by(deleted_by.id)
                 .maybe_message(opts.message.as_deref())
@@ -149,7 +148,7 @@ struct CrateInfo {
     #[diesel(select_expression = crates::columns::id)]
     id: i32,
     #[diesel(select_expression = crates::columns::created_at)]
-    created_at: NaiveDateTime,
+    created_at: DateTime<Utc>,
     #[diesel(select_expression = crate_downloads::columns::downloads)]
     downloads: i64,
     #[diesel(select_expression = owners_subquery())]
