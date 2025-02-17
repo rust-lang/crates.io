@@ -2,6 +2,7 @@ use axum::extract::{FromRequestParts, Query};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
+use diesel::insert_into;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -12,8 +13,8 @@ use crate::app::AppState;
 use crate::controllers::user::update::UserConfirmEmail;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewUser, User};
-use crate::schema::users;
+use crate::models::{AccountProvider, NewEmail, NewUser, User};
+use crate::schema::{linked_accounts, users};
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{bad_request, server_error, AppResult};
 use crate::views::EncodableMe;
@@ -174,6 +175,24 @@ async fn create_or_update_user(
     conn.transaction(|conn| {
         async move {
             let user = new_user.insert_or_update(conn).await?;
+
+            // To assist in eventually someday allowing OAuth with more than GitHub, also
+            // write the GitHub info to the `linked_accounts` table. Nothing currently reads
+            // from this table. Only log errors but don't fail login if this writing fails.
+            if let Err(e) = insert_into(linked_accounts::table)
+                .values((
+                    linked_accounts::user_id.eq(user.id),
+                    linked_accounts::provider.eq(AccountProvider::Github),
+                    linked_accounts::account_id.eq(user.gh_id),
+                    linked_accounts::access_token.eq(&new_user.gh_access_token),
+                    linked_accounts::login.eq(&user.gh_login),
+                    linked_accounts::avatar.eq(&user.gh_avatar),
+                ))
+                .execute(conn)
+                .await
+            {
+                info!("Error inserting linked_accounts record: {e}");
+            }
 
             // To send the user an account verification email
             if let Some(user_email) = email {
