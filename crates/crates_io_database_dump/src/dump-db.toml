@@ -154,6 +154,16 @@ keyword = "public"
 crates_cnt = "public"
 created_at = "public"
 
+[linked_accounts.columns]
+user_id = "public"
+provider = "public"
+account_id = "public"
+access_token = "private"
+login = "public"
+avatar = "public"
+[linked_accounts.column_defaults]
+access_token = "''"
+
 [metadata.columns]
 total_downloads = "public"
 

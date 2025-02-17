@@ -10,7 +10,7 @@ use crate::app::AppState;
 use crate::controllers::user::update::UserConfirmEmail;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewUser, User};
+use crate::models::{AccountProvider, NewEmail, NewLinkedAccount, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -161,6 +161,21 @@ async fn create_or_update_user(
     conn.transaction(|conn| {
         async move {
             let user = new_user.insert_or_update(conn).await?;
+
+            // To assist in eventually someday allowing OAuth with more than GitHub, also
+            // write the GitHub info to the `linked_accounts` table. Nothing currently reads
+            // from this table. Only log errors but don't fail login if this writing fails.
+            let new_linked_account = NewLinkedAccount::builder()
+                .user_id(user.id)
+                .provider(AccountProvider::Github)
+                .account_id(user.gh_id)
+                .access_token(new_user.gh_access_token)
+                .login(&user.gh_login)
+                .maybe_avatar(user.gh_avatar.as_deref())
+                .build();
+            if let Err(e) = new_linked_account.insert_or_update(conn).await {
+                info!("Error inserting or updating linked_accounts record: {e}");
+            }
 
             // To send the user an account verification email
             if let Some(user_email) = email {

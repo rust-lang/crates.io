@@ -1,5 +1,6 @@
 use crate::controllers::session;
-use crate::models::{ApiToken, Email, User};
+use crate::models::{AccountProvider, ApiToken, Email, LinkedAccount, User};
+use crate::schema::linked_accounts;
 use crate::tests::TestApp;
 use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
@@ -262,6 +263,50 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     assert_eq!(json.user.email.unwrap(), "potahto@example.com");
     assert!(!json.user.email_verified);
     assert!(!json.user.email_verification_sent);
+
+    Ok(())
+}
+
+// To assist in eventually someday allowing OAuth with more than GitHub, verify that we're starting
+// to also write the GitHub info to the `linked_accounts` table. Nothing currently reads from this
+// table other than this test.
+#[tokio::test(flavor = "multi_thread")]
+async fn also_write_to_linked_accounts() -> anyhow::Result<()> {
+    let (app, _) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+
+    // Simulate logging in via GitHub. Don't use app.db_new_user because it inserts a user record
+    // directly into the database and we want to test the OAuth flow here.
+    let email = "potahto@example.com";
+
+    let emails = &app.as_inner().emails;
+
+    let gh_user = GithubUser {
+        id: next_gh_id(),
+        login: "arbitrary_username".to_string(),
+        name: None,
+        email: Some(email.to_string()),
+        avatar_url: None,
+    };
+
+    let u =
+        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+
+    let linked_accounts = linked_accounts::table
+        .filter(linked_accounts::provider.eq(AccountProvider::Github))
+        .filter(linked_accounts::account_id.eq(u.gh_id))
+        .load::<LinkedAccount>(&mut conn)
+        .await
+        .unwrap();
+
+    assert_eq!(linked_accounts.len(), 1);
+    let linked_account = &linked_accounts[0];
+    assert_eq!(linked_account.user_id, u.id);
+    assert_eq!(linked_account.login, u.gh_login);
+    assert_eq!(
+        linked_account.access_token.expose_secret(),
+        u.gh_access_token.expose_secret()
+    );
 
     Ok(())
 }
