@@ -31,7 +31,16 @@ pub struct CrateVersionPath {
 
 impl CrateVersionPath {
     pub async fn load_version(&self, conn: &mut AsyncPgConnection) -> AppResult<Version> {
-        Ok(self.load_version_and_crate(conn).await?.0)
+        use ext::*;
+
+        let (_, version) = self
+            .crate_and_version()
+            .select((crates::id, Option::<Version>::as_select()))
+            .first::<(i32, _)>(conn)
+            .await
+            .optional()?
+            .gather_from_path(self)?;
+        Ok(version)
     }
 
     pub async fn load_version_and_crate(
