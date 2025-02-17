@@ -47,12 +47,9 @@ async fn version_and_crate(
     crate_name: &str,
     semver: &str,
 ) -> AppResult<(Version, Crate)> {
-    let (krate, version) = Crate::by_name(crate_name)
-        .left_join(
-            versions::table.on(crates::id
-                .eq(versions::crate_id)
-                .and(versions::num.eq(semver))),
-        )
+    use ext::*;
+
+    let (krate, version) = crate_and_version_query(crate_name, semver)
         .select(<(Crate, Option<Version>)>::as_select())
         .first(conn)
         .await
@@ -67,4 +64,20 @@ fn deserialize_version<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Str
     let s = String::deserialize(deserializer)?;
     let _ = semver::Version::parse(&s).map_err(Error::custom)?;
     Ok(s)
+}
+
+mod ext {
+    use super::*;
+    use crates_io_diesel_helpers::canon_crate_name;
+
+    #[diesel::dsl::auto_type()]
+    pub fn crate_and_version_query<'a>(crate_name: &'a str, semver: &'a str) -> _ {
+        crates::table
+            .left_join(
+                versions::table.on(crates::id
+                    .eq(versions::crate_id)
+                    .and(versions::num.eq(semver))),
+            )
+            .filter(canon_crate_name(crates::name).eq(canon_crate_name(crate_name)))
+    }
 }
