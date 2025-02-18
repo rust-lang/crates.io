@@ -108,6 +108,7 @@ mod tests {
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use crate::schema::{crate_downloads, crates, versions};
     use crates_io_test_db::TestDatabase;
+    use diesel::sql_types::Timestamptz;
     use diesel_async::AsyncConnection;
 
     async fn user(conn: &mut AsyncPgConnection) -> User {
@@ -257,12 +258,12 @@ mod tests {
         let user = user(&mut conn).await;
         let (krate, version) = crate_and_version(&mut conn, user.id).await;
         update(versions::table)
-            .set(versions::updated_at.eq(now - 2.hours()))
+            .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.hours()))
             .execute(&mut conn)
             .await
             .unwrap();
         update(crates::table)
-            .set(crates::updated_at.eq(now - 2.hours()))
+            .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 2.hours()))
             .execute(&mut conn)
             .await
             .unwrap();
@@ -351,12 +352,12 @@ mod tests {
         conn.begin_test_transaction().await.unwrap();
 
         update(versions::table)
-            .set(versions::updated_at.eq(now - 2.days()))
+            .set(versions::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
             .execute(&mut conn)
             .await
             .unwrap();
         update(crates::table)
-            .set(crates::updated_at.eq(now - 2.days()))
+            .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 2.days()))
             .execute(&mut conn)
             .await
             .unwrap();
@@ -375,11 +376,11 @@ mod tests {
         super::update(&mut conn).await.unwrap();
 
         let versions_changed = versions::table
-            .select(versions::updated_at.ne(now - 2.days()))
+            .select(versions::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
             .get_result(&mut conn)
             .await;
         let crates_changed = crates::table
-            .select(crates::updated_at.ne(now - 2.days()))
+            .select(crates::updated_at.ne(now.into_sql::<Timestamptz>() - 2.days()))
             .get_result(&mut conn)
             .await;
         assert_eq!(versions_changed, Ok(false));

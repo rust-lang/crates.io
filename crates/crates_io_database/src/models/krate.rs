@@ -2,7 +2,7 @@ use crate::models::helpers::with_count::*;
 use crate::models::version::TopVersions;
 use crate::models::{CrateOwner, Owner, OwnerKind, ReverseDependency, User, Version};
 use crate::schema::*;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use crates_io_diesel_helpers::canon_crate_name;
 use diesel::associations::Identifiable;
 use diesel::dsl;
@@ -40,8 +40,8 @@ pub struct CrateName {
 pub struct Crate {
     pub id: i32,
     pub name: String,
-    pub updated_at: NaiveDateTime,
-    pub created_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
     pub description: Option<String>,
     pub homepage: Option<String>,
     pub documentation: Option<String>,

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use bon::Builder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use crates_io_index::features::FeaturesMap;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -18,8 +18,8 @@ pub struct Version {
     pub id: i32,
     pub crate_id: i32,
     pub num: String,
-    pub updated_at: NaiveDateTime,
-    pub created_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
     pub downloads: i32,
     pub features: serde_json::Value,
     pub yanked: bool,
@@ -84,7 +84,7 @@ pub struct NewVersion<'a> {
     num: &'a str,
     #[builder(default = strip_build_metadata(num))]
     pub num_no_build: &'a str,
-    created_at: Option<&'a NaiveDateTime>,
+    created_at: Option<&'a DateTime<Utc>>,
     yanked: Option<bool>,
     #[builder(default = serde_json::Value::Object(Default::default()))]
     features: serde_json::Value,
@@ -170,10 +170,10 @@ impl TopVersions {
     /// highest version (in semver order) for a collection of date/version pairs.
     pub fn from_date_version_pairs<T>(pairs: T) -> Self
     where
-        T: IntoIterator<Item = (NaiveDateTime, String)>,
+        T: IntoIterator<Item = (DateTime<Utc>, String)>,
     {
         // filter out versions that we can't parse
-        let pairs: Vec<(NaiveDateTime, semver::Version)> = pairs
+        let pairs: Vec<(DateTime<Utc>, semver::Version)> = pairs
             .into_iter()
             .filter_map(|(date, version)| {
                 semver::Version::parse(&version)
@@ -201,12 +201,12 @@ impl TopVersions {
 
 #[cfg(test)]
 mod tests {
-    use super::TopVersions;
+    use super::*;
     use chrono::NaiveDateTime;
 
     #[track_caller]
-    fn date(str: &str) -> NaiveDateTime {
-        str.parse().unwrap()
+    fn date(str: &str) -> DateTime<Utc> {
+        str.parse::<NaiveDateTime>().unwrap().and_utc()
     }
 
     #[track_caller]

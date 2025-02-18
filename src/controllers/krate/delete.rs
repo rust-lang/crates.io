@@ -81,7 +81,7 @@ pub async fn delete_crate(
         }
     }
 
-    let created_at = krate.created_at.and_utc();
+    let created_at = krate.created_at;
 
     let age = Utc::now().signed_duration_since(created_at);
     if age > TimeDelta::hours(72) {

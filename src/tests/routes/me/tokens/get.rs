@@ -41,7 +41,7 @@ async fn show_token_with_scopes() {
             CrateScope::try_from("serde-*").unwrap(),
         ])
         .endpoint_scopes(vec![EndpointScope::PublishUpdate])
-        .expired_at((Utc::now() - Duration::days(31)).naive_utc())
+        .expired_at(Utc::now() - Duration::days(31))
         .build();
     let token = assert_ok!(new_token.insert(&mut conn).await);
 

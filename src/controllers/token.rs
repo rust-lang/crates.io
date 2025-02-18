@@ -1,6 +1,5 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::util::rfc3339;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::app::AppState;
@@ -13,10 +12,11 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::data_types::PgInterval;
 use diesel::dsl::{now, IntervalDsl};
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use http::StatusCode;
@@ -60,7 +60,7 @@ pub async fn list_api_tokens(
         .filter(
             api_tokens::expired_at.is_null().or(api_tokens::expired_at
                 .assume_not_null()
-                .gt(now - params.expired_days_interval())),
+                .gt(now.into_sql::<Timestamptz>() - params.expired_days_interval())),
         )
         .order(api_tokens::id.desc())
         .load(&mut conn)
@@ -75,8 +75,7 @@ pub struct NewApiToken {
     name: String,
     crate_scopes: Option<Vec<String>>,
     endpoint_scopes: Option<Vec<String>>,
-    #[serde(default, with = "rfc3339::option")]
-    expired_at: Option<NaiveDateTime>,
+    expired_at: Option<DateTime<Utc>>,
 }
 
 /// The incoming serialization format for the `ApiToken` model.

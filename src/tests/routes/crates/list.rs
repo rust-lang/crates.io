@@ -4,6 +4,7 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::tests::{new_category, new_user};
 use crates_io_database::schema::categories;
+use diesel::sql_types::Timestamptz;
 use diesel::{dsl::*, prelude::*, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
@@ -317,25 +318,25 @@ async fn index_sorting() -> anyhow::Result<()> {
 
     // Set the created at column for each crate
     update(&krate1)
-        .set(crates::created_at.eq(now - 4.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 4.weeks()))
         .execute(&mut conn)
         .await?;
     update(&krate2)
-        .set(crates::created_at.eq(now - 1.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 1.weeks()))
         .execute(&mut conn)
         .await?;
     update(crates::table.filter(crates::id.eq_any(vec![krate3.id, krate4.id])))
-        .set(crates::created_at.eq(now - 3.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 3.weeks()))
         .execute(&mut conn)
         .await?;
 
     // Set the updated at column for each crate
     update(&krate1)
-        .set(crates::updated_at.eq(now - 3.weeks()))
+        .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 3.weeks()))
         .execute(&mut conn)
         .await?;
     update(crates::table.filter(crates::id.eq_any(vec![krate2.id, krate3.id])))
-        .set(crates::updated_at.eq(now - 5.days()))
+        .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 5.days()))
         .execute(&mut conn)
         .await?;
     update(&krate4)
@@ -533,33 +534,33 @@ async fn ignore_exact_match_on_queries_with_sort() -> anyhow::Result<()> {
 
     // Set the created at column for each crate
     update(&krate1)
-        .set(crates::created_at.eq(now - 4.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 4.weeks()))
         .execute(&mut conn)
         .await?;
     update(&krate2)
-        .set(crates::created_at.eq(now - 1.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 1.weeks()))
         .execute(&mut conn)
         .await?;
     update(&krate3)
-        .set(crates::created_at.eq(now - 2.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 2.weeks()))
         .execute(&mut conn)
         .await?;
     update(&krate4)
-        .set(crates::created_at.eq(now - 3.weeks()))
+        .set(crates::created_at.eq(now.into_sql::<Timestamptz>() - 3.weeks()))
         .execute(&mut conn)
         .await?;
 
     // Set the updated at column for each crate
     update(&krate1)
-        .set(crates::updated_at.eq(now - 3.weeks()))
+        .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 3.weeks()))
         .execute(&mut conn)
         .await?;
     update(&krate2)
-        .set(crates::updated_at.eq(now - 5.days()))
+        .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 5.days()))
         .execute(&mut conn)
         .await?;
     update(&krate3)
-        .set(crates::updated_at.eq(now - 10.seconds()))
+        .set(crates::updated_at.eq(now.into_sql::<Timestamptz>() - 10.seconds()))
         .execute(&mut conn)
         .await?;
     update(&krate4)

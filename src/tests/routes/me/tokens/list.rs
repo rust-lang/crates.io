@@ -49,7 +49,7 @@ async fn list_tokens() {
     let new_token = NewApiToken::builder()
         .name("qux")
         .user_id(id)
-        .expired_at((Utc::now() - Duration::days(1)).naive_utc())
+        .expired_at(Utc::now() - Duration::days(1))
         .build();
     assert_ok!(new_token.insert(&mut conn).await);
 
@@ -84,14 +84,14 @@ async fn list_recently_expired_tokens() {
             CrateScope::try_from("serde-*").unwrap(),
         ])
         .endpoint_scopes(vec![EndpointScope::PublishUpdate])
-        .expired_at((Utc::now() - Duration::days(31)).naive_utc())
+        .expired_at(Utc::now() - Duration::days(31))
         .build();
     assert_ok!(new_token.insert(&mut conn).await);
 
     let new_token = NewApiToken::builder()
         .name("recent")
         .user_id(id)
-        .expired_at((Utc::now() - Duration::days(1)).naive_utc())
+        .expired_at(Utc::now() - Duration::days(1))
         .build();
     assert_ok!(new_token.insert(&mut conn).await);
 

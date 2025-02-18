@@ -1,6 +1,6 @@
 use crate::models::Crate;
 use crate::schema::*;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::dsl;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -15,7 +15,7 @@ pub struct Category {
     pub slug: String,
     pub description: String,
     pub crates_cnt: i32,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 type WithSlug<'a> = dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<&'a str>>;

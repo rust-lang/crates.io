@@ -1,11 +1,11 @@
 use diesel::define_sql_function;
-use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Timestamp};
+use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Timestamptz};
 
 define_sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 define_sql_function!(fn canon_crate_name(x: Text) -> Text);
 define_sql_function!(fn to_char(a: Date, b: Text) -> Text);
 define_sql_function!(fn lower(x: Text) -> Text);
-define_sql_function!(fn date_part(x: Text, y: Timestamp) -> Double);
+define_sql_function!(fn date_part(x: Text, y: Timestamptz) -> Double);
 define_sql_function! {
     #[sql_name = "date_part"]
     fn interval_part(x: Text, y: Interval) -> Double;

@@ -1,7 +1,7 @@
 use crate::models::{ApiToken, User, Version};
 use crate::schema::*;
 use bon::Builder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use crates_io_diesel_helpers::pg_enum;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -49,7 +49,7 @@ pub struct VersionOwnerAction {
     pub user_id: i32,
     pub api_token_id: Option<i32>,
     pub action: VersionAction,
-    pub time: NaiveDateTime,
+    pub time: DateTime<Utc>,
 }
 
 impl VersionOwnerAction {

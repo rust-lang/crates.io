@@ -13,6 +13,7 @@ use crates_io_pagerduty as pagerduty;
 use crates_io_pagerduty::PagerdutyClient;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[tokio::main]
@@ -53,7 +54,9 @@ async fn check_failing_background_jobs(
 
     let stalled_jobs: Vec<i32> = background_jobs::table
         .select(1.into_sql::<Integer>())
-        .filter(background_jobs::created_at.lt(now - max_job_time.minutes()))
+        .filter(
+            background_jobs::created_at.lt(now.into_sql::<Timestamptz>() - max_job_time.minutes()),
+        )
         .filter(background_jobs::priority.ge(0))
         .for_update()
         .skip_locked()
@@ -86,7 +89,7 @@ async fn check_stalled_update_downloads(
     conn: &mut AsyncPgConnection,
     pagerduty: &PagerdutyClient,
 ) -> Result<()> {
-    use chrono::{DateTime, NaiveDateTime, Utc};
+    use chrono::{DateTime, Utc};
 
     const EVENT_KEY: &str = "update_downloads_stalled";
 
@@ -95,14 +98,13 @@ async fn check_stalled_update_downloads(
     // Max job execution time in minutes
     let max_job_time = var_parsed("MONITOR_MAX_UPDATE_DOWNLOADS_TIME")?.unwrap_or(120);
 
-    let start_time: Result<NaiveDateTime, _> = background_jobs::table
+    let start_time: Result<DateTime<Utc>, _> = background_jobs::table
         .filter(background_jobs::job_type.eq(jobs::UpdateDownloads::JOB_NAME))
         .select(background_jobs::created_at)
         .first(conn)
         .await;
 
     if let Ok(start_time) = start_time {
-        let start_time = DateTime::<Utc>::from_naive_utc_and_offset(start_time, Utc);
         let minutes = Utc::now().signed_duration_since(start_time).num_minutes();
 
         if minutes > max_job_time {

@@ -278,7 +278,7 @@ async fn prepare_list(
                 .ok_or_else(|| internal(format!("missing crate with id {}", invitation.crate_id)))?
                 .clone(),
             created_at: invitation.created_at,
-            expires_at: invitation.expires_at.naive_utc(),
+            expires_at: invitation.expires_at,
         });
         users_in_response.insert(invitation.invited_user_id);
         users_in_response.insert(invitation.invited_by_user_id);

@@ -162,15 +162,8 @@ mod tests {
             .await
             .unwrap();
 
-        let created_at_1 = Utc::now()
-            .checked_sub_days(Days::new(14))
-            .unwrap()
-            .naive_utc();
-
-        let created_at_2 = Utc::now()
-            .checked_sub_days(Days::new(7))
-            .unwrap()
-            .naive_utc();
+        let created_at_1 = Utc::now().checked_sub_days(Days::new(14)).unwrap();
+        let created_at_2 = Utc::now().checked_sub_days(Days::new(7)).unwrap();
 
         let fooo = CrateBuilder::new("foo", user_id)
             .version(VersionBuilder::new("0.1.0"))

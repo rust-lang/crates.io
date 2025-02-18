@@ -1,16 +1,16 @@
 mod scopes;
 
 use bon::Builder;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::dsl::now;
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 pub use self::scopes::{CrateScope, EndpointScope};
 use crate::models::User;
 use crate::schema::api_tokens;
-use crate::utils::rfc3339;
 use crate::utils::token::{HashedToken, PlainToken};
 
 #[derive(Debug, Insertable, Builder)]
@@ -25,7 +25,7 @@ pub struct NewApiToken {
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
-    pub expired_at: Option<NaiveDateTime>,
+    pub expired_at: Option<DateTime<Utc>>,
 }
 
 impl NewApiToken {
@@ -46,18 +46,15 @@ pub struct ApiToken {
     #[serde(skip)]
     pub user_id: i32,
     pub name: String,
-    #[serde(with = "rfc3339")]
-    pub created_at: NaiveDateTime,
-    #[serde(with = "rfc3339::option")]
-    pub last_used_at: Option<NaiveDateTime>,
+    pub created_at: DateTime<Utc>,
+    pub last_used_at: Option<DateTime<Utc>>,
     #[serde(skip)]
     pub revoked: bool,
     /// `None` or a list of crate scope patterns (see RFC #2947)
     pub crate_scopes: Option<Vec<CrateScope>>,
     /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
-    #[serde(with = "rfc3339::option")]
-    pub expired_at: Option<NaiveDateTime>,
+    pub expired_at: Option<DateTime<Utc>>,
 }
 
 impl ApiToken {
@@ -80,7 +77,7 @@ impl ApiToken {
             .transaction(|conn| {
                 async move {
                     diesel::update(tokens)
-                        .set(api_tokens::last_used_at.eq(now.nullable()))
+                        .set(api_tokens::last_used_at.eq(now.into_sql::<Timestamptz>().nullable()))
                         .returning(ApiToken::as_returning())
                         .get_result(conn)
                         .await
@@ -111,20 +108,23 @@ mod tests {
             created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
                 .and_hms_opt(14, 23, 11)
-                .unwrap(),
-            last_used_at: NaiveDate::from_ymd_opt(2017, 1, 6)
                 .unwrap()
-                .and_hms_opt(14, 23, 12),
+                .and_utc(),
+            last_used_at: Some(
+                NaiveDate::from_ymd_opt(2017, 1, 6)
+                    .unwrap()
+                    .and_hms_opt(14, 23, 12)
+                    .unwrap()
+                    .and_utc(),
+            ),
             crate_scopes: None,
             endpoint_scopes: None,
             expired_at: None,
         };
         let json = serde_json::to_string(&tok).unwrap();
+        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
         assert_some!(json
             .as_str()
-            .find(r#""created_at":"2017-01-06T14:23:11+00:00""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""last_used_at":"2017-01-06T14:23:12+00:00""#));
+            .find(r#""last_used_at":"2017-01-06T14:23:12Z""#));
     }
 }

@@ -264,7 +264,7 @@ fn ensure_not_locked(user: &User) -> AppResult<()> {
     if let Some(reason) = &user.account_lock_reason {
         let still_locked = user
             .account_lock_until
-            .map(|until| until > Utc::now().naive_utc())
+            .map(|until| until > Utc::now())
             .unwrap_or(true);
 
         if still_locked {

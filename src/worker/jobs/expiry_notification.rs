@@ -5,6 +5,7 @@ use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use std::sync::Arc;
 
@@ -82,7 +83,7 @@ async fn handle_expiring_token(
             name: &user.gh_login,
             token_id: token.id,
             token_name: &token.name,
-            expiry_date: token.expired_at.unwrap().and_utc(),
+            expiry_date: token.expired_at.unwrap(),
         };
         emails.send(&recipient, email).await?;
     } else {
@@ -95,7 +96,7 @@ async fn handle_expiring_token(
     // Update the token to prevent duplicate notifications.
     debug!("Marking token {} as notified…", token.id);
     diesel::update(token)
-        .set(api_tokens::expiry_notification_at.eq(now.nullable()))
+        .set(api_tokens::expiry_notification_at.eq(now.into_sql::<Timestamptz>().nullable()))
         .execute(conn)
         .await?;
 
@@ -200,7 +201,8 @@ mod tests {
                 api_tokens::user_id.eq(user.id),
                 api_tokens::name.eq("test_token"),
                 api_tokens::token.eq(token.hashed()),
-                api_tokens::expired_at.eq(now.nullable() + (EXPIRY_THRESHOLD.num_days() - 1).day()),
+                api_tokens::expired_at.eq(now.into_sql::<Timestamptz>().nullable()
+                    + (EXPIRY_THRESHOLD.num_days() - 1).day()),
             ))
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)
@@ -215,7 +217,8 @@ mod tests {
                     api_tokens::user_id.eq(user.id),
                     api_tokens::name.eq(format!("test_token{i}")),
                     api_tokens::token.eq(token.hashed()),
-                    api_tokens::expired_at.eq(now.nullable() + not_expired_offset.day()),
+                    api_tokens::expired_at
+                        .eq(now.into_sql::<Timestamptz>().nullable() + not_expired_offset.day()),
                 ))
                 .returning(ApiToken::as_returning())
                 .get_result(&mut conn)
@@ -259,7 +262,7 @@ mod tests {
                 api_tokens::user_id.eq(user.id),
                 api_tokens::name.eq("expired_token"),
                 api_tokens::token.eq(token.hashed()),
-                api_tokens::expired_at.eq(now.nullable() - 1.day()),
+                api_tokens::expired_at.eq(now.into_sql::<Timestamptz>().nullable() - 1.day()),
             ))
             .returning(ApiToken::as_returning())
             .get_result(&mut conn)

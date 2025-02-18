@@ -210,7 +210,7 @@ mod auth {
 
         let (app, _, client) = prepare().await;
         let client = client
-            .db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()))
+            .db_new_scoped_token("test-token", None, None, Some(expired_at))
             .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;
@@ -230,7 +230,7 @@ mod auth {
 
         let (app, _, client) = prepare().await;
         let client = client
-            .db_new_scoped_token("test-token", None, None, Some(expired_at.naive_utc()))
+            .db_new_scoped_token("test-token", None, None, Some(expired_at))
             .await;
 
         let response = client.yank(CRATE_NAME, CRATE_VERSION).await;

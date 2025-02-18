@@ -3,7 +3,7 @@ use crate::models::OwnerKind;
 use crate::schema::{crate_owners, crates, emails, users, versions};
 use crate::worker::Environment;
 use anyhow::anyhow;
-use chrono::{NaiveDateTime, SecondsFormat};
+use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -40,7 +40,6 @@ impl BackgroundJob for SendPublishNotificationsJob {
 
         let publish_time = publish_details
             .publish_time
-            .and_utc()
             .to_rfc3339_opts(SecondsFormat::Secs, true);
 
         // Find names and email addresses of all crate owners
@@ -138,7 +137,7 @@ struct PublishDetails {
     #[diesel(select_expression = versions::columns::num)]
     version: String,
     #[diesel(select_expression = versions::columns::created_at)]
-    publish_time: NaiveDateTime,
+    publish_time: DateTime<Utc>,
     #[diesel(select_expression = users::columns::gh_login.nullable())]
     publisher: Option<String>,
 }

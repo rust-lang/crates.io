@@ -632,7 +632,8 @@ impl FilterParams {
 mod seek {
     use super::Record;
     use crate::controllers::helpers::pagination::seek;
-    use chrono::naive::serde::ts_microseconds;
+    use chrono::serde::ts_microseconds;
+    use chrono::Utc;
 
     seek!(
         pub enum Seek {
@@ -641,12 +642,12 @@ mod seek {
             },
             New {
                 #[serde(with = "ts_microseconds")]
-                created_at: chrono::NaiveDateTime,
+                created_at: chrono::DateTime<Utc>,
                 id: i32,
             },
             RecentUpdates {
                 #[serde(with = "ts_microseconds")]
-                updated_at: chrono::NaiveDateTime,
+                updated_at: chrono::DateTime<Utc>,
                 id: i32,
             },
             RecentDownloads {
