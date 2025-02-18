@@ -12,6 +12,10 @@ This document describes the API used by the crates.io website, cargo
 client, and other third-party tools to interact with the crates.io
 registry.
 
+Before using this API, please read the
+[crates.io data access policy](https://crates.io/data-access) and ensure
+that your use of the API complies with the policy.
+
 __The API is under active development and may change at any time__,
 though we will try to avoid breaking changes where possible.
 
