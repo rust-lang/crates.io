@@ -44,7 +44,6 @@ export default class DesignService extends Service {
    */
   watcherTask = restartableTask(async () => {
     let mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       let scheme = this.scheme;
       if (scheme === 'system') {

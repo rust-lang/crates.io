@@ -42,7 +42,7 @@ jobs:
             packages/**
             public/**
             tests/**
-            .eslintrc
+            eslint.config.mjs
             .template-lintrc.js
             ember-cli-build.js
             package.json
