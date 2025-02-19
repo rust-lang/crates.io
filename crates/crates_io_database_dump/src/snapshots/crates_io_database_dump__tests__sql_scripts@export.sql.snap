@@ -13,7 +13,7 @@ BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;
     \copy "metadata" ("total_downloads") TO 'data/metadata.csv' WITH CSV HEADER
     \copy "reserved_crate_names" ("name") TO 'data/reserved_crate_names.csv' WITH CSV HEADER
     \copy "teams" ("avatar", "github_id", "id", "login", "name", "org_id") TO 'data/teams.csv' WITH CSV HEADER
-    \copy (SELECT "gh_avatar", "gh_id", "gh_login", "id", "name" FROM "users" WHERE id in (     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0     UNION     SELECT published_by as user_id FROM versions )) TO 'data/users.csv' WITH CSV HEADER
+    \copy (SELECT "gh_avatar", "gh_id", "gh_login", "id", "name", "username" FROM "users" WHERE id in (     SELECT owner_id AS user_id FROM crate_owners WHERE NOT deleted AND owner_kind = 0     UNION     SELECT published_by as user_id FROM versions )) TO 'data/users.csv' WITH CSV HEADER
 
     \copy "crates_categories" ("category_id", "crate_id") TO 'data/crates_categories.csv' WITH CSV HEADER
     \copy "crates_keywords" ("crate_id", "keyword_id") TO 'data/crates_keywords.csv' WITH CSV HEADER

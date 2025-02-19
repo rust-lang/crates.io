@@ -78,8 +78,8 @@ async fn following() {
         .find(|v| v.krate == "bar_fighters")
         .unwrap();
     assert_eq!(
-        bar_version.published_by.as_ref().unwrap().login,
-        user_model.gh_login
+        &bar_version.published_by.as_ref().unwrap().username,
+        user_model.username.as_ref().unwrap()
     );
 
     let r: R = user
