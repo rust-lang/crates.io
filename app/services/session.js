@@ -144,7 +144,6 @@ export default class SessionService extends Service {
   });
 
   windowEventWatcherTask = task(async () => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       let event = await waitForEvent(window, 'message');
       if (event.origin !== window.location.origin || !event.data) {
@@ -161,7 +160,6 @@ export default class SessionService extends Service {
   });
 
   windowCloseWatcherTask = task(async window => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (window.closed) {
         return { closed: true };

@@ -1,8 +1,8 @@
+import { globby } from 'globby';
+import { createReadStream, createWriteStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { createGzip, createBrotliCompress, constants } from 'node:zlib';
-import { globby } from 'globby';
+import { constants, createBrotliCompress, createGzip } from 'node:zlib';
 
 let paths = await globby(['**/*.css', '**/*.html', '**/*.js', '**/*.map', '**/*.svg', '**/*.txt', '**/*.xml'], {
   cwd: 'dist',

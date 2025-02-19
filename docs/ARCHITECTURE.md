@@ -50,7 +50,7 @@ These files have to do with the frontend:
   frontend; served under the root `/` url - (ignored in `.gitignore`)
 - `.ember-cli` - Settings for the `ember` command line interface
 - `ember-cli-build.js` - Contains the build specification for Broccoli
-- `.eslintrc.js` - Defines Javascript coding style guidelines (enforced during CI???)
+- `eslint.config.mjs` - Defines Javascript coding style guidelines
 - `node_modules/` - npm dependencies - (ignored in `.gitignore`)
 - `packages/crates-io-msw` - A mock backend used for testing
 - `package.json` - Defines the npm package and its dependencies
