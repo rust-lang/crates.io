@@ -772,6 +772,7 @@ async fn inactive_users_dont_get_invitations() {
     NewUser::builder()
         .gh_id(-1)
         .gh_login(invited_gh_login)
+        .username(invited_gh_login)
         .gh_access_token("some random token")
         .build()
         .insert(&mut conn)

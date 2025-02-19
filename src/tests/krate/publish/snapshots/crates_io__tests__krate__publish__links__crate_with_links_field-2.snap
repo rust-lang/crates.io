@@ -1,6 +1,7 @@
 ---
 source: src/tests/krate/publish/links.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "version": {
@@ -13,7 +14,8 @@ expression: response.json()
           "id": 1,
           "login": "foo",
           "name": null,
-          "url": "https://github.com/foo"
+          "url": "https://github.com/foo",
+          "username": "foo"
         }
       }
     ],
@@ -44,7 +46,8 @@ expression: response.json()
       "id": "[id]",
       "login": "foo",
       "name": null,
-      "url": "https://github.com/foo"
+      "url": "https://github.com/foo",
+      "username": "foo"
     },
     "readme_path": "/api/v1/crates/foo/1.0.0/readme",
     "repository": null,

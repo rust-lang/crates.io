@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/versions/read.rs
 expression: json
+snapshot_kind: text
 ---
 {
   "version": {
@@ -32,7 +33,8 @@ expression: json
       "id": "[id]",
       "login": "foo",
       "name": null,
-      "url": "https://github.com/foo"
+      "url": "https://github.com/foo",
+      "username": "foo"
     },
     "readme_path": "/api/v1/crates/foo_vers_show/2.0.0/readme",
     "repository": null,

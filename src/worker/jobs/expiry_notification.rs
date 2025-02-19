@@ -186,6 +186,7 @@ mod tests {
         let user = NewUser::builder()
             .gh_id(0)
             .gh_login("a")
+            .username("a")
             .gh_access_token("token")
             .build()
             .insert(&mut conn)

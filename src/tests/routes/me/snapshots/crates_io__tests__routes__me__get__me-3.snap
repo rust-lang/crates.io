@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/me/get.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "owned_crates": [
@@ -20,6 +21,7 @@ expression: response.json()
     "login": "foo",
     "name": null,
     "publish_notifications": true,
-    "url": "https://github.com/foo"
+    "url": "https://github.com/foo",
+    "username": "foo"
   }
 }

@@ -132,6 +132,7 @@ pub async fn save_user_to_database(
     let new_user = NewUser::builder()
         .gh_id(user.id)
         .gh_login(&user.login)
+        .username(&user.login)
         .maybe_name(user.name.as_deref())
         .maybe_gh_avatar(user.avatar_url.as_deref())
         .gh_access_token(access_token)

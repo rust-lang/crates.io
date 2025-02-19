@@ -38,6 +38,7 @@ async fn show_latest_user_case_insensitively() {
     let user1 = NewUser::builder()
         .gh_id(1)
         .gh_login("foobar")
+        .username("foobar")
         .name("I was first then deleted my github account")
         .gh_access_token("bar")
         .build();
@@ -45,6 +46,7 @@ async fn show_latest_user_case_insensitively() {
     let user2 = NewUser::builder()
         .gh_id(2)
         .gh_login("FOOBAR")
+        .username("FOOBAR")
         .name("I was second, I took the foobar username on github")
         .gh_access_token("bar")
         .build();

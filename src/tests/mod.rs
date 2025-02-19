@@ -95,6 +95,7 @@ fn new_user(login: &str) -> NewUser<'_> {
     NewUser::builder()
         .gh_id(next_gh_id())
         .gh_login(login)
+        .username(login)
         .gh_access_token("some random token")
         .build()
 }

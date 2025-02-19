@@ -1,6 +1,7 @@
 ---
 source: src/tests/krate/yanking.rs
 expression: json
+snapshot_kind: text
 ---
 {
   "version": {
@@ -26,6 +27,7 @@ expression: json
     "published_by": {
       "id": 1,
       "login": "foo",
+      "username": "foo",
       "name": null,
       "avatar": null,
       "url": "https://github.com/foo"
@@ -36,6 +38,7 @@ expression: json
         "user": {
           "id": 1,
           "login": "foo",
+          "username": "foo",
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo"
@@ -47,6 +50,7 @@ expression: json
         "user": {
           "id": 1,
           "login": "foo",
+          "username": "foo",
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo"
@@ -58,6 +62,7 @@ expression: json
         "user": {
           "id": 1,
           "login": "foo",
+          "username": "foo",
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo"
@@ -69,6 +74,7 @@ expression: json
         "user": {
           "id": 1,
           "login": "foo",
+          "username": "foo",
           "name": null,
           "avatar": null,
           "url": "https://github.com/foo"

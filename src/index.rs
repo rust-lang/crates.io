@@ -153,6 +153,7 @@ mod tests {
         let user_id = diesel::insert_into(users::table)
             .values((
                 users::name.eq("user1"),
+                users::username.eq("user1"),
                 users::gh_login.eq("user1"),
                 users::gh_id.eq(42),
                 users::gh_access_token.eq("some random token"),

@@ -1,6 +1,7 @@
 ---
 source: src/openapi.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "components": {
@@ -117,7 +118,7 @@ expression: response.json()
             "type": "boolean"
           },
           "login": {
-            "description": "The user's login name.",
+            "description": "The user's GitHub login.",
             "example": "ghost",
             "type": "string"
           },
@@ -141,11 +142,17 @@ expression: response.json()
               "string",
               "null"
             ]
+          },
+          "username": {
+            "description": "The user's crates.io username.",
+            "example": "ghost",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "login",
+          "username",
           "email_verified",
           "email_verification_sent",
           "is_admin",
@@ -707,7 +714,7 @@ expression: response.json()
             "type": "string"
           },
           "login": {
-            "description": "The login name of the team or user.",
+            "description": "The GitHub login of the team or user.",
             "example": "ghost",
             "type": "string"
           },
@@ -726,11 +733,17 @@ expression: response.json()
               "string",
               "null"
             ]
+          },
+          "username": {
+            "description": "The crates.io username of the team or user.",
+            "example": "ghost",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "login",
+          "username",
           "kind"
         ],
         "type": "object"
@@ -853,7 +866,7 @@ expression: response.json()
             "type": "integer"
           },
           "login": {
-            "description": "The user's login name.",
+            "description": "The user's GitHub login name.",
             "example": "ghost",
             "type": "string"
           },
@@ -869,11 +882,17 @@ expression: response.json()
             "description": "The user's GitHub profile URL.",
             "example": "https://github.com/ghost",
             "type": "string"
+          },
+          "username": {
+            "description": "The user's crates.io username.",
+            "example": "ghost",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "login",
+          "username",
           "url"
         ],
         "type": "object"
