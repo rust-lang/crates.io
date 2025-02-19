@@ -521,9 +521,15 @@ pub struct EncodableOwner {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The login name of the team or user.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The GitHub login of the team or user.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The crates.io username of the team or user.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// The kind of the owner (`user` or `team`).
     #[schema(example = "user")]
@@ -548,14 +554,17 @@ impl From<Owner> for EncodableOwner {
             Owner::User(User {
                 id,
                 name,
+                username,
                 gh_login,
                 gh_avatar,
                 ..
             }) => {
                 let url = format!("https://github.com/{gh_login}");
+                let username = username.unwrap_or(gh_login);
                 Self {
                     id,
-                    login: gh_login,
+                    login: username.clone(),
+                    username,
                     avatar: gh_avatar,
                     url: Some(url),
                     name,
@@ -572,7 +581,8 @@ impl From<Owner> for EncodableOwner {
                 let url = github::team_url(&login);
                 Self {
                     id,
-                    login,
+                    login: login.clone(),
+                    username: login,
                     url: Some(url),
                     avatar,
                     name,
@@ -672,9 +682,15 @@ pub struct EncodablePrivateUser {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The user's login name.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The user's GitHub login.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The user's crates.io username.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// Whether the user's email address has been verified.
     #[schema(example = true)]
@@ -720,6 +736,7 @@ impl EncodablePrivateUser {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             is_admin,
@@ -727,14 +744,16 @@ impl EncodablePrivateUser {
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
 
         EncodablePrivateUser {
             id,
+            login: username.clone(),
+            username,
             email,
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
             name,
             url: Some(url),
             is_admin,
@@ -750,9 +769,15 @@ pub struct EncodablePublicUser {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The user's login name.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The user's GitHub login name.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The user's crates.io username.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// The user's display name, if set.
     #[schema(example = "Kate Morgan")]
@@ -773,16 +798,19 @@ impl From<User> for EncodablePublicUser {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
         EncodablePublicUser {
             id,
-            avatar: gh_avatar,
-            login: gh_login,
+            login: username.clone(),
+            username,
             name,
+            avatar: gh_avatar,
             url,
         }
     }
@@ -1108,6 +1136,7 @@ mod tests {
                 user: EncodablePublicUser {
                     id: 0,
                     login: String::new(),
+                    username: String::new(),
                     name: None,
                     avatar: None,
                     url: String::new(),
