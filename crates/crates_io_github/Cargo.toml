@@ -16,7 +16,7 @@ async-trait = "=0.1.86"
 mockall = { version = "=0.13.1", optional = true }
 oauth2 = { version = "=5.0.0", default-features = false }
 reqwest = { version = "=0.12.12", features = ["json"] }
-serde = { version = "=1.0.217", features = ["derive"] }
+serde = { version = "=1.0.218", features = ["derive"] }
 thiserror = "=2.0.11"
 tracing = "=0.1.41"
 
