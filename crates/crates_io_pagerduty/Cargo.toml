@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.95"
+anyhow = "=1.0.96"
 reqwest = { version = "=0.12.12", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.218", features = ["derive"] }

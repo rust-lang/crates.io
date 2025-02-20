@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.95"
+anyhow = "=1.0.96"
 diesel = { version = "=2.2.7", features = ["postgres", "serde_json"] }
 diesel-async = { version = "=0.5.2", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 futures-util = "=0.3.31"
