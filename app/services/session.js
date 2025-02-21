@@ -1,3 +1,4 @@
+import { debug } from '@ember/debug';
 import Service, { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
@@ -179,16 +180,21 @@ export default class SessionService extends Service {
   });
 
   loadUserTask = dropTask(async () => {
-    if (!this.isLoggedIn) return {};
+    if (!this.isLoggedIn) {
+      debug('User is not logged in, skipping user load');
+      return {};
+    }
 
     let response;
     try {
       response = await ajax('/api/v1/me');
-    } catch {
+    } catch (error) {
+      debug(`Failed to load user: ${error}`);
       return {};
     }
 
     let currentUser = this.store.push(this.store.normalize('user', response.user));
+    debug(`User found: ${currentUser.login}`);
     let ownedCrates = response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c)));
 
     let { id } = currentUser;
