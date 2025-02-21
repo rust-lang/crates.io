@@ -350,7 +350,10 @@ pub struct EncodableCrateLinks {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncodableOwner {
     pub id: i32,
+    // `login` and `username` should contain the same value. `login` is deprecated and can be
+    // removed when all frontends have migrated to `username`.
     pub login: String,
+    pub username: String,
     pub kind: String,
     pub url: Option<String>,
     pub name: Option<String>,
@@ -363,14 +366,17 @@ impl From<Owner> for EncodableOwner {
             Owner::User(User {
                 id,
                 name,
+                username,
                 gh_login,
                 gh_avatar,
                 ..
             }) => {
                 let url = format!("https://github.com/{gh_login}");
+                let username = username.unwrap_or(gh_login);
                 Self {
                     id,
-                    login: gh_login,
+                    login: username.clone(),
+                    username,
                     avatar: gh_avatar,
                     url: Some(url),
                     name,
@@ -387,7 +393,8 @@ impl From<Owner> for EncodableOwner {
                 let url = github::team_url(&login);
                 Self {
                     id,
-                    login,
+                    login: login.clone(),
+                    username: login,
                     url: Some(url),
                     avatar,
                     name,
@@ -458,7 +465,10 @@ pub struct EncodableMe {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EncodablePrivateUser {
     pub id: i32,
+    // `login` and `username` should contain the same value. `login` is deprecated and can be
+    // removed when all frontends have migrated to `username`.
     pub login: String,
+    pub username: String,
     pub email_verified: bool,
     pub email_verification_sent: bool,
     pub name: Option<String>,
@@ -480,6 +490,7 @@ impl EncodablePrivateUser {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             is_admin,
@@ -487,14 +498,16 @@ impl EncodablePrivateUser {
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
 
         EncodablePrivateUser {
             id,
+            login: username.clone(),
+            username,
             email,
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
             name,
             url: Some(url),
             is_admin,
@@ -508,7 +521,10 @@ impl EncodablePrivateUser {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct EncodablePublicUser {
     pub id: i32,
+    // `login` and `username` should contain the same value. `login` is deprecated and can be
+    // removed when all frontends have migrated to `username`.
     pub login: String,
+    pub username: String,
     pub name: Option<String>,
     pub avatar: Option<String>,
     pub url: String,
@@ -520,16 +536,19 @@ impl From<User> for EncodablePublicUser {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
         EncodablePublicUser {
             id,
-            avatar: gh_avatar,
-            login: gh_login,
+            login: username.clone(),
+            username,
             name,
+            avatar: gh_avatar,
             url,
         }
     }
@@ -775,6 +794,7 @@ mod tests {
                 user: EncodablePublicUser {
                     id: 0,
                     login: String::new(),
+                    username: String::new(),
                     name: None,
                     avatar: None,
                     url: String::new(),
