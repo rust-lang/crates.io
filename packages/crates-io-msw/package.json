@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@mswjs/data": "0.16.2",
-    "msw": "2.7.0",
+    "msw": "2.7.1",
     "semver": "7.7.1"
   },
   "devDependencies": {
