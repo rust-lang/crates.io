@@ -183,7 +183,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     // Make sure required fields are provided
     fn empty(s: Option<&String>) -> bool {
-        s.map_or(true, String::is_empty)
+        s.is_none_or(String::is_empty)
     }
 
     // It can have up to three elements per below conditions.
