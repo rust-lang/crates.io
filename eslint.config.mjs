@@ -5,6 +5,7 @@ import ember from 'eslint-plugin-ember';
 import emberConcurrency from 'eslint-plugin-ember-concurrency';
 import importHelpers from 'eslint-plugin-import-helpers';
 import prettier from 'eslint-plugin-prettier';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,6 +19,7 @@ const compat = new FlatCompat({
 });
 
 export default [
+  eslintPluginUnicorn.configs.recommended,
   {
     ignores: [
       '.git/**/*',
@@ -49,7 +51,6 @@ export default [
     'plugin:ember/recommended',
     'plugin:qunit/recommended',
     'plugin:qunit-dom/recommended',
-    'plugin:unicorn/recommended',
     'plugin:prettier/recommended',
   ),
   {
