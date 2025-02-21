@@ -8,7 +8,7 @@ use crate::controllers::krate::CratePath;
 use crate::models::download::Version;
 use crate::models::{User, Version as FullVersion, VersionDownload, VersionOwnerAction};
 use crate::schema::{version_downloads, version_owner_actions, versions};
-use crate::util::errors::{bad_request, AppResult, BoxedAppError};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::views::{EncodableVersion, EncodableVersionDownload};
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
@@ -18,8 +18,8 @@ use crates_io_database::schema::users;
 use crates_io_diesel_helpers::to_char;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::future::BoxFuture;
 use futures_util::FutureExt;
+use futures_util::future::BoxFuture;
 use std::cmp;
 use std::str::FromStr;
 

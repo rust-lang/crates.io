@@ -1,6 +1,6 @@
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use crates_io_database_dump::{create_archives, DumpDirectory};
+use crates_io_database_dump::{DumpDirectory, create_archives};
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
 use std::path::PathBuf;

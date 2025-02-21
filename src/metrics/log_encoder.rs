@@ -239,7 +239,7 @@ enum VectorMetricData {
 mod tests {
     use super::*;
     use anyhow::Error;
-    use base64::{engine::general_purpose, Engine};
+    use base64::{Engine, engine::general_purpose};
     use prometheus::{Histogram, HistogramOpts, IntCounter, IntGauge, IntGaugeVec, Opts, Registry};
 
     #[test]

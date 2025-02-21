@@ -1,8 +1,8 @@
-use crate::tests::util::{MockRequestExt, RequestHelper, Response};
 use crate::tests::TestApp;
+use crate::tests::util::{MockRequestExt, RequestHelper, Response};
 
 use crate::tests::util::encode_session_header;
-use http::{header, Method, StatusCode};
+use http::{Method, StatusCode, header};
 use insta::assert_snapshot;
 
 static URL: &str = "/api/v1/me/updates";

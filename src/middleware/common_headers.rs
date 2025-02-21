@@ -3,7 +3,7 @@ use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum_extra::headers::{CacheControl, Expires, HeaderMapExt};
-use http::{header, HeaderMap, HeaderValue};
+use http::{HeaderMap, HeaderValue, header};
 use std::time::{Duration, SystemTime};
 
 // see http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header

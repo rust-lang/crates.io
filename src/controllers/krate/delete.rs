@@ -5,7 +5,7 @@ use crate::controllers::krate::CratePath;
 use crate::email::Email;
 use crate::models::NewDeletedCrate;
 use crate::schema::{crate_downloads, crates, dependencies};
-use crate::util::errors::{custom, AppResult, BoxedAppError};
+use crate::util::errors::{AppResult, BoxedAppError, custom};
 use crate::worker::jobs;
 use axum::extract::rejection::QueryRejection;
 use axum::extract::{FromRequestParts, Query};
@@ -16,8 +16,8 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use http::request::Parts;
 use http::StatusCode;
+use http::request::Parts;
 
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;
 const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
@@ -92,7 +92,9 @@ pub async fn delete_crate(
 
         let downloads = get_crate_downloads(&mut conn, krate.id).await?;
         if downloads > max_downloads(&age) {
-            let msg = format!("only crates with less than {DOWNLOADS_PER_MONTH_LIMIT} downloads per month can be deleted after 72 hours");
+            let msg = format!(
+                "only crates with less than {DOWNLOADS_PER_MONTH_LIMIT} downloads per month can be deleted after 72 hours"
+            );
             return Err(custom(StatusCode::UNPROCESSABLE_ENTITY, msg));
         }
     }

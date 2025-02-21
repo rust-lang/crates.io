@@ -5,12 +5,12 @@ use crate::controllers::util::RequestPartsExt;
 use crate::headers::XRequestId;
 use crate::middleware::normalize_path::OriginalPath;
 use crate::middleware::real_ip::RealIp;
+use axum::Extension;
 use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use axum::Extension;
-use axum_extra::headers::UserAgent;
 use axum_extra::TypedHeader;
+use axum_extra::headers::UserAgent;
 use derive_more::Deref;
 use http::{Method, Uri};
 use parking_lot::Mutex;
@@ -56,7 +56,7 @@ pub async fn log_requests(
     let url = request_metadata
         .original_path
         .as_ref()
-        .map(|p| Cow::Borrowed(&p.0 .0))
+        .map(|p| Cow::Borrowed(&p.0.0))
         .unwrap_or_else(|| Cow::Owned(request_metadata.uri.to_string()));
 
     let matched_path = request_metadata

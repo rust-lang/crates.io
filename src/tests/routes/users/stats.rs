@@ -11,7 +11,7 @@ async fn user_total_downloads() -> anyhow::Result<()> {
     use crate::tests::builders::CrateBuilder;
     use crate::tests::util::{RequestHelper, TestApp};
     use diesel::prelude::*;
-    use diesel::{update, QueryDsl};
+    use diesel::{QueryDsl, update};
     use diesel_async::RunQueryDsl;
 
     let (app, anon, user) = TestApp::init().with_user().await;

@@ -1,4 +1,4 @@
-use crate::tests::{util::RequestHelper, TestApp};
+use crate::tests::{TestApp, util::RequestHelper};
 use chrono::{DateTime, Duration, Utc};
 use http::StatusCode;
 use insta::assert_snapshot;

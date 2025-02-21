@@ -5,21 +5,21 @@ use crate::views::EncodableApiTokenWithToken;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::util::errors::{bad_request, AppResult};
+use crate::util::errors::{AppResult, bad_request};
 use crate::util::token::PlainToken;
+use axum::Json;
 use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use chrono::{DateTime, Utc};
 use diesel::data_types::PgInterval;
-use diesel::dsl::{now, IntervalDsl};
+use diesel::dsl::{IntervalDsl, now};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
-use http::request::Parts;
 use http::StatusCode;
+use http::request::Parts;
 use secrecy::ExposeSecret;
 
 #[derive(Deserialize)]

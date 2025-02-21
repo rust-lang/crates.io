@@ -1,14 +1,14 @@
 use crate::config::CdnLogQueueConfig;
 use crate::sqs::{MockSqsQueue, SqsQueue, SqsQueueImpl};
-use crate::worker::jobs::ProcessCdnLog;
 use crate::worker::Environment;
+use crate::worker::jobs::ProcessCdnLog;
 use anyhow::Context;
 use aws_credential_types::Credentials;
 use aws_sdk_sqs::config::Region;
 use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
 use std::sync::Arc;
 
 /// A background job that processes messages from the CDN log queue.
@@ -223,13 +223,13 @@ async fn enqueue_jobs(
 mod tests {
     use super::*;
     use aws_sdk_sqs::operation::receive_message::builders::ReceiveMessageOutputBuilder;
-    use aws_sdk_sqs::types::builders::MessageBuilder;
     use aws_sdk_sqs::types::Message;
+    use aws_sdk_sqs::types::builders::MessageBuilder;
     use crates_io_test_db::TestDatabase;
     use crates_io_worker::schema::background_jobs;
     use diesel::prelude::*;
-    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use diesel_async::RunQueryDsl;
+    use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_snapshot;
     use parking_lot::Mutex;
     use serde_json::json;
@@ -366,7 +366,7 @@ mod tests {
             "cloudfront/static.crates.io/EJED5RT0WA7HA.2024-02-01-10.6a8be093.gz",
             "cloudfront/static.staging.crates.io/E6OCLKYH9FE8V.2024-02-01-10.5da9e90c.gz",
             "fastly-requests/static.crates.io/2024-02-01T09:00:00.000-4AIwSEQyIFDSzdAT1Fqt.log.zst",
-            "fastly-requests/static.staging.crates.io/2024-02-01T09:00:00.000-QPF3Ea8eICqLkzaoC_Wt.log.zst"
+            "fastly-requests/static.staging.crates.io/2024-02-01T09:00:00.000-QPF3Ea8eICqLkzaoC_Wt.log.zst",
         ];
         for path in valid_paths {
             assert!(!is_ignored_path(path));

@@ -1,4 +1,4 @@
-use ::dialoguer::{theme::Theme, Confirm};
+use ::dialoguer::{Confirm, theme::Theme};
 use crates_io::tasks::spawn_blocking;
 
 pub async fn confirm(msg: impl Into<String>) -> anyhow::Result<bool> {

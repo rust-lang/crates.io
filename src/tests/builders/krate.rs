@@ -1,4 +1,4 @@
-use crate::models::{update_default_version, Category, Crate, Keyword, NewCrate};
+use crate::models::{Category, Crate, Keyword, NewCrate, update_default_version};
 use crate::schema::{crate_downloads, crates, version_downloads};
 use crate::util::errors::AppResult;
 

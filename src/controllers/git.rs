@@ -2,7 +2,7 @@ use axum::extract::{ConnectInfo, Path, Request};
 use axum::response::{IntoResponse, Response};
 use http::header::HeaderName;
 use http::request::Parts;
-use http::{header, HeaderMap, HeaderValue, StatusCode};
+use http::{HeaderMap, HeaderValue, StatusCode, header};
 use hyper::body::Buf;
 use std::io::{BufRead, Read};
 use std::net::SocketAddr;

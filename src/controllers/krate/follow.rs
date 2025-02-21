@@ -6,7 +6,7 @@ use crate::controllers::helpers::ok_true;
 use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
-use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::errors::{AppResult, crate_not_found};
 use axum::response::Response;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;

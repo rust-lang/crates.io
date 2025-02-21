@@ -5,11 +5,11 @@ use crate::auth::AuthCheck;
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
-use axum::body::{Body, Bytes};
 use axum::Json;
+use axum::body::{Body, Bytes};
 use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
-use crates_io_tarball::{process_tarball, TarballError};
+use crates_io_tarball::{TarballError, process_tarball};
 use crates_io_worker::{BackgroundJob, EnqueueError};
 use diesel::dsl::{exists, select};
 use diesel::prelude::*;
@@ -19,8 +19,8 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryFutureExt;
 use futures_util::TryStreamExt;
 use hex::ToHex;
-use http::request::Parts;
 use http::StatusCode;
+use http::request::Parts;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
@@ -28,8 +28,8 @@ use tokio_util::io::StreamReader;
 use url::Url;
 
 use crate::models::{
-    default_versions::Version as DefaultVersion, Category, Crate, DependencyKind, Keyword,
-    NewCrate, NewVersion, NewVersionOwnerAction, VersionAction,
+    Category, Crate, DependencyKind, Keyword, NewCrate, NewVersion, NewVersionOwnerAction,
+    VersionAction, default_versions::Version as DefaultVersion,
 };
 
 use crate::controllers::helpers::authorization::Rights;
@@ -38,7 +38,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
-use crate::util::errors::{bad_request, custom, internal, AppResult, BoxedAppError};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, internal};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
@@ -88,7 +88,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             return Err(bad_request(format_args!(
                 "\"{}\" is an invalid semver version",
                 metadata.vers
-            )))
+            )));
         }
     };
 
@@ -201,7 +201,9 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
     if let Some(description) = &description {
         if description.len() > MAX_DESCRIPTION_LENGTH {
-            return Err(bad_request(format!("The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed.")));
+            return Err(bad_request(format!(
+                "The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed."
+            )));
         }
     }
 
@@ -583,7 +585,7 @@ async fn count_versions_published_today(
     crate_id: i32,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<i64> {
-    use diesel::dsl::{now, IntervalDsl};
+    use diesel::dsl::{IntervalDsl, now};
 
     versions::table
         .filter(versions::crate_id.eq(crate_id))
@@ -794,7 +796,10 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
 
     if let Some(registry) = &dep.registry {
         if !registry.is_empty() {
-            return Err(bad_request(format_args!("Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.", dep.name)));
+            return Err(bad_request(format_args!(
+                "Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.",
+                dep.name
+            )));
         }
     }
 
@@ -806,10 +811,13 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
             )));
         }
         Ok(req) if req == semver::VersionReq::STAR => {
-            return Err(bad_request(format_args!("wildcard (`*`) dependency constraints are not allowed \
+            return Err(bad_request(format_args!(
+                "wildcard (`*`) dependency constraints are not allowed \
                 on crates.io. Crate with this problem: `{}` See https://doc.rust-lang.org/cargo/faq.html#can-\
                 libraries-use--as-a-version-for-their-dependencies for more \
-                information", dep.name)));
+                information",
+                dep.name
+            )));
         }
         _ => {}
     }
@@ -876,9 +884,9 @@ pub async fn add_dependencies(
 impl From<TarballError> for BoxedAppError {
     fn from(error: TarballError) -> Self {
         match error {
-            TarballError::Malformed(_err) => bad_request(
-                "uploaded tarball is malformed or too large when decompressed",
-            ),
+            TarballError::Malformed(_err) => {
+                bad_request("uploaded tarball is malformed or too large when decompressed")
+            }
             TarballError::InvalidPath(path) => bad_request(format!("invalid path found: {path}")),
             TarballError::UnexpectedSymlink(path) => {
                 bad_request(format!("unexpected symlink or hard link found: {path}"))
@@ -887,12 +895,10 @@ impl From<TarballError> for BoxedAppError {
             TarballError::MissingManifest => {
                 bad_request("uploaded tarball is missing a `Cargo.toml` manifest file")
             }
-            TarballError::IncorrectlyCasedManifest(name) => {
-                bad_request(format!(
-                    "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
-                    name = name.to_string_lossy(),
-                ))
-            }
+            TarballError::IncorrectlyCasedManifest(name) => bad_request(format!(
+                "uploaded tarball is missing a `Cargo.toml` manifest file; `{name}` was found, but must be named `Cargo.toml` with that exact casing",
+                name = name.to_string_lossy(),
+            )),
             TarballError::TooManyManifests(paths) => {
                 let paths = paths
                     .into_iter()
@@ -926,8 +932,17 @@ mod tests {
 
     #[test]
     fn missing_metadata_error_message_test() {
-        assert_eq!(missing_metadata_error_message(&["a"]), "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
-        assert_eq!(missing_metadata_error_message(&["a", "b"]), "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
-        assert_eq!(missing_metadata_error_message(&["a", "b", "c"]), "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields");
+        assert_eq!(
+            missing_metadata_error_message(&["a"]),
+            "missing or empty metadata fields: a. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"
+        );
+        assert_eq!(
+            missing_metadata_error_message(&["a", "b"]),
+            "missing or empty metadata fields: a, b. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"
+        );
+        assert_eq!(
+            missing_metadata_error_message(&["a", "b", "c"]),
+            "missing or empty metadata fields: a, b, c. Please see https://doc.rust-lang.org/cargo/reference/manifest.html for more information on configuring these fields"
+        );
     }
 }

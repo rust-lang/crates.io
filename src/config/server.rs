@@ -1,15 +1,15 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 use url::Url;
 
-use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::Env;
+use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
-use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::config::CdnLogQueueConfig;
+use crate::config::cdn_log_storage::CdnLogStorageConfig;
 use crate::middleware::cargo_compat::StatusCodeConfig;
 use crate::storage::StorageConfig;
 use crates_io_env_vars::{list, list_parsed, required_var, var, var_parsed};
@@ -179,7 +179,11 @@ impl Server {
             font-src https://code.cdn.mozilla.net; \
             img-src *; \
             object-src 'none'",
-            cdn_domain = storage.cdn_prefix.as_ref().map(|cdn_prefix| format!("https://{cdn_prefix}")).unwrap_or_default()
+            cdn_domain = storage
+                .cdn_prefix
+                .as_ref()
+                .map(|cdn_prefix| format!("https://{cdn_prefix}"))
+                .unwrap_or_default()
         );
 
         Ok(Server {
@@ -259,7 +263,9 @@ fn parse_cidr_block(block: &str) -> anyhow::Result<IpNetwork> {
     };
 
     if cidr.prefix() < host_prefix {
-        return Err(anyhow!("WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix of at least 16 bits (IPv4) or 64 bits (IPv6)."));
+        return Err(anyhow!(
+            "WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix of at least 16 bits (IPv4) or 64 bits (IPv6)."
+        ));
     }
 
     Ok(cidr)

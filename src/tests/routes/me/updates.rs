@@ -1,7 +1,7 @@
 use crate::schema::versions;
+use crate::tests::OkBool;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
-use crate::tests::OkBool;
 use crate::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;

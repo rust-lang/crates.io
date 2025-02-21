@@ -7,7 +7,7 @@ use std::str::from_utf8;
 
 use crate::rate_limiter::LimitedAction;
 use derive_more::Deref;
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 
 /// A type providing helper methods for working with responses
 #[derive(Deref)]

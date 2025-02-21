@@ -182,7 +182,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     let user = user.as_model();
 
     use crate::schema::versions;
-    use diesel::{update, ExpressionMethods};
+    use diesel::{ExpressionMethods, update};
     use diesel_async::RunQueryDsl;
 
     let c1 = CrateBuilder::new("c1", user.id)

@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::PaginationOptions;
-use crate::controllers::helpers::{pagination::Paginated, Paginate};
+use crate::controllers::helpers::{Paginate, pagination::Paginated};
 use crate::models::Keyword;
 use crate::util::errors::AppResult;
 use crate::views::EncodableKeyword;

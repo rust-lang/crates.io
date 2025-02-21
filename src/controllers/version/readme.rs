@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::controllers::version::CrateVersionPath;
-use crate::util::{redirect, RequestUtils};
+use crate::util::{RequestUtils, redirect};
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use http::request::Parts;

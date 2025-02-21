@@ -66,7 +66,7 @@ fn normalize_path_inner(req: &mut Request) {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_path_inner, OriginalPath};
+    use super::{OriginalPath, normalize_path_inner};
     use axum::body::Body;
     use axum::extract::Request;
 

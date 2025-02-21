@@ -1,7 +1,7 @@
 use anyhow::Context;
 use crates_io_env_vars::{required_var, var, var_parsed};
-use sentry::types::Dsn;
 use sentry::IntoDsn;
+use sentry::types::Dsn;
 
 pub struct SentryConfig {
     pub dsn: Option<Dsn>,

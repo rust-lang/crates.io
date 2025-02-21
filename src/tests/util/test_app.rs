@@ -3,8 +3,8 @@ use crate::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
 use crate::middleware::cargo_compat::StatusCodeConfig;
-use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::NewEmail;
+use crate::models::token::{CrateScope, EndpointScope};
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;

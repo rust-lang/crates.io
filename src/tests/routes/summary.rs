@@ -5,7 +5,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use chrono::Utc;
 use crates_io_database::schema::categories;
-use diesel::{insert_into, update, ExpressionMethods};
+use diesel::{ExpressionMethods, insert_into, update};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 

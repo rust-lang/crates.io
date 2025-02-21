@@ -1,9 +1,9 @@
 use crate::app::AppState;
 use crate::tasks::spawn_blocking;
-use crate::util::errors::{custom, forbidden, not_found, AppResult};
+use crate::util::errors::{AppResult, custom, forbidden, not_found};
 use axum::extract::Path;
 use http::request::Parts;
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 use prometheus::TextEncoder;
 
 /// Handles the `GET /api/private/metrics/{kind}` endpoint.

@@ -237,12 +237,12 @@ mod tests {
             .unwrap()
     }
 
-    fn create_version(
+    fn create_version<T: Into<Cow<'static, str>>>(
         conn: &mut AsyncPgConnection,
         crate_id: i32,
-        version: impl Into<Cow<'static, str>>,
+        version: T,
         publish_time: DateTime<Utc>,
-    ) -> impl Future<Output = i32> {
+    ) -> impl Future<Output = i32> + use<T> {
         let version = version.into();
         let future = diesel::insert_into(versions::table)
             .values((

@@ -19,10 +19,10 @@
 
 use crate::app::App;
 use crate::metrics::macros::metrics;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
 use prometheus::{
-    proto::MetricFamily, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
+    HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec, proto::MetricFamily,
 };
 
 metrics! {

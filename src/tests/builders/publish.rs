@@ -266,20 +266,12 @@ trait NoneOrFilled: Sized {
 
 impl<T> NoneOrFilled for Vec<T> {
     fn none_or_filled(self) -> Option<Self> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(self)
-        }
+        if self.is_empty() { None } else { Some(self) }
     }
 }
 
 impl<K, V> NoneOrFilled for BTreeMap<K, V> {
     fn none_or_filled(self) -> Option<Self> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(self)
-        }
+        if self.is_empty() { None } else { Some(self) }
     }
 }

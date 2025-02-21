@@ -4,7 +4,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    account_locked, forbidden, internal, AppResult, InsecurelyGeneratedTokenRevoked,
+    AppResult, InsecurelyGeneratedTokenRevoked, account_locked, forbidden, internal,
 };
 use crate::util::token::HashedToken;
 use chrono::Utc;

@@ -6,7 +6,7 @@ use axum_extra::extract::Query;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use derive_more::Deref;
-use diesel::dsl::{exists, InnerJoinQuerySource, LeftJoinQuerySource};
+use diesel::dsl::{InnerJoinQuerySource, LeftJoinQuerySource, exists};
 use diesel::prelude::*;
 use diesel::sql_types::Bool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -19,13 +19,13 @@ use crate::app::AppState;
 use crate::controllers::helpers::Paginate;
 use crate::models::{Crate, CrateOwner, OwnerKind, TopVersions, Version};
 use crate::schema::*;
-use crate::util::errors::{bad_request, AppResult};
+use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
 
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
-use crate::util::string_excl_null::StringExclNull;
 use crate::util::RequestUtils;
+use crate::util::string_excl_null::StringExclNull;
 use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
 
 /// Returns a list of crates.
@@ -632,8 +632,8 @@ impl FilterParams {
 mod seek {
     use super::Record;
     use crate::controllers::helpers::pagination::seek;
-    use chrono::serde::ts_microseconds;
     use chrono::Utc;
+    use chrono::serde::ts_microseconds;
 
     seek!(
         pub enum Seek {

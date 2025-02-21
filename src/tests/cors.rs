@@ -1,5 +1,5 @@
-use crate::tests::util::{MockRequestExt, RequestHelper};
 use crate::tests::TestApp;
+use crate::tests::util::{MockRequestExt, RequestHelper};
 use http::StatusCode;
 use insta::assert_snapshot;
 

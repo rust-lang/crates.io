@@ -1,8 +1,8 @@
 use crate::controllers::session;
 use crate::models::{ApiToken, Email, User};
+use crate::tests::TestApp;
 use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
-use crate::tests::TestApp;
 use crate::util::token::HashedToken;
 use chrono::{DateTime, Utc};
 use crates_io_github::GithubUser;

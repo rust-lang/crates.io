@@ -14,7 +14,7 @@ use utoipa::IntoParams;
 
 use crate::controllers::krate::load_crate;
 use crate::models::{Crate, Version};
-use crate::util::errors::{version_not_found, AppResult};
+use crate::util::errors::{AppResult, version_not_found};
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]
 #[into_params(parameter_in = Path)]

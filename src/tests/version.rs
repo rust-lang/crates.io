@@ -1,6 +1,6 @@
 use crate::models::Version;
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::TestApp;
+use crate::tests::builders::{CrateBuilder, VersionBuilder};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn record_rerendered_readme_time() -> anyhow::Result<()> {

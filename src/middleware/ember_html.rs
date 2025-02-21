@@ -14,9 +14,9 @@ use std::sync::{Arc, LazyLock, OnceLock};
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use futures_util::future::{BoxFuture, Shared};
 use futures_util::FutureExt;
-use http::{header, HeaderMap, HeaderValue, Method, StatusCode};
+use futures_util::future::{BoxFuture, Shared};
+use http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 use url::Url;
 
 use crate::app::AppState;

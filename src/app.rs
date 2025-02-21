@@ -1,7 +1,7 @@
 //! Application-wide components in a struct accessible from each request
 
 use crate::config;
-use crate::db::{connection_url, make_manager_config, ConnectionConfig};
+use crate::db::{ConnectionConfig, connection_url, make_manager_config};
 use std::sync::Arc;
 
 use crate::email::Emails;
@@ -12,9 +12,9 @@ use axum::extract::{FromRef, FromRequestParts, State};
 use crates_io_github::GitHubClient;
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
-use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
 use oauth2::basic::BasicClient;
 use oauth2::{EndpointNotSet, EndpointSet};
 

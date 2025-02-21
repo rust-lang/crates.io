@@ -3,8 +3,8 @@ use crate::tests::util::TestApp;
 use crate::worker::jobs::SyncAdmins;
 use crates_io_team_repo::{MockTeamRepo, Permission, Person};
 use crates_io_worker::BackgroundJob;
-use diesel::prelude::*;
 use diesel::QueryResult;
+use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
 

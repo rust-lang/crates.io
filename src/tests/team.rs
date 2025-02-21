@@ -1,6 +1,6 @@
 use crate::models::{Crate, CrateOwner, NewTeam};
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::{add_team_to_crate, new_team, OwnerTeamsResponse, RequestHelper, TestApp};
+use crate::tests::{OwnerTeamsResponse, RequestHelper, TestApp, add_team_to_crate, new_team};
 
 use diesel::*;
 use diesel_async::RunQueryDsl;

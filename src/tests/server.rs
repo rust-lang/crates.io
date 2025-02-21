@@ -3,7 +3,7 @@ use crate::tests::util::*;
 use std::collections::HashSet;
 
 use ::insta::assert_json_snapshot;
-use http::{header, Request, StatusCode};
+use http::{Request, StatusCode, header};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn user_agent_is_required() {

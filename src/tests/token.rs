@@ -3,7 +3,7 @@ use crate::tests::{RequestHelper, TestApp};
 use crate::{models::ApiToken, views::EncodableMe};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
