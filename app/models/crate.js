@@ -38,30 +38,25 @@ export default class Crate extends Model {
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
   @cached get versionIdsBySemver() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsBySemver`', last != null);
-    let versions = last?.value ?? [];
-    return versions
-      .slice()
+    let versions = this.versionsObj.values();
+    return Array.from(versions)
       .sort(compareVersionBySemver)
       .map(v => v.id);
   }
 
   @cached get versionIdsByDate() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsByDate`', last != null);
-    let versions = last?.value ?? [];
-    return versions
-      .slice()
+    let versions = this.versionsObj.values();
+    return Array.from(versions)
       .sort(compareVersionByDate)
       .map(v => v.id);
   }
 
-  @cached get versionsObj() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionsObj`', last != null);
-    let versions = last?.value ?? [];
-    return Object.fromEntries(versions.slice().map(v => [v.id, v]));
+  /** @return {Map<number, import("../models/version").default>} */
+  @cached
+  get versionsObj() {
+    let versionsRef = this.hasMany('versions');
+    let values = versionsRef.value();
+    return new Map(values?.map(ref => [ref.id, ref]));
   }
 
   /** @return {Map<string, import("../models/version").default>} */
@@ -76,7 +71,7 @@ export default class Crate extends Model {
     let map = new Map();
     let { versionsObj: versions, versionIdsBySemver } = this;
     for (let id of versionIdsBySemver) {
-      let { releaseTrack, isPrerelease, yanked } = versions[id];
+      let { releaseTrack, isPrerelease, yanked } = versions.get(id);
       if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
         map.set(releaseTrack, id);
       }

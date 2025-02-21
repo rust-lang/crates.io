@@ -16,6 +16,6 @@ export default class SearchController extends Controller {
   get sortedVersions() {
     let { versionIdsBySemver, versionIdsByDate, versionsObj: versions } = this.crate;
 
-    return (this.sort === 'semver' ? versionIdsBySemver : versionIdsByDate).map(id => versions[id]);
+    return (this.sort === 'semver' ? versionIdsBySemver : versionIdsByDate).map(id => versions.get(id));
   }
 }
