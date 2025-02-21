@@ -1,10 +1,10 @@
-<CrateHeader @crate={{this.model}} />
+<CrateHeader @crate={{this.crate}} />
 
 <div local-class="results-meta">
   <span local-class="page-description" data-test-page-description>
-    All <strong>{{ this.model.num_versions }}</strong>
-    versions of <strong>{{ this.model.name }}</strong> since
-    {{date-format this.model.created_at 'PPP'}}
+    All <strong>{{ this.crate.num_versions }}</strong>
+    versions of <strong>{{ this.crate.name }}</strong> since
+    {{date-format this.crate.created_at 'PPP'}}
   </span>
 
   <div data-test-search-sort>
