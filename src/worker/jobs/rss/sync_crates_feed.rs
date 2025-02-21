@@ -211,11 +211,11 @@ mod tests {
         assert_debug_snapshot!(new_crates.iter().map(|u| &u.name).collect::<Vec<_>>());
     }
 
-    fn create_crate(
+    fn create_crate<T: Into<Cow<'static, str>>>(
         conn: &mut AsyncPgConnection,
-        name: impl Into<Cow<'static, str>>,
+        name: T,
         publish_time: DateTime<Utc>,
-    ) -> impl Future<Output = i32> {
+    ) -> impl Future<Output = i32> + use<T> {
         let future = diesel::insert_into(crates::table)
             .values((
                 crates::name.eq(name.into()),

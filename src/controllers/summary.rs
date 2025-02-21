@@ -142,7 +142,7 @@ struct Record {
 fn encode_crates(
     conn: &mut AsyncPgConnection,
     data: Vec<Record>,
-) -> impl Future<Output = AppResult<Vec<EncodableCrate>>> {
+) -> impl Future<Output = AppResult<Vec<EncodableCrate>>> + use<> {
     let crate_ids = data
         .iter()
         .map(|record| record.krate.id)
