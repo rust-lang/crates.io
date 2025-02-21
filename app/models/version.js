@@ -72,10 +72,6 @@ export default class Version extends Model {
     return Date.now() - this.created_at.getTime() < EIGHT_DAYS;
   }
 
-  @cached get isFirst() {
-    return this.id === this.crate?.firstVersionId;
-  }
-
   get semver() {
     return semverParse(this.num, { loose: true });
   }

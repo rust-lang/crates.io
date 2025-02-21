@@ -57,10 +57,6 @@ export default class Crate extends Model {
       .map(v => v.id);
   }
 
-  @cached get firstVersionId() {
-    return this.versionIdsByDate.at(-1);
-  }
-
   @cached get versionsObj() {
     let { last } = this.loadVersionsTask;
     assert('`loadVersionsTask.perform()` must be called before calling `versionsObj`', last != null);
