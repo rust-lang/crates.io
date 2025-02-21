@@ -38,14 +38,14 @@ export default class Crate extends Model {
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
   @cached get versionIdsBySemver() {
-    let versions = this.versionsObj.values();
+    let versions = this.loadedVersionsById.values();
     return Array.from(versions)
       .sort(compareVersionBySemver)
       .map(v => v.id);
   }
 
   @cached get versionIdsByDate() {
-    let versions = this.versionsObj.values();
+    let versions = this.loadedVersionsById.values();
     return Array.from(versions)
       .sort(compareVersionByDate)
       .map(v => v.id);
@@ -53,7 +53,7 @@ export default class Crate extends Model {
 
   /** @return {Map<number, import("../models/version").default>} */
   @cached
-  get versionsObj() {
+  get loadedVersionsById() {
     let versionsRef = this.hasMany('versions');
     let values = versionsRef.value();
     return new Map(values?.map(ref => [ref.id, ref]));
@@ -69,7 +69,7 @@ export default class Crate extends Model {
 
   @cached get releaseTrackSet() {
     let map = new Map();
-    let { versionsObj: versions, versionIdsBySemver } = this;
+    let { loadedVersionsById: versions, versionIdsBySemver } = this;
     for (let id of versionIdsBySemver) {
       let { releaseTrack, isPrerelease, yanked } = versions.get(id);
       if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
