@@ -2,7 +2,7 @@
 extern crate tracing;
 
 use crates_io::middleware::normalize_path::normalize_path;
-use crates_io::{metrics::LogEncoder, App, Emails};
+use crates_io::{App, Emails, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
@@ -12,7 +12,7 @@ use reqwest::Client;
 use std::io::Write;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tokio::signal::unix::{signal, SignalKind};
+use tokio::signal::unix::{SignalKind, signal};
 use tower::Layer;
 
 const CORE_THREADS: usize = 4;
@@ -106,11 +106,13 @@ fn log_instance_metrics_thread(app: Arc<App>) {
         None => return,
     };
 
-    std::thread::spawn(move || loop {
-        if let Err(err) = log_instance_metrics_inner(&app) {
-            error!(?err, "log_instance_metrics error");
+    std::thread::spawn(move || {
+        loop {
+            if let Err(err) = log_instance_metrics_inner(&app) {
+                error!(?err, "log_instance_metrics error");
+            }
+            std::thread::sleep(interval);
         }
-        std::thread::sleep(interval);
     });
 }
 

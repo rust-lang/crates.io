@@ -15,7 +15,7 @@ use crate::schema::{background_jobs, crates, versions};
 use crate::util::errors::AppResult;
 use diesel::{dsl::count_star, prelude::*};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use prometheus::{proto::MetricFamily, IntGauge, IntGaugeVec};
+use prometheus::{IntGauge, IntGaugeVec, proto::MetricFamily};
 
 metrics! {
     pub struct ServiceMetrics {

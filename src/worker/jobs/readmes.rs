@@ -5,8 +5,8 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
-use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
+use diesel_async::scoped_futures::ScopedFutureExt;
 use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize)]

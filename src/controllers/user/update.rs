@@ -3,10 +3,10 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::NewEmail;
 use crate::schema::users;
-use crate::util::errors::{bad_request, server_error, AppResult};
+use crate::util::errors::{AppResult, bad_request, server_error};
+use axum::Json;
 use axum::extract::Path;
 use axum::response::Response;
-use axum::Json;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -75,7 +75,9 @@ pub async fn update_user(
                     };
 
                     if let Err(error) = state.emails.send(&email_address, email).await {
-                        warn!("Failed to send publish notifications unsubscribe email to {email_address}: {error}");
+                        warn!(
+                            "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
+                        );
                     }
                 }
             }

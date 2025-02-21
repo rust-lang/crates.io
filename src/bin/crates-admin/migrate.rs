@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Context, Error};
+use anyhow::{Context, Error, anyhow};
 use crates_io::tasks::spawn_blocking;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::AsyncPgConnection;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_migrations::{
-    embed_migrations, EmbeddedMigrations, HarnessWithOutput, MigrationHarness,
+    EmbeddedMigrations, HarnessWithOutput, MigrationHarness, embed_migrations,
 };
 
 static CATEGORIES_TOML: &str = include_str!("../../boot/categories.toml");

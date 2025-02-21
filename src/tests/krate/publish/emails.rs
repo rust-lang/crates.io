@@ -1,7 +1,7 @@
 use crate::schema::emails;
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel::{delete, update, ExpressionMethods};
+use diesel::{ExpressionMethods, delete, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 

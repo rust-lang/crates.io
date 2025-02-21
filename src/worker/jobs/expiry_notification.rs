@@ -1,6 +1,6 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::{email::Email, models::User, worker::Environment, Emails};
+use crate::{Emails, email::Email, models::User, worker::Environment};
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
@@ -46,10 +46,14 @@ async fn check(emails: &Emails, conn: &mut AsyncPgConnection) -> anyhow::Result<
         return Ok(());
     }
 
-    info!("Found {num_tokens} tokens that will expire before {before}. Sending out expiry notifications…");
+    info!(
+        "Found {num_tokens} tokens that will expire before {before}. Sending out expiry notifications…"
+    );
 
     if num_tokens == MAX_ROWS as usize {
-        warn!("The maximum number of API tokens per query has been reached. More API tokens might be processed on the next run.");
+        warn!(
+            "The maximum number of API tokens per query has been reached. More API tokens might be processed on the next run."
+        );
     }
 
     let mut success = 0;
@@ -235,9 +239,10 @@ mod tests {
         assert_eq!(sent_mail.len(), 1);
         let sent = &sent_mail[0];
         assert_eq!(&sent.0.to(), &["testuser@test.com".parse::<Address>()?]);
-        assert!(sent
-            .1
-            .contains("crates.io: Your API token \"test_token\" is about to expire"));
+        assert!(
+            sent.1
+                .contains("crates.io: Your API token \"test_token\" is about to expire")
+        );
         let updated_token = api_tokens::table
             .filter(api_tokens::id.eq(token.id))
             .filter(api_tokens::expiry_notification_at.is_not_null())

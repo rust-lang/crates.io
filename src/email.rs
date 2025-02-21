@@ -1,11 +1,11 @@
-use crate::config;
 use crate::Env;
+use crate::config;
 use lettre::address::Envelope;
-use lettre::message::header::ContentType;
 use lettre::message::Mailbox;
+use lettre::message::header::ContentType;
 use lettre::transport::file::AsyncFileTransport;
-use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::smtp::AsyncSmtpTransport;
+use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use rand::distr::{Alphanumeric, SampleString};

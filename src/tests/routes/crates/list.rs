@@ -1023,9 +1023,11 @@ async fn pagination_links_included_if_applicable() -> anyhow::Result<()> {
         Some("?letter=p&per_page=1&page=2".to_string()),
         page3.meta.prev_page
     );
-    assert!([page1.meta.total, page2.meta.total, page3.meta.total]
-        .iter()
-        .all(|w| *w == 3));
+    assert!(
+        [page1.meta.total, page2.meta.total, page3.meta.total]
+            .iter()
+            .all(|w| *w == 3)
+    );
     assert_eq!(page4.meta.total, 0);
     for p in [page1, page2, page3, page4] {
         assert!(default_versions_iter(&p.crates).all(Option::is_some));
@@ -1218,18 +1220,21 @@ async fn search_both<U: RequestHelper>(anon: &U, query: &str) -> [crate::tests::
         anon.search(&format!("page=1&{query}")).await,
         anon.search(query).await,
     );
-    assert!(offset
-        .meta
-        .next_page
-        .as_deref()
-        .unwrap_or("page=2")
-        .contains("page=2"));
-    assert!(seek
-        .meta
-        .next_page
-        .as_deref()
-        .unwrap_or("seek=")
-        .contains("seek="));
+    assert!(
+        offset
+            .meta
+            .next_page
+            .as_deref()
+            .unwrap_or("page=2")
+            .contains("page=2")
+    );
+    assert!(
+        seek.meta
+            .next_page
+            .as_deref()
+            .unwrap_or("seek=")
+            .contains("seek=")
+    );
     assert!(default_versions_iter(&offset.crates).all(Option::is_some));
     assert!(default_versions_iter(&seek.crates).all(Option::is_some));
     [offset, seek]
@@ -1288,8 +1293,8 @@ async fn querystring_rank(
 ) -> indexmap::IndexMap<String, f32> {
     use diesel_full_text_search::configuration::TsConfigurationByName;
     use diesel_full_text_search::{plainto_tsquery_with_search_config, ts_rank_cd};
-    use futures_util::future::ready;
     use futures_util::TryStreamExt;
+    use futures_util::future::ready;
 
     let tsquery = plainto_tsquery_with_search_config(TsConfigurationByName("english"), q);
     let rank = ts_rank_cd(crates::textsearchable_index_col, tsquery);

@@ -4,11 +4,11 @@ use axum::{Json, Router};
 use http::{Method, StatusCode};
 use utoipa_axum::routes;
 
+use crate::Env;
 use crate::app::AppState;
 use crate::controllers::*;
 use crate::openapi::BaseOpenApi;
 use crate::util::errors::not_found;
-use crate::Env;
 
 #[allow(deprecated)]
 pub fn build_axum_router(state: AppState) -> Router<()> {

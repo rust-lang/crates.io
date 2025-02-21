@@ -1,5 +1,5 @@
 use crate::models::Crate;
-use crate::util::errors::{crate_not_found, AppResult};
+use crate::util::errors::{AppResult, crate_not_found};
 use axum::extract::{FromRequestParts, Path};
 use crates_io_database::schema::crates;
 use diesel::{OptionalExtension, QueryDsl};

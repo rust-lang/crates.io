@@ -3,12 +3,12 @@ use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
-use crate::util::errors::{bad_request, AppResult};
 use crate::util::HeaderMapExt;
+use crate::util::errors::{AppResult, bad_request};
 use std::num::NonZeroU32;
 
 use axum::extract::FromRequestParts;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
@@ -133,8 +133,9 @@ impl PaginationOptionsBuilder {
                 {
                     parts.request_log().add("cause", "large page offset");
 
-                    let error =
-                            format!("Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.");
+                    let error = format!(
+                        "Page {numeric_page} is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives."
+                    );
 
                     return Err(bad_request(error));
                 }
@@ -387,10 +388,8 @@ impl<T, C> QueryId for PaginatedQueryWithCountSubq<T, C> {
     type QueryId = ();
 }
 
-impl<
-        T: Query,
-        C: Query + QueryDsl + diesel::query_dsl::methods::SelectDsl<diesel::dsl::CountStar>,
-    > Query for PaginatedQueryWithCountSubq<T, C>
+impl<T: Query, C: Query + QueryDsl + diesel::query_dsl::methods::SelectDsl<diesel::dsl::CountStar>>
+    Query for PaginatedQueryWithCountSubq<T, C>
 {
     type SqlType = (T::SqlType, BigInt);
 }
@@ -639,8 +638,8 @@ mod tests {
     }
 
     mod seek {
-        use chrono::serde::ts_microseconds;
         use chrono::Utc;
+        use chrono::serde::ts_microseconds;
 
         seek!(
             pub(super) enum Seek {
@@ -662,8 +661,8 @@ mod tests {
 
     #[test]
     fn test_seek_macro_encode_and_decode() {
-        use chrono::serde::ts_microseconds;
         use chrono::NaiveDate;
+        use chrono::serde::ts_microseconds;
         use seek::*;
 
         let assert_decode_after = |seek: Seek, query: &str, expect| {

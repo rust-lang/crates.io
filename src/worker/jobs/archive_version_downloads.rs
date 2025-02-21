@@ -2,7 +2,7 @@ use super::IndexVersionDownloadsArchive;
 use crate::schema::version_downloads;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use chrono::{NaiveDate, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -10,8 +10,8 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use object_store::ObjectStore;
 use secrecy::{ExposeSecret, SecretString};
-use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
@@ -93,7 +93,9 @@ async fn export(
 
     info!("Exporting version downloads to CSV file…");
     let instant = Instant::now();
-    let command = format!("\\copy (SELECT date, version_id, downloads FROM version_downloads WHERE date < '{before}') TO '{filename}' WITH CSV HEADER");
+    let command = format!(
+        "\\copy (SELECT date, version_id, downloads FROM version_downloads WHERE date < '{before}') TO '{filename}' WITH CSV HEADER"
+    );
     psql(database_url, &command).await?;
 
     let elapsed = instant.elapsed();

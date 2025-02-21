@@ -12,8 +12,8 @@ mod static_or_continue;
 mod update_metrics;
 
 use ::sentry::integrations::tower as sentry_tower;
-use axum::middleware::{from_fn, from_fn_with_state};
 use axum::Router;
+use axum::middleware::{from_fn, from_fn_with_state};
 use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
 use std::time::Duration;
@@ -23,8 +23,8 @@ use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::timeout::{RequestBodyTimeoutLayer, TimeoutLayer};
 
-use crate::app::AppState;
 use crate::Env;
+use crate::app::AppState;
 
 pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
     let config = &state.config;

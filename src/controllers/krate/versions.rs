@@ -7,21 +7,21 @@ use axum_extra::response::ErasedJson;
 use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{future, TryStreamExt};
+use futures_util::{TryStreamExt, future};
 use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
 use std::str::FromStr;
 
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{
-    encode_seek, Page, PaginationOptions, PaginationQueryParams,
+    Page, PaginationOptions, PaginationQueryParams, encode_seek,
 };
 use crate::controllers::krate::CratePath;
 use crate::models::{User, Version, VersionOwnerAction};
 use crate::schema::{users, versions};
-use crate::util::errors::{bad_request, AppResult, BoxedAppError};
-use crate::util::string_excl_null::StringExclNull;
 use crate::util::RequestUtils;
+use crate::util::errors::{AppResult, BoxedAppError, bad_request};
+use crate::util::string_excl_null::StringExclNull;
 use crate::views::EncodableVersion;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -374,8 +374,8 @@ async fn list_by_semver(
 mod seek {
     use crate::controllers::helpers::pagination::seek;
     use crate::models::{User, Version};
-    use chrono::serde::ts_microseconds;
     use chrono::Utc;
+    use chrono::serde::ts_microseconds;
 
     // We might consider refactoring this to use named fields, which would be clearer and more
     // flexible. It's also worth noting that we currently encode seek compactly as a Vec, which

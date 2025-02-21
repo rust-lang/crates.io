@@ -1,5 +1,5 @@
-use axum::response::{IntoResponse, Response};
 use axum::Extension;
+use axum::response::{IntoResponse, Response};
 use axum_extra::json;
 use std::borrow::Cow;
 use std::fmt;
@@ -9,7 +9,7 @@ use super::{AppError, BoxedAppError};
 use crate::middleware::log_request::CauseField;
 use crate::rate_limiter::LimitedAction;
 use chrono::{DateTime, Utc};
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 
 /// Generates a response with the provided status and description as JSON
 fn json_error(detail: &str, status: StatusCode) -> Response {
@@ -95,8 +95,7 @@ impl AppError for InsecurelyGeneratedTokenRevoked {
     }
 }
 
-pub const TOKEN_FORMAT_ERROR: &str =
-    "The given API token does not match the format used by crates.io. \
+pub const TOKEN_FORMAT_ERROR: &str = "The given API token does not match the format used by crates.io. \
     \
     Tokens generated before 2020-07-14 were generated with an insecure \
     random number generator, and have been revoked. You can generate a \

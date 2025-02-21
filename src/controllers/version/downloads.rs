@@ -7,7 +7,7 @@ use crate::app::AppState;
 use crate::models::VersionDownload;
 use crate::schema::*;
 use crate::util::errors::AppResult;
-use crate::util::{redirect, RequestUtils};
+use crate::util::{RequestUtils, redirect};
 use crate::views::EncodableVersionDownload;
 use axum::extract::{FromRequestParts, Query};
 use axum::response::{IntoResponse, Response};

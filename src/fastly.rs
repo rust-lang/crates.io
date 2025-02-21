@@ -1,6 +1,6 @@
-use anyhow::{anyhow, Context};
-use reqwest::header::{HeaderMap, HeaderValue};
+use anyhow::{Context, anyhow};
 use reqwest::Client;
+use reqwest::header::{HeaderMap, HeaderValue};
 use secrecy::{ExposeSecret, SecretString};
 
 #[derive(Debug)]

@@ -1,11 +1,11 @@
 #[tokio::test(flavor = "multi_thread")]
 async fn uploading_new_version_touches_crate() {
     use crate::schema::crates;
+    use crate::tests::CrateResponse;
     use crate::tests::builders::PublishBuilder;
     use crate::tests::util::{RequestHelper, TestApp};
-    use crate::tests::CrateResponse;
-    use diesel::dsl::*;
     use diesel::ExpressionMethods;
+    use diesel::dsl::*;
     use diesel_async::RunQueryDsl;
 
     let (app, _, user) = TestApp::full().with_user().await;

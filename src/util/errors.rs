@@ -33,7 +33,7 @@ use crate::email::EmailError;
 use crate::util::diesel::is_read_only_error;
 use crates_io_github::GitHubError;
 pub use json::TOKEN_FORMAT_ERROR;
-pub(crate) use json::{custom, InsecurelyGeneratedTokenRevoked, TooManyRequests};
+pub(crate) use json::{InsecurelyGeneratedTokenRevoked, TooManyRequests, custom};
 
 pub type BoxedAppError = Box<dyn AppError>;
 

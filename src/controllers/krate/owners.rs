@@ -3,14 +3,14 @@
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
 use crate::models::krate::OwnerRemoveError;
-use crate::models::{
-    krate::NewOwnerInvite, token::EndpointScope, CrateOwner, NewCrateOwnerInvitation,
-    NewCrateOwnerInvitationOutcome, NewTeam,
-};
 use crate::models::{Crate, Owner, Team, User};
-use crate::util::errors::{bad_request, crate_not_found, custom, AppResult, BoxedAppError};
+use crate::models::{
+    CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
+    krate::NewOwnerInvite, token::EndpointScope,
+};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
 use crate::views::EncodableOwner;
-use crate::{app::AppState, App};
+use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::Email};
 use axum::Json;
 use axum_extra::json;
@@ -20,8 +20,8 @@ use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use http::request::Parts;
 use http::StatusCode;
+use http::request::Parts;
 use oauth2::AccessToken;
 use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;

@@ -6,7 +6,7 @@ use crate::models::token::EndpointScope;
 use crate::models::{Crate, NewVersionOwnerAction, Version, VersionAction, VersionOwnerAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::{bad_request, custom, AppResult};
+use crate::util::errors::{AppResult, bad_request, custom};
 use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use axum::Json;
@@ -15,8 +15,8 @@ use axum_extra::response::ErasedJson;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use http::request::Parts;
 use http::StatusCode;
+use http::request::Parts;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

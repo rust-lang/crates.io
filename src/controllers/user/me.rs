@@ -7,8 +7,8 @@ use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
 use crate::app::AppState;
-use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::controllers::helpers::Paginate;
+use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};

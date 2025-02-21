@@ -1,8 +1,8 @@
 use diesel_async::AsyncPgConnection;
 use std::sync::Arc;
 use thiserror::Error;
-use typomania::checks::{Bitflips, Omitted, SwappedWords, Typos};
 use typomania::Harness;
+use typomania::checks::{Bitflips, Omitted, SwappedWords, Typos};
 
 use super::{checks::Affixes, config, database::TopCrates};
 
@@ -39,7 +39,9 @@ impl Cache {
 
         if emails.is_empty() {
             // If we're not notifying anyone, then there's really not much to do here.
-            warn!("$TYPOSQUAT_NOTIFICATION_EMAILS is not set; no typosquatting notifications will be sent");
+            warn!(
+                "$TYPOSQUAT_NOTIFICATION_EMAILS is not set; no typosquatting notifications will be sent"
+            );
             Ok(Self {
                 emails,
                 harness: None,

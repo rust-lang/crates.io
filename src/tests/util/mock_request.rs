@@ -1,5 +1,5 @@
 use axum::body::Bytes;
-use http::{header, header::IntoHeaderName, HeaderValue, Request};
+use http::{HeaderValue, Request, header, header::IntoHeaderName};
 
 pub type MockRequest = Request<Bytes>;
 
@@ -37,7 +37,7 @@ mod tests {
     use super::{MockRequest, MockRequestExt};
 
     use axum::body::Bytes;
-    use hyper::http::{header, Method, Request};
+    use hyper::http::{Method, Request, header};
 
     pub fn mock_request(method: Method, path: &str) -> MockRequest {
         Request::builder()

@@ -1,8 +1,8 @@
+use axum::Json;
 use axum::extract::{MatchedPath, Request, State};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
-use http::{header, Method, StatusCode};
+use http::{Method, StatusCode, header};
 use std::str::FromStr;
 
 #[derive(Clone, Copy, Debug)]
@@ -131,10 +131,10 @@ async fn convert_to_json_response(res: Response) -> anyhow::Result<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::Router;
     use axum::body::Body;
     use axum::middleware::from_fn_with_state;
     use axum::routing::{get, put};
-    use axum::Router;
     use bytes::Bytes;
     use http::response::Parts;
     use http::{Request, StatusCode};

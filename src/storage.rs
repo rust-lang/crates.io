@@ -443,7 +443,11 @@ mod tests {
         let storage = Storage::from_config(&config);
 
         let crate_tests = vec![
-            ("foo", "1.2.3", "https://static.crates.io/crates/foo/foo-1.2.3.crate"),
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/crates/foo/foo-1.2.3.crate",
+            ),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",
@@ -455,7 +459,11 @@ mod tests {
         }
 
         let readme_tests = vec![
-            ("foo", "1.2.3", "https://static.crates.io/readmes/foo/foo-1.2.3.html"),
+            (
+                "foo",
+                "1.2.3",
+                "https://static.crates.io/readmes/foo/foo-1.2.3.html",
+            ),
             (
                 "some-long-crate-name",
                 "42.0.5-beta.1+foo",

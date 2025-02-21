@@ -1,8 +1,8 @@
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
-use crate::util::errors::{forbidden, AppResult};
+use crate::util::errors::{AppResult, forbidden};
 use http::request::Parts;
-use http::{header, Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version};
+use http::{Extensions, HeaderMap, HeaderValue, Method, Request, Uri, Version, header};
 
 /// The Origin header (<https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin>)
 /// is sent with CORS requests and POST requests, and indicates where the request comes from.

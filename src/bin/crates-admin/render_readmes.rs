@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use crates_io::db;
 use crates_io::models::Version;
 use crates_io::schema::{crates, readme_renderings, versions};
@@ -17,7 +17,7 @@ use crates_io_tarball::{Manifest, StringOrBool};
 use diesel::prelude::*;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use reqwest::{header, Client};
+use reqwest::{Client, header};
 use std::str::FromStr;
 use tokio_tar::{self, Archive};
 

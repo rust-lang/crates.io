@@ -1,5 +1,5 @@
-use axum::extract::{FromRequestParts, Query};
 use axum::Json;
+use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
@@ -15,7 +15,7 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
-use crate::util::errors::{bad_request, server_error, AppResult};
+use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 use crates_io_session::SessionExtension;

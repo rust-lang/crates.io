@@ -1,14 +1,14 @@
+use crate::Emails;
 use crate::cloudfront::CloudFront;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::typosquat;
-use crate::Emails;
 use anyhow::Context;
 use bon::Builder;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_team_repo::TeamRepo;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::ObjectStore;
 use parking_lot::{Mutex, MutexGuard};
 use std::ops::{Deref, DerefMut};

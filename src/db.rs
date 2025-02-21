@@ -1,7 +1,7 @@
 use crate::certs::CRUNCHY;
 use diesel::{ConnectionResult, QueryResult};
-use diesel_async::pooled_connection::deadpool::{Hook, HookError};
 use diesel_async::pooled_connection::ManagerConfig;
+use diesel_async::pooled_connection::deadpool::{Hook, HookError};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use native_tls::{Certificate, TlsConnector};
 use postgres_native_tls::MakeTlsConnector;

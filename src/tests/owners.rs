@@ -3,7 +3,7 @@ use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{
     MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response,
 };
-use crate::tests::{add_team_to_crate, new_team, TestApp};
+use crate::tests::{TestApp, add_team_to_crate, new_team};
 use crate::views::{
     EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };

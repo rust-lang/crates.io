@@ -4,7 +4,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::ok_true;
 use crate::models::Email;
 use crate::util::errors::AppResult;
-use crate::util::errors::{bad_request, BoxedAppError};
+use crate::util::errors::{BoxedAppError, bad_request};
 use axum::extract::Path;
 use axum::response::Response;
 use crates_io_database::schema::emails;

@@ -12,7 +12,7 @@ use crate::models::{
 };
 use crate::schema::*;
 use crate::util::errors::{
-    bad_request, crate_not_found, version_not_found, AppResult, BoxedAppError,
+    AppResult, BoxedAppError, bad_request, crate_not_found, version_not_found,
 };
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
 use axum::extract::{FromRequestParts, Query};
@@ -251,8 +251,7 @@ impl Default for ShowIncludeMode {
 }
 
 impl ShowIncludeMode {
-    const INVALID_COMPONENT: &'static str =
-        "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', 'default_version', or 'full')";
+    const INVALID_COMPONENT: &'static str = "invalid component for ?include= (expected 'versions', 'keywords', 'categories', 'badges', 'downloads', 'default_version', or 'full')";
 }
 
 impl FromStr for ShowIncludeMode {

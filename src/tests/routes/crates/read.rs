@@ -11,7 +11,7 @@ async fn show() {
     let user = user.as_model();
 
     use crate::schema::versions;
-    use diesel::{update, ExpressionMethods};
+    use diesel::{ExpressionMethods, update};
 
     CrateBuilder::new("foo_show", user.id)
         .description("description")

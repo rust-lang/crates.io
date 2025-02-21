@@ -1,7 +1,7 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
 use googletest::assert_that;
 use googletest::matchers::ends_with;
 use http::StatusCode;
