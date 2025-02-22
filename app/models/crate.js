@@ -45,20 +45,6 @@ export default class Crate extends Model {
   @hasMany('category', { async: true, inverse: null }) categories;
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
-  @cached get versionIdsBySemver() {
-    let versions = this.loadedVersionsById.values();
-    return Array.from(versions)
-      .sort(compareVersionBySemver)
-      .map(v => v.id);
-  }
-
-  @cached get versionIdsByDate() {
-    let versions = this.loadedVersionsById.values();
-    return Array.from(versions)
-      .sort(compareVersionByDate)
-      .map(v => v.id);
-  }
-
   /** @return {Map<number, import("../models/version").default>} */
   @cached
   get loadedVersionsById() {
@@ -137,26 +123,4 @@ export default class Crate extends Model {
     let fut = reload === true ? versionsRef.reload() : versionsRef.load();
     return (await fut) ?? [];
   });
-}
-
-function compareVersionBySemver(a, b) {
-  let aSemver = a.semver;
-  let bSemver = b.semver;
-
-  if (aSemver === bSemver) {
-    return b.created_at - a.created_at;
-  } else if (aSemver === null) {
-    return 1;
-  } else if (bSemver === null) {
-    return -1;
-  } else {
-    return bSemver.compare(aSemver);
-  }
-}
-
-function compareVersionByDate(a, b) {
-  let bDate = b.created_at.getTime();
-  let aDate = a.created_at.getTime();
-
-  return bDate === aDate ? parseInt(b.id) - parseInt(a.id) : bDate - aDate;
 }
