@@ -29,6 +29,14 @@ export default class Crate extends Model {
   @attr documentation;
   @attr repository;
 
+  /**
+   * This isn't an attribute in the crate response.
+   * It's actually the `meta` attribute that belongs to `versions`
+   * and needs to be assigned to `crate` manually.
+   * @type {Object.<string, {highest: string}>?}
+   **/
+  @attr release_tracks;
+
   @hasMany('version', { async: true, inverse: 'crate' }) versions;
   @hasMany('team', { async: true, inverse: null }) owner_team;
   @hasMany('user', { async: true, inverse: null }) owner_user;
@@ -68,15 +76,9 @@ export default class Crate extends Model {
   }
 
   @cached get releaseTrackSet() {
-    let map = new Map();
-    let { loadedVersionsById: versions, versionIdsBySemver } = this;
-    for (let id of versionIdsBySemver) {
-      let { releaseTrack, isPrerelease, yanked } = versions.get(id);
-      if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
-        map.set(releaseTrack, id);
-      }
-    }
-    return new Set(map.values());
+    let { release_tracks } = this;
+    let nums = release_tracks ? Object.values(this.release_tracks).map(it => it.highest) : [];
+    return new Set(nums);
   }
 
   hasOwnerUser(userId) {

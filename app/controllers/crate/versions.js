@@ -52,6 +52,7 @@ export default class SearchController extends Controller {
     if (next_page) {
       let params = new URLSearchParams(next_page);
       params.set('name', crate.name);
+      params.delete('include');
       query = Object.fromEntries(params.entries());
     } else {
       if (sort !== 'semver') {
@@ -62,6 +63,9 @@ export default class SearchController extends Controller {
         sort,
         per_page,
       };
+    }
+    if (crate.release_tracks == null) {
+      query.include = 'release_tracks';
     }
 
     try {
@@ -82,6 +86,18 @@ export default class SearchController extends Controller {
           next_page: meta.next_page,
         };
       }
+
+      // set release_tracks to crate
+      if (meta.release_tracks) {
+        let payload = {
+          crate: {
+            id: crate.id,
+            release_tracks: meta.release_tracks,
+          },
+        };
+        this.store.pushPayload(payload);
+      }
+
       return versions;
     } catch (error) {
       // report unexpected errors to Sentry and ignore `ajax()` errors
