@@ -133,7 +133,7 @@
         outline: 0;
         border: 0;
         background-color: light-dark(#dbd9cf, #202023);
-        color: white;
+        color: light-dark(#525252, #f9f7ec);
 
         &:hover, &:focus {
             background-color: light-dark(#c5c2b2, #26262b);
