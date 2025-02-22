@@ -161,7 +161,10 @@
         "@babel/core",
         "postcss"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "msw"
+    ]
   },
   "engines": {
     "node": "22.14.0",
