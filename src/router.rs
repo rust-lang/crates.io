@@ -110,12 +110,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
     }
 
     router
-        .route("/api/openapi.json", get(|| async { Json(openapi) }))
-        .fallback(|method: Method| async move {
-            match method {
-                Method::HEAD => StatusCode::NOT_FOUND.into_response(),
-                _ => not_found().into_response(),
-            }
+        .route("/api/openapi.json", get(async || Json(openapi)))
+        .fallback(async |method: Method| match method {
+            Method::HEAD => StatusCode::NOT_FOUND.into_response(),
+            _ => not_found().into_response(),
         })
         .with_state(state)
 }

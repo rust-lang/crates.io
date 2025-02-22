@@ -142,10 +142,9 @@ mod tests {
     use tower::ServiceExt;
 
     fn build_app() -> Router {
-        let okay = get(|| async { "Everything is okay" });
-        let teapot = get(|| async { (StatusCode::IM_A_TEAPOT, "I'm a teapot") });
-        let internal =
-            get(|| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") });
+        let okay = get(async || "Everything is okay");
+        let teapot = get(async || (StatusCode::IM_A_TEAPOT, "I'm a teapot"));
+        let internal = get(async || (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"));
 
         Router::new()
             .route("/api/ok", okay.clone())
@@ -153,10 +152,10 @@ mod tests {
             .route("/teapot", teapot)
             .route("/api/500", internal.clone())
             .route("/500", internal)
-            .route("/api/v1/crates/new", put(|| async { StatusCode::CREATED }))
+            .route("/api/v1/crates/new", put(async || StatusCode::CREATED))
             .route(
                 "/api/v1/crates/{crate_id}/owners",
-                get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+                get(async || StatusCode::INTERNAL_SERVER_ERROR),
             )
             .layer(from_fn_with_state(StatusCodeConfig::AdjustAll, middleware))
     }

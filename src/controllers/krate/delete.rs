@@ -236,7 +236,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_query_params() -> anyhow::Result<()> {
-        let check = |uri| async move {
+        let check = async |uri| {
             let request = Request::builder().uri(uri).body(())?;
             let (mut parts, _) = request.into_parts();
             Ok::<_, anyhow::Error>(parts.extract::<DeleteQueryParams>().await?)
