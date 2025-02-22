@@ -41,11 +41,11 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@floating-ui/dom": "1.6.13",
     "@juggle/resize-observer": "3.4.0",
     "@sentry/ember": "9.1.0",
     "chart.js": "4.4.8",
     "date-fns": "4.1.0",
-    "@floating-ui/dom": "1.6.13",
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
     "mermaid": "11.4.1",
@@ -66,8 +66,8 @@
     "@embroider/compat": "3.8.2",
     "@embroider/core": "3.5.2",
     "@embroider/webpack": "4.1.0",
-    "@eslint/js": "9.21.0",
     "@eslint/eslintrc": "3.3.0",
+    "@eslint/js": "9.21.0",
     "@glimmer/component": "2.0.0",
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.6.0",
@@ -161,7 +161,10 @@
         "@babel/core",
         "postcss"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "msw"
+    ]
   },
   "engines": {
     "node": "22.14.0",
