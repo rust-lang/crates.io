@@ -1,12 +1,14 @@
 //! Endpoint for triggering a docs.rs rebuild
 
-use super::update::authenticate;
 use super::CrateVersionPath;
+use super::update::authenticate;
 use crate::app::AppState;
-use crate::controllers::helpers::ok_true;
 use crate::rate_limiter::LimitedAction;
-use crate::util::errors::{forbidden, AppResult};
+use crate::util::HeaderMapExt;
+use crate::util::errors::{AppResult, forbidden};
+use axum::body::Body;
 use axum::response::Response;
+use http::HeaderValue;
 use http::request::Parts;
 
 /// Trigger a rebuild for the crate documentation on docs.rs.
@@ -52,20 +54,17 @@ pub async fn rebuild_version_docs(
         .send()
         .await?;
 
-    let status= = response.status();
+    const APPLICATION_JSON: HeaderValue = HeaderValue::from_static("application/json");
 
-    // reqwest::
-
-    // perform_version_yank_update(
-    //     &state,
-    //     &mut conn,
-    //     &mut version,
-    //     &krate,
-    //     &auth,
-    //     Some(yanked),
-    //     None,
-    // )
-    // .await?;
-
-    ok_true()
+    Ok(Response::builder()
+        .status(response.status())
+        .header(
+            "content-type",
+            response
+                .headers()
+                .get("content-type")
+                .unwrap_or(&APPLICATION_JSON),
+        )
+        .body(Body::from_stream(response.bytes_stream()))
+        .unwrap())
 }
