@@ -2,14 +2,17 @@ import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
-import { dropTask } from 'ember-concurrency';
+import { didCancel, dropTask } from 'ember-concurrency';
 import { alias } from 'macro-decorators';
+
+import { AjaxError } from '../../utils/ajax';
 
 function defaultVersionsContext() {
   return { data: [], next_page: undefined };
 }
 
 export default class SearchController extends Controller {
+  @service sentry;
   @service store;
 
   queryParams = ['per_page', 'sort'];
@@ -60,24 +63,32 @@ export default class SearchController extends Controller {
         per_page,
       };
     }
-    let versions = await this.store.query('version', query);
-    let meta = versions.meta;
 
-    let ids = versions.map(it => it.id);
-    if (sort === 'semver') {
-      this.bySemver = {
-        ...versionsContext,
-        data: data.concat(ids),
-        next_page: meta.next_page,
-      };
-    } else {
-      this.byDate = {
-        ...versionsContext,
-        data: data.concat(ids),
-        next_page: meta.next_page,
-      };
+    try {
+      let versions = await this.store.query('version', query);
+      let meta = versions.meta;
+
+      let ids = versions.map(it => it.id);
+      if (sort === 'semver') {
+        this.bySemver = {
+          ...versionsContext,
+          data: data.concat(ids),
+          next_page: meta.next_page,
+        };
+      } else {
+        this.byDate = {
+          ...versionsContext,
+          data: data.concat(ids),
+          next_page: meta.next_page,
+        };
+      }
+      return versions;
+    } catch (error) {
+      // report unexpected errors to Sentry and ignore `ajax()` errors
+      if (!didCancel(error) && !(error instanceof AjaxError)) {
+        this.sentry.captureException(error);
+      }
     }
-    return versions;
   });
 
   reset() {

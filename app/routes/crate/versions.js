@@ -22,7 +22,6 @@ export default class VersionsRoute extends Route {
     controller.set('crate', crate);
     // Fetch initial data only if empty
     if (controller.data.length === 0) {
-      // TODO: Add error handling
       waitForPromise(controller.loadMoreTask.perform());
     }
   }
