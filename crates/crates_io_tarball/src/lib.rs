@@ -326,7 +326,7 @@ mod tests {
 
     #[tokio::test]
     async fn process_tarball_test_incorrect_manifest_casing() {
-        let process = |file| async move {
+        let process = async |file| {
             let tarball = TarballBuilder::new()
                 .add_file(&format!("foo-0.0.1/{file}"), MANIFEST)
                 .build();
@@ -343,7 +343,7 @@ mod tests {
 
     #[tokio::test]
     async fn process_tarball_test_multiple_manifests() {
-        let process = |files: Vec<_>| async move {
+        let process = async |files: Vec<_>| {
             let tarball = files
                 .iter()
                 .fold(TarballBuilder::new(), |builder, file| {

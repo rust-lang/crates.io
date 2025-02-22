@@ -75,7 +75,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                 let job_id = job.id;
                 debug!("Running job…");
 
-                let future = with_sentry_transaction(&job.job_type, || async {
+                let future = with_sentry_transaction(&job.job_type, async || {
                     let run_task_fn = job_registry
                         .get(&job.job_type)
                         .ok_or_else(|| anyhow!("Unknown job type {}", job.job_type))?;

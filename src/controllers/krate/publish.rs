@@ -527,11 +527,11 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             git_index_job.enqueue(conn),
             sparse_index_job.enqueue(conn),
             publish_notifications_job.enqueue(conn),
-            crate_feed_job.enqueue(conn).or_else(|error| async move {
+            crate_feed_job.enqueue(conn).or_else(async |error| {
                 error!("Failed to enqueue `rss::SyncCrateFeed` job: {error}");
                 Ok::<_, EnqueueError>(None)
             }),
-            updates_feed_job.enqueue(conn).or_else(|error| async move {
+            updates_feed_job.enqueue(conn).or_else(async |error| {
                 error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
                 Ok::<_, EnqueueError>(None)
             }),
@@ -543,11 +543,11 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             let typosquat_job = CheckTyposquat::new(&krate.name);
 
             tokio::try_join!(
-                crates_feed_job.enqueue(conn).or_else(|error| async move {
+                crates_feed_job.enqueue(conn).or_else(async |error| {
                     error!("Failed to enqueue `rss::SyncCratesFeed` job: {error}");
                     Ok::<_, EnqueueError>(None)
                 }),
-                typosquat_job.enqueue(conn).or_else(|error| async move {
+                typosquat_job.enqueue(conn).or_else(async |error| {
                     error!("Failed to enqueue `CheckTyposquat` job: {error}");
                     Ok::<_, EnqueueError>(None)
                 }),

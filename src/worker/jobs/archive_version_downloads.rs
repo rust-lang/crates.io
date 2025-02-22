@@ -191,7 +191,7 @@ async fn upload(
 
     let directory = directory.as_ref();
     let uploaded_dates = futures_util::stream::iter(dates)
-        .map(|date| async move {
+        .map(async |date| {
             let path = directory.join(format!("{date}.csv"));
             let result = upload_file(store, &path).await;
             result.map(|_| date).inspect_err(|error| {
