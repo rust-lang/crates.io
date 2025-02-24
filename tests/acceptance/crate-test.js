@@ -249,4 +249,14 @@ module('Acceptance | crate page', function (hooks) {
 
     assert.strictEqual(currentURL(), '/crates/nanomsg/settings');
   });
+
+  test('keywords are shown when navigating from search', async function (assert) {
+    loadFixtures(this.db);
+
+    await visit('/search?q=nanomsg');
+    await click('[data-test-crate-link]');
+
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-keyword]').exists();
+  });
 });

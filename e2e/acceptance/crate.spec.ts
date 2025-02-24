@@ -245,4 +245,14 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg/settings');
   });
+
+  test('keywords are shown when navigating from search', async ({ page, msw }) => {
+    loadFixtures(msw.db);
+
+    await page.goto('/search?q=nanomsg');
+    await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
+
+    await expect(page).toHaveURL('/crates/nanomsg');
+    await expect(page.locator('[data-test-keyword]')).toBeVisible();
+  });
 });

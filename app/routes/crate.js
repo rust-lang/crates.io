@@ -12,7 +12,15 @@ export default class CrateRoute extends Route {
     let crateName = params.crate_id;
 
     try {
-      return this.store.peekRecord('crate', crateName) || (await this.store.queryRecord('crate', { name: crateName }));
+      // We would like the peeked crate to include information (such as keywords) for further
+      // processing. Currently, we determine this by checking if associated versions exist,
+      // as default_version is included in the queryRecord call.
+      // See: https://github.com/rust-lang/crates.io/issues/10663
+      let crate = this.store.peekRecord('crate', crateName);
+      if (!crate || crate.hasMany('versions').value() == null) {
+        crate = await this.store.queryRecord('crate', { name: crateName });
+      }
+      return crate;
     } catch (error) {
       if (error instanceof NotFoundError) {
         let title = `${crateName}: Crate not found`;
