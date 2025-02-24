@@ -1,5 +1,6 @@
 import { expect, test } from '@/e2e/helper';
 import { loadFixtures } from '@crates-io/msw/fixtures';
+import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
   // should match the default set in the crates controller
@@ -78,5 +79,26 @@ test.describe('Acceptance | crates page', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-recent-downloads]')).toHaveText('Recent: 2,000');
+  });
+
+  test('shows error message screen', async ({ page, msw }) => {
+    loadFixtures(msw.db);
+
+    let detail =
+      'Page 1 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.';
+    let error = HttpResponse.json({ errors: [{ detail }] }, { status: 400 });
+    await msw.worker.use(http.get('/api/v1/crates', () => error));
+
+    await page.goto('/crates');
+    await expect(page.locator('[data-test-404-page]')).toBeVisible();
+    await expect(page.locator('[data-test-title]')).toHaveText('Failed to load crate list');
+    await expect(page.locator('[data-test-details]')).toHaveText(detail);
+    await expect(page.locator('[data-test-try-again]')).toBeVisible();
+    await expect(page.locator('[data-test-go-back]')).not.toBeVisible();
+
+    await msw.worker.resetHandlers();
+    await page.click('[data-test-try-again]');
+    await expect(page.locator('[data-test-404-page]')).not.toBeVisible();
+    await expect(page.locator('[data-test-crate-row]')).toHaveCount(23);
   });
 });

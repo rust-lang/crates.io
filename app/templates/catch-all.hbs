@@ -4,6 +4,10 @@
 
     <h1 local-class="title" data-test-title>{{or @model.title "Page not found"}}</h1>
 
+    {{#if @model.details}}
+      <p local-class="details" data-test-details>{{@model.details}}</p>
+    {{/if}}
+
     {{#if @model.loginNeeded}}
       <button
         type="button"

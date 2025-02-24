@@ -1,14 +1,16 @@
-import { click, currentURL, visit } from '@ember/test-helpers';
+import { click, currentURL } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
 import percySnapshot from '@percy/ember';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 import { getPageTitle } from 'ember-page-title/test-support';
+import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 import axeConfig from '../axe-config';
+import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crates page', function (hooks) {
   setupApplicationTest(hooks, { msw: true });
@@ -91,5 +93,26 @@ module('Acceptance | crates page', function (hooks) {
 
     let formatted = Number(2000).toLocaleString();
     assert.dom('[data-test-crate-row="0"] [data-test-recent-downloads]').hasText(`Recent: ${formatted}`);
+  });
+
+  test('shows error message screen', async function (assert) {
+    loadFixtures(this.db);
+
+    let detail =
+      'Page 1 is unavailable for performance reasons. Please take a look at https://crates.io/data-access for alternatives.';
+    let error = HttpResponse.json({ errors: [{ detail }] }, { status: 400 });
+    this.worker.use(http.get('/api/v1/crates', () => error));
+
+    await visit('/crates');
+    assert.dom('[data-test-404-page]').exists();
+    assert.dom('[data-test-title]').hasText('Failed to load crate list');
+    assert.dom('[data-test-details]').hasText(detail);
+    assert.dom('[data-test-try-again]').exists();
+    assert.dom('[data-test-go-back]').doesNotExist();
+
+    this.worker.resetHandlers();
+    await click('[data-test-try-again]');
+    assert.dom('[data-test-404-page]').doesNotExist();
+    assert.dom('[data-test-crate-row]').exists({ count: 23 });
   });
 });
