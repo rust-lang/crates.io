@@ -158,11 +158,23 @@ impl From<VersionDownload> for EncodableVersionDownload {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = Keyword)]
 pub struct EncodableKeyword {
+    /// An opaque identifier for the keyword.
+    #[schema(example = "http")]
     pub id: String,
+
+    /// The keyword itself.
+    #[schema(example = "http")]
     pub keyword: String,
+
+    /// The date and time this keyword was created.
+    #[schema(example = "2017-01-06T14:23:11Z")]
     pub created_at: DateTime<Utc>,
+
+    /// The total number of crates that have this keyword.
+    #[schema(example = 42)]
     pub crates_cnt: i32,
 }
 

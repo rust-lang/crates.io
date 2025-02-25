@@ -4,6 +4,41 @@ expression: response.json()
 ---
 {
   "components": {
+    "schemas": {
+      "Keyword": {
+        "properties": {
+          "crates_cnt": {
+            "description": "The total number of crates that have this keyword.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "The date and time this keyword was created.",
+            "example": "2017-01-06T14:23:11Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "An opaque identifier for the keyword.",
+            "example": "http",
+            "type": "string"
+          },
+          "keyword": {
+            "description": "The keyword itself.",
+            "example": "http",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "keyword",
+          "created_at",
+          "crates_cnt"
+        ],
+        "type": "object"
+      }
+    },
     "securitySchemes": {
       "api_token": {
         "description": "The API token is used to authenticate requests from cargo and other clients.",
