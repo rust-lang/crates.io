@@ -1,17 +1,24 @@
 use crate::app::AppState;
-use crate::controllers::helpers::pagination::PaginationOptions;
+use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::controllers::helpers::{Paginate, pagination::Paginated};
 use crate::models::Keyword;
 use crate::util::errors::AppResult;
 use crate::views::EncodableKeyword;
-use axum::extract::{Path, Query};
+use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use http::request::Parts;
 
-#[derive(Deserialize)]
-pub struct IndexQuery {
+#[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
+#[from_request(via(Query))]
+#[into_params(parameter_in = Query)]
+pub struct ListQueryParams {
+    /// The sort order of the keywords.
+    ///
+    /// Valid values: `alpha`, and `crates`.
+    ///
+    /// Defaults to `alpha`.
     sort: Option<String>,
 }
 
@@ -19,19 +26,20 @@ pub struct IndexQuery {
 #[utoipa::path(
     get,
     path = "/api/v1/keywords",
+    params(ListQueryParams, PaginationQueryParams),
     tag = "keywords",
     responses((status = 200, description = "Successful Response")),
 )]
 pub async fn list_keywords(
     state: AppState,
-    qp: Query<IndexQuery>,
+    params: ListQueryParams,
     req: Parts,
 ) -> AppResult<ErasedJson> {
     use crate::schema::keywords;
 
     let mut query = keywords::table.into_boxed();
 
-    query = match &qp.sort {
+    query = match &params.sort {
         Some(sort) if sort == "crates" => query.order(keywords::crates_cnt.desc()),
         _ => query.order(keywords::keyword.asc()),
     };
