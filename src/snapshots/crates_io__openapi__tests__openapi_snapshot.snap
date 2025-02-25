@@ -1366,6 +1366,40 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "keywords": {
+                      "description": "The list of keywords.",
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "total": {
+                          "description": "The total number of keywords.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "keywords",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

@@ -4,6 +4,7 @@ use crate::controllers::helpers::{Paginate, pagination::Paginated};
 use crate::models::Keyword;
 use crate::util::errors::AppResult;
 use crate::views::EncodableKeyword;
+use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -22,19 +23,35 @@ pub struct ListQueryParams {
     sort: Option<String>,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    /// The list of keywords.
+    pub keywords: Vec<EncodableKeyword>,
+
+    #[schema(inline)]
+    pub meta: ListMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListMeta {
+    /// The total number of keywords.
+    #[schema(example = 123)]
+    pub total: i64,
+}
+
 /// List all keywords.
 #[utoipa::path(
     get,
     path = "/api/v1/keywords",
     params(ListQueryParams, PaginationQueryParams),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_keywords(
     state: AppState,
     params: ListQueryParams,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ListResponse>> {
     use crate::schema::keywords;
 
     let mut query = keywords::table.into_boxed();
@@ -49,15 +66,10 @@ pub async fn list_keywords(
     let mut conn = state.db_read().await?;
     let data: Paginated<Keyword> = query.load(&mut conn).await?;
     let total = data.total();
-    let kws = data
-        .into_iter()
-        .map(Keyword::into)
-        .collect::<Vec<EncodableKeyword>>();
+    let keywords = data.into_iter().map(Keyword::into).collect();
 
-    Ok(json!({
-        "keywords": kws,
-        "meta": { "total": total },
-    }))
+    let meta = ListMeta { total };
+    Ok(Json(ListResponse { keywords, meta }))
 }
 
 /// Get keyword metadata.
