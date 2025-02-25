@@ -6,8 +6,6 @@ use crate::util::errors::AppResult;
 use crate::views::EncodableKeyword;
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use http::request::Parts;
 
@@ -72,6 +70,11 @@ pub async fn list_keywords(
     Ok(Json(ListResponse { keywords, meta }))
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub keyword: EncodableKeyword,
+}
+
 /// Get keyword metadata.
 #[utoipa::path(
     get,
@@ -80,11 +83,14 @@ pub async fn list_keywords(
         ("keyword" = String, Path, description = "The keyword to find"),
     ),
     tag = "keywords",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
-pub async fn find_keyword(Path(name): Path<String>, state: AppState) -> AppResult<ErasedJson> {
+pub async fn find_keyword(
+    Path(name): Path<String>,
+    state: AppState,
+) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read().await?;
     let kw = Keyword::find_by_keyword(&mut conn, &name).await?;
-
-    Ok(json!({ "keyword": EncodableKeyword::from(kw) }))
+    let keyword = EncodableKeyword::from(kw);
+    Ok(Json(GetResponse { keyword }))
 }

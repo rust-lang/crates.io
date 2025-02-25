@@ -1425,6 +1425,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "keyword": {
+                      "$ref": "#/components/schemas/Keyword"
+                    }
+                  },
+                  "required": [
+                    "keyword"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
