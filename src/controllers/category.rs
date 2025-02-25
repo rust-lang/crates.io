@@ -4,6 +4,7 @@ use crate::models::Category;
 use crate::schema::categories;
 use crate::util::errors::AppResult;
 use crate::views::EncodableCategory;
+use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -23,19 +24,35 @@ pub struct ListQueryParams {
     sort: Option<String>,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    /// The list of categories.
+    pub categories: Vec<EncodableCategory>,
+
+    #[schema(inline)]
+    pub meta: ListMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListMeta {
+    /// The total number of categories.
+    #[schema(example = 123)]
+    pub total: i64,
+}
+
 /// List all categories.
 #[utoipa::path(
     get,
     path = "/api/v1/categories",
     params(ListQueryParams, PaginationQueryParams),
     tag = "categories",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_categories(
     app: AppState,
     params: ListQueryParams,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ListResponse>> {
     // FIXME: There are 69 categories, 47 top level. This isn't going to
     // grow by an OoM. We need a limit for /summary, but we don't need
     // to paginate this.
@@ -48,18 +65,18 @@ pub async fn list_categories(
     let offset = options.offset().unwrap_or_default();
 
     let categories = Category::toplevel(&mut conn, sort, options.per_page, offset).await?;
-    let categories = categories
-        .into_iter()
-        .map(Category::into)
-        .collect::<Vec<EncodableCategory>>();
+    let categories = categories.into_iter().map(Category::into).collect();
 
     // Query for the total count of categories
     let total = Category::count_toplevel(&mut conn).await?;
 
-    Ok(json!({
-        "categories": categories,
-        "meta": { "total": total },
-    }))
+    let meta = ListMeta { total };
+    Ok(Json(ListResponse { categories, meta }))
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub category: EncodableCategory,
 }
 
 /// Get category metadata.
@@ -70,9 +87,12 @@ pub async fn list_categories(
         ("category" = String, Path, description = "Name of the category"),
     ),
     tag = "categories",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
-pub async fn find_category(state: AppState, Path(slug): Path<String>) -> AppResult<ErasedJson> {
+pub async fn find_category(
+    state: AppState,
+    Path(slug): Path<String>,
+) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read().await?;
 
     let cat: Category = Category::by_slug(&slug).first(&mut conn).await?;
@@ -93,7 +113,7 @@ pub async fn find_category(state: AppState, Path(slug): Path<String>) -> AppResu
     category.subcategories = Some(subcats);
     category.parent_categories = Some(parents);
 
-    Ok(json!({ "category": category }))
+    Ok(Json(GetResponse { category }))
 }
 
 /// List all available category slugs.

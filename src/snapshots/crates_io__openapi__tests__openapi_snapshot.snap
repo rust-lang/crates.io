@@ -5,6 +5,73 @@ expression: response.json()
 {
   "components": {
     "schemas": {
+      "Category": {
+        "properties": {
+          "category": {
+            "description": "The name of the category.",
+            "example": "Game development",
+            "type": "string"
+          },
+          "crates_cnt": {
+            "description": "The total number of crates that have this category.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "The date and time this category was created.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "A description of the category.",
+            "example": "Libraries for creating games.",
+            "type": "string"
+          },
+          "id": {
+            "description": "An opaque identifier for the category.",
+            "example": "game-development",
+            "type": "string"
+          },
+          "parent_categories": {
+            "description": "The parent categories of this category.\n\nThis field is only present when the category details are queried,\nbut not when listing categories.",
+            "example": [],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "slug": {
+            "description": "The \"slug\" of the category.\n\nSee <https://crates.io/category_slugs>.",
+            "example": "game-development",
+            "type": "string"
+          },
+          "subcategories": {
+            "description": "The subcategories of this category.\n\nThis field is only present when the category details are queried,\nbut not when listing categories.",
+            "example": [],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "slug",
+          "description",
+          "created_at",
+          "crates_cnt"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "crates_cnt": {
@@ -237,6 +304,40 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "categories": {
+                      "description": "The list of categories.",
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "total": {
+                          "description": "The total number of categories.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "categories",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -262,6 +363,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "category": {
+                      "$ref": "#/components/schemas/Category"
+                    }
+                  },
+                  "required": [
+                    "category"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
