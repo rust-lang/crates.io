@@ -4,6 +4,41 @@ expression: response.json()
 ---
 {
   "components": {
+    "schemas": {
+      "Keyword": {
+        "properties": {
+          "crates_cnt": {
+            "description": "The total number of crates that have this keyword.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "The date and time this keyword was created.",
+            "example": "2017-01-06T14:23:11Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "An opaque identifier for the keyword.",
+            "example": "http",
+            "type": "string"
+          },
+          "keyword": {
+            "description": "The keyword itself.",
+            "example": "http",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "keyword",
+          "created_at",
+          "crates_cnt"
+        ],
+        "type": "object"
+      }
+    },
     "securitySchemes": {
       "api_token": {
         "description": "The API token is used to authenticate requests from cargo and other clients.",
@@ -1331,6 +1366,40 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "keywords": {
+                      "description": "The list of keywords.",
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "total": {
+                          "description": "The total number of keywords.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "keywords",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1356,6 +1425,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "keyword": {
+                      "$ref": "#/components/schemas/Keyword"
+                    }
+                  },
+                  "required": [
+                    "keyword"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

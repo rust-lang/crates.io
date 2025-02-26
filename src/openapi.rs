@@ -40,6 +40,11 @@ other clients).
         license(name = "MIT OR Apache-2.0", url = "https://github.com/rust-lang/crates.io/blob/main/README.md#%EF%B8%8F-license"),
         version = "0.0.0",
     ),
+    components(
+        schemas(
+            crate::views::EncodableKeyword,
+        ),
+    ),
     modifiers(&SecurityAddon),
     servers(
         (url = "https://crates.io"),
