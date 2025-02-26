@@ -1,8 +1,8 @@
 use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{
-    EncodableCategory, EncodableCategoryWithSubcategories, EncodableCrate, EncodableKeyword,
-    EncodableOwner, EncodableVersion, GoodCrate,
+    EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
+    GoodCrate,
 };
 
 use crate::tests::util::github::next_gh_id;
@@ -67,7 +67,7 @@ pub struct OwnersResponse {
 }
 #[derive(Deserialize)]
 pub struct CategoryResponse {
-    category: EncodableCategoryWithSubcategories,
+    category: EncodableCategory,
 }
 #[derive(Deserialize)]
 pub struct CategoryListResponse {
