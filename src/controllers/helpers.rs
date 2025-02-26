@@ -1,13 +1,31 @@
-use crate::util::errors::AppResult;
+use axum::Json;
 use axum::response::{IntoResponse, Response};
-use axum_extra::json;
 
 pub mod authorization;
 pub(crate) mod pagination;
 
 pub(crate) use self::pagination::Paginate;
 
-pub fn ok_true() -> AppResult<Response> {
-    let json = json!({ "ok": true });
-    Ok(json.into_response())
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct OkResponse {
+    #[schema(example = true)]
+    ok: bool,
+}
+
+impl Default for OkResponse {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl OkResponse {
+    pub fn new() -> Self {
+        Self { ok: true }
+    }
+}
+
+impl IntoResponse for OkResponse {
+    fn into_response(self) -> Response {
+        Json(self).into_response()
+    }
 }

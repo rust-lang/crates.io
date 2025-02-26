@@ -1,12 +1,11 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::helpers::ok_true;
+use crate::controllers::helpers::OkResponse;
 use crate::models::NewEmail;
 use crate::schema::users;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
 use axum::extract::Path;
-use axum::response::Response;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -47,7 +46,7 @@ pub async fn update_user(
     Path(param_user_id): Path<i32>,
     req: Parts,
     Json(user_update): Json<UserUpdate>,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     let mut conn = state.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
@@ -116,7 +115,7 @@ pub async fn update_user(
         let _ = state.emails.send(user_email, email).await;
     }
 
-    ok_true()
+    Ok(OkResponse::new())
 }
 
 pub struct UserConfirmEmail<'a> {

@@ -1,11 +1,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::helpers::ok_true;
+use crate::controllers::helpers::OkResponse;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::crate_owners;
 use crate::util::errors::AppResult;
 use axum::Json;
-use axum::response::Response;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -36,7 +35,7 @@ pub async fn update_email_notifications(
     app: AppState,
     parts: Parts,
     Json(updates): Json<Vec<CrateEmailNotifications>>,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     use diesel::pg::upsert::excluded;
 
     let updates: HashMap<i32, bool> = updates
@@ -89,5 +88,5 @@ pub async fn update_email_notifications(
         .execute(&mut conn)
         .await?;
 
-    ok_true()
+    Ok(OkResponse::new())
 }

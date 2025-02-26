@@ -2,12 +2,11 @@
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::helpers::ok_true;
+use crate::controllers::helpers::OkResponse;
 use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 use crate::util::errors::{AppResult, crate_not_found};
-use axum::response::Response;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
@@ -41,7 +40,7 @@ async fn follow_target(
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<Response> {
+pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
@@ -51,7 +50,7 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
         .execute(&mut conn)
         .await?;
 
-    ok_true()
+    Ok(OkResponse::new())
 }
 
 /// Unfollow a crate.
@@ -66,13 +65,13 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
     tag = "crates",
     responses((status = 200, description = "Successful Response")),
 )]
-pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<Response> {
+pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
     let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
     diesel::delete(&follow).execute(&mut conn).await?;
 
-    ok_true()
+    Ok(OkResponse::new())
 }
 
 /// Check if a crate is followed.
