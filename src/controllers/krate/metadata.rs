@@ -99,56 +99,46 @@ pub async fn find_crate(
         .optional()?
         .ok_or_else(|| crate_not_found(&path.name))?;
 
-    let versions_and_publishers =
-        load_versions_and_publishers(&mut conn, &krate, include.versions).await?;
-    let mut versions_publishers_and_audit_actions =
-        if let Some(versions_and_publishers) = versions_and_publishers {
-            let versions = versions_and_publishers
-                .iter()
-                .map(|(v, _)| v)
-                .collect::<Vec<_>>();
-            let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
-            Some(
-                versions_and_publishers
-                    .into_iter()
-                    .zip(actions)
-                    .map(|((v, pb), aas)| (v, pb, aas))
-                    .collect::<Vec<_>>(),
-            )
-        } else {
-            None
-        };
-    let ids = versions_publishers_and_audit_actions
+    // Since `versions` and `default_version` share the same key (versions), we should only settle
+    // the `include.default_version` when `include.versions` is not included, and ignore when no
+    // `default_version` available.
+    let include_default_version =
+        include.default_version && !include.versions && default_version.is_some();
+    let (versions_and_publishers, default_versions_and_publishers, kws, cats, recent_downloads) = tokio::try_join!(
+        load_versions_and_publishers(&mut conn, &krate, include.versions),
+        load_default_versions_and_publishers(
+            &mut conn,
+            &krate,
+            default_version.as_deref(),
+            include_default_version,
+        ),
+        load_keywords(&mut conn, &krate, include.keywords),
+        load_categories(&mut conn, &krate, include.categories),
+        load_recent_downloads(&mut conn, &krate, include.downloads),
+    )?;
+
+    let ids = versions_and_publishers
         .as_ref()
         .map(|vps| vps.iter().map(|v| v.0.id).collect());
 
-    // Since `versions` and `default_version` share the same key (versions), we should only settle
-    // the `default_version` when `versions` is not included.
-    if let Some(default_version) = default_version
-        .as_ref()
-        .filter(|_| include.default_version && !include.versions)
+    let versions_publishers_and_audit_actions = if let Some(versions_and_publishers) =
+        versions_and_publishers.or(default_versions_and_publishers)
     {
-        let versions_and_publishers =
-            load_default_versions_and_publishers(&mut conn, &krate, Some(default_version), true)
-                .await?
-                .expect("default_version should exists");
         let versions = versions_and_publishers
             .iter()
             .map(|(v, _)| v)
             .collect::<Vec<_>>();
         let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
-        versions_publishers_and_audit_actions = Some(
+        Some(
             versions_and_publishers
                 .into_iter()
                 .zip(actions)
                 .map(|((v, pb), aas)| (v, pb, aas))
                 .collect::<Vec<_>>(),
         )
+    } else {
+        None
     };
-
-    let kws = load_keywords(&mut conn, &krate, include.keywords).await?;
-    let cats = load_categories(&mut conn, &krate, include.categories).await?;
-    let recent_downloads = load_recent_downloads(&mut conn, &krate, include.downloads).await?;
 
     let top_versions = if let Some(versions) = versions_publishers_and_audit_actions
         .as_ref()
