@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.96"
-chrono = { version = "=0.4.39", default-features = false, features = ["clock", "serde"] }
+chrono = { version = "=0.4.40", default-features = false, features = ["clock", "serde"] }
 flate2 = "=1.1.0"
 minijinja = "=2.7.0"
 serde = { version = "=1.0.218", features = ["derive"] }
