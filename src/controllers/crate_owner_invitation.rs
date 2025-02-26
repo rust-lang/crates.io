@@ -96,7 +96,7 @@ pub struct ListQueryParams {
     params(ListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(PrivateListResponse))),
 )]
 pub async fn list_crate_owner_invitations(
     app: AppState,
@@ -296,15 +296,22 @@ async fn prepare_list(
     })
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 pub struct PrivateListResponse {
+    /// The list of crate owner invitations.
     invitations: Vec<EncodableCrateOwnerInvitation>,
+
+    /// The list of users referenced in the crate owner invitations.
     users: Vec<EncodablePublicUser>,
+
+    #[schema(inline)]
     meta: ResponseMeta,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 struct ResponseMeta {
+    /// Query parameter string to fetch the next page of results.
+    #[schema(example = "?seek=c0ffee")]
     next_page: Option<String>,
 }
 

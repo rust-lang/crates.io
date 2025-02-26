@@ -72,6 +72,54 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "CrateOwnerInvitation": {
+        "properties": {
+          "crate_id": {
+            "description": "The ID of the crate that the user was invited to be an owner of.",
+            "example": 123,
+            "format": "int32",
+            "type": "integer"
+          },
+          "crate_name": {
+            "description": "The name of the crate that the user was invited to be an owner of.",
+            "example": "serde",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "The date and time this invitation was created.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "The date and time this invitation will expire.",
+            "example": "2020-01-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "invitee_id": {
+            "description": "The ID of the user who was invited to be a crate owner.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "inviter_id": {
+            "description": "The ID of the user who sent the invitation.",
+            "example": 3,
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "invitee_id",
+          "inviter_id",
+          "crate_id",
+          "crate_name",
+          "created_at",
+          "expires_at"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "crates_cnt": {
@@ -261,6 +309,47 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "invitations": {
+                      "description": "The list of crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/CrateOwnerInvitation"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query parameter string to fetch the next page of results.",
+                          "example": "?seek=c0ffee",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "users": {
+                      "description": "The list of users referenced in the crate owner invitations.",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "invitations",
+                    "users",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
