@@ -79,15 +79,29 @@ impl From<Category> for EncodableCategory {
     }
 }
 
-/// The serialization format for the `CrateOwnerInvitation` model.
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
+#[schema(as = LegacyCrateOwnerInvitation)]
 pub struct EncodableCrateOwnerInvitationV1 {
+    /// The ID of the user who was invited to be a crate owner.
+    #[schema(example = 42)]
     pub invitee_id: i32,
+    /// The ID of the user who sent the invitation.
+    #[schema(example = 3)]
     pub inviter_id: i32,
+    /// The username of the user who sent the invitation.
+    #[schema(example = "ghost")]
     pub invited_by_username: String,
+    /// The name of the crate that the user was invited to be an owner of.
+    #[schema(example = "serde")]
     pub crate_name: String,
+    /// The ID of the crate that the user was invited to be an owner of.
+    #[schema(example = 123)]
     pub crate_id: i32,
+    /// The date and time this invitation was created.
+    #[schema(example = "2019-12-13T13:46:41Z")]
     pub created_at: DateTime<Utc>,
+    /// The date and time this invitation will expire.
+    #[schema(example = "2020-01-13T13:46:41Z")]
     pub expires_at: DateTime<Utc>,
 }
 
