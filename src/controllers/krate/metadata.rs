@@ -128,14 +128,22 @@ pub async fn find_crate(
         .as_ref()
         .filter(|_| include.default_version && !include.versions)
     {
-        let version = krate.find_version(&mut conn, default_version).await?;
-        let version = version.ok_or_else(|| version_not_found(&krate.name, default_version))?;
-
-        let (actions, published_by) = tokio::try_join!(
-            VersionOwnerAction::by_version(&mut conn, &version),
-            version.published_by(&mut conn),
-        )?;
-        versions_publishers_and_audit_actions = Some(vec![(version, published_by, actions)]);
+        let versions_and_publishers =
+            load_default_versions_and_publishers(&mut conn, &krate, Some(default_version), true)
+                .await?
+                .expect("default_version should exists");
+        let versions = versions_and_publishers
+            .iter()
+            .map(|(v, _)| v)
+            .collect::<Vec<_>>();
+        let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+        versions_publishers_and_audit_actions = Some(
+            versions_and_publishers
+                .into_iter()
+                .zip(actions)
+                .map(|((v, pb), aas)| (v, pb, aas))
+                .collect::<Vec<_>>(),
+        )
     };
 
     let kws = if include.keywords {
@@ -235,12 +243,48 @@ fn load_versions_and_publishers<'a>(
         return always_ready(|| Ok(None)).boxed();
     }
 
-    let fut = Version::belonging_to(&krate)
+    _load_versions_and_publishers(conn, krate, None)
+}
+
+fn load_default_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    version_num: Option<&'a str>,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    if !includes || version_num.is_none() {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = _load_versions_and_publishers(conn, krate, version_num);
+    async move {
+        let records = fut.await?.ok_or_else(|| {
+            version_not_found(
+                &krate.name,
+                version_num.expect("default_version should not be None"),
+            )
+        })?;
+        Ok(Some(records))
+    }
+    .boxed()
+}
+
+fn _load_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    version_num: Option<&'a str>,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    let mut query = Version::belonging_to(&krate)
         .left_outer_join(users::table)
         .select(<(Version, Option<User>)>::as_select())
         .order_by(versions::id.desc())
-        .load(conn);
+        .into_boxed();
 
+    if let Some(num) = version_num {
+        query = query.filter(versions::num.eq(num));
+    }
+
+    let fut = query.load(conn);
     async move { Ok(Some(fut.await?)) }.boxed()
 }
 
