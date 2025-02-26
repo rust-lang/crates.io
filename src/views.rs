@@ -10,19 +10,49 @@ use crates_io_github as github;
 pub mod krate_publish;
 pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = Category)]
 pub struct EncodableCategory {
+    /// An opaque identifier for the category.
+    #[schema(example = "game-development")]
     pub id: String,
+
+    /// The name of the category.
+    #[schema(example = "Game development")]
     pub category: String,
+
+    /// The "slug" of the category.
+    ///
+    /// See <https://crates.io/category_slugs>.
+    #[schema(example = "game-development")]
     pub slug: String,
+
+    /// A description of the category.
+    #[schema(example = "Libraries for creating games.")]
     pub description: String,
+
+    /// The date and time this category was created.
+    #[schema(example = "2019-12-13T13:46:41Z")]
     pub created_at: DateTime<Utc>,
+
+    /// The total number of crates that have this category.
+    #[schema(example = 42)]
     pub crates_cnt: i32,
 
+    /// The subcategories of this category.
+    ///
+    /// This field is only present when the category details are queried,
+    /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(no_recursion, example = json!([]))]
     pub subcategories: Option<Vec<EncodableCategory>>,
 
+    /// The parent categories of this category.
+    ///
+    /// This field is only present when the category details are queried,
+    /// but not when listing categories.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(no_recursion, example = json!([]))]
     pub parent_categories: Option<Vec<EncodableCategory>>,
 }
 
