@@ -148,15 +148,7 @@ pub async fn find_crate(
 
     let kws = load_keywords(&mut conn, &krate, include.keywords).await?;
     let cats = load_categories(&mut conn, &krate, include.categories).await?;
-    let recent_downloads = if include.downloads {
-        RecentCrateDownloads::belonging_to(&krate)
-            .select(recent_crate_downloads::downloads)
-            .get_result(&mut conn)
-            .await
-            .optional()?
-    } else {
-        None
-    };
+    let recent_downloads = load_recent_downloads(&mut conn, &krate, include.downloads).await?;
 
     let top_versions = if let Some(versions) = versions_publishers_and_audit_actions
         .as_ref()
@@ -279,6 +271,21 @@ fn load_categories<'a>(
         .select(Category::as_select())
         .load(conn);
     async move { Ok(Some(fut.await?)) }.boxed()
+}
+
+fn load_recent_downloads<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<i64>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = RecentCrateDownloads::belonging_to(&krate)
+        .select(recent_crate_downloads::downloads)
+        .get_result(conn);
+    async move { Ok(fut.await.optional()?) }.boxed()
 }
 
 fn _load_versions_and_publishers<'a>(
