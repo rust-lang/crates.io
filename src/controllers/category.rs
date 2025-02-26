@@ -3,7 +3,7 @@ use crate::app::AppState;
 use crate::models::Category;
 use crate::schema::categories;
 use crate::util::errors::AppResult;
-use crate::views::{EncodableCategory, EncodableCategoryWithSubcategories};
+use crate::views::EncodableCategory;
 use axum::extract::{FromRequestParts, Path, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -89,19 +89,11 @@ pub async fn find_category(state: AppState, Path(slug): Path<String>) -> AppResu
         .map(Category::into)
         .collect();
 
-    let cat = EncodableCategory::from(cat);
-    let cat_with_subcats = EncodableCategoryWithSubcategories {
-        id: cat.id,
-        category: cat.category,
-        slug: cat.slug,
-        description: cat.description,
-        created_at: cat.created_at,
-        crates_cnt: cat.crates_cnt,
-        subcategories: subcats,
-        parent_categories: parents,
-    };
+    let mut category = EncodableCategory::from(cat);
+    category.subcategories = Some(subcats);
+    category.parent_categories = Some(parents);
 
-    Ok(json!({ "category": cat_with_subcats }))
+    Ok(json!({ "category": category }))
 }
 
 /// List all available category slugs.

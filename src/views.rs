@@ -18,6 +18,12 @@ pub struct EncodableCategory {
     pub description: String,
     pub created_at: DateTime<Utc>,
     pub crates_cnt: i32,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subcategories: Option<Vec<EncodableCategory>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_categories: Option<Vec<EncodableCategory>>,
 }
 
 impl From<Category> for EncodableCategory {
@@ -37,20 +43,10 @@ impl From<Category> for EncodableCategory {
             created_at,
             crates_cnt,
             category: category.rsplit("::").collect::<Vec<_>>()[0].to_string(),
+            subcategories: None,
+            parent_categories: None,
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EncodableCategoryWithSubcategories {
-    pub id: String,
-    pub category: String,
-    pub slug: String,
-    pub description: String,
-    pub created_at: DateTime<Utc>,
-    pub crates_cnt: i32,
-    pub subcategories: Vec<EncodableCategory>,
-    pub parent_categories: Vec<EncodableCategory>,
 }
 
 /// The serialization format for the `CrateOwnerInvitation` model.
@@ -701,26 +697,8 @@ mod tests {
                 .and_hms_opt(14, 23, 11)
                 .unwrap()
                 .and_utc(),
-        };
-        let json = serde_json::to_string(&cat).unwrap();
-        assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
-    }
-
-    #[test]
-    fn category_with_sub_dates_serializes_to_rfc3339() {
-        let cat = EncodableCategoryWithSubcategories {
-            id: "".to_string(),
-            category: "".to_string(),
-            slug: "".to_string(),
-            description: "".to_string(),
-            crates_cnt: 1,
-            created_at: NaiveDate::from_ymd_opt(2017, 1, 6)
-                .unwrap()
-                .and_hms_opt(14, 23, 11)
-                .unwrap()
-                .and_utc(),
-            subcategories: vec![],
-            parent_categories: vec![],
+            subcategories: None,
+            parent_categories: None,
         };
         let json = serde_json::to_string(&cat).unwrap();
         assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
