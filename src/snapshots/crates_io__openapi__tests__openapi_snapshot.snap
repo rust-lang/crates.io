@@ -104,6 +104,31 @@ expression: response.json()
           "crates_cnt"
         ],
         "type": "object"
+      },
+      "Slug": {
+        "properties": {
+          "description": {
+            "description": "A description of the category.",
+            "example": "Libraries for creating games.",
+            "type": "string"
+          },
+          "id": {
+            "description": "An opaque identifier for the category.",
+            "example": "game-development",
+            "type": "string"
+          },
+          "slug": {
+            "description": "The \"slug\" of the category.\n\nSee <https://crates.io/category_slugs>.",
+            "example": "game-development",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "description"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -392,6 +417,25 @@ expression: response.json()
         "operationId": "list_category_slugs",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "category_slugs": {
+                      "description": "The list of category slugs.",
+                      "items": {
+                        "$ref": "#/components/schemas/Slug"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "category_slugs"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

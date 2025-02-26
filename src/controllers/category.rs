@@ -6,8 +6,6 @@ use crate::util::errors::AppResult;
 use crate::views::EncodableCategory;
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -116,28 +114,44 @@ pub async fn find_category(
     Ok(Json(GetResponse { category }))
 }
 
+#[derive(Debug, Serialize, Queryable, utoipa::ToSchema)]
+pub struct Slug {
+    /// An opaque identifier for the category.
+    #[schema(example = "game-development")]
+    id: String,
+
+    /// The "slug" of the category.
+    ///
+    /// See <https://crates.io/category_slugs>.
+    #[schema(example = "game-development")]
+    slug: String,
+
+    /// A description of the category.
+    #[schema(example = "Libraries for creating games.")]
+    description: String,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListSlugsResponse {
+    /// The list of category slugs.
+    pub category_slugs: Vec<Slug>,
+}
+
 /// List all available category slugs.
 #[utoipa::path(
     get,
     path = "/api/v1/category_slugs",
     tag = "categories",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListSlugsResponse))),
 )]
-pub async fn list_category_slugs(state: AppState) -> AppResult<ErasedJson> {
+pub async fn list_category_slugs(state: AppState) -> AppResult<Json<ListSlugsResponse>> {
     let mut conn = state.db_read().await?;
 
-    let slugs: Vec<Slug> = categories::table
+    let category_slugs = categories::table
         .select((categories::slug, categories::slug, categories::description))
         .order(categories::slug)
         .load(&mut conn)
         .await?;
 
-    #[derive(Serialize, Queryable)]
-    struct Slug {
-        id: String,
-        slug: String,
-        description: String,
-    }
-
-    Ok(json!({ "category_slugs": slugs }))
+    Ok(Json(ListSlugsResponse { category_slugs }))
 }
