@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
-    ApiToken, Category, Crate, CrateOwnerInvitation, Dependency, DependencyKind, Keyword, Owner,
-    ReverseDependency, Team, TopVersions, User, Version, VersionDownload, VersionOwnerAction,
+    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
+    TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crates_io_github as github;
 
@@ -89,25 +89,6 @@ pub struct EncodableCrateOwnerInvitationV1 {
     pub crate_id: i32,
     pub created_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
-}
-
-impl EncodableCrateOwnerInvitationV1 {
-    pub fn from(
-        invitation: CrateOwnerInvitation,
-        inviter_name: String,
-        crate_name: String,
-        expires_at: DateTime<Utc>,
-    ) -> Self {
-        Self {
-            invitee_id: invitation.invited_user_id,
-            inviter_id: invitation.invited_by_user_id,
-            invited_by_username: inviter_name,
-            crate_name,
-            crate_id: invitation.crate_id,
-            created_at: invitation.created_at,
-            expires_at,
-        }
-    }
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
