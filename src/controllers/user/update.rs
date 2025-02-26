@@ -39,7 +39,7 @@ pub struct User {
         ("cookie" = []),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn update_user(
     state: AppState,

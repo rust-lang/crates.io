@@ -21,7 +21,7 @@ use http::request::Parts;
         ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn confirm_user_email(
     state: AppState,
@@ -53,7 +53,7 @@ pub async fn confirm_user_email(
         ("cookie" = []),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn resend_email_verification(
     state: AppState,

@@ -38,7 +38,7 @@ async fn follow_target(
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
@@ -63,7 +63,7 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;

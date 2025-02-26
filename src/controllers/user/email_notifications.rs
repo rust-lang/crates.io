@@ -28,7 +28,7 @@ pub struct CrateEmailNotifications {
         ("cookie" = []),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 #[deprecated]
 pub async fn update_email_notifications(
