@@ -1,3 +1,4 @@
+use axum::Json;
 use axum::extract::Path;
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
@@ -12,6 +13,11 @@ use crate::util::errors::AppResult;
 use crate::views::EncodablePublicUser;
 use crates_io_diesel_helpers::lower;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub user: EncodablePublicUser,
+}
+
 /// Find user by login.
 #[utoipa::path(
     get,
@@ -20,9 +26,12 @@ use crates_io_diesel_helpers::lower;
         ("user" = String, Path, description = "Login name of the user"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
-pub async fn find_user(state: AppState, Path(user_name): Path<String>) -> AppResult<ErasedJson> {
+pub async fn find_user(
+    state: AppState,
+    Path(user_name): Path<String>,
+) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use crate::schema::users::dsl::{gh_login, id, users};
@@ -34,7 +43,7 @@ pub async fn find_user(state: AppState, Path(user_name): Path<String>) -> AppRes
         .first(&mut conn)
         .await?;
 
-    Ok(json!({ "user": EncodablePublicUser::from(user) }))
+    Ok(Json(GetResponse { user: user.into() }))
 }
 
 /// Get user stats.
