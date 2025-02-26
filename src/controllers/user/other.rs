@@ -1,7 +1,5 @@
 use axum::Json;
 use axum::extract::Path;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -46,6 +44,13 @@ pub async fn find_user(
     Ok(Json(GetResponse { user: user.into() }))
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct StatsResponse {
+    /// The total number of downloads for crates owned by the user.
+    #[schema(example = 123_456_789)]
+    pub total_downloads: u64,
+}
+
 /// Get user stats.
 ///
 /// This currently only returns the total number of downloads for crates owned
@@ -57,15 +62,18 @@ pub async fn find_user(
         ("id" = i32, Path, description = "ID of the user"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(StatsResponse))),
 )]
-pub async fn get_user_stats(state: AppState, Path(user_id): Path<i32>) -> AppResult<ErasedJson> {
+pub async fn get_user_stats(
+    state: AppState,
+    Path(user_id): Path<i32>,
+) -> AppResult<Json<StatsResponse>> {
     let mut conn = state.db_read_prefer_primary().await?;
 
     use diesel::dsl::sum;
     use diesel_async::RunQueryDsl;
 
-    let data = CrateOwner::by_owner_kind(OwnerKind::User)
+    let total_downloads = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
         .inner_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
         .filter(crate_owners::owner_id.eq(user_id))
@@ -75,5 +83,5 @@ pub async fn get_user_stats(state: AppState, Path(user_id): Path<i32>) -> AppRes
         .map(|d| d.to_u64().unwrap_or(u64::MAX))
         .unwrap_or(0);
 
-    Ok(json!({ "total_downloads": data }))
+    Ok(Json(StatsResponse { total_downloads }))
 }
