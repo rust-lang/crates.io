@@ -19,7 +19,9 @@ use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::FutureExt;
+use futures_util::future::{BoxFuture, always_ready};
 use std::str::FromStr;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -97,29 +99,25 @@ pub async fn find_crate(
         .optional()?
         .ok_or_else(|| crate_not_found(&path.name))?;
 
-    let mut versions_publishers_and_audit_actions = if include.versions {
-        let versions_and_publishers: Vec<(Version, Option<User>)> = Version::belonging_to(&krate)
-            .left_outer_join(users::table)
-            .select(<(Version, Option<User>)>::as_select())
-            .order_by(versions::id.desc())
-            .load(&mut conn)
-            .await?;
-
-        let versions = versions_and_publishers
-            .iter()
-            .map(|(v, _)| v)
-            .collect::<Vec<_>>();
-        let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
-        Some(
-            versions_and_publishers
-                .into_iter()
-                .zip(actions)
-                .map(|((v, pb), aas)| (v, pb, aas))
-                .collect::<Vec<_>>(),
-        )
-    } else {
-        None
-    };
+    let versions_and_publishers =
+        load_versions_and_publishers(&mut conn, &krate, include.versions).await?;
+    let mut versions_publishers_and_audit_actions =
+        if let Some(versions_and_publishers) = versions_and_publishers {
+            let versions = versions_and_publishers
+                .iter()
+                .map(|(v, _)| v)
+                .collect::<Vec<_>>();
+            let actions = VersionOwnerAction::for_versions(&mut conn, &versions).await?;
+            Some(
+                versions_and_publishers
+                    .into_iter()
+                    .zip(actions)
+                    .map(|((v, pb), aas)| (v, pb, aas))
+                    .collect::<Vec<_>>(),
+            )
+        } else {
+            None
+        };
     let ids = versions_publishers_and_audit_actions
         .as_ref()
         .map(|vps| vps.iter().map(|v| v.0.id).collect());
@@ -224,6 +222,26 @@ pub async fn find_crate(
         "keywords": encodable_keywords,
         "categories": encodable_cats,
     }))
+}
+
+type VersionsAndPublishers = (Version, Option<User>);
+
+fn load_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = Version::belonging_to(&krate)
+        .left_outer_join(users::table)
+        .select(<(Version, Option<User>)>::as_select())
+        .order_by(versions::id.desc())
+        .load(conn);
+
+    async move { Ok(Some(fut.await?)) }.boxed()
 }
 
 #[derive(Debug)]
