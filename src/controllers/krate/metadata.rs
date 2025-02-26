@@ -146,17 +146,7 @@ pub async fn find_crate(
         )
     };
 
-    let kws = if include.keywords {
-        Some(
-            CrateKeyword::belonging_to(&krate)
-                .inner_join(keywords::table)
-                .select(Keyword::as_select())
-                .load(&mut conn)
-                .await?,
-        )
-    } else {
-        None
-    };
+    let kws = load_keywords(&mut conn, &krate, include.keywords).await?;
     let cats = if include.categories {
         Some(
             CrateCategory::belonging_to(&krate)
@@ -267,6 +257,22 @@ fn load_default_versions_and_publishers<'a>(
         Ok(Some(records))
     }
     .boxed()
+}
+
+fn load_keywords<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<Keyword>>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = CrateKeyword::belonging_to(&krate)
+        .inner_join(keywords::table)
+        .select(Keyword::as_select())
+        .load(conn);
+    async move { Ok(Some(fut.await?)) }.boxed()
 }
 
 fn _load_versions_and_publishers<'a>(
