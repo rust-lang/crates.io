@@ -3,10 +3,9 @@
 use super::CrateVersionPath;
 use super::update::{authenticate, perform_version_yank_update};
 use crate::app::AppState;
-use crate::controllers::helpers::ok_true;
+use crate::controllers::helpers::OkResponse;
 use crate::rate_limiter::LimitedAction;
 use crate::util::errors::AppResult;
-use axum::response::Response;
 use http::request::Parts;
 
 /// Yank a crate version.
@@ -29,13 +28,13 @@ use http::request::Parts;
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn yank_version(
     app: AppState,
     path: CrateVersionPath,
     req: Parts,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     modify_yank(path, app, req, true).await
 }
 
@@ -49,13 +48,13 @@ pub async fn yank_version(
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn unyank_version(
     app: AppState,
     path: CrateVersionPath,
     req: Parts,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     modify_yank(path, app, req, false).await
 }
 
@@ -65,7 +64,7 @@ async fn modify_yank(
     state: AppState,
     req: Parts,
     yanked: bool,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     // FIXME: Should reject bad requests before authentication, but can't due to
     // lifetime issues with `req`.
 
@@ -89,5 +88,5 @@ async fn modify_yank(
     )
     .await?;
 
-    ok_true()
+    Ok(OkResponse::new())
 }

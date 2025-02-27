@@ -1,12 +1,11 @@
 use super::update::UserConfirmEmail;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::helpers::ok_true;
+use crate::controllers::helpers::OkResponse;
 use crate::models::Email;
 use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
 use axum::extract::Path;
-use axum::response::Response;
 use crates_io_database::schema::emails;
 use diesel::dsl::sql;
 use diesel::prelude::*;
@@ -22,9 +21,12 @@ use http::request::Parts;
         ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
-pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> AppResult<Response> {
+pub async fn confirm_user_email(
+    state: AppState,
+    Path(token): Path<String>,
+) -> AppResult<OkResponse> {
     let mut conn = state.db_write().await?;
 
     let updated_rows = diesel::update(emails::table.filter(emails::token.eq(&token)))
@@ -36,7 +38,7 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
         return Err(bad_request("Email belonging to token not found."));
     }
 
-    ok_true()
+    Ok(OkResponse::new())
 }
 
 /// Regenerate and send an email verification token.
@@ -51,13 +53,13 @@ pub async fn confirm_user_email(state: AppState, Path(token): Path<String>) -> A
         ("cookie" = []),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
 pub async fn resend_email_verification(
     state: AppState,
     Path(param_user_id): Path<i32>,
     req: Parts,
-) -> AppResult<Response> {
+) -> AppResult<OkResponse> {
     let mut conn = state.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
@@ -91,7 +93,7 @@ pub async fn resend_email_verification(
     })
     .await?;
 
-    ok_true()
+    Ok(OkResponse::new())
 }
 
 #[cfg(test)]
