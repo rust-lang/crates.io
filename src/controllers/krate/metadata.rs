@@ -19,7 +19,9 @@ use axum::extract::{FromRequestParts, Query};
 use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::FutureExt;
+use futures_util::future::{BoxFuture, always_ready};
 use std::str::FromStr;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -97,14 +99,31 @@ pub async fn find_crate(
         .optional()?
         .ok_or_else(|| crate_not_found(&path.name))?;
 
-    let mut versions_publishers_and_audit_actions = if include.versions {
-        let versions_and_publishers: Vec<(Version, Option<User>)> = Version::belonging_to(&krate)
-            .left_outer_join(users::table)
-            .select(<(Version, Option<User>)>::as_select())
-            .order_by(versions::id.desc())
-            .load(&mut conn)
-            .await?;
+    // Since `versions` and `default_version` share the same key (versions), we should only settle
+    // the `include.default_version` when `include.versions` is not included, and ignore when no
+    // `default_version` available.
+    let include_default_version =
+        include.default_version && !include.versions && default_version.is_some();
+    let (versions_and_publishers, default_versions_and_publishers, kws, cats, recent_downloads) = tokio::try_join!(
+        load_versions_and_publishers(&mut conn, &krate, include.versions),
+        load_default_versions_and_publishers(
+            &mut conn,
+            &krate,
+            default_version.as_deref(),
+            include_default_version,
+        ),
+        load_keywords(&mut conn, &krate, include.keywords),
+        load_categories(&mut conn, &krate, include.categories),
+        load_recent_downloads(&mut conn, &krate, include.downloads),
+    )?;
 
+    let ids = versions_and_publishers
+        .as_ref()
+        .map(|vps| vps.iter().map(|v| v.0.id).collect());
+
+    let versions_publishers_and_audit_actions = if let Some(versions_and_publishers) =
+        versions_and_publishers.or(default_versions_and_publishers)
+    {
         let versions = versions_and_publishers
             .iter()
             .map(|(v, _)| v)
@@ -117,57 +136,6 @@ pub async fn find_crate(
                 .map(|((v, pb), aas)| (v, pb, aas))
                 .collect::<Vec<_>>(),
         )
-    } else {
-        None
-    };
-    let ids = versions_publishers_and_audit_actions
-        .as_ref()
-        .map(|vps| vps.iter().map(|v| v.0.id).collect());
-
-    // Since `versions` and `default_version` share the same key (versions), we should only settle
-    // the `default_version` when `versions` is not included.
-    if let Some(default_version) = default_version
-        .as_ref()
-        .filter(|_| include.default_version && !include.versions)
-    {
-        let version = krate.find_version(&mut conn, default_version).await?;
-        let version = version.ok_or_else(|| version_not_found(&krate.name, default_version))?;
-
-        let (actions, published_by) = tokio::try_join!(
-            VersionOwnerAction::by_version(&mut conn, &version),
-            version.published_by(&mut conn),
-        )?;
-        versions_publishers_and_audit_actions = Some(vec![(version, published_by, actions)]);
-    };
-
-    let kws = if include.keywords {
-        Some(
-            CrateKeyword::belonging_to(&krate)
-                .inner_join(keywords::table)
-                .select(Keyword::as_select())
-                .load(&mut conn)
-                .await?,
-        )
-    } else {
-        None
-    };
-    let cats = if include.categories {
-        Some(
-            CrateCategory::belonging_to(&krate)
-                .inner_join(categories::table)
-                .select(Category::as_select())
-                .load(&mut conn)
-                .await?,
-        )
-    } else {
-        None
-    };
-    let recent_downloads = if include.downloads {
-        RecentCrateDownloads::belonging_to(&krate)
-            .select(recent_crate_downloads::downloads)
-            .get_result(&mut conn)
-            .await
-            .optional()?
     } else {
         None
     };
@@ -224,6 +192,109 @@ pub async fn find_crate(
         "keywords": encodable_keywords,
         "categories": encodable_cats,
     }))
+}
+
+type VersionsAndPublishers = (Version, Option<User>);
+
+fn load_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    _load_versions_and_publishers(conn, krate, None)
+}
+
+fn load_default_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    version_num: Option<&'a str>,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    if !includes || version_num.is_none() {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = _load_versions_and_publishers(conn, krate, version_num);
+    async move {
+        let records = fut.await?.ok_or_else(|| {
+            version_not_found(
+                &krate.name,
+                version_num.expect("default_version should not be None"),
+            )
+        })?;
+        Ok(Some(records))
+    }
+    .boxed()
+}
+
+fn load_keywords<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<Keyword>>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = CrateKeyword::belonging_to(&krate)
+        .inner_join(keywords::table)
+        .select(Keyword::as_select())
+        .load(conn);
+    async move { Ok(Some(fut.await?)) }.boxed()
+}
+
+fn load_categories<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<Vec<Category>>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = CrateCategory::belonging_to(&krate)
+        .inner_join(categories::table)
+        .select(Category::as_select())
+        .load(conn);
+    async move { Ok(Some(fut.await?)) }.boxed()
+}
+
+fn load_recent_downloads<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    includes: bool,
+) -> BoxFuture<'a, AppResult<Option<i64>>> {
+    if !includes {
+        return always_ready(|| Ok(None)).boxed();
+    }
+
+    let fut = RecentCrateDownloads::belonging_to(&krate)
+        .select(recent_crate_downloads::downloads)
+        .get_result(conn);
+    async move { Ok(fut.await.optional()?) }.boxed()
+}
+
+fn _load_versions_and_publishers<'a>(
+    conn: &mut AsyncPgConnection,
+    krate: &'a Crate,
+    version_num: Option<&'a str>,
+) -> BoxFuture<'a, AppResult<Option<Vec<VersionsAndPublishers>>>> {
+    let mut query = Version::belonging_to(&krate)
+        .left_outer_join(users::table)
+        .select(<(Version, Option<User>)>::as_select())
+        .order_by(versions::id.desc())
+        .into_boxed();
+
+    if let Some(num) = version_num {
+        query = query.filter(versions::num.eq(num));
+    }
+
+    let fut = query.load(conn);
+    async move { Ok(Some(fut.await?)) }.boxed()
 }
 
 #[derive(Debug)]
