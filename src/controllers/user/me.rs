@@ -21,7 +21,7 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
     path = "/api/v1/me",
     security(("cookie" = [])),
     tag = "users",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
 pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;

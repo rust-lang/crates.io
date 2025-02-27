@@ -5,6 +5,82 @@ expression: response.json()
 {
   "components": {
     "schemas": {
+      "AuthenticatedUser": {
+        "properties": {
+          "avatar": {
+            "description": "The user's avatar URL, if set.",
+            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "The user's email address, if set.",
+            "example": "kate@morgan.dev",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email_verification_sent": {
+            "description": "Whether the user's email address verification email has been sent.",
+            "example": true,
+            "type": "boolean"
+          },
+          "email_verified": {
+            "description": "Whether the user's email address has been verified.",
+            "example": true,
+            "type": "boolean"
+          },
+          "id": {
+            "description": "An opaque identifier for the user.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "is_admin": {
+            "description": "Whether the user is a crates.io administrator.",
+            "example": false,
+            "type": "boolean"
+          },
+          "login": {
+            "description": "The user's login name.",
+            "example": "ghost",
+            "type": "string"
+          },
+          "name": {
+            "description": "The user's display name, if set.",
+            "example": "Kate Morgan",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publish_notifications": {
+            "description": "Whether the user has opted in to receive publish notifications via email.",
+            "example": true,
+            "type": "boolean"
+          },
+          "url": {
+            "description": "The user's GitHub profile URL.",
+            "example": "https://github.com/ghost",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "email_verified",
+          "email_verification_sent",
+          "is_admin",
+          "publish_notifications"
+        ],
+        "type": "object"
+      },
       "Category": {
         "properties": {
           "category": {
@@ -1879,6 +1955,52 @@ expression: response.json()
         "operationId": "get_authenticated_user",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "owned_crates": {
+                      "description": "The crates that the authenticated user owns.",
+                      "items": {
+                        "properties": {
+                          "email_notifications": {
+                            "deprecated": true,
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "The opaque identifier of the crate.",
+                            "example": 123,
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "The name of the crate.",
+                            "example": "serde",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email_notifications"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/AuthenticatedUser",
+                      "description": "The authenticated user."
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "owned_crates"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
