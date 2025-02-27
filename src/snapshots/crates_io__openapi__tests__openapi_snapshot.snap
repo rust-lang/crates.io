@@ -148,6 +148,235 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "Crate": {
+        "properties": {
+          "badges": {
+            "deprecated": true,
+            "example": [],
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "description": "The list of categories belonging to this crate.",
+            "example": null,
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "The date and time this crate was created.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "default_version": {
+            "description": "The \"default\" version of this crate.\n\nThis version will be displayed by default on the crate's page.",
+            "example": "1.3.0",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "description": "Description of the crate.",
+            "example": "A generic serialization/deserialization framework",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "documentation": {
+            "description": "The URL to the crate's documentation, if set.",
+            "example": "https://docs.rs/serde",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "downloads": {
+            "description": "The total number of downloads for this crate.",
+            "example": 123456789,
+            "format": "int64",
+            "type": "integer"
+          },
+          "exact_match": {
+            "deprecated": true,
+            "description": "Whether the crate name was an exact match.",
+            "type": "boolean"
+          },
+          "homepage": {
+            "description": "The URL to the crate's homepage, if set.",
+            "example": "https://serde.rs",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "An opaque identifier for the crate.",
+            "example": "serde",
+            "type": "string"
+          },
+          "keywords": {
+            "description": "The list of keywords belonging to this crate.",
+            "example": null,
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "links": {
+            "$ref": "#/components/schemas/CrateLinks",
+            "description": "Links to other API endpoints related to this crate."
+          },
+          "max_stable_version": {
+            "deprecated": true,
+            "description": "The highest version number for this crate that is not a pre-release.",
+            "example": "1.3.0",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "max_version": {
+            "deprecated": true,
+            "description": "The highest version number for this crate.",
+            "example": "2.0.0-beta.1",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the crate.",
+            "example": "serde",
+            "type": "string"
+          },
+          "newest_version": {
+            "deprecated": true,
+            "description": "The most recently published version for this crate.",
+            "example": "1.2.3",
+            "type": "string"
+          },
+          "num_versions": {
+            "description": "The total number of versions for this crate.",
+            "example": 13,
+            "format": "int32",
+            "type": "integer"
+          },
+          "recent_downloads": {
+            "description": "The total number of downloads for this crate in the last 90 days.",
+            "example": 456789,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "repository": {
+            "description": "The URL to the crate's repository, if set.",
+            "example": "https://github.com/serde-rs/serde",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "description": "The date and time this crate was last updated.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "versions": {
+            "description": "The list of version IDs belonging to this crate.",
+            "example": null,
+            "items": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "yanked": {
+            "description": "Whether all versions of this crate have been yanked.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "updated_at",
+          "badges",
+          "created_at",
+          "downloads",
+          "num_versions",
+          "yanked",
+          "max_version",
+          "newest_version",
+          "links",
+          "exact_match"
+        ],
+        "type": "object"
+      },
+      "CrateLinks": {
+        "properties": {
+          "owner_team": {
+            "description": "The API path to this crate's team owners.",
+            "example": "/api/v1/crates/serde/owner_team",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner_user": {
+            "description": "The API path to this crate's user owners.",
+            "example": "/api/v1/crates/serde/owner_user",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owners": {
+            "description": "The API path to this crate's owners.",
+            "example": "/api/v1/crates/serde/owners",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reverse_dependencies": {
+            "description": "The API path to this crate's reverse dependencies.",
+            "example": "/api/v1/crates/serde/reverse_dependencies",
+            "type": "string"
+          },
+          "version_downloads": {
+            "description": "The API path to this crate's download statistics.",
+            "example": "/api/v1/crates/serde/downloads",
+            "type": "string"
+          },
+          "versions": {
+            "description": "The API path to this crate's versions.",
+            "example": "/api/v1/crates/serde/versions",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "version_downloads",
+          "reverse_dependencies"
+        ],
+        "type": "object"
+      },
       "CrateOwnerInvitation": {
         "properties": {
           "crate_id": {
@@ -1270,6 +1499,55 @@ expression: response.json()
         "operationId": "find_new_crate",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "categories": {
+                      "description": "The categories of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate",
+                      "description": "The crate metadata."
+                    },
+                    "keywords": {
+                      "description": "The keywords of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "versions": {
+                      "description": "The versions of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "crate"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1362,6 +1640,55 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "categories": {
+                      "description": "The categories of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate",
+                      "description": "The crate metadata."
+                    },
+                    "keywords": {
+                      "description": "The keywords of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "versions": {
+                      "description": "The versions of the crate.",
+                      "example": null,
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "crate"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

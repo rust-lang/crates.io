@@ -15,9 +15,8 @@ use crate::util::errors::{
     AppResult, BoxedAppError, bad_request, crate_not_found, version_not_found,
 };
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword, EncodableVersion};
+use axum::Json;
 use axum::extract::{FromRequestParts, Query};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
@@ -41,6 +40,25 @@ pub struct FindQueryParams {
     include: Option<String>,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    /// The crate metadata.
+    #[serde(rename = "crate")]
+    krate: EncodableCrate,
+
+    /// The versions of the crate.
+    #[schema(example = json!(null))]
+    versions: Option<Vec<EncodableVersion>>,
+
+    /// The keywords of the crate.
+    #[schema(example = json!(null))]
+    keywords: Option<Vec<EncodableKeyword>>,
+
+    /// The categories of the crate.
+    #[schema(example = json!(null))]
+    categories: Option<Vec<EncodableCategory>>,
+}
+
 /// Get crate metadata (for the `new` crate).
 ///
 /// This endpoint works around a small limitation in `axum` and is delegating
@@ -49,9 +67,12 @@ pub struct FindQueryParams {
     get,
     path = "/api/v1/crates/new",
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
-pub async fn find_new_crate(app: AppState, params: FindQueryParams) -> AppResult<ErasedJson> {
+pub async fn find_new_crate(
+    app: AppState,
+    params: FindQueryParams,
+) -> AppResult<Json<GetResponse>> {
     let name = "new".to_string();
     find_crate(app, CratePath { name }, params).await
 }
@@ -62,13 +83,13 @@ pub async fn find_new_crate(app: AppState, params: FindQueryParams) -> AppResult
     path = "/api/v1/crates/{name}",
     params(CratePath, FindQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
 pub async fn find_crate(
     app: AppState,
     path: CratePath,
     params: FindQueryParams,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<GetResponse>> {
     let mut conn = app.db_read().await?;
 
     let include = params
@@ -186,11 +207,11 @@ pub async fn find_crate(
             .collect::<Vec<EncodableCategory>>()
     });
 
-    Ok(json!({
-        "crate": encodable_crate,
-        "versions": encodable_versions,
-        "keywords": encodable_keywords,
-        "categories": encodable_cats,
+    Ok(Json(GetResponse {
+        krate: encodable_crate,
+        versions: encodable_versions,
+        keywords: encodable_keywords,
+        categories: encodable_cats,
     }))
 }
 
