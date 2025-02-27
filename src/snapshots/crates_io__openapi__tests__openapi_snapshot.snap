@@ -1991,7 +1991,35 @@ expression: response.json()
         ],
         "responses": {
           "200": {
-            "description": "Successful Response"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "url": {
+                      "description": "The URL to the crate file.",
+                      "example": "https://static.crates.io/crates/serde/serde-1.0.0.crate",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response (for `content-type: application/json`)"
+          },
+          "302": {
+            "description": "Successful Response (default)",
+            "headers": {
+              "location": {
+                "description": "The URL to the crate file.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "summary": "Download a crate version.",

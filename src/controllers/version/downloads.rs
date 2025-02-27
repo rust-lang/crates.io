@@ -18,6 +18,13 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UrlResponse {
+    /// The URL to the crate file.
+    #[schema(example = "https://static.crates.io/crates/serde/serde-1.0.0.crate")]
+    pub url: String,
+}
+
 /// Download a crate version.
 ///
 /// This returns a URL to the location where the crate is stored.
@@ -26,7 +33,10 @@ use http::request::Parts;
     path = "/api/v1/crates/{name}/{version}/download",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses(
+        (status = 302, description = "Successful Response (default)", headers(("location" = String, description = "The URL to the crate file."))),
+        (status = 200, description = "Successful Response (for `content-type: application/json`)", body = inline(UrlResponse)),
+    ),
 )]
 pub async fn download_version(
     app: AppState,
