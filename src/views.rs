@@ -134,17 +134,43 @@ pub struct InvitationResponse {
     pub accepted: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct EncodableDependency {
+    /// An opaque identifier for the dependency.
+    #[schema(example = 169)]
     pub id: i32,
+
+    /// The ID of the version this dependency belongs to.
+    #[schema(example = 42)]
     pub version_id: i32,
+
+    /// The name of the crate this dependency points to.
+    #[schema(example = "serde")]
     pub crate_id: String,
+
+    /// The version requirement for this dependency.
+    #[schema(example = "^1")]
     pub req: String,
+
+    /// Whether this dependency is optional.
     pub optional: bool,
+
+    /// Whether default features are enabled for this dependency.
+    #[schema(example = true)]
     pub default_features: bool,
+
+    /// The features explicitly enabled for this dependency.
     pub features: Vec<String>,
+
+    /// The target platform for this dependency, if any.
     pub target: Option<String>,
+
+    /// The type of dependency this is (normal, dev, or build).
+    #[schema(value_type = String, example = "normal")]
     pub kind: DependencyKind,
+
+    /// The total number of downloads for the crate this dependency points to.
+    #[schema(example = 123_456)]
     pub downloads: i64,
 }
 
