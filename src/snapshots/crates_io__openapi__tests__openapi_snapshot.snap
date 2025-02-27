@@ -129,6 +129,48 @@ expression: response.json()
           "description"
         ],
         "type": "object"
+      },
+      "User": {
+        "properties": {
+          "avatar": {
+            "description": "The user's avatar URL, if set.",
+            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "An opaque identifier for the user.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "login": {
+            "description": "The user's login name.",
+            "example": "ghost",
+            "type": "string"
+          },
+          "name": {
+            "description": "The user's display name, if set.",
+            "example": "Kate Morgan",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The user's GitHub profile URL.",
+            "example": "https://github.com/ghost",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "url"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -2004,6 +2046,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

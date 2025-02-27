@@ -522,14 +522,27 @@ impl EncodablePrivateUser {
     }
 }
 
-/// The serialization format for the `User` model.
-/// Same as private user, except no email field
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
+#[schema(as = User)]
 pub struct EncodablePublicUser {
+    /// An opaque identifier for the user.
+    #[schema(example = 42)]
     pub id: i32,
+
+    /// The user's login name.
+    #[schema(example = "ghost")]
     pub login: String,
+
+    /// The user's display name, if set.
+    #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
+
+    /// The user's avatar URL, if set.
+    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
     pub avatar: Option<String>,
+
+    /// The user's GitHub profile URL.
+    #[schema(example = "https://github.com/ghost")]
     pub url: String,
 }
 
