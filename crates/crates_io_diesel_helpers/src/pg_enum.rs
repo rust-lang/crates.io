@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! pg_enum {
     (
-        $vis:vis enum $name:ident {
+        $(#[$meta:meta])* $vis:vis enum $name:ident {
             $($item:ident = $int:expr,)*
         }
     ) => {
@@ -9,6 +9,7 @@ macro_rules! pg_enum {
         #[diesel(sql_type = diesel::sql_types::Integer)]
         #[serde(rename_all = "snake_case")]
         #[repr(i32)]
+        $(#[$meta])*
         $vis enum $name {
             $($item = $int,)*
         }
