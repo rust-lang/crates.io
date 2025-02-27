@@ -19,9 +19,6 @@ export default class VersionRow extends Component {
     if (version.invalidSemver) {
       return `Failed to parse version ${version.num}`;
     }
-    if (version.isFirst) {
-      return 'This is the first version that was released';
-    }
 
     let { releaseTrack } = version;
 

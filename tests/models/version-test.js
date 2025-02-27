@@ -1,5 +1,7 @@
 import { module, test } from 'qunit';
 
+import { calculateReleaseTracks } from '@crates-io/msw/utils/release-tracks';
+
 import { setupTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -169,6 +171,7 @@ module('Model | Version', function (hooks) {
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
+      crateRecord.release_tracks = calculateReleaseTracks(versions);
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -200,6 +203,7 @@ module('Model | Version', function (hooks) {
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
+      crateRecord.release_tracks = calculateReleaseTracks(versions);
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -218,6 +222,7 @@ module('Model | Version', function (hooks) {
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
       let versions = (await crateRecord.loadVersionsTask.perform()).slice();
+      crateRecord.release_tracks = calculateReleaseTracks(versions);
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),
@@ -231,6 +236,7 @@ module('Model | Version', function (hooks) {
       this.db.version.create({ crate, num: '0.4.3', yanked: true });
       crateRecord = await this.store.findRecord('crate', crate.name, { reload: true });
       versions = (await crateRecord.loadVersionsTask.perform({ reload: true })).slice();
+      crateRecord.release_tracks = calculateReleaseTracks(versions);
 
       assert.deepEqual(
         versions.map(it => ({ num: it.num, isHighestOfReleaseTrack: it.isHighestOfReleaseTrack })),

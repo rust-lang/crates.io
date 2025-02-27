@@ -23,7 +23,7 @@ module('Component | VersionList::Row', function (hooks) {
     this.secondVersion = versions.find(it => it.num === '0.3.0-alpha.01');
 
     await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
-    assert.dom('[data-test-release-track] svg').exists();
+    assert.dom('[data-test-release-track]').hasText('0.4');
     assert.dom('[data-test-release-track-link]').hasText('0.4.0-alpha.01');
 
     await render(hbs`<VersionList::Row @version={{this.secondVersion}} />`);

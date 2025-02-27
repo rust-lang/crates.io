@@ -26,3 +26,29 @@
         margin-top: var(--space-2xs);
     }
 }
+
+.load-more {
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+
+    /* TODO: move to shared */
+    composes: load-more from '../../styles/dashboard.module.css';
+
+    border: 0;
+    padding: 0 var(--space-m);
+
+    button {
+        border-radius: var(--space-3xs);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .loading-spinner {
+        display: inline-flex;
+        align-items: center;
+        position: absolute;
+        height: 100%;
+        top: 0;
+        margin-left: var(--space-2xs);
+    }
+}

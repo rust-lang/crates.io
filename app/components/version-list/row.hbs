@@ -14,8 +14,6 @@
         {{svg-jar "trash"}}
       {{else if @version.invalidSemver}}
         ?
-      {{else if @version.isFirst}}
-        {{svg-jar "star"}}
       {{else}}
         {{@version.releaseTrack}}
       {{/if}}

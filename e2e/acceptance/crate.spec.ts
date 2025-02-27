@@ -123,14 +123,29 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('foo-bar');
   });
 
-  test('navigating to the all versions page', async ({ page, msw }) => {
+  test('navigating to the versions page', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
+    // default with a page size more than 13
     await page.goto('/crates/nanomsg');
     await page.click('[data-test-versions-tab] a');
 
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /All 13\s+versions of nanomsg since\s+December \d+th, 2014/,
+      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+    );
+  });
+
+  test('navigating to the versions page with custom per_page', async ({ page, msw }) => {
+    loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg/versions?per_page=10');
+    await expect(page.locator('[data-test-page-description]')).toHaveText(
+      /10 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+    );
+
+    await page.getByTestId('load-more').click();
+    await expect(page.locator('[data-test-page-description]')).toHaveText(
+      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
     );
   });
 

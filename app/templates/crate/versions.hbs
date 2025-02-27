@@ -1,10 +1,10 @@
-<CrateHeader @crate={{this.model}} />
+<CrateHeader @crate={{this.crate}} />
 
 <div local-class="results-meta">
   <span local-class="page-description" data-test-page-description>
-    All <strong>{{ this.model.num_versions }}</strong>
-    versions of <strong>{{ this.model.name }}</strong> since
-    {{date-format this.model.created_at 'PPP'}}
+    <strong>{{ this.sortedVersions.length }}</strong> of <strong>{{ this.crate.num_versions }}</strong>
+    <strong>{{ this.crate.name }}</strong> versions since
+    {{date-format this.crate.created_at 'PPP'}}
   </span>
 
   <div data-test-search-sort>
@@ -23,3 +23,15 @@
     </li>
   {{/each}}
 </ul>
+{{#if this.next_page}}
+  <div local-class="load-more">
+    <button type="button" data-test-id="load-more" disabled={{this.loadMoreTask.isRunning}}
+      {{on "click" (perform this.loadMoreTask)}}
+    >
+      Load More
+      {{#if this.loadMoreTask.isRunning}}
+        <LoadingSpinner local-class="loading-spinner" />
+      {{/if}}
+    </button>
+  </div>
+{{/if}}

@@ -29,6 +29,14 @@ export default class Crate extends Model {
   @attr documentation;
   @attr repository;
 
+  /**
+   * This isn't an attribute in the crate response.
+   * It's actually the `meta` attribute that belongs to `versions`
+   * and needs to be assigned to `crate` manually.
+   * @type {Object.<string, {highest: string}>?}
+   **/
+  @attr release_tracks;
+
   @hasMany('version', { async: true, inverse: 'crate' }) versions;
   @hasMany('team', { async: true, inverse: null }) owner_team;
   @hasMany('user', { async: true, inverse: null }) owner_user;
@@ -37,35 +45,12 @@ export default class Crate extends Model {
   @hasMany('category', { async: true, inverse: null }) categories;
   @hasMany('dependency', { async: true, inverse: null }) reverse_dependencies;
 
-  @cached get versionIdsBySemver() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsBySemver`', last != null);
-    let versions = last?.value ?? [];
-    return versions
-      .slice()
-      .sort(compareVersionBySemver)
-      .map(v => v.id);
-  }
-
-  @cached get versionIdsByDate() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionIdsByDate`', last != null);
-    let versions = last?.value ?? [];
-    return versions
-      .slice()
-      .sort(compareVersionByDate)
-      .map(v => v.id);
-  }
-
-  @cached get firstVersionId() {
-    return this.versionIdsByDate.at(-1);
-  }
-
-  @cached get versionsObj() {
-    let { last } = this.loadVersionsTask;
-    assert('`loadVersionsTask.perform()` must be called before calling `versionsObj`', last != null);
-    let versions = last?.value ?? [];
-    return Object.fromEntries(versions.slice().map(v => [v.id, v]));
+  /** @return {Map<number, import("../models/version").default>} */
+  @cached
+  get loadedVersionsById() {
+    let versionsRef = this.hasMany('versions');
+    let values = versionsRef.value();
+    return new Map(values?.map(ref => [ref.id, ref]));
   }
 
   /** @return {Map<string, import("../models/version").default>} */
@@ -77,15 +62,9 @@ export default class Crate extends Model {
   }
 
   @cached get releaseTrackSet() {
-    let map = new Map();
-    let { versionsObj: versions, versionIdsBySemver } = this;
-    for (let id of versionIdsBySemver) {
-      let { releaseTrack, isPrerelease, yanked } = versions[id];
-      if (releaseTrack && !isPrerelease && !yanked && !map.has(releaseTrack)) {
-        map.set(releaseTrack, id);
-      }
-    }
-    return new Set(map.values());
+    let { release_tracks } = this;
+    let nums = release_tracks ? Object.values(this.release_tracks).map(it => it.highest) : [];
+    return new Set(nums);
   }
 
   hasOwnerUser(userId) {
@@ -144,26 +123,4 @@ export default class Crate extends Model {
     let fut = reload === true ? versionsRef.reload() : versionsRef.load();
     return (await fut) ?? [];
   });
-}
-
-function compareVersionBySemver(a, b) {
-  let aSemver = a.semver;
-  let bSemver = b.semver;
-
-  if (aSemver === bSemver) {
-    return b.created_at - a.created_at;
-  } else if (aSemver === null) {
-    return 1;
-  } else if (bSemver === null) {
-    return -1;
-  } else {
-    return bSemver.compare(aSemver);
-  }
-}
-
-function compareVersionByDate(a, b) {
-  let bDate = b.created_at.getTime();
-  let aDate = a.created_at.getTime();
-
-  return bDate === aDate ? parseInt(b.id) - parseInt(a.id) : bDate - aDate;
 }

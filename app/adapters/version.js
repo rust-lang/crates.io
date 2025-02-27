@@ -7,6 +7,15 @@ export default class VersionAdapter extends ApplicationAdapter {
     return `/${this.namespace}/crates/${crateName}/${num}`;
   }
 
+  urlForQuery(query) {
+    let { name } = query ?? {};
+    let baseUrl = this.buildURL('crate', name);
+    let url = `${baseUrl}/versions`;
+    // The following used to remove them from URL's query string.
+    delete query.name;
+    return url;
+  }
+
   urlForQueryRecord(query) {
     let { name, num } = query ?? {};
     let baseUrl = this.buildURL('crate', name);
