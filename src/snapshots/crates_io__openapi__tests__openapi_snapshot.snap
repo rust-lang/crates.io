@@ -349,6 +349,255 @@ expression: response.json()
           "url"
         ],
         "type": "object"
+      },
+      "Version": {
+        "properties": {
+          "audit_actions": {
+            "description": "A list of actions performed on this version.",
+            "items": {
+              "properties": {
+                "action": {
+                  "description": "The action that was performed.",
+                  "example": "publish",
+                  "type": "string"
+                },
+                "time": {
+                  "description": "The date and time the action was performed.",
+                  "example": "2019-12-13T13:46:41Z",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "user": {
+                  "$ref": "#/components/schemas/User",
+                  "description": "The user who performed the action."
+                }
+              },
+              "required": [
+                "action",
+                "user",
+                "time"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "bin_names": {
+            "description": "The names of the binaries provided by this version, if any.",
+            "example": [],
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "checksum": {
+            "description": "The SHA256 checksum of the compressed crate file encoded as a\nhexadecimal string.",
+            "example": "e8dfc9d19bdbf6d17e22319da49161d5d0108e4188e8b680aef6299eed22df60",
+            "type": "string"
+          },
+          "crate": {
+            "description": "The name of the crate.",
+            "example": "serde",
+            "type": "string"
+          },
+          "crate_size": {
+            "description": "The size of the compressed crate file in bytes.",
+            "example": 1234,
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "The date and time this version was created.",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of this version of the crate.",
+            "example": "A generic serialization/deserialization framework",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dl_path": {
+            "description": "The API path to download the crate.",
+            "example": "/api/v1/crates/serde/1.0.0/download",
+            "type": "string"
+          },
+          "documentation": {
+            "description": "The URL to the crate's documentation, if set.",
+            "example": "https://docs.rs/serde",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "downloads": {
+            "description": "The total number of downloads for this version.",
+            "example": 123456,
+            "format": "int32",
+            "type": "integer"
+          },
+          "edition": {
+            "description": "The Rust Edition used to compile this version, if set.",
+            "example": "2021",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "features": {
+            "description": "The features defined by this version.",
+            "type": "object"
+          },
+          "has_lib": {
+            "description": "Whether this version can be used as a library.",
+            "example": true,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "homepage": {
+            "description": "The URL to the crate's homepage, if set.",
+            "example": "https://serde.rs",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "An opaque identifier for the version.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "lib_links": {
+            "description": "The name of the native library this version links with, if any.",
+            "example": "git2",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "license": {
+            "description": "The license of this version of the crate.",
+            "example": "MIT",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "links": {
+            "$ref": "#/components/schemas/VersionLinks",
+            "description": "Links to other API endpoints related to this version."
+          },
+          "num": {
+            "description": "The version number.",
+            "example": "1.0.0",
+            "type": "string"
+          },
+          "published_by": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/User",
+                "description": "The user who published this version.\n\nThis field may be `null` if the version was published before crates.io\nstarted recording this information."
+              }
+            ]
+          },
+          "readme_path": {
+            "description": "The API path to download the crate's README file as HTML code.",
+            "example": "/api/v1/crates/serde/1.0.0/readme",
+            "type": "string"
+          },
+          "repository": {
+            "description": "The URL to the crate's repository, if set.",
+            "example": "https://github.com/serde-rs/serde",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rust_version": {
+            "description": "The minimum version of the Rust compiler required to compile\nthis version, if set.",
+            "example": "1.31",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "description": "The date and time this version was last updated (i.e. yanked or unyanked).",
+            "example": "2019-12-13T13:46:41Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "yank_message": {
+            "description": "The message given when this version was yanked, if any.",
+            "example": "Security vulnerability",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "yanked": {
+            "description": "Whether this version has been yanked.",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "crate",
+          "num",
+          "dl_path",
+          "readme_path",
+          "updated_at",
+          "created_at",
+          "downloads",
+          "features",
+          "yanked",
+          "links",
+          "crate_size",
+          "audit_actions",
+          "checksum"
+        ],
+        "type": "object"
+      },
+      "VersionLinks": {
+        "properties": {
+          "authors": {
+            "deprecated": true,
+            "description": "The API path to download this version's authors.",
+            "example": "/api/v1/crates/serde/1.0.0/authors",
+            "type": "string"
+          },
+          "dependencies": {
+            "description": "The API path to download this version's dependencies.",
+            "example": "/api/v1/crates/serde/1.0.0/dependencies",
+            "type": "string"
+          },
+          "version_downloads": {
+            "description": "The API path to download this version's download numbers.",
+            "example": "/api/v1/crates/serde/1.0.0/downloads",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dependencies",
+          "version_downloads",
+          "authors"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -1459,6 +1708,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "version": {
+                      "$ref": "#/components/schemas/Version"
+                    }
+                  },
+                  "required": [
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

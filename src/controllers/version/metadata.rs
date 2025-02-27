@@ -4,8 +4,7 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
+use axum::Json;
 
 use crate::app::AppState;
 use crate::models::VersionOwnerAction;
@@ -14,15 +13,20 @@ use crate::views::EncodableVersion;
 
 use super::CrateVersionPath;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub version: EncodableVersion,
+}
+
 /// Get crate version metadata.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/{version}",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
-pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<ErasedJson> {
+pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read().await?;
     let (version, krate) = path.load_version_and_crate(&mut conn).await?;
     let (actions, published_by) = tokio::try_join!(
@@ -31,5 +35,5 @@ pub async fn find_version(state: AppState, path: CrateVersionPath) -> AppResult<
     )?;
 
     let version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(json!({ "version": version }))
+    Ok(Json(GetResponse { version }))
 }
