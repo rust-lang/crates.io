@@ -1856,6 +1856,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "version": {
+                      "$ref": "#/components/schemas/Version"
+                    }
+                  },
+                  "required": [
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
