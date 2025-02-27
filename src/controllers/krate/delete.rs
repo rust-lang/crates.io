@@ -50,7 +50,7 @@ impl DeleteQueryParams {
     params(CratePath, DeleteQueryParams),
     security(("cookie" = [])),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 204, description = "Successful Response")),
 )]
 pub async fn delete_crate(
     path: CratePath,
