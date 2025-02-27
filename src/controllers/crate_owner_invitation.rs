@@ -26,18 +26,27 @@ use http::request::Parts;
 use indexmap::IndexMap;
 use std::collections::{HashMap, HashSet};
 
+#[derive(Serialize, utoipa::ToSchema)]
+pub struct LegacyListResponse {
+    /// The list of crate owner invitations.
+    crate_owner_invitations: Vec<EncodableCrateOwnerInvitationV1>,
+
+    /// The list of users referenced in the crate owner invitations.
+    users: Vec<EncodablePublicUser>,
+}
+
 /// List all crate owner invitations for the authenticated user.
 #[utoipa::path(
     get,
     path = "/api/v1/me/crate_owner_invitations",
     security(("cookie" = [])),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(LegacyListResponse))),
 )]
 pub async fn list_crate_owner_invitations_for_user(
     app: AppState,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<LegacyListResponse>> {
     let mut conn = app.db_read().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -68,9 +77,9 @@ pub async fn list_crate_owner_invitations_for_user(
         })
         .collect::<AppResult<Vec<EncodableCrateOwnerInvitationV1>>>()?;
 
-    Ok(json!({
-        "crate_owner_invitations": crate_owner_invitations,
-        "users": users,
+    Ok(Json(LegacyListResponse {
+        crate_owner_invitations,
+        users,
     }))
 }
 
@@ -96,7 +105,7 @@ pub struct ListQueryParams {
     params(ListQueryParams, PaginationQueryParams),
     security(("cookie" = [])),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(PrivateListResponse))),
 )]
 pub async fn list_crate_owner_invitations(
     app: AppState,
@@ -296,15 +305,22 @@ async fn prepare_list(
     })
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 pub struct PrivateListResponse {
+    /// The list of crate owner invitations.
     invitations: Vec<EncodableCrateOwnerInvitation>,
+
+    /// The list of users referenced in the crate owner invitations.
     users: Vec<EncodablePublicUser>,
+
+    #[schema(inline)]
     meta: ResponseMeta,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 struct ResponseMeta {
+    /// Query parameter string to fetch the next page of results.
+    #[schema(example = "?seek=c0ffee")]
     next_page: Option<String>,
 }
 
