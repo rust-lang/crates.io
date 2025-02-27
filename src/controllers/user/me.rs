@@ -4,6 +4,7 @@ use axum_extra::json;
 use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use futures_util::FutureExt;
 use http::request::Parts;
 
 use crate::app::AppState;
@@ -29,7 +30,8 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
         .check(&req, &mut conn)
         .await?
         .user_id();
-    let (user, verified, email, verification_sent): (User, Option<bool>, Option<String>, bool) =
+
+    let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
         users::table
             .find(user_id)
             .left_join(emails::table)
@@ -39,16 +41,18 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
                 emails::email.nullable(),
                 emails::token_generated_at.nullable().is_not_null(),
             ))
-            .first(&mut conn)
-            .await?;
+            .first::<(User, Option<bool>, Option<String>, bool)>(&mut conn)
+            .boxed(),
+        CrateOwner::by_owner_kind(OwnerKind::User)
+            .inner_join(crates::table)
+            .filter(crate_owners::owner_id.eq(user_id))
+            .select((crates::id, crates::name, crate_owners::email_notifications))
+            .order(crates::name.asc())
+            .load(&mut conn)
+            .boxed()
+    )?;
 
-    let owned_crates = CrateOwner::by_owner_kind(OwnerKind::User)
-        .inner_join(crates::table)
-        .filter(crate_owners::owner_id.eq(user_id))
-        .select((crates::id, crates::name, crate_owners::email_notifications))
-        .order(crates::name.asc())
-        .load(&mut conn)
-        .await?
+    let owned_crates = owned_crates
         .into_iter()
         .map(|(id, name, email_notifications)| OwnedCrate {
             id,
