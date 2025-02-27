@@ -222,10 +222,43 @@
     text-transform: none;
 }
 
+.features-button {
+    text-align: center;
+    padding-top: var(--space-4xs);
+    position: relative;
+    cursor: help;
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: var(--space-4xs);
+        margin-bottom: -.2em;
+    }
+}
+
+.features-panel {
+    margin-top: var(--space-2xs);
+    letter-spacing: .7px;
+    font-size: 13px;
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: var(--space-4xs);
+        margin-bottom: -.1em;
+    }
+}
+
 .feature-list {
     padding: 0;
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
+    user-select: text;
+
+    li {
+        padding: var(--space-4xs);
+    }
+    li svg {
+        vertical-align: middle;
+    }
 }
 
 .yank-button {
