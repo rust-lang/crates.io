@@ -645,6 +645,33 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "VersionDownload": {
+        "properties": {
+          "date": {
+            "description": "The date this download count is for.",
+            "example": "2019-12-13",
+            "type": "string"
+          },
+          "downloads": {
+            "description": "The number of downloads for this version on the given date.",
+            "example": 123,
+            "format": "int32",
+            "type": "integer"
+          },
+          "version": {
+            "description": "The ID of the version this download count is for.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "downloads",
+          "date"
+        ],
+        "type": "object"
+      },
       "VersionLinks": {
         "properties": {
           "authors": {
@@ -2011,6 +2038,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "version_downloads": {
+                      "items": {
+                        "$ref": "#/components/schemas/VersionDownload"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "version_downloads"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
