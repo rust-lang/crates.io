@@ -485,33 +485,71 @@ pub struct EncodableApiTokenWithToken {
     pub plaintext: String,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
 pub struct OwnedCrate {
+    /// The opaque identifier of the crate.
+    #[schema(example = 123)]
     pub id: i32,
+
+    /// The name of the crate.
+    #[schema(example = "serde")]
     pub name: String,
+
+    #[schema(deprecated)]
     pub email_notifications: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct EncodableMe {
+    /// The authenticated user.
     pub user: EncodablePrivateUser,
+
+    /// The crates that the authenticated user owns.
+    #[schema(inline)]
     pub owned_crates: Vec<OwnedCrate>,
 }
 
-/// The serialization format for the `User` model.
-/// Same as public user, except for addition of
-/// email field
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
+#[schema(as = AuthenticatedUser)]
 pub struct EncodablePrivateUser {
+    /// An opaque identifier for the user.
+    #[schema(example = 42)]
     pub id: i32,
+
+    /// The user's login name.
+    #[schema(example = "ghost")]
     pub login: String,
+
+    /// Whether the user's email address has been verified.
+    #[schema(example = true)]
     pub email_verified: bool,
+
+    /// Whether the user's email address verification email has been sent.
+    #[schema(example = true)]
     pub email_verification_sent: bool,
+
+    /// The user's display name, if set.
+    #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
+
+    /// The user's email address, if set.
+    #[schema(example = "kate@morgan.dev")]
     pub email: Option<String>,
+
+    /// The user's avatar URL, if set.
+    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
     pub avatar: Option<String>,
+
+    /// The user's GitHub profile URL.
+    #[schema(example = "https://github.com/ghost")]
     pub url: Option<String>,
+
+    /// Whether the user is a crates.io administrator.
+    #[schema(example = false)]
     pub is_admin: bool,
+
+    /// Whether the user has opted in to receive publish notifications via email.
+    #[schema(example = true)]
     pub publish_notifications: bool,
 }
 
