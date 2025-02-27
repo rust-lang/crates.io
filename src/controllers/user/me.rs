@@ -1,7 +1,5 @@
 use crate::auth::AuthCheck;
 use axum::Json;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use futures_util::FutureExt;
@@ -69,15 +67,33 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
     }))
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UpdatesResponse {
+    /// The list of recent versions of crates that the authenticated user follows.
+    pub versions: Vec<EncodableVersion>,
+
+    #[schema(inline)]
+    pub meta: UpdatesResponseMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UpdatesResponseMeta {
+    /// Whether there are more versions to be loaded.
+    pub more: bool,
+}
+
 /// List versions of crates that the authenticated user follows.
 #[utoipa::path(
     get,
     path = "/api/v1/me/updates",
     security(("cookie" = [])),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UpdatesResponse))),
 )]
-pub async fn get_authenticated_user_updates(app: AppState, req: Parts) -> AppResult<ErasedJson> {
+pub async fn get_authenticated_user_updates(
+    app: AppState,
+    req: Parts,
+) -> AppResult<Json<UpdatesResponse>> {
     let mut conn = app.db_read_prefer_primary().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -109,8 +125,8 @@ pub async fn get_authenticated_user_updates(app: AppState, req: Parts) -> AppRes
         })
         .collect::<Vec<_>>();
 
-    Ok(json!({
-        "versions": versions,
-        "meta": { "more": more },
+    Ok(Json(UpdatesResponse {
+        versions,
+        meta: UpdatesResponseMeta { more },
     }))
 }

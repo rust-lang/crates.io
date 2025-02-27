@@ -2531,6 +2531,38 @@ expression: response.json()
         "operationId": "get_authenticated_user_updates",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "meta": {
+                      "properties": {
+                        "more": {
+                          "description": "Whether there are more versions to be loaded.",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "more"
+                      ],
+                      "type": "object"
+                    },
+                    "versions": {
+                      "description": "The list of recent versions of crates that the authenticated user follows.",
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "versions",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
