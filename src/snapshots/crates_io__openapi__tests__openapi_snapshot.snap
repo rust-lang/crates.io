@@ -1579,6 +1579,22 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "following": {
+                      "description": "Whether the authenticated user is following the crate.",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "following"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
