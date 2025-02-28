@@ -10,10 +10,9 @@ use crate::models::{User, Version as FullVersion, VersionDownload, VersionOwnerA
 use crate::schema::{version_downloads, version_owner_actions, versions};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::views::{EncodableVersion, EncodableVersionDownload};
+use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use crates_io_database::schema::users;
 use crates_io_diesel_helpers::to_char;
 use diesel::prelude::*;
@@ -37,6 +36,37 @@ pub struct DownloadsQueryParams {
     include: Option<String>,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct DownloadsResponse {
+    /// The per-day download counts for the last 90 days.
+    pub version_downloads: Vec<EncodableVersionDownload>,
+
+    /// The versions referenced in the download counts, if `?include=versions`
+    /// was requested.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub versions: Option<Vec<EncodableVersion>>,
+
+    #[schema(inline)]
+    pub meta: DownloadsMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct DownloadsMeta {
+    #[schema(inline)]
+    pub extra_downloads: Vec<ExtraDownload>,
+}
+
+#[derive(Debug, Serialize, Queryable, utoipa::ToSchema)]
+pub struct ExtraDownload {
+    /// The date this download count is for.
+    #[schema(example = "2019-12-13")]
+    date: String,
+
+    /// The number of downloads on the given date.
+    #[schema(example = 123)]
+    downloads: i64,
+}
+
 /// Get the download counts for a crate.
 ///
 /// This includes the per-day downloads for the last 90 days and for the
@@ -46,14 +76,13 @@ pub struct DownloadsQueryParams {
     path = "/api/v1/crates/{name}/downloads",
     params(CratePath, DownloadsQueryParams),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(DownloadsResponse))),
 )]
-
 pub async fn get_crate_downloads(
     state: AppState,
     path: CratePath,
     params: DownloadsQueryParams,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<DownloadsResponse>> {
     let mut conn = state.db_read().await?;
 
     use diesel::dsl::*;
@@ -78,7 +107,7 @@ pub async fn get_crate_downloads(
         .unwrap_or_default();
 
     let sum_downloads = sql::<BigInt>("SUM(version_downloads.downloads)");
-    let (downloads, extra, versions_and_publishers, actions) = tokio::try_join!(
+    let (downloads, extra_downloads, versions_and_publishers, actions) = tokio::try_join!(
         VersionDownload::belonging_to(latest_five)
             .filter(version_downloads::date.gt(date(now - 90.days())))
             .order((
@@ -101,18 +130,12 @@ pub async fn get_crate_downloads(
         load_actions(&mut conn, latest_five, include.versions),
     )?;
 
-    let downloads = downloads
+    let version_downloads = downloads
         .into_iter()
         .map(VersionDownload::into)
         .collect::<Vec<EncodableVersionDownload>>();
 
-    #[derive(Serialize, Queryable)]
-    struct ExtraDownload {
-        date: String,
-        downloads: i64,
-    }
-
-    if include.versions {
+    let versions = if include.versions {
         let versions_and_publishers = versions_and_publishers.grouped_by(latest_five);
         let actions = actions.grouped_by(latest_five);
         let versions = versions_and_publishers
@@ -125,20 +148,15 @@ pub async fn get_crate_downloads(
             })
             .collect::<Vec<_>>();
 
-        return Ok(json!({
-            "version_downloads": downloads,
-            "versions": versions,
-            "meta": {
-                "extra_downloads": extra,
-            },
-        }));
-    }
+        Some(versions)
+    } else {
+        None
+    };
 
-    Ok(json!({
-        "version_downloads": downloads,
-        "meta": {
-            "extra_downloads": extra,
-        },
+    Ok(Json(DownloadsResponse {
+        version_downloads,
+        versions,
+        meta: DownloadsMeta { extra_downloads },
     }))
 }
 

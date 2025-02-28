@@ -7,8 +7,7 @@ use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
 use crate::schema::*;
 use crate::util::errors::{AppResult, crate_not_found};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
+use axum::Json;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
@@ -74,6 +73,12 @@ pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppRe
     Ok(OkResponse::new())
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct FollowingResponse {
+    /// Whether the authenticated user is following the crate.
+    pub following: bool,
+}
+
 /// Check if a crate is followed.
 #[utoipa::path(
     get,
@@ -81,13 +86,13 @@ pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppRe
     params(CratePath),
     security(("cookie" = [])),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(FollowingResponse))),
 )]
 pub async fn get_following_crate(
     app: AppState,
     path: CratePath,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<FollowingResponse>> {
     use diesel::dsl::exists;
 
     let mut conn = app.db_read_prefer_primary().await?;
@@ -98,8 +103,8 @@ pub async fn get_following_crate(
 
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
     let following = diesel::select(exists(follows::table.find(follow.id())))
-        .get_result::<bool>(&mut conn)
+        .get_result(&mut conn)
         .await?;
 
-    Ok(json!({ "following": following }))
+    Ok(Json(FollowingResponse { following }))
 }

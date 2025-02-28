@@ -264,31 +264,94 @@ impl From<Keyword> for EncodableKeyword {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = Crate)]
 pub struct EncodableCrate {
+    /// An opaque identifier for the crate.
+    #[schema(example = "serde")]
     pub id: String,
+
+    /// The name of the crate.
+    #[schema(example = "serde")]
     pub name: String,
+
+    /// The date and time this crate was last updated.
+    #[schema(example = "2019-12-13T13:46:41Z")]
     pub updated_at: DateTime<Utc>,
+
+    /// The list of version IDs belonging to this crate.
+    #[schema(example = json!(null))]
     pub versions: Option<Vec<i32>>,
+
+    /// The list of keywords belonging to this crate.
+    #[schema(example = json!(null))]
     pub keywords: Option<Vec<String>>,
+
+    /// The list of categories belonging to this crate.
+    #[schema(example = json!(null))]
     pub categories: Option<Vec<String>>,
+
+    #[schema(deprecated, value_type = Vec<Object>, example = json!([]))]
     pub badges: [(); 0],
+
+    /// The date and time this crate was created.
+    #[schema(example = "2019-12-13T13:46:41Z")]
     pub created_at: DateTime<Utc>,
-    // NOTE: Used by shields.io, altering `downloads` requires a PR with shields.io
+
+    /// The total number of downloads for this crate.
+    #[schema(example = 123_456_789)]
     pub downloads: i64,
+
+    /// The total number of downloads for this crate in the last 90 days.
+    #[schema(example = 456_789)]
     pub recent_downloads: Option<i64>,
+
+    /// The "default" version of this crate.
+    ///
+    /// This version will be displayed by default on the crate's page.
+    #[schema(example = "1.3.0")]
     pub default_version: Option<String>,
+
+    /// The total number of versions for this crate.
+    #[schema(example = 13)]
     pub num_versions: i32,
+
+    /// Whether all versions of this crate have been yanked.
     pub yanked: bool,
-    // NOTE: Used by shields.io, altering `max_version` requires a PR with shields.io
+
+    /// The highest version number for this crate.
+    #[schema(deprecated, example = "2.0.0-beta.1")]
     pub max_version: String,
-    pub newest_version: String, // Most recently updated version, which may not be max
+
+    /// The most recently published version for this crate.
+    #[schema(deprecated, example = "1.2.3")]
+    pub newest_version: String,
+
+    /// The highest version number for this crate that is not a pre-release.
+    #[schema(deprecated, example = "1.3.0")]
     pub max_stable_version: Option<String>,
+
+    /// Description of the crate.
+    #[schema(example = "A generic serialization/deserialization framework")]
     pub description: Option<String>,
+
+    /// The URL to the crate's homepage, if set.
+    #[schema(example = "https://serde.rs")]
     pub homepage: Option<String>,
+
+    /// The URL to the crate's documentation, if set.
+    #[schema(example = "https://docs.rs/serde")]
     pub documentation: Option<String>,
+
+    /// The URL to the crate's repository, if set.
+    #[schema(example = "https://github.com/serde-rs/serde")]
     pub repository: Option<String>,
+
+    /// Links to other API endpoints related to this crate.
     pub links: EncodableCrateLinks,
+
+    /// Whether the crate name was an exact match.
+    #[schema(deprecated)]
     pub exact_match: bool,
 }
 
@@ -418,13 +481,31 @@ impl EncodableCrate {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = CrateLinks)]
 pub struct EncodableCrateLinks {
+    /// The API path to this crate's download statistics.
+    #[schema(example = "/api/v1/crates/serde/downloads")]
     pub version_downloads: String,
+
+    /// The API path to this crate's versions.
+    #[schema(example = "/api/v1/crates/serde/versions")]
     pub versions: Option<String>,
+
+    /// The API path to this crate's owners.
+    #[schema(example = "/api/v1/crates/serde/owners")]
     pub owners: Option<String>,
+
+    /// The API path to this crate's team owners.
+    #[schema(example = "/api/v1/crates/serde/owner_team")]
     pub owner_team: Option<String>,
+
+    /// The API path to this crate's user owners.
+    #[schema(example = "/api/v1/crates/serde/owner_user")]
     pub owner_user: Option<String>,
+
+    /// The API path to this crate's reverse dependencies.
+    #[schema(example = "/api/v1/crates/serde/reverse_dependencies")]
     pub reverse_dependencies: String,
 }
 
