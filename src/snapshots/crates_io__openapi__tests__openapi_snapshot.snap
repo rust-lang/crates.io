@@ -196,6 +196,78 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "EncodableDependency": {
+        "properties": {
+          "crate_id": {
+            "description": "The name of the crate this dependency points to.",
+            "example": "serde",
+            "type": "string"
+          },
+          "default_features": {
+            "description": "Whether default features are enabled for this dependency.",
+            "example": true,
+            "type": "boolean"
+          },
+          "downloads": {
+            "description": "The total number of downloads for the crate this dependency points to.",
+            "example": 123456,
+            "format": "int64",
+            "type": "integer"
+          },
+          "features": {
+            "description": "The features explicitly enabled for this dependency.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "An opaque identifier for the dependency.",
+            "example": 169,
+            "format": "int32",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "The type of dependency this is (normal, dev, or build).",
+            "example": "normal",
+            "type": "string"
+          },
+          "optional": {
+            "description": "Whether this dependency is optional.",
+            "type": "boolean"
+          },
+          "req": {
+            "description": "The version requirement for this dependency.",
+            "example": "^1",
+            "type": "string"
+          },
+          "target": {
+            "description": "The target platform for this dependency, if any.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version_id": {
+            "description": "The ID of the version this dependency belongs to.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version_id",
+          "crate_id",
+          "req",
+          "optional",
+          "default_features",
+          "features",
+          "kind",
+          "downloads"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "crates_cnt": {
@@ -1838,6 +1910,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "dependencies": {
+                      "items": {
+                        "$ref": "#/components/schemas/EncodableDependency"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "dependencies"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

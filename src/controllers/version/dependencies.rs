@@ -3,11 +3,15 @@ use crate::app::AppState;
 use crate::models::Dependency;
 use crate::util::errors::AppResult;
 use crate::views::EncodableDependency;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
+use axum::Json;
 use crates_io_database::schema::{crates, dependencies};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct Response {
+    pub dependencies: Vec<EncodableDependency>,
+}
 
 /// Get crate version dependencies.
 ///
@@ -21,16 +25,16 @@ use diesel_async::RunQueryDsl;
     path = "/api/v1/crates/{name}/{version}/dependencies",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(Response))),
 )]
 pub async fn get_version_dependencies(
     state: AppState,
     path: CrateVersionPath,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<Response>> {
     let mut conn = state.db_read().await?;
     let version = path.load_version(&mut conn).await?;
 
-    let deps = Dependency::belonging_to(&version)
+    let dependencies = Dependency::belonging_to(&version)
         .inner_join(crates::table)
         .select((Dependency::as_select(), crates::name))
         .order((dependencies::optional, crates::name))
@@ -40,5 +44,5 @@ pub async fn get_version_dependencies(
         .map(|(dep, crate_name)| EncodableDependency::from_dep(dep, &crate_name))
         .collect::<Vec<_>>();
 
-    Ok(json!({ "dependencies": deps }))
+    Ok(Json(Response { dependencies }))
 }
