@@ -230,8 +230,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       ember-template-lint:
-        specifier: 6.1.0
-        version: 6.1.0
+        specifier: 7.0.0
+        version: 7.0.0(@babel/core@7.26.9)
       ember-test-selectors:
         specifier: 7.0.0
         version: 7.0.0
@@ -2851,10 +2851,6 @@ packages:
     resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
     engines: {node: '>=4'}
 
-  babel-import-util@0.2.0:
-    resolution: {integrity: sha512-CtWYYHU/MgK88rxMrLfkD356dApswtR/kWZ/c6JifG1m10e7tBBrs/366dFzWMAoqYmG5/JSh+94tUSpIwh+ag==}
-    engines: {node: '>= 12.*'}
-
   babel-import-util@2.1.1:
     resolution: {integrity: sha512-3qBQWRjzP9NreSH/YrOEU1Lj5F60+pWSLP0kIdCWxjFHH7pX2YPHIxQ67el4gnMNfYoDxSDGcT0zpVlZ+gVtQA==}
     engines: {node: '>= 12.*'}
@@ -3658,8 +3654,15 @@ packages:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
     engines: {node: '>= 0.6'}
 
+  content-tag-utils@0.3.0:
+    resolution: {integrity: sha512-tyuXzzMyiOblbFiS+0m+jrE9WSeNEOx4FU47kNFBbFy1JBsdlD5WFEBGHnT5+Yulyqnor4y8Ep2fMxhSLGf2DQ==}
+    engines: {node: '>= 18'}
+
   content-tag@2.0.3:
     resolution: {integrity: sha512-htLIdtfhhKW2fHlFLnZH7GFzHSdSpHhDLrWVswkNiiPMZ5uXq5JfrGboQKFhNQuAAFF8VNB2EYUj3MsdJrKKpg==}
+
+  content-tag@3.1.1:
+    resolution: {integrity: sha512-94puwVk6X8oJcbRIEY03UM80zWzA3dYgGkOiRJzeY1vXgwrFUh3OolDDi/D7YBa6Vsx+CgAvuk4uXlB8loZ1FA==}
 
   content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
@@ -4543,12 +4546,8 @@ packages:
     resolution: {integrity: sha512-bDwzecB1DjVMvYCg0QpSsqQoHjK/zRDJ/ob+QbB0VzL8rPbSsThpoyKAsRcNip7m0l+gUxBfyUoHorPlyc0UxA==}
     engines: {node: 12.* || 14.* || >= 16}
 
-  ember-template-imports@3.4.2:
-    resolution: {integrity: sha512-OS8TUVG2kQYYwP3netunLVfeijPoOKIs1SvPQRTNOQX4Pu8xGGBEZmrv0U1YTnQn12Eg+p6w/0UdGbUnITjyzw==}
-    engines: {node: 12.* || >= 14}
-
-  ember-template-lint@6.1.0:
-    resolution: {integrity: sha512-UyzLPcyneG3mnbBfewyYIlV7fy6JKHQVAJy5a9+URdJKkZKN+3vQkQzIIlsz6dP/GpoXVB+datns5HlfMfliSA==}
+  ember-template-lint@7.0.0:
+    resolution: {integrity: sha512-LWAgk/kpcYrMCIWBxC7tf+yd2t870Sk0nUAOSvow0TQxmbLADRPNlqijW3+yGf8CGzEK1eLUInzJQdm23xJxyQ==}
     engines: {node: ^18.18.0 || >= 20.9.0}
     hasBin: true
 
@@ -8403,9 +8402,6 @@ packages:
     resolution: {integrity: sha512-d7KLgL1LD3U3fgnvWEY1cQXoO/q6EQ1BSz48Sa149V/5zVTAbgmZIpyI8TRi6U9/JNyeYLlTKsEMPtLC27RFUg==}
     engines: {node: ^18.17.0 || >=20.5.0}
 
-  validate-peer-dependencies@1.2.0:
-    resolution: {integrity: sha512-nd2HUpKc6RWblPZQ2GDuI65sxJ2n/UqZwSBVtj64xlWjMx0m7ZB2m9b2JS3v1f+n9VWH/dd1CMhkHfP6pIdckA==}
-
   validate-peer-dependencies@2.2.0:
     resolution: {integrity: sha512-8X1OWlERjiUY6P6tdeU9E0EwO8RA3bahoOVG7ulOZT5MqgNDUO/BQoVjYiHPcNe+v8glsboZRIw9iToMAA2zAA==}
     engines: {node: '>= 12'}
@@ -11989,8 +11985,6 @@ snapshots:
 
   axe-core@4.10.2: {}
 
-  babel-import-util@0.2.0: {}
-
   babel-import-util@2.1.1: {}
 
   babel-import-util@3.0.0: {}
@@ -12979,7 +12973,13 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
+  content-tag-utils@0.3.0:
+    dependencies:
+      content-tag: 3.1.1
+
   content-tag@2.0.3: {}
+
+  content-tag@3.1.1: {}
 
   content-type@1.0.5: {}
 
@@ -14432,28 +14432,20 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-template-imports@3.4.2:
+  ember-template-lint@7.0.0(@babel/core@7.26.9):
     dependencies:
-      babel-import-util: 0.2.0
-      broccoli-stew: 3.0.0
-      ember-cli-babel-plugin-helpers: 1.1.1
-      ember-cli-version-checker: 5.1.2
-      line-column: 1.0.2
-      magic-string: 0.25.9
-      parse-static-imports: 1.1.0
-      string.prototype.matchall: 4.0.12
-      validate-peer-dependencies: 1.2.0
-    transitivePeerDependencies:
-      - supports-color
-
-  ember-template-lint@6.1.0:
-    dependencies:
+      '@babel/generator': 7.26.9
+      '@babel/parser': 7.26.9
+      '@babel/plugin-syntax-typescript': 7.25.9(@babel/core@7.26.9)
+      '@babel/plugin-transform-typescript': 7.26.8(@babel/core@7.26.9)
+      '@babel/traverse': 7.26.9(supports-color@8.1.1)
       '@lint-todo/utils': 13.1.1
       aria-query: 5.3.2
       chalk: 5.4.1
       ci-info: 4.1.0
+      content-tag: 3.1.1
+      content-tag-utils: 0.3.0
       date-fns: 3.6.0
-      ember-template-imports: 3.4.2
       ember-template-recast: 6.1.5
       eslint-formatter-kakoune: 1.0.0
       find-up: 7.0.0
@@ -14467,6 +14459,7 @@ snapshots:
       v8-compile-cache: 2.4.0
       yargs: 17.7.2
     transitivePeerDependencies:
+      - '@babel/core'
       - supports-color
 
   ember-template-recast@6.1.5:
@@ -19059,11 +19052,6 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   validate-npm-package-name@6.0.0: {}
-
-  validate-peer-dependencies@1.2.0:
-    dependencies:
-      resolve-package-path: 3.1.0
-      semver: 7.7.1
 
   validate-peer-dependencies@2.2.0:
     dependencies:
