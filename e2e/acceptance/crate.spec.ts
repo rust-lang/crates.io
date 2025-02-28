@@ -270,4 +270,33 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
   });
+
+  test('keywords are shown when navigating from crate to keywords, and then back to crate', async ({ page, msw }) => {
+    loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg');
+    await expect(page.locator('[data-test-keyword]')).toBeVisible();
+
+    await page.getByRole('link', { name: '#network', exact: true }).click();
+    await expect(page).toHaveURL('/keywords/network');
+    await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
+
+    await expect(page).toHaveURL('/crates/nanomsg');
+    await expect(page.locator('[data-test-keyword]')).toBeVisible();
+  });
+
+  test('keywords are shown when navigating from crate to searchs, and then back to crate', async ({ page, msw }) => {
+    loadFixtures(msw.db);
+
+    await page.goto('/crates/nanomsg');
+    await expect(page.locator('[data-test-keyword]')).toBeVisible();
+
+    await page.fill('[data-test-search-input]', 'nanomsg');
+    await page.locator('[data-test-search-form]').getByRole('button', { name: 'Submit' }).click();
+    await expect(page).toHaveURL('/search?q=nanomsg');
+    await page.getByRole('link', { name: 'nanomsg', exact: true }).click();
+
+    await expect(page).toHaveURL('/crates/nanomsg');
+    await expect(page.locator('[data-test-keyword]')).toBeVisible();
+  });
 });

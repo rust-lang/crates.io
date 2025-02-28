@@ -1,4 +1,4 @@
-import { click, currentRouteName, currentURL, waitFor } from '@ember/test-helpers';
+import { click, currentRouteName, currentURL, fillIn, triggerEvent, waitFor } from '@ember/test-helpers';
 import { module, skip, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
@@ -267,6 +267,35 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/search?q=nanomsg');
     await click('[data-test-crate-link]');
+
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-keyword]').exists();
+  });
+
+  test('keywords are shown when navigating from crate to keywords, and then back to crate', async function (assert) {
+    loadFixtures(this.db);
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-keyword]').exists();
+
+    await click('[data-test-keyword="network"]');
+    assert.strictEqual(currentURL(), '/keywords/network');
+    await click('[href="/crates/nanomsg"]');
+
+    assert.strictEqual(currentURL(), '/crates/nanomsg');
+    assert.dom('[data-test-keyword]').exists();
+  });
+
+  test('keywords are shown when navigating from crate to searchs, and then back to crate', async function (assert) {
+    loadFixtures(this.db);
+
+    await visit('/crates/nanomsg');
+    assert.dom('[data-test-keyword]').exists();
+
+    await fillIn('[data-test-search-input]', 'nanomsg');
+    await triggerEvent('[data-test-search-form]', 'submit');
+    assert.strictEqual(currentURL(), '/search?q=nanomsg');
+    await click('[href="/crates/nanomsg"]');
 
     assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-keyword]').exists();
