@@ -1557,6 +1557,55 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crates": {
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query string to the next page of results, if any.",
+                          "example": "?page=3",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "prev_page": {
+                          "description": "Query string to the previous page of results, if any.",
+                          "example": "?page=1",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "description": "The total number of crates that match the query.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crates",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
