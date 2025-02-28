@@ -2288,6 +2288,47 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "dependencies": {
+                      "description": "The list of reverse dependencies of the crate.",
+                      "items": {
+                        "$ref": "#/components/schemas/EncodableDependency"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "total": {
+                          "example": 32,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    },
+                    "versions": {
+                      "description": "The versions referenced in the `dependencies` field.",
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "dependencies",
+                    "versions",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

@@ -4,12 +4,29 @@ use crate::controllers::krate::CratePath;
 use crate::models::{CrateName, User, Version, VersionOwnerAction};
 use crate::util::errors::AppResult;
 use crate::views::{EncodableDependency, EncodableVersion};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
+use axum::Json;
 use crates_io_database::schema::{crates, users, versions};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct RevDepsResponse {
+    /// The list of reverse dependencies of the crate.
+    dependencies: Vec<EncodableDependency>,
+
+    /// The versions referenced in the `dependencies` field.
+    versions: Vec<EncodableVersion>,
+
+    #[schema(inline)]
+    meta: RevDepsMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct RevDepsMeta {
+    #[schema(example = 32)]
+    total: i64,
+}
 
 /// List reverse dependencies of a crate.
 #[utoipa::path(
@@ -17,13 +34,13 @@ use http::request::Parts;
     path = "/api/v1/crates/{name}/reverse_dependencies",
     params(CratePath),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(RevDepsResponse))),
 )]
 pub async fn list_reverse_dependencies(
     app: AppState,
     path: CratePath,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<RevDepsResponse>> {
     let mut conn = app.db_read().await?;
 
     let pagination_options = PaginationOptions::builder().gather(&req)?;
@@ -64,9 +81,9 @@ pub async fn list_reverse_dependencies(
         })
         .collect::<Vec<_>>();
 
-    Ok(json!({
-        "dependencies": rev_deps,
-        "versions": versions,
-        "meta": { "total": total },
+    Ok(Json(RevDepsResponse {
+        dependencies: rev_deps,
+        versions,
+        meta: RevDepsMeta { total },
     }))
 }
