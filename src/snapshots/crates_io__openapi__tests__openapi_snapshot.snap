@@ -1324,7 +1324,7 @@ expression: response.json()
           }
         ],
         "responses": {
-          "200": {
+          "204": {
             "description": "Successful Response"
           }
         },
