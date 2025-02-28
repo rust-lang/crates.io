@@ -3288,6 +3288,38 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate_owner_invitation": {
+                      "properties": {
+                        "accepted": {
+                          "description": "Whether the invitation was accepted.",
+                          "example": true,
+                          "type": "boolean"
+                        },
+                        "crate_id": {
+                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "example": 42,
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "crate_id",
+                        "accepted"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crate_owner_invitation"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -3314,6 +3346,38 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate_owner_invitation": {
+                      "properties": {
+                        "accepted": {
+                          "description": "Whether the invitation was accepted.",
+                          "example": true,
+                          "type": "boolean"
+                        },
+                        "crate_id": {
+                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "example": 42,
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "crate_id",
+                        "accepted"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crate_owner_invitation"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

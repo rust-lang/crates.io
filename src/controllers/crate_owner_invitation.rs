@@ -14,8 +14,6 @@ use crate::views::{
 };
 use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use chrono::Utc;
 use diesel::pg::Pg;
 use diesel::prelude::*;
@@ -329,6 +327,12 @@ pub struct OwnerInvitation {
     crate_owner_invite: InvitationResponse,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct HandleResponse {
+    #[schema(inline)]
+    crate_owner_invitation: InvitationResponse,
+}
+
 /// Accept or decline a crate owner invitation.
 #[utoipa::path(
     put,
@@ -341,13 +345,13 @@ pub struct OwnerInvitation {
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(HandleResponse))),
 )]
 pub async fn handle_crate_owner_invitation(
     state: AppState,
     parts: Parts,
     Json(crate_invite): Json<OwnerInvitation>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<HandleResponse>> {
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
@@ -364,7 +368,9 @@ pub async fn handle_crate_owner_invitation(
         invitation.decline(&mut conn).await?;
     }
 
-    Ok(json!({ "crate_owner_invitation": crate_invite }))
+    Ok(Json(HandleResponse {
+        crate_owner_invitation: crate_invite,
+    }))
 }
 
 /// Accept a crate owner invitation with a token.
@@ -375,23 +381,25 @@ pub async fn handle_crate_owner_invitation(
         ("token" = String, Path, description = "Secret token sent to the user's email address"),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(HandleResponse))),
 )]
 pub async fn accept_crate_owner_invitation_with_token(
     state: AppState,
     Path(token): Path<String>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<HandleResponse>> {
     let mut conn = state.db_write().await?;
     let invitation = CrateOwnerInvitation::find_by_token(&token, &mut conn).await?;
 
     let crate_id = invitation.crate_id;
     invitation.accept(&mut conn).await?;
 
-    Ok(json!({
-        "crate_owner_invitation": {
-            "crate_id": crate_id,
-            "accepted": true,
-        },
+    let crate_owner_invitation = InvitationResponse {
+        crate_id,
+        accepted: true,
+    };
+
+    Ok(Json(HandleResponse {
+        crate_owner_invitation,
     }))
 }
 

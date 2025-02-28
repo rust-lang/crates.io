@@ -128,9 +128,14 @@ pub struct EncodableCrateOwnerInvitation {
     pub expires_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, utoipa::ToSchema)]
 pub struct InvitationResponse {
+    /// The opaque identifier for the crate this invitation is for.
+    #[schema(example = 42)]
     pub crate_id: i32,
+
+    /// Whether the invitation was accepted.
+    #[schema(example = true)]
     pub accepted: bool,
 }
 
