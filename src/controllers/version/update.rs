@@ -10,8 +10,6 @@ use crate::util::errors::{AppResult, bad_request, custom};
 use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use axum::Json;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -29,6 +27,11 @@ pub struct VersionUpdateRequest {
     version: VersionUpdate,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UpdateResponse {
+    pub version: EncodableVersion,
+}
+
 /// Update a crate version.
 ///
 /// This endpoint allows updating the `yanked` state of a version, including a yank message.
@@ -41,14 +44,14 @@ pub struct VersionUpdateRequest {
         ("cookie" = []),
     ),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UpdateResponse))),
 )]
 pub async fn update_version(
     state: AppState,
     path: CrateVersionPath,
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<UpdateResponse>> {
     let mut conn = state.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     validate_yank_update(&update_request.version, &version)?;
@@ -74,8 +77,8 @@ pub async fn update_version(
         VersionOwnerAction::by_version(&mut conn, &version),
         version.published_by(&mut conn),
     )?;
-    let updated_version = EncodableVersion::from(version, &krate.name, published_by, actions);
-    Ok(json!({ "version": updated_version }))
+    let version = EncodableVersion::from(version, &krate.name, published_by, actions);
+    Ok(Json(UpdateResponse { version }))
 }
 
 fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppResult<()> {

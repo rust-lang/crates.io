@@ -9,14 +9,21 @@ use crate::schema::*;
 use crate::util::errors::AppResult;
 use crate::util::{RequestUtils, redirect};
 use crate::views::EncodableVersionDownload;
+use axum::Json;
 use axum::extract::{FromRequestParts, Query};
 use axum::response::{IntoResponse, Response};
 use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UrlResponse {
+    /// The URL to the crate file.
+    #[schema(example = "https://static.crates.io/crates/serde/serde-1.0.0.crate")]
+    pub url: String,
+}
 
 /// Download a crate version.
 ///
@@ -26,7 +33,10 @@ use http::request::Parts;
     path = "/api/v1/crates/{name}/{version}/download",
     params(CrateVersionPath),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses(
+        (status = 302, description = "Successful Response (default)", headers(("location" = String, description = "The URL to the crate file."))),
+        (status = 200, description = "Successful Response (for `content-type: application/json`)", body = inline(UrlResponse)),
+    ),
 )]
 pub async fn download_version(
     app: AppState,
@@ -51,6 +61,11 @@ pub struct DownloadsQueryParams {
     before_date: Option<NaiveDate>,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct DownloadsResponse {
+    pub version_downloads: Vec<EncodableVersionDownload>,
+}
+
 /// Get the download counts for a crate version.
 ///
 /// This includes the per-day downloads for the last 90 days.
@@ -59,13 +74,13 @@ pub struct DownloadsQueryParams {
     path = "/api/v1/crates/{name}/{version}/downloads",
     params(CrateVersionPath, DownloadsQueryParams),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(DownloadsResponse))),
 )]
 pub async fn get_version_downloads(
     app: AppState,
     path: CrateVersionPath,
     params: DownloadsQueryParams,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<DownloadsResponse>> {
     let mut conn = app.db_read().await?;
     let version = path.load_version(&mut conn).await?;
 
@@ -75,14 +90,14 @@ pub async fn get_version_downloads(
 
     let cutoff_start_date = cutoff_end_date - Duration::days(89);
 
-    let downloads = VersionDownload::belonging_to(&version)
+    let version_downloads = VersionDownload::belonging_to(&version)
         .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
         .order(version_downloads::date)
         .load(&mut conn)
         .await?
         .into_iter()
         .map(VersionDownload::into)
-        .collect::<Vec<EncodableVersionDownload>>();
+        .collect();
 
-    Ok(json!({ "version_downloads": downloads }))
+    Ok(Json(DownloadsResponse { version_downloads }))
 }

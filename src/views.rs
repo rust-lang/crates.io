@@ -201,10 +201,19 @@ impl EncodableDependency {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = VersionDownload)]
 pub struct EncodableVersionDownload {
+    /// The ID of the version this download count is for.
+    #[schema(example = 42)]
     pub version: i32,
+
+    /// The number of downloads for this version on the given date.
+    #[schema(example = 123)]
     pub downloads: i32,
+
+    /// The date this download count is for.
+    #[schema(example = "2019-12-13")]
     pub date: String,
 }
 
