@@ -26,27 +26,37 @@ use oauth2::AccessToken;
 use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UsersResponse {
+    pub users: Vec<EncodableOwner>,
+}
+
 /// List crate owners.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
 )]
-pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let mut conn = state.db_read().await?;
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = krate
+    let users = krate
         .owners(&mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "users": owners }))
+    Ok(Json(UsersResponse { users }))
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct TeamsResponse {
+    pub teams: Vec<EncodableOwner>,
 }
 
 /// List team owners of a crate.
@@ -55,19 +65,19 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJs
     path = "/api/v1/crates/{name}/owner_team",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(TeamsResponse))),
 )]
-pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json<TeamsResponse>> {
     let mut conn = state.db_read().await?;
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = Team::owning(&krate, &mut conn)
+    let teams = Team::owning(&krate, &mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "teams": owners }))
+    Ok(Json(TeamsResponse { teams }))
 }
 
 /// List user owners of a crate.
@@ -76,20 +86,20 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Eras
     path = "/api/v1/crates/{name}/owner_user",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
 )]
-pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let mut conn = state.db_read().await?;
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = User::owning(&krate, &mut conn)
+    let users = User::owning(&krate, &mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "users": owners }))
+    Ok(Json(UsersResponse { users }))
 }
 
 /// Add crate owners.

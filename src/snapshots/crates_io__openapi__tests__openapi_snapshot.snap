@@ -584,6 +584,56 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "Owner": {
+        "properties": {
+          "avatar": {
+            "description": "The avatar URL of the team or user.",
+            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "The opaque identifier for the team or user, depending on the `kind` field.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "The kind of the owner (`user` or `team`).",
+            "example": "user",
+            "type": "string"
+          },
+          "login": {
+            "description": "The login name of the team or user.",
+            "example": "ghost",
+            "type": "string"
+          },
+          "name": {
+            "description": "The display name of the team or user.",
+            "example": "Kate Morgan",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The URL to the owner's profile.",
+            "example": "https://github.com/ghost",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "kind"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -1952,6 +2002,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "teams": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "teams"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1977,6 +2045,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "users": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "users"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2033,6 +2119,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "users": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "users"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
