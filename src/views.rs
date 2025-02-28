@@ -983,17 +983,20 @@ pub struct EncodableVersionLinks {
     pub authors: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct GoodCrate {
     #[serde(rename = "crate")]
     pub krate: EncodableCrate,
     pub warnings: PublishWarnings,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct PublishWarnings {
+    #[schema(example = json!([]))]
     pub invalid_categories: Vec<String>,
+    #[schema(deprecated, example = json!([]))]
     pub invalid_badges: Vec<String>,
+    #[schema(example = json!([]))]
     pub other: Vec<String>,
 }
 

@@ -63,7 +63,7 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
         ("cookie" = []),
     ),
     tag = "publish",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GoodCrate))),
 )]
 pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();

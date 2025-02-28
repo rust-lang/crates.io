@@ -634,6 +634,38 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "PublishWarnings": {
+        "properties": {
+          "invalid_badges": {
+            "deprecated": true,
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "invalid_categories": {
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "other": {
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "invalid_categories",
+          "invalid_badges",
+          "other"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -1611,6 +1643,25 @@ expression: response.json()
         "operationId": "publish",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate"
+                    },
+                    "warnings": {
+                      "$ref": "#/components/schemas/PublishWarnings"
+                    }
+                  },
+                  "required": [
+                    "crate",
+                    "warnings"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
