@@ -2088,6 +2088,28 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "msg": {
+                      "description": "A message describing the result of the operation.",
+                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "type": "string"
+                    },
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "msg",
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2160,6 +2182,28 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "msg": {
+                      "description": "A message describing the result of the operation.",
+                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "type": "string"
+                    },
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "msg",
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

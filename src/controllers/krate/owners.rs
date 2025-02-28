@@ -13,8 +13,6 @@ use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::Email};
 use axum::Json;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use chrono::Utc;
 use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
@@ -102,6 +100,16 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
     Ok(Json(UsersResponse { users }))
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ModifyResponse {
+    /// A message describing the result of the operation.
+    #[schema(example = "user ghost has been invited to be an owner of crate serde")]
+    pub msg: String,
+
+    #[schema(example = true)]
+    pub ok: bool,
+}
+
 /// Add crate owners.
 #[utoipa::path(
     put,
@@ -112,14 +120,14 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
 )]
 pub async fn add_owners(
     app: AppState,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     modify_owners(app, path.name, parts, body, true).await
 }
 
@@ -133,14 +141,14 @@ pub async fn add_owners(
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
 )]
 pub async fn remove_owners(
     app: AppState,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     modify_owners(app, path.name, parts, body, false).await
 }
 
@@ -156,7 +164,7 @@ async fn modify_owners(
     parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     let logins = body.owners;
 
     // Bound the number of invites processed per request to limit the cost of
@@ -176,7 +184,7 @@ async fn modify_owners(
 
     let user = auth.user();
 
-    let (comma_sep_msg, emails) = conn
+    let (msg, emails) = conn
         .transaction(|conn| {
             let app = app.clone();
             async move {
@@ -291,7 +299,7 @@ async fn modify_owners(
         }
     }
 
-    Ok(json!({ "msg": comma_sep_msg, "ok": true }))
+    Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
 /// Invite `login` as an owner of this crate, returning the created
