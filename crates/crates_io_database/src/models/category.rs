@@ -5,6 +5,8 @@ use diesel::dsl;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use futures_util::future::BoxFuture;
+use futures_util::FutureExt;
 use std::future::Future;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
@@ -116,13 +118,16 @@ impl Category {
             .load(conn)
     }
 
-    pub async fn subcategories(&self, conn: &mut AsyncPgConnection) -> QueryResult<Vec<Category>> {
+    pub fn subcategories(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> BoxFuture<'_, QueryResult<Vec<Category>>> {
         use diesel::sql_types::Text;
 
         diesel::sql_query(include_str!("subcategories.sql"))
             .bind::<Text, _>(&self.category)
             .load(conn)
-            .await
+            .boxed()
     }
 
     /// Gathers the parent categories from the top-level Category to the direct parent of this Category.
