@@ -56,10 +56,6 @@
     grid-template-columns: auto auto;
     place-items: center;
 
-    .tooltip {
-        word-break: break-all;
-    }
-
     @media only screen and (max-width: 550px) {
         grid-template-columns: auto;
         margin: 0 var(--space-s);
@@ -107,6 +103,10 @@
 
 .rt-yanked {
     color: hsl(0, 87%, 58%);
+}
+
+.rt-tooltip {
+    word-break: break-all;
 }
 
 .num-link {
@@ -159,11 +159,6 @@
         width: auto;
         margin-right: var(--space-4xs);
         margin-bottom: -.1em;
-    }
-
-    .tooltip {
-        text-transform: none;
-        letter-spacing: normal;
     }
 
     > * + * {
@@ -226,6 +221,13 @@
     padding: 0;
     margin: var(--space-2xs) var(--space-3xs);
     list-style: none;
+
+    svg {
+        height: 1em;
+        width: auto;
+        margin-right: var(--space-4xs);
+        margin-bottom: -.1em;
+    }
 }
 
 .yank-button {

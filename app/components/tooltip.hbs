@@ -1,9 +1,13 @@
-<div ...attributes local-class="tooltip" {{attach-tooltip hide=this.hide show=this.show side=@side}}>
-  {{#unless this.hidden}}
-    {{#if (has-block)}}
-      {{yield}}
-    {{else}}
-      {{@text}}
-    {{/if}}
-  {{/unless}}
-</div>
+<span local-class="anchor" {{this.onInsertAnchor this}} />
+
+{{#if this.visible}}
+  {{#in-element this.containerElement}}
+    <div ...attributes local-class="tooltip" {{this.attachTooltip this side=@side}}>
+      {{#if (has-block)}}
+        {{yield}}
+      {{else}}
+        {{@text}}
+      {{/if}}
+    </div>
+  {{/in-element}}
+{{/if}}

@@ -37,13 +37,13 @@
         cursor: help;
     }
 
-    .tooltip {
-        word-break: break-all;
-    }
-
     @media only screen and (max-width: 550px) {
         display: block
     }
+}
+
+.tooltip {
+    word-break: break-all;
 }
 
 .range-lg, .range-sm {
