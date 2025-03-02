@@ -13,8 +13,6 @@ use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::Email};
 use axum::Json;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use chrono::Utc;
 use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
@@ -26,27 +24,37 @@ use oauth2::AccessToken;
 use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct UsersResponse {
+    pub users: Vec<EncodableOwner>,
+}
+
 /// List crate owners.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
 )]
-pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let mut conn = state.db_read().await?;
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = krate
+    let users = krate
         .owners(&mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "users": owners }))
+    Ok(Json(UsersResponse { users }))
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct TeamsResponse {
+    pub teams: Vec<EncodableOwner>,
 }
 
 /// List team owners of a crate.
@@ -55,19 +63,19 @@ pub async fn list_owners(state: AppState, path: CratePath) -> AppResult<ErasedJs
     path = "/api/v1/crates/{name}/owner_team",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(TeamsResponse))),
 )]
-pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Json<TeamsResponse>> {
     let mut conn = state.db_read().await?;
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = Team::owning(&krate, &mut conn)
+    let teams = Team::owning(&krate, &mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "teams": owners }))
+    Ok(Json(TeamsResponse { teams }))
 }
 
 /// List user owners of a crate.
@@ -76,20 +84,30 @@ pub async fn get_team_owners(state: AppState, path: CratePath) -> AppResult<Eras
     path = "/api/v1/crates/{name}/owner_user",
     params(CratePath),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(UsersResponse))),
 )]
-pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<ErasedJson> {
+pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Json<UsersResponse>> {
     let mut conn = state.db_read().await?;
 
     let krate = path.load_crate(&mut conn).await?;
 
-    let owners = User::owning(&krate, &mut conn)
+    let users = User::owning(&krate, &mut conn)
         .await?
         .into_iter()
         .map(Owner::into)
         .collect::<Vec<EncodableOwner>>();
 
-    Ok(json!({ "users": owners }))
+    Ok(Json(UsersResponse { users }))
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ModifyResponse {
+    /// A message describing the result of the operation.
+    #[schema(example = "user ghost has been invited to be an owner of crate serde")]
+    pub msg: String,
+
+    #[schema(example = true)]
+    pub ok: bool,
 }
 
 /// Add crate owners.
@@ -102,14 +120,14 @@ pub async fn get_user_owners(state: AppState, path: CratePath) -> AppResult<Eras
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
 )]
 pub async fn add_owners(
     app: AppState,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     modify_owners(app, path.name, parts, body, true).await
 }
 
@@ -123,14 +141,14 @@ pub async fn add_owners(
         ("cookie" = []),
     ),
     tag = "owners",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ModifyResponse))),
 )]
 pub async fn remove_owners(
     app: AppState,
     path: CratePath,
     parts: Parts,
     Json(body): Json<ChangeOwnersRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     modify_owners(app, path.name, parts, body, false).await
 }
 
@@ -146,7 +164,7 @@ async fn modify_owners(
     parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ModifyResponse>> {
     let logins = body.owners;
 
     // Bound the number of invites processed per request to limit the cost of
@@ -166,7 +184,7 @@ async fn modify_owners(
 
     let user = auth.user();
 
-    let (comma_sep_msg, emails) = conn
+    let (msg, emails) = conn
         .transaction(|conn| {
             let app = app.clone();
             async move {
@@ -281,7 +299,7 @@ async fn modify_owners(
         }
     }
 
-    Ok(json!({ "msg": comma_sep_msg, "ok": true }))
+    Ok(Json(ModifyResponse { msg, ok: true }))
 }
 
 /// Invite `login` as an owner of this crate, returning the created

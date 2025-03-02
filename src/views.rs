@@ -128,9 +128,14 @@ pub struct EncodableCrateOwnerInvitation {
     pub expires_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, utoipa::ToSchema)]
 pub struct InvitationResponse {
+    /// The opaque identifier for the crate this invitation is for.
+    #[schema(example = 42)]
     pub crate_id: i32,
+
+    /// Whether the invitation was accepted.
+    #[schema(example = true)]
     pub accepted: bool,
 }
 
@@ -509,13 +514,31 @@ pub struct EncodableCrateLinks {
     pub reverse_dependencies: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
+#[schema(as = Owner)]
 pub struct EncodableOwner {
+    /// The opaque identifier for the team or user, depending on the `kind` field.
+    #[schema(example = 42)]
     pub id: i32,
+
+    /// The login name of the team or user.
+    #[schema(example = "ghost")]
     pub login: String,
+
+    /// The kind of the owner (`user` or `team`).
+    #[schema(example = "user")]
     pub kind: String,
+
+    /// The URL to the owner's profile.
+    #[schema(example = "https://github.com/ghost")]
     pub url: Option<String>,
+
+    /// The display name of the team or user.
+    #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
+
+    /// The avatar URL of the team or user.
+    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
     pub avatar: Option<String>,
 }
 
@@ -965,17 +988,20 @@ pub struct EncodableVersionLinks {
     pub authors: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct GoodCrate {
     #[serde(rename = "crate")]
     pub krate: EncodableCrate,
     pub warnings: PublishWarnings,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 pub struct PublishWarnings {
+    #[schema(example = json!([]))]
     pub invalid_categories: Vec<String>,
+    #[schema(deprecated, example = json!([]))]
     pub invalid_badges: Vec<String>,
+    #[schema(example = json!([]))]
     pub other: Vec<String>,
 }
 

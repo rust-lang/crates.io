@@ -584,6 +584,88 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "Owner": {
+        "properties": {
+          "avatar": {
+            "description": "The avatar URL of the team or user.",
+            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "The opaque identifier for the team or user, depending on the `kind` field.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "The kind of the owner (`user` or `team`).",
+            "example": "user",
+            "type": "string"
+          },
+          "login": {
+            "description": "The login name of the team or user.",
+            "example": "ghost",
+            "type": "string"
+          },
+          "name": {
+            "description": "The display name of the team or user.",
+            "example": "Kate Morgan",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The URL to the owner's profile.",
+            "example": "https://github.com/ghost",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "PublishWarnings": {
+        "properties": {
+          "invalid_badges": {
+            "deprecated": true,
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "invalid_categories": {
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "other": {
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "invalid_categories",
+          "invalid_badges",
+          "other"
+        ],
+        "type": "object"
+      },
       "Slug": {
         "properties": {
           "description": {
@@ -1475,6 +1557,55 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crates": {
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query string to the next page of results, if any.",
+                          "example": "?page=3",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "prev_page": {
+                          "description": "Query string to the previous page of results, if any.",
+                          "example": "?page=1",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "description": "The total number of crates that match the query.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crates",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1561,6 +1692,25 @@ expression: response.json()
         "operationId": "publish",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate"
+                    },
+                    "warnings": {
+                      "$ref": "#/components/schemas/PublishWarnings"
+                    }
+                  },
+                  "required": [
+                    "crate",
+                    "warnings"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1952,6 +2102,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "teams": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "teams"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1977,6 +2145,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "users": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "users"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2002,6 +2188,28 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "msg": {
+                      "description": "A message describing the result of the operation.",
+                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "type": "string"
+                    },
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "msg",
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2033,6 +2241,24 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "users": {
+                      "items": {
+                        "$ref": "#/components/schemas/Owner"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "users"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2056,6 +2282,28 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "msg": {
+                      "description": "A message describing the result of the operation.",
+                      "example": "user ghost has been invited to be an owner of crate serde",
+                      "type": "string"
+                    },
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "msg",
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2089,6 +2337,47 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "dependencies": {
+                      "description": "The list of reverse dependencies of the crate.",
+                      "items": {
+                        "$ref": "#/components/schemas/EncodableDependency"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "total": {
+                          "example": 32,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    },
+                    "versions": {
+                      "description": "The versions referenced in the `dependencies` field.",
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "dependencies",
+                    "versions",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2176,6 +2465,54 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query string to the next page of results, if any.",
+                          "example": "?page=3",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "release_tracks": {
+                          "description": "Additional data about the crate's release tracks,\nif `?include=release_tracks` is used.",
+                          "type": [
+                            "object",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "description": "The total number of versions belonging to the crate.",
+                          "example": 123,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
+                    },
+                    "versions": {
+                      "items": {
+                        "$ref": "#/components/schemas/Version"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "versions",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2951,6 +3288,38 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate_owner_invitation": {
+                      "properties": {
+                        "accepted": {
+                          "description": "Whether the invitation was accepted.",
+                          "example": true,
+                          "type": "boolean"
+                        },
+                        "crate_id": {
+                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "example": 42,
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "crate_id",
+                        "accepted"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crate_owner_invitation"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -2977,6 +3346,38 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate_owner_invitation": {
+                      "properties": {
+                        "accepted": {
+                          "description": "Whether the invitation was accepted.",
+                          "example": true,
+                          "type": "boolean"
+                        },
+                        "crate_id": {
+                          "description": "The opaque identifier for the crate this invitation is for.",
+                          "example": 42,
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "crate_id",
+                        "accepted"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "crate_owner_invitation"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

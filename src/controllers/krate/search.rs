@@ -1,10 +1,9 @@
 //! Endpoint for searching and discovery functionality
 
 use crate::auth::AuthCheck;
+use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use derive_more::Deref;
 use diesel::dsl::{InnerJoinQuerySource, LeftJoinQuerySource, exists};
 use diesel::prelude::*;
@@ -28,6 +27,29 @@ use crate::util::RequestUtils;
 use crate::util::string_excl_null::StringExclNull;
 use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    crates: Vec<EncodableCrate>,
+
+    #[schema(inline)]
+    meta: ListMeta,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListMeta {
+    /// The total number of crates that match the query.
+    #[schema(example = 123)]
+    total: i64,
+
+    /// Query string to the next page of results, if any.
+    #[schema(example = "?page=3")]
+    next_page: Option<String>,
+
+    /// Query string to the previous page of results, if any.
+    #[schema(example = "?page=1")]
+    prev_page: Option<String>,
+}
+
 /// Returns a list of crates.
 ///
 /// Called in a variety of scenarios in the front end, including:
@@ -44,13 +66,13 @@ use crates_io_diesel_helpers::{array_agg, canon_crate_name, lower};
         ("cookie" = []),
     ),
     tag = "crates",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_crates(
     app: AppState,
     params: ListQueryParams,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ListResponse>> {
     // Notes:
     // The different use cases this function covers is handled through passing
     // in parameters in the GET request.
@@ -240,12 +262,12 @@ pub async fn list_crates(
         })
         .collect::<Vec<_>>();
 
-    Ok(json!({
-        "crates": crates,
-        "meta": {
-            "total": total,
-            "next_page": next_page,
-            "prev_page": prev_page,
+    Ok(Json(ListResponse {
+        crates,
+        meta: ListMeta {
+            total,
+            next_page,
+            prev_page,
         },
     }))
 }

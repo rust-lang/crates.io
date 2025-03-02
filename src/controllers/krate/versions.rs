@@ -1,17 +1,5 @@
 //! Endpoint for versions of a crate
 
-use axum::extract::FromRequestParts;
-use axum_extra::extract::Query;
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
-use diesel::dsl::not;
-use diesel::prelude::*;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use futures_util::{TryStreamExt, future};
-use http::request::Parts;
-use indexmap::{IndexMap, IndexSet};
-use std::str::FromStr;
-
 use crate::app::AppState;
 use crate::controllers::helpers::pagination::{
     Page, PaginationOptions, PaginationQueryParams, encode_seek,
@@ -23,6 +11,16 @@ use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::string_excl_null::StringExclNull;
 use crate::views::EncodableVersion;
+use axum::Json;
+use axum::extract::FromRequestParts;
+use axum_extra::extract::Query;
+use diesel::dsl::not;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::{TryStreamExt, future};
+use http::request::Parts;
+use indexmap::{IndexMap, IndexSet};
+use std::str::FromStr;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
@@ -62,13 +60,21 @@ impl ListQueryParams {
     }
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    versions: Vec<EncodableVersion>,
+
+    #[schema(inline)]
+    meta: ResponseMeta,
+}
+
 /// List all versions of a crate.
 #[utoipa::path(
     get,
     path = "/api/v1/crates/{name}/versions",
     params(CratePath, ListQueryParams, PaginationQueryParams),
     tag = "versions",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_versions(
     state: AppState,
@@ -76,7 +82,7 @@ pub async fn list_versions(
     params: ListQueryParams,
     pagination: PaginationQueryParams,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<ListResponse>> {
     let mut conn = state.db_read().await?;
 
     let crate_id = path.load_crate_id(&mut conn).await?;
@@ -113,7 +119,10 @@ pub async fn list_versions(
         .map(|((v, pb), aas)| EncodableVersion::from(v, &path.name, pb, aas))
         .collect::<Vec<_>>();
 
-    Ok(json!({ "versions": versions, "meta": versions_and_publishers.meta }))
+    Ok(Json(ListResponse {
+        versions,
+        meta: versions_and_publishers.meta,
+    }))
 }
 
 /// Seek-based pagination of versions by date
@@ -433,11 +442,20 @@ struct PaginatedVersionsAndPublishers {
     meta: ResponseMeta,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 struct ResponseMeta {
+    /// The total number of versions belonging to the crate.
+    #[schema(example = 123)]
     total: i64,
+
+    /// Query string to the next page of results, if any.
+    #[schema(example = "?page=3")]
     next_page: Option<String>,
+
+    /// Additional data about the crate's release tracks,
+    /// if `?include=release_tracks` is used.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(value_type = Option<Object>)]
     release_tracks: Option<ReleaseTracks>,
 }
 
