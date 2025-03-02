@@ -1,5 +1,4 @@
 .tooltip {
-    display: none;
     width: max-content;
     max-width: 300px;
     position: absolute;
@@ -19,4 +18,8 @@
     strong {
         color: unset;
     }
+}
+
+.anchor {
+    display: none;
 }
