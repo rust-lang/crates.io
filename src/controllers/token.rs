@@ -194,6 +194,11 @@ pub async fn create_api_token(
     Ok(Json(CreateResponse { api_token }))
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub api_token: ApiToken,
+}
+
 /// Find API token by id.
 #[utoipa::path(
     get,
@@ -206,23 +211,23 @@ pub async fn create_api_token(
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
 pub async fn find_api_token(
     app: AppState,
     Path(id): Path<i32>,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<GetResponse>> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
-    let token = ApiToken::belonging_to(user)
+    let api_token = ApiToken::belonging_to(user)
         .find(id)
         .select(ApiToken::as_select())
         .first(&mut conn)
         .await?;
 
-    Ok(json!({ "api_token": token }))
+    Ok(Json(GetResponse { api_token }))
 }
 
 /// Revoke API token.

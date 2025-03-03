@@ -3765,6 +3765,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "api_token": {
+                      "$ref": "#/components/schemas/ApiToken"
+                    }
+                  },
+                  "required": [
+                    "api_token"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
