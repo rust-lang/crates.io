@@ -1174,10 +1174,56 @@ expression: response.json()
     },
     "/api/private/session/authorize": {
       "get": {
-        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**\n\n## Response Body Example\n\n```json\n{\n    \"user\": {\n        \"email\": \"foo@bar.org\",\n        \"name\": \"Foo Bar\",\n        \"login\": \"foobar\",\n        \"avatar\": \"https://avatars.githubusercontent.com/u/1234\",\n        \"url\": null\n    }\n}\n```",
+        "description": "This route is called from the GitHub API OAuth flow after the user accepted or rejected\nthe data access permissions. It will check the `state` parameter and then call the GitHub API\nto exchange the temporary `code` for an API token. The API token is returned together with\nthe corresponding user information.\n\nsee <https://developer.github.com/v3/oauth/#github-redirects-back-to-your-site>\n\n## Query Parameters\n\n- `code` – temporary code received from the GitHub API  **(Required)**\n- `state` – state parameter received from the GitHub API  **(Required)**",
         "operationId": "authorize_session",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "owned_crates": {
+                      "description": "The crates that the authenticated user owns.",
+                      "items": {
+                        "properties": {
+                          "email_notifications": {
+                            "deprecated": true,
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "The opaque identifier of the crate.",
+                            "example": 123,
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "name": {
+                            "description": "The name of the crate.",
+                            "example": "serde",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "email_notifications"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/AuthenticatedUser",
+                      "description": "The authenticated user."
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "owned_crates"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -1189,10 +1235,31 @@ expression: response.json()
     },
     "/api/private/session/begin": {
       "get": {
-        "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>\n\n## Response Body Example\n\n```json\n{\n    \"state\": \"b84a63c4ea3fcb4ac84\",\n    \"url\": \"https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg\"\n}\n```",
+        "description": "This route will return an authorization URL for the GitHub OAuth flow including the crates.io\n`client_id` and a randomly generated `state` secret.\n\nsee <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>",
         "operationId": "begin_session",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "state": {
+                      "example": "b84a63c4ea3fcb4ac84",
+                      "type": "string"
+                    },
+                    "url": {
+                      "example": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "state"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

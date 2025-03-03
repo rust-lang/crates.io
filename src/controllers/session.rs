@@ -1,7 +1,5 @@
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
@@ -20,28 +18,30 @@ use crate::views::EncodableMe;
 use crates_io_github::GithubUser;
 use crates_io_session::SessionExtension;
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct BeginResponse {
+    #[schema(
+        example = "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
+    )]
+    pub url: String,
+
+    #[schema(example = "b84a63c4ea3fcb4ac84")]
+    pub state: String,
+}
+
 /// Begin authentication flow.
 ///
 /// This route will return an authorization URL for the GitHub OAuth flow including the crates.io
 /// `client_id` and a randomly generated `state` secret.
 ///
 /// see <https://developer.github.com/v3/oauth/#redirect-users-to-request-github-access>
-///
-/// ## Response Body Example
-///
-/// ```json
-/// {
-///     "state": "b84a63c4ea3fcb4ac84",
-///     "url": "https://github.com/login/oauth/authorize?client_id=...&state=...&scope=read%3Aorg"
-/// }
-/// ```
 #[utoipa::path(
     get,
     path = "/api/private/session/begin",
     tag = "session",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(BeginResponse))),
 )]
-pub async fn begin_session(app: AppState, session: SessionExtension) -> ErasedJson {
+pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<BeginResponse> {
     let (url, state) = app
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
@@ -51,7 +51,8 @@ pub async fn begin_session(app: AppState, session: SessionExtension) -> ErasedJs
     let state = state.secret().to_string();
     session.insert("github_oauth_state".to_string(), state.clone());
 
-    json!({ "url": url.to_string(), "state": state })
+    let url = url.to_string();
+    Json(BeginResponse { url, state })
 }
 
 #[derive(Clone, Debug, Deserialize, FromRequestParts)]
@@ -74,25 +75,11 @@ pub struct AuthorizeQuery {
 ///
 /// - `code` – temporary code received from the GitHub API  **(Required)**
 /// - `state` – state parameter received from the GitHub API  **(Required)**
-///
-/// ## Response Body Example
-///
-/// ```json
-/// {
-///     "user": {
-///         "email": "foo@bar.org",
-///         "name": "Foo Bar",
-///         "login": "foobar",
-///         "avatar": "https://avatars.githubusercontent.com/u/1234",
-///         "url": null
-///     }
-/// }
-/// ```
 #[utoipa::path(
     get,
     path = "/api/private/session/authorize",
     tag = "session",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
 pub async fn authorize_session(
     query: AuthorizeQuery,
