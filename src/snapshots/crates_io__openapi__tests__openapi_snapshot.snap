@@ -691,6 +691,50 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "Team": {
+        "properties": {
+          "avatar": {
+            "description": "The avatar URL of the team.",
+            "example": "https://avatars2.githubusercontent.com/u/1234567?v=4",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "An opaque identifier for the team.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "login": {
+            "description": "The login name of the team.",
+            "example": "github:rust-lang:crates-io",
+            "type": "string"
+          },
+          "name": {
+            "description": "The display name of the team.",
+            "example": "Crates.io team",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The GitHub profile URL of the team.",
+            "example": "https://github.com/rust-lang",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "login"
+        ],
+        "type": "object"
+      },
       "User": {
         "properties": {
           "avatar": {
@@ -3803,6 +3847,21 @@ expression: response.json()
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "team": {
+                      "$ref": "#/components/schemas/Team"
+                    }
+                  },
+                  "required": [
+                    "team"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
