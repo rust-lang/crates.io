@@ -37,13 +37,18 @@ impl GetParams {
     }
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    pub api_tokens: Vec<ApiToken>,
+}
+
 /// List all API tokens of the authenticated user.
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens",
     security(("cookie" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_api_tokens(
     app: AppState,

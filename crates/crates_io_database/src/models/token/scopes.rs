@@ -5,7 +5,9 @@ use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::Text;
 use std::io::Write;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, diesel::AsExpression, serde::Serialize)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, diesel::AsExpression, serde::Serialize, utoipa::ToSchema,
+)]
 #[diesel(sql_type = Text)]
 #[serde(rename_all = "kebab-case")]
 pub enum EndpointScope {

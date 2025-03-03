@@ -5,6 +5,78 @@ expression: response.json()
 {
   "components": {
     "schemas": {
+      "ApiToken": {
+        "description": "The model representing a row in the `api_tokens` database table.",
+        "properties": {
+          "crate_scopes": {
+            "description": "`None` or a list of crate scope patterns (see RFC #2947).",
+            "example": [
+              "serde"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "The date and time when the token was created.",
+            "example": "2017-01-06T14:23:11Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "endpoint_scopes": {
+            "description": "A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947).",
+            "example": [
+              "publish-update"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EndpointScope"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "expired_at": {
+            "description": "The date and time when the token will expire, or `null`.",
+            "example": "2030-10-26T11:32:12Z",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "An opaque unique identifier for the token.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "last_used_at": {
+            "description": "The date and time when the token was last used.",
+            "example": "2021-10-26T11:32:12Z",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The name of the token.",
+            "example": "Example API Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "AuthenticatedUser": {
         "properties": {
           "avatar": {
@@ -496,6 +568,15 @@ expression: response.json()
           "downloads"
         ],
         "type": "object"
+      },
+      "EndpointScope": {
+        "enum": [
+          "publish-new",
+          "publish-update",
+          "yank",
+          "change-owners"
+        ],
+        "type": "string"
       },
       "Keyword": {
         "properties": {
@@ -3551,6 +3632,24 @@ expression: response.json()
         "operationId": "list_api_tokens",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "api_tokens": {
+                      "items": {
+                        "$ref": "#/components/schemas/ApiToken"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "api_tokens"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

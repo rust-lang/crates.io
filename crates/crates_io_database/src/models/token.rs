@@ -39,21 +39,43 @@ impl NewApiToken {
 }
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(Debug, Identifiable, Queryable, Selectable, Associations, serde::Serialize)]
+#[derive(
+    Debug, Identifiable, Queryable, Selectable, Associations, serde::Serialize, utoipa::ToSchema,
+)]
 #[diesel(belongs_to(User))]
 pub struct ApiToken {
+    /// An opaque unique identifier for the token.
+    #[schema(example = 42)]
     pub id: i32,
+
     #[serde(skip)]
     pub user_id: i32,
+
+    /// The name of the token.
+    #[schema(example = "Example API Token")]
     pub name: String,
+
+    /// The date and time when the token was created.
+    #[schema(example = "2017-01-06T14:23:11Z")]
     pub created_at: DateTime<Utc>,
+
+    /// The date and time when the token was last used.
+    #[schema(example = "2021-10-26T11:32:12Z")]
     pub last_used_at: Option<DateTime<Utc>>,
+
     #[serde(skip)]
     pub revoked: bool,
-    /// `None` or a list of crate scope patterns (see RFC #2947)
+
+    /// `None` or a list of crate scope patterns (see RFC #2947).
+    #[schema(value_type = Option<Vec<String>>, example = json!(["serde"]))]
     pub crate_scopes: Option<Vec<CrateScope>>,
-    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947)
+
+    /// A list of endpoint scopes or `None` for the `legacy` endpoint scope (see RFC #2947).
+    #[schema(example = json!(["publish-update"]))]
     pub endpoint_scopes: Option<Vec<EndpointScope>>,
+
+    /// The date and time when the token will expire, or `null`.
+    #[schema(example = "2030-10-26T11:32:12Z")]
     pub expired_at: Option<DateTime<Utc>>,
 }
 

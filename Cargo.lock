@@ -1189,6 +1189,7 @@ dependencies = [
  "tokio",
  "tracing",
  "unicode-xid",
+ "utoipa",
 ]
 
 [[package]]
