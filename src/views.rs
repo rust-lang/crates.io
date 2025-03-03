@@ -628,14 +628,16 @@ impl From<Team> for EncodableTeam {
     }
 }
 
-/// The serialization format for the `ApiToken` model with its token value.
-/// This should only be used when initially creating a new token to minimize
-/// the chance of token leaks.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, utoipa::ToSchema)]
 pub struct EncodableApiTokenWithToken {
     #[serde(flatten)]
     pub token: ApiToken,
+
+    /// The plaintext API token.
+    ///
+    /// Only available when the token is created.
     #[serde(rename = "token")]
+    #[schema(example = "a1b2c3d4e5f6g7h8i9j0")]
     pub plaintext: String,
 }
 

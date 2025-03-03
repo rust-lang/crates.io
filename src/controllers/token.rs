@@ -89,19 +89,24 @@ pub struct NewApiTokenRequest {
     api_token: NewApiToken,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct CreateResponse {
+    api_token: EncodableApiTokenWithToken,
+}
+
 /// Create a new API token.
 #[utoipa::path(
     put,
     path = "/api/v1/me/tokens",
     security(("cookie" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(CreateResponse))),
 )]
 pub async fn create_api_token(
     app: AppState,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<CreateResponse>> {
     if new.api_token.name.is_empty() {
         return Err(bad_request("name must have a value"));
     }
@@ -186,7 +191,7 @@ pub async fn create_api_token(
         plaintext: plaintext.expose_secret().to_string(),
     };
 
-    Ok(json!({ "api_token": api_token }))
+    Ok(Json(CreateResponse { api_token }))
 }
 
 /// Find API token by id.

@@ -497,6 +497,26 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "EncodableApiTokenWithToken": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiToken"
+          },
+          {
+            "properties": {
+              "token": {
+                "description": "The plaintext API token.\n\nOnly available when the token is created.",
+                "example": "a1b2c3d4e5f6g7h8i9j0",
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "EncodableDependency": {
         "properties": {
           "crate_id": {
@@ -3667,6 +3687,21 @@ expression: response.json()
         "operationId": "create_api_token",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "api_token": {
+                      "$ref": "#/components/schemas/EncodableApiTokenWithToken"
+                    }
+                  },
+                  "required": [
+                    "api_token"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
