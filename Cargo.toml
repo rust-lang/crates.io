@@ -97,7 +97,7 @@ ipnetwork = "=0.21.1"
 json-subscriber = "=0.2.4"
 krata-tokio-tar = "=0.4.2"
 lettre = { version = "=0.11.14", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
-minijinja = { version = "=2.7.0", features = ["loader"] }
+minijinja = { version = "=2.8.0", features = ["loader"] }
 mockall = "=0.13.1"
 moka = { version = "=0.12.10", default-features = false, features = ["future"] }
 native-tls = "=0.2.14"
