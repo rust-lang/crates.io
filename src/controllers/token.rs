@@ -242,7 +242,7 @@ pub async fn find_api_token(
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = Object)),
 )]
 pub async fn revoke_api_token(
     app: AppState,
