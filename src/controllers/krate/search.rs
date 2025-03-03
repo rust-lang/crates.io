@@ -196,7 +196,7 @@ pub async fn list_crates(
     let (total, next_page, prev_page, data) = if !explicit_page && seek.is_some() {
         let seek = seek.unwrap();
         if let Some(condition) = seek
-            .after(&pagination.page)?
+            .decode(&pagination.page)?
             .map(|s| filter_params.seek_after(&s))
         {
             query = query.filter(condition);

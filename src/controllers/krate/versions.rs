@@ -159,7 +159,7 @@ async fn list_by_date(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
-        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.after(&options.page)? {
+        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.decode(&options.page)? {
             query = query.filter(
                 versions::created_at
                     .eq(created_at)
@@ -297,7 +297,7 @@ async fn list_by_semver(
         });
 
         let mut idx = Some(0);
-        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
+        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.decode(&options.page)? {
             idx = sorted_versions
                 .get_index_of(&id)
                 .filter(|i| i + 1 < sorted_versions.len())

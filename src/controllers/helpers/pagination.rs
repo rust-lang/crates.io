@@ -522,7 +522,7 @@ macro_rules! seek {
             use crate::util::errors::AppResult;
             use crate::controllers::helpers::pagination::Page;
             impl $name {
-                pub fn after(&self, page: &Page) -> AppResult<Option<[<$name Payload>]>> {
+                pub fn decode(&self, page: &Page) -> AppResult<Option<[<$name Payload>]>> {
                     let Page::Seek(ref encoded) = *page else {
                         return Ok(None);
                     };
@@ -670,7 +670,7 @@ mod tests {
                 .enable_seek(true)
                 .gather(&mock(query))
                 .unwrap();
-            let decoded = seek.after(&pagination.page).unwrap();
+            let decoded = seek.decode(&pagination.page).unwrap();
             assert_eq!(decoded, expect);
         };
 
@@ -706,7 +706,7 @@ mod tests {
             .enable_seek(true)
             .gather(&mock(&query))
             .unwrap();
-        let error = seek.after(&pagination.page).unwrap_err();
+        let error = seek.decode(&pagination.page).unwrap_err();
         assert_eq!(error.to_string(), "invalid seek parameter");
         let response = error.response();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
