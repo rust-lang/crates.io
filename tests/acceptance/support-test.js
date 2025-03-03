@@ -1,4 +1,4 @@
-import { click, currentURL, fillIn, findAll } from '@ember/test-helpers';
+import { click, currentURL, fillIn, findAll, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -205,6 +205,8 @@ test detail
       };
 
       await visit('/crates/nanomsg');
+      assert.strictEqual(currentURL(), '/crates/nanomsg');
+      await waitFor('[data-test-id="link-crate-report"]');
       await click('[data-test-id="link-crate-report"]');
       assert.strictEqual(currentURL(), '/support?crate=nanomsg&inquire=crate-violation');
       assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
