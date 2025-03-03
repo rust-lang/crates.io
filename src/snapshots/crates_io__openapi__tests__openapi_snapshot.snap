@@ -4032,7 +4032,7 @@ expression: response.json()
         "description": "This endpoint revokes the API token that is used to authenticate\nthe request.",
         "operationId": "revoke_current_api_token",
         "responses": {
-          "200": {
+          "204": {
             "description": "Successful Response"
           }
         },

@@ -269,7 +269,7 @@ pub async fn revoke_api_token(
     path = "/api/v1/tokens/current",
     security(("api_token" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 204, description = "Successful Response")),
 )]
 pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
