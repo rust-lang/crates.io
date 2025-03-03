@@ -3661,6 +3661,34 @@ expression: response.json()
         "operationId": "get_site_metadata",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "commit": {
+                      "description": "The SHA1 of the currently deployed commit.",
+                      "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
+                      "type": "string"
+                    },
+                    "deployed_sha": {
+                      "description": "The SHA1 of the currently deployed commit.",
+                      "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
+                      "type": "string"
+                    },
+                    "read_only": {
+                      "description": "Whether the crates.io service is in read-only mode.",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "deployed_sha",
+                    "commit",
+                    "read_only"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },

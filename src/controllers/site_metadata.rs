@@ -1,6 +1,20 @@
 use crate::app::AppState;
+use axum::Json;
 use axum::response::IntoResponse;
-use axum_extra::json;
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct MetadataResponse<'a> {
+    /// The SHA1 of the currently deployed commit.
+    #[schema(example = "0aebe2cdfacae1229b93853b1c58f9352195f081")]
+    pub deployed_sha: &'a str,
+
+    /// The SHA1 of the currently deployed commit.
+    #[schema(example = "0aebe2cdfacae1229b93853b1c58f9352195f081")]
+    pub commit: &'a str,
+
+    /// Whether the crates.io service is in read-only mode.
+    pub read_only: bool,
+}
 
 /// Get crates.io metadata.
 ///
@@ -10,7 +24,7 @@ use axum_extra::json;
     get,
     path = "/api/v1/site_metadata",
     tag = "other",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(MetadataResponse<'_>))),
 )]
 pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
     let read_only = state.config.db.are_all_read_only();
@@ -18,9 +32,10 @@ pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
     let deployed_sha =
         dotenvy::var("HEROKU_SLUG_COMMIT").unwrap_or_else(|_| String::from("unknown"));
 
-    json!({
-        "deployed_sha": &deployed_sha[..],
-        "commit": &deployed_sha[..],
-        "read_only": read_only,
+    Json(MetadataResponse {
+        deployed_sha: &deployed_sha,
+        commit: &deployed_sha,
+        read_only,
     })
+    .into_response()
 }
