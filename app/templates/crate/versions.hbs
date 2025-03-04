@@ -1,7 +1,10 @@
 <CrateHeader @crate={{this.crate}} />
 
 <div local-class="results-meta">
-  <span local-class="page-description" data-test-page-description>
+  <span local-class="page-description"
+    class="{{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
+    data-test-page-description
+  >
     <strong>{{ this.sortedVersions.length }}</strong> of <strong>{{ this.crate.num_versions }}</strong>
     <strong>{{ this.crate.name }}</strong> versions since
     {{date-format this.crate.created_at 'PPP'}}
@@ -16,22 +19,27 @@
   </div>
 </div>
 
-<ul local-class="list">
+<ul local-class="list" class="{{unless this.sortedVersions 'is-empty'}}">
   {{#each this.sortedVersions as |version|}}
     <li>
       <VersionList::Row @version={{version}} local-class="row" data-test-version={{version.num}} />
     </li>
   {{/each}}
 </ul>
-{{#if this.next_page}}
+{{#if this.loadMoreTask.isRunning}}
+  <div local-class="loading">
+    <button type="button" data-test-id="loading" disabled={{this.loadMoreTask.isRunning}}
+      {{on "click" (perform this.loadMoreTask)}}
+    >
+      Loading...<LoadingSpinner local-class="loading-spinner" />
+    </button>
+  </div>
+{{else if this.next_page}}
   <div local-class="load-more">
     <button type="button" data-test-id="load-more" disabled={{this.loadMoreTask.isRunning}}
       {{on "click" (perform this.loadMoreTask)}}
     >
       Load More
-      {{#if this.loadMoreTask.isRunning}}
-        <LoadingSpinner local-class="loading-spinner" />
-      {{/if}}
     </button>
   </div>
 {{/if}}
