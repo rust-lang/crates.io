@@ -30,7 +30,7 @@ test('can add new owner', async function () {
 
   let user2 = db.user.create();
 
-  let body = JSON.stringify({ owners: [user2.login] });
+  let body = JSON.stringify({ owners: [user2.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {
@@ -57,7 +57,7 @@ test('can add team owner', async function () {
 
   let team = db.team.create();
 
-  let body = JSON.stringify({ owners: [team.login] });
+  let body = JSON.stringify({ owners: [team.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {
@@ -87,7 +87,7 @@ test('can add multiple owners', async function () {
   let user2 = db.user.create();
   let user3 = db.user.create();
 
-  let body = JSON.stringify({ owners: [user2.login, team.login, user3.login] });
+  let body = JSON.stringify({ owners: [user2.username, team.username, user3.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {

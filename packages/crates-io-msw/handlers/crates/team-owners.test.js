@@ -32,6 +32,7 @@ test('returns the list of teams that own the specified crate', async function ()
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
         kind: 'team',
         login: 'github:rust-lang:maintainers',
+        username: 'github:rust-lang:maintainers',
         name: 'maintainers',
         url: 'https://github.com/rust-lang',
       },

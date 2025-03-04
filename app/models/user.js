@@ -13,6 +13,7 @@ export default class User extends Model {
   @attr name;
   @attr is_admin;
   @attr login;
+  @attr username;
   @attr avatar;
   @attr url;
   @attr kind;

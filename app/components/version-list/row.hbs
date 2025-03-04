@@ -40,9 +40,9 @@
       {{#if @version.published_by}}
         <span local-class="publisher">
           by
-          <LinkTo @route="user" @model={{@version.published_by.login}}>
+          <LinkTo @route="user" @model={{@version.published_by.username}}>
             <UserAvatar @user={{@version.published_by}} local-class="avatar" />
-            {{or @version.published_by.name @version.published_by.login}}
+            {{or @version.published_by.name @version.published_by.username}}
           </LinkTo>
         </span>
       {{/if}}

@@ -4,6 +4,7 @@ test.describe('/settings/tokens', { tag: '@routes' }, () => {
   test('reloads all tokens from the server', async ({ page, msw }) => {
     let user = msw.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

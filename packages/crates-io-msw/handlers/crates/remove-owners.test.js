@@ -31,7 +31,7 @@ test('can remove a user owner', async function () {
   let user2 = db.user.create();
   db.crateOwnership.create({ crate, user: user2 });
 
-  let body = JSON.stringify({ owners: [user2.login] });
+  let body = JSON.stringify({ owners: [user2.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, msg: 'owners successfully removed' });
@@ -54,7 +54,7 @@ test('can remove a team owner', async function () {
   let team = db.team.create();
   db.crateOwnership.create({ crate, team });
 
-  let body = JSON.stringify({ owners: [team.login] });
+  let body = JSON.stringify({ owners: [team.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, msg: 'owners successfully removed' });
@@ -81,7 +81,7 @@ test('can remove multiple owners', async function () {
   let user2 = db.user.create();
   db.crateOwnership.create({ crate, user: user2 });
 
-  let body = JSON.stringify({ owners: [user2.login, team.login] });
+  let body = JSON.stringify({ owners: [user2.username, team.username] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, msg: 'owners successfully removed' });

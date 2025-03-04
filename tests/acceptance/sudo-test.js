@@ -13,6 +13,7 @@ module('Acceptance | sudo', function (hooks) {
   function prepare(context, isAdmin) {
     const user = context.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

@@ -194,7 +194,7 @@ export default class SessionService extends Service {
     }
 
     let currentUser = this.store.push(this.store.normalize('user', response.user));
-    debug(`User found: ${currentUser.login}`);
+    debug(`User found: ${currentUser.username}`);
     let ownedCrates = response.owned_crates.map(c => this.store.push(this.store.normalize('owned-crate', c)));
 
     let { id } = currentUser;

@@ -32,19 +32,19 @@ export default class CrateSettingsController extends Controller {
 
   removeOwnerTask = task(async owner => {
     try {
-      await this.crate.removeOwner(owner.get('login'));
+      await this.crate.removeOwner(owner.get('username'));
 
       if (owner.kind === 'team') {
         this.notifications.success(`Team ${owner.get('display_name')} removed as crate owner`);
         let owner_team = await this.crate.owner_team;
         removeOwner(owner_team, owner);
       } else {
-        this.notifications.success(`User ${owner.get('login')} removed as crate owner`);
+        this.notifications.success(`User ${owner.get('username')} removed as crate owner`);
         let owner_user = await this.crate.owner_user;
         removeOwner(owner_user, owner);
       }
     } catch (error) {
-      let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;
+      let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('username')}`;
       let message = `Failed to remove the ${subject} as crate owner`;
 
       let detail = error.errors?.[0]?.detail;

@@ -328,7 +328,7 @@ async fn invite_user_owner(
     let user = User::find_by_login(conn, login)
         .await
         .optional()?
-        .ok_or_else(|| bad_request(format_args!("could not find user with login `{login}`")))?;
+        .ok_or_else(|| bad_request(format_args!("could not find user with username `{login}`")))?;
 
     // Users are invited and must accept before being added
     let expires_at = Utc::now() + app.config.ownership_invitations_expiration;
@@ -498,7 +498,7 @@ impl From<OwnerRemoveError> for BoxedAppError {
         match error {
             OwnerRemoveError::Diesel(error) => error.into(),
             OwnerRemoveError::NotFound { login } => {
-                bad_request(format!("could not find owner with login `{login}`"))
+                bad_request(format!("could not find owner with username `{login}`"))
             }
         }
     }

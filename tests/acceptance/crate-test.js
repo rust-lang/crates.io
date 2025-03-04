@@ -215,7 +215,7 @@ module('Acceptance | crate page', function (hooks) {
   skip('crates can be yanked by owner', async function (assert) {
     loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = this.db.user.findFirst({ where: { username: { equals: 'thehydroimpulse' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg/0.5.0');
@@ -242,7 +242,7 @@ module('Acceptance | crate page', function (hooks) {
   test('navigating to the owners page when not an owner', async function (assert) {
     loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'iain8' } } });
+    let user = this.db.user.findFirst({ where: { username: { equals: 'iain8' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
@@ -253,7 +253,7 @@ module('Acceptance | crate page', function (hooks) {
   test('navigating to the settings page', async function (assert) {
     loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = this.db.user.findFirst({ where: { username: { equals: 'thehydroimpulse' } } });
     this.authenticateAs(user);
 
     await visit('/crates/nanomsg');

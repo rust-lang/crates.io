@@ -5,8 +5,8 @@ import { serializeTeam } from '../../serializers/team.js';
 import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/teams/:team_id', ({ params }) => {
-  let login = params.team_id;
-  let team = db.team.findFirst({ where: { login: { equals: login } } });
+  let username = params.team_id;
+  let team = db.team.findFirst({ where: { username: { equals: username } } });
   if (!team) {
     return notFound();
   }

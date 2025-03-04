@@ -18,11 +18,11 @@
 
 <div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}
-    <div local-class='row' data-test-owner-team={{team.login}}>
-      <LinkTo @route={{team.kind}} @model={{team.login}}>
+    <div local-class='row' data-test-owner-team={{team.username}}>
+      <LinkTo @route={{team.kind}} @model={{team.username}}>
         <UserAvatar @user={{team}} @size="medium-small" />
       </LinkTo>
-      <LinkTo @route={{team.kind}} @model={{team.login}}>
+      <LinkTo @route={{team.kind}} @model={{team.username}}>
         {{team.display_name}}
       </LinkTo>
       <div local-class="email-column">
@@ -32,15 +32,15 @@
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
-    <div local-class='row' data-test-owner-user={{user.login}}>
-      <LinkTo @route={{user.kind}} @model={{user.login}}>
+    <div local-class='row' data-test-owner-user={{user.username}}>
+      <LinkTo @route={{user.kind}} @model={{user.username}}>
         <UserAvatar @user={{user}} @size="medium-small" />
       </LinkTo>
-      <LinkTo @route={{user.kind}} @model={{user.login}}>
+      <LinkTo @route={{user.kind}} @model={{user.username}}>
         {{#if user.name}}
           {{user.name}}
         {{else}}
-          {{user.login}}
+          {{user.username}}
         {{/if}}
       </LinkTo>
       <div local-class="email-column">

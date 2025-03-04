@@ -17,6 +17,7 @@ test('default are applied', ({ expect }) => {
       "name": "User 1",
       "publishNotifications": true,
       "url": "https://github.com/user-1",
+      "username": "user-1",
       Symbol(type): "user",
       Symbol(primaryKey): "id",
     }
@@ -38,6 +39,7 @@ test('name can be set', ({ expect }) => {
       "name": "John Doe",
       "publishNotifications": true,
       "url": "https://github.com/john-doe",
+      "username": "john-doe",
       Symbol(type): "user",
       Symbol(primaryKey): "id",
     }

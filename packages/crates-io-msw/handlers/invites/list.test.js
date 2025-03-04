@@ -56,6 +56,7 @@ test('happy path (invitee_id)', async function () {
         login: user.login,
         name: user.name,
         url: user.url,
+        username: user.username,
       },
       {
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
@@ -63,6 +64,7 @@ test('happy path (invitee_id)', async function () {
         login: 'janed',
         name: 'janed',
         url: 'https://github.com/janed',
+        username: 'janed',
       },
       {
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
@@ -70,6 +72,7 @@ test('happy path (invitee_id)', async function () {
         login: 'wycats',
         name: 'wycats',
         url: 'https://github.com/wycats',
+        username: 'wycats',
       },
     ],
     meta: {
@@ -164,6 +167,7 @@ test('happy path (crate_name)', async function () {
         login: user.login,
         name: user.name,
         url: user.url,
+        username: user.username,
       },
       {
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
@@ -171,6 +175,7 @@ test('happy path (crate_name)', async function () {
         login: 'wycats',
         name: 'wycats',
         url: 'https://github.com/wycats',
+        username: 'wycats',
       },
     ],
     meta: {

@@ -16,9 +16,11 @@ async fn show() {
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
+    assert_eq!(json.user.username, "foo");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
     assert_eq!(json.user.login, "Bar");
+    assert_eq!(json.user.username, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
 }
 

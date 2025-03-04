@@ -5,8 +5,8 @@ import { serializeUser } from '../../serializers/user.js';
 import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/users/:user_id', ({ params }) => {
-  let login = params.user_id;
-  let user = db.user.findFirst({ where: { login: { equals: login } } });
+  let username = params.user_id;
+  let user = db.user.findFirst({ where: { username: { equals: username } } });
   if (!user) {
     return notFound();
   }
