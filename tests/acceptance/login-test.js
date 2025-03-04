@@ -45,6 +45,7 @@ module('Acceptance | Login', function (hooks) {
           user: {
             id: 42,
             login: 'johnnydee',
+            username: 'johnnydee',
             name: 'John Doe',
             email: 'john@doe.name',
             avatar: 'https://avatars2.githubusercontent.com/u/12345?v=4',

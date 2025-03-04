@@ -6,6 +6,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
   async function prepare(msw) {
     let user = msw.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

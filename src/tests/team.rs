@@ -121,6 +121,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
     let json = anon.crate_owner_teams("foo_renamed_team").await.good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(json.teams[0].username, "github:test-org:core");
 
     Ok(())
 }
@@ -151,6 +152,7 @@ async fn add_team_mixed_case() -> anyhow::Result<()> {
     let json = anon.crate_owner_teams("foo_mixed_case").await.good();
     assert_eq!(json.teams.len(), 1);
     assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(json.teams[0].username, "github:test-org:core");
 
     Ok(())
 }
