@@ -20,25 +20,25 @@ export default http.put('/api/v1/crates/:name/owners', async ({ request, params 
   let users = [];
   let teams = [];
   let msgs = [];
-  for (let login of body.owners) {
-    if (login.includes(':')) {
-      let team = db.team.findFirst({ where: { login: { equals: login } } });
+  for (let username of body.owners) {
+    if (username.includes(':')) {
+      let team = db.team.findFirst({ where: { username: { equals: username } } });
       if (!team) {
-        let errorMessage = `could not find team with login \`${login}\``;
+        let errorMessage = `could not find team with username \`${username}\``;
         return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
       }
 
       teams.push(team);
-      msgs.push(`team ${login} has been added as an owner of crate ${crate.name}`);
+      msgs.push(`team ${username} has been added as an owner of crate ${crate.name}`);
     } else {
-      let user = db.user.findFirst({ where: { login: { equals: login } } });
+      let user = db.user.findFirst({ where: { username: { equals: username } } });
       if (!user) {
-        let errorMessage = `could not find user with login \`${login}\``;
+        let errorMessage = `could not find user with username \`${username}\``;
         return HttpResponse.json({ errors: [{ detail: errorMessage }] }, { status: 404 });
       }
 
       users.push(user);
-      msgs.push(`user ${login} has been invited to be an owner of crate ${crate.name}`);
+      msgs.push(`user ${username} has been invited to be an owner of crate ${crate.name}`);
     }
   }
 

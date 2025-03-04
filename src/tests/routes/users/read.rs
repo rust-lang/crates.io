@@ -16,9 +16,11 @@ async fn show() {
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/foo").await.good();
     assert_eq!(json.user.login, "foo");
+    assert_eq!(json.user.username, "foo");
 
     let json: UserShowPublicResponse = anon.get("/api/v1/users/bAr").await.good();
     assert_eq!(json.user.login, "Bar");
+    assert_eq!(json.user.username, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
 }
 
@@ -38,6 +40,7 @@ async fn show_latest_user_case_insensitively() {
     let user1 = NewUser::builder()
         .gh_id(1)
         .gh_login("foobar")
+        .username("foobar")
         .name("I was first then deleted my github account")
         .gh_access_token("bar")
         .build();
@@ -45,6 +48,7 @@ async fn show_latest_user_case_insensitively() {
     let user2 = NewUser::builder()
         .gh_id(2)
         .gh_login("FOOBAR")
+        .username("FOOBAR")
         .name("I was second, I took the foobar username on github")
         .gh_access_token("bar")
         .build();

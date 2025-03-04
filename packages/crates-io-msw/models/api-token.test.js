@@ -31,6 +31,7 @@ test('happy path', ({ expect }) => {
         "id": 1,
         "isAdmin": false,
         "login": "user-1",
+        "username": "user-1",
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",

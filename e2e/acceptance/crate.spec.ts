@@ -213,7 +213,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test.skip('crates can be yanked by owner', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = msw.db.user.findFirst({ where: { username: { equals: 'thehydroimpulse' } } });
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg/0.5.0');
@@ -241,7 +241,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test('navigating to the owners page when not an owner', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'iain8' } } });
+    let user = msw.db.user.findFirst({ where: { username: { equals: 'iain8' } } });
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg');
@@ -252,7 +252,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   test('navigating to the settings page', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
-    let user = msw.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
+    let user = msw.db.user.findFirst({ where: { username: { equals: 'thehydroimpulse' } } });
     await msw.authenticateAs(user);
 
     await page.goto('/crates/nanomsg');

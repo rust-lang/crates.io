@@ -32,6 +32,7 @@ test('returns the list of users that own the specified crate', async function ()
         avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
         kind: 'user',
         login: 'john-doe',
+        username: 'john-doe',
         name: 'John Doe',
         url: 'https://github.com/john-doe',
       },

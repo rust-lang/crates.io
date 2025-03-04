@@ -29,7 +29,7 @@ test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () =>
     await page.click('[data-test-save-button]');
 
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
-      'Error sending invite: could not find user with login `spookyghostboo`',
+      'Error sending invite: could not find user with username `spookyghostboo`',
     );
     await expect(page.locator('[data-test-owners] [data-test-owner-team]')).toHaveCount(2);
     await expect(page.locator('[data-test-owners] [data-test-owner-user]')).toHaveCount(2);
