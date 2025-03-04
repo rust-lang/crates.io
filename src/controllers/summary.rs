@@ -5,12 +5,40 @@ use crate::schema::{
 };
 use crate::util::errors::AppResult;
 use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
-use axum_extra::json;
-use axum_extra::response::ErasedJson;
+use axum::Json;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use std::future::Future;
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SummaryResponse {
+    /// The total number of downloads across all crates.
+    #[schema(example = 123_456_789)]
+    num_downloads: i64,
+
+    /// The total number of crates on crates.io.
+    #[schema(example = 123_456)]
+    num_crates: i64,
+
+    /// The 10 most recently created crates.
+    new_crates: Vec<EncodableCrate>,
+
+    /// The 10 crates with the highest total number of downloads.
+    most_downloaded: Vec<EncodableCrate>,
+
+    /// The 10 crates with the highest number of downloads within the last 90 days.
+    most_recently_downloaded: Vec<EncodableCrate>,
+
+    /// The 10 most recently updated crates.
+    just_updated: Vec<EncodableCrate>,
+
+    /// The 10 most popular keywords.
+    popular_keywords: Vec<EncodableKeyword>,
+
+    /// The 10 most popular categories.
+    popular_categories: Vec<EncodableCategory>,
+}
 
 /// Get front page data.
 ///
@@ -20,9 +48,9 @@ use std::future::Future;
     get,
     path = "/api/v1/summary",
     tag = "other",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(SummaryResponse))),
 )]
-pub async fn get_summary(state: AppState) -> AppResult<ErasedJson> {
+pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
     let mut conn = state.db_read().await?;
 
     let config = &state.config;
@@ -37,10 +65,10 @@ pub async fn get_summary(state: AppState) -> AppResult<ErasedJson> {
         popular_categories,
         popular_keywords,
     ) = tokio::try_join!(
-        crates::table.count().get_result::<i64>(&mut conn).boxed(),
+        crates::table.count().get_result(&mut conn).boxed(),
         metadata::table
             .select(metadata::total_downloads)
-            .get_result::<i64>(&mut conn)
+            .get_result(&mut conn)
             .boxed(),
         crates::table
             .inner_join(crate_downloads::table)
@@ -100,25 +128,18 @@ pub async fn get_summary(state: AppState) -> AppResult<ErasedJson> {
         encode_crates(&mut conn, just_updated),
     )?;
 
-    let popular_categories = popular_categories
-        .into_iter()
-        .map(Category::into)
-        .collect::<Vec<EncodableCategory>>();
+    let popular_categories = popular_categories.into_iter().map(Category::into).collect();
+    let popular_keywords = popular_keywords.into_iter().map(Keyword::into).collect();
 
-    let popular_keywords = popular_keywords
-        .into_iter()
-        .map(Keyword::into)
-        .collect::<Vec<EncodableKeyword>>();
-
-    Ok(json!({
-        "num_downloads": num_downloads,
-        "num_crates": num_crates,
-        "new_crates": new_crates,
-        "most_downloaded": most_downloaded,
-        "most_recently_downloaded": most_recently_downloaded,
-        "just_updated": just_updated,
-        "popular_keywords": popular_keywords,
-        "popular_categories": popular_categories,
+    Ok(Json(SummaryResponse {
+        num_downloads,
+        num_crates,
+        new_crates,
+        most_downloaded,
+        most_recently_downloaded,
+        just_updated,
+        popular_keywords,
+        popular_categories,
     }))
 }
 

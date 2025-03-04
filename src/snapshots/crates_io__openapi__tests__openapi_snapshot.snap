@@ -3661,6 +3661,34 @@ expression: response.json()
         "operationId": "get_site_metadata",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "commit": {
+                      "description": "The SHA1 of the currently deployed commit.",
+                      "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
+                      "type": "string"
+                    },
+                    "deployed_sha": {
+                      "description": "The SHA1 of the currently deployed commit.",
+                      "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
+                      "type": "string"
+                    },
+                    "read_only": {
+                      "description": "Whether the crates.io service is in read-only mode.",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "deployed_sha",
+                    "commit",
+                    "read_only"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
@@ -3676,6 +3704,79 @@ expression: response.json()
         "operationId": "get_summary",
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "just_updated": {
+                      "description": "The 10 most recently updated crates.",
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "most_downloaded": {
+                      "description": "The 10 crates with the highest total number of downloads.",
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "most_recently_downloaded": {
+                      "description": "The 10 crates with the highest number of downloads within the last 90 days.",
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "new_crates": {
+                      "description": "The 10 most recently created crates.",
+                      "items": {
+                        "$ref": "#/components/schemas/Crate"
+                      },
+                      "type": "array"
+                    },
+                    "num_crates": {
+                      "description": "The total number of crates on crates.io.",
+                      "example": 123456,
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "num_downloads": {
+                      "description": "The total number of downloads across all crates.",
+                      "example": 123456789,
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "popular_categories": {
+                      "description": "The 10 most popular categories.",
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      },
+                      "type": "array"
+                    },
+                    "popular_keywords": {
+                      "description": "The 10 most popular keywords.",
+                      "items": {
+                        "$ref": "#/components/schemas/Keyword"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "num_downloads",
+                    "num_crates",
+                    "new_crates",
+                    "most_downloaded",
+                    "most_recently_downloaded",
+                    "just_updated",
+                    "popular_keywords",
+                    "popular_categories"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
             "description": "Successful Response"
           }
         },
