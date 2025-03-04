@@ -583,12 +583,27 @@ impl From<Owner> for EncodableOwner {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, utoipa::ToSchema)]
+#[schema(as = Team)]
 pub struct EncodableTeam {
+    /// An opaque identifier for the team.
+    #[schema(example = 42)]
     pub id: i32,
+
+    /// The login name of the team.
+    #[schema(example = "github:rust-lang:crates-io")]
     pub login: String,
+
+    /// The display name of the team.
+    #[schema(example = "Crates.io team")]
     pub name: Option<String>,
+
+    /// The avatar URL of the team.
+    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
     pub avatar: Option<String>,
+
+    /// The GitHub profile URL of the team.
+    #[schema(example = "https://github.com/rust-lang")]
     pub url: Option<String>,
 }
 
