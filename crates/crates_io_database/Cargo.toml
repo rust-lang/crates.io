@@ -25,6 +25,7 @@ sha2 = "=0.10.8"
 thiserror = "=2.0.12"
 tracing = "=0.1.41"
 unicode-xid = "=0.2.6"
+utoipa = "=5.3.1"
 
 [dev-dependencies]
 claims = "=0.8.0"

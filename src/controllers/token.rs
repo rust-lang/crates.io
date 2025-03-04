@@ -37,13 +37,18 @@ impl GetParams {
     }
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    pub api_tokens: Vec<ApiToken>,
+}
+
 /// List all API tokens of the authenticated user.
 #[utoipa::path(
     get,
     path = "/api/v1/me/tokens",
     security(("cookie" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
 pub async fn list_api_tokens(
     app: AppState,
@@ -84,19 +89,24 @@ pub struct NewApiTokenRequest {
     api_token: NewApiToken,
 }
 
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct CreateResponse {
+    api_token: EncodableApiTokenWithToken,
+}
+
 /// Create a new API token.
 #[utoipa::path(
     put,
     path = "/api/v1/me/tokens",
     security(("cookie" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(CreateResponse))),
 )]
 pub async fn create_api_token(
     app: AppState,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<CreateResponse>> {
     if new.api_token.name.is_empty() {
         return Err(bad_request("name must have a value"));
     }
@@ -181,7 +191,12 @@ pub async fn create_api_token(
         plaintext: plaintext.expose_secret().to_string(),
     };
 
-    Ok(json!({ "api_token": api_token }))
+    Ok(Json(CreateResponse { api_token }))
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct GetResponse {
+    pub api_token: ApiToken,
 }
 
 /// Find API token by id.
@@ -196,23 +211,23 @@ pub async fn create_api_token(
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
 pub async fn find_api_token(
     app: AppState,
     Path(id): Path<i32>,
     req: Parts,
-) -> AppResult<ErasedJson> {
+) -> AppResult<Json<GetResponse>> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let user = auth.user();
-    let token = ApiToken::belonging_to(user)
+    let api_token = ApiToken::belonging_to(user)
         .find(id)
         .select(ApiToken::as_select())
         .first(&mut conn)
         .await?;
 
-    Ok(json!({ "api_token": token }))
+    Ok(Json(GetResponse { api_token }))
 }
 
 /// Revoke API token.
@@ -227,7 +242,7 @@ pub async fn find_api_token(
         ("cookie" = []),
     ),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 200, description = "Successful Response", body = Object)),
 )]
 pub async fn revoke_api_token(
     app: AppState,
@@ -254,7 +269,7 @@ pub async fn revoke_api_token(
     path = "/api/v1/tokens/current",
     security(("api_token" = [])),
     tag = "api_tokens",
-    responses((status = 200, description = "Successful Response")),
+    responses((status = 204, description = "Successful Response")),
 )]
 pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
