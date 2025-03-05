@@ -29,6 +29,7 @@ const MAX_PER_PAGE: i64 = 100;
 pub(crate) enum Page {
     Numeric(u32),
     Seek(RawSeekPayload),
+    SeekBackward(RawSeekPayload),
     Unspecified,
 }
 
@@ -157,8 +158,7 @@ impl PaginationOptionsBuilder {
                         "seek backward ?seek=- is not supported for this request",
                     ));
                 }
-                // TODO: add a varaint for seek backward
-                true => unimplemented!("seek backward is not yet implemented"),
+                true => Page::SeekBackward(RawSeekPayload(s.trim_start_matches('-').into())),
                 false if !self.enable_seek => {
                     return Err(bad_request("?seek= is not supported for this request"));
                 }
@@ -225,7 +225,7 @@ impl<T> Paginated<T> {
         match self.options.page {
             Page::Numeric(n) => opts.insert("page".into(), (n + 1).to_string()),
             Page::Unspecified => opts.insert("page".into(), 2.to_string()),
-            Page::Seek(_) => return None,
+            Page::Seek(_) | Page::SeekBackward(_) => return None,
         };
         Some(opts)
     }
@@ -233,7 +233,9 @@ impl<T> Paginated<T> {
     pub(crate) fn prev_page_params(&self) -> Option<IndexMap<String, String>> {
         let mut opts = IndexMap::new();
         match self.options.page {
-            Page::Numeric(1) | Page::Unspecified | Page::Seek(_) => return None,
+            Page::Numeric(1) | Page::Unspecified | Page::Seek(_) | Page::SeekBackward(_) => {
+                return None;
+            }
             Page::Numeric(n) => opts.insert("page".into(), (n - 1).to_string()),
         };
         Some(opts)
@@ -244,6 +246,7 @@ impl<T> Paginated<T> {
         F: Fn(&T) -> S,
         S: Serialize,
     {
+        // TODO: handle this more properly when seek backward comes into play.
         if self.is_explicit_page() || self.records_and_total.len() < self.options.per_page as usize
         {
             return Ok(None);
@@ -251,7 +254,7 @@ impl<T> Paginated<T> {
 
         let mut opts = IndexMap::new();
         match self.options.page {
-            Page::Unspecified | Page::Seek(_) => {
+            Page::Unspecified | Page::Seek(_) | Page::SeekBackward(_) => {
                 let seek = f(&self.records_and_total.last().unwrap().record);
                 opts.insert("seek".into(), encode_seek(seek)?);
             }
@@ -301,6 +304,8 @@ impl<T> PaginatedQuery<T> {
 
         async move {
             let records_and_total = future.await?.try_collect().await?;
+
+            // TODO: maintain consistent ordering from page to pagen
 
             Ok(Paginated {
                 records_and_total,
@@ -450,6 +455,8 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
         async move {
             let records_and_total = future.await?.try_collect().await?;
 
+            // TODO: maintain consistent ordering from page to pagen
+
             Ok(Paginated {
                 records_and_total,
                 options,
@@ -539,8 +546,10 @@ macro_rules! seek {
             use crate::controllers::helpers::pagination::Page;
             impl $name {
                 pub fn decode(&self, page: &Page) -> AppResult<Option<[<$name Payload>]>> {
-                    let Page::Seek(ref encoded) = *page else {
-                        return Ok(None);
+                    let encoded = match page {
+                        Page::Seek(encoded) => encoded,
+                        Page::SeekBackward(encoded) => encoded,
+                        _ => return Ok(None),
                     };
 
                     Ok(Some(match self {
@@ -619,6 +628,24 @@ mod tests {
                 pagination.page
             );
         }
+
+        // for backward
+        let error = pagination_error(PaginationOptions::builder(), "seek=-OTg");
+        assert_snapshot!(error, @"seek backward ?seek=- is not supported for this request");
+
+        let pagination = PaginationOptions::builder()
+            .enable_seek_backward(true)
+            .gather(&mock("seek=-OTg"))
+            .unwrap();
+
+        if let Page::SeekBackward(raw) = pagination.page {
+            assert_ok_eq!(raw.decode::<i32>(), 98);
+        } else {
+            panic!(
+                "did not parse a seek page, parsed {:?} instead",
+                pagination.page
+            );
+        }
     }
 
     #[test]
@@ -629,6 +656,13 @@ mod tests {
         let error = pagination_error(
             PaginationOptions::builder().enable_seek(true),
             "page=1&seek=OTg",
+        );
+        assert_snapshot!(error, @"providing both ?page= and ?seek= is unsupported");
+
+        // for backward
+        let error = pagination_error(
+            PaginationOptions::builder().enable_seek_backward(true),
+            "page=1&seek=-OTg",
         );
         assert_snapshot!(error, @"providing both ?page= and ?seek= is unsupported");
     }
@@ -681,20 +715,27 @@ mod tests {
         use chrono::serde::ts_microseconds;
         use seek::*;
 
-        let assert_decode_after = |seek: Seek, query: &str, expect| {
-            let pagination = PaginationOptions::builder()
-                .enable_seek(true)
-                .gather(&mock(query))
-                .unwrap();
-            let decoded = seek.decode(&pagination.page).unwrap();
-            assert_eq!(decoded, expect);
+        let assert_decode = |seek: Seek, payload: Option<_>| {
+            for (param, prefix) in [("seek", ""), ("seek", "-")] {
+                let query = if let Some(ref s) = payload {
+                    &format!("{param}={prefix}{}", encode_seek(s).unwrap())
+                } else {
+                    ""
+                };
+                let pagination = PaginationOptions::builder()
+                    .enable_seek(true)
+                    .enable_seek_backward(true)
+                    .gather(&mock(query))
+                    .unwrap();
+                let decoded = seek.decode(&pagination.page).unwrap();
+                assert_eq!(decoded.as_ref(), payload.as_ref());
+            }
         };
 
         let id = 1234;
         let seek = Seek::Id;
         let payload = SeekPayload::Id(Id { id });
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
+        assert_decode(seek, Some(payload));
 
         let dt = NaiveDate::from_ymd_opt(2016, 7, 8)
             .unwrap()
@@ -703,29 +744,41 @@ mod tests {
             .and_utc();
         let seek = Seek::New;
         let payload = SeekPayload::New(New { dt, id });
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
+        assert_decode(seek, Some(payload));
 
         let downloads = Some(5678);
         let seek = Seek::RecentDownloads;
         let payload = SeekPayload::RecentDownloads(RecentDownloads { downloads, id });
-        let query = format!("seek={}", encode_seek(&payload).unwrap());
-        assert_decode_after(seek, &query, Some(payload));
+        assert_decode(seek, Some(payload));
 
         let seek = Seek::Id;
-        assert_decode_after(seek, "", None);
+        assert_decode(seek, None);
 
-        let seek = Seek::Id;
-        let payload = SeekPayload::RecentDownloads(RecentDownloads { downloads, id });
-        let query = format!("seek={}", encode_seek(payload).unwrap());
-        let pagination = PaginationOptions::builder()
-            .enable_seek(true)
-            .gather(&mock(&query))
-            .unwrap();
-        let error = seek.decode(&pagination.page).unwrap_err();
-        assert_eq!(error.to_string(), "invalid seek parameter");
-        let response = error.response();
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        // invalid seek payload
+        {
+            let seek = Seek::Id;
+            let payload = SeekPayload::RecentDownloads(RecentDownloads { downloads, id });
+            let query = format!("seek={}", encode_seek(&payload).unwrap());
+            let pagination = PaginationOptions::builder()
+                .enable_seek(true)
+                .gather(&mock(&query))
+                .unwrap();
+            let error = seek.decode(&pagination.page).unwrap_err();
+            assert_eq!(error.to_string(), "invalid seek parameter");
+            let response = error.response();
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+            // for backward
+            let query = format!("seek=-{}", encode_seek(&payload).unwrap());
+            let pagination = PaginationOptions::builder()
+                .enable_seek_backward(true)
+                .gather(&mock(&query))
+                .unwrap();
+            let error = seek.decode(&pagination.page).unwrap_err();
+            assert_eq!(error.to_string(), "invalid seek parameter");
+            let response = error.response();
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        }
 
         // Ensures it still encodes compactly with a field struct
         #[derive(Debug, Default, Serialize, PartialEq)]

@@ -432,7 +432,7 @@ where
             let seek = f(records.last().unwrap());
             opts.insert("seek".into(), encode_seek(seek)?);
         }
-        Page::Numeric(_) => unreachable!(),
+        Page::Numeric(_) | Page::SeekBackward(_) => unreachable!(),
     };
     Ok(Some(opts))
 }
