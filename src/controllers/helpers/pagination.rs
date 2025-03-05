@@ -43,6 +43,7 @@ impl PaginationOptions {
         PaginationOptionsBuilder {
             limit_page_numbers: false,
             enable_seek: false,
+            enable_seek_backward: false,
             enable_pages: true,
         }
     }
@@ -85,6 +86,7 @@ pub(crate) struct PaginationOptionsBuilder {
     limit_page_numbers: bool,
     enable_pages: bool,
     enable_seek: bool,
+    enable_seek_backward: bool,
 }
 
 impl PaginationOptionsBuilder {
@@ -100,6 +102,12 @@ impl PaginationOptionsBuilder {
 
     pub(crate) fn enable_seek(mut self, enable: bool) -> Self {
         self.enable_seek = enable;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn enable_seek_backward(mut self, enable: bool) -> Self {
+        self.enable_seek_backward = enable;
         self
     }
 
@@ -143,11 +151,19 @@ impl PaginationOptionsBuilder {
 
             Page::Numeric(numeric_page)
         } else if let Some(s) = params.seek {
-            if !self.enable_seek {
-                return Err(bad_request("?seek= is not supported for this request"));
+            match s.starts_with('-') {
+                true if !self.enable_seek_backward => {
+                    return Err(bad_request(
+                        "seek backward ?seek=- is not supported for this request",
+                    ));
+                }
+                // TODO: add a varaint for seek backward
+                true => unimplemented!("seek backward is not yet implemented"),
+                false if !self.enable_seek => {
+                    return Err(bad_request("?seek= is not supported for this request"));
+                }
+                false => Page::Seek(RawSeekPayload(s)),
             }
-
-            Page::Seek(RawSeekPayload(s))
         } else {
             Page::Unspecified
         };
