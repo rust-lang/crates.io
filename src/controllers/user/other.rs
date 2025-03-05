@@ -16,12 +16,12 @@ pub struct GetResponse {
     pub user: EncodablePublicUser,
 }
 
-/// Find user by login.
+/// Find user by username.
 #[utoipa::path(
     get,
     path = "/api/v1/users/{user}",
     params(
-        ("user" = String, Path, description = "Login name of the user"),
+        ("user" = String, Path, description = "Crates.io username of the user"),
     ),
     tag = "users",
     responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
@@ -41,7 +41,11 @@ pub async fn find_user(
         .first(&mut conn)
         .await?;
 
-    Ok(Json(GetResponse { user: user.into() }))
+    let linked_accounts = user.linked_accounts(&mut conn).await?;
+
+    Ok(Json(GetResponse {
+        user: EncodablePublicUser::with_linked_accounts(user, &linked_accounts),
+    }))
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

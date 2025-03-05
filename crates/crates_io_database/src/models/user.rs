@@ -11,6 +11,8 @@ use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
 use crate::schema::{crate_owners, emails, linked_accounts, users};
 use crates_io_diesel_helpers::{lower, pg_enum};
 
+use std::fmt::{Display, Formatter};
+
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
 pub struct User {
@@ -77,6 +79,17 @@ impl User {
             .await
             .optional()
     }
+
+    /// Queries for the linked accounts belonging to a particular user
+    pub async fn linked_accounts(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Vec<LinkedAccount>> {
+        LinkedAccount::belonging_to(self)
+            .select(LinkedAccount::as_select())
+            .load(conn)
+            .await
+    }
 }
 
 /// Represents a new user record insertable to the `users` table
@@ -130,6 +143,22 @@ impl NewUser<'_> {
 pg_enum! {
     pub enum AccountProvider {
         Github = 0,
+    }
+}
+
+impl Display for AccountProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Github => write!(f, "GitHub"),
+        }
+    }
+}
+
+impl AccountProvider {
+    pub fn url(&self, login: &str) -> String {
+        match self {
+            Self::Github => format!("https://github.com/{login}"),
+        }
     }
 }
 

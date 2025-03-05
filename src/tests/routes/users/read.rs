@@ -22,6 +22,13 @@ async fn show() {
     assert_eq!(json.user.login, "Bar");
     assert_eq!(json.user.username, "Bar");
     assert_eq!(json.user.url, "https://github.com/Bar");
+
+    let accounts = json.user.linked_accounts.unwrap();
+    assert_eq!(accounts.len(), 1);
+    let account = &accounts[0];
+    assert_eq!(account.provider, "GitHub");
+    assert_eq!(account.login, "Bar");
+    assert_eq!(account.url, "https://github.com/Bar");
 }
 
 #[tokio::test(flavor = "multi_thread")]

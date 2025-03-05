@@ -865,6 +865,17 @@ snapshot_kind: text
             "format": "int32",
             "type": "integer"
           },
+          "linked_accounts": {
+            "description": "The accounts linked to this crates.io account.",
+            "example": [],
+            "items": {
+              "$ref": "#/components/schemas/LinkedAccount"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "login": {
             "description": "The user's GitHub login name.",
             "example": "ghost",
@@ -4167,7 +4178,7 @@ snapshot_kind: text
         "operationId": "find_user",
         "parameters": [
           {
-            "description": "Login name of the user",
+            "description": "Crates.io username of the user",
             "in": "path",
             "name": "user",
             "required": true,
@@ -4196,7 +4207,7 @@ snapshot_kind: text
             "description": "Successful Response"
           }
         },
-        "summary": "Find user by login.",
+        "summary": "Find user by username.",
         "tags": [
           "users"
         ]
