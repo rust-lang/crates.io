@@ -49,6 +49,13 @@ export default class VersionRow extends Component {
     return this.args.version.crate.hasOwnerUser(userId);
   }
 
+  get features() {
+    let features = this.args.version.featureList;
+    let list = features.slice(0, 15);
+    let more = features.length - list.length;
+    return { list, more };
+  }
+
   @action setFocused(value) {
     this.focused = value;
   }
