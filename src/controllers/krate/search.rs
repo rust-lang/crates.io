@@ -116,13 +116,17 @@ pub async fn list_crates(
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .select(selection);
 
+    let pagination: PaginationOptions = PaginationOptions::builder()
+        .limit_page_numbers()
+        .enable_seek(true)
+        .gather(&req)?;
+    let is_forward = !matches!(pagination.page, Page::SeekBackward(_));
+
     if let Some(q_string) = &filter_params.q_string {
         if !q_string.is_empty() {
             let q_string = q_string.as_str();
 
             let sort = sort.unwrap_or("relevance");
-
-            query = query.order(Crate::with_name(q_string).desc());
 
             if sort == "relevance" {
                 let q =
@@ -139,7 +143,11 @@ pub async fn list_crates(
                     default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Relevance);
-                query = query.then_order_by(rank.desc())
+                query = if is_forward {
+                    query.order((Crate::with_name(q_string).desc(), rank.desc()))
+                } else {
+                    query.order((Crate::with_name(q_string).asc(), rank.asc()))
+                }
             } else {
                 query = query.select((
                     ALL_COLUMNS,
@@ -152,6 +160,11 @@ pub async fn list_crates(
                     default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Query);
+                query = if is_forward {
+                    query.order(Crate::with_name(q_string).desc())
+                } else {
+                    query.order(Crate::with_name(q_string).asc())
+                }
             }
         }
     }
@@ -163,30 +176,48 @@ pub async fn list_crates(
     // to ensure predictable pagination behavior.
     if sort == Some("downloads") {
         seek = Some(Seek::Downloads);
-        query = query.order((crate_downloads::downloads.desc(), crates::id.desc()))
+        query = if is_forward {
+            query.order((crate_downloads::downloads.desc(), crates::id.desc()))
+        } else {
+            query.order((crate_downloads::downloads.asc(), crates::id.asc()))
+        };
     } else if sort == Some("recent-downloads") {
         seek = Some(Seek::RecentDownloads);
-        query = query.order((
-            recent_crate_downloads::downloads.desc().nulls_last(),
-            crates::id.desc(),
-        ))
+        query = if is_forward {
+            query.order((
+                recent_crate_downloads::downloads.desc().nulls_last(),
+                crates::id.desc(),
+            ))
+        } else {
+            query.order((
+                recent_crate_downloads::downloads.asc().nulls_first(),
+                crates::id.asc(),
+            ))
+        };
     } else if sort == Some("recent-updates") {
         seek = Some(Seek::RecentUpdates);
-        query = query.order((crates::updated_at.desc(), crates::id.desc()));
+        query = if is_forward {
+            query.order((crates::updated_at.desc(), crates::id.desc()))
+        } else {
+            query.order((crates::updated_at.asc(), crates::id.asc()))
+        };
     } else if sort == Some("new") {
         seek = Some(Seek::New);
-        query = query.order((crates::created_at.desc(), crates::id.desc()));
+        query = if is_forward {
+            query.order((crates::created_at.desc(), crates::id.desc()))
+        } else {
+            query.order((crates::created_at.asc(), crates::id.asc()))
+        };
     } else {
         seek = seek.or(Some(Seek::Name));
         // Since the name is unique value, the inherent ordering becomes naturally unique.
         // Therefore, an additional auxiliary ordering column is unnecessary in this case.
-        query = query.then_order_by(crates::name.asc())
+        query = if is_forward {
+            query.then_order_by(crates::name.asc())
+        } else {
+            query.then_order_by(crates::name.desc())
+        };
     }
-
-    let pagination: PaginationOptions = PaginationOptions::builder()
-        .limit_page_numbers()
-        .enable_seek(true)
-        .gather(&req)?;
 
     let explicit_page = matches!(pagination.page, Page::Numeric(_));
 
