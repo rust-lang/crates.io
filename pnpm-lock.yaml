@@ -191,8 +191,8 @@ importers:
         specifier: 0.1.1
         version: 0.1.1
       ember-exam:
-        specifier: 9.0.0
-        version: 9.0.0(ember-qunit@9.0.1(@ember/test-helpers@5.1.0(@babel/core@7.26.9)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1)(webpack@5.98.0)
+        specifier: 9.1.0
+        version: 9.1.0(ember-qunit@9.0.1(@ember/test-helpers@5.1.0(@babel/core@7.26.9)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1)(webpack@5.98.0)
       ember-fetch:
         specifier: 8.1.2
         version: 8.1.2
@@ -4445,8 +4445,8 @@ packages:
     resolution: {integrity: sha512-fWcbWd4W4nRv8bbato8JB6oGRpATkR+oGYxMIqnfgTgPWaCS0ww7CuUVNpwg1TulojKMCuTXi8Fem2b1NSF1ZQ==}
     engines: {node: 8.* || >= 10.*}
 
-  ember-exam@9.0.0:
-    resolution: {integrity: sha512-zQBZFlig9SMtCgsU4+0jjtyVdF7RnR539ySxnyesO0mmvhArQOPB576XH598FWawUqkMPbEu7rR/X/NDiozK1g==}
+  ember-exam@9.1.0:
+    resolution: {integrity: sha512-POqCgZ1jjQEvIARnDVDFoag3KZaNRU7XTGIzL/enVsilzPA0xTomOlCpc2lZNh/hXOZSfB69fHwygYshxMf3+A==}
     engines: {node: '>= 18'}
     peerDependencies:
       ember-qunit: '*'
@@ -14199,7 +14199,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-exam@9.0.0(ember-qunit@9.0.1(@ember/test-helpers@5.1.0(@babel/core@7.26.9)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1)(webpack@5.98.0):
+  ember-exam@9.1.0(ember-qunit@9.0.1(@ember/test-helpers@5.1.0(@babel/core@7.26.9)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1))(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))(qunit@2.24.1)(webpack@5.98.0):
     dependencies:
       '@babel/core': 7.26.9(supports-color@8.1.1)
       chalk: 5.4.1
