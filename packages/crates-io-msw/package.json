@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "happy-dom": "17.2.2",
-    "vitest": "3.0.7"
+    "vitest": "3.0.8"
   }
 }
