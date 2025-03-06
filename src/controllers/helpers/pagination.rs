@@ -56,6 +56,10 @@ impl PaginationOptions {
             None
         }
     }
+
+    pub(crate) fn is_backward(&self) -> bool {
+        matches!(self.page, Page::SeekBackward(_))
+    }
 }
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]

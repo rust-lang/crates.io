@@ -120,7 +120,7 @@ pub async fn list_crates(
         .limit_page_numbers()
         .enable_seek(true)
         .gather(&req)?;
-    let is_forward = !matches!(pagination.page, Page::SeekBackward(_));
+    let is_forward = !pagination.is_backward();
 
     if let Some(q_string) = &filter_params.q_string {
         if !q_string.is_empty() {
