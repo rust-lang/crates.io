@@ -21,7 +21,7 @@ use crate::schema::*;
 use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
 
-use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
+use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
 use crate::util::RequestUtils;
 use crate::util::string_excl_null::StringExclNull;
@@ -219,12 +219,10 @@ pub async fn list_crates(
         };
     }
 
-    let explicit_page = matches!(pagination.page, Page::Numeric(_));
-
     // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
     // not been provided. This way clients relying on meta.next_page will use the faster seek-based
     // paginations, while client hardcoding pages handling will use the slower offset-based code.
-    let (total, next_page, prev_page, data) = if !explicit_page && seek.is_some() {
+    let (total, next_page, prev_page, data) = if !pagination.is_explicit() && seek.is_some() {
         let seek = seek.unwrap();
         if let Some(condition) = seek
             .decode(&pagination.page)?

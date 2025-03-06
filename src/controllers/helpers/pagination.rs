@@ -60,6 +60,10 @@ impl PaginationOptions {
     pub(crate) fn is_backward(&self) -> bool {
         matches!(self.page, Page::SeekBackward(_))
     }
+
+    pub(crate) fn is_explicit(&self) -> bool {
+        matches!(self.page, Page::Numeric(_))
+    }
 }
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -251,7 +255,8 @@ impl<T> Paginated<T> {
         S: Serialize,
     {
         // TODO: handle this more properly when seek backward comes into play.
-        if self.is_explicit_page() || self.records_and_total.len() < self.options.per_page as usize
+        if self.options.is_explicit()
+            || self.records_and_total.len() < self.options.per_page as usize
         {
             return Ok(None);
         }
@@ -265,10 +270,6 @@ impl<T> Paginated<T> {
             Page::Numeric(_) => unreachable!(),
         };
         Ok(Some(opts))
-    }
-
-    fn is_explicit_page(&self) -> bool {
-        matches!(&self.options.page, Page::Numeric(_))
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
