@@ -2,18 +2,19 @@
 
 create or replace function semver_ord(num varchar) returns jsonb as $$
 declare
-    -- We need to ensure that the array has the same length for all versions
-    -- since shorter arrays have lower precedence in JSONB. Since we also need
-    -- to add a boolean value for each part of the prerelease string, this
-    -- results in us supporting up to 15 parts in the prerelease string.
-    -- Everything beyond that will be ignored.
-    prerelease_array_length constant int := 30;
+    -- We need to ensure that the prerelease array has the same length for all
+    -- versions since shorter arrays have lower precedence in JSONB. We store
+    -- the first 10 parts of the prerelease string as pairs of booleans and
+    -- numbers or text values, and then a final text item for the remaining
+    -- parts.
+    max_prerelease_parts constant int := 10;
 
     -- We ignore the "build metadata" part of the semver string, since it has
     -- no impact on the version ordering.
     match_result text[] := regexp_match(num, '^(\d+).(\d+).(\d+)(?:-([0-9A-Za-z\-.]+))?');
 
     prerelease jsonb;
+    prerelease_parts text[];
     prerelease_part text;
     i int := 0;
 begin
@@ -22,11 +23,13 @@ begin
         -- prerelease specifiers should have lower precedence than those without.
         prerelease := json_build_object();
     else
-        prerelease := to_jsonb(array_fill(NULL::bool, ARRAY[prerelease_array_length]));
+        prerelease := to_jsonb(array_fill(NULL::bool, ARRAY[max_prerelease_parts * 2 + 1]));
 
         -- Split prerelease string by `.` and "append" items to
         -- the `prerelease` array.
-        foreach prerelease_part in array string_to_array(match_result[4], '.')
+        prerelease_parts := string_to_array(match_result[4], '.');
+
+        foreach prerelease_part in array prerelease_parts[1:max_prerelease_parts + 1]
         loop
             -- Parse parts as numbers if they consist of only digits.
             if regexp_like(prerelease_part, '^\d+$') then
@@ -42,8 +45,10 @@ begin
 
             -- Exit the loop if we have reached the maximum number of parts.
             i := i + 2;
-            exit when i > prerelease_array_length;
+            exit when i >= max_prerelease_parts * 2;
         end loop;
+
+        prerelease := jsonb_set(prerelease, array[(max_prerelease_parts * 2)::text], to_jsonb(array_to_string(prerelease_parts[max_prerelease_parts + 1:], '.')));
     end if;
 
     -- Return an array with the major, minor, patch, and prerelease parts.
