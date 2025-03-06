@@ -254,15 +254,20 @@ impl<T> Paginated<T> {
         F: Fn(&T) -> S,
         S: Serialize,
     {
-        // TODO: handle this more properly when seek backward comes into play.
+        // When the data size is smaller than the page size, we would expect the next page to be
+        // available during backward pagination but unavailable during forward pagination.
         if self.options.is_explicit()
-            || self.records_and_total.len() < self.options.per_page as usize
+            || self.records_and_total.is_empty()
+            || (self.records_and_total.len() < self.options.per_page as usize
+                && !self.options.is_backward())
         {
             return Ok(None);
         }
 
+        // We also like to return None for next page when it's the first backward pagination.
         let mut opts = IndexMap::new();
         match self.options.page {
+            Page::SeekBackward(ref raw) if raw.is_empty() => return Ok(None),
             Page::Unspecified | Page::Seek(_) | Page::SeekBackward(_) => {
                 let seek = f(&self.records_and_total.last().unwrap().record);
                 opts.insert("seek".into(), encode_seek(seek)?);
