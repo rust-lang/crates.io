@@ -51,24 +51,6 @@ async fn test_spec_order() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
 
-    let query = r#"
-    with nums as (
-        select unnest(array[
-            '1.0.0-beta',
-            '1.0.0-alpha',
-            '1.0.0-rc.1',
-            '1.0.0',
-            '1.0.0-beta.2',
-            '1.0.0-alpha.1',
-            '1.0.0-alpha.beta',
-            '1.0.0-beta.11'
-        ]) as num
-    )
-    select num
-    from nums
-    order by semver_ord(num);
-    "#;
-
     #[derive(QueryableByName)]
     struct Row {
         #[diesel(sql_type = Text)]
@@ -81,12 +63,34 @@ async fn test_spec_order() {
         }
     }
 
-    let nums = diesel::sql_query(query)
-        .load::<Row>(&mut conn)
-        .await
-        .unwrap();
+    let mut check = async |order| {
+        let query = format!(
+            r#"
+            with nums as (
+                select unnest(array[
+                    '1.0.0-beta',
+                    '1.0.0-alpha',
+                    '1.0.0-rc.1',
+                    '1.0.0',
+                    '1.0.0-beta.2',
+                    '1.0.0-alpha.1',
+                    '1.0.0-alpha.beta',
+                    '1.0.0-beta.11'
+                ]) as num
+            )
+            select num
+            from nums
+            order by semver_ord(num) {order};
+            "#
+        );
 
-    insta::assert_debug_snapshot!(nums, @r"
+        diesel::sql_query(query)
+            .load::<Row>(&mut conn)
+            .await
+            .unwrap()
+    };
+
+    insta::assert_debug_snapshot!(check("asc").await, @r"
     [
         1.0.0-alpha,
         1.0.0-alpha.1,
@@ -96,6 +100,19 @@ async fn test_spec_order() {
         1.0.0-beta.11,
         1.0.0-rc.1,
         1.0.0,
+    ]
+    ");
+
+    insta::assert_debug_snapshot!(check("desc").await, @r"
+    [
+        1.0.0,
+        1.0.0-rc.1,
+        1.0.0-beta.11,
+        1.0.0-beta.2,
+        1.0.0-beta,
+        1.0.0-alpha.beta,
+        1.0.0-alpha.1,
+        1.0.0-alpha,
     ]
     ");
 }
