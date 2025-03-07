@@ -18,6 +18,10 @@ declare
     prerelease_part text;
     i int := 0;
 begin
+    if match_result is null then
+        return null;
+    end if;
+
     if match_result[4] is null then
         -- A JSONB object has higher precedence than an array, and versions with
         -- prerelease specifiers should have lower precedence than those without.
@@ -67,7 +71,7 @@ comment on function semver_ord is 'Converts a semver string into a JSONB array f
 -- Add corresponding column to the `versions` table.
 
 alter table versions
-    add semver_ord jsonb default 'null'::jsonb not null;
+    add semver_ord jsonb;
 
 comment on column versions.semver_ord is 'JSONB representation of the version number for sorting purposes.';
 
