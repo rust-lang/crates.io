@@ -23,13 +23,8 @@
     overflow-wrap: break-word;
 }
 
-.version {
-    margin-left: var(--space-2xs);
-}
-
 .copy-button {
     composes: button-reset from '../styles/shared/buttons.module.css';
-    padding: 0 var(--space-2xs);
     color: var(--main-color);
     cursor: pointer;
 
@@ -51,14 +46,28 @@
     }
 
     svg {
+        vertical-align: top;
         height: 1rem;
         width: 1rem;
     }
 }
 
+.crate-spec {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    & > * {
+        margin-bottom: calc(var(--space-xs) / 2);
+    }
+    & > :not(last-child) {
+        margin-right: var(--space-2xs);
+    }
+}
+
 .description {
     composes: small from '../styles/shared/typography.module.css';
-    margin-top: var(--space-xs);
+    margin-top: calc(var(--space-xs) / 2);
     line-height: 1.5;
 }
 

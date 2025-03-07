@@ -1,6 +1,6 @@
 <div local-class="crate-row" data-test-crate-row ...attributes>
   <div local-class="description-box">
-    <div>
+    <div local-class="crate-spec">
       {{#let (link "crate" @crate.id) as |l|}}
         <a href={{l.url}} local-class="name" data-test-crate-link {{on "click" l.transitionTo}}>
           {{@crate.name}}
