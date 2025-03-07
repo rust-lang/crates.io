@@ -1,6 +1,6 @@
 use crates_io_test_db::TestDatabase;
 use diesel::prelude::*;
-use diesel::sql_types::Text;
+use diesel::sql_types::{Nullable, Text};
 use diesel_async::RunQueryDsl;
 use std::fmt::Debug;
 
@@ -14,8 +14,8 @@ async fn test_jsonb_output() {
 
         #[derive(QueryableByName)]
         struct Row {
-            #[diesel(sql_type = Text)]
-            output: String,
+            #[diesel(sql_type = Nullable<Text>)]
+            output: Option<String>,
         }
 
         diesel::sql_query(query)
@@ -23,6 +23,7 @@ async fn test_jsonb_output() {
             .await
             .unwrap()
             .output
+            .unwrap_or_default()
     };
 
     insta::assert_snapshot!(check("0.0.0").await, @r#"[0, 0, 0, {}]"#);
@@ -32,7 +33,7 @@ async fn test_jsonb_output() {
     insta::assert_snapshot!(check("1.0.0-0.HDTV-BluRay.1020p.YTSUB.L33TRip.mkv").await, @r#"[1, 0, 0, [false, 0, true, "HDTV-BluRay", true, "1020p", true, "YTSUB", true, "L33TRip", true, "mkv", null, null, null, null, null, null, null, null, ""]]"#);
 
     // Invalid version string
-    insta::assert_snapshot!(check("foo").await, @"[null, null, null, {}]");
+    insta::assert_snapshot!(check("foo").await, @"");
 
     // Version string with a lot of prerelease identifiers
     insta::assert_snapshot!(check("1.2.3-1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.17.end").await, @r#"[1, 2, 3, [false, 1, false, 2, false, 3, false, 4, false, 5, false, 6, false, 7, false, 8, false, 9, false, 10, "11.12.13.14.15.16.17.end"]]"#);
