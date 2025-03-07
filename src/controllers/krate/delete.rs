@@ -99,8 +99,7 @@ pub async fn delete_crate(
         }
     }
 
-    // Temporary hack to mitigate https://github.com/rust-lang/crates.io/issues/10538: all crates
-    // with reverse dependencies are currently blocked from being deleted to avoid unexpected
+    // All crates with reverse dependencies are blocked from being deleted to avoid unexpected
     // historical index changes.
     if has_rev_dep(&mut conn, krate.id).await? {
         let msg = "only crates without reverse dependencies can be deleted";
