@@ -191,6 +191,7 @@ fn owners_subquery() -> SqlLiteral<Array<Text>> {
             LEFT JOIN teams ON teams.id = crate_owners.owner_id
             LEFT JOIN users ON users.id = crate_owners.owner_id
             WHERE crate_owners.crate_id = crates.id
+            AND crate_owners.deleted = 'f'
         )
     "#)
 }
