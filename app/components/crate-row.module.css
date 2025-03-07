@@ -23,37 +23,51 @@
     overflow-wrap: break-word;
 }
 
-.version {
-    margin-left: var(--space-2xs);
-}
-
 .copy-button {
     composes: button-reset from '../styles/shared/buttons.module.css';
-    padding: 0 var(--space-2xs);
     color: var(--main-color);
     cursor: pointer;
-    opacity: 0;
-    transition: var(--transition-medium);
 
-    .crate-row:hover & {
-        opacity: .8;
-        transition: var(--transition-instant);
-    }
+    /* Hover selector for pointer only */
+    /* See: https://github.com/rust-lang/crates.io/issues/10772 */
+    @media (pointer: fine) {
+        opacity: 0;
+        transition: var(--transition-medium);
 
-    .crate-row:hover &:hover, &:focus {
-        opacity: 1;
-        transition: var(--transition-instant);
+        .crate-row:hover & {
+            opacity: .8;
+            transition: var(--transition-instant);
+        }
+
+        .crate-row:hover &:hover, &:focus {
+            opacity: 1;
+            transition: var(--transition-instant);
+        }
     }
 
     svg {
+        vertical-align: top;
         height: 1rem;
         width: 1rem;
     }
 }
 
+.crate-spec {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    & > * {
+        margin-bottom: calc(var(--space-xs) / 2);
+    }
+    & > :not(last-child) {
+        margin-right: var(--space-2xs);
+    }
+}
+
 .description {
     composes: small from '../styles/shared/typography.module.css';
-    margin-top: var(--space-xs);
+    margin-top: calc(var(--space-xs) / 2);
     line-height: 1.5;
 }
 
