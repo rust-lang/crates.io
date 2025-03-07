@@ -32,17 +32,22 @@
     padding: 0 var(--space-2xs);
     color: var(--main-color);
     cursor: pointer;
-    opacity: 0;
-    transition: var(--transition-medium);
 
-    .crate-row:hover & {
-        opacity: .8;
-        transition: var(--transition-instant);
-    }
+    /* Hover selector for pointer only */
+    /* See: https://github.com/rust-lang/crates.io/issues/10772 */
+    @media (pointer: fine) {
+        opacity: 0;
+        transition: var(--transition-medium);
 
-    .crate-row:hover &:hover, &:focus {
-        opacity: 1;
-        transition: var(--transition-instant);
+        .crate-row:hover & {
+            opacity: .8;
+            transition: var(--transition-instant);
+        }
+
+        .crate-row:hover &:hover, &:focus {
+            opacity: 1;
+            transition: var(--transition-instant);
+        }
     }
 
     svg {
