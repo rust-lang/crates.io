@@ -98,12 +98,17 @@
 
             <Tooltip local-class="tooltip">
               <ul local-class="feature-list">
-                {{#each @version.featureList as |feature|}}
+                {{#each this.features.list as |feature|}}
                   <li>
                     {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
                     {{feature.name}}
                   </li>
                 {{/each}}
+                {{#if this.features.more}}
+                  <li local-class="other-features">
+                    and {{this.features.more}} other features
+                  </li>
+                {{/if}}
               </ul>
             </Tooltip>
           </span>

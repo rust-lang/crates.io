@@ -230,6 +230,11 @@
     }
 }
 
+.other-features {
+    font-style: italic;
+    margin-top: var(--space-2xs);
+}
+
 .yank-button {
     position: relative;
     margin-left: var(--space-xs);
