@@ -1077,7 +1077,9 @@ async fn seek_based_pagination() -> anyhow::Result<()> {
             assert_eq!(resp.meta.total, 0);
         }
 
-        assert_eq!(resp.meta.prev_page, None);
+        if calls == 1 {
+            assert_eq!(resp.meta.prev_page, None);
+        }
     }
 
     assert_eq!(calls, 4);

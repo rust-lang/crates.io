@@ -245,7 +245,8 @@ pub async fn list_crates(
             data.total(),
             data.next_seek_params(|last| seek.to_payload(last))?
                 .map(|p| req.query_with_params(p)),
-            None,
+            data.prev_seek_params(|first| seek.to_payload(first))?
+                .map(|p| req.query_with_params(p)),
             data.into_iter().collect::<Vec<_>>(),
         )
     } else {
