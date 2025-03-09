@@ -313,9 +313,12 @@ impl<T> PaginatedQuery<T> {
         let future = self.internal_load(conn);
 
         async move {
-            let records_and_total = future.await?.try_collect().await?;
+            let mut records_and_total: Vec<_> = future.await?.try_collect().await?;
 
-            // TODO: maintain consistent ordering from page to pagen
+            // This maintain consistent ordering from page to pagen
+            if options.is_backward() {
+                records_and_total.reverse();
+            }
 
             Ok(Paginated {
                 records_and_total,
@@ -467,9 +470,12 @@ impl<T, C> PaginatedQueryWithCountSubq<T, C> {
         let future = self.internal_load(conn);
 
         async move {
-            let records_and_total = future.await?.try_collect().await?;
+            let mut records_and_total: Vec<_> = future.await?.try_collect().await?;
 
-            // TODO: maintain consistent ordering from page to pagen
+            // This maintain consistent ordering from page to pagen
+            if options.is_backward() {
+                records_and_total.reverse();
+            }
 
             Ok(Paginated {
                 records_and_total,
