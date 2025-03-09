@@ -348,6 +348,10 @@ impl RawSeekPayload {
     pub(crate) fn decode<D: for<'a> Deserialize<'a>>(&self) -> AppResult<D> {
         decode_seek(&self.0).map_err(|_| bad_request("invalid seek parameter"))
     }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 /// Function to check if the request is blocked.
@@ -547,8 +551,8 @@ macro_rules! seek {
             impl $name {
                 pub fn decode(&self, page: &Page) -> AppResult<Option<[<$name Payload>]>> {
                     let encoded = match page {
-                        Page::Seek(encoded) => encoded,
-                        Page::SeekBackward(encoded) => encoded,
+                        Page::Seek(encoded) if !encoded.is_empty() => encoded,
+                        Page::SeekBackward(encoded) if !encoded.is_empty() => encoded,
                         _ => return Ok(None),
                     };
 
@@ -778,6 +782,24 @@ mod tests {
             assert_eq!(error.to_string(), "invalid seek parameter");
             let response = error.response();
             assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        }
+
+        // empty string
+        {
+            let seek = Seek::Id;
+            let pagination = PaginationOptions::builder()
+                .enable_seek(true)
+                .gather(&mock("seek="))
+                .unwrap();
+            assert_eq!(seek.decode(&pagination.page).unwrap(), None);
+
+            // for backward
+            let seek = Seek::Id;
+            let pagination = PaginationOptions::builder()
+                .enable_seek_backward(true)
+                .gather(&mock("seek=-"))
+                .unwrap();
+            assert_eq!(seek.decode(&pagination.page).unwrap(), None);
         }
 
         // Ensures it still encodes compactly with a field struct
