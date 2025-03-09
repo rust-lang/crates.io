@@ -10,7 +10,7 @@ workspace = true
 [dependencies]
 diesel = { version = "=2.2.8", features = ["postgres"] }
 semver = "=1.0.26"
-serde = { version = "=1.0.218", features = ["derive"] }
+serde = { version = "=1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 crates_io_database = { path = "../crates_io_database" }
