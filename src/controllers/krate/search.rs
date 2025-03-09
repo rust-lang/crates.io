@@ -119,6 +119,7 @@ pub async fn list_crates(
     let pagination: PaginationOptions = PaginationOptions::builder()
         .limit_page_numbers()
         .enable_seek(true)
+        .enable_seek_backward(true)
         .gather(&req)?;
     let is_forward = !pagination.is_backward();
 
