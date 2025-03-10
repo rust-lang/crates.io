@@ -68,9 +68,8 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
-    # "ring is unmaintained" – we are aware, but there is not much we can do
-    # about it on our side for now :-/
-    "RUSTSEC-2025-0007",
+    # "paste is unmaintained"
+    "RUSTSEC-2024-0436",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -106,8 +105,6 @@ allow = [
     "ISC",
     "MIT",
     "MPL-2.0",
-    "OpenSSL",
-    "Unicode-DFS-2016",
     "Unicode-3.0",
 ]
 # The confidence threshold for detecting a license from license text.
