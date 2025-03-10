@@ -126,7 +126,7 @@ impl FileSet {
 #[derive(Serialize, Debug, Eq)]
 struct File {
     name: String,
-    size: usize,
+    size: u64,
 }
 
 impl Ord for File {
