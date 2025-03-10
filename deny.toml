@@ -68,6 +68,9 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
+    # "paste is unmaintained"
+    "RUSTSEC-2024-0436",
+
     # "ring is unmaintained" – we are aware, but there is not much we can do
     # about it on our side for now :-/
     "RUSTSEC-2025-0007",
