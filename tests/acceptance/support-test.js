@@ -1,4 +1,4 @@
-import { click, currentURL, fillIn, findAll, waitFor } from '@ember/test-helpers';
+import { click, currentURL, fillIn, findAll, getSettledState, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
 import percySnapshot from '@percy/ember';
@@ -206,7 +206,34 @@ test detail
 
       await visit('/crates/nanomsg');
       assert.strictEqual(currentURL(), '/crates/nanomsg');
-      await waitFor('[data-test-id="link-crate-report"]');
+
+      try {
+        await waitFor('[data-test-id="link-crate-report"]');
+      } catch (error) {
+        console.error(error);
+        console.log(getSettledState());
+        // display DOM tree for debugging
+        const walker = document.createTreeWalker(
+          document.querySelector('main'),
+          NodeFilter.SHOW_ELEMENT + NodeFilter.SHOW_TEXT,
+        );
+        while (walker.nextNode()) {
+          let current = walker.currentNode;
+          if (current.nodeName === '#text') {
+            let text = current.textContent.trim();
+            if (text) {
+              console.log(current.textContent, { current });
+            }
+          } else if (current.tagName && current.tagName !== 'path') {
+            console.log(
+              current.tagName,
+              [...(current.attributes ?? [])].map(({ value, name }) => `${name}=${value}`).join(','),
+            );
+          }
+        }
+        throw error;
+      }
+
       await click('[data-test-id="link-crate-report"]');
       assert.strictEqual(currentURL(), '/support?crate=nanomsg&inquire=crate-violation');
       assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
