@@ -212,6 +212,7 @@ async fn prepare_list(
                 .load(conn)
                 .await?
         }
+        Page::SeekBackward(_) => unreachable!("seek-backward is disabled"),
         Page::Numeric(_) => unreachable!("page-based pagination is disabled"),
     };
     let next_page = if raw_invitations.len() > pagination.per_page as usize {

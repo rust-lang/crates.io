@@ -21,7 +21,7 @@ use crate::schema::*;
 use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
 
-use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
+use crate::controllers::helpers::pagination::{PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
 use crate::util::RequestUtils;
 use crate::util::string_excl_null::StringExclNull;
@@ -116,13 +116,18 @@ pub async fn list_crates(
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .select(selection);
 
+    let pagination: PaginationOptions = PaginationOptions::builder()
+        .limit_page_numbers()
+        .enable_seek(true)
+        .enable_seek_backward(true)
+        .gather(&req)?;
+    let is_forward = !pagination.is_backward();
+
     if let Some(q_string) = &filter_params.q_string {
         if !q_string.is_empty() {
             let q_string = q_string.as_str();
 
             let sort = sort.unwrap_or("relevance");
-
-            query = query.order(Crate::with_name(q_string).desc());
 
             if sort == "relevance" {
                 let q =
@@ -139,7 +144,11 @@ pub async fn list_crates(
                     default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Relevance);
-                query = query.then_order_by(rank.desc())
+                query = if is_forward {
+                    query.order((Crate::with_name(q_string).desc(), rank.desc()))
+                } else {
+                    query.order((Crate::with_name(q_string).asc(), rank.asc()))
+                }
             } else {
                 query = query.select((
                     ALL_COLUMNS,
@@ -152,6 +161,11 @@ pub async fn list_crates(
                     default_versions::num_versions.nullable(),
                 ));
                 seek = Some(Seek::Query);
+                query = if is_forward {
+                    query.order(Crate::with_name(q_string).desc())
+                } else {
+                    query.order(Crate::with_name(q_string).asc())
+                }
             }
         }
     }
@@ -163,41 +177,57 @@ pub async fn list_crates(
     // to ensure predictable pagination behavior.
     if sort == Some("downloads") {
         seek = Some(Seek::Downloads);
-        query = query.order((crate_downloads::downloads.desc(), crates::id.desc()))
+        query = if is_forward {
+            query.order((crate_downloads::downloads.desc(), crates::id.desc()))
+        } else {
+            query.order((crate_downloads::downloads.asc(), crates::id.asc()))
+        };
     } else if sort == Some("recent-downloads") {
         seek = Some(Seek::RecentDownloads);
-        query = query.order((
-            recent_crate_downloads::downloads.desc().nulls_last(),
-            crates::id.desc(),
-        ))
+        query = if is_forward {
+            query.order((
+                recent_crate_downloads::downloads.desc().nulls_last(),
+                crates::id.desc(),
+            ))
+        } else {
+            query.order((
+                recent_crate_downloads::downloads.asc().nulls_first(),
+                crates::id.asc(),
+            ))
+        };
     } else if sort == Some("recent-updates") {
         seek = Some(Seek::RecentUpdates);
-        query = query.order((crates::updated_at.desc(), crates::id.desc()));
+        query = if is_forward {
+            query.order((crates::updated_at.desc(), crates::id.desc()))
+        } else {
+            query.order((crates::updated_at.asc(), crates::id.asc()))
+        };
     } else if sort == Some("new") {
         seek = Some(Seek::New);
-        query = query.order((crates::created_at.desc(), crates::id.desc()));
+        query = if is_forward {
+            query.order((crates::created_at.desc(), crates::id.desc()))
+        } else {
+            query.order((crates::created_at.asc(), crates::id.asc()))
+        };
     } else {
         seek = seek.or(Some(Seek::Name));
         // Since the name is unique value, the inherent ordering becomes naturally unique.
         // Therefore, an additional auxiliary ordering column is unnecessary in this case.
-        query = query.then_order_by(crates::name.asc())
+        query = if is_forward {
+            query.then_order_by(crates::name.asc())
+        } else {
+            query.then_order_by(crates::name.desc())
+        };
     }
-
-    let pagination: PaginationOptions = PaginationOptions::builder()
-        .limit_page_numbers()
-        .enable_seek(true)
-        .gather(&req)?;
-
-    let explicit_page = matches!(pagination.page, Page::Numeric(_));
 
     // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
     // not been provided. This way clients relying on meta.next_page will use the faster seek-based
     // paginations, while client hardcoding pages handling will use the slower offset-based code.
-    let (total, next_page, prev_page, data) = if !explicit_page && seek.is_some() {
+    let (total, next_page, prev_page, data) = if !pagination.is_explicit() && seek.is_some() {
         let seek = seek.unwrap();
         if let Some(condition) = seek
-            .after(&pagination.page)?
-            .map(|s| filter_params.seek_after(&s))
+            .decode(&pagination.page)?
+            .map(|s| filter_params.seek(&s, is_forward))
         {
             query = query.filter(condition);
         }
@@ -216,7 +246,8 @@ pub async fn list_crates(
             data.total(),
             data.next_seek_params(|last| seek.to_payload(last))?
                 .map(|p| req.query_with_params(p)),
-            None,
+            data.prev_seek_params(|first| seek.to_payload(first))?
+                .map(|p| req.query_with_params(p)),
             data.into_iter().collect::<Vec<_>>(),
         )
     } else {
@@ -475,7 +506,7 @@ impl FilterParams {
         query
     }
 
-    fn seek_after(&self, seek_payload: &seek::SeekPayload) -> BoxedCondition<'_> {
+    fn seek(&self, seek_payload: &seek::SeekPayload, is_forward: bool) -> BoxedCondition<'_> {
         use seek::*;
 
         let crates_aliased = alias!(crates as crates_aliased);
@@ -487,63 +518,85 @@ impl FilterParams {
         };
         let conditions: Vec<BoxedCondition<'_>> = match *seek_payload {
             SeekPayload::Name(Name { id }) => {
-                // Equivalent of:
-                // ```
-                // WHERE name > name'
-                // ORDER BY name ASC
-                // ```
-                vec![Box::new(crates::name.nullable().gt(crate_name_by_id(id)))]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE name > name'
+                    // ORDER BY name ASC
+                    // ```
+                    vec![Box::new(crates::name.nullable().gt(crate_name_by_id(id)))]
+                } else {
+                    vec![Box::new(crates::name.nullable().lt(crate_name_by_id(id)))]
+                }
             }
             SeekPayload::New(New { created_at, id }) => {
-                // Equivalent of:
-                // ```
-                // WHERE (created_at = created_at' AND id < id') OR created_at < created_at'
-                // ORDER BY created_at DESC, id DESC
-                // ```
-                vec![
-                    Box::new(
-                        crates::created_at
-                            .eq(created_at)
-                            .and(crates::id.lt(id))
-                            .nullable(),
-                    ),
-                    Box::new(crates::created_at.lt(created_at).nullable()),
-                ]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE (created_at = created_at' AND id < id') OR created_at < created_at'
+                    // ORDER BY created_at DESC, id DESC
+                    // ```
+                    vec![
+                        Box::new(
+                            crates::created_at
+                                .eq(created_at)
+                                .and(crates::id.lt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crates::created_at.lt(created_at).nullable()),
+                    ]
+                } else {
+                    vec![
+                        Box::new(
+                            crates::created_at
+                                .eq(created_at)
+                                .and(crates::id.gt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crates::created_at.gt(created_at).nullable()),
+                    ]
+                }
             }
             SeekPayload::RecentUpdates(RecentUpdates { updated_at, id }) => {
-                // Equivalent of:
-                // ```
-                // WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'
-                // ORDER BY updated_at DESC, id DESC
-                // ```
-                vec![
-                    Box::new(
-                        crates::updated_at
-                            .eq(updated_at)
-                            .and(crates::id.lt(id))
-                            .nullable(),
-                    ),
-                    Box::new(crates::updated_at.lt(updated_at).nullable()),
-                ]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE (updated_at = updated_at' AND id < id') OR updated_at < updated_at'
+                    // ORDER BY updated_at DESC, id DESC
+                    // ```
+                    vec![
+                        Box::new(
+                            crates::updated_at
+                                .eq(updated_at)
+                                .and(crates::id.lt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crates::updated_at.lt(updated_at).nullable()),
+                    ]
+                } else {
+                    vec![
+                        Box::new(
+                            crates::updated_at
+                                .eq(updated_at)
+                                .and(crates::id.gt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crates::updated_at.gt(updated_at).nullable()),
+                    ]
+                }
             }
             SeekPayload::RecentDownloads(RecentDownloads {
                 recent_downloads,
                 id,
             }) => {
-                // Equivalent of:
-                // for recent_downloads is not None:
-                // ```
-                // WHERE (recent_downloads = recent_downloads' AND id < id')
-                //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)
-                // ORDER BY recent_downloads DESC NULLS LAST, id DESC
-                // ```
-                // for recent_downloads is None:
-                // ```
-                // WHERE (recent_downloads IS NULL AND id < id')
-                // ORDER BY recent_downloads DESC NULLS LAST, id DESC
-                // ```
-                match recent_downloads {
-                    Some(dl) => {
+                match (recent_downloads, is_forward) {
+                    (Some(dl), true) => {
+                        // Equivalent of:
+                        // ```
+                        // WHERE (recent_downloads = recent_downloads' AND id < id')
+                        //      OR (recent_downloads < recent_downloads' OR recent_downloads IS NULL)
+                        // ORDER BY recent_downloads DESC NULLS LAST, id DESC
+                        // ```
                         vec![
                             Box::new(
                                 recent_crate_downloads::downloads
@@ -559,7 +612,12 @@ impl FilterParams {
                             ),
                         ]
                     }
-                    None => {
+                    (None, true) => {
+                        // Equivalent of:
+                        // ```
+                        // WHERE (recent_downloads IS NULL AND id < id')
+                        // ORDER BY recent_downloads DESC NULLS LAST, id DESC
+                        // ```
                         vec![Box::new(
                             recent_crate_downloads::downloads
                                 .is_null()
@@ -567,54 +625,105 @@ impl FilterParams {
                                 .nullable(),
                         )]
                     }
+                    (Some(dl), false) => {
+                        // Equivalent of:
+                        // ```
+                        // WHERE (recent_downloads = recent_downloads' AND id > id')
+                        //      OR (recent_downloads > recent_downloads')
+                        // ORDER BY recent_downloads ASC NULLS FIRST, id ASC
+                        // ```
+                        vec![
+                            Box::new(
+                                recent_crate_downloads::downloads
+                                    .eq(dl)
+                                    .and(crates::id.gt(id))
+                                    .nullable(),
+                            ),
+                            Box::new(recent_crate_downloads::downloads.gt(dl).nullable()),
+                        ]
+                    }
+                    (None, false) => {
+                        // Equivalent of:
+                        // ```
+                        // WHERE (recent_downloads IS NULL AND id > id')
+                        //      OR (recent_downloads IS NOT NULL)
+                        // ORDER BY recent_downloads ASC NULLS FIRST, id ASC
+                        // ```
+                        vec![
+                            Box::new(
+                                recent_crate_downloads::downloads
+                                    .is_null()
+                                    .and(crates::id.gt(id))
+                                    .nullable(),
+                            ),
+                            Box::new(recent_crate_downloads::downloads.is_not_null().nullable()),
+                        ]
+                    }
                 }
             }
             SeekPayload::Downloads(Downloads { downloads, id }) => {
-                // Equivalent of:
-                // ```
-                // WHERE (downloads = downloads' AND id < id') OR downloads < downloads'
-                // ORDER BY downloads DESC, id DESC
-                // ```
-                vec![
-                    Box::new(
-                        crate_downloads::downloads
-                            .eq(downloads)
-                            .and(crates::id.lt(id))
-                            .nullable(),
-                    ),
-                    Box::new(crate_downloads::downloads.lt(downloads).nullable()),
-                ]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE (downloads = downloads' AND id < id') OR downloads < downloads'
+                    // ORDER BY downloads DESC, id DESC
+                    // ```
+                    vec![
+                        Box::new(
+                            crate_downloads::downloads
+                                .eq(downloads)
+                                .and(crates::id.lt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crate_downloads::downloads.lt(downloads).nullable()),
+                    ]
+                } else {
+                    vec![
+                        Box::new(
+                            crate_downloads::downloads
+                                .eq(downloads)
+                                .and(crates::id.gt(id))
+                                .nullable(),
+                        ),
+                        Box::new(crate_downloads::downloads.gt(downloads).nullable()),
+                    ]
+                }
             }
             SeekPayload::Query(Query { exact_match, id }) => {
-                // Equivalent of:
-                // ```
-                // WHERE (exact_match = exact_match' AND name > name') OR exact_match < exact_match'
-                // ORDER BY exact_match DESC, NAME ASC
-                // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let name_exact_match = Crate::with_name(q_string);
-                vec![
-                    Box::new(
-                        name_exact_match
-                            .eq(exact_match)
-                            .and(crates::name.nullable().gt(crate_name_by_id(id)))
-                            .nullable(),
-                    ),
-                    Box::new(name_exact_match.lt(exact_match).nullable()),
-                ]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE (exact_match = exact_match' AND name > name') OR exact_match < exact_match'
+                    // ORDER BY exact_match DESC, NAME ASC
+                    // ```
+                    vec![
+                        Box::new(
+                            name_exact_match
+                                .eq(exact_match)
+                                .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                                .nullable(),
+                        ),
+                        Box::new(name_exact_match.lt(exact_match).nullable()),
+                    ]
+                } else {
+                    vec![
+                        Box::new(
+                            name_exact_match
+                                .eq(exact_match)
+                                .and(crates::name.nullable().lt(crate_name_by_id(id)))
+                                .nullable(),
+                        ),
+                        Box::new(name_exact_match.gt(exact_match).nullable()),
+                    ]
+                }
             }
             SeekPayload::Relevance(Relevance {
                 exact_match: exact,
                 rank: rank_in,
                 id,
             }) => {
-                // Equivalent of:
-                // ```
-                // WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
-                //      OR (exact_match = exact_match' AND rank < rank')
-                //      OR exact_match < exact_match'
-                // ORDER BY exact_match DESC, rank DESC, name ASC
-                // ```
                 let q_string = self.q_string.as_ref().expect("q_string should not be None");
                 let q = plainto_tsquery_with_search_config(
                     TsConfigurationByName("english"),
@@ -622,17 +731,38 @@ impl FilterParams {
                 );
                 let rank = ts_rank_cd(crates::textsearchable_index_col, q);
                 let name_exact_match = Crate::with_name(q_string.as_str());
-                vec![
-                    Box::new(
-                        name_exact_match
-                            .eq(exact)
-                            .and(rank.eq(rank_in))
-                            .and(crates::name.nullable().gt(crate_name_by_id(id)))
-                            .nullable(),
-                    ),
-                    Box::new(name_exact_match.eq(exact).and(rank.lt(rank_in)).nullable()),
-                    Box::new(name_exact_match.lt(exact).nullable()),
-                ]
+                if is_forward {
+                    // Equivalent of:
+                    // ```
+                    // WHERE (exact_match = exact_match' AND rank = rank' AND name > name')
+                    //      OR (exact_match = exact_match' AND rank < rank')
+                    //      OR exact_match < exact_match'
+                    // ORDER BY exact_match DESC, rank DESC, name ASC
+                    // ```
+                    vec![
+                        Box::new(
+                            name_exact_match
+                                .eq(exact)
+                                .and(rank.eq(rank_in))
+                                .and(crates::name.nullable().gt(crate_name_by_id(id)))
+                                .nullable(),
+                        ),
+                        Box::new(name_exact_match.eq(exact).and(rank.lt(rank_in)).nullable()),
+                        Box::new(name_exact_match.lt(exact).nullable()),
+                    ]
+                } else {
+                    vec![
+                        Box::new(
+                            name_exact_match
+                                .eq(exact)
+                                .and(rank.eq(rank_in))
+                                .and(crates::name.nullable().lt(crate_name_by_id(id)))
+                                .nullable(),
+                        ),
+                        Box::new(name_exact_match.eq(exact).and(rank.gt(rank_in)).nullable()),
+                        Box::new(name_exact_match.gt(exact).nullable()),
+                    ]
+                }
             }
         };
 

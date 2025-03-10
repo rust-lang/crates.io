@@ -155,11 +155,10 @@ async fn list_by_date(
     let mut query = make_base_query();
 
     if let Some(options) = options {
-        assert!(
-            !matches!(&options.page, Page::Numeric(_)),
-            "?page= is not supported"
-        );
-        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.after(&options.page)? {
+        assert!(!options.is_explicit(), "?page= is not supported");
+        if let Some(SeekPayload::Date(Date { created_at, id })) =
+            Seek::Date.decode(&options.page)?
+        {
             query = query.filter(
                 versions::created_at
                     .eq(created_at)
@@ -282,10 +281,7 @@ async fn list_by_semver(
         sorted_versions
             .sort_unstable_by(|_, (semver_a, _, _), _, (semver_b, _, _)| semver_b.cmp(semver_a));
 
-        assert!(
-            !matches!(&options.page, Page::Numeric(_)),
-            "?page= is not supported"
-        );
+        assert!(!options.is_explicit(), "?page= is not supported");
 
         let release_tracks = include.release_tracks.then(|| {
             ReleaseTracks::from_sorted_semver_iter(
@@ -297,7 +293,7 @@ async fn list_by_semver(
         });
 
         let mut idx = Some(0);
-        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
+        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.decode(&options.page)? {
             idx = sorted_versions
                 .get_index_of(&id)
                 .filter(|i| i + 1 < sorted_versions.len())
@@ -422,7 +418,7 @@ where
     F: Fn(&T) -> S,
     S: serde::Serialize,
 {
-    if matches!(options.page, Page::Numeric(_)) || records.len() < options.per_page as usize {
+    if options.is_explicit() || records.len() < options.per_page as usize {
         return Ok(None);
     }
 
@@ -432,7 +428,7 @@ where
             let seek = f(records.last().unwrap());
             opts.insert("seek".into(), encode_seek(seek)?);
         }
-        Page::Numeric(_) => unreachable!(),
+        Page::Numeric(_) | Page::SeekBackward(_) => unreachable!(),
     };
     Ok(Some(opts))
 }
