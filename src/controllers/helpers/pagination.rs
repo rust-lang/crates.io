@@ -87,7 +87,9 @@ pub struct PaginationQueryParams {
     /// all requests.
     ///
     /// The seek key can usually be found in the `meta.next_page` field of
-    /// paginated responses.
+    /// paginated responses. It can also be found in the `meta.prev_page` field
+    /// when the endpoint supports backward pagination, in which case the value
+    /// starts with a `-`.
     pub seek: Option<String>,
 }
 
