@@ -7,6 +7,10 @@
     height: var(--spinner-size);
     width: var(--spinner-size);
 
+    &.light {
+        --spinner-bg-color: rgba(0, 0, 0, .2);
+    }
+
     &:after {
         content: " ";
         display: block;

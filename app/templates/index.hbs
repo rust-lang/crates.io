@@ -51,7 +51,7 @@
   >
     Try Again
     {{#if this.dataTask.isRunning}}
-      <LoadingSpinner local-class="spinner" data-test-spinner />
+      <LoadingSpinner @theme="light" local-class="spinner" data-test-spinner />
     {{/if}}
   </button>
 {{else}}
