@@ -1023,6 +1023,8 @@ diesel::table! {
         categories -> Array<Nullable<Text>>,
         /// The list of `keywords` in the `Cargo.toml` file of this version.
         keywords -> Array<Nullable<Text>>,
+        /// JSONB representation of the version number for sorting purposes.
+        semver_ord -> Nullable<Jsonb>,
     }
 }
 
