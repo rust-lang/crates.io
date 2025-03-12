@@ -270,9 +270,9 @@ dependencies = [
 
 [[package]]
 name = "aws-ip-ranges"
-version = "0.1063.0"
+version = "0.1065.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8db1d4ab33c81dfefaa45dd271590809c84cf7f529b231baa75dc50a5f90a9b6"
+checksum = "8d8c3d3bcfbb09f5f2d774616cbe5be9cd10873f5254e395d738866572299b73"
 dependencies = [
  "serde",
  "serde_json",
@@ -416,7 +416,7 @@ dependencies = [
  "bytes-utils",
  "futures-core",
  "http 0.2.12",
- "http 1.2.0",
+ "http 1.3.1",
  "http-body 0.4.6",
  "once_cell",
  "percent-encoding",
@@ -436,7 +436,7 @@ dependencies = [
  "aws-smithy-types",
  "h2 0.4.7",
  "http 0.2.12",
- "http 1.2.0",
+ "http 1.3.1",
  "http-body 0.4.6",
  "hyper 0.14.32",
  "hyper 1.6.0",
@@ -476,7 +476,7 @@ dependencies = [
  "bytes",
  "fastrand",
  "http 0.2.12",
- "http 1.2.0",
+ "http 1.3.1",
  "http-body 0.4.6",
  "http-body 1.0.1",
  "once_cell",
