@@ -14,3 +14,4 @@ define_sql_function!(fn floor(x: Double) -> Integer);
 define_sql_function!(fn greatest<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn least<T: SingleValue>(x: T, y: T) -> T);
 define_sql_function!(fn split_part(string: Text, delimiter: Text, n: Integer) -> Text);
+define_sql_function!(fn semver_ord(num: Text) -> Nullable<Jsonb>);
