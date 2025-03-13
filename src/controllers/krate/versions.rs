@@ -204,6 +204,7 @@ async fn list(
                 .filter(versions::crate_id.eq(crate_id))
                 .filter(not(versions::yanked))
                 .select(versions::num)
+                .order(versions::semver_ord.desc())
                 .load_stream::<String>(conn)
                 .await?
                 .try_for_each(|num| {
@@ -222,9 +223,11 @@ async fn list(
                         .and_then(|v| semver::Version::parse(&v.num).ok())
                 })
                 .collect();
+            if seek == Seek::Date {
+                sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+            }
         }
 
-        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
         Some(ReleaseTracks::from_sorted_semver_iter(
             sorted_versions.iter(),
         ))
