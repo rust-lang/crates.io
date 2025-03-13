@@ -1232,7 +1232,7 @@ expression: response.json()
             }
           },
           {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses. It can also be found in the `meta.prev_page` field\nwhen the endpoint supports backward pagination, in which case the value\nstarts with a `-`.",
             "in": "query",
             "name": "seek",
             "required": false,
@@ -1450,7 +1450,7 @@ expression: response.json()
             }
           },
           {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses. It can also be found in the `meta.prev_page` field\nwhen the endpoint supports backward pagination, in which case the value\nstarts with a `-`.",
             "in": "query",
             "name": "seek",
             "required": false,
@@ -1758,7 +1758,7 @@ expression: response.json()
             }
           },
           {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses. It can also be found in the `meta.prev_page` field\nwhen the endpoint supports backward pagination, in which case the value\nstarts with a `-`.",
             "in": "query",
             "name": "seek",
             "required": false,
@@ -2666,7 +2666,7 @@ expression: response.json()
             }
           },
           {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses. It can also be found in the `meta.prev_page` field\nwhen the endpoint supports backward pagination, in which case the value\nstarts with a `-`.",
             "in": "query",
             "name": "seek",
             "required": false,
@@ -3279,7 +3279,7 @@ expression: response.json()
             }
           },
           {
-            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses. It can also be found in the `meta.prev_page` field\nwhen the endpoint supports backward pagination, in which case the value\nstarts with a `-`.",
             "in": "query",
             "name": "seek",
             "required": false,

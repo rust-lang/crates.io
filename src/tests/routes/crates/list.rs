@@ -352,11 +352,18 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=downloads").await;
+    let (resp, calls) = page_with_seek_forward(&anon, "sort=downloads").await;
     assert_eq!(resp[0].crates[0].name, "other_sort");
     assert_eq!(resp[1].crates[0].name, "baz_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, "sort=downloads").await;
+    assert_eq!(resp[0].crates[0].name, "foo_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "baz_sort");
+    assert_eq!(resp[3].crates[0].name, "other_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
 
@@ -368,11 +375,18 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads").await;
+    let (resp, calls) = page_with_seek_forward(&anon, "sort=recent-downloads").await;
     assert_eq!(resp[0].crates[0].name, "baz_sort");
     assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "other_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, "sort=recent-downloads").await;
+    assert_eq!(resp[0].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "foo_sort");
+    assert_eq!(resp[3].crates[0].name, "baz_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
 
@@ -384,11 +398,18 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-updates").await;
+    let (resp, calls) = page_with_seek_forward(&anon, "sort=recent-updates").await;
     assert_eq!(resp[0].crates[0].name, "other_sort");
     assert_eq!(resp[1].crates[0].name, "baz_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, "sort=recent-updates").await;
+    assert_eq!(resp[0].crates[0].name, "foo_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "baz_sort");
+    assert_eq!(resp[3].crates[0].name, "other_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
 
@@ -400,18 +421,25 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(json.crates[2].name, "baz_sort");
         assert_eq!(json.crates[3].name, "foo_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=new").await;
+    let (resp, calls) = page_with_seek_forward(&anon, "sort=new").await;
     assert_eq!(resp[0].crates[0].name, "bar_sort");
     assert_eq!(resp[1].crates[0].name, "other_sort");
     assert_eq!(resp[2].crates[0].name, "baz_sort");
     assert_eq!(resp[3].crates[0].name, "foo_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, "sort=new").await;
+    assert_eq!(resp[0].crates[0].name, "foo_sort");
+    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[2].crates[0].name, "other_sort");
+    assert_eq!(resp[3].crates[0].name, "bar_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
 
     // Sort by alpha with query
     // ordering (exact match desc, name asc)
     let query = "sort=alpha&q=bar_sort";
-    let (resp, calls) = page_with_seek(&anon, query).await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "bar_sort");
@@ -419,9 +447,15 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(resp[2].crates[0].name, "foo_sort");
     }
     assert_eq!(calls, 4);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "foo_sort");
+    assert_eq!(resp[1].crates[0].name, "baz_sort");
+    assert_eq!(resp[2].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].meta.total, 3);
+    assert_eq!(calls, 4);
 
     let query = "sort=alpha&q=sort";
-    let (resp, calls) = page_with_seek(&anon, query).await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(resp[0].crates[0].name, "bar_sort");
@@ -430,11 +464,18 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(resp[3].crates[0].name, "other_sort");
     }
     assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "foo_sort");
+    assert_eq!(resp[2].crates[0].name, "baz_sort");
+    assert_eq!(resp[3].crates[0].name, "bar_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
 
     // Sort by relevance
     // ordering (exact match desc, rank desc, name asc)
     let query = "q=foo_sort";
-    let (resp, calls) = page_with_seek(&anon, query).await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
@@ -442,6 +483,12 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(resp[1].crates[0].name, "bar_sort");
         assert_eq!(resp[2].crates[0].name, "baz_sort");
     }
+    assert_eq!(calls, 4);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "foo_sort");
+    assert_eq!(resp[2].meta.total, 3);
     assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo_sort").await;
     assert_eq!(ranks.get("bar_sort"), ranks.get("baz_sort"));
@@ -449,7 +496,7 @@ async fn index_sorting() -> anyhow::Result<()> {
     // Add query containing a space to ensure tsquery works
     // "foo_sort" and "foo sort" would generate same tsquery
     let query = "q=foo%20sort";
-    let (resp, calls) = page_with_seek(&anon, query).await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 3);
         assert_eq!(resp[0].crates[0].name, "foo_sort");
@@ -458,11 +505,17 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(resp[2].crates[0].name, "baz_sort");
     }
     assert_eq!(calls, 4);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "baz_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "foo_sort");
+    assert_eq!(resp[2].meta.total, 3);
+    assert_eq!(calls, 4);
     let ranks = querystring_rank(&mut conn, "foo%20sort").await;
     assert_eq!(ranks.get("bar_sort"), ranks.get("baz_sort"));
 
     let query = "q=sort";
-    let (resp, calls) = page_with_seek(&anon, query).await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 4);
         // by rank desc (items with more "sort" should have a hider rank value)
@@ -472,6 +525,13 @@ async fn index_sorting() -> anyhow::Result<()> {
         assert_eq!(resp[3].crates[0].name, "other_sort");
     }
     assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "foo_sort");
+    assert_eq!(resp[2].crates[0].name, "bar_sort");
+    assert_eq!(resp[3].crates[0].name, "baz_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
     let ranks = querystring_rank(&mut conn, "sort").await;
     assert_eq!(
         ranks.keys().collect::<Vec<_>>(),
@@ -480,18 +540,26 @@ async fn index_sorting() -> anyhow::Result<()> {
 
     // Test for bug with showing null results first when sorting
     // by descending downloads
-    for json in search_both(&anon, "sort=recent-downloads").await {
+    let query = "sort=recent-downloads";
+    for json in search_both(&anon, query).await {
         assert_eq!(json.meta.total, 4);
         assert_eq!(json.crates[0].name, "baz_sort");
         assert_eq!(json.crates[1].name, "foo_sort");
         assert_eq!(json.crates[2].name, "bar_sort");
         assert_eq!(json.crates[3].name, "other_sort");
     }
-    let (resp, calls) = page_with_seek(&anon, "sort=recent-downloads").await;
+    let (resp, calls) = page_with_seek_forward(&anon, query).await;
     assert_eq!(resp[0].crates[0].name, "baz_sort");
     assert_eq!(resp[1].crates[0].name, "foo_sort");
     assert_eq!(resp[2].crates[0].name, "bar_sort");
     assert_eq!(resp[3].crates[0].name, "other_sort");
+    assert_eq!(resp[3].meta.total, 4);
+    assert_eq!(calls, 5);
+    let (resp, calls) = page_with_seek_backward(&anon, query).await;
+    assert_eq!(resp[0].crates[0].name, "other_sort");
+    assert_eq!(resp[1].crates[0].name, "bar_sort");
+    assert_eq!(resp[2].crates[0].name, "foo_sort");
+    assert_eq!(resp[3].crates[0].name, "baz_sort");
     assert_eq!(resp[3].meta.total, 4);
     assert_eq!(calls, 5);
 
@@ -1052,43 +1120,35 @@ async fn seek_based_pagination() -> anyhow::Result<()> {
         .expect_build(&mut conn)
         .await;
 
-    let mut url = Some("?per_page=1".to_string());
-    let mut results = Vec::new();
-    let mut calls = 0;
-    while let Some(current_url) = url.take() {
-        let resp = anon.search(current_url.trim_start_matches('?')).await;
-        calls += 1;
-
-        results.append(
-            &mut resp
-                .crates
-                .iter()
-                .map(|res| res.name.clone())
-                .collect::<Vec<_>>(),
-        );
-
-        if let Some(new_url) = resp.meta.next_page {
-            assert_that!(resp.crates, len(eq(1)));
-            url = Some(new_url);
-            assert_eq!(resp.meta.total, 3);
-            assert!(default_versions_iter(&resp.crates).all(Option::is_some));
-        } else {
-            assert_that!(resp.crates, empty());
-            assert_eq!(resp.meta.total, 0);
-        }
-
-        assert_eq!(resp.meta.prev_page, None);
+    fn names(resp: &[crate::tests::CrateList]) -> std::vec::Vec<&str> {
+        resp.iter()
+            .flat_map(|r| r.crates.iter().map(|c| c.name.as_str()))
+            .collect::<Vec<_>>()
     }
 
+    let (resp, calls) = page_with_seek_forward(&anon, "").await;
     assert_eq!(calls, 4);
     assert_eq!(
         vec![
             "pagination_links_1",
             "pagination_links_2",
-            "pagination_links_3"
+            "pagination_links_3",
         ],
-        results
+        names(&resp)
     );
+    assert_eq!(resp[0].meta.prev_page, None);
+
+    let (resp, calls) = page_with_seek_backward(&anon, "").await;
+    assert_eq!(calls, 4);
+    assert_eq!(
+        vec![
+            "pagination_links_3",
+            "pagination_links_2",
+            "pagination_links_1",
+        ],
+        names(&resp)
+    );
+    assert_eq!(resp[0].meta.next_page, None);
 
     Ok(())
 }
@@ -1248,11 +1308,29 @@ async fn search_both_by_user_id<U: RequestHelper>(
     search_both(anon, &url).await
 }
 
-async fn page_with_seek<U: RequestHelper>(
+async fn page_with_seek_forward<U: RequestHelper>(
     anon: &U,
     query: &str,
 ) -> (Vec<crate::tests::CrateList>, i32) {
-    let mut url = Some(format!("?per_page=1&{query}"));
+    _page_with_seek(anon, query, true).await
+}
+
+async fn page_with_seek_backward<U: RequestHelper>(
+    anon: &U,
+    query: &str,
+) -> (Vec<crate::tests::CrateList>, i32) {
+    _page_with_seek(anon, query, false).await
+}
+
+async fn _page_with_seek<U: RequestHelper>(
+    anon: &U,
+    query: &str,
+    forward: bool,
+) -> (Vec<crate::tests::CrateList>, i32) {
+    let mut url = Some(format!(
+        "?per_page=1&{query}{}",
+        (!forward).then_some("&seek=-").unwrap_or_default()
+    ));
     let mut results = Vec::new();
     let mut calls = 0;
     while let Some(current_url) = url.take() {
@@ -1262,7 +1340,13 @@ async fn page_with_seek<U: RequestHelper>(
             panic!("potential infinite loop detected!")
         }
 
-        if let Some(ref new_url) = resp.meta.next_page {
+        let next_url = if forward {
+            resp.meta.next_page.as_ref()
+        } else {
+            resp.meta.prev_page.as_ref()
+        };
+
+        if let Some(new_url) = next_url {
             assert!(new_url.contains("seek="));
             assert_that!(resp.crates, len(eq(1)));
             url = Some(new_url.to_owned());
