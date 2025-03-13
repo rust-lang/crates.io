@@ -77,14 +77,14 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       '@embroider/compat':
-        specifier: 3.8.3
-        version: 3.8.3(@embroider/core@3.5.3)
+        specifier: 3.8.4
+        version: 3.8.4(@embroider/core@3.5.4)
       '@embroider/core':
-        specifier: 3.5.3
-        version: 3.5.3
+        specifier: 3.5.4
+        version: 3.5.4
       '@embroider/webpack':
         specifier: 4.1.0
-        version: 4.1.0(@embroider/core@3.5.3)(webpack@5.98.0)
+        version: 4.1.0(@embroider/core@3.5.4)(webpack@5.98.0)
       '@eslint/eslintrc':
         specifier: 3.3.0
         version: 3.3.0
@@ -150,7 +150,7 @@ importers:
         version: 1.0.0
       ember-cli-code-coverage:
         specifier: 3.1.0
-        version: 3.1.0(@embroider/compat@3.8.3(@embroider/core@3.5.3))(@embroider/core@3.5.3)
+        version: 3.1.0(@embroider/compat@3.8.4(@embroider/core@3.5.4))(@embroider/core@3.5.4)
       ember-cli-dependency-checker:
         specifier: 3.3.3
         version: 3.3.3(ember-cli@6.2.3(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
@@ -1392,15 +1392,15 @@ packages:
     peerDependencies:
       '@embroider/core': ^3.4.0
 
-  '@embroider/compat@3.8.3':
-    resolution: {integrity: sha512-FZy8/highQ/4tbbOLpZtmLME+9HYSkcr532Zl2CtsRt1b9gQuOcjCN3tGflpiFFadbaUFaulh8PhWAv6632DuA==}
+  '@embroider/compat@3.8.4':
+    resolution: {integrity: sha512-fpR0YFP0zKh3FC1RKvEb4twpQ9xOsExUeR7ikJRZ0FIK/rLLlsCbX4GpcUj7Ih4CW+4EZTo6ym61tUQzq9CIEw==}
     engines: {node: 12.* || 14.* || >= 16}
     hasBin: true
     peerDependencies:
-      '@embroider/core': ^3.5.2
+      '@embroider/core': ^3.5.4
 
-  '@embroider/core@3.5.3':
-    resolution: {integrity: sha512-T39bKsR3IGnf7pIqecuueMlq/y+XhezuDYmJekzVjQsJnMe7/Jh0ggXwbnY/l8AQdhWJGvwBw9X6vACucEGlfA==}
+  '@embroider/core@3.5.4':
+    resolution: {integrity: sha512-tUSR6sjK4xdO+EqBbuYz1NNlKIhxFZ7U1ixoBFZF+CEB/vL7Hq7zFMXq4JtaBncbrKIObOuQJJf6QhfT8B2gvg==}
     engines: {node: 12.* || 14.* || >= 16}
 
   '@embroider/hbs-loader@3.0.3':
@@ -8903,7 +8903,7 @@ snapshots:
 
   '@babel/generator@7.26.9':
     dependencies:
-      '@babel/parser': 7.26.9
+      '@babel/parser': 7.26.10
       '@babel/types': 7.26.9
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
@@ -8954,14 +8954,14 @@ snapshots:
 
   '@babel/helper-member-expression-to-functions@7.25.9(supports-color@8.1.1)':
     dependencies:
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       '@babel/types': 7.26.9
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-imports@7.25.9(supports-color@8.1.1)':
     dependencies:
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       '@babel/types': 7.26.9
     transitivePeerDependencies:
       - supports-color
@@ -8986,7 +8986,7 @@ snapshots:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.25.9
       '@babel/helper-wrap-function': 7.25.9(supports-color@8.1.1)
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8995,13 +8995,13 @@ snapshots:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-member-expression-to-functions': 7.25.9(supports-color@8.1.1)
       '@babel/helper-optimise-call-expression': 7.25.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-skip-transparent-expression-wrappers@7.25.9(supports-color@8.1.1)':
     dependencies:
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       '@babel/types': 7.26.9
     transitivePeerDependencies:
       - supports-color
@@ -9015,8 +9015,8 @@ snapshots:
   '@babel/helper-wrap-function@7.25.9(supports-color@8.1.1)':
     dependencies:
       '@babel/template': 7.26.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
-      '@babel/types': 7.26.9
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
+      '@babel/types': 7.26.10
     transitivePeerDependencies:
       - supports-color
 
@@ -9037,7 +9037,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.26.5
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -9064,7 +9064,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.26.5
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -9153,7 +9153,7 @@ snapshots:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.26.5
       '@babel/helper-remap-async-to-generator': 7.25.9(@babel/core@7.26.10)(supports-color@8.1.1)
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -9199,7 +9199,7 @@ snapshots:
       '@babel/helper-compilation-targets': 7.26.5
       '@babel/helper-plugin-utils': 7.26.5
       '@babel/helper-replace-supers': 7.26.5(@babel/core@7.26.10)(supports-color@8.1.1)
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -9260,7 +9260,7 @@ snapshots:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-compilation-targets': 7.26.5
       '@babel/helper-plugin-utils': 7.26.5
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -9306,7 +9306,7 @@ snapshots:
       '@babel/helper-module-transforms': 7.26.0(@babel/core@7.26.10)(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.26.5
       '@babel/helper-validator-identifier': 7.25.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -9578,7 +9578,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.26.5
-      '@babel/types': 7.26.9
+      '@babel/types': 7.26.10
       esutils: 2.0.3
 
   '@babel/runtime@7.12.18':
@@ -9611,7 +9611,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/generator': 7.26.9
-      '@babel/parser': 7.26.9
+      '@babel/parser': 7.26.10
       '@babel/template': 7.26.9
       '@babel/types': 7.26.9
       debug: 4.4.0(supports-color@8.1.1)
@@ -10135,16 +10135,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/babel-loader-9@3.1.1(@embroider/core@3.5.3)(supports-color@8.1.1)(webpack@5.98.0)':
+  '@embroider/babel-loader-9@3.1.1(@embroider/core@3.5.4)(supports-color@8.1.1)(webpack@5.98.0)':
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
-      '@embroider/core': 3.5.3
+      '@embroider/core': 3.5.4
       babel-loader: 9.2.1(@babel/core@7.26.10)(webpack@5.98.0)
     transitivePeerDependencies:
       - supports-color
       - webpack
 
-  '@embroider/compat@3.8.3(@embroider/core@3.5.3)':
+  '@embroider/compat@3.8.4(@embroider/core@3.5.4)':
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/core': 7.26.10(supports-color@8.1.1)
@@ -10154,8 +10154,8 @@ snapshots:
       '@babel/plugin-transform-runtime': 7.26.9(@babel/core@7.26.10)
       '@babel/preset-env': 7.26.9(@babel/core@7.26.10)(supports-color@8.1.1)
       '@babel/runtime': 7.26.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
-      '@embroider/core': 3.5.3
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
+      '@embroider/core': 3.5.4
       '@embroider/macros': 1.16.11
       '@types/babel__code-frame': 7.0.6
       '@types/yargs': 17.0.33
@@ -10197,11 +10197,11 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@embroider/core@3.5.3':
+  '@embroider/core@3.5.4':
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
-      '@babel/parser': 7.26.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/parser': 7.26.10
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       '@embroider/macros': 1.16.11
       '@embroider/shared-internals': 2.9.0(supports-color@8.1.1)
       assert-never: 1.4.0
@@ -10231,9 +10231,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@embroider/hbs-loader@3.0.3(@embroider/core@3.5.3)(webpack@5.98.0)':
+  '@embroider/hbs-loader@3.0.3(@embroider/core@3.5.4)(webpack@5.98.0)':
     dependencies:
-      '@embroider/core': 3.5.3
+      '@embroider/core': 3.5.4
       webpack: 5.98.0
 
   '@embroider/macros@1.16.11':
@@ -10266,13 +10266,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/webpack@4.1.0(@embroider/core@3.5.3)(webpack@5.98.0)':
+  '@embroider/webpack@4.1.0(@embroider/core@3.5.4)(webpack@5.98.0)':
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
       '@babel/preset-env': 7.26.9(@babel/core@7.26.10)(supports-color@8.1.1)
-      '@embroider/babel-loader-9': 3.1.1(@embroider/core@3.5.3)(supports-color@8.1.1)(webpack@5.98.0)
-      '@embroider/core': 3.5.3
-      '@embroider/hbs-loader': 3.0.3(@embroider/core@3.5.3)(webpack@5.98.0)
+      '@embroider/babel-loader-9': 3.1.1(@embroider/core@3.5.4)(supports-color@8.1.1)(webpack@5.98.0)
+      '@embroider/core': 3.5.4
+      '@embroider/hbs-loader': 3.0.3(@embroider/core@3.5.4)(webpack@5.98.0)
       '@embroider/shared-internals': 2.9.0(supports-color@8.1.1)
       '@types/supports-color': 8.1.3
       assert-never: 1.4.0
@@ -11313,6 +11313,26 @@ snapshots:
       '@types/ember__utils': 3.16.8
       '@types/rsvp': 4.0.9
 
+  '@types/ember@4.0.11':
+    dependencies:
+      '@types/ember__application': 4.0.11(@babel/core@7.26.10)
+      '@types/ember__array': 4.0.10(@babel/core@7.26.10)
+      '@types/ember__component': 4.0.22
+      '@types/ember__controller': 4.0.12
+      '@types/ember__debug': 4.0.8
+      '@types/ember__engine': 4.0.11
+      '@types/ember__error': 4.0.6
+      '@types/ember__object': 4.0.12
+      '@types/ember__polyfills': 4.0.6
+      '@types/ember__routing': 4.0.22
+      '@types/ember__runloop': 4.0.10
+      '@types/ember__service': 4.0.9
+      '@types/ember__string': 3.0.15
+      '@types/ember__template': 4.0.7
+      '@types/ember__test': 4.0.6(@babel/core@7.26.10)
+      '@types/ember__utils': 4.0.7
+      '@types/rsvp': 4.0.9
+
   '@types/ember@4.0.11(@babel/core@7.26.10)':
     dependencies:
       '@types/ember__application': 4.0.11(@babel/core@7.26.10)
@@ -11345,11 +11365,11 @@ snapshots:
   '@types/ember__application@4.0.11(@babel/core@7.26.10)':
     dependencies:
       '@glimmer/component': 1.1.2(@babel/core@7.26.10)
-      '@types/ember': 4.0.11(@babel/core@7.26.10)
-      '@types/ember__engine': 4.0.11(@babel/core@7.26.10)
-      '@types/ember__object': 4.0.12(@babel/core@7.26.10)
+      '@types/ember': 4.0.11
+      '@types/ember__engine': 4.0.11
+      '@types/ember__object': 4.0.12
       '@types/ember__owner': 4.0.9
-      '@types/ember__routing': 4.0.22(@babel/core@7.26.10)
+      '@types/ember__routing': 4.0.22
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11371,10 +11391,15 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/jquery': 3.5.32
 
+  '@types/ember__component@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__object': 4.0.12
+
   '@types/ember__component@4.0.22(@babel/core@7.26.10)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.26.10)
-      '@types/ember__object': 4.0.12(@babel/core@7.26.10)
+      '@types/ember__object': 4.0.12
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -11382,6 +11407,10 @@ snapshots:
   '@types/ember__controller@3.16.14':
     dependencies:
       '@types/ember__object': 3.12.13
+
+  '@types/ember__controller@4.0.12':
+    dependencies:
+      '@types/ember__object': 4.0.12
 
   '@types/ember__controller@4.0.12(@babel/core@7.26.10)':
     dependencies:
@@ -11395,6 +11424,11 @@ snapshots:
       '@types/ember__engine': 3.16.9
       '@types/ember__object': 3.12.13
 
+  '@types/ember__debug@4.0.8':
+    dependencies:
+      '@types/ember__object': 4.0.12
+      '@types/ember__owner': 4.0.9
+
   '@types/ember__debug@4.0.8(@babel/core@7.26.10)':
     dependencies:
       '@types/ember__object': 4.0.12(@babel/core@7.26.10)
@@ -11406,6 +11440,11 @@ snapshots:
   '@types/ember__engine@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
+
+  '@types/ember__engine@4.0.11':
+    dependencies:
+      '@types/ember__object': 4.0.12
+      '@types/ember__owner': 4.0.9
 
   '@types/ember__engine@4.0.11(@babel/core@7.26.10)':
     dependencies:
@@ -11421,6 +11460,11 @@ snapshots:
 
   '@types/ember__object@3.12.13':
     dependencies:
+      '@types/rsvp': 4.0.9
+
+  '@types/ember__object@4.0.12':
+    dependencies:
+      '@types/ember': 4.0.11
       '@types/rsvp': 4.0.9
 
   '@types/ember__object@4.0.12(@babel/core@7.26.10)':
@@ -11444,17 +11488,28 @@ snapshots:
       '@types/ember__object': 3.12.13
       '@types/ember__service': 3.16.9
 
+  '@types/ember__routing@4.0.22':
+    dependencies:
+      '@types/ember': 4.0.11
+      '@types/ember__controller': 4.0.12
+      '@types/ember__object': 4.0.12
+      '@types/ember__service': 4.0.9
+
   '@types/ember__routing@4.0.22(@babel/core@7.26.10)':
     dependencies:
       '@types/ember': 4.0.11(@babel/core@7.26.10)
-      '@types/ember__controller': 4.0.12(@babel/core@7.26.10)
-      '@types/ember__object': 4.0.12(@babel/core@7.26.10)
-      '@types/ember__service': 4.0.9(@babel/core@7.26.10)
+      '@types/ember__controller': 4.0.12
+      '@types/ember__object': 4.0.12
+      '@types/ember__service': 4.0.9
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
   '@types/ember__runloop@3.16.10': {}
+
+  '@types/ember__runloop@4.0.10':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__runloop@4.0.10(@babel/core@7.26.10)':
     dependencies:
@@ -11466,6 +11521,10 @@ snapshots:
   '@types/ember__service@3.16.9':
     dependencies:
       '@types/ember__object': 3.12.13
+
+  '@types/ember__service@4.0.9':
+    dependencies:
+      '@types/ember__object': 4.0.12
 
   '@types/ember__service@4.0.9(@babel/core@7.26.10)':
     dependencies:
@@ -11496,6 +11555,10 @@ snapshots:
       - supports-color
 
   '@types/ember__utils@3.16.8': {}
+
+  '@types/ember__utils@4.0.7':
+    dependencies:
+      '@types/ember': 4.0.11
 
   '@types/ember__utils@4.0.7(@babel/core@7.26.10)':
     dependencies:
@@ -13802,7 +13865,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-code-coverage@3.1.0(@embroider/compat@3.8.3(@embroider/core@3.5.3))(@embroider/core@3.5.3):
+  ember-cli-code-coverage@3.1.0(@embroider/compat@3.8.4(@embroider/core@3.5.4))(@embroider/core@3.5.4):
     dependencies:
       babel-plugin-istanbul: 6.1.1
       body-parser: 1.20.3
@@ -13816,8 +13879,8 @@ snapshots:
       node-dir: 0.1.17
       walk-sync: 2.2.0
     optionalDependencies:
-      '@embroider/compat': 3.8.3(@embroider/core@3.5.3)
-      '@embroider/core': 3.5.3
+      '@embroider/compat': 3.8.4(@embroider/core@3.5.4)
+      '@embroider/core': 3.5.4
     transitivePeerDependencies:
       - supports-color
 
@@ -14412,8 +14475,8 @@ snapshots:
 
   ember-router-generator@2.0.0:
     dependencies:
-      '@babel/parser': 7.26.9
-      '@babel/traverse': 7.26.9(supports-color@8.1.1)
+      '@babel/parser': 7.26.10
+      '@babel/traverse': 7.26.10(supports-color@8.1.1)
       recast: 0.18.10
     transitivePeerDependencies:
       - supports-color
@@ -16248,7 +16311,7 @@ snapshots:
   istanbul-lib-instrument@5.2.1:
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
-      '@babel/parser': 7.26.9
+      '@babel/parser': 7.26.10
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
       semver: 6.3.1
@@ -16258,7 +16321,7 @@ snapshots:
   istanbul-lib-instrument@6.0.3:
     dependencies:
       '@babel/core': 7.26.10(supports-color@8.1.1)
-      '@babel/parser': 7.26.9
+      '@babel/parser': 7.26.10
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
       semver: 7.7.1
