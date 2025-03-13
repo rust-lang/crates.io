@@ -99,13 +99,8 @@ pub async fn list_versions(
         None => None,
     };
 
-    // Sort by semver by default
-    let versions_and_publishers = match &params.sort.as_ref().map(|s| s.to_lowercase()).as_deref() {
-        Some("date") => {
-            list_by_date(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?
-        }
-        _ => list_by_semver(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?,
-    };
+    let versions_and_publishers =
+        list(crate_id, pagination.as_ref(), &params, &req, &mut conn).await?;
 
     let versions = versions_and_publishers
         .data
@@ -126,12 +121,12 @@ pub async fn list_versions(
     }))
 }
 
-/// Seek-based pagination of versions by date
+/// Seek-based pagination of versions
 ///
 /// # Panics
 ///
-/// This function will panic if `option` is built with `enable_pages` set to true.
-async fn list_by_date(
+/// This function will panic if `options` is built with `enable_pages` set to true.
+async fn list(
     crate_id: i32,
     options: Option<&PaginationOptions>,
     params: &ListQueryParams,
@@ -139,6 +134,11 @@ async fn list_by_date(
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
+
+    let seek = match &params.sort.as_ref().map(|s| s.to_lowercase()).as_deref() {
+        Some("date") => Seek::Date,
+        _ => Seek::Semver,
+    };
 
     let make_base_query = || {
         let mut query = versions::table
@@ -160,130 +160,40 @@ async fn list_by_date(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
-        if let Some(SeekPayload::Date(Date { created_at, id })) = Seek::Date.after(&options.page)? {
-            query = query.filter(
-                versions::created_at
-                    .eq(created_at)
-                    .and(versions::id.lt(id))
-                    .or(versions::created_at.lt(created_at)),
-            )
+
+        match seek.after(&options.page)? {
+            Some(SeekPayload::Date(Date { created_at, id })) => {
+                query = query.filter(
+                    versions::created_at
+                        .eq(created_at)
+                        .and(versions::id.lt(id))
+                        .or(versions::created_at.lt(created_at)),
+                )
+            }
+            Some(SeekPayload::Semver(Semver { num, id })) => {
+                query = query.filter(
+                    versions::semver_ord
+                        .eq(semver_ord(num.clone()))
+                        .and(versions::id.lt(id))
+                        .or(versions::semver_ord.lt(semver_ord(num))),
+                )
+            }
+            None => {}
         }
+
         query = query.limit(options.per_page);
     }
 
-    query = query.order((versions::created_at.desc(), versions::id.desc()));
+    if seek == Seek::Date {
+        query = query.order((versions::created_at.desc(), versions::id.desc()));
+    } else {
+        query = query.order((versions::semver_ord.desc(), versions::id.desc()));
+    }
 
     let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
     let mut next_page = None;
     if let Some(options) = options {
-        next_page = next_seek_params(&data, options, |last| Seek::Date.to_payload(last))?
-            .map(|p| req.query_with_params(p));
-    };
-
-    let release_tracks = if params.include()?.release_tracks {
-        let mut sorted_versions = IndexSet::new();
-        if options.is_some() {
-            versions::table
-                .filter(versions::crate_id.eq(crate_id))
-                .filter(not(versions::yanked))
-                .select(versions::num)
-                .load_stream::<String>(conn)
-                .await?
-                .try_for_each(|num| {
-                    if let Ok(semver) = semver::Version::parse(&num) {
-                        sorted_versions.insert(semver);
-                    };
-                    future::ready(Ok(()))
-                })
-                .await?;
-        } else {
-            sorted_versions = data
-                .iter()
-                .flat_map(|(version, _)| {
-                    (!version.yanked)
-                        .then_some(version)
-                        .and_then(|v| semver::Version::parse(&v.num).ok())
-                })
-                .collect();
-        }
-
-        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
-        Some(ReleaseTracks::from_sorted_semver_iter(
-            sorted_versions.iter(),
-        ))
-    } else {
-        None
-    };
-
-    // Since the total count is retrieved through an additional query, to maintain consistency
-    // with other pagination methods, we only make a count query while data is not empty.
-    let total = if !data.is_empty() {
-        make_base_query().count().get_result(conn).await?
-    } else {
-        0
-    };
-
-    Ok(PaginatedVersionsAndPublishers {
-        data,
-        meta: ResponseMeta {
-            total,
-            next_page,
-            release_tracks,
-        },
-    })
-}
-
-/// Seek-based pagination of versions by semver
-///
-/// # Panics
-///
-/// This function will panic if `option` is built with `enable_pages` set to true.
-async fn list_by_semver(
-    crate_id: i32,
-    options: Option<&PaginationOptions>,
-    params: &ListQueryParams,
-    req: &Parts,
-    conn: &mut AsyncPgConnection,
-) -> AppResult<PaginatedVersionsAndPublishers> {
-    use seek::*;
-
-    let make_base_query = || {
-        let mut query = versions::table
-            .filter(versions::crate_id.eq(crate_id))
-            .left_outer_join(users::table)
-            .select(<(Version, Option<User>)>::as_select())
-            .into_boxed();
-
-        if !params.nums.is_empty() {
-            query = query.filter(versions::num.eq_any(params.nums.iter().map(|s| s.as_str())));
-        }
-        query
-    };
-
-    let mut query = make_base_query();
-
-    if let Some(options) = options {
-        assert!(
-            !matches!(&options.page, Page::Numeric(_)),
-            "?page= is not supported"
-        );
-        if let Some(SeekPayload::Semver(Semver { num, id })) = Seek::Semver.after(&options.page)? {
-            query = query.filter(
-                versions::semver_ord
-                    .eq(semver_ord(num.clone()))
-                    .and(versions::id.lt(id))
-                    .or(versions::semver_ord.lt(semver_ord(num))),
-            )
-        }
-        query = query.limit(options.per_page);
-    }
-
-    query = query.order((versions::semver_ord.desc(), versions::id.desc()));
-
-    let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
-    let mut next_page = None;
-    if let Some(options) = options {
-        next_page = next_seek_params(&data, options, |last| Seek::Semver.to_payload(last))?
+        next_page = next_seek_params(&data, options, |last| seek.to_payload(last))?
             .map(|p| req.query_with_params(p));
     };
 
