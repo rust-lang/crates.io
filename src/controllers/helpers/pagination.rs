@@ -461,7 +461,7 @@ macro_rules! seek {
             impl From<[<$variant Helper>]> for $variant {
                 fn from(helper: [<$variant Helper>]) -> Self {
                     let [<$variant Helper>]($($field,)*) = helper;
-                    Self { $($field,)* }
+                    Self { $($field: $field.clone(),)* }
                 }
             }
 
@@ -470,7 +470,7 @@ macro_rules! seek {
                 where
                     S: serde::Serializer,
                 {
-                    let helper = [<$variant Helper>]($(self.$field,)*);
+                    let helper = [<$variant Helper>]($(self.$field.clone(),)*);
                     serde::Serialize::serialize(&helper, serializer)
                 }
             }
