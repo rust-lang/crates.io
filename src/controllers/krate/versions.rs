@@ -14,6 +14,7 @@ use crate::views::EncodableVersion;
 use axum::Json;
 use axum::extract::FromRequestParts;
 use axum_extra::extract::Query;
+use crates_io_diesel_helpers::semver_ord;
 use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -234,9 +235,6 @@ async fn list_by_date(
 
 /// Seek-based pagination of versions by semver
 ///
-/// Unfortunately, Heroku Postgres has no support for the semver PG extension.
-/// Therefore, we need to perform both sorting and pagination manually on the server.
-///
 /// # Panics
 ///
 /// This function will panic if `option` is built with `enable_pages` set to true.
@@ -249,131 +247,93 @@ async fn list_by_semver(
 ) -> AppResult<PaginatedVersionsAndPublishers> {
     use seek::*;
 
-    let include = params.include()?;
-    let mut query = versions::table
-        .filter(versions::crate_id.eq(crate_id))
-        .into_boxed();
+    let make_base_query = || {
+        let mut query = versions::table
+            .filter(versions::crate_id.eq(crate_id))
+            .left_outer_join(users::table)
+            .select(<(Version, Option<User>)>::as_select())
+            .into_boxed();
 
-    if !params.nums.is_empty() {
-        query = query.filter(versions::num.eq_any(params.nums.iter().map(|s| s.as_str())));
-    }
-
-    let (data, total, release_tracks) = if let Some(options) = options {
-        // Since versions will only increase in the future and both sorting and pagination need to
-        // happen on the app server, implementing it with fetching only the data needed for sorting
-        // and pagination, then making another query for the data to respond with, would minimize
-        // payload and memory usage. This way, we can utilize the sorted map and enrich it later
-        // without sorting twice.
-        // Sorting by semver but opted for id as the seek key because num can be quite lengthy,
-        // while id values are significantly smaller.
-
-        let mut sorted_versions = IndexMap::new();
+        if !params.nums.is_empty() {
+            query = query.filter(versions::num.eq_any(params.nums.iter().map(|s| s.as_str())));
+        }
         query
-            .select((versions::id, versions::num, versions::yanked))
-            .load_stream::<(i32, String, bool)>(conn)
-            .await?
-            .try_for_each(|(id, num, yanked)| {
-                let semver = semver::Version::parse(&num).ok();
-                sorted_versions.insert(id, (semver, yanked, None));
-                future::ready(Ok(()))
-            })
-            .await?;
+    };
 
-        sorted_versions
-            .sort_unstable_by(|_, (semver_a, _, _), _, (semver_b, _, _)| semver_b.cmp(semver_a));
+    let mut query = make_base_query();
 
+    if let Some(options) = options {
         assert!(
             !matches!(&options.page, Page::Numeric(_)),
             "?page= is not supported"
         );
-
-        let release_tracks = include.release_tracks.then(|| {
-            ReleaseTracks::from_sorted_semver_iter(
-                sorted_versions
-                    .values()
-                    .filter(|(_, yanked, _)| !yanked)
-                    .filter_map(|(semver, _, _)| semver.as_ref()),
+        if let Some(SeekPayload::Semver(Semver { num, id })) = Seek::Semver.after(&options.page)? {
+            query = query.filter(
+                versions::semver_ord
+                    .eq(semver_ord(num.clone()))
+                    .and(versions::id.lt(id))
+                    .or(versions::semver_ord.lt(semver_ord(num))),
             )
-        });
-
-        let mut idx = Some(0);
-        if let Some(SeekPayload::Semver(Semver { id })) = Seek::Semver.after(&options.page)? {
-            idx = sorted_versions
-                .get_index_of(&id)
-                .filter(|i| i + 1 < sorted_versions.len())
-                .map(|i| i + 1);
         }
-        if let Some(start) = idx {
-            let end = (start + options.per_page as usize).min(sorted_versions.len());
-            let ids = sorted_versions[start..end]
-                .keys()
-                .cloned()
-                .collect::<Vec<_>>();
-            versions::table
-                .filter(versions::crate_id.eq(crate_id))
-                .left_outer_join(users::table)
-                .select(<(Version, Option<User>)>::as_select())
-                .filter(versions::id.eq_any(ids))
-                .load_stream::<(Version, Option<User>)>(conn)
-                .await?
-                .try_for_each(|row| {
-                    // The versions are already sorted, and we only need to enrich the fetched rows into them.
-                    // Therefore, other values can now be safely ignored.
-                    sorted_versions
-                        .entry(row.0.id)
-                        .and_modify(|entry| *entry = (None, false, Some(row)));
+        query = query.limit(options.per_page);
+    }
 
-                    future::ready(Ok(()))
-                })
-                .await?;
+    query = query.order((versions::semver_ord.desc(), versions::id.desc()));
 
-            let len = sorted_versions.len();
-            (
-                sorted_versions
-                    .into_values()
-                    .filter_map(|(_, _, v)| v)
-                    .collect(),
-                len,
-                release_tracks,
-            )
-        } else {
-            (vec![], 0, release_tracks)
-        }
-    } else {
-        let mut data = IndexMap::new();
-        query
-            .left_outer_join(users::table)
-            .select(<(Version, Option<User>)>::as_select())
-            .load_stream::<(Version, Option<User>)>(conn)
-            .await?
-            .try_for_each(|row| {
-                if let Ok(semver) = semver::Version::parse(&row.0.num) {
-                    data.insert(semver, row);
-                };
-                future::ready(Ok(()))
-            })
-            .await?;
-        data.sort_unstable_by(|a, _, b, _| b.cmp(a));
-        let total = data.len();
-        let release_tracks = include.release_tracks.then(|| {
-            ReleaseTracks::from_sorted_semver_iter(
-                data.iter()
-                    .flat_map(|(semver, (version, _))| (!version.yanked).then_some(semver)),
-            )
-        });
-        (data.into_values().collect(), total, release_tracks)
-    };
-
+    let data: Vec<(Version, Option<User>)> = query.load(conn).await?;
     let mut next_page = None;
     if let Some(options) = options {
         next_page = next_seek_params(&data, options, |last| Seek::Semver.to_payload(last))?
-            .map(|p| req.query_with_params(p))
+            .map(|p| req.query_with_params(p));
+    };
+
+    let release_tracks = if params.include()?.release_tracks {
+        let mut sorted_versions = IndexSet::new();
+        if options.is_some() {
+            versions::table
+                .filter(versions::crate_id.eq(crate_id))
+                .filter(not(versions::yanked))
+                .select(versions::num)
+                .load_stream::<String>(conn)
+                .await?
+                .try_for_each(|num| {
+                    if let Ok(semver) = semver::Version::parse(&num) {
+                        sorted_versions.insert(semver);
+                    };
+                    future::ready(Ok(()))
+                })
+                .await?;
+        } else {
+            sorted_versions = data
+                .iter()
+                .flat_map(|(version, _)| {
+                    (!version.yanked)
+                        .then_some(version)
+                        .and_then(|v| semver::Version::parse(&v.num).ok())
+                })
+                .collect();
+        }
+
+        sorted_versions.sort_unstable_by(|a, b| b.cmp(a));
+        Some(ReleaseTracks::from_sorted_semver_iter(
+            sorted_versions.iter(),
+        ))
+    } else {
+        None
+    };
+
+    // Since the total count is retrieved through an additional query, to maintain consistency
+    // with other pagination methods, we only make a count query while data is not empty.
+    let total = if !data.is_empty() {
+        make_base_query().count().get_result(conn).await?
+    } else {
+        0
     };
 
     Ok(PaginatedVersionsAndPublishers {
         data,
         meta: ResponseMeta {
-            total: total as i64,
+            total,
             next_page,
             release_tracks,
         },
@@ -392,6 +352,7 @@ mod seek {
     seek!(
         pub enum Seek {
             Semver {
+                num: String,
                 id: i32,
             },
             Date {
@@ -406,7 +367,10 @@ mod seek {
         pub(crate) fn to_payload(&self, record: &(Version, Option<User>)) -> SeekPayload {
             let (Version { id, created_at, .. }, _) = *record;
             match *self {
-                Seek::Semver => SeekPayload::Semver(Semver { id }),
+                Seek::Semver => SeekPayload::Semver(Semver {
+                    num: record.0.num.clone(),
+                    id,
+                }),
                 Seek::Date => SeekPayload::Date(Date { created_at, id }),
             }
         }

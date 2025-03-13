@@ -291,9 +291,9 @@ async fn test_seek_based_pagination_semver_sorting() -> anyhow::Result<()> {
     assert_eq!(json.meta.total as usize, expects.len());
     assert_eq!(json.meta.release_tracks, None);
 
-    // A decodable seek value, MTAwCg (100), but doesn't actually exist
+    // A decodable seek value, WyIwLjAuMCIsMTAwXQ (["0.0.0",100]), but doesn't actually exist
     let json: VersionList = anon
-        .get_with_query(url, "per_page=10&sort=semver&seek=MTAwCg")
+        .get_with_query(url, "per_page=10&sort=semver&seek=WyIwLjAuMCIsMTAwXQ")
         .await
         .good();
     assert_eq!(json.versions.len(), 0);
