@@ -31,6 +31,19 @@ BEGIN;
 {%- endfor %}
 {%- endfor %}
 
+    -- Set sequence values.
+{% for table in tables -%}
+{% if table.sequence %}
+    SELECT setval(
+        '{{table.sequence.name}}',
+        COALESCE(
+            (SELECT MAX("{{table.sequence.column}}") FROM "{{table.name}}")::BIGINT,
+            1
+        )
+    );
+{% endif %}
+{%- endfor %}
+
     -- Reenable triggers on each table.
 {% for table in tables %}
     ALTER TABLE "{{table.name}}" ENABLE TRIGGER ALL;
