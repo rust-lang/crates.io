@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-bon = "=3.4.0"
+bon = "=3.5.0"
 chrono = { version = "=0.4.40", default-features = false, features = ["serde"] }
 crates_io_diesel_helpers = { path = "../crates_io_diesel_helpers" }
 crates_io_index = { path = "../crates_io_index" }
