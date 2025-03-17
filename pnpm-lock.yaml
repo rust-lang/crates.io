@@ -48,7 +48,7 @@ importers:
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.10.1
-        version: 4.10.1(playwright-core@1.51.0)
+        version: 4.10.1(playwright-core@1.51.1)
       '@babel/core':
         specifier: 7.26.10
         version: 7.26.10(supports-color@8.1.1)
@@ -108,10 +108,10 @@ importers:
         version: 4.2.0
       '@percy/playwright':
         specifier: 1.0.7
-        version: 1.0.7(playwright-core@1.51.0)
+        version: 1.0.7(playwright-core@1.51.1)
       '@playwright/test':
-        specifier: 1.51.0
-        version: 1.51.0
+        specifier: 1.51.1
+        version: 1.51.1
       '@sinonjs/fake-timers':
         specifier: 14.0.0
         version: 14.0.0
@@ -294,7 +294,7 @@ importers:
         version: 17.1.0
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.51.0)(msw@2.7.3(@types/node@22.13.10)(typescript@5.8.2))
+        version: 3.0.1(@playwright/test@1.51.1)(msw@2.7.3(@types/node@22.13.10)(typescript@5.8.2))
       postcss-preset-env:
         specifier: 10.1.5
         version: 10.1.5(postcss@8.5.3)
@@ -1971,8 +1971,8 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.51.0':
-    resolution: {integrity: sha512-dJ0dMbZeHhI+wb77+ljx/FeC8VBP6j/rj9OAojO08JI80wTZy6vRk9KvHKiDCUh4iMpEiseMgqRBIeW+eKX6RA==}
+  '@playwright/test@1.51.1':
+    resolution: {integrity: sha512-nM+kEaTSAoVlXmMPH10017vn3FSiFqr/bh4fKg9vmAdMfd9SDqRZNvPSiAHADc/itWak+qPvMPZQOPwCBW7k7Q==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6998,8 +6998,8 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.51.0:
-    resolution: {integrity: sha512-x47yPE3Zwhlil7wlNU/iktF7t2r/URR3VLbH6EknJd/04Qc/PSJ0EY3CMXipmglLG+zyRxW6HNo2EGbKLHPWMg==}
+  playwright-core@1.51.1:
+    resolution: {integrity: sha512-/crRMj8+j/Nq5s8QcvegseuyeZPxpQCZb6HNk3Sos3BlZyAknRjoyJPFWkpNn8v0+P3WiwqFF8P+zQo4eqiNuw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7010,8 +7010,8 @@ packages:
       '@playwright/test': '>=1.20.0'
       msw: ^2.0.0
 
-  playwright@1.51.0:
-    resolution: {integrity: sha512-442pTfGM0xxfCYxuBa/Pu6B2OqxqqaYq39JS8QDMGThUvIOCd6s0ANDog3uwA0cHavVlnTQzGCN7Id2YekDSXA==}
+  playwright@1.51.1:
+    resolution: {integrity: sha512-kkx+MB2KQRkyxjYPc3a0wLZZoDczmppyGJIvQ43l+aZihkaVvmu/21kiyaHeHjiFxjxNNFnUncKmcGIyOojsaw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8852,10 +8852,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.3
       lru-cache: 10.4.3
 
-  '@axe-core/playwright@4.10.1(playwright-core@1.51.0)':
+  '@axe-core/playwright@4.10.1(playwright-core@1.51.1)':
     dependencies:
       axe-core: 4.10.3
-      playwright-core: 1.51.0
+      playwright-core: 1.51.1
 
   '@babel/code-frame@7.26.2':
     dependencies:
@@ -10981,9 +10981,9 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@percy/playwright@1.0.7(playwright-core@1.51.0)':
+  '@percy/playwright@1.0.7(playwright-core@1.51.1)':
     dependencies:
-      playwright-core: 1.51.0
+      playwright-core: 1.51.1
 
   '@percy/sdk-utils@1.30.7': {}
 
@@ -11001,9 +11001,9 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@playwright/test@1.51.0':
+  '@playwright/test@1.51.1':
     dependencies:
-      playwright: 1.51.0
+      playwright: 1.51.1
 
   '@pnpm/constants@10.0.0': {}
 
@@ -17425,18 +17425,18 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.51.0: {}
+  playwright-core@1.51.1: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.51.0)(msw@2.7.3(@types/node@22.13.10)(typescript@5.8.2)):
+  playwright-msw@3.0.1(@playwright/test@1.51.1)(msw@2.7.3(@types/node@22.13.10)(typescript@5.8.2)):
     dependencies:
       '@mswjs/cookies': 1.1.1
-      '@playwright/test': 1.51.0
+      '@playwright/test': 1.51.1
       msw: 2.7.3(@types/node@22.13.10)(typescript@5.8.2)
       strict-event-emitter: 0.5.1
 
-  playwright@1.51.0:
+  playwright@1.51.1:
     dependencies:
-      playwright-core: 1.51.0
+      playwright-core: 1.51.1
     optionalDependencies:
       fsevents: 2.3.2
 
