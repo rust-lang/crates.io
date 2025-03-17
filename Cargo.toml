@@ -144,7 +144,7 @@ crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"]
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 claims = "=0.8.0"
 diesel = { version = "=2.2.8", features = ["r2d2"] }
-googletest = "=0.13.0"
+googletest = "=0.14.0"
 insta = { version = "=1.42.2", features = ["glob", "json", "redactions"] }
 regex = "=1.11.1"
 tokio = "=1.44.1"
