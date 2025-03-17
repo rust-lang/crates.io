@@ -11,6 +11,7 @@ workspace = true
 builder = ["dep:flate2", "dep:tar"]
 
 [dependencies]
+astral-tokio-tar = "=0.5.1"
 cargo-manifest = "=0.19.1"
 flate2 = { version = "=1.1.0", optional = true }
 serde = { version = "=1.0.219", features = ["derive"] }
@@ -20,7 +21,6 @@ thiserror = "=2.0.12"
 tracing = "=0.1.41"
 tokio = { version = "=1.44.1", features = ["io-util", "macros", "rt-multi-thread"] }
 async-compression = { version = "=0.4.21", default-features = false, features = ["gzip", "tokio"] }
-krata-tokio-tar = "=0.4.2"
 futures-util = "=0.3.31"
 
 [dev-dependencies]
