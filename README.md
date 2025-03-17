@@ -18,6 +18,8 @@
 
 </div>
 
+[![Build](https://github.com/rust-lang/crates.io/actions/workflows/ci.yml/badge.svg)](https://github.com/rust-lang/crates.io/actions)
+
 ## 🦀 Overview
 
 Welcome to the GitHub repository for [crates.io], the official package registry for the [Rust] programming language.
