@@ -27,10 +27,10 @@ dbg_macro = "warn"
 todo = "warn"
 
 [package.metadata.cargo-machete]
-ignored = ["krata-tokio-tar"]
+ignored = ["astral-tokio-tar"]
 
 [workspace.metadata.cargo-machete]
-ignored = ["krata-tokio-tar"]
+ignored = ["astral-tokio-tar"]
 
 [lints]
 workspace = true
@@ -48,6 +48,7 @@ doctest = true
 
 [dependencies]
 anyhow = "=1.0.97"
+astral-tokio-tar = "=0.5.1"
 async-compression = { version = "=0.4.21", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.88"
 aws-credential-types = { version = "=1.2.2", features = ["hardcoded-credentials"] }
@@ -95,7 +96,6 @@ indexmap = { version = "=2.8.0", features = ["serde"] }
 indicatif = "=0.17.11"
 ipnetwork = "=0.21.1"
 json-subscriber = "=0.2.4"
-krata-tokio-tar = "=0.4.2"
 lettre = { version = "=0.11.15", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = { version = "=2.8.0", features = ["loader"] }
 mockall = "=0.13.1"
