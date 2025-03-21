@@ -220,7 +220,6 @@
 }
 
 .generate-button {
-    composes: yellow-button small from '../../../styles/shared/buttons.module.css';
     border-radius: 4px;
 
     .spinner {
@@ -229,6 +228,5 @@
 }
 
 .cancel-button {
-    composes: tan-button small from '../../../styles/shared/buttons.module.css';
     border-radius: 4px;
 }

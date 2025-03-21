@@ -7,7 +7,7 @@
     background: none;
 }
 
-.button {
+:global(.button) {
     --text-color: #383838;
     --disabled-text-color: #858585;
 
@@ -59,13 +59,7 @@
     }
 }
 
-.yellow-button {
-    composes: button;
-}
-
-.tan-button {
-    composes: button;
-
+:global(.button--tan) {
     --bg-color-top: #e8e3c7;
     --bg-color-bottom: #d6cd99;
 
@@ -76,9 +70,7 @@
     --bg-color-bottom-dark: #cfc487;
 }
 
-.red-button {
-    composes: button;
-
+:global(.button--red) {
     --bg-color-top: #ffb8b8;
     --bg-color-bottom: #f78888;
 
@@ -89,6 +81,6 @@
     --bg-color-bottom-dark: #ed6b6b;
 }
 
-.small {
+:global(.button--small) {
     padding: var(--space-2xs) var(--space-s);
 }

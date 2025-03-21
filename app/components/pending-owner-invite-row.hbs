@@ -27,8 +27,8 @@
       {{date-format-distance-to-now @invite.created_at addSuffix=true}}
     </div>
     <div>
-      <button type="button" local-class="accept-button" data-test-accept-button {{on "click" (perform this.acceptInvitationTask)}}>Accept</button>
-      <button type="button" local-class="decline-button" data-test-decline-button {{on "click" (perform this.declineInvitationTask)}}>Decline</button>
+      <button type="button" class="button button--small" data-test-accept-button {{on "click" (perform this.acceptInvitationTask)}}>Accept</button>
+      <button type="button" class="button button--small" data-test-decline-button {{on "click" (perform this.declineInvitationTask)}}>Decline</button>
     </div>
   </div>
 {{/if}}

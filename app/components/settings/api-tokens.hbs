@@ -3,7 +3,7 @@
   <div local-class="right">
     <LinkTo
       @route="settings.tokens.new"
-      local-class="new-token-button"
+      class="button"
       data-test-new-token-button
     >
       New Token
@@ -116,6 +116,7 @@
             @route="settings.tokens.new"
             @query={{hash from=token.id}}
             local-class="regenerate-button"
+            class="button button--small"
             data-test-regenerate-token-button
           >
             Regenerate
@@ -124,6 +125,7 @@
             <button
               type="button"
               local-class="revoke-button"
+              class="button button--tan button--small"
               disabled={{token.isSaving}}
               data-test-revoke-token-button
               {{on "click" (perform this.revokeTokenTask token)}}
@@ -147,6 +149,7 @@
     <LinkTo
       @route="settings.tokens.new"
       local-class="empty-state-button"
+      class="button button--small"
       data-test-empty-state-button
     >
       New Token

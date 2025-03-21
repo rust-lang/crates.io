@@ -9,10 +9,6 @@
     }
 }
 
-.new-token-button {
-    composes: yellow-button from '../../styles/shared/buttons.module.css';
-}
-
 .explainer {
     line-height: 1.5;
 }
@@ -77,20 +73,12 @@
     margin-left: var(--space-xs);
 }
 
-.save-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
-    flex-grow: 1;
-    border-radius: var(--space-3xs);
-}
-
 .revoke-button {
-    composes: tan-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
     border-radius: var(--space-3xs);
 }
 
 .regenerate-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
     border-radius: var(--space-3xs);
 }
@@ -151,7 +139,6 @@
 }
 
 .empty-state-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
     margin-top: var(--space-m);
     border-radius: 4px;
 }
