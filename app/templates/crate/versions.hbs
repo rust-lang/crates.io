@@ -2,7 +2,7 @@
 
 <div local-class="results-meta">
   <span local-class="page-description"
-    class="{{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
+    class="text--small {{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
     data-test-page-description
   >
     <strong>{{ this.sortedVersions.length }}</strong> of <strong>{{ this.crate.num_versions }}</strong>

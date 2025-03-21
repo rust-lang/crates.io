@@ -60,6 +60,7 @@ module.exports = function (defaults) {
         'crates-io/styles/shared/a11y',
         'crates-io/styles/shared/buttons',
         'crates-io/styles/shared/sort-by',
+        'crates-io/styles/shared/typography',
         'crates-io/styles/application',
       ],
       plugins: {

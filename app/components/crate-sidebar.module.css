@@ -58,11 +58,6 @@
     }
 }
 
-.more-versions-link,
-.reverse-deps-link {
-    composes: small from '../styles/shared/typography.module.css';
-}
-
 .categories {
     margin: 0;
     padding-left: 20px;
@@ -79,7 +74,6 @@
 }
 
 .playground-help {
-    composes: small from '../styles/shared/typography.module.css';
     max-width: 220px;
     text-align: justify;
     line-height: 1.3em;

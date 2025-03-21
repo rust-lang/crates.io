@@ -12,7 +12,3 @@
         margin: 0;
     }
 }
-
-.date-column {
-    composes: small from '../styles/shared/typography.module.css';
-}
