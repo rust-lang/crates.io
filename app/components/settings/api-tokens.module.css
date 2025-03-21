@@ -130,10 +130,6 @@
     }
 }
 
-.copy-button-label {
-    composes: sr-only from '../../styles/shared/a11y.module.css';
-}
-
 .copy-button-icon {
     width: auto;
     height: 1.3em;

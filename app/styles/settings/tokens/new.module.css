@@ -32,10 +32,6 @@
     }
 }
 
-.hidden-label {
-    composes: sr-only from '../../shared/a11y.module.css';
-}
-
 .form-group-error {
     display: block;
     color: red;

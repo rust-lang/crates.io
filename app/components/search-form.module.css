@@ -80,10 +80,6 @@
     }
 }
 
-.submit-label {
-    composes: sr-only from '../styles/shared/a11y.module.css';
-}
-
 .submit-icon {
     width: var(--submit-icon-size);
     height: var(--submit-icon-size);

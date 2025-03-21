@@ -13,10 +13,6 @@
     padding: 0;
 }
 
-.trigger-label {
-    composes: sr-only from '../styles/shared/a11y.module.css'
-}
-
 .menu {
     right: 0;
     min-width: max-content;
