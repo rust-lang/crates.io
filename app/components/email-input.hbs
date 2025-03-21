@@ -27,6 +27,7 @@
           <button
             type='submit'
             local-class="save-button"
+            class="button button--small"
             disabled={{not this.value}}
             data-test-save-button
           >
@@ -35,7 +36,7 @@
 
           <button
             type="button"
-            local-class="cancel-button"
+            class="button button--small"
             data-test-cancel-button
             {{on "click" (fn (mut this.isEditing) false)}}
           >
@@ -60,7 +61,7 @@
       <div local-class="actions">
         <button
           type="button"
-          local-class="edit-button"
+          class="button button--small"
           data-test-edit-button
           {{on "click" this.editEmail}}
         >
@@ -79,7 +80,7 @@
         <div local-class="actions">
           <button
             type="button"
-            local-class="resend-button"
+            class="button button--small"
             disabled={{this.disableResend}}
             data-test-resend-button
             {{on "click" (perform this.resendEmailTask)}}

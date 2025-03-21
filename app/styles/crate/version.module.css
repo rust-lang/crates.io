@@ -40,7 +40,6 @@
 }
 
 .retry-button {
-    composes: yellow-button from '../shared/buttons.module.css';
     display: block;
     text-align: center;
     margin: var(--space-s) auto 0;

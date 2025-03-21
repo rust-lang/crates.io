@@ -24,11 +24,6 @@
     gap: var(--space-2xs);
 }
 
-.select-all-button,
-.deselect-all-button {
-    composes: yellow-button small from '../shared/buttons.module.css';
-}
-
 .notifications-error,
 .notifications-success {
     border-top-width: 0;
@@ -41,8 +36,4 @@
 
 .notifications-success {
     color: green;
-}
-
-.update-notifications-button {
-    composes: yellow-button from '../shared/buttons.module.css';
 }

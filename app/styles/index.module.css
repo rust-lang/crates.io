@@ -9,8 +9,6 @@
 }
 
 .hero-button {
-    composes: yellow-button from '../styles/shared/buttons.module.css';
-
     .icon {
         color: #c4890e;
     }
@@ -79,7 +77,6 @@
 }
 
 .try-again-button {
-    composes: yellow-button from './shared/buttons.module.css';
     align-self: center;
     margin: var(--space-s) 0;
 

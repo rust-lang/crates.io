@@ -100,10 +100,6 @@
     align-items: center;
 }
 
-.delete-button {
-    composes: red-button from '../shared/buttons.module.css';
-}
-
 .spinner-wrapper {
     position: relative;
 }
