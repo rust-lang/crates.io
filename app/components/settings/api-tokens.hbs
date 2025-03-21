@@ -102,7 +102,7 @@
               <span local-class="token-value" data-test-token>{{token.token}}</span>
 
               {{#if (is-clipboard-supported)}}
-                <CopyButton @copyText={{token.token}} local-class="copy-button">
+                <CopyButton @copyText={{token.token}} local-class="copy-button" class="button-reset">
                   <span class="sr-only">Copy</span>
                   {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
                 </CopyButton>

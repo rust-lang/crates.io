@@ -9,6 +9,7 @@
       <menu.Item>
         <button
           local-class="menu-button {{if (eq colorScheme.mode this.colorScheme.scheme) 'selected'}}"
+          class="button-reset"
           type="button"
           {{on 'click' (fn this.colorScheme.set colorScheme.mode)}}
         >
