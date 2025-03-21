@@ -111,10 +111,6 @@
     }
 }
 
-.stat-description {
-    composes: small from '../shared/typography.module.css';
-}
-
 .graph {
     flex-grow: 10;
     width: 100%;

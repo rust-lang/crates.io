@@ -6,7 +6,7 @@
     <div local-class='downloads'>
       {{svg-jar "download" local-class="header-icon"}}
       <span local-class='num'>{{format-num this.myStats.total_downloads}}</span>
-      <span local-class="stats-label">Total Downloads</span>
+      <span local-class="stats-label" class="text--small">Total Downloads</span>
     </div>
   </div>
 </PageHeader>
@@ -50,9 +50,9 @@
           <li local-class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
-              <span local-class="feed-version">{{ version.num }}</span>
+              <span class="text--small">{{ version.num }}</span>
             </LinkTo>
-            <span local-class="feed-date">
+            <span local-class="feed-date" class="text--small">
               {{date-format-distance-to-now version.created_at addSuffix=true}}
             </span>
           </li>

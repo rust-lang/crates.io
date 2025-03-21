@@ -37,8 +37,6 @@
 
 .scopes,
 .metadata {
-    composes: small from '../../styles/shared/typography.module.css';
-
     > * + * {
         margin-top: var(--space-3xs);
     }

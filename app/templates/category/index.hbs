@@ -19,11 +19,11 @@
         <div local-class="subcategory">
           <div>
             <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
-            <span local-class="crate-count">
+            <span class="text--small">
               {{format-num subcategory.crates_cnt}} {{if (eq subcategory.crates_cnt 1) "crate" "crates"}}
             </span>
           </div>
-          <div local-class="category-description">
+          <div local-class="category-description" class="text--small">
             {{ subcategory.description }}
           </div>
         </div>
@@ -42,7 +42,7 @@
   />
 
   <div data-test-category-sort>
-    <span local-class="sort-by-label">Sort by</span>
+    <span class="text--small">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
       <sd.Option @query={{hash sort="downloads"}}>All-Time Downloads</sd.Option>

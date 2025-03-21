@@ -41,7 +41,7 @@
         </h3>
 
         {{#if (or token.endpoint_scopes token.crate_scopes)}}
-          <div local-class="scopes">
+          <div local-class="scopes" class="text--small">
             {{#if token.endpoint_scopes}}
               <div local-class="endpoint-scopes" data-test-endpoint-scopes>
                 Scopes:
@@ -72,7 +72,7 @@
           </div>
         {{/if}}
 
-        <div local-class="metadata">
+        <div local-class="metadata" class="text--small">
           <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
             {{#if token.last_used_at}}
               Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}

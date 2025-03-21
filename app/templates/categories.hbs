@@ -11,7 +11,7 @@
   />
 
   <div data-test-categories-sort class="sort-by-v-center">
-    <span local-class="sort-by-label">Sort by</span>
+    <span class="text--small">Sort by</span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="alpha"}}>Alphabetical</sd.Option>
       <sd.Option @query={{hash sort="crates"}}># Crates</sd.Option>
@@ -26,11 +26,11 @@
         <LinkTo @route="category" @model={{category.slug}} local-class="category-link">
           {{~category.category~}}
         </LinkTo>
-        <span local-class="crate-count" data-test-crate-count>
+        <span class="text--small" data-test-crate-count>
           {{format-num category.crates_cnt}} {{if (eq category.crates_cnt 1) "crate" "crates"}}
         </span>
       </div>
-      <div local-class="description">
+      <div local-class="description" class="text--small">
         {{ category.description }}
       </div>
     </div>
