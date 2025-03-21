@@ -115,7 +115,7 @@ h1 {
     }
 }
 
-a, .link {
+a, .link, :global(.text--link) {
     color: var(--link-color);
     text-decoration: none;
     cursor: pointer;

@@ -15,7 +15,6 @@
 }
 
 .link {
-    composes: link from '../styles/application.module.css';
     font-weight: 500;
 
     &[disabled] {
