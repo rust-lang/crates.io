@@ -14,7 +14,7 @@
     margin-top: 0;
 }
 
-.warning-block {
+.warning, .confirmation {
     background: light-dark(var(--yellow100), var(--yellow800));
     border-color: var(--yellow500);
     border-left-style: solid;
@@ -25,7 +25,6 @@
 }
 
 .warning {
-    composes: warning-block;
     display: flex;
 
     svg {
@@ -85,7 +84,6 @@
 }
 
 .confirmation {
-    composes: warning-block;
     display: block;
 
     input {
