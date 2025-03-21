@@ -112,15 +112,15 @@
         {{/if}}
 
         <div local-class="actions">
+          <LinkTo
+            @route="settings.tokens.new"
+            @query={{hash from=token.id}}
+            local-class="regenerate-button"
+            data-test-regenerate-token-button
+          >
+            Regenerate
+          </LinkTo>
           {{#unless token.isExpired}}
-            <LinkTo
-              @route="settings.tokens.new"
-              @query={{hash from=token.id}}
-              local-class="regenerate-button"
-              data-test-regenerate-token-button
-            >
-              Regenerate
-            </LinkTo>
             <button
               type="button"
               local-class="revoke-button"
