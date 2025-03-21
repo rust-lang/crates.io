@@ -1,4 +1,4 @@
-.button-reset {
+:global(.button-reset) {
     padding: 0;
     border: none;
     outline: none;

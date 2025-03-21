@@ -58,6 +58,7 @@ module.exports = function (defaults) {
       // see https://github.com/salsify/ember-css-modules/blob/v2.0.1/docs/ORDERING.md
       headerModules: [
         'crates-io/styles/shared/a11y',
+        'crates-io/styles/shared/buttons',
         'crates-io/styles/shared/sort-by',
         'crates-io/styles/application',
       ],

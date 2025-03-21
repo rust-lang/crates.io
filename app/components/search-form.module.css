@@ -58,8 +58,6 @@
 }
 
 .submit-button {
-    composes: button-reset from '../styles/shared/buttons.module.css';
-
     position: absolute;
     /* see https://github.com/rust-lang/crates.io/issues/8677 🤷 */
     right: -.5px;

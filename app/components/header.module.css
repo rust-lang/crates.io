@@ -127,7 +127,6 @@
 }
 
 .login-button {
-    composes: button-reset from '../styles/shared/buttons.module.css';
     display: inline-flex;
     align-items: center;
     /* negative margin for larger click target */
@@ -181,7 +180,6 @@
 .login-menu-item,
 .logout-menu-item,
 .sudo-menu-item {
-    composes: button-reset from '../styles/shared/buttons.module.css';
     cursor: pointer;
 
     &:disabled {

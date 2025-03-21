@@ -37,12 +37,12 @@
             {{#if this.session.isAdmin}}
               <menu.Item local-class='sudo'>
                 {{#if this.session.isSudoEnabled}}
-                  <button data-test-disable-admin-actions local-class='sudo-menu-item' type='button' {{on 'click' this.disableSudo}}>
+                  <button data-test-disable-admin-actions local-class='sudo-menu-item' class="button-reset" type='button' {{on 'click' this.disableSudo}}>
                     Disable admin actions
                     <div local-class='expires-in'>expires at {{date-format this.session.sudoEnabledUntil 'HH:mm'}}</div>
                   </button>
                 {{else}}
-                  <button data-test-enable-admin-actions local-class='sudo-menu-item' type='button' {{on 'click' this.enableSudo}}>
+                  <button data-test-enable-admin-actions local-class='sudo-menu-item' class="button-reset" type='button' {{on 'click' this.enableSudo}}>
                     Enable admin actions
                   </button>
                 {{/if}}
@@ -53,6 +53,7 @@
                 type="button"
                 disabled={{this.session.logoutTask.isRunning}}
                 local-class="logout-menu-item"
+                class="button-reset"
                 data-test-logout-button
                 {{on "click" (perform this.session.logoutTask)}}
               >
@@ -69,6 +70,7 @@
           type="button"
           disabled={{this.session.loginTask.isRunning}}
           local-class="login-button"
+          class="button-reset"
           data-test-login-button
           {{on "click" (perform this.session.loginTask)}}
         >
@@ -100,6 +102,7 @@
                 type="button"
                 disabled={{this.session.logoutTask.isRunning}}
                 local-class="logout-menu-item"
+                class="button-reset"
                 {{on "click" (perform this.session.logoutTask)}}
               >
                 {{#if this.session.logoutTask.isRunning}}
@@ -114,6 +117,7 @@
                 type="button"
                 disabled={{this.session.loginTask.isRunning}}
                 local-class="login-menu-item"
+                class="button-reset"
                 {{on "click" (perform this.session.loginTask)}}
               >
                 {{#if this.session.loginTask.isRunning}}

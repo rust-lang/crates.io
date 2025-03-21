@@ -120,7 +120,6 @@
 }
 
 .copy-button {
-    composes: button-reset from '../../styles/shared/buttons.module.css';
     align-self: stretch;
     padding: 0 var(--space-s);
     cursor: pointer;
