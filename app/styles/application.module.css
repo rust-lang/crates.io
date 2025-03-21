@@ -176,7 +176,7 @@ noscript {
     line-height: 1.5;
 }
 
-.width-limit {
+:global(.width-limit) {
     width: 960px;
     @media only screen and (max-width: 960px) {
         width: 100%;
@@ -197,7 +197,6 @@ noscript {
 .inner-main {
     --main-layout-padding: var(--space-s);
 
-    composes: width-limit;
     display: flex;
     flex-direction: column;
     padding: var(--main-layout-padding);

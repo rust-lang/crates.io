@@ -56,7 +56,7 @@ module.exports = function (defaults) {
     cssModules: {
       extension: 'module.css',
       // see https://github.com/salsify/ember-css-modules/blob/v2.0.1/docs/ORDERING.md
-      headerModules: ['crates-io/styles/shared/a11y'],
+      headerModules: ['crates-io/styles/shared/a11y', 'crates-io/styles/application'],
       plugins: {
         postprocess: [
           require('postcss-preset-env')({

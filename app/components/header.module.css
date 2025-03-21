@@ -5,8 +5,6 @@
 }
 
 .header-inner {
-    composes: width-limit from '../styles/application.module.css';
-
     display: grid;
     grid-template:
         "logo search nav" auto /
