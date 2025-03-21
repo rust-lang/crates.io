@@ -4,7 +4,8 @@
 }
 
 .title {
-    composes: heading from '../crate-sidebar.module.css';
+    font-size: 1.17em;
+    margin: 0 0 var(--space-s);
 }
 
 .icon {
