@@ -89,7 +89,7 @@
     }
 }
 
-.metadata {
+.optional-label, .features-label {
     color: var(--grey600);
     text-transform: uppercase;
     letter-spacing: .7px;
@@ -121,14 +121,6 @@
         display: block;
         margin-top: var(--space-xs);
     }
-}
-
-.optional-label {
-    composes: metadata;
-}
-
-.features-label {
-    composes: metadata;
 }
 
 .feature-list {
