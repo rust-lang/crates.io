@@ -103,7 +103,7 @@
 
               {{#if (is-clipboard-supported)}}
                 <CopyButton @copyText={{token.token}} local-class="copy-button">
-                  <span local-class="copy-button-label">Copy</span>
+                  <span class="sr-only">Copy</span>
                   {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
                 </CopyButton>
               {{/if}}
