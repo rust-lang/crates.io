@@ -3,7 +3,7 @@
 <form local-class="form" {{on "submit" (prevent-default (perform this.saveTokenTask))}}>
   <div local-class="form-group" data-test-name-group>
     {{#let (unique-id) as |id|}}
-      <label for={{id}} local-class="form-group-name">Name</label>
+      <label for={{id}} class="form-group-name">Name</label>
 
       <Input
         id={{id}}
@@ -14,13 +14,14 @@
         aria-required="true"
         aria-invalid={{if this.nameInvalid "true" "false"}}
         local-class="name-input"
+        class="base-input"
         data-test-name
         {{auto-focus}}
         {{on "input" this.resetNameValidation}}
       />
 
       {{#if this.nameInvalid}}
-        <div local-class="form-group-error" data-test-error>
+        <div class="form-group-error" data-test-error>
           Please enter a name for this token.
         </div>
       {{/if}}
@@ -29,7 +30,7 @@
 
   <div local-class="form-group" data-test-expiry-group>
     {{#let (unique-id) as |id|}}
-      <label for={{id}} local-class="form-group-name">Expiration</label>
+      <label for={{id}} class="form-group-name">Expiration</label>
     {{/let}}
 
     <div local-class="select-group">
@@ -38,6 +39,7 @@
           id={{id}}
           disabled={{this.saveTokenTask.isRunning}}
           local-class="expiry-select"
+          class="base-input"
           data-test-expiry
           {{on "change" this.updateExpirySelection}}
         >
@@ -60,6 +62,7 @@
           aria-invalid={{if this.expiryDateInvalid "true" "false"}}
           aria-label="Custom expiration date"
           local-class="expiry-date-input"
+          class="base-input"
           data-test-expiry-date
           {{on "input" this.resetExpiryDateValidation}}
         />
@@ -72,7 +75,7 @@
   </div>
 
   <div local-class="form-group" data-test-scopes-group>
-    <div local-class="form-group-name">
+    <div class="form-group-name">
       Scopes
 
       <a
@@ -81,12 +84,12 @@
         rel="noopener noreferrer"
         local-class="help-link"
       >
-        <span local-class="hidden-label">Help</span>
+        <span class="sr-only">Help</span>
         {{svg-jar "circle-question"}}
       </a>
     </div>
 
-    <ul role="list" local-class="scopes-list {{if this.scopesInvalid "invalid"}}">
+    <ul role="list" class="scopes-list {{if this.scopesInvalid "invalid"}}">
       {{#each this.ENDPOINT_SCOPES as |scope|}}
         <li>
           <label data-test-scope={{scope}}>
@@ -105,14 +108,14 @@
     </ul>
 
     {{#if this.scopesInvalid}}
-      <div local-class="form-group-error" data-test-error>
+      <div class="form-group-error" data-test-error>
         Please select at least one token scope.
       </div>
     {{/if}}
   </div>
 
   <div local-class="form-group" data-test-scopes-group>
-    <div local-class="form-group-name">
+    <div class="form-group-name">
       Crates
 
       <a
@@ -121,7 +124,7 @@
         rel="noopener noreferrer"
         local-class="help-link"
       >
-        <span local-class="hidden-label">Help</span>
+        <span class="sr-only">Help</span>
         {{svg-jar "circle-question"}}
       </a>
     </div>
@@ -150,7 +153,7 @@
             data-test-remove
             {{on "click" (fn this.removeCrateScope index)}}
           >
-            <span local-class="hidden-label">Remove pattern</span>
+            <span class="sr-only">Remove pattern</span>
             {{svg-jar "trash"}}
           </button>
         </li>
@@ -176,6 +179,7 @@
     <button
       type="submit"
       local-class="generate-button"
+      class="button button--small"
       disabled={{this.saveTokenTask.isRunning}}
       data-test-generate
     >
@@ -189,6 +193,7 @@
     <LinkTo
       @route="settings.tokens.index"
       local-class="cancel-button"
+      class="button button--tan button--small"
       data-test-cancel
     >
       Cancel

@@ -10,7 +10,7 @@
       Username
     </label>
     <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
-    <button type="submit" disabled={{not this.username}} local-class="submit-button" data-test-save-button>Save</button>
+    <button type="submit" disabled={{not this.username}} class="button button--small" data-test-save-button>Save</button>
   </form>
 </div>
 
@@ -28,7 +28,7 @@
       <div local-class="email-column">
         {{team.email}}
       </div>
-      <button type="button" local-class="remove-button" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask team)}}>Remove</button>
+      <button type="button" class="button button--small" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask team)}}>Remove</button>
     </div>
   {{/each}}
   {{#each this.crate.owner_user as |user|}}
@@ -46,7 +46,7 @@
       <div local-class="email-column">
         {{user.email}}
       </div>
-      <button type="button" local-class="remove-button" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask user)}}>Remove</button>
+      <button type="button" class="button button--small" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask user)}}>Remove</button>
     </div>
   {{/each}}
 </div>
@@ -54,7 +54,7 @@
 <h2>Danger Zone</h2>
 
 <div>
-  <LinkTo @route="crate.delete" local-class="delete-button" data-test-delete-button>
+  <LinkTo @route="crate.delete" class="button button--red" data-test-delete-button>
     Delete this crate
   </LinkTo>
 </div>

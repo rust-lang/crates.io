@@ -70,7 +70,3 @@
     gap: var(--space-2xs);
     margin-top: var(--space-s);
 }
-
-.update-prefs-button {
-    composes: yellow-button small from '../shared/buttons.module.css';
-}

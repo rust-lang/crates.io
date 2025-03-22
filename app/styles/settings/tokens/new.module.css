@@ -3,13 +3,6 @@
     margin: var(--space-m) 0;
 }
 
-.form-group-name {
-    display: flex;
-    gap: var(--space-2xs);
-    margin-bottom: var(--space-2xs);
-    font-weight: 600;
-}
-
 .select-group {
     display: flex;
     align-content: center;
@@ -32,45 +25,18 @@
     }
 }
 
-.hidden-label {
-    composes: sr-only from '../../shared/a11y.module.css';
-}
-
-.form-group-error {
-    display: block;
-    color: red;
-    font-size: 0.9em;
-    margin-top: var(--space-2xs);
-}
-
 .buttons {
     display: flex;
     gap: var(--space-2xs);
     flex-wrap: wrap;
 }
 
-.base-input {
-    padding: var(--space-2xs);
-    background-color: light-dark(white, #141413);
-    border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
-
-    &[aria-invalid="true"] {
-        background: light-dark(#fff2f2, #170808);
-        border-color: red;
-    }
-}
-
 .name-input {
-    composes: base-input;
-
     max-width: 440px;
     width: 100%;
 }
 
 .expiry-select {
-    composes: base-input;
-
     padding-right: var(--space-m);
     background-image: url("/assets/dropdown.svg");
     background-repeat: no-repeat;
@@ -80,7 +46,7 @@
 }
 
 .expiry-date-input {
-    composes: base-input;
+    margin-left: var(--space-2xs);
 }
 
 .expiry-description {
@@ -88,7 +54,7 @@
     font-size: 0.9em;
 }
 
-.scopes-list {
+:global(.scopes-list) {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -96,7 +62,7 @@
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
-    &.invalid {
+    &:global(.invalid) {
         background: light-dark(#fff2f2, #170808);
         border-color: red;
     }
@@ -224,7 +190,6 @@
 }
 
 .generate-button {
-    composes: yellow-button small from '../../../styles/shared/buttons.module.css';
     border-radius: 4px;
 
     .spinner {
@@ -233,6 +198,5 @@
 }
 
 .cancel-button {
-    composes: tan-button small from '../../../styles/shared/buttons.module.css';
     border-radius: 4px;
 }

@@ -24,7 +24,6 @@
 }
 
 .copy-button {
-    composes: button-reset from '../styles/shared/buttons.module.css';
     color: var(--main-color);
     cursor: pointer;
 
@@ -66,7 +65,6 @@
 }
 
 .description {
-    composes: small from '../styles/shared/typography.module.css';
     margin-top: calc(var(--space-xs) / 2);
     line-height: 1.5;
 }

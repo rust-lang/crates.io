@@ -15,8 +15,6 @@
 }
 
 .link {
-    composes: button-reset from '../styles/shared/buttons.module.css';
-    composes: link from '../styles/application.module.css';
     font-weight: 500;
 
     &[disabled] {
