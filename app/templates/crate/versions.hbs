@@ -26,20 +26,19 @@
     </li>
   {{/each}}
 </ul>
-{{#if this.loadMoreTask.isRunning}}
-  <div local-class="loading">
-    <button type="button" data-test-id="loading" disabled={{this.loadMoreTask.isRunning}}
-      {{on "click" (perform this.loadMoreTask)}}
-    >
-      Loading...<LoadingSpinner local-class="loading-spinner" />
-    </button>
-  </div>
-{{else if this.next_page}}
+{{#if (or this.loadMoreTask.isRunning this.next_page)}}
   <div local-class="load-more">
-    <button type="button" data-test-id="load-more" disabled={{this.loadMoreTask.isRunning}}
+    <button
+      type="button"
+      data-test-id={{if this.loadMoreTask.isRunning "loading" "load-more"}}
+      disabled={{this.loadMoreTask.isRunning}}
       {{on "click" (perform this.loadMoreTask)}}
     >
-      Load More
+      {{#if this.loadMoreTask.isRunning}}
+        Loading...<LoadingSpinner local-class="loading-spinner" />
+      {{else}}
+        Load More
+      {{/if}}
     </button>
   </div>
 {{/if}}
