@@ -60,7 +60,7 @@
       </ul>
 
       {{#if this.hasMore}}
-        <div local-class="load-more">
+        <div class="load-more">
           <button type="button" disabled={{this.loadMoreTask.isRunning}} {{on "click" (perform this.loadMoreTask)}}>
             Load More
             {{#if this.loadMoreTask.isRunning}}
