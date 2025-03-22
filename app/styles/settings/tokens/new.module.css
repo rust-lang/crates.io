@@ -3,13 +3,6 @@
     margin: var(--space-m) 0;
 }
 
-.form-group-name {
-    display: flex;
-    gap: var(--space-2xs);
-    margin-bottom: var(--space-2xs);
-    font-weight: 600;
-}
-
 .select-group {
     display: flex;
     align-content: center;
@@ -30,13 +23,6 @@
         width: 1em;
         height: 1em;
     }
-}
-
-.form-group-error {
-    display: block;
-    color: red;
-    font-size: 0.9em;
-    margin-top: var(--space-2xs);
 }
 
 .buttons {
