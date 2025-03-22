@@ -89,7 +89,7 @@
       </a>
     </div>
 
-    <ul role="list" local-class="scopes-list {{if this.scopesInvalid "invalid"}}">
+    <ul role="list" class="scopes-list {{if this.scopesInvalid "invalid"}}">
       {{#each this.ENDPOINT_SCOPES as |scope|}}
         <li>
           <label data-test-scope={{scope}}>
