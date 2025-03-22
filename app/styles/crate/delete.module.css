@@ -79,7 +79,6 @@
 }
 
 .reason-input {
-    composes: base-input from '../../styles/settings/tokens/new.module.css';
     width: 100%;
 }
 

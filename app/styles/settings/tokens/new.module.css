@@ -31,28 +31,12 @@
     flex-wrap: wrap;
 }
 
-.base-input {
-    padding: var(--space-2xs);
-    background-color: light-dark(white, #141413);
-    border: 1px solid var(--gray-border);
-    border-radius: var(--space-3xs);
-
-    &[aria-invalid="true"] {
-        background: light-dark(#fff2f2, #170808);
-        border-color: red;
-    }
-}
-
 .name-input {
-    composes: base-input;
-
     max-width: 440px;
     width: 100%;
 }
 
 .expiry-select {
-    composes: base-input;
-
     padding-right: var(--space-m);
     background-image: url("/assets/dropdown.svg");
     background-repeat: no-repeat;
@@ -62,7 +46,7 @@
 }
 
 .expiry-date-input {
-    composes: base-input;
+    margin-left: var(--space-2xs);
 }
 
 .expiry-description {
