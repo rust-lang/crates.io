@@ -1,4 +1,4 @@
-.link {
+:global(.box-link) {
     --shadow: 0 2px 3px light-dark(hsla(51, 50%, 44%, .35), #232321);
 
     display: flex;

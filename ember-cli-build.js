@@ -65,6 +65,8 @@ module.exports = function (defaults) {
         'crates-io/styles/application',
         // for the `.scopes-list` class
         'crates-io/styles/settings/tokens/new',
+        // for the `.box-link` class
+        'crates-io/components/front-page-list/item',
       ],
       plugins: {
         postprocess: [
