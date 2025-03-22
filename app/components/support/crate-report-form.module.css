@@ -19,7 +19,6 @@
 }
 
 .reasons-list {
-  composes: scopes-list from '../../styles/settings/tokens/new.module.css';
   label {
     flex-wrap: nowrap;
   }

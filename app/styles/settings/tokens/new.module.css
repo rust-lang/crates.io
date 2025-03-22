@@ -54,7 +54,7 @@
     font-size: 0.9em;
 }
 
-.scopes-list {
+:global(.scopes-list) {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -62,7 +62,7 @@
     border: 1px solid var(--gray-border);
     border-radius: var(--space-3xs);
 
-    &.invalid {
+    &:global(.invalid) {
         background: light-dark(#fff2f2, #170808);
         border-color: red;
     }

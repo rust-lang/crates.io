@@ -34,7 +34,7 @@
 
   <fieldset local-class="form-group" data-test-id="fieldset-reasons">
     <div class="form-group-name">Reasons</div>
-    <ul role="list" local-class="reasons-list {{if this.reasonsInvalid "invalid"}}">
+    <ul role="list" local-class="reasons-list" class="scopes-list {{if this.reasonsInvalid "invalid"}}">
       {{#each this.reasons as |option|}}
         <li>
           <label>
