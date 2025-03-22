@@ -43,7 +43,10 @@
 }
 
 .buttons {
-  composes: buttons from '../../styles/settings/tokens/new.module.css';
+  position: relative;
+  margin: var(--space-m) 0;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: end;
   gap: 2rem;
 }
