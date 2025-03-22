@@ -63,6 +63,8 @@ module.exports = function (defaults) {
         'crates-io/styles/shared/sort-by',
         'crates-io/styles/shared/typography',
         'crates-io/styles/application',
+        // for the `.load-more` class
+        'crates-io/styles/dashboard',
         // for the `.scopes-list` class
         'crates-io/styles/settings/tokens/new',
         // for the `.box-link` class
