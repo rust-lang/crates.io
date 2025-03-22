@@ -106,6 +106,15 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 3 });
 
+    assert.dom('[data-test-api-token="1"] [data-test-regenerate-token-button]').exists();
+    assert.dom('[data-test-api-token="1"] [data-test-revoke-token-button]').exists();
+
+    assert.dom('[data-test-api-token="2"] [data-test-regenerate-token-button]').exists();
+    assert.dom('[data-test-api-token="2"] [data-test-revoke-token-button]').exists();
+
+    assert.dom('[data-test-api-token="3"] [data-test-regenerate-token-button]').exists();
+    assert.dom('[data-test-api-token="3"] [data-test-revoke-token-button]').doesNotExist();
+
     await click('[data-test-api-token="1"] [data-test-regenerate-token-button]');
     assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
   });

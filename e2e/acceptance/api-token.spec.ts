@@ -9,6 +9,14 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
+
+    msw.db.apiToken.create({
+      user,
+      name: 'foo',
+      createdAt: '2017-08-01T12:34:56',
+      lastUsedAt: '2017-11-02T01:45:14',
+    });
+
     msw.db.apiToken.create({
       user,
       name: 'BAR',
@@ -23,12 +31,6 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
       createdAt: '2017-08-01T12:34:56',
       lastUsedAt: '2017-11-02T01:45:14',
       expiredAt: '2017-11-19T17:59:22',
-    });
-    msw.db.apiToken.create({
-      user,
-      name: 'foo',
-      createdAt: '2017-08-01T12:34:56',
-      lastUsedAt: '2017-11-02T01:45:14',
     });
 
     await msw.authenticateAs(user);
@@ -88,6 +90,15 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.goto('/settings/tokens');
     await expect(page).toHaveURL('/settings/tokens');
     await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
+
+    await expect(page.locator('[data-test-api-token="1"] [data-test-regenerate-token-button]')).toBeVisible();
+    await expect(page.locator('[data-test-api-token="1"] [data-test-revoke-token-button]')).toBeVisible();
+
+    await expect(page.locator('[data-test-api-token="2"] [data-test-regenerate-token-button]')).toBeVisible();
+    await expect(page.locator('[data-test-api-token="2"] [data-test-revoke-token-button]')).toBeVisible();
+
+    await expect(page.locator('[data-test-api-token="3"] [data-test-regenerate-token-button]')).toBeVisible();
+    await expect(page.locator('[data-test-api-token="3"] [data-test-revoke-token-button]')).not.toBeVisible();
 
     await page.click('[data-test-api-token="1"] [data-test-regenerate-token-button]');
     await expect(page).toHaveURL('/settings/tokens/new?from=1');
