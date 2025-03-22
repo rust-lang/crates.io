@@ -14,7 +14,8 @@
 }
 
 .crate-input {
-  composes: name-input from '../../styles/settings/tokens/new.module.css';
+  max-width: 440px;
+  width: 100%;
 }
 
 .reasons-list {

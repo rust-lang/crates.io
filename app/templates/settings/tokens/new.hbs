@@ -14,6 +14,7 @@
         aria-required="true"
         aria-invalid={{if this.nameInvalid "true" "false"}}
         local-class="name-input"
+        class="base-input"
         data-test-name
         {{auto-focus}}
         {{on "input" this.resetNameValidation}}
@@ -38,6 +39,7 @@
           id={{id}}
           disabled={{this.saveTokenTask.isRunning}}
           local-class="expiry-select"
+          class="base-input"
           data-test-expiry
           {{on "change" this.updateExpirySelection}}
         >
@@ -60,6 +62,7 @@
           aria-invalid={{if this.expiryDateInvalid "true" "false"}}
           aria-label="Custom expiration date"
           local-class="expiry-date-input"
+          class="base-input"
           data-test-expiry-date
           {{on "input" this.resetExpiryDateValidation}}
         />
