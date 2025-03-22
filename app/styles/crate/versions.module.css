@@ -33,7 +33,7 @@
     }
 }
 
-.load-more, .loading {
+.load-more {
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
     /* TODO: move to shared */
