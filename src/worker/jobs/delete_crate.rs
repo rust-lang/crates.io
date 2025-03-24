@@ -1,5 +1,6 @@
 use crate::storage::FeedId;
 use crate::worker::Environment;
+use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
@@ -25,8 +26,9 @@ impl BackgroundJob for DeleteCrateFromStorage {
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         let name = &self.name;
+        let feed_id = FeedId::Crate { name };
 
-        try_join!(
+        let (crate_file_paths, readme_paths, _) = try_join!(
             async {
                 info!("{name}: Deleting crate files from S3…");
                 let result = ctx.storage.delete_all_crate_files(name).await;
@@ -39,13 +41,27 @@ impl BackgroundJob for DeleteCrateFromStorage {
             },
             async {
                 info!("{name}: Deleting RSS feed from S3…");
-                let feed_id = FeedId::Crate { name };
                 let result = ctx.storage.delete_feed(&feed_id).await;
                 result.context("Failed to delete RSS feed from S3")
             }
         )?;
 
         info!("{name}: Successfully deleted crate from S3");
+
+        info!("{name}: Enqueuing CDN invalidations");
+
+        let mut conn = ctx.deadpool.get().await?;
+        InvalidateCdns::new(
+            crate_file_paths
+                .into_iter()
+                .chain(readme_paths.into_iter())
+                .chain(std::iter::once(object_store::path::Path::from(&feed_id))),
+        )
+        .enqueue(&mut conn)
+        .await?;
+
+        info!("{name}: Successfully enqueued CDN invalidations.");
+
         Ok(())
     }
 }
