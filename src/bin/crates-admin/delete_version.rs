@@ -105,10 +105,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
         warn!(%crate_name, "Failed to enqueue background job: {error}");
     }
 
+    let mut paths = Vec::new();
     for version in &opts.versions {
         debug!(%crate_name, %version, "Deleting crate file from S3");
         if let Err(error) = store.delete_crate_file(crate_name, version).await {
             warn!(%crate_name, %version, ?error, "Failed to delete crate file from S3");
+        } else {
+            paths.push(store.crate_location(crate_name, version));
         }
 
         debug!(%crate_name, %version, "Deleting readme file from S3");
@@ -117,8 +120,17 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
             Err(error) => {
                 warn!(%crate_name, %version, ?error, "Failed to delete readme file from S3")
             }
-            Ok(_) => {}
+            Ok(_) => {
+                paths.push(store.readme_location(crate_name, version));
+            }
         }
+    }
+
+    if let Err(e) = jobs::InvalidateCdns::new(paths.into_iter())
+        .enqueue(&mut conn)
+        .await
+    {
+        warn!("{crate_name}: Failed to enqueue CDN invalidation background job: {e}");
     }
 
     Ok(())

@@ -35,17 +35,28 @@ impl CloudFront {
     /// Invalidate a file on CloudFront
     ///
     /// `path` is the path to the file to invalidate, such as `config.json`, or `re/ge/regex`
-    #[instrument(skip(self))]
     pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
-        let path = if path.starts_with('/') {
-            path.to_string()
-        } else {
-            format!("/{path}")
-        };
+        self.invalidate_many(vec![path.to_string()]).await
+    }
 
+    /// Invalidate multiple paths on Cloudfront.
+    #[instrument(skip(self))]
+    pub async fn invalidate_many(&self, mut paths: Vec<String>) -> anyhow::Result<()> {
         let now = chrono::offset::Utc::now().timestamp_micros();
 
-        let paths = Paths::builder().quantity(1).items(path).build()?;
+        // We need to ensure that paths have a starting slash.
+        for path in paths.iter_mut() {
+            if !path.starts_with('/') {
+                *path = format!("/{path}");
+            }
+        }
+
+        let paths = Paths::builder()
+            // It looks like you have to set quantity even if you provide a full blown Vec, because
+            // reasons.
+            .quantity(paths.len() as i32)
+            .set_items(Some(paths))
+            .build()?;
 
         let invalidation_batch = InvalidationBatch::builder()
             .caller_reference(format!("{now}"))

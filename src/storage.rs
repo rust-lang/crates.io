@@ -213,14 +213,16 @@ impl Storage {
         apply_cdn_prefix(&self.cdn_prefix, &feed_id.into()).replace('+', "%2B")
     }
 
+    /// Deletes all crate files for the given crate, returning the paths that were deleted.
     #[instrument(skip(self))]
-    pub async fn delete_all_crate_files(&self, name: &str) -> Result<()> {
+    pub async fn delete_all_crate_files(&self, name: &str) -> Result<Vec<Path>> {
         let prefix = format!("{PREFIX_CRATES}/{name}").into();
         self.delete_all_with_prefix(&prefix).await
     }
 
+    /// Deletes all READMEs for the given crate, returning the paths that were deleted.
     #[instrument(skip(self))]
-    pub async fn delete_all_readmes(&self, name: &str) -> Result<()> {
+    pub async fn delete_all_readmes(&self, name: &str) -> Result<Vec<Path>> {
         let prefix = format!("{PREFIX_READMES}/{name}").into();
         self.delete_all_with_prefix(&prefix).await
     }
@@ -333,16 +335,24 @@ impl Storage {
         self.store.clone()
     }
 
-    async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<()> {
+    async fn delete_all_with_prefix(&self, prefix: &Path) -> Result<Vec<Path>> {
         let objects = self.store.list(Some(prefix));
-        let locations = objects.map(|meta| meta.map(|m| m.location)).boxed();
+        let mut paths = Vec::new();
+        let locations = objects
+            .map(|meta| meta.map(|m| m.location))
+            .inspect(|r| {
+                if let Ok(path) = r {
+                    paths.push(path.clone());
+                }
+            })
+            .boxed();
 
         self.store
             .delete_stream(locations)
             .try_collect::<Vec<_>>()
             .await?;
 
-        Ok(())
+        Ok(paths)
     }
 
     fn attrs(&self, slice: impl IntoIterator<Item = (Attribute, &'static str)>) -> Attributes {
@@ -505,7 +515,14 @@ mod tests {
     async fn delete_all_crate_files() {
         let storage = prepare().await;
 
-        storage.delete_all_crate_files("foo").await.unwrap();
+        let deleted_files = storage.delete_all_crate_files("foo").await.unwrap();
+        assert_eq!(
+            deleted_files,
+            vec![
+                "crates/foo/foo-1.0.0.crate".into(),
+                "crates/foo/foo-1.2.3.crate".into(),
+            ]
+        );
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
@@ -520,7 +537,14 @@ mod tests {
     async fn delete_all_readmes() {
         let storage = prepare().await;
 
-        storage.delete_all_readmes("foo").await.unwrap();
+        let deleted_files = storage.delete_all_readmes("foo").await.unwrap();
+        assert_eq!(
+            deleted_files,
+            vec![
+                "readmes/foo/foo-1.0.0.html".into(),
+                "readmes/foo/foo-1.2.3.html".into(),
+            ]
+        );
 
         let expected_files = vec![
             "crates/bar/bar-2.0.0.crate",
