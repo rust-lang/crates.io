@@ -97,9 +97,9 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                     let mut counts = Vec::new();
                     let mut last_cumulative_count = 0;
                     for bucket in histogram.get_bucket() {
-                        buckets.push(bucket.get_upper_bound());
-                        counts.push(bucket.get_cumulative_count() - last_cumulative_count);
-                        last_cumulative_count = bucket.get_cumulative_count();
+                        buckets.push(bucket.upper_bound());
+                        counts.push(bucket.cumulative_count() - last_cumulative_count);
+                        last_cumulative_count = bucket.cumulative_count();
                     }
 
                     VectorMetricData::AggregatedHistogram {
@@ -117,11 +117,11 @@ fn families_to_json_events(families: &[MetricFamily]) -> Vec<VectorEvent<'_>> {
                 metric: VectorMetric {
                     data,
                     kind: "absolute",
-                    name: family.get_name(),
+                    name: family.name(),
                     tags: metric
                         .get_label()
                         .iter()
-                        .map(|p| (p.get_name(), p.get_value()))
+                        .map(|p| (p.name(), p.value()))
                         .collect(),
                 },
             });
