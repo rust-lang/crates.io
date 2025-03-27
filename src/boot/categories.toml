@@ -547,6 +547,12 @@ description = """
 Crates for processing biological sequences, including alignment, assembly, and annotation.\
 """
 
+[security]
+name = "Security"
+description = """
+Crates related to cybersecurity, penetration testing, code review, vulnerability research, and reverse engineering.\
+"""
+
 [simulation]
 name = "Simulation"
 description = """
