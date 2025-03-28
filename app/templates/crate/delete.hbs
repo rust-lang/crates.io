@@ -47,6 +47,7 @@
             @value={{this.reason}}
             required={{true}}
             local-class="reason-input"
+            class="base-input"
             data-test-reason
           />
         </label>
@@ -67,7 +68,7 @@
       <button
         type="submit"
         disabled={{or (not this.isConfirmed) this.deleteTask.isRunning}}
-        local-class="delete-button"
+        class="button button--red"
         data-test-delete-button
       >
         Delete this crate

@@ -13,15 +13,16 @@
         type="button"
         disabled={{this.session.loginTask.isRunning}}
         local-class="link"
+        class="button-reset text--link"
         data-test-login
         {{on "click" (perform this.session.loginTask)}}
       >
         Log in with GitHub
       </button>
     {{else if @model.tryAgain}}
-      <button type="button" local-class="link" data-test-try-again {{on "click" this.reload}}>Try Again</button>
+      <button type="button" local-class="link" class="button-reset text--link" data-test-try-again {{on "click" this.reload}}>Try Again</button>
     {{else}}
-      <button type="button" local-class="link" data-test-go-back {{on "click" this.back}}>Go Back</button>
+      <button type="button" local-class="link" class="button-reset text--link" data-test-go-back {{on "click" this.back}}>Go Back</button>
     {{/if}}
   </div>
 </div>

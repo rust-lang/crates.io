@@ -9,10 +9,6 @@
     }
 }
 
-.new-token-button {
-    composes: yellow-button from '../../styles/shared/buttons.module.css';
-}
-
 .explainer {
     line-height: 1.5;
 }
@@ -41,8 +37,6 @@
 
 .scopes,
 .metadata {
-    composes: small from '../../styles/shared/typography.module.css';
-
     > * + * {
         margin-top: var(--space-3xs);
     }
@@ -77,20 +71,12 @@
     margin-left: var(--space-xs);
 }
 
-.save-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
-    flex-grow: 1;
-    border-radius: var(--space-3xs);
-}
-
 .revoke-button {
-    composes: tan-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
     border-radius: var(--space-3xs);
 }
 
 .regenerate-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
     flex-grow: 1;
     border-radius: var(--space-3xs);
 }
@@ -120,7 +106,6 @@
 }
 
 .copy-button {
-    composes: button-reset from '../../styles/shared/buttons.module.css';
     align-self: stretch;
     padding: 0 var(--space-s);
     cursor: pointer;
@@ -128,10 +113,6 @@
     &:hover {
         color: light-dark(#ddd8b2, #65655e);
     }
-}
-
-.copy-button-label {
-    composes: sr-only from '../../styles/shared/a11y.module.css';
 }
 
 .copy-button-icon {
@@ -156,7 +137,6 @@
 }
 
 .empty-state-button {
-    composes: yellow-button small from '../../styles/shared/buttons.module.css';
     margin-top: var(--space-m);
     border-radius: 4px;
 }
