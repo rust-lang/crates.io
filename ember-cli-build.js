@@ -56,7 +56,15 @@ module.exports = function (defaults) {
     cssModules: {
       extension: 'module.css',
       plugins: {
-        postprocess: [require('postcss-preset-env')({ browsers, preserve: false })],
+        postprocess: [
+          require('postcss-preset-env')({
+            browsers,
+            preserve: false,
+            features: {
+              'nesting-rules': true,
+            },
+          }),
+        ],
       },
     },
     fingerprint: {
