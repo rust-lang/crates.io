@@ -12,6 +12,7 @@ test('default are applied', ({ expect }) => {
       "name": "team-1",
       "org": "rust-lang",
       "url": "https://github.com/rust-lang",
+      "username": "github:rust-lang:team-1",
       Symbol(type): "team",
       Symbol(primaryKey): "id",
     }
@@ -28,6 +29,7 @@ test('attributes can be set', ({ expect }) => {
       "name": "axum",
       "org": "tokio-rs",
       "url": "https://github.com/tokio-rs",
+      "username": "github:tokio-rs:axum",
       Symbol(type): "team",
       Symbol(primaryKey): "id",
     }

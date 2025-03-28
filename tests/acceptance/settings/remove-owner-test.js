@@ -48,11 +48,11 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
     );
 
     await visit(`/crates/${crate.name}/settings`);
-    await click(`[data-test-owner-user="${user2.login}"] [data-test-remove-owner-button]`);
+    await click(`[data-test-owner-user="${user2.username}"] [data-test-remove-owner-button]`);
 
     assert
       .dom('[data-test-notification-message="error"]')
-      .hasText(`Failed to remove the user ${user2.login} as crate owner: nope`);
+      .hasText(`Failed to remove the user ${user2.username} as crate owner: nope`);
     assert.dom('[data-test-owner-user]').exists({ count: 2 });
   });
 
@@ -76,7 +76,7 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
     );
 
     await visit(`/crates/${crate.name}/settings`);
-    await click(`[data-test-owner-team="${team1.login}"] [data-test-remove-owner-button]`);
+    await click(`[data-test-owner-team="${team1.username}"] [data-test-remove-owner-button]`);
 
     assert
       .dom('[data-test-notification-message="error"]')

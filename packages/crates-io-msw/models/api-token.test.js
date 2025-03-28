@@ -34,6 +34,7 @@ test('happy path', ({ expect }) => {
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",
+        "username": "user-1",
         Symbol(type): "user",
         Symbol(primaryKey): "id",
       },

@@ -5,6 +5,7 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
   async function prepare(msw, { isAdmin = false } = {}) {
     let user = msw.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

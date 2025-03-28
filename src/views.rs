@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
-    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
-    TopVersions, User, Version, VersionDownload, VersionOwnerAction,
+    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, LinkedAccount, Owner,
+    ReverseDependency, Team, TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
 use crates_io_github as github;
 
@@ -521,9 +521,15 @@ pub struct EncodableOwner {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The login name of the team or user.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The GitHub login of the team or user.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The crates.io username of the team or user.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// The kind of the owner (`user` or `team`).
     #[schema(example = "user")]
@@ -548,14 +554,17 @@ impl From<Owner> for EncodableOwner {
             Owner::User(User {
                 id,
                 name,
+                username,
                 gh_login,
                 gh_avatar,
                 ..
             }) => {
                 let url = format!("https://github.com/{gh_login}");
+                let username = username.unwrap_or(gh_login);
                 Self {
                     id,
-                    login: gh_login,
+                    login: username.clone(),
+                    username,
                     avatar: gh_avatar,
                     url: Some(url),
                     name,
@@ -572,7 +581,8 @@ impl From<Owner> for EncodableOwner {
                 let url = github::team_url(&login);
                 Self {
                     id,
-                    login,
+                    login: login.clone(),
+                    username: login,
                     url: Some(url),
                     avatar,
                     name,
@@ -672,9 +682,15 @@ pub struct EncodablePrivateUser {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The user's login name.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The user's GitHub login.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The user's crates.io username.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// Whether the user's email address has been verified.
     #[schema(example = true)]
@@ -720,6 +736,7 @@ impl EncodablePrivateUser {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             is_admin,
@@ -727,14 +744,16 @@ impl EncodablePrivateUser {
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
 
         EncodablePrivateUser {
             id,
+            login: username.clone(),
+            username,
             email,
             email_verified,
             email_verification_sent,
             avatar: gh_avatar,
-            login: gh_login,
             name,
             url: Some(url),
             is_admin,
@@ -750,9 +769,15 @@ pub struct EncodablePublicUser {
     #[schema(example = 42)]
     pub id: i32,
 
-    /// The user's login name.
+    // `login` and `username` should contain the same value for now.
+    // `login` is deprecated; can be removed when all frontends have migrated to `username`.
+    /// The user's GitHub login name.
     #[schema(example = "ghost")]
     pub login: String,
+
+    /// The user's crates.io username.
+    #[schema(example = "ghost")]
+    pub username: String,
 
     /// The user's display name, if set.
     #[schema(example = "Kate Morgan")]
@@ -765,24 +790,107 @@ pub struct EncodablePublicUser {
     /// The user's GitHub profile URL.
     #[schema(example = "https://github.com/ghost")]
     pub url: String,
+
+    /// The accounts linked to this crates.io account.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(no_recursion, example = json!([]))]
+    pub linked_accounts: Option<Vec<EncodableLinkedAccount>>,
 }
 
-/// Converts a `User` model into an `EncodablePublicUser` for JSON serialization.
+/// Converts a `User` model into an `EncodablePublicUser` for JSON serialization. Does not include
+/// linked accounts.
 impl From<User> for EncodablePublicUser {
     fn from(user: User) -> Self {
         let User {
             id,
             name,
+            username,
             gh_login,
             gh_avatar,
             ..
         } = user;
         let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
+
         EncodablePublicUser {
             id,
-            avatar: gh_avatar,
-            login: gh_login,
+            login: username.clone(),
+            username,
             name,
+            avatar: gh_avatar,
+            url,
+            linked_accounts: None,
+        }
+    }
+}
+
+impl EncodablePublicUser {
+    pub fn with_linked_accounts(user: User, linked_accounts: &[LinkedAccount]) -> Self {
+        let User {
+            id,
+            name,
+            username,
+            gh_login,
+            gh_avatar,
+            ..
+        } = user;
+        let url = format!("https://github.com/{gh_login}");
+        let username = username.unwrap_or(gh_login);
+
+        let linked_accounts = if linked_accounts.is_empty() {
+            None
+        } else {
+            Some(linked_accounts.iter().map(Into::into).collect())
+        };
+
+        EncodablePublicUser {
+            id,
+            login: username.clone(),
+            username,
+            name,
+            avatar: gh_avatar,
+            url,
+            linked_accounts,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, utoipa::ToSchema)]
+#[schema(as = LinkedAccount)]
+pub struct EncodableLinkedAccount {
+    /// The service providing this linked account.
+    #[schema(example = "GitHub")]
+    pub provider: String,
+
+    /// The linked account's login name.
+    #[schema(example = "ghost")]
+    pub login: String,
+
+    /// The linked account's avatar URL, if set.
+    #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
+    pub avatar: Option<String>,
+
+    /// The linked account's profile URL on the provided service.
+    #[schema(example = "https://github.com/ghost")]
+    pub url: String,
+}
+
+/// Converts a `LinkedAccount` model into an `EncodableLinkedAccount` for JSON serialization.
+impl From<&LinkedAccount> for EncodableLinkedAccount {
+    fn from(linked_account: &LinkedAccount) -> Self {
+        let LinkedAccount {
+            provider,
+            login,
+            avatar,
+            ..
+        } = linked_account;
+
+        let url = provider.url(login);
+
+        Self {
+            provider: provider.to_string(),
+            login: login.clone(),
+            avatar: avatar.clone(),
             url,
         }
     }
@@ -1108,9 +1216,11 @@ mod tests {
                 user: EncodablePublicUser {
                     id: 0,
                     login: String::new(),
+                    username: String::new(),
                     name: None,
                     avatar: None,
                     url: String::new(),
+                    linked_accounts: None,
                 },
                 time: NaiveDate::from_ymd_opt(2017, 1, 6)
                     .unwrap()
