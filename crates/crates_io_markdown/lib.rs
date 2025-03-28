@@ -670,4 +670,20 @@ There can also be some text in between!
         </picture>
         "#);
     }
+
+    #[test]
+    fn nested_checkbox_lists() {
+        let text = r#"
+- [ ] `c`
+- [ ] [link](https://crates.io)
+- [ ] [link](#anchor)
+        "#;
+        assert_snapshot!(markdown_to_html(text, None, ""), @r##"
+        <ul>
+        <li><input type="checkbox" disabled=""> <code>c</code></li>
+        <li><input type="checkbox" disabled=""> <a href="https://crates.io" rel="nofollow noopener noreferrer">link</a></li>
+        <li><input type="checkbox" disabled=""> <a href="#anchor" rel="nofollow noopener noreferrer">link</a></li>
+        </ul>
+        "##);
+    }
 }
