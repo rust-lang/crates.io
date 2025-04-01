@@ -305,7 +305,7 @@ async fn test_unknown_user() {
 
     let response = cookie.add_named_owner("foo", "unknown").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with username `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -370,7 +370,7 @@ async fn no_invite_emails_for_txn_rollback() {
 
     let response = token.add_named_owners("crate_name", &usernames).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with username `bananas`"}]}"#);
 
     // No emails should have been sent.
     assert_eq!(app.emails().await.len(), 0);

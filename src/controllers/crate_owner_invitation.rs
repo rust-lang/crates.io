@@ -63,7 +63,7 @@ pub async fn list_crate_owner_invitations_for_user(
                     .iter()
                     .find(|u| u.id == private.inviter_id)
                     .ok_or_else(|| internal(format!("missing user {}", private.inviter_id)))?
-                    .login
+                    .username
                     .clone(),
                 invitee_id: private.invitee_id,
                 inviter_id: private.inviter_id,

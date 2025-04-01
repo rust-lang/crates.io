@@ -3,8 +3,8 @@ use crate::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
 use crate::middleware::cargo_compat::StatusCodeConfig;
-use crate::models::NewEmail;
 use crate::models::token::{CrateScope, EndpointScope};
+use crate::models::{AccountProvider, NewEmail, NewLinkedAccount};
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;
@@ -114,8 +114,8 @@ impl TestApp {
         self.0.test_database.async_connect().await
     }
 
-    /// Create a new user with a verified email address in the database
-    /// (`<username>@example.com`) and return a mock user session.
+    /// Create a new user with a verified email address (`<username>@example.com`)
+    /// and a linked GitHub account in the database and return a mock user session.
     ///
     /// This method updates the database directly
     pub async fn db_new_user(&self, username: &str) -> MockCookieUser {
@@ -123,10 +123,19 @@ impl TestApp {
 
         let email = format!("{username}@example.com");
 
-        let user = crate::tests::new_user(username)
-            .insert(&mut conn)
-            .await
-            .unwrap();
+        let new_user = crate::tests::new_user(username);
+        let user = new_user.insert(&mut conn).await.unwrap();
+
+        let linked_account = NewLinkedAccount::builder()
+            .user_id(user.id)
+            .provider(AccountProvider::Github)
+            .account_id(user.gh_id)
+            .access_token(&new_user.gh_access_token)
+            .login(&user.gh_login)
+            .maybe_avatar(user.gh_avatar.as_deref())
+            .build();
+
+        linked_account.insert_or_update(&mut conn).await.unwrap();
 
         let new_email = NewEmail::builder()
             .user_id(user.id)

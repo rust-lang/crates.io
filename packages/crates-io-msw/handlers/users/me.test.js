@@ -17,6 +17,7 @@ test('returns the `user` resource including the private fields', async function 
       email_verified: true,
       is_admin: false,
       login: 'user-1',
+      username: 'user-1',
       name: 'User 1',
       publish_notifications: true,
       url: 'https://github.com/user-1',

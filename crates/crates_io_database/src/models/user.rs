@@ -8,8 +8,10 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
-use crate::schema::{crate_owners, emails, users};
-use crates_io_diesel_helpers::lower;
+use crate::schema::{crate_owners, emails, linked_accounts, users};
+use crates_io_diesel_helpers::{lower, pg_enum};
+
+use std::fmt::{Display, Formatter};
 
 /// The model representing a row in the `users` database table.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
@@ -25,6 +27,7 @@ pub struct User {
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
     pub publish_notifications: bool,
+    pub username: Option<String>,
 }
 
 impl User {
@@ -76,6 +79,17 @@ impl User {
             .await
             .optional()
     }
+
+    /// Queries for the linked accounts belonging to a particular user
+    pub async fn linked_accounts(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Vec<LinkedAccount>> {
+        LinkedAccount::belonging_to(self)
+            .select(LinkedAccount::as_select())
+            .load(conn)
+            .await
+    }
 }
 
 /// Represents a new user record insertable to the `users` table
@@ -85,6 +99,7 @@ pub struct NewUser<'a> {
     pub gh_id: i32,
     pub gh_login: &'a str,
     pub name: Option<&'a str>,
+    pub username: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: &'a str,
 }
@@ -114,9 +129,101 @@ impl NewUser<'_> {
             .do_update()
             .set((
                 users::gh_login.eq(excluded(users::gh_login)),
+                users::username.eq(excluded(users::username)),
                 users::name.eq(excluded(users::name)),
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_access_token.eq(excluded(users::gh_access_token)),
+            ))
+            .get_result(conn)
+            .await
+    }
+}
+
+// Supported OAuth providers. Currently only GitHub.
+pg_enum! {
+    pub enum AccountProvider {
+        Github = 0,
+    }
+}
+
+impl Display for AccountProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Github => write!(f, "GitHub"),
+        }
+    }
+}
+
+impl AccountProvider {
+    pub fn url(&self, login: &str) -> String {
+        match self {
+            Self::Github => format!("https://github.com/{login}"),
+        }
+    }
+}
+
+/// Represents an OAuth account record linked to a user record.
+#[derive(Associations, Identifiable, Selectable, Queryable, Debug, Clone)]
+#[diesel(
+    table_name = linked_accounts,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(provider, account_id),
+    belongs_to(User),
+)]
+pub struct LinkedAccount {
+    pub user_id: i32,
+    pub provider: AccountProvider,
+    pub account_id: i32, // corresponds to user.gh_id
+    #[diesel(deserialize_as = String)]
+    pub access_token: SecretString, // corresponds to user.gh_access_token
+    pub login: String,   // corresponds to user.gh_login
+    pub avatar: Option<String>, // corresponds to user.gh_avatar
+}
+
+/// Represents a new linked account record insertable to the `linked_accounts` table
+#[derive(Insertable, Debug, Builder)]
+#[diesel(
+    table_name = linked_accounts,
+    check_for_backend(diesel::pg::Pg),
+    primary_key(provider, account_id),
+    belongs_to(User),
+)]
+pub struct NewLinkedAccount<'a> {
+    pub user_id: i32,
+    pub provider: AccountProvider,
+    pub account_id: i32,         // corresponds to user.gh_id
+    pub access_token: &'a str,   // corresponds to user.gh_access_token
+    pub login: &'a str,          // corresponds to user.gh_login
+    pub avatar: Option<&'a str>, // corresponds to user.gh_avatar
+}
+
+impl NewLinkedAccount<'_> {
+    /// Inserts the linked account into the database, or updates an existing one.
+    ///
+    /// This is to be used for logging in when there is no currently logged-in user, as opposed to
+    /// adding another linked account to a currently-logged-in user. The logic for adding another
+    /// linked account (when that ability gets added) will need to ensure that a particular
+    /// (provider, account_id) combo (ex: GitHub account with GitHub ID 1234) is only associated
+    /// with one crates.io account, so that we know what crates.io account to log in when we get an
+    /// oAuth request from GitHub ID 1234. In other words, we should NOT be updating the user_id on
+    /// an existing (provider, account_id) row when starting from a currently-logged-in crates.io \
+    /// user because that would mean that oAuth account has already been associated with a
+    /// different crates.io account.
+    ///
+    /// This function should be called if there is no current user and should update, say, the
+    /// access token, login, or avatar if those have changed.
+    pub async fn insert_or_update(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<LinkedAccount> {
+        diesel::insert_into(linked_accounts::table)
+            .values(self)
+            .on_conflict((linked_accounts::provider, linked_accounts::account_id))
+            .do_update()
+            .set((
+                linked_accounts::access_token.eq(excluded(linked_accounts::access_token)),
+                linked_accounts::login.eq(excluded(linked_accounts::login)),
+                linked_accounts::avatar.eq(excluded(linked_accounts::avatar)),
             ))
             .get_result(conn)
             .await

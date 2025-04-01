@@ -61,7 +61,7 @@ async fn test_unknown_user() {
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with username `unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -77,7 +77,7 @@ async fn test_unknown_team() {
         .remove_named_owner("foo", "github:unknown:unknown")
         .await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:unknown:unknown`"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with username `github:unknown:unknown`"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

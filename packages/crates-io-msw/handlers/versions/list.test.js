@@ -69,6 +69,7 @@ test('returns all versions belonging to the specified crate', async function () 
           id: 1,
           avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
           login: 'user-1',
+          username: 'user-1',
           name: 'User 1',
           url: 'https://github.com/user-1',
         },

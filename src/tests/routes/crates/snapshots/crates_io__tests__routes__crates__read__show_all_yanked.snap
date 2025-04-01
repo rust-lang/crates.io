@@ -1,6 +1,7 @@
 ---
 source: src/tests/routes/crates/read.rs
 expression: response.json()
+snapshot_kind: text
 ---
 {
   "categories": [],
@@ -78,7 +79,8 @@ expression: response.json()
         "id": 1,
         "login": "foo",
         "name": null,
-        "url": "https://github.com/foo"
+        "url": "https://github.com/foo",
+        "username": "foo"
       },
       "readme_path": "/api/v1/crates/foo_show/0.5.0/readme",
       "repository": null,
@@ -116,7 +118,8 @@ expression: response.json()
         "id": 1,
         "login": "foo",
         "name": null,
-        "url": "https://github.com/foo"
+        "url": "https://github.com/foo",
+        "username": "foo"
       },
       "readme_path": "/api/v1/crates/foo_show/1.0.0/readme",
       "repository": null,
