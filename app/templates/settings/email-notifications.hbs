@@ -14,8 +14,8 @@
       </p>
 
       <div local-class="notifications-row">
-        <button type='button' local-class="select-all-button" {{on "click" this.emailNotificationsSelectAll}}>Select All</button>
-        <button type='button' local-class="deselect-all-button" {{on "click" this.emailNotificationsSelectNone}}>Deselect All</button>
+        <button type='button' class="button button--small" {{on "click" this.emailNotificationsSelectAll}}>Select All</button>
+        <button type='button' class="button button--small" {{on "click" this.emailNotificationsSelectNone}}>Deselect All</button>
       </div>
 
       <ul local-class="notifications-list">
@@ -38,7 +38,7 @@
           </div>
         {{/if}}
         <div local-class="right">
-          <button type='submit' local-class="update-notifications-button">Update</button>
+          <button type='submit' class="button">Update</button>
         </div>
       </div>
     {{else}}
