@@ -148,4 +148,4 @@ googletest = "=0.14.0"
 insta = { version = "=1.42.2", features = ["glob", "json", "redactions"] }
 regex = "=1.11.1"
 tokio = "=1.44.2"
-zip = { version = "=2.5.0", default-features = false, features = ["deflate"] }
+zip = { version = "=2.6.1", default-features = false, features = ["deflate"] }
