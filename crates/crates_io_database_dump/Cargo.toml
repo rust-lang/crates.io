@@ -22,7 +22,7 @@ zip = { version = "=2.6.1", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
-diesel = "=2.2.8"
+diesel = "=2.2.9"
 diesel-async = { version = "=0.5.2", features = ["postgres"] }
 insta = { version = "=1.42.2", features = ["glob"] }
 tokio = { version = "=1.44.2", features = ["macros", "rt"] }
