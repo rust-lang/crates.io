@@ -122,7 +122,7 @@ tar = "=0.4.44"
 tempfile = "=3.19.1"
 thiserror = "=2.0.12"
 tikv-jemallocator = { version = "=0.6.0", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
-tokio = { version = "=1.44.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
+tokio = { version = "=1.44.2", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.13"
 tokio-util = "=0.7.14"
 toml = "=0.8.20"
@@ -147,5 +147,5 @@ diesel = { version = "=2.2.8", features = ["r2d2"] }
 googletest = "=0.14.0"
 insta = { version = "=1.42.2", features = ["glob", "json", "redactions"] }
 regex = "=1.11.1"
-tokio = "=1.44.1"
+tokio = "=1.44.2"
 zip = { version = "=2.5.0", default-features = false, features = ["deflate"] }
