@@ -4,7 +4,6 @@ import { cached } from '@glimmer/tracking';
 
 import { apiAction } from '@mainmatter/ember-api-actions';
 import { keepLatestTask, task } from 'ember-concurrency';
-import fetch from 'fetch';
 import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
 
@@ -135,7 +134,7 @@ export default class Version extends Model {
 
   loadReadmeTask = keepLatestTask(async () => {
     if (this.readme_path) {
-      let response = await fetch(this.readme_path);
+      let response = await waitForPromise(fetch(this.readme_path));
       if (response.status === 404 || response.status === 403) {
         return;
       }
@@ -144,7 +143,7 @@ export default class Version extends Model {
         throw new Error(`README request for ${this.crateName} v${this.num} failed`);
       }
 
-      return await response.text();
+      return await waitForPromise(response.text());
     }
   });
 

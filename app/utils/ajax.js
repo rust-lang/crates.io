@@ -1,15 +1,14 @@
 import { runInDebug } from '@ember/debug';
-
-import fetch from 'fetch';
+import { waitForPromise } from '@ember/test-waiters';
 
 export default async function ajax(input, init) {
   let method = init?.method ?? 'GET';
 
   let cause;
   try {
-    let response = await fetch(input, init);
+    let response = await waitForPromise(fetch(input, init));
     if (response.ok) {
-      return await response.json();
+      return await waitForPromise(response.json());
     }
     cause = new HttpError({ url: input, method, response });
   } catch (error) {
@@ -68,7 +67,7 @@ export class AjaxError extends Error {
 
   async json() {
     try {
-      return await this.cause.response.json();
+      return await waitForPromise(this.cause.response.json());
     } catch {
       // ignore errors and implicitly return `undefined`
     }
