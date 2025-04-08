@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@ember/test-waiters': 4.1.0
   ember-auto-import: 2.10.0
   ember-get-config: 2.1.1
   ember-inflector: 6.0.0
@@ -1256,7 +1257,7 @@ packages:
       '@ember-data/request': 5.3.11
       '@ember-data/request-utils': 5.3.11
       '@ember-data/store': 5.3.11
-      '@ember/test-waiters': ^3.1.0 || >= 4.0.0
+      '@ember/test-waiters': 4.1.0
       '@warp-drive/core-types': 0.0.1
       ember-source: 3.28.12 || ^4.0.4 || ^5.0.0 || ^6.0.0
     peerDependenciesMeta:
@@ -1357,10 +1358,6 @@ packages:
     resolution: {integrity: sha512-hxY3379AvMolYnQsi9pqrR7tup/SmE/9zzkpiLnu2VTmrW8xsgV7MrXF1a3xw2twLWPSzVF8T3VDPyvuHbvqfw==}
     peerDependencies:
       ember-source: '>= 4.0.0'
-
-  '@ember/test-waiters@3.1.0':
-    resolution: {integrity: sha512-bb9h95ktG2wKY9+ja1sdsFBdOms2lB19VWs8wmNpzgHv1NCetonBoV5jHBV4DHt0uS1tg9z66cZqhUVlYs96KQ==}
-    engines: {node: 10.* || 12.* || >= 14.*}
 
   '@ember/test-waiters@4.1.0':
     resolution: {integrity: sha512-qRFA0OumYv7/C3hmx4ETC2dlPzyD549D+naPhcrnV2xCnc3AZlKouWyoFnNF+Cje918kRp9aEefVgV3vmGL5Bg==}
@@ -4338,7 +4335,7 @@ packages:
     engines: {node: '>= 18.20.4'}
     peerDependencies:
       '@ember/test-helpers': ^3.3.0 || ^4.0.4 || ^5.1.0
-      '@ember/test-waiters': ^3.1.0 || ^4.0.0
+      '@ember/test-waiters': 4.1.0
       ember-source: 3.28.12 || ^4.0.4 || ^5.0.0 || ^6.0.0
       qunit: ^2.18.0
     peerDependenciesMeta:
@@ -9921,15 +9918,6 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  '@ember/test-waiters@3.1.0':
-    dependencies:
-      calculate-cache-key-for-tree: 2.0.0
-      ember-cli-babel: 7.26.11
-      ember-cli-version-checker: 5.1.2
-      semver: 7.7.1
-    transitivePeerDependencies:
-      - supports-color
-
   '@ember/test-waiters@4.1.0':
     dependencies:
       '@embroider/addon-shim': 1.10.0
@@ -13358,7 +13346,7 @@ snapshots:
   ember-a11y-testing@7.1.0(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(qunit@2.24.1)(webpack@5.98.0):
     dependencies:
       '@ember/test-helpers': 5.2.1(@babel/core@7.26.10)(ember-source@6.0.1(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))
-      '@ember/test-waiters': 3.1.0
+      '@ember/test-waiters': 4.1.0
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
       axe-core: 4.10.3
       broccoli-persistent-filter: 3.1.3
