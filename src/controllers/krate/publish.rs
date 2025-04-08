@@ -171,6 +171,22 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
     // we only accept manifests with a `package` section and without
     // inheritance.
     let package = tarball_info.manifest.package.unwrap();
+    if package.name != metadata.name {
+        let message = format!(
+            "metadata name `{}` does not match manifest name `{}`",
+            metadata.name, package.name
+        );
+        return Err(bad_request(message));
+    }
+
+    let manifest_version = package.version.map(|it| it.as_local().unwrap()).unwrap();
+    if manifest_version != metadata.vers {
+        let message = format!(
+            "metadata version `{}` does not match manifest version `{manifest_version}`",
+            metadata.vers
+        );
+        return Err(bad_request(message));
+    }
 
     let description = package.description.map(|it| it.as_local().unwrap());
     let mut license = package.license.map(|it| it.as_local().unwrap());
