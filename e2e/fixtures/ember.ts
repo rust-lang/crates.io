@@ -47,7 +47,7 @@ export class EmberPage {
           `${event}`,
           async ({ detail: { owner } }: CustomEvent<{ owner: _Ember.ApplicationInstance }>) => {
             if (testing) {
-              require('@ember/debug').setTesting(true);
+              owner.lookup('service:testing').setTesting(true);
             }
             window[Symbol.for(`${ownerKey}`)] = owner;
           },
