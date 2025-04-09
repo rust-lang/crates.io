@@ -128,6 +128,30 @@ async fn invalid_manifest_missing_version() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn name_mismatch() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
+
+    let response =
+        token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+            "[package]\nname = \"bar\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\n",
+        )).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata name `foo` does not match manifest name `bar`"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn version_mismatch() {
+    let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
+
+    let response =
+        token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
+            "[package]\nname = \"foo\"\nversion = \"2.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\n",
+        )).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata version `1.0.0` does not match manifest version `2.0.0`"}]}"#);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn invalid_rust_version() {
     let (_app, _anon, _cookie, token) = TestApp::full().with_token().await;
 
