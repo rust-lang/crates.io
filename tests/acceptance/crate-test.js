@@ -13,7 +13,7 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('visiting a crate page from the front page', async function (assert) {
     let crate = this.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });

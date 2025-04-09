@@ -10,7 +10,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #2329', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
   setupWindowMock(hooks);
 
   test('is fixed', async function (assert) {

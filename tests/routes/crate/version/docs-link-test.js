@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Route | crate.version | docs link', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('shows regular documentation link', async function (assert) {
     let crate = this.db.crate.create({ name: 'foo', documentation: 'https://foo.io/docs' });

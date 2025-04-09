@@ -4,7 +4,7 @@ import { module, test } from 'qunit';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Route | crate.version | crate links', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('shows all external crate links', async function (assert) {
     let crate = this.db.crate.create({

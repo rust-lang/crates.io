@@ -10,7 +10,7 @@ const TAB_REV_DEPS = '[data-test-rev-deps-tab] a';
 const TAB_SETTINGS = '[data-test-settings-tab] a';
 
 module('Acceptance | crate navigation tabs', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('basic navigation between tabs works as expected', async function (assert) {
     let crate = this.db.crate.create({ name: 'nanomsg' });

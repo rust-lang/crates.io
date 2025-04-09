@@ -10,7 +10,7 @@ import { http, HttpResponse } from 'msw';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Login', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
   setupWindowMock(hooks);
 
   test('successful login', async function (assert) {

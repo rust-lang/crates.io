@@ -6,7 +6,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Bug #4506', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   function prepare(context) {
     let { db } = context;

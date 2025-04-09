@@ -15,7 +15,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | search', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('searching for "rust"', async function (assert) {
     loadFixtures(this.db);

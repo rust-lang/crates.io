@@ -9,7 +9,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | Dashboard', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('shows "page requires authentication" error when not logged in', async function (assert) {
     await visit('/dashboard');

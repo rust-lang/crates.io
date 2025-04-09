@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Settings | Remove Owner', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   function prepare(context) {
     let { db } = context;

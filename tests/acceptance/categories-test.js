@@ -9,7 +9,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | categories', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('listing categories', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';

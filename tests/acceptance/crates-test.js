@@ -13,7 +13,7 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crates page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   // should match the default set in the crates controller
   const per_page = 50;

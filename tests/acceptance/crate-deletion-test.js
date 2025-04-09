@@ -6,7 +6,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate deletion', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('happy path', async function (assert) {
     let user = this.db.user.create();

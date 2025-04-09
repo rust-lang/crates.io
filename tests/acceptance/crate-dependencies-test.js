@@ -13,7 +13,7 @@ import axeConfig from '../axe-config';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | crate dependencies page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('shows the lists of dependencies', async function (assert) {
     loadFixtures(this.db);

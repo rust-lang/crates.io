@@ -8,7 +8,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   function prepare({ db }) {
     let foo = db.crate.create({ name: 'foo' });

@@ -9,7 +9,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | /accept-invite/:token', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('visiting to /accept-invite shows 404 page', async function (assert) {
     await visit('/accept-invite');

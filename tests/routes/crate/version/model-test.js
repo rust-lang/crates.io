@@ -6,7 +6,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../../../helpers/visit-ignoring-abort';
 
 module('Route | crate.version | model() hook', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   module('with explicit version number in the URL', function () {
     test('shows yanked versions', async function (assert) {

@@ -11,7 +11,7 @@ if (s.has('devmode')) {
    * @link http://localhost:4200/tests/?notrycatch&devmode&filter=Development%20Mode
    */
   module('Development Mode', function (hooks) {
-    setupApplicationTest(hooks, { msw: true });
+    setupApplicationTest(hooks);
 
     test('authenticated', async function () {
       let user = this.db.user.create();

@@ -8,7 +8,7 @@ import { http, HttpResponse } from 'msw';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Crate following', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   function prepare(context, { loggedIn = true, following = false } = {}) {
     let { db } = context;
