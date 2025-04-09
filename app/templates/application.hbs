@@ -9,7 +9,7 @@
 
 <Header @hero={{this.isIndex}} />
 
-<main local-class="main">
+<main local-class="main" {{remember-document-scroll key=this.router.currentURL}}>
   <div local-class="inner-main">
     {{outlet}}
   </div>
