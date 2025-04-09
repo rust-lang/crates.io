@@ -81,7 +81,7 @@
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
     "broccoli-funnel": "3.0.8",
-    "ember-a11y-testing": "7.1.0",
+    "ember-a11y-testing": "7.1.1",
     "ember-auto-import": "2.10.0",
     "ember-cli": "6.3.1",
     "ember-cli-babel": "8.2.0",
@@ -144,7 +144,6 @@
     "webpack": "5.98.0"
   },
   "resolutions": {
-    "@ember/test-waiters": "4.1.0",
     "ember-auto-import": "2.10.0",
     "ember-get-config": "2.1.1",
     "ember-inflector": "6.0.0",
