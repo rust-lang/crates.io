@@ -163,7 +163,12 @@
       ]
     },
     "onlyBuiltDependencies": [
+      "@percy/core",
+      "esbuild",
       "msw"
+    ],
+    "ignoredBuiltDependencies": [
+      "core-js"
     ]
   },
   "engines": {
