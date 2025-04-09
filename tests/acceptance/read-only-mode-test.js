@@ -8,7 +8,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { AjaxError } from '../../utils/ajax';
 
 module('Acceptance | Read-only Mode', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('notification is not shown for read-write mode', async function (assert) {
     await visit('/');

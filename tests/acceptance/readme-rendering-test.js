@@ -92,7 +92,7 @@ graph TD;
 `;
 
 module('Acceptance | README rendering', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('it works', async function (assert) {
     let crate = this.db.crate.create({ name: 'serde' });

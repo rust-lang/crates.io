@@ -7,14 +7,9 @@ export { setupTest, setupRenderingTest } from 'ember-qunit';
 
 // see http://emberjs.github.io/rfcs/0637-customizable-test-setups.html
 export function setupApplicationTest(hooks, options = {}) {
-  let { msw } = options;
-
   upstreamSetupApplicationTest(hooks, options);
 
-  if (msw) {
-    setupMSW(hooks);
-  }
-
+  setupMSW(hooks);
   setupSentryMock(hooks);
   setupAppTestDataAttr(hooks);
 }

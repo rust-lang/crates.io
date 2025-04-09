@@ -7,7 +7,7 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | Logout', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
   setupWindowMock(hooks);
 
   test('successful logout', async function (assert) {

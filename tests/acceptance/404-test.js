@@ -6,7 +6,7 @@ import percySnapshot from '@percy/ember';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | 404', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('/unknown-route shows a 404 page', async function (assert) {
     await visit('/unknown-route');

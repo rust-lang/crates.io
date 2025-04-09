@@ -9,7 +9,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | keywords', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('keyword/:keyword_id index default sort is recent-downloads', async function (assert) {
     this.db.keyword.create({ keyword: 'network' });

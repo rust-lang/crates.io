@@ -8,7 +8,7 @@ import { http, HttpResponse } from 'msw';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | publish notifications', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('unsubscribe and resubscribe', async function (assert) {
     let user = this.db.user.create();

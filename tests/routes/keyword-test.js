@@ -8,7 +8,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Route | keyword', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('shows an empty list if the keyword does not exist on the server', async function (assert) {
     await visit('/keywords/foo');

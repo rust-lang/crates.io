@@ -6,7 +6,7 @@ import percySnapshot from '@percy/ember';
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
 module('Acceptance | crate versions page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('show versions sorted by date', async function (assert) {
     let crate = this.db.crate.create({ name: 'nanomsg' });

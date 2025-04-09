@@ -14,7 +14,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | front page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('visiting /', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';

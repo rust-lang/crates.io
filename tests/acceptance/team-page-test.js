@@ -10,7 +10,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import axeConfig from '../axe-config';
 
 module('Acceptance | team page', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   test('has team organization display', async function (assert) {
     loadFixtures(this.db);

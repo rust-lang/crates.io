@@ -11,7 +11,7 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 import { visit } from '../../helpers/visit-ignoring-abort';
 
 module('Route: crate.delete', function (hooks) {
-  setupApplicationTest(hooks, { msw: true });
+  setupApplicationTest(hooks);
 
   function prepare(context) {
     let user = context.db.user.create();
