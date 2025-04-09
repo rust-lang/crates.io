@@ -27,7 +27,7 @@ test.describe('Route | support', { tag: '@routes' }, () => {
 
   test('LinkTo support must overwirte query', async ({ page, ember }) => {
     await ember.addHook(async owner => {
-      const Service = require('@ember/service').default;
+      const { Service } = owner.lookup('service:testing');
       // query params of LinkTo support's in footer will not be cleared
       class MockService extends Service {
         paramsFor() {
