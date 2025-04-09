@@ -81,7 +81,7 @@
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
     "broccoli-funnel": "3.0.8",
-    "ember-a11y-testing": "7.1.0",
+    "ember-a11y-testing": "7.1.1",
     "ember-auto-import": "2.10.0",
     "ember-cli": "6.3.1",
     "ember-cli-babel": "8.2.0",
