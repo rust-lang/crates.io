@@ -1,5 +1,5 @@
 import { debug } from '@ember/debug';
-import Service, { inject as service } from '@ember/service';
+import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 import { dropTask, race, rawTimeout, restartableTask, task, waitForEvent } from 'ember-concurrency';

@@ -1,4 +1,4 @@
-import { inject as service } from '@ember/service';
+import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 
 import Modifier from 'ember-modifier';
