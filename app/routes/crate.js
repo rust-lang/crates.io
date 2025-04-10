@@ -1,6 +1,6 @@
 import { NotFoundError } from '@ember-data/adapter/error';
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
+import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 
 export default class CrateRoute extends Route {
