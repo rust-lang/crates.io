@@ -13,8 +13,8 @@ export default class UserAvatar extends Component {
 
   get alt() {
     return this.args.user.name === null
-      ? `(${this.args.user.login})`
-      : `${this.args.user.name} (${this.args.user.login})`;
+      ? `(${this.args.user.username})`
+      : `${this.args.user.name} (${this.args.user.username})`;
   }
 
   get title() {

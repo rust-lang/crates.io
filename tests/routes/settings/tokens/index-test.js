@@ -11,6 +11,7 @@ module('/settings/tokens', function (hooks) {
   function prepare(context) {
     let user = context.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

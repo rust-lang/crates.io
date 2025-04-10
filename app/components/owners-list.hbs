@@ -7,12 +7,12 @@
     <li local-class="{{if (eq owner.kind "team") "team"}}">
       <LinkTo
         @route={{owner.kind}}
-        @model={{owner.login}}
+        @model={{owner.username}}
         local-class="link"
-        data-test-owner-link={{owner.login}}
+        data-test-owner-link={{owner.username}}
       >
         <UserAvatar @user={{owner}} @size="medium-small" local-class="avatar" aria-hidden="true" />
-        <span local-class="name {{unless this.showDetailedList "hidden-name"}}">{{or owner.display_name owner.name owner.login}}</span>
+        <span local-class="name {{unless this.showDetailedList "hidden-name"}}">{{or owner.display_name owner.name owner.username}}</span>
       </LinkTo>
     </li>
   {{/each}}

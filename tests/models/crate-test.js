@@ -25,7 +25,7 @@ module('Model | Crate', function (hooks) {
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
-      let result = await crateRecord.inviteOwner(user2.login);
+      let result = await crateRecord.inviteOwner(user2.username);
       assert.deepEqual(result, { ok: true, msg: 'user user-2 has been invited to be an owner of crate crate-1' });
     });
 
@@ -39,7 +39,7 @@ module('Model | Crate', function (hooks) {
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
       await assert.rejects(crateRecord.inviteOwner('unknown'), function (error) {
-        assert.deepEqual(error.errors, [{ detail: 'could not find user with login `unknown`' }]);
+        assert.deepEqual(error.errors, [{ detail: 'could not find user with username `unknown`' }]);
         return true;
       });
     });
@@ -58,7 +58,7 @@ module('Model | Crate', function (hooks) {
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
-      let result = await crateRecord.removeOwner(user2.login);
+      let result = await crateRecord.removeOwner(user2.username);
       assert.deepEqual(result, { ok: true, msg: 'owners successfully removed' });
     });
 

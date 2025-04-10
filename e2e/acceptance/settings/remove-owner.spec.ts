@@ -37,10 +37,10 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
     await msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
-    await page.click(`[data-test-owner-user="${user2.login}"] [data-test-remove-owner-button]`);
+    await page.click(`[data-test-owner-user="${user2.username}"] [data-test-remove-owner-button]`);
 
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
-      `Failed to remove the user ${user2.login} as crate owner: nope`,
+      `Failed to remove the user ${user2.username} as crate owner: nope`,
     );
     await expect(page.locator('[data-test-owner-user]')).toHaveCount(2);
   });
@@ -62,7 +62,7 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
     await msw.worker.use(http.delete('/api/v1/crates/nanomsg/owners', () => error));
 
     await page.goto(`/crates/${crate.name}/settings`);
-    await page.click(`[data-test-owner-team="${team1.login}"] [data-test-remove-owner-button]`);
+    await page.click(`[data-test-owner-team="${team1.username}"] [data-test-remove-owner-button]`);
 
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
       `Failed to remove the team ${team1.org}/${team1.name} as crate owner: nope`,

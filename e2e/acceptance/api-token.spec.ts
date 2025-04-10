@@ -5,6 +5,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ msw }) => {
     let user = msw.db.user.create({
       login: 'johnnydee',
+      username: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',

@@ -19,7 +19,9 @@ export default http.delete('/api/v1/crates/:name/owners', async ({ request, para
 
   for (let owner of body.owners) {
     let ownership = db.crateOwnership.findFirst({
-      where: owner.includes(':') ? { team: { login: { equals: owner } } } : { user: { login: { equals: owner } } },
+      where: owner.includes(':')
+        ? { team: { username: { equals: owner } } }
+        : { user: { username: { equals: owner } } },
     });
     if (!ownership) return notFound();
     db.crateOwnership.delete({ where: { id: { equals: ownership.id } } });

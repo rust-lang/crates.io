@@ -43,7 +43,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
 
     assert
       .dom('[data-test-notification-message="error"]')
-      .hasText('Error sending invite: could not find user with login `spookyghostboo`');
+      .hasText('Error sending invite: could not find user with username `spookyghostboo`');
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
   });
