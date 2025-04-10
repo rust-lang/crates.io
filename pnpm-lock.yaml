@@ -131,8 +131,8 @@ importers:
         specifier: 3.0.8
         version: 3.0.8
       ember-a11y-testing:
-        specifier: 7.1.1
-        version: 7.1.1(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(qunit@2.24.1)(webpack@5.98.0)
+        specifier: 7.1.2
+        version: 7.1.2(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(qunit@2.24.1)(webpack@5.98.0)
       ember-auto-import:
         specifier: 2.10.0
         version: 2.10.0(webpack@5.98.0)
@@ -4103,8 +4103,8 @@ packages:
   electron-to-chromium@1.5.132:
     resolution: {integrity: sha512-QgX9EBvWGmvSRa74zqfnG7+Eno0Ak0vftBll0Pt2/z5b3bEGYL6OUXLgKPtvx73dn3dvwrlyVkjPKRRlhLYTEg==}
 
-  ember-a11y-testing@7.1.1:
-    resolution: {integrity: sha512-AIOiygQqTua5P2twLw2bj6udzethpN11oNcw/tPGpieu/jJa8hm5bEkt3NEuWqaeiKEB6/GpV8aM2tlSdG6nuQ==}
+  ember-a11y-testing@7.1.2:
+    resolution: {integrity: sha512-V30dZgfj3itq+4/H78livBN1X4wvYeCJnsPTnQFqZfgrQyEfCYLL6d96W0T4UoahQao+PFzJcR2P/CpMU9j5nw==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
       '@ember/test-helpers': ^3.0.3 || ^4.0.2 || ^5.0.0
@@ -13099,10 +13099,11 @@ snapshots:
 
   electron-to-chromium@1.5.132: {}
 
-  ember-a11y-testing@7.1.1(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(qunit@2.24.1)(webpack@5.98.0):
+  ember-a11y-testing@7.1.2(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0)))(qunit@2.24.1)(webpack@5.98.0):
     dependencies:
       '@ember/test-helpers': 5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.98.0))
       '@ember/test-waiters': 4.1.0
+      '@glimmer/env': 0.1.7
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
       axe-core: 4.10.3
       broccoli-persistent-filter: 3.1.3
