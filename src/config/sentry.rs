@@ -3,6 +3,7 @@ use crates_io_env_vars::{required_var, var, var_parsed};
 use sentry::IntoDsn;
 use sentry::types::Dsn;
 
+#[cfg_attr(test, derive(Default))]
 pub struct SentryConfig {
     pub dsn: Option<Dsn>,
     pub environment: Option<String>,

@@ -1,4 +1,5 @@
 use crate::config::SentryConfig;
+use http::header::AUTHORIZATION;
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
@@ -20,6 +21,10 @@ pub fn init() -> Option<ClientInitGuard> {
         }
     };
 
+    Some(sentry::init(options(config)))
+}
+
+fn options(config: SentryConfig) -> ClientOptions {
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if let Some(sampled) = ctx.sampled() {
             return if sampled { 1.0 } else { 0.0 };
@@ -53,16 +58,22 @@ pub fn init() -> Option<ClientInitGuard> {
     };
 
     let before_send = |mut event: Event<'static>| {
-        // Remove cookies from the request to avoid sending sensitive
-        // information like the `cargo_session`.
         if let Some(request) = &mut event.request {
+            // Remove cookies from the request to avoid sending sensitive information like the
+            // `cargo_session`.
             request.cookies.take();
+
+            // Also remove `Authorization`, just so it never even gets sent to Sentry, even if
+            // they're redacting it downstream.
+            request
+                .headers
+                .retain(|name, _value| AUTHORIZATION != name.as_str());
         }
 
         Some(event)
     };
 
-    let opts = ClientOptions {
+    ClientOptions {
         auto_session_tracking: true,
         dsn: config.dsn,
         environment: config.environment.map(Into::into),
@@ -71,7 +82,86 @@ pub fn init() -> Option<ClientInitGuard> {
         session_mode: sentry::SessionMode::Request,
         traces_sampler: Some(Arc::new(traces_sampler)),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use sentry::{
+        capture_error,
+        protocol::{Request, SpanStatus, Url},
+        start_transaction,
     };
 
-    Some(sentry::init(opts))
+    #[test]
+    fn test_redaction() -> anyhow::Result<()> {
+        let req = Request {
+            url: Some(Url::parse("https://crates.io/api/v1/foo")?),
+            method: Some("GET".into()),
+            data: None,
+            cookies: Some("cargo_session=foobar".into()),
+            headers: [
+                ("Authorization", "secret"),
+                ("authorization", "another secret"),
+                ("Accept", "application/json"),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect(),
+            query_string: None,
+            env: Default::default(),
+        };
+        let err = std::io::Error::new(std::io::ErrorKind::Other, "error");
+
+        let opts = options(SentryConfig::default());
+        let event_req = req.clone();
+        let mut events = sentry::test::with_captured_events_options(
+            move || {
+                let scope_req = event_req.clone();
+                sentry::configure_scope(|scope| {
+                    // This is straight up replicated from the implementation of SentryHttpFuture,
+                    // and is how requests are attached by the Tower middleware.
+                    scope.add_event_processor(move |mut event| {
+                        if event.request.is_none() {
+                            event.request = Some(scope_req.clone());
+                        }
+                        Some(event)
+                    });
+                });
+
+                let ctx = TransactionContext::new("test", "http.server");
+                let txn = start_transaction(ctx);
+                txn.set_request(event_req);
+                txn.set_status(SpanStatus::InternalError);
+
+                capture_error(&err);
+
+                txn.finish();
+            },
+            opts,
+        );
+
+        // OK, so there should be exactly one event, and it should match `req` except that its
+        // cookies are removed and its headers have been cleaned of all Authorization values. Let's
+        // see what we actually have.
+        assert_eq!(events.len(), 1);
+        let event = assert_some!(events.pop());
+        let event_req = assert_some!(event.request);
+
+        // Things that shouldn't change.
+        assert_eq!(&req.url, &event_req.url);
+        assert_eq!(&req.method, &event_req.method);
+        assert_eq!(&req.data, &event_req.data);
+        assert_eq!(&req.query_string, &event_req.query_string);
+        assert_eq!(&req.env, &event_req.env);
+
+        // Things that should.
+        assert_none!(&event_req.cookies);
+        assert_eq!(event_req.headers.len(), 1);
+        assert_some!(event_req.headers.get("Accept"));
+
+        Ok(())
+    }
 }
