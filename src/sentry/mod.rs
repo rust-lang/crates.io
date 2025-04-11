@@ -1,4 +1,5 @@
 use crate::config::SentryConfig;
+use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
 
@@ -51,11 +52,22 @@ pub fn init() -> Option<ClientInitGuard> {
         config.traces_sample_rate
     };
 
+    let before_send = |mut event: Event<'static>| {
+        // Remove cookies from the request to avoid sending sensitive
+        // information like the `cargo_session`.
+        if let Some(request) = &mut event.request {
+            request.cookies.take();
+        }
+
+        Some(event)
+    };
+
     let opts = ClientOptions {
         auto_session_tracking: true,
         dsn: config.dsn,
         environment: config.environment.map(Into::into),
         release: config.release.map(Into::into),
+        before_send: Some(Arc::new(before_send)),
         session_mode: sentry::SessionMode::Request,
         traces_sampler: Some(Arc::new(traces_sampler)),
         ..Default::default()
