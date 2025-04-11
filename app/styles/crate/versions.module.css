@@ -10,8 +10,6 @@
 }
 
 .page-description {
-    composes: small from '../shared/typography.module.css';
-
     @media only screen and (max-width: 550px) {
         display: block;
         margin-bottom: var(--space-s);
@@ -35,11 +33,8 @@
     }
 }
 
-.load-more, .loading {
+.load-more {
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
-
-    /* TODO: move to shared */
-    composes: load-more from '../../styles/dashboard.module.css';
 
     border: 0;
     padding: 0 var(--space-m);

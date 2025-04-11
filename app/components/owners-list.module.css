@@ -46,7 +46,3 @@
         border-radius: 4px;
     }
 }
-
-.hidden-name {
-    composes: sr-only from '../styles/shared/a11y.module.css';
-}

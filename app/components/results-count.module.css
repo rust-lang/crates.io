@@ -1,7 +1,3 @@
-.results-count {
-    composes: small from '../styles/shared/typography.module.css';
-}
-
 .highlight {
     color: var(--main-color);
     font-weight: bold;

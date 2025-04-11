@@ -18,10 +18,6 @@
     width: 400px;
 }
 
-.submit-button {
-    composes: small yellow-button from '../shared/buttons.module.css';
-}
-
 .list {
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
@@ -43,12 +39,4 @@
 .email-column {
     width: 25%;
     color: var(--main-color-light);
-}
-
-.remove-button {
-    composes: small yellow-button from '../shared/buttons.module.css';
-}
-
-.delete-button {
-    composes: red-button from '../shared/buttons.module.css';
 }

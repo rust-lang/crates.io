@@ -55,6 +55,21 @@ module.exports = function (defaults) {
 
     cssModules: {
       extension: 'module.css',
+      // see https://github.com/salsify/ember-css-modules/blob/v2.0.1/docs/ORDERING.md
+      headerModules: [
+        'crates-io/styles/shared/a11y',
+        'crates-io/styles/shared/buttons',
+        'crates-io/styles/shared/forms',
+        'crates-io/styles/shared/sort-by',
+        'crates-io/styles/shared/typography',
+        'crates-io/styles/application',
+        // for the `.load-more` class
+        'crates-io/styles/dashboard',
+        // for the `.scopes-list` class
+        'crates-io/styles/settings/tokens/new',
+        // for the `.box-link` class
+        'crates-io/components/front-page-list/item',
+      ],
       plugins: {
         postprocess: [
           require('postcss-preset-env')({

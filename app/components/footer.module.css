@@ -14,7 +14,6 @@
 }
 
 .content {
-    composes: width-limit from '../styles/application.module.css';
     display: grid;
     gap: var(--space-xl) var(--space-m);
     padding: var(--space-l);

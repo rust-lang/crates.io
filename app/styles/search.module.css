@@ -14,20 +14,11 @@
     border-radius: var(--space-4xs);
 }
 
-.sort-by {
-    composes: v-center from './shared/sort-by.module.css';
-}
-
-.sort-by-label {
-    composes: small from './shared/typography.module.css';
-}
-
 .list {
     margin-bottom: var(--space-s);
 }
 
 .try-again-button {
-    composes: yellow-button from './shared/buttons.module.css';
     align-self: center;
     margin-top: var(--space-m);
 }

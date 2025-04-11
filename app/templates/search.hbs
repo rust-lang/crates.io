@@ -26,6 +26,7 @@
     type="button"
     disabled={{this.dataTask.isRunning}}
     local-class="try-again-button"
+    class="button"
     data-test-try-again-button
     {{on "click" this.fetchData}}
   >
@@ -40,8 +41,8 @@
       data-test-search-nav
     />
 
-    <div data-test-search-sort local-class='sort-by'>
-      <span local-class="sort-by-label">Sort by </span>
+    <div data-test-search-sort class="sort-by-v-center">
+      <span class="text--small">Sort by </span>
       <SortDropdown @current={{this.currentSortBy}} as |sd|>
         <sd.Option @query={{hash page=1 sort="relevance"}}>Relevance</sd.Option>
         <sd.Option @query={{hash page=1 sort="downloads"}}>All-Time Downloads</sd.Option>

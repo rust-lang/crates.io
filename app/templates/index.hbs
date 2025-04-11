@@ -1,10 +1,10 @@
 <div local-class="hero-buttons">
-  <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html" local-class="hero-button" data-test-install-cargo-link>
+  <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html" local-class="hero-button" class="button" data-test-install-cargo-link>
     {{svg-jar "download-arrow" local-class="icon"}}
     Install Cargo
   </a>
 
-  <a href='https://doc.rust-lang.org/cargo/guide/' local-class="hero-button">
+  <a href='https://doc.rust-lang.org/cargo/guide/' local-class="hero-button" class="button">
     {{svg-jar "flag" local-class="icon"}}
     Getting Started
   </a>
@@ -46,6 +46,7 @@
     type="button"
     disabled={{this.dataTask.isRunning}}
     local-class="try-again-button"
+    class="button"
     data-test-try-again-button
     {{on "click" this.fetchData}}
   >

@@ -5,14 +5,6 @@
     margin-bottom: var(--space-s);
 }
 
-.sort-by {
-    composes: v-center from './shared/sort-by.module.css';
-}
-
-.sort-by-label {
-    composes: small from './shared/typography.module.css';
-}
-
 .list {
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
@@ -26,8 +18,4 @@
     > * + * {
         border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #424242);
     }
-}
-
-.crate-count {
-    composes: small from './shared/typography.module.css';
 }

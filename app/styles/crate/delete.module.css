@@ -14,7 +14,7 @@
     margin-top: 0;
 }
 
-.warning-block {
+.warning, .confirmation {
     background: light-dark(var(--yellow100), var(--yellow800));
     border-color: var(--yellow500);
     border-left-style: solid;
@@ -25,7 +25,6 @@
 }
 
 .warning {
-    composes: warning-block;
     display: flex;
 
     svg {
@@ -80,12 +79,10 @@
 }
 
 .reason-input {
-    composes: base-input from '../../styles/settings/tokens/new.module.css';
     width: 100%;
 }
 
 .confirmation {
-    composes: warning-block;
     display: block;
 
     input {
@@ -98,10 +95,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.delete-button {
-    composes: red-button from '../shared/buttons.module.css';
 }
 
 .spinner-wrapper {

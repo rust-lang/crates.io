@@ -3,7 +3,7 @@
   <div local-class="right">
     <LinkTo
       @route="settings.tokens.new"
-      local-class="new-token-button"
+      class="button"
       data-test-new-token-button
     >
       New Token
@@ -41,7 +41,7 @@
         </h3>
 
         {{#if (or token.endpoint_scopes token.crate_scopes)}}
-          <div local-class="scopes">
+          <div local-class="scopes" class="text--small">
             {{#if token.endpoint_scopes}}
               <div local-class="endpoint-scopes" data-test-endpoint-scopes>
                 Scopes:
@@ -72,7 +72,7 @@
           </div>
         {{/if}}
 
-        <div local-class="metadata">
+        <div local-class="metadata" class="text--small">
           <div title={{token.last_used_at}} local-class="last-used-at" data-test-last-used-at>
             {{#if token.last_used_at}}
               Last used {{date-format-distance-to-now token.last_used_at addSuffix=true}}
@@ -102,8 +102,8 @@
               <span local-class="token-value" data-test-token>{{token.token}}</span>
 
               {{#if (is-clipboard-supported)}}
-                <CopyButton @copyText={{token.token}} local-class="copy-button">
-                  <span local-class="copy-button-label">Copy</span>
+                <CopyButton @copyText={{token.token}} local-class="copy-button" class="button-reset">
+                  <span class="sr-only">Copy</span>
                   {{svg-jar "copy" aria-hidden="true" local-class="copy-button-icon"}}
                 </CopyButton>
               {{/if}}
@@ -116,6 +116,7 @@
             @route="settings.tokens.new"
             @query={{hash from=token.id}}
             local-class="regenerate-button"
+            class="button button--small"
             data-test-regenerate-token-button
           >
             Regenerate
@@ -124,6 +125,7 @@
             <button
               type="button"
               local-class="revoke-button"
+              class="button button--tan button--small"
               disabled={{token.isSaving}}
               data-test-revoke-token-button
               {{on "click" (perform this.revokeTokenTask token)}}
@@ -147,6 +149,7 @@
     <LinkTo
       @route="settings.tokens.new"
       local-class="empty-state-button"
+      class="button button--small"
       data-test-empty-state-button
     >
       New Token

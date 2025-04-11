@@ -58,35 +58,22 @@
     }
 }
 
-.more-versions-link,
-.reverse-deps-link {
-    composes: small from '../styles/shared/typography.module.css';
-}
-
 .categories {
     margin: 0;
     padding-left: 20px;
     line-height: 1.5;
 }
 
-.button {
+.report-button, .playground-button {
     justify-content: center;
     width: 220px;
 }
 
-.report-button {
-    composes: button;
-    composes: red-button small from '../styles/shared/buttons.module.css';
-}
-
 .playground-button {
-    composes: button;
-    composes: yellow-button small from '../styles/shared/buttons.module.css';
     margin-bottom: var(--space-2xs);
 }
 
 .playground-help {
-    composes: small from '../styles/shared/typography.module.css';
     max-width: 220px;
     text-align: justify;
     line-height: 1.3em;

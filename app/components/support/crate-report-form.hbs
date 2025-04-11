@@ -8,7 +8,7 @@
 
   <fieldset local-class="form-group" data-test-id="fieldset-crate">
     {{#let (unique-id) as |id|}}
-      <label for={{id}} local-class="form-group-name">
+      <label for={{id}} class="form-group-name">
         Crate
       </label>
       <Input
@@ -19,12 +19,13 @@
         aria-required="true"
         aria-invalid={{if this.crateInvalid "true" "false"}}
         local-class="crate-input"
+        class="base-input"
         data-test-id="crate-input"
         {{auto-focus}}
         {{on "input" this.resetCrateValidation}}
       />
       {{#if this.crateInvalid}}
-        <div local-class="form-group-error" data-test-id="crate-invalid">
+        <div class="form-group-error" data-test-id="crate-invalid">
           Please specify a crate.
         </div>
       {{/if}}
@@ -32,8 +33,8 @@
   </fieldset>
 
   <fieldset local-class="form-group" data-test-id="fieldset-reasons">
-    <div local-class="form-group-name">Reasons</div>
-    <ul role="list" local-class="reasons-list {{if this.reasonsInvalid "invalid"}}">
+    <div class="form-group-name">Reasons</div>
+    <ul role="list" local-class="reasons-list" class="scopes-list {{if this.reasonsInvalid "invalid"}}">
       {{#each this.reasons as |option|}}
         <li>
           <label>
@@ -50,7 +51,7 @@
       {{/each}}
     </ul>
     {{#if this.reasonsInvalid}}
-      <div local-class="form-group-error" data-test-id="reasons-invalid">
+      <div class="form-group-error" data-test-id="reasons-invalid">
         Please choose reasons to report.
       </div>
     {{/if}}
@@ -58,7 +59,7 @@
 
   <fieldset local-class="form-group" data-test-id="fieldset-detail">
     {{#let (unique-id) as |id|}}
-      <label for={{id}} local-class="form-group-name">Detail</label>
+      <label for={{id}} class="form-group-name">Detail</label>
       <Textarea
         id={{id}}
         @value={{this.detail}}
@@ -70,7 +71,7 @@
         {{on "input" this.resetDetailValidation}}
       />
       {{#if this.detailInvalid}}
-        <div local-class="form-group-error" data-test-id="detail-invalid">
+        <div class="form-group-error" data-test-id="detail-invalid">
           Please provide some detail.
         </div>
       {{/if}}
@@ -81,6 +82,7 @@
     <button
       type="submit"
       local-class="report-button"
+      class="button button--small"
       data-test-id="report-button"
     >
       Report to <strong>help@crates.io</strong>

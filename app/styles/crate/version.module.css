@@ -40,7 +40,6 @@
 }
 
 .retry-button {
-    composes: yellow-button from '../shared/buttons.module.css';
     display: block;
     text-align: center;
     margin: var(--space-s) auto 0;
@@ -110,10 +109,6 @@
         position: relative;
         bottom: 0.4rem;
     }
-}
-
-.stat-description {
-    composes: small from '../shared/typography.module.css';
 }
 
 .graph {

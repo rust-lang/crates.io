@@ -32,7 +32,3 @@
         border-color: #cfc487;
     }
 }
-
-.input {
-    composes: sr-only from '../styles/shared/a11y.module.css';
-}

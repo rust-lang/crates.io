@@ -2,7 +2,7 @@
 
 <div local-class="results-meta">
   <span local-class="page-description"
-    class="{{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
+    class="text--small {{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
     data-test-page-description
   >
     <strong>{{ this.sortedVersions.length }}</strong> of <strong>{{ this.crate.num_versions }}</strong>
@@ -26,20 +26,19 @@
     </li>
   {{/each}}
 </ul>
-{{#if this.loadMoreTask.isRunning}}
-  <div local-class="loading">
-    <button type="button" data-test-id="loading" disabled={{this.loadMoreTask.isRunning}}
+{{#if (or this.loadMoreTask.isRunning this.next_page)}}
+  <div local-class="load-more" class="load-more">
+    <button
+      type="button"
+      data-test-id={{if this.loadMoreTask.isRunning "loading" "load-more"}}
+      disabled={{this.loadMoreTask.isRunning}}
       {{on "click" (perform this.loadMoreTask)}}
     >
-      Loading...<LoadingSpinner local-class="loading-spinner" />
-    </button>
-  </div>
-{{else if this.next_page}}
-  <div local-class="load-more">
-    <button type="button" data-test-id="load-more" disabled={{this.loadMoreTask.isRunning}}
-      {{on "click" (perform this.loadMoreTask)}}
-    >
-      Load More
+      {{#if this.loadMoreTask.isRunning}}
+        Loading...<LoadingSpinner local-class="loading-spinner" />
+      {{else}}
+        Load More
+      {{/if}}
     </button>
   </div>
 {{/if}}

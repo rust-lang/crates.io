@@ -1,4 +1,4 @@
-.small {
+.small, :global(.text--small) {
     color: var(--main-color-light);
     font-size: 80%;
 
@@ -7,7 +7,7 @@
     }
 }
 
-.small a, a.small {
+.small a, :global(.text--small) a, a.small, a:global(.text--small) {
     color: var(--main-color-light);
     text-decoration: underline;
     font-weight: normal;

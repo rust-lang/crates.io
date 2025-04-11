@@ -13,17 +13,12 @@
   }
 }
 
-.form-group-name {
-  composes: form-group-name from '../../styles/settings/tokens/new.module.css';
-  align-items: center;
-}
-
 .crate-input {
-  composes: name-input from '../../styles/settings/tokens/new.module.css';
+  max-width: 440px;
+  width: 100%;
 }
 
 .reasons-list {
-  composes: scopes-list from '../../styles/settings/tokens/new.module.css';
   label {
     flex-wrap: nowrap;
   }
@@ -46,28 +41,23 @@
   }
 }
 
-.form-group-error {
-  composes: form-group-error from '../../styles/settings/tokens/new.module.css';
-}
-
 .buttons {
-  composes: buttons from '../../styles/settings/tokens/new.module.css';
+  position: relative;
+  margin: var(--space-m) 0;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: end;
   gap: 2rem;
 }
 
-.button {
+.report-button {
+  border-radius: var(--space-3xs);
+  font-weight: normal;
+
   &:focus {
     outline: 1px solid var(--bg-color-top-dark);
     outline-offset: 2px;
   }
-}
-
-.report-button {
-  composes: button;
-  composes: button small from '../../styles/shared/buttons.module.css';
-  border-radius: var(--space-3xs);
-  font-weight: normal;
 
   strong {
     margin-left: var(--space-3xs);
