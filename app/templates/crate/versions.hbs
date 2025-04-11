@@ -19,27 +19,34 @@
   </div>
 </div>
 
-<ul local-class="list" class="{{unless this.sortedVersions 'is-empty'}}">
-  {{#each this.sortedVersions as |version|}}
-    <li>
-      <VersionList::Row @version={{version}} local-class="row" data-test-version={{version.num}} />
-    </li>
-  {{/each}}
-</ul>
-{{#if (or this.loadMoreTask.isRunning this.next_page)}}
-  <div local-class="load-more">
-    <button
-      type="button"
-      class="load-more-button"
-      data-test-id={{if this.loadMoreTask.isRunning "loading" "load-more"}}
-      disabled={{this.loadMoreTask.isRunning}}
-      {{on "click" (perform this.loadMoreTask)}}
-    >
-      {{#if this.loadMoreTask.isRunning}}
-        Loading...<LoadingSpinner local-class="loading-spinner" />
-      {{else}}
-        Load More
-      {{/if}}
-    </button>
+{{#if this.sortedVersions}}
+  <ul local-class="list">
+    {{#each this.sortedVersions as |version|}}
+      <li>
+        <VersionList::Row @version={{version}} local-class="row" data-test-version={{version.num}} />
+      </li>
+    {{/each}}
+  </ul>
+
+  {{#if (or this.loadMoreTask.isRunning this.next_page)}}
+    <div local-class="load-more">
+      <button
+        type="button"
+        class="load-more-button"
+        data-test-id={{if this.loadMoreTask.isRunning "loading" "load-more"}}
+        disabled={{this.loadMoreTask.isRunning}}
+        {{on "click" (perform this.loadMoreTask)}}
+      >
+        {{#if this.loadMoreTask.isRunning}}
+          Loading...<LoadingSpinner local-class="loading-spinner" />
+        {{else}}
+          Load More
+        {{/if}}
+      </button>
+    </div>
+  {{/if}}
+{{else if this.loadMoreTask.isRunning}}
+  <div local-class="loading">
+    <LoadingSpinner local-class="loading-spinner" />
   </div>
 {{/if}}

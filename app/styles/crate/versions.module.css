@@ -33,21 +33,27 @@
     }
 }
 
+.loading {
+    margin: var(--space-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+
+    .loading-spinner {
+        --spinner-size: var(--space-xl);
+    }
+}
+
 .load-more {
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
-    border: 0;
     padding: 0 var(--space-m);
 
-    :not(:global(.is-empty)) + & button {
+    button {
         border-radius: var(--space-3xs);
         box-shadow: var(--shadow);
         cursor: pointer;
-        position: relative;
-    }
-
-    :global(.is-empty) + & button {
-        background-color: transparent;
         position: relative;
     }
 
