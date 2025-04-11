@@ -115,7 +115,7 @@
     text-align: right;
 }
 
-:global(.load-more) {
+.load-more {
     padding: var(--space-s);
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #232321);
 }
