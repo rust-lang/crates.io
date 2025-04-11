@@ -49,10 +49,6 @@ module.exports = function (defaults) {
       throwUnlessParallelizable: true,
     },
 
-    'ember-fetch': {
-      preferNative: true,
-    },
-
     cssModules: {
       extension: 'module.css',
       // see https://github.com/salsify/ember-css-modules/blob/v2.0.1/docs/ORDERING.md
