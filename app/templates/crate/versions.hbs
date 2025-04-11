@@ -27,9 +27,10 @@
   {{/each}}
 </ul>
 {{#if (or this.loadMoreTask.isRunning this.next_page)}}
-  <div local-class="load-more" class="load-more">
+  <div local-class="load-more">
     <button
       type="button"
+      class="load-more-button"
       data-test-id={{if this.loadMoreTask.isRunning "loading" "load-more"}}
       disabled={{this.loadMoreTask.isRunning}}
       {{on "click" (perform this.loadMoreTask)}}
