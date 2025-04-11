@@ -1,4 +1,5 @@
 use crate::config::SentryConfig;
+use http::header::AUTHORIZATION;
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
@@ -53,10 +54,14 @@ pub fn init() -> Option<ClientInitGuard> {
     };
 
     let before_send = |mut event: Event<'static>| {
-        // Remove cookies from the request to avoid sending sensitive
-        // information like the `cargo_session`.
         if let Some(request) = &mut event.request {
+            // Remove cookies from the request to avoid sending sensitive information like the
+            // `cargo_session`.
             request.cookies.take();
+
+            // Also remove `Authorization`, just so it never even gets sent to Sentry, even if
+            // they're redacting it downstream.
+            request.headers.remove(AUTHORIZATION.as_str());
         }
 
         Some(event)
