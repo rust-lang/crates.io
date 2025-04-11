@@ -118,19 +118,4 @@
 :global(.load-more) {
     padding: var(--space-s);
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #232321);
-
-    button {
-        display: block;
-        text-align: center;
-        width: 100%;
-        padding: var(--space-2xs);
-        outline: 0;
-        border: 0;
-        background-color: light-dark(#dbd9cf, #202023);
-        color: light-dark(#525252, #f9f7ec);
-
-        &:hover, &:focus {
-            background-color: light-dark(#c5c2b2, #26262b);
-        }
-    }
 }
