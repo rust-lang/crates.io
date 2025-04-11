@@ -1,4 +1,5 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
+import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import { cached } from '@glimmer/tracking';
 
@@ -12,6 +13,8 @@ import ajax from '../utils/ajax';
 const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 
 export default class Version extends Model {
+  @service releaseTracks;
+
   @attr num;
   @attr dl_path;
   @attr readme_path;
@@ -188,11 +191,13 @@ export default class Version extends Model {
     let data = { version: { yanked: true } };
     let payload = await waitForPromise(apiAction(this, { method: 'PATCH', data }));
     this.store.pushPayload(payload);
+    await waitForPromise(this.releaseTracks.refreshTask.perform(this.crateName, true));
   });
 
   unyankTask = keepLatestTask(async () => {
     let data = { version: { yanked: false } };
     let payload = await waitForPromise(apiAction(this, { method: 'PATCH', data }));
     this.store.pushPayload(payload);
+    await waitForPromise(this.releaseTracks.refreshTask.perform(this.crateName, false));
   });
 }
