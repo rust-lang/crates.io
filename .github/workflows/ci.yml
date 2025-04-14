@@ -36,7 +36,7 @@ jobs:
           # (see https://github.com/tj-actions/changed-files/blob/v46.0.5/README.md#usage-)
           fetch-depth: 0
 
-      - uses: tj-actions/changed-files@6cb76d07bee4c9772c6882c06c37837bf82a04d3 # v46.0.4
+      - uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
         id: changed-files-non-js
         with:
           files_ignore: |
@@ -52,7 +52,7 @@ jobs:
             pnpm-lock.yaml
             testem.js
 
-      - uses: tj-actions/changed-files@6cb76d07bee4c9772c6882c06c37837bf82a04d3 # v46.0.4
+      - uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
         id: changed-files-non-rust
         with:
           files_ignore: |
@@ -64,7 +64,7 @@ jobs:
             Cargo.toml
             rust-toolchain.toml
 
-      - uses: tj-actions/changed-files@6cb76d07bee4c9772c6882c06c37837bf82a04d3 # v46.0.4
+      - uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
         id: changed-files-rust-lockfile
         with:
           files: Cargo.lock
