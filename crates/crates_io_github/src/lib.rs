@@ -20,6 +20,12 @@ type Result<T> = std::result::Result<T, GitHubError>;
 #[async_trait]
 pub trait GitHubClient: Send + Sync {
     async fn current_user(&self, auth: &AccessToken) -> Result<GithubUser>;
+    async fn get_repository(
+        &self,
+        owner: &str,
+        repo: &str,
+        auth: &AccessToken,
+    ) -> Result<GitHubRepository>;
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization>;
     async fn team_by_name(
         &self,
@@ -100,6 +106,16 @@ impl RealGitHubClient {
 impl GitHubClient for RealGitHubClient {
     async fn current_user(&self, auth: &AccessToken) -> Result<GithubUser> {
         self.request("/user", auth).await
+    }
+
+    async fn get_repository(
+        &self,
+        owner: &str,
+        repo: &str,
+        auth: &AccessToken,
+    ) -> Result<GitHubRepository> {
+        let url = format!("/repos/{owner}/{repo}");
+        self.request(&url, auth).await
     }
 
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization> {
@@ -189,6 +205,19 @@ pub struct GithubUser {
     pub id: i32,
     pub login: String,
     pub name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubRepository {
+    pub id: i64,
+    pub name: String,
+    pub owner: GitHubRepositoryOwner,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubRepositoryOwner {
+    pub login: String,
+    pub id: i32,
 }
 
 #[derive(Debug, Deserialize)]
