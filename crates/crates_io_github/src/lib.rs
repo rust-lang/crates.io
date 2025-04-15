@@ -59,7 +59,7 @@ impl RealGitHubClient {
         T: DeserializeOwned,
     {
         let url = format!("https://api.github.com{url}");
-        info!("GITHUB HTTP: {url}");
+        info!("GitHub request: GET {url}");
 
         let response = self
             .client
