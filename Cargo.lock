@@ -1363,12 +1363,16 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "clap",
  "mockall",
  "oauth2",
  "reqwest",
+ "secrecy",
  "serde",
  "thiserror 2.0.12",
+ "tokio",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
