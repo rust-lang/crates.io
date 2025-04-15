@@ -4,7 +4,7 @@
 extern crate tracing;
 
 use oauth2::AccessToken;
-use reqwest::{self, header};
+use reqwest::{self, header, RequestBuilder};
 
 use serde::de::DeserializeOwned;
 
@@ -54,22 +54,21 @@ impl RealGitHubClient {
     }
 
     /// Does all the nonsense for sending a GET to Github.
-    async fn _request<T>(&self, url: &str, auth: &str) -> Result<T>
+    async fn _request<T, A>(&self, url: &str, apply_auth: A) -> Result<T>
     where
         T: DeserializeOwned,
+        A: Fn(RequestBuilder) -> RequestBuilder,
     {
         let url = format!("https://api.github.com{url}");
         info!("GitHub request: GET {url}");
 
-        let response = self
+        let request = self
             .client
             .get(&url)
             .header(header::ACCEPT, "application/vnd.github.v3+json")
-            .header(header::AUTHORIZATION, auth)
-            .header(header::USER_AGENT, "crates.io (https://crates.io)")
-            .send()
-            .await?
-            .error_for_status()?;
+            .header(header::USER_AGENT, "crates.io (https://crates.io)");
+
+        let response = apply_auth(request).send().await?.error_for_status()?;
 
         let headers = response.headers();
         let remaining = headers.get("x-ratelimit-remaining");
@@ -84,8 +83,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        self._request(url, &format!("Bearer {}", auth.secret()))
-            .await
+        self._request(url, |r| r.bearer_auth(auth.secret())).await
     }
 
     /// Sends a GET to GitHub using basic authentication
@@ -93,7 +91,7 @@ impl RealGitHubClient {
     where
         T: DeserializeOwned,
     {
-        self._request(url, &format!("basic {username}:{password}"))
+        self._request(url, |r| r.basic_auth(username, Some(password)))
             .await
     }
 }
