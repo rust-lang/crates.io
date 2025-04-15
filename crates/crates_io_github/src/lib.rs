@@ -61,17 +61,22 @@ impl RealGitHubClient {
         let url = format!("https://api.github.com{url}");
         info!("GITHUB HTTP: {url}");
 
-        self.client
+        let response = self
+            .client
             .get(&url)
             .header(header::ACCEPT, "application/vnd.github.v3+json")
             .header(header::AUTHORIZATION, auth)
             .header(header::USER_AGENT, "crates.io (https://crates.io)")
             .send()
             .await?
-            .error_for_status()?
-            .json()
-            .await
-            .map_err(Into::into)
+            .error_for_status()?;
+
+        let headers = response.headers();
+        let remaining = headers.get("x-ratelimit-remaining");
+        let limit = headers.get("x-ratelimit-limit");
+        debug!("GitHub rate limit remaining: {remaining:?}/{limit:?}");
+
+        response.json().await.map_err(Into::into)
     }
 
     /// Sends a GET to GitHub using OAuth access token authentication
