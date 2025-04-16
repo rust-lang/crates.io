@@ -12,6 +12,7 @@ function defaultVersionsContext() {
 }
 
 export default class SearchController extends Controller {
+  @service releaseTracks;
   @service sentry;
   @service store;
 
@@ -87,15 +88,8 @@ export default class SearchController extends Controller {
         };
       }
 
-      // set release_tracks to crate
       if (meta.release_tracks) {
-        let payload = {
-          crate: {
-            id: crate.id,
-            release_tracks: meta.release_tracks,
-          },
-        };
-        this.store.pushPayload(payload);
+        this.releaseTracks.updatePayload(crate.id, meta.release_tracks);
       }
 
       return versions;
