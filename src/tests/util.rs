@@ -370,6 +370,14 @@ impl RequestHelper for MockTokenUser {
 }
 
 impl MockTokenUser {
+    pub fn with_auth_header(token: String, app: TestApp) -> Self {
+        Self {
+            app,
+            token: None,
+            plaintext: token,
+        }
+    }
+
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
         const ERROR: &str = "Original `ApiToken` was not set on this `MockTokenUser` instance";
