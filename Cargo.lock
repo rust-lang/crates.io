@@ -1494,6 +1494,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_trustpub"
+version = "0.0.0"
+
+[[package]]
 name = "crates_io_worker"
 version = "0.0.0"
 dependencies = [
