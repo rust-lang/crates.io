@@ -39,6 +39,7 @@ use http::header;
 use secrecy::ExposeSecret;
 use serde_json::json;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::net::SocketAddr;
 use tower::ServiceExt;
 
@@ -361,6 +362,14 @@ impl RequestHelper for MockTokenUser {
 }
 
 impl MockTokenUser {
+    pub fn for_token(token: impl Display, app: TestApp) -> Self {
+        Self {
+            app,
+            token: None,
+            plaintext: format!("Bearer {token}"),
+        }
+    }
+
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
         const ERROR: &str = "Original `ApiToken` was not set on this `MockTokenUser` instance";
