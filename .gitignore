@@ -27,6 +27,9 @@ docker-compose.override.yml
 *~
 src/schema.rs.orig
 
+# insta
+*.pending-snap
+
 # playwright
 /test-results/
 /playwright-report/
