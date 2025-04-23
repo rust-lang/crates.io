@@ -9,6 +9,7 @@ use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use crate::rate_limiter::RateLimiter;
 use crate::storage::Storage;
 use axum::extract::{FromRef, FromRequestParts, State};
+use bon::Builder;
 use crates_io_github::GitHubClient;
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
@@ -25,6 +26,7 @@ type DeadpoolResult = Result<
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
+#[derive(Builder)]
 pub struct App {
     /// Database connection pool connected to the primary database
     pub primary_database: DeadpoolPool<AsyncPgConnection>,
@@ -128,18 +130,18 @@ impl App {
             None
         };
 
-        App {
-            primary_database,
-            replica_database,
-            github,
-            github_oauth,
-            emails,
-            storage: Arc::new(Storage::from_config(&config.storage)),
-            service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
-            instance_metrics,
-            rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
-            config: Arc::new(config),
-        }
+        App::builder()
+            .primary_database(primary_database)
+            .maybe_replica_database(replica_database)
+            .github(github)
+            .github_oauth(github_oauth)
+            .emails(emails)
+            .storage(Arc::new(Storage::from_config(&config.storage)))
+            .service_metrics(ServiceMetrics::new().expect("could not initialize service metrics"))
+            .instance_metrics(instance_metrics)
+            .rate_limiter(RateLimiter::new(config.rate_limiter.clone()))
+            .config(Arc::new(config))
+            .build()
     }
 
     /// A unique key to generate signed cookies
