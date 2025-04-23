@@ -336,7 +336,7 @@ impl MockCookieUser {
         MockTokenUser {
             app: self.app.clone(),
             token,
-            plaintext,
+            plaintext: plaintext.expose_secret().into(),
         }
     }
 }
@@ -345,13 +345,13 @@ impl MockCookieUser {
 pub struct MockTokenUser {
     app: TestApp,
     token: ApiToken,
-    plaintext: PlainToken,
+    plaintext: String,
 }
 
 impl RequestHelper for MockTokenUser {
     fn request_builder(&self, method: Method, path: &str) -> MockRequest {
         let mut request = req(method, path);
-        request.header(header::AUTHORIZATION, self.plaintext.expose_secret());
+        request.header(header::AUTHORIZATION, &self.plaintext);
         request
     }
 
@@ -366,7 +366,7 @@ impl MockTokenUser {
         &self.token
     }
 
-    pub fn plaintext(&self) -> &PlainToken {
+    pub fn plaintext(&self) -> &str {
         &self.plaintext
     }
 }
