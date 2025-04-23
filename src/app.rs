@@ -62,15 +62,14 @@ pub struct App {
     pub rate_limiter: RateLimiter,
 }
 
-impl App {
-    /// Creates a new `App` with a given `Config` and an optional HTTP `Client`
-    ///
-    /// Configures and sets up:
-    ///
-    /// - GitHub OAuth
-    /// - Database connection pools
-    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
+impl<S: app_builder::State> AppBuilder<S> {
+    pub fn github_oauth_from_config(
+        self,
+        config: &config::Server,
+    ) -> AppBuilder<app_builder::SetGithubOauth<S>>
+    where
+        S::GithubOauth: app_builder::IsUnset,
+    {
         use oauth2::{AuthUrl, TokenUrl};
 
         let auth_url = "https://github.com/login/oauth/authorize";
@@ -83,6 +82,19 @@ impl App {
             .set_auth_uri(auth_url)
             .set_token_uri(token_url);
 
+        self.github_oauth(github_oauth)
+    }
+}
+
+impl App {
+    /// Creates a new `App` with a given `Config` and an optional HTTP `Client`
+    ///
+    /// Configures and sets up:
+    ///
+    /// - GitHub OAuth
+    /// - Database connection pools
+    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
+    pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
         let primary_database = {
             use secrecy::ExposeSecret;
 
@@ -133,7 +145,7 @@ impl App {
             .primary_database(primary_database)
             .maybe_replica_database(replica_database)
             .github(github)
-            .github_oauth(github_oauth)
+            .github_oauth_from_config(&config)
             .emails(emails)
             .storage(Arc::new(Storage::from_config(&config.storage)))
             .rate_limiter(RateLimiter::new(config.rate_limiter.clone()))
