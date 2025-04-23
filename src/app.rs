@@ -51,9 +51,11 @@ pub struct App {
     pub storage: Arc<Storage>,
 
     /// Metrics related to the service as a whole
+    #[builder(default = ServiceMetrics::new().expect("could not initialize service metrics"))]
     pub service_metrics: ServiceMetrics,
 
     /// Metrics related to this specific instance of the service
+    #[builder(default = InstanceMetrics::new().expect("could not initialize instance metrics"))]
     pub instance_metrics: InstanceMetrics,
 
     /// Rate limit select actions.
@@ -70,9 +72,6 @@ impl App {
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
         use oauth2::{AuthUrl, TokenUrl};
-
-        let instance_metrics =
-            InstanceMetrics::new().expect("could not initialize instance metrics");
 
         let auth_url = "https://github.com/login/oauth/authorize";
         let auth_url = AuthUrl::new(auth_url.into()).unwrap();
@@ -137,8 +136,6 @@ impl App {
             .github_oauth(github_oauth)
             .emails(emails)
             .storage(Arc::new(Storage::from_config(&config.storage)))
-            .service_metrics(ServiceMetrics::new().expect("could not initialize service metrics"))
-            .instance_metrics(instance_metrics)
             .rate_limiter(RateLimiter::new(config.rate_limiter.clone()))
             .config(Arc::new(config))
             .build()
