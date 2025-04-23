@@ -170,13 +170,13 @@
     ]
   },
   "engines": {
-    "node": "22.14.0",
+    "node": "22.15.0",
     "pnpm": "10.9.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "22.14.0"
+    "node": "22.15.0"
   }
 }
