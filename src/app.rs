@@ -166,25 +166,6 @@ impl<S: app_builder::State> AppBuilder<S> {
 }
 
 impl App {
-    /// Creates a new `App` with a given `Config` and an optional HTTP `Client`
-    ///
-    /// Configures and sets up:
-    ///
-    /// - GitHub OAuth
-    /// - Database connection pools
-    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
-        App::builder()
-            .databases_from_config(&config.db)
-            .github(github)
-            .github_oauth_from_config(&config)
-            .emails(emails)
-            .storage_from_config(&config.storage)
-            .rate_limiter_from_config(config.rate_limiter.clone())
-            .config(Arc::new(config))
-            .build()
-    }
-
     /// A unique key to generate signed cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key

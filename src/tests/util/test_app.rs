@@ -488,7 +488,15 @@ fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<A
     let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
     let github = Box::new(github);
 
-    let app = App::new(config, emails, github);
+    let app = App::builder()
+        .databases_from_config(&config.db)
+        .github(github)
+        .github_oauth_from_config(&config)
+        .emails(emails)
+        .storage_from_config(&config.storage)
+        .rate_limiter_from_config(config.rate_limiter.clone())
+        .config(Arc::new(config))
+        .build();
 
     let app = Arc::new(app);
     let router = crate::build_handler(Arc::clone(&app));
