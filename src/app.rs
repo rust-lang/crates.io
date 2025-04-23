@@ -84,6 +84,64 @@ impl<S: app_builder::State> AppBuilder<S> {
 
         self.github_oauth(github_oauth)
     }
+
+    pub fn databases_from_config(
+        self,
+        config: &config::DatabasePools,
+    ) -> AppBuilder<app_builder::SetReplicaDatabase<app_builder::SetPrimaryDatabase<S>>>
+    where
+        S::PrimaryDatabase: app_builder::IsUnset,
+        S::ReplicaDatabase: app_builder::IsUnset,
+    {
+        let primary_database = {
+            use secrecy::ExposeSecret;
+
+            let primary_db_connection_config = ConnectionConfig {
+                statement_timeout: config.statement_timeout,
+                read_only: config.primary.read_only_mode,
+            };
+
+            let url = connection_url(config, config.primary.url.expose_secret());
+            let manager_config = make_manager_config(config.enforce_tls);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
+
+            DeadpoolPool::builder(manager)
+                .runtime(Runtime::Tokio1)
+                .max_size(config.primary.pool_size)
+                .wait_timeout(Some(config.connection_timeout))
+                .post_create(primary_db_connection_config)
+                .build()
+                .unwrap()
+        };
+
+        let replica_database = if let Some(pool_config) = config.replica.as_ref() {
+            use secrecy::ExposeSecret;
+
+            let replica_db_connection_config = ConnectionConfig {
+                statement_timeout: config.statement_timeout,
+                read_only: pool_config.read_only_mode,
+            };
+
+            let url = connection_url(config, pool_config.url.expose_secret());
+            let manager_config = make_manager_config(config.enforce_tls);
+            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
+
+            let pool = DeadpoolPool::builder(manager)
+                .runtime(Runtime::Tokio1)
+                .max_size(pool_config.pool_size)
+                .wait_timeout(Some(config.connection_timeout))
+                .post_create(replica_db_connection_config)
+                .build()
+                .unwrap();
+
+            Some(pool)
+        } else {
+            None
+        };
+
+        self.primary_database(primary_database)
+            .maybe_replica_database(replica_database)
+    }
 }
 
 impl App {
@@ -95,55 +153,8 @@ impl App {
     /// - Database connection pools
     /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
     pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
-        let primary_database = {
-            use secrecy::ExposeSecret;
-
-            let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
-                read_only: config.db.primary.read_only_mode,
-            };
-
-            let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager_config = make_manager_config(config.db.enforce_tls);
-            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
-
-            DeadpoolPool::builder(manager)
-                .runtime(Runtime::Tokio1)
-                .max_size(config.db.primary.pool_size)
-                .wait_timeout(Some(config.db.connection_timeout))
-                .post_create(primary_db_connection_config)
-                .build()
-                .unwrap()
-        };
-
-        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
-            use secrecy::ExposeSecret;
-
-            let replica_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
-                read_only: pool_config.read_only_mode,
-            };
-
-            let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager_config = make_manager_config(config.db.enforce_tls);
-            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
-
-            let pool = DeadpoolPool::builder(manager)
-                .runtime(Runtime::Tokio1)
-                .max_size(pool_config.pool_size)
-                .wait_timeout(Some(config.db.connection_timeout))
-                .post_create(replica_db_connection_config)
-                .build()
-                .unwrap();
-
-            Some(pool)
-        } else {
-            None
-        };
-
         App::builder()
-            .primary_database(primary_database)
-            .maybe_replica_database(replica_database)
+            .databases_from_config(&config.db)
             .github(github)
             .github_oauth_from_config(&config)
             .emails(emails)
