@@ -1,5 +1,5 @@
---- crates/crates_io_database/schema.rs.orig	2024-03-04 10:34:35
-+++ crates/crates_io_database/schema.rs	2024-03-04 10:33:35
+--- original
++++ patched
 @@ -21,9 +21,7 @@
      /// The `pg_catalog.tsvector` SQL type
      ///
