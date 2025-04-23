@@ -7,7 +7,7 @@ use std::sync::Arc;
 use crate::email::Emails;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
 use crate::rate_limiter::RateLimiter;
-use crate::storage::Storage;
+use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
 use crates_io_github::GitHubClient;
@@ -142,6 +142,16 @@ impl<S: app_builder::State> AppBuilder<S> {
         self.primary_database(primary_database)
             .maybe_replica_database(replica_database)
     }
+
+    pub fn storage_from_config(
+        self,
+        config: &StorageConfig,
+    ) -> AppBuilder<app_builder::SetStorage<S>>
+    where
+        S::Storage: app_builder::IsUnset,
+    {
+        self.storage(Arc::new(Storage::from_config(config)))
+    }
 }
 
 impl App {
@@ -158,7 +168,7 @@ impl App {
             .github(github)
             .github_oauth_from_config(&config)
             .emails(emails)
-            .storage(Arc::new(Storage::from_config(&config.storage)))
+            .storage_from_config(&config.storage)
             .rate_limiter(RateLimiter::new(config.rate_limiter.clone()))
             .config(Arc::new(config))
             .build()
