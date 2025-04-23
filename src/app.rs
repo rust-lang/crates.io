@@ -2,11 +2,12 @@
 
 use crate::config;
 use crate::db::{ConnectionConfig, connection_url, make_manager_config};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::email::Emails;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
-use crate::rate_limiter::RateLimiter;
+use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
 use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
@@ -152,6 +153,16 @@ impl<S: app_builder::State> AppBuilder<S> {
     {
         self.storage(Arc::new(Storage::from_config(config)))
     }
+
+    pub fn rate_limiter_from_config(
+        self,
+        config: HashMap<LimitedAction, RateLimiterConfig>,
+    ) -> AppBuilder<app_builder::SetRateLimiter<S>>
+    where
+        S::RateLimiter: app_builder::IsUnset,
+    {
+        self.rate_limiter(RateLimiter::new(config))
+    }
 }
 
 impl App {
@@ -169,7 +180,7 @@ impl App {
             .github_oauth_from_config(&config)
             .emails(emails)
             .storage_from_config(&config.storage)
-            .rate_limiter(RateLimiter::new(config.rate_limiter.clone()))
+            .rate_limiter_from_config(config.rate_limiter.clone())
             .config(Arc::new(config))
             .build()
     }
