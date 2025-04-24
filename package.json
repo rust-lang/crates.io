@@ -95,7 +95,7 @@
     "ember-cli-notifications": "9.1.0",
     "ember-click-outside": "6.1.1",
     "ember-concurrency": "4.0.3",
-    "ember-css-modules": "2.1.0",
+    "ember-css-modules": "2.1.1",
     "ember-data": "5.3.13",
     "ember-disable-prototype-extensions": "1.1.3",
     "ember-error-route": "0.2.0",
