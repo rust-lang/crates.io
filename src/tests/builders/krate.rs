@@ -1,6 +1,5 @@
 use crate::models::{Category, Crate, Keyword, NewCrate, update_default_version};
 use crate::schema::{crate_downloads, crates, version_downloads};
-use crate::util::errors::AppResult;
 
 use super::VersionBuilder;
 use chrono::{DateTime, Utc};
@@ -114,7 +113,7 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
-    pub async fn build(mut self, connection: &mut AsyncPgConnection) -> AppResult<Crate> {
+    pub async fn build(mut self, connection: &mut AsyncPgConnection) -> anyhow::Result<Crate> {
         use diesel::{insert_into, select, update};
 
         let mut krate = self.krate.create(connection, self.owner_id).await?;

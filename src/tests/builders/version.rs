@@ -1,6 +1,5 @@
 use crate::models::{Crate, NewVersion, Version};
 use crate::schema::dependencies;
-use crate::util::errors::AppResult;
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
@@ -94,7 +93,7 @@ impl VersionBuilder {
         crate_id: i32,
         published_by: i32,
         connection: &mut AsyncPgConnection,
-    ) -> AppResult<Version> {
+    ) -> anyhow::Result<Version> {
         use diesel::insert_into;
 
         let version = self.num.to_string();
