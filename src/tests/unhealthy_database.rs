@@ -60,8 +60,7 @@ async fn download_requests_with_unhealthy_database_succeed() -> anyhow::Result<(
     CrateBuilder::new("foo", token.as_model().user_id)
         .version("1.0.0")
         .build(&mut conn)
-        .await
-        .unwrap();
+        .await?;
 
     app.primary_db_chaosproxy().break_networking()?;
 
