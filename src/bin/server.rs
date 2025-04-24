@@ -33,7 +33,17 @@ fn main() -> anyhow::Result<()> {
     let github = RealGitHubClient::new(client);
     let github = Box::new(github);
 
-    let app = Arc::new(App::new(config, emails, github));
+    let app = App::builder()
+        .databases_from_config(&config.db)
+        .github(github)
+        .github_oauth_from_config(&config)
+        .emails(emails)
+        .storage_from_config(&config.storage)
+        .rate_limiter_from_config(config.rate_limiter.clone())
+        .config(Arc::new(config))
+        .build();
+
+    let app = Arc::new(app);
 
     // Start the background thread periodically logging instance metrics.
     log_instance_metrics_thread(app.clone());

@@ -2,13 +2,15 @@
 
 use crate::config;
 use crate::db::{ConnectionConfig, connection_url, make_manager_config};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::email::Emails;
 use crate::metrics::{InstanceMetrics, ServiceMetrics};
-use crate::rate_limiter::RateLimiter;
-use crate::storage::Storage;
+use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
+use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
+use bon::Builder;
 use crates_io_github::GitHubClient;
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
@@ -25,6 +27,7 @@ type DeadpoolResult = Result<
 
 /// The `App` struct holds the main components of the application like
 /// the database connection pool and configurations
+#[derive(Builder)]
 pub struct App {
     /// Database connection pool connected to the primary database
     pub primary_database: DeadpoolPool<AsyncPgConnection>,
@@ -49,28 +52,26 @@ pub struct App {
     pub storage: Arc<Storage>,
 
     /// Metrics related to the service as a whole
+    #[builder(default = ServiceMetrics::new().expect("could not initialize service metrics"))]
     pub service_metrics: ServiceMetrics,
 
     /// Metrics related to this specific instance of the service
+    #[builder(default = InstanceMetrics::new().expect("could not initialize instance metrics"))]
     pub instance_metrics: InstanceMetrics,
 
     /// Rate limit select actions.
     pub rate_limiter: RateLimiter,
 }
 
-impl App {
-    /// Creates a new `App` with a given `Config` and an optional HTTP `Client`
-    ///
-    /// Configures and sets up:
-    ///
-    /// - GitHub OAuth
-    /// - Database connection pools
-    /// - A `git2::Repository` instance from the index repo checkout (that server.rs ensures exists)
-    pub fn new(config: config::Server, emails: Emails, github: Box<dyn GitHubClient>) -> App {
+impl<S: app_builder::State> AppBuilder<S> {
+    pub fn github_oauth_from_config(
+        self,
+        config: &config::Server,
+    ) -> AppBuilder<app_builder::SetGithubOauth<S>>
+    where
+        S::GithubOauth: app_builder::IsUnset,
+    {
         use oauth2::{AuthUrl, TokenUrl};
-
-        let instance_metrics =
-            InstanceMetrics::new().expect("could not initialize instance metrics");
 
         let auth_url = "https://github.com/login/oauth/authorize";
         let auth_url = AuthUrl::new(auth_url.into()).unwrap();
@@ -82,43 +83,54 @@ impl App {
             .set_auth_uri(auth_url)
             .set_token_uri(token_url);
 
+        self.github_oauth(github_oauth)
+    }
+
+    pub fn databases_from_config(
+        self,
+        config: &config::DatabasePools,
+    ) -> AppBuilder<app_builder::SetReplicaDatabase<app_builder::SetPrimaryDatabase<S>>>
+    where
+        S::PrimaryDatabase: app_builder::IsUnset,
+        S::ReplicaDatabase: app_builder::IsUnset,
+    {
         let primary_database = {
             use secrecy::ExposeSecret;
 
             let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
-                read_only: config.db.primary.read_only_mode,
+                statement_timeout: config.statement_timeout,
+                read_only: config.primary.read_only_mode,
             };
 
-            let url = connection_url(&config.db, config.db.primary.url.expose_secret());
-            let manager_config = make_manager_config(config.db.enforce_tls);
+            let url = connection_url(config, config.primary.url.expose_secret());
+            let manager_config = make_manager_config(config.enforce_tls);
             let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
-                .max_size(config.db.primary.pool_size)
-                .wait_timeout(Some(config.db.connection_timeout))
+                .max_size(config.primary.pool_size)
+                .wait_timeout(Some(config.connection_timeout))
                 .post_create(primary_db_connection_config)
                 .build()
                 .unwrap()
         };
 
-        let replica_database = if let Some(pool_config) = config.db.replica.as_ref() {
+        let replica_database = if let Some(pool_config) = config.replica.as_ref() {
             use secrecy::ExposeSecret;
 
             let replica_db_connection_config = ConnectionConfig {
-                statement_timeout: config.db.statement_timeout,
+                statement_timeout: config.statement_timeout,
                 read_only: pool_config.read_only_mode,
             };
 
-            let url = connection_url(&config.db, pool_config.url.expose_secret());
-            let manager_config = make_manager_config(config.db.enforce_tls);
+            let url = connection_url(config, pool_config.url.expose_secret());
+            let manager_config = make_manager_config(config.enforce_tls);
             let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
                 .max_size(pool_config.pool_size)
-                .wait_timeout(Some(config.db.connection_timeout))
+                .wait_timeout(Some(config.connection_timeout))
                 .post_create(replica_db_connection_config)
                 .build()
                 .unwrap();
@@ -128,20 +140,32 @@ impl App {
             None
         };
 
-        App {
-            primary_database,
-            replica_database,
-            github,
-            github_oauth,
-            emails,
-            storage: Arc::new(Storage::from_config(&config.storage)),
-            service_metrics: ServiceMetrics::new().expect("could not initialize service metrics"),
-            instance_metrics,
-            rate_limiter: RateLimiter::new(config.rate_limiter.clone()),
-            config: Arc::new(config),
-        }
+        self.primary_database(primary_database)
+            .maybe_replica_database(replica_database)
     }
 
+    pub fn storage_from_config(
+        self,
+        config: &StorageConfig,
+    ) -> AppBuilder<app_builder::SetStorage<S>>
+    where
+        S::Storage: app_builder::IsUnset,
+    {
+        self.storage(Arc::new(Storage::from_config(config)))
+    }
+
+    pub fn rate_limiter_from_config(
+        self,
+        config: HashMap<LimitedAction, RateLimiterConfig>,
+    ) -> AppBuilder<app_builder::SetRateLimiter<S>>
+    where
+        S::RateLimiter: app_builder::IsUnset,
+    {
+        self.rate_limiter(RateLimiter::new(config))
+    }
+}
+
+impl App {
     /// A unique key to generate signed cookies
     pub fn session_key(&self) -> &cookie::Key {
         &self.config.session_key
