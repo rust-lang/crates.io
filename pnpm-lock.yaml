@@ -173,8 +173,8 @@ importers:
         specifier: 4.0.3
         version: 4.0.3(@babel/core@7.26.10)(@glimmer/tracking@1.1.2)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.99.6))
       ember-css-modules:
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: 2.1.1
+        version: 2.1.1
       ember-data:
         specifier: 5.3.13
         version: 5.3.13(@ember/string@4.0.1)(@ember/test-helpers@5.2.1(@babel/core@7.26.10)(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.99.6)))(@ember/test-waiters@4.1.0)(ember-inflector@6.0.0(@babel/core@7.26.10))(ember-source@6.3.0(@glimmer/component@2.0.0)(rsvp@4.8.5)(webpack@5.99.6))(qunit@2.24.1)
@@ -4251,8 +4251,8 @@ packages:
       '@glint/template':
         optional: true
 
-  ember-css-modules@2.1.0:
-    resolution: {integrity: sha512-xD4RJNaVX8QqqCRpKSE/JFB4CMVLqSFJIf0ijPkEDFbtj2N7M1nuMq+FjYpkLkymn5fWkJpTqvkF75RJKxwTtw==}
+  ember-css-modules@2.1.1:
+    resolution: {integrity: sha512-9MbaaGC49s4wGoTXnG1OCcHyLs3gOBd3Ptxy2mhY53tIen72S7KRYJD13CRvGXX55Si0RIfDo0lrER+9CO5zyw==}
     engines: {node: 12.* || 14.* || >= 16}
 
   ember-data@5.3.13:
@@ -13610,7 +13610,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-css-modules@2.1.0:
+  ember-css-modules@2.1.1:
     dependencies:
       broccoli-bridge: 1.0.0
       broccoli-concat: 4.2.5
