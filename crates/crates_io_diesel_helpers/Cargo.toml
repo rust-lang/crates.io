@@ -8,7 +8,7 @@ edition = "2021"
 workspace = true
 
 [dependencies]
-diesel = { version = "=2.2.9", features = ["postgres"] }
+diesel = { version = "=2.2.10", features = ["postgres"] }
 semver = "=1.0.26"
 serde = { version = "=1.0.219", features = ["derive"] }
 
