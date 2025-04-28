@@ -33,5 +33,6 @@ pub mod krate;
 mod owner;
 pub mod team;
 pub mod token;
+pub mod trustpub;
 pub mod user;
 pub mod version;
