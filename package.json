@@ -49,7 +49,7 @@
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
     "mermaid": "11.6.0",
-    "pretty-bytes": "6.1.1",
+    "pretty-bytes": "7.0.0",
     "semver": "7.7.1"
   },
   "devDependencies": {
