@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 bon = "=3.6.3"
-chrono = { version = "=0.4.40", default-features = false, features = ["serde"] }
+chrono = { version = "=0.4.41", default-features = false, features = ["serde"] }
 crates_io_diesel_helpers = { path = "../crates_io_diesel_helpers" }
 crates_io_index = { path = "../crates_io_index" }
 diesel = { version = "=2.2.10", features = ["serde_json", "chrono", "numeric"] }
