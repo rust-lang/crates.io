@@ -32,5 +32,5 @@ claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
 diesel-async = { version = "=0.5.2", features = ["postgres"] }
 googletest = "=0.14.0"
-insta = "=1.43.0"
+insta = "=1.43.1"
 tokio = { version = "=1.44.2", features = ["macros", "rt"] }
