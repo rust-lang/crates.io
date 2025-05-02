@@ -23,7 +23,7 @@ importers:
         version: 3.4.0
       '@sentry/ember':
         specifier: 9.15.0
-        version: 9.15.0(ember-cli@6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.7)
+        version: 9.15.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.7)
       chart.js:
         specifier: 4.4.9
         version: 4.4.9
@@ -137,8 +137,8 @@ importers:
         specifier: 2.10.0
         version: 2.10.0(webpack@5.99.7)
       ember-cli:
-        specifier: 6.3.1
-        version: 6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+        specifier: 6.4.0
+        version: 6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       ember-cli-babel:
         specifier: 8.2.0
         version: 8.2.0(@babel/core@7.27.1)
@@ -150,7 +150,7 @@ importers:
         version: 3.1.0(@embroider/compat@3.9.0(@embroider/core@3.5.6))(@embroider/core@3.5.6)
       ember-cli-dependency-checker:
         specifier: 3.3.3
-        version: 3.3.3(ember-cli@6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
+        version: 3.3.3(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -2049,16 +2049,16 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@pnpm/constants@10.0.0':
-    resolution: {integrity: sha512-dxIXcW1F1dxIGfye2JXE7Q8WVwYB0axVzdBOkvE1WKIVR4xjB8e6k/Dkjo7DpbyfW5Vu2k21p6dyM32YLSAWoQ==}
+  '@pnpm/constants@1001.1.0':
+    resolution: {integrity: sha512-xb9dfSGi1qfUKY3r4Zy9JdC9+ZeaDxwfE7HrrGIEsBVY1hvIn6ntbR7A97z3nk44yX7vwbINNf9sizTp0WEtEw==}
     engines: {node: '>=18.12'}
 
-  '@pnpm/error@6.0.3':
-    resolution: {integrity: sha512-OIYhG7HQh4zUFh2s8/6bp7glVRjNxms7bpzXVOLV7pyRa+rSYFmqJ8zDsBC64k58nuaxS85Ip+SCDjFxsFGeOg==}
+  '@pnpm/error@1000.0.2':
+    resolution: {integrity: sha512-2SfE4FFL73rE1WVIoESbqlj4sLy5nWW4M/RVdHvCRJPjlQHa9MH7m7CVJM204lz6I+eHoB+E7rL3zmpJR5wYnQ==}
     engines: {node: '>=18.12'}
 
-  '@pnpm/find-workspace-dir@7.0.3':
-    resolution: {integrity: sha512-eGjkyHSufkHyZ66WpygWnslcRePB0U1lJg1dF3rgWqTChpregYoDyNGDzK7l9Gk+CHVgGZZS5aWp7uKKVmAAEg==}
+  '@pnpm/find-workspace-dir@1000.1.0':
+    resolution: {integrity: sha512-K5iG/z0SLV6bVW1jIYvbNBI6vWAD6ETJKyWj/wwHr7hxloxtm9xJCGbe/41pmM9nfFFUPbr1Z0YOi4q9yWkj6g==}
     engines: {node: '>=18.12'}
 
   '@rollup/rollup-android-arm-eabi@4.40.1':
@@ -4315,8 +4315,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@6.3.1:
-    resolution: {integrity: sha512-RtQ78/zl8qUbqaBNIY3+wzcoxVxPkr0zwfU/JycY6Wd4JRviBL9bAkWrfSQqy+xTxou5fV7BPxjekDvoBaB1yw==}
+  ember-cli@6.4.0:
+    resolution: {integrity: sha512-adcz01uGDrqBPniZrrYx6+tHe58ikc6j+cbX4+3aTG2OVJvQSL+LeisI6ixxtEZeklHRFB6FE6U1etTS6nRVfQ==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -10899,15 +10899,15 @@ snapshots:
     dependencies:
       playwright: 1.52.0
 
-  '@pnpm/constants@10.0.0': {}
+  '@pnpm/constants@1001.1.0': {}
 
-  '@pnpm/error@6.0.3':
+  '@pnpm/error@1000.0.2':
     dependencies:
-      '@pnpm/constants': 10.0.0
+      '@pnpm/constants': 1001.1.0
 
-  '@pnpm/find-workspace-dir@7.0.3':
+  '@pnpm/find-workspace-dir@1000.1.0':
     dependencies:
-      '@pnpm/error': 6.0.3
+      '@pnpm/error': 1000.0.2
       find-up: 5.0.0
 
   '@rollup/rollup-android-arm-eabi@4.40.1':
@@ -11007,7 +11007,7 @@ snapshots:
 
   '@sentry/core@9.15.0': {}
 
-  '@sentry/ember@9.15.0(ember-cli@6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.7)':
+  '@sentry/ember@9.15.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.7)':
     dependencies:
       '@babel/core': 7.27.1(supports-color@8.1.1)
       '@embroider/macros': 1.17.2
@@ -11018,7 +11018,7 @@ snapshots:
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
     optionalDependencies:
-      ember-cli: 6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -11822,7 +11822,7 @@ snapshots:
   babel-remove-types@1.0.1:
     dependencies:
       '@babel/core': 7.27.1(supports-color@8.1.1)
-      '@babel/plugin-syntax-decorators': 7.25.9(@babel/core@7.27.1)
+      '@babel/plugin-syntax-decorators': 7.27.1(@babel/core@7.27.1)
       '@babel/plugin-transform-typescript': 7.27.0(@babel/core@7.27.1)
       prettier: 2.8.8
     transitivePeerDependencies:
@@ -13419,10 +13419,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.3(ember-cli@6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
+  ember-cli-dependency-checker@3.3.3(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       find-yarn-workspace-root: 2.0.0
       is-git-url: 1.0.0
       resolve: 1.22.10
@@ -13585,9 +13585,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@6.3.1(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
+  ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
     dependencies:
-      '@pnpm/find-workspace-dir': 7.0.3
+      '@pnpm/find-workspace-dir': 1000.1.0
       babel-remove-types: 1.0.1
       broccoli: 3.5.2
       broccoli-concat: 4.2.5
@@ -17410,7 +17410,7 @@ snapshots:
   remove-types@1.0.0:
     dependencies:
       '@babel/core': 7.27.1(supports-color@8.1.1)
-      '@babel/plugin-syntax-decorators': 7.25.9(@babel/core@7.27.1)
+      '@babel/plugin-syntax-decorators': 7.27.1(@babel/core@7.27.1)
       '@babel/plugin-transform-typescript': 7.27.0(@babel/core@7.27.1)
       prettier: 2.8.8
     transitivePeerDependencies:
