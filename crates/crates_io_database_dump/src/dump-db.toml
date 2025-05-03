@@ -188,6 +188,31 @@ name = "public"
 avatar = "public"
 org_id = "public"
 
+[trustpub_configs_github]
+dependencies = ["crates"]
+[trustpub_configs_github.columns]
+id = "private"
+created_at = "private"
+crate_id = "private"
+repository_owner = "private"
+repository_owner_id = "private"
+repository_name = "private"
+workflow_filename = "private"
+environment = "private"
+
+[trustpub_tokens.columns]
+id = "private"
+created_at = "private"
+expires_at = "private"
+hashed_token = "private"
+crate_ids = "private"
+
+[trustpub_used_jtis.columns]
+id = "private"
+jti = "private"
+used_at = "private"
+expires_at = "private"
+
 [users]
 filter = """
 id in (
