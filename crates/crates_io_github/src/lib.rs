@@ -19,7 +19,7 @@ type Result<T> = std::result::Result<T, GitHubError>;
 #[cfg_attr(feature = "mock", mockall::automock)]
 #[async_trait]
 pub trait GitHubClient: Send + Sync {
-    async fn current_user(&self, auth: &AccessToken) -> Result<GithubUser>;
+    async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser>;
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization>;
     async fn team_by_name(
         &self,
@@ -53,7 +53,7 @@ impl RealGitHubClient {
         Self { client }
     }
 
-    /// Does all the nonsense for sending a GET to Github.
+    /// Does all the nonsense for sending a GET to GitHub.
     async fn _request<T, A>(&self, url: &str, apply_auth: A) -> Result<T>
     where
         T: DeserializeOwned,
@@ -98,7 +98,7 @@ impl RealGitHubClient {
 
 #[async_trait]
 impl GitHubClient for RealGitHubClient {
-    async fn current_user(&self, auth: &AccessToken) -> Result<GithubUser> {
+    async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser> {
         self.request("/user", auth).await
     }
 
@@ -183,7 +183,7 @@ impl From<reqwest::Error> for GitHubError {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GithubUser {
+pub struct GitHubUser {
     pub avatar_url: Option<String>,
     pub email: Option<String>,
     pub id: i32,

@@ -390,7 +390,7 @@ async fn add_team_owner(
     Ok(NewOwnerInvite::Team(team))
 }
 
-/// Tries to create or update a Github Team. Assumes `org` and `team` are
+/// Tries to create or update a GitHub Team. Assumes `org` and `team` are
 /// correctly parsed out of the full `name`. `name` is passed as a
 /// convenience to avoid rebuilding it.
 pub async fn create_or_update_github_team(

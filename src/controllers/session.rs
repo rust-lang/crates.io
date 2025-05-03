@@ -15,7 +15,7 @@ use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::views::EncodableMe;
-use crates_io_github::GithubUser;
+use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -124,7 +124,7 @@ pub async fn authorize_session(
 }
 
 pub async fn save_user_to_database(
-    user: &GithubUser,
+    user: &GitHubUser,
     access_token: &str,
     emails: &Emails,
     conn: &mut AsyncPgConnection,
@@ -220,7 +220,7 @@ mod tests {
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
 
-        let gh_user = GithubUser {
+        let gh_user = GitHubUser {
             email: Some("String.Format(\"{0}.{1}@live.com\", FirstName, LastName)".into()),
             name: Some("My Name".into()),
             login: "github_user".into(),
