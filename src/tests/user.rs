@@ -5,7 +5,7 @@ use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
 use crate::util::token::HashedToken;
 use chrono::{DateTime, Utc};
-use crates_io_github::GithubUser;
+use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
@@ -30,7 +30,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let token = token.plaintext();
 
     // Reuse gh_id but use new gh_login and gh_access_token
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         id: gh_id,
         login: "bar".to_string(),
         name: None,
@@ -67,10 +67,10 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     // Simulate logging in via GitHub with an account that has no email.
 
-    // Because faking GitHub is terrible, call what GithubUser::save_to_database does directly.
+    // Because faking GitHub is terrible, call what GitHubUser::save_to_database does directly.
     // Don't use app.db_new_user because it adds a verified email.
     let gh_id = next_gh_id();
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         id: gh_id,
         login: "arbitrary_username".to_string(),
         name: None,
@@ -94,7 +94,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     // Simulate the same user logging in via GitHub again, still with no email in GitHub.
 
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         id: gh_id,
         login: "arbitrary_username".to_string(),
         name: None,
@@ -135,7 +135,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let emails = app.as_inner().emails.clone();
 
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         // Use the same github ID to link to the existing account
         id: model.gh_id,
         login: "arbitrary_username".to_string(),
@@ -193,7 +193,7 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
 
     let emails = &app.as_inner().emails;
 
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         id: next_gh_id(),
         login: "arbitrary_username".to_string(),
         name: None,
@@ -239,7 +239,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
 
     let emails = &app.as_inner().emails;
 
-    let gh_user = GithubUser {
+    let gh_user = GitHubUser {
         id: next_gh_id(),
         login: "arbitrary_username".to_string(),
         name: None,

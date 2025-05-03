@@ -5,14 +5,14 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use crate::models::{Crate, CrateOwner, Owner, OwnerKind};
 use crate::schema::{crate_owners, teams};
 
-/// For now, just a Github Team. Can be upgraded to other teams
+/// For now, just a GitHub Team. Can be upgraded to other teams
 /// later if desirable.
 #[derive(Queryable, Identifiable, serde::Serialize, serde::Deserialize, Debug, Selectable)]
 pub struct Team {
     /// Unique table id
     pub id: i32,
     /// "github:org:team"
-    /// An opaque unique ID, that was at one point parsed out to query Github.
+    /// An opaque unique ID, that was at one point parsed out to query GitHub.
     /// We only query membership with github using the github_id, though.
     /// This is the only name we should ever talk to Cargo about.
     pub login: String,

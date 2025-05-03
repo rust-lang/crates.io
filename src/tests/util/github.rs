@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use crates_io_github::{
     GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
-    GithubUser, MockGitHubClient,
+    GitHubUser, MockGitHubClient,
 };
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -75,9 +75,9 @@ impl MockData {
         mock
     }
 
-    fn current_user(&self) -> Result<GithubUser, GitHubError> {
+    fn current_user(&self) -> Result<GitHubUser, GitHubError> {
         let user = &self.users[0];
-        Ok(GithubUser {
+        Ok(GitHubUser {
             id: user.id,
             login: user.login.into(),
             name: Some(user.name.into()),
