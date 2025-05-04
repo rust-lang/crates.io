@@ -221,8 +221,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       ember-template-lint:
-        specifier: 7.4.1
-        version: 7.4.1(@babel/core@7.27.1)
+        specifier: 7.5.0
+        version: 7.5.0(@babel/core@7.27.1)
       ember-test-selectors:
         specifier: 7.1.0
         version: 7.1.0
@@ -4497,8 +4497,8 @@ packages:
     resolution: {integrity: sha512-bDwzecB1DjVMvYCg0QpSsqQoHjK/zRDJ/ob+QbB0VzL8rPbSsThpoyKAsRcNip7m0l+gUxBfyUoHorPlyc0UxA==}
     engines: {node: 12.* || 14.* || >= 16}
 
-  ember-template-lint@7.4.1:
-    resolution: {integrity: sha512-TPOAmVnaW9Rv6JtBt+aHatjXNnPn7s56TI1Ie3OF2RbZbnTe9dOz3ztEQCD2AXe4gNKXRMSrilNXOKZpZRcDGg==}
+  ember-template-lint@7.5.0:
+    resolution: {integrity: sha512-91LYoGsyWJKUxl2IZtMz0e9ILu5luZ8uKkpRxUrSPAw9s5IXQ7cqE5Rcpzsi9xvTUIpgTE3lID70PUFTNgbXJw==}
     engines: {node: ^18.18.0 || >= 20.9.0}
     hasBin: true
 
@@ -14113,8 +14113,8 @@ snapshots:
 
   ember-router-generator@2.0.0:
     dependencies:
-      '@babel/parser': 7.27.0
-      '@babel/traverse': 7.27.0(supports-color@8.1.1)
+      '@babel/parser': 7.27.1
+      '@babel/traverse': 7.27.1(supports-color@8.1.1)
       recast: 0.18.10
     transitivePeerDependencies:
       - supports-color
@@ -14187,7 +14187,7 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-template-lint@7.4.1(@babel/core@7.27.1):
+  ember-template-lint@7.5.0(@babel/core@7.27.1):
     dependencies:
       '@babel/generator': 7.27.1
       '@babel/parser': 7.27.1
