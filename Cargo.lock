@@ -1496,6 +1496,12 @@ dependencies = [
 [[package]]
 name = "crates_io_trustpub"
 version = "0.0.0"
+dependencies = [
+ "claims",
+ "insta",
+ "regex",
+ "thiserror 2.0.12",
+]
 
 [[package]]
 name = "crates_io_worker"

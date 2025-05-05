@@ -8,5 +8,9 @@ edition = "2024"
 workspace = true
 
 [dependencies]
+regex = "=1.11.1"
+thiserror = "=2.0.12"
 
 [dev-dependencies]
+claims = "=0.8.0"
+insta = "=1.43.1"
