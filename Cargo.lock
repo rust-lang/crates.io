@@ -1198,6 +1198,7 @@ dependencies = [
  "crates_io_tarball",
  "crates_io_team_repo",
  "crates_io_test_db",
+ "crates_io_trustpub",
  "crates_io_worker",
  "csv",
  "deadpool-diesel",
