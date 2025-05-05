@@ -87,6 +87,10 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(session::begin_session))
         .routes(routes!(session::authorize_session))
         .routes(routes!(session::end_session))
+        // OIDC / Trusted Publishing
+        .routes(routes!(
+            trustpub::github_configs::create::create_trustpub_github_config,
+        ))
         .split_for_parts();
 
     let mut router = router

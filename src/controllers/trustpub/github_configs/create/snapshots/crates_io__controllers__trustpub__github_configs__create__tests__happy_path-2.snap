@@ -1,0 +1,29 @@
+---
+source: src/controllers/trustpub/github_configs/create/tests.rs
+expression: app.emails_snapshot().await
+---
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Trusted Publishing configration added to foo
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello foo!
+
+crates.io user foo has added a new "Trusted Publishing" configuration for G=
+itHub Actions to a crate that you manage (foo). Trusted publishers act as t=
+rusted users and can publish new versions of the crate automatically.
+
+Trusted Publishing configuration:
+
+- Repository owner: rust-lang
+- Repository name: foo-rs
+- Workflow filename: publish.yml
+- Environment: (not set)
+
+If you did not make this change and you think it was made maliciously, you =
+can remove the configuration from the crate via the "Settings" tab on the c=
+rate's page.
+
+If you are unable to revert the change and need to do so, you can email hel=
+p@crates.io to communicate with the crates.io support team.
