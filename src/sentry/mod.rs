@@ -1,5 +1,5 @@
 use crate::config::SentryConfig;
-use http::header::AUTHORIZATION;
+use http::header::{AUTHORIZATION, COOKIE};
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
@@ -67,7 +67,7 @@ fn options(config: SentryConfig) -> ClientOptions {
             // they're redacting it downstream.
             request
                 .headers
-                .retain(|name, _value| AUTHORIZATION != name.as_str());
+                .retain(|name, _value| AUTHORIZATION != name.as_str() && COOKIE != name.as_str());
         }
 
         Some(event)
@@ -106,6 +106,7 @@ mod tests {
                 ("Authorization", "secret"),
                 ("authorization", "another secret"),
                 ("Accept", "application/json"),
+                ("Cookie", "cargo_session=foobar"),
             ]
             .into_iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
