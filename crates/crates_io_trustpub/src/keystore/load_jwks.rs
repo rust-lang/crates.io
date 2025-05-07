@@ -11,7 +11,6 @@ use reqwest::Client;
 /// 3. It fetches the JWKS from the extracted URI.
 ///
 /// The JWKS contains the public keys used to verify JWT signatures issued by the provider.
-#[allow(dead_code)]
 pub async fn load_jwks(client: &Client, issuer_uri: &str) -> reqwest::Result<JwkSet> {
     #[derive(Debug, serde::Deserialize)]
     struct OpenIdConfig {
