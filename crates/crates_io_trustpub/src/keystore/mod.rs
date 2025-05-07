@@ -1,9 +1,13 @@
+mod r#impl;
 mod load_jwks;
 
 use async_trait::async_trait;
+pub use r#impl::RealOidcKeyStore;
 use jsonwebtoken::DecodingKey;
 
 /// A trait for fetching OIDC keys from a key store.
+///
+/// The main implementation is [`RealOidcKeyStore`].
 #[async_trait]
 pub trait OidcKeyStore: Send + Sync {
     /// Fetches a [`DecodingKey`] from the key store using the provided `key_id`.
