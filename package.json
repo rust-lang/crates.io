@@ -43,7 +43,7 @@
   "dependencies": {
     "@floating-ui/dom": "1.7.0",
     "@juggle/resize-observer": "3.4.0",
-    "@sentry/ember": "9.15.0",
+    "@sentry/ember": "9.16.1",
     "chart.js": "4.4.9",
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
