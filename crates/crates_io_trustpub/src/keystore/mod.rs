@@ -7,7 +7,9 @@ use jsonwebtoken::DecodingKey;
 
 /// A trait for fetching OIDC keys from a key store.
 ///
-/// The main implementation is [`RealOidcKeyStore`].
+/// The main implementation is [`RealOidcKeyStore`], but for testing purposes
+/// there is also a mock implementation available.
+#[cfg_attr(feature = "test-helpers", mockall::automock)]
 #[async_trait]
 pub trait OidcKeyStore: Send + Sync {
     /// Fetches a [`DecodingKey`] from the key store using the provided `key_id`.
