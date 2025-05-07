@@ -12,6 +12,7 @@ use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
 use crates_io_github::GitHubClient;
+use crates_io_trustpub::keystore::OidcKeyStore;
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
 use diesel_async::AsyncPgConnection;
@@ -41,6 +42,13 @@ pub struct App {
     /// The GitHub OAuth2 configuration
     pub github_oauth:
         BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>,
+
+    /// OIDC key stores for "Trusted Publishing"
+    ///
+    /// This is a map of OIDC key stores, where the key is the issuer URL and
+    /// the value is the OIDC key store instance.
+    #[builder(default)]
+    pub oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
 
     /// The server configuration
     pub config: Arc<config::Server>,
