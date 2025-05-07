@@ -1674,6 +1674,7 @@ dependencies = [
  "claims",
  "insta",
  "jsonwebtoken",
+ "mockall",
  "mockito",
  "regex",
  "reqwest",
