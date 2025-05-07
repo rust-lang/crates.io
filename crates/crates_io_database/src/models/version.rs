@@ -91,7 +91,7 @@ pub struct NewVersion<'a> {
     license: Option<&'a str>,
     #[builder(default, name = "size")]
     crate_size: i32,
-    published_by: i32,
+    published_by: Option<i32>,
     checksum: &'a str,
     links: Option<&'a str>,
     rust_version: Option<&'a str>,
@@ -110,7 +110,7 @@ impl NewVersion<'_> {
     pub async fn save(
         &self,
         conn: &mut AsyncPgConnection,
-        published_by_email: &str,
+        published_by_email: Option<&str>,
     ) -> QueryResult<Version> {
         use diesel::insert_into;
 
@@ -122,13 +122,15 @@ impl NewVersion<'_> {
                     .get_result(conn)
                     .await?;
 
-                insert_into(versions_published_by::table)
-                    .values((
-                        versions_published_by::version_id.eq(version.id),
-                        versions_published_by::email.eq(published_by_email),
-                    ))
-                    .execute(conn)
-                    .await?;
+                if let Some(published_by_email) = published_by_email {
+                    insert_into(versions_published_by::table)
+                        .values((
+                            versions_published_by::version_id.eq(version.id),
+                            versions_published_by::email.eq(published_by_email),
+                        ))
+                        .execute(conn)
+                        .await?;
+                }
 
                 Ok(version)
             }
