@@ -18,12 +18,13 @@ use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
+use crates_io_trustpub::keystore::{MockOidcKeyStore, OidcKeyStore};
 use crates_io_worker::Runner;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
 use oauth2::{ClientId, ClientSecret};
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
@@ -104,6 +105,7 @@ impl TestApp {
             team_repo: MockTeamRepo::new(),
             github: None,
             docs_rs: None,
+            oidc_key_stores: Default::default(),
         }
     }
 
@@ -246,6 +248,7 @@ pub struct TestAppBuilder {
     team_repo: MockTeamRepo,
     github: Option<MockGitHubClient>,
     docs_rs: Option<MockDocsRsClient>,
+    oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
 }
 
 impl TestAppBuilder {
@@ -284,7 +287,7 @@ impl TestAppBuilder {
             (primary_proxy, replica_proxy)
         };
 
-        let (app, router) = build_app(self.config, self.github);
+        let (app, router) = build_app(self.config, self.github, self.oidc_key_stores);
 
         let runner = if self.build_job_runner {
             let index = self
@@ -398,6 +401,17 @@ impl TestAppBuilder {
         self
     }
 
+    /// Add a new OIDC keystore to the application
+    pub fn with_oidc_keystore(
+        mut self,
+        issuer_url: impl Into<String>,
+        keystore: MockOidcKeyStore,
+    ) -> Self {
+        self.oidc_key_stores
+            .insert(issuer_url.into(), Box::new(keystore));
+        self
+    }
+
     pub fn with_team_repo(mut self, team_repo: MockTeamRepo) -> Self {
         self.team_repo = team_repo;
         self
@@ -496,7 +510,11 @@ fn simple_config() -> config::Server {
     }
 }
 
-fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<App>, axum::Router) {
+fn build_app(
+    config: config::Server,
+    github: Option<MockGitHubClient>,
+    oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
+) -> (Arc<App>, axum::Router) {
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     let emails = Emails::new_in_memory();
@@ -508,6 +526,7 @@ fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<A
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .oidc_key_stores(oidc_key_stores)
         .emails(emails)
         .storage_from_config(&config.storage)
         .rate_limiter_from_config(config.rate_limiter.clone())
