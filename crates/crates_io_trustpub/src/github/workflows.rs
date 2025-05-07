@@ -4,7 +4,6 @@ use std::sync::LazyLock;
 ///
 /// In other words, it turns e.g. `rust-lang/regex/.github/workflows/ci.yml@refs/heads/main`
 /// into `ci.yml`, or `None` if the reference is in an unexpected format.
-#[allow(unused)]
 pub(crate) fn extract_workflow_filename(workflow_ref: &str) -> Option<&str> {
     static WORKFLOW_REF_RE: LazyLock<regex::Regex> =
         LazyLock::new(|| regex::Regex::new(r"([^/]+\.(yml|yaml))(@.+)").unwrap());
