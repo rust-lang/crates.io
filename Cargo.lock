@@ -1690,6 +1690,8 @@ dependencies = [
 name = "crates_io_trustpub"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
+ "async-trait",
  "claims",
  "insta",
  "jsonwebtoken",

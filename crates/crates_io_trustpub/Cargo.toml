@@ -8,6 +8,8 @@ edition = "2024"
 workspace = true
 
 [dependencies]
+anyhow = "=1.0.98"
+async-trait = "=0.1.88"
 jsonwebtoken = "=9.3.1"
 reqwest = { version = "=0.12.15", features = ["gzip", "json"] }
 regex = "=1.11.1"
