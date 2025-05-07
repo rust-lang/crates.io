@@ -26,4 +26,5 @@ tracing = "=0.1.41"
 claims = "=0.8.0"
 insta = "=1.43.1"
 mockito = "=1.7.0"
+serde_json = "=1.0.140"
 tokio = { version = "=1.45.1", features = ["macros", "rt-multi-thread"] }
