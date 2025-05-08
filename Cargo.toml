@@ -145,10 +145,12 @@ crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
 crates_io_tarball = { path = "crates/crates_io_tarball", features = ["builder"] }
 crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"] }
 crates_io_test_db = { path = "crates/crates_io_test_db" }
+crates_io_trustpub = { path = "crates/crates_io_trustpub", features = ["test-helpers"] }
 claims = "=0.8.0"
 diesel = { version = "=2.2.10", features = ["r2d2"] }
 googletest = "=0.14.0"
 insta = { version = "=1.43.1", features = ["glob", "json", "redactions"] }
+jsonwebtoken = "=9.3.1"
 regex = "=1.11.1"
 sentry = { version = "=0.38.1", features = ["test"] }
 tokio = "=1.45.0"
