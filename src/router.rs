@@ -88,6 +88,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(session::authorize_session))
         .routes(routes!(session::end_session))
         // OIDC / Trusted Publishing
+        .routes(routes!(trustpub::tokens::exchange::exchange_trustpub_token))
         .routes(routes!(
             trustpub::github_configs::create::create_trustpub_github_config,
         ))
