@@ -6,6 +6,7 @@ use crates_io::{App, Emails, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
+use crates_io_env_vars::list;
 use crates_io_github::RealGitHubClient;
 use prometheus::Encoder;
 use reqwest::Client;
@@ -37,6 +38,7 @@ fn main() -> anyhow::Result<()> {
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .trustpub_providers(&list("TRUSTPUB_PROVIDERS")?)
         .emails(emails)
         .storage_from_config(&config.storage)
         .rate_limiter_from_config(config.rate_limiter.clone())
