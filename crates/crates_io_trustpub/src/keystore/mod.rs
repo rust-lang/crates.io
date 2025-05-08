@@ -18,3 +18,21 @@ pub trait OidcKeyStore: Send + Sync {
     /// is an error while fetching the key, it will return an error.
     async fn get_oidc_key(&self, key_id: &str) -> anyhow::Result<Option<DecodingKey>>;
 }
+
+#[cfg(feature = "test-helpers")]
+impl MockOidcKeyStore {
+    /// Creates a new instance of [`MockOidcKeyStore`] based on the RSA keys
+    /// provided in the [`crate::test_keys`] module.
+    pub fn with_test_key() -> Self {
+        use crate::test_keys::{DECODING_KEY, KEY_ID};
+        use mockall::predicate::*;
+
+        let mut mock = Self::new();
+
+        mock.expect_get_oidc_key()
+            .with(eq(KEY_ID))
+            .returning(|_| Ok(Some(DECODING_KEY.clone())));
+
+        mock
+    }
+}
