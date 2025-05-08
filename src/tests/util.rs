@@ -39,6 +39,7 @@ use http::header;
 use secrecy::ExposeSecret;
 use serde_json::json;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::net::SocketAddr;
 use tower::ServiceExt;
 
@@ -335,7 +336,7 @@ impl MockCookieUser {
 
         MockTokenUser {
             app: self.app.clone(),
-            token,
+            token: Some(token),
             plaintext: plaintext.expose_secret().into(),
         }
     }
@@ -344,7 +345,7 @@ impl MockCookieUser {
 /// A type that can generate token authenticated requests
 pub struct MockTokenUser {
     app: TestApp,
-    token: ApiToken,
+    token: Option<ApiToken>,
     plaintext: String,
 }
 
@@ -361,9 +362,18 @@ impl RequestHelper for MockTokenUser {
 }
 
 impl MockTokenUser {
+    pub fn for_token(token: impl Display, app: TestApp) -> Self {
+        Self {
+            app,
+            token: None,
+            plaintext: format!("Bearer {token}"),
+        }
+    }
+
     /// Returns a reference to the database `ApiToken` model
     pub fn as_model(&self) -> &ApiToken {
-        &self.token
+        const ERROR: &str = "Original `ApiToken` was not set on this `MockTokenUser` instance";
+        self.token.as_ref().expect(ERROR)
     }
 
     pub fn plaintext(&self) -> &str {

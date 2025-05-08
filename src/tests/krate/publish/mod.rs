@@ -19,4 +19,5 @@ mod readme;
 mod similar_names;
 mod tarball;
 mod timestamps;
+mod trustpub;
 mod validation;
