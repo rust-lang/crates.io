@@ -8,11 +8,12 @@ edition = "2024"
 workspace = true
 
 [features]
-test-helpers = ["dep:mockall", "dep:serde_json"]
+test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 
 [dependencies]
 anyhow = "=1.0.98"
 async-trait = "=0.1.88"
+bon = { version = "=3.6.3", optional = true }
 chrono = { version = "=0.4.41", features = ["serde"] }
 jsonwebtoken = "=9.3.1"
 mockall = { version = "=0.13.1", optional = true }
@@ -24,6 +25,7 @@ thiserror = "=2.0.12"
 tokio = { version = "=1.45.0", features = ["sync"] }
 
 [dev-dependencies]
+bon = "=3.6.3"
 claims = "=0.8.0"
 insta = { version = "=1.43.1", features = ["json", "redactions"] }
 mockito = "=1.7.0"
