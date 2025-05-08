@@ -1510,6 +1510,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bon",
  "chrono",
  "claims",
  "insta",
