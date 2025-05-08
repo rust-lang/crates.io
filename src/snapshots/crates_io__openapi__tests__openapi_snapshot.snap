@@ -4301,6 +4301,53 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/trusted_publishing/tokens": {
+      "put": {
+        "operationId": "exchange_trustpub_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "jwt": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "jwt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "token"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Exchange an OIDC token for a temporary access token.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      }
+    },
     "/api/v1/users/{id}/resend": {
       "put": {
         "operationId": "resend_email_verification",
