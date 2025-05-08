@@ -110,6 +110,7 @@ paste = "=1.0.15"
 postgres-native-tls = "=0.5.1"
 prometheus = { version = "=0.14.0", default-features = false }
 rand = "=0.9.1"
+regex = "=1.11.1"
 reqwest = { version = "=0.12.15", features = ["gzip", "json"] }
 rss = { version = "=2.0.12", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
@@ -149,7 +150,6 @@ diesel = { version = "=2.2.10", features = ["r2d2"] }
 googletest = "=0.14.0"
 insta = { version = "=1.43.1", features = ["glob", "json", "redactions"] }
 jsonwebtoken = "=9.3.1"
-regex = "=1.11.1"
 sentry = { version = "=0.37.0", features = ["test"] }
 tokio = "=1.45.0"
 zip = { version = "=2.6.1", default-features = false, features = ["deflate"] }
