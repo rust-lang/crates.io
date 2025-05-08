@@ -1391,6 +1391,7 @@ dependencies = [
  "insta",
  "ipnetwork",
  "json-subscriber",
+ "jsonwebtoken",
  "lettre",
  "minijinja",
  "mockall",
