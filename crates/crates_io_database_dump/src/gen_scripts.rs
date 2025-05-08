@@ -1,4 +1,4 @@
-use crate::configuration::{ColumnVisibility, TableConfig, VisibilityConfig};
+use crate::configuration::{ColumnVisibility, SequenceConfig, TableConfig, VisibilityConfig};
 use anyhow::Context;
 use serde::Serialize;
 use std::{fs::File, path::Path};
@@ -18,6 +18,7 @@ struct HandlebarsTableContext<'a> {
     filter: Option<String>,
     columns: String,
     column_defaults: Vec<ColumnDefault<'a>>,
+    sequence: Option<&'a SequenceConfig>,
 }
 
 #[derive(Debug, Serialize)]
@@ -52,6 +53,7 @@ impl TableConfig {
                 filter,
                 columns,
                 column_defaults,
+                sequence: self.sequence.as_ref(),
             })
         }
     }
