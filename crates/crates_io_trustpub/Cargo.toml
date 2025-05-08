@@ -1,0 +1,16 @@
+[package]
+name = "crates_io_trustpub"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+regex = "=1.11.1"
+thiserror = "=2.0.12"
+
+[dev-dependencies]
+claims = "=0.8.0"
+insta = "=1.43.1"

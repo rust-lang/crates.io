@@ -12,6 +12,11 @@ enum Request {
         #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
         access_token: SecretString,
     },
+    GetUser {
+        name: String,
+        #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
+        access_token: SecretString,
+    },
     OrgByName {
         org_name: String,
         #[clap(long, env = "GITHUB_ACCESS_TOKEN", hide_env_values = true)]
@@ -56,6 +61,11 @@ async fn main() -> Result<()> {
         Request::CurrentUser { access_token } => {
             let access_token = AccessToken::new(access_token.expose_secret().into());
             let response = github_client.current_user(&access_token).await?;
+            println!("{response:#?}");
+        }
+        Request::GetUser { name, access_token } => {
+            let access_token = AccessToken::new(access_token.expose_secret().into());
+            let response = github_client.get_user(&name, &access_token).await?;
             println!("{response:#?}");
         }
         Request::OrgByName {

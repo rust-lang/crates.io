@@ -598,6 +598,57 @@ expression: response.json()
         ],
         "type": "string"
       },
+      "GitHubConfig": {
+        "properties": {
+          "crate": {
+            "example": "regex",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "environment": {
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "repository_name": {
+            "example": "regex",
+            "type": "string"
+          },
+          "repository_owner": {
+            "example": "rust-lang",
+            "type": "string"
+          },
+          "repository_owner_id": {
+            "example": 5430905,
+            "format": "int32",
+            "type": "integer"
+          },
+          "workflow_filename": {
+            "example": "ci.yml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "crate",
+          "repository_owner",
+          "repository_owner_id",
+          "repository_name",
+          "workflow_filename",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "crates_cnt": {
@@ -682,6 +733,40 @@ expression: response.json()
           "crate_id",
           "created_at",
           "expires_at"
+        ],
+        "type": "object"
+      },
+      "NewGitHubConfig": {
+        "properties": {
+          "crate": {
+            "example": "regex",
+            "type": "string"
+          },
+          "environment": {
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "repository_name": {
+            "example": "regex",
+            "type": "string"
+          },
+          "repository_owner": {
+            "example": "rust-lang",
+            "type": "string"
+          },
+          "workflow_filename": {
+            "example": "ci.yml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crate",
+          "repository_owner",
+          "repository_name",
+          "workflow_filename"
         ],
         "type": "object"
       },
@@ -4044,6 +4129,58 @@ expression: response.json()
         "summary": "Revoke the current API token.",
         "tags": [
           "api_tokens"
+        ]
+      }
+    },
+    "/api/v1/trusted_publishing/github_configs": {
+      "put": {
+        "operationId": "create_trustpub_github_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "github_config": {
+                    "$ref": "#/components/schemas/NewGitHubConfig"
+                  }
+                },
+                "required": [
+                  "github_config"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "github_config": {
+                      "$ref": "#/components/schemas/GitHubConfig"
+                    }
+                  },
+                  "required": [
+                    "github_config"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Create a new Trusted Publishing configuration for GitHub Actions.",
+        "tags": [
+          "trusted_publishing"
         ]
       }
     },

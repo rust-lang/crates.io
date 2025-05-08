@@ -1198,6 +1198,7 @@ dependencies = [
  "crates_io_tarball",
  "crates_io_team_repo",
  "crates_io_test_db",
+ "crates_io_trustpub",
  "crates_io_worker",
  "csv",
  "deadpool-diesel",
@@ -1491,6 +1492,16 @@ dependencies = [
  "rand 0.9.1",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "crates_io_trustpub"
+version = "0.0.0"
+dependencies = [
+ "claims",
+ "insta",
+ "regex",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
