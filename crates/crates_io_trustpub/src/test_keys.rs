@@ -54,7 +54,6 @@ pub(crate) const KEY_ID: &str = "c0ffee";
 static ENCODING_KEY: LazyLock<EncodingKey> =
     LazyLock::new(|| EncodingKey::from_rsa_pem(PRIVATE_KEY_PEM).unwrap());
 
-#[allow(unused)]
 pub(crate) static DECODING_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
     let jwk = serde_json::from_str(PUBLIC_KEY_JWK).unwrap();
     DecodingKey::from_jwk(&jwk).unwrap()

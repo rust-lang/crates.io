@@ -2,5 +2,5 @@
 
 pub mod github;
 pub mod keystore;
-#[cfg(test)]
+#[cfg(any(test, feature = "test-helpers"))]
 pub mod test_keys;
