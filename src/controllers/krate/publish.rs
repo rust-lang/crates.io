@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{AuthCheck, Authentication};
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
@@ -11,7 +11,7 @@ use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{TarballError, process_tarball};
 use crates_io_worker::{BackgroundJob, EnqueueError};
-use diesel::dsl::{exists, select};
+use diesel::dsl::{exists, now, select};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -19,8 +19,8 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryFutureExt;
 use futures_util::TryStreamExt;
 use hex::ToHex;
-use http::StatusCode;
 use http::request::Parts;
+use http::{StatusCode, header};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
@@ -43,6 +43,7 @@ use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
 use crates_io_diesel_helpers::canon_crate_name;
+use crates_io_trustpub::access_token::AccessToken;
 
 const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
      If you believe this is a mistake, perhaps you need \
@@ -50,6 +51,11 @@ const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem
      publishing.";
 
 const MAX_DESCRIPTION_LENGTH: usize = 1000;
+
+enum AuthType {
+    Regular(Box<Authentication>),
+    Oidc(),
+}
 
 /// Publish a new crate/version.
 ///
@@ -130,30 +136,66 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         None => EndpointScope::PublishNew,
     };
 
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(endpoint_scope)
-        .for_crate(&metadata.name)
-        .check(&req, &mut conn)
-        .await?;
+    let access_token = req
+        .headers
+        .get(header::AUTHORIZATION)
+        .and_then(|h| h.as_bytes().strip_prefix(b"Bearer "))
+        .filter(|b| b.starts_with(AccessToken::PREFIX.as_bytes()))
+        .map(AccessToken::from_byte_str)
+        .transpose()
+        .map_err(|_| bad_request("Invalid authentication token"))?;
 
-    let verified_email_address = auth.user().verified_email(&mut conn).await?;
-    let verified_email_address = verified_email_address.ok_or_else(|| {
-        bad_request(format!(
-            "A verified email address is required to publish crates to crates.io. \
-             Visit https://{}/settings/profile to set and verify your email address.",
-            app.config.domain_name,
-        ))
-    })?;
+    let auth = match (access_token, &existing_crate) {
+        (Some(access_token), Some(existing_crate)) => {
+            let hashed_token = access_token.sha256();
 
-    // Use a different rate limit whether this is a new or an existing crate.
-    let rate_limit_action = match existing_crate {
-        Some(_) => LimitedAction::PublishUpdate,
-        None => LimitedAction::PublishNew,
+            trustpub_tokens::table
+                .filter(trustpub_tokens::crate_ids.contains(vec![existing_crate.id]))
+                .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
+                .filter(trustpub_tokens::expires_at.gt(now))
+                .select(trustpub_tokens::id)
+                .get_result::<i64>(&mut conn)
+                .await?;
+
+            AuthType::Oidc()
+        }
+        _ => {
+            let auth = AuthCheck::default()
+                .with_endpoint_scope(endpoint_scope)
+                .for_crate(&metadata.name)
+                .check(&req, &mut conn)
+                .await?;
+
+            AuthType::Regular(Box::new(auth))
+        }
     };
 
-    app.rate_limiter
-        .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
-        .await?;
+    let verified_email_address = match &auth {
+        AuthType::Regular(auth) => {
+            let verified_email_address = auth.user().verified_email(&mut conn).await?;
+            let verified_email_address = verified_email_address.ok_or_else(|| {
+                bad_request(format!(
+                    "A verified email address is required to publish crates to crates.io. \
+             Visit https://{}/settings/profile to set and verify your email address.",
+                    app.config.domain_name,
+                ))
+            })?;
+            Some(verified_email_address)
+        }
+        AuthType::Oidc() => None,
+    };
+
+    if let AuthType::Regular(auth) = &auth {
+        // Use a different rate limit whether this is a new or an existing crate.
+        let rate_limit_action = match existing_crate {
+            Some(_) => LimitedAction::PublishUpdate,
+            None => LimitedAction::PublishNew,
+        };
+
+        app.rate_limiter
+            .check_rate_limit(auth.user().id, rate_limit_action, &mut conn)
+            .await?;
+    }
 
     let max_upload_size = existing_crate
         .as_ref()
@@ -342,9 +384,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         validate_dependency(dep)?;
     }
 
-    let api_token_id = auth.api_token_id();
-    let user = auth.user();
-
     // Create a transaction on the database, if there are no errors,
     // commit the transactions to record a new or updated crate.
     conn.transaction(|conn| async move {
@@ -368,17 +407,29 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             return Err(bad_request("cannot upload a crate with a reserved name"));
         }
 
-        // To avoid race conditions, we try to insert
-        // first so we know whether to add an owner
-        let krate = match persist.create(conn, user.id).await.optional()? {
-            Some(krate) => krate,
-            None => persist.update(conn).await?,
-        };
+        let krate = match &auth {
+            AuthType::Regular(auth) => {
+                let user = auth.user();
 
-        let owners = krate.owners(conn).await?;
-        if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
-            return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
-        }
+                // To avoid race conditions, we try to insert
+                // first so we know whether to add an owner
+                let krate = match persist.create(conn, user.id).await.optional()? {
+                    Some(krate) => krate,
+                    None => persist.update(conn).await?,
+                };
+
+                let owners = krate.owners(conn).await?;
+                if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
+                    return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
+                }
+
+                krate
+            }
+            AuthType::Oidc() => {
+                // OIDC does not support creating new crates
+                persist.update(conn).await?
+            }
+        };
 
         if krate.name != *name {
             return Err(bad_request(format_args!(
@@ -407,6 +458,11 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let edition = edition.map(|edition| edition.as_str());
 
+        let published_by = match &auth {
+            AuthType::Regular(auth) => Some(auth.user().id),
+            AuthType::Oidc() => None,
+        };
+
         // Read tarball from request
         let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
@@ -417,7 +473,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             // Downcast is okay because the file length must be less than the max upload size
             // to get here, and max upload sizes are way less than i32 max
             .size(content_length as i32)
-            .published_by(user.id)
+            .maybe_published_by(published_by)
             .checksum(&hex_cksum)
             .maybe_links(package.links.as_deref())
             .maybe_rust_version(rust_version.as_deref())
@@ -432,7 +488,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .keywords(&keywords)
             .build();
 
-        let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {
+        let version = new_version.save(conn, verified_email_address.as_deref()).await.map_err(|error| {
             use diesel::result::{Error, DatabaseErrorKind};
             match error {
                 Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
@@ -441,14 +497,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             }
         })?;
 
-        NewVersionOwnerAction::builder()
-            .version_id(version.id)
-            .user_id(user.id)
-            .maybe_api_token_id(api_token_id)
-            .action(VersionAction::Publish)
-            .build()
-            .insert(conn)
-            .await?;
+        if let AuthType::Regular(auth) = &auth {
+            NewVersionOwnerAction::builder()
+                .version_id(version.id)
+                .user_id(auth.user().id)
+                .maybe_api_token_id(auth.api_token_id())
+                .action(VersionAction::Publish)
+                .build()
+                .insert(conn)
+                .await?;
+        }
 
         // Link this new version to all dependencies
         add_dependencies(conn, &deps, version.id).await?;
