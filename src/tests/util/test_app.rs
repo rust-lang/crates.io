@@ -17,6 +17,7 @@ use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
+use crates_io_trustpub::github::test_helpers::AUDIENCE;
 use crates_io_worker::Runner;
 use diesel_async::AsyncPgConnection;
 use futures_util::TryStreamExt;
@@ -491,6 +492,7 @@ fn simple_config() -> config::Server {
         og_image_base_url: None,
         html_render_cache_max_capacity: 1024,
         content_security_policy: None,
+        trustpub_audience: AUDIENCE.to_string(),
     }
 }
 
