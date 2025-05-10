@@ -94,7 +94,7 @@
     "ember-cli-inject-live-reload": "2.1.0",
     "ember-cli-notifications": "9.1.0",
     "ember-click-outside": "6.1.1",
-    "ember-concurrency": "4.0.3",
+    "ember-concurrency": "4.0.4",
     "ember-css-modules": "2.1.1",
     "ember-data": "5.4.1",
     "ember-disable-prototype-extensions": "1.1.3",
