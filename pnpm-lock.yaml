@@ -43,8 +43,8 @@ importers:
         specifier: 7.0.0
         version: 7.0.0
       semver:
-        specifier: 7.7.1
-        version: 7.7.1
+        specifier: 7.7.2
+        version: 7.7.2
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.10.1
@@ -323,8 +323,8 @@ importers:
         specifier: 2.8.2
         version: 2.8.2(@types/node@22.15.17)(typescript@5.8.3)
       semver:
-        specifier: 7.7.1
-        version: 7.7.1
+        specifier: 7.7.2
+        version: 7.7.2
     devDependencies:
       happy-dom:
         specifier: 17.4.7
@@ -7496,8 +7496,8 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.7.1:
-    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -9894,7 +9894,7 @@ snapshots:
       '@embroider/shared-internals': 3.0.0
       broccoli-funnel: 3.0.8
       common-ancestor-path: 1.0.1
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -9947,7 +9947,7 @@ snapshots:
       pkg-up: 3.1.0
       resolve: 1.22.10
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       symlink-or-copy: 1.3.1
       tree-sync: 2.1.0
       typescript-memoize: 1.1.1
@@ -9984,7 +9984,7 @@ snapshots:
       lodash: 4.17.21
       resolve: 1.22.10
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       typescript-memoize: 1.1.1
       walk-sync: 3.0.0
     transitivePeerDependencies:
@@ -10008,7 +10008,7 @@ snapshots:
       find-up: 5.0.0
       lodash: 4.17.21
       resolve: 1.22.10
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -10021,7 +10021,7 @@ snapshots:
       find-up: 5.0.0
       lodash: 4.17.21
       resolve: 1.22.10
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -10037,7 +10037,7 @@ snapshots:
       minimatch: 3.1.2
       pkg-entry-points: 1.1.1
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       typescript-memoize: 1.1.1
     transitivePeerDependencies:
       - supports-color
@@ -10055,7 +10055,7 @@ snapshots:
       pkg-entry-points: 1.1.1
       resolve-package-path: 4.0.3
       resolve.exports: 2.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       typescript-memoize: 1.1.1
     transitivePeerDependencies:
       - supports-color
@@ -10079,7 +10079,7 @@ snapshots:
       jsdom: 25.0.1(supports-color@8.1.1)
       lodash: 4.17.21
       mini-css-extract-plugin: 2.9.2(webpack@5.99.7)
-      semver: 7.7.1
+      semver: 7.7.2
       source-map-url: 0.4.1
       style-loader: 2.0.0(webpack@5.99.7)
       supports-color: 8.1.1
@@ -11235,7 +11235,7 @@ snapshots:
       '@embroider/addon-shim': 1.10.0
       '@embroider/macros': 1.17.2
       babel-import-util: 2.1.1
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -12664,7 +12664,7 @@ snapshots:
       postcss-modules-values: 4.0.0(postcss@8.5.3)
       postcss-value-parser: 4.2.0
       schema-utils: 3.3.0
-      semver: 7.7.1
+      semver: 7.7.2
       webpack: 5.99.7
 
   css-prefers-color-scheme@10.0.0(postcss@8.5.3):
@@ -13221,7 +13221,7 @@ snapshots:
       pkg-entry-points: 1.1.1
       resolve: 1.22.10
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       style-loader: 2.0.0(webpack@5.99.7)
       typescript-memoize: 1.1.1
       walk-sync: 3.0.0
@@ -13296,7 +13296,7 @@ snapshots:
       ember-cli-version-checker: 5.1.2
       ensure-posix-path: 1.1.1
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -13369,7 +13369,7 @@ snapshots:
       hash-for-dep: 1.5.1
       heimdalljs-logger: 0.1.10
       json-stable-stringify: 1.3.0
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
       strip-bom: 4.0.0
       walk-sync: 2.2.0
@@ -13389,7 +13389,7 @@ snapshots:
       hash-for-dep: 1.5.1
       heimdalljs-logger: 0.1.10
       js-string-escape: 1.0.1
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
       walk-sync: 2.2.0
     transitivePeerDependencies:
@@ -13448,7 +13448,7 @@ snapshots:
       fs-extra: 9.1.0
       resolve: 1.22.10
       rsvp: 4.8.5
-      semver: 7.7.1
+      semver: 7.7.2
       stagehand: 1.0.1
       walk-sync: 2.2.0
     transitivePeerDependencies:
@@ -13463,7 +13463,7 @@ snapshots:
       fs-extra: 9.1.0
       resolve: 1.22.10
       rsvp: 4.8.5
-      semver: 7.7.1
+      semver: 7.7.2
       stagehand: 1.0.1
       walk-sync: 2.2.0
     transitivePeerDependencies:
@@ -13490,7 +13490,7 @@ snapshots:
   ember-cli-version-checker@5.1.2:
     dependencies:
       resolve-package-path: 3.1.0
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
     transitivePeerDependencies:
       - supports-color
@@ -13567,7 +13567,7 @@ snapshots:
       resolve-package-path: 4.0.3
       safe-stable-stringify: 2.5.0
       sane: 5.0.1
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
       sort-package-json: 2.15.1
       symlink-or-copy: 1.3.1
@@ -13766,7 +13766,7 @@ snapshots:
       npmlog: 7.0.1
       qunit: 2.24.1
       rimraf: 5.0.10
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
     transitivePeerDependencies:
       - '@glint/template'
@@ -13926,7 +13926,7 @@ snapshots:
       inflection: 2.0.1
       route-recognizer: 0.3.4
       router_js: 8.0.6(route-recognizer@0.3.4)(rsvp@4.8.5)
-      semver: 7.7.1
+      semver: 7.7.2
       silent-error: 1.1.1
       simple-html-tokenizer: 0.5.11
     transitivePeerDependencies:
@@ -14301,7 +14301,7 @@ snapshots:
       pluralize: 8.0.0
       regexp-tree: 0.1.27
       regjsparser: 0.12.0
-      semver: 7.7.1
+      semver: 7.7.2
       strip-indent: 4.0.0
 
   eslint-scope@5.1.1:
@@ -15756,7 +15756,7 @@ snapshots:
       '@babel/parser': 7.27.1
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -16140,7 +16140,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
 
   makeerror@1.0.12:
     dependencies:
@@ -16476,7 +16476,7 @@ snapshots:
     dependencies:
       growly: 1.3.0
       is-wsl: 2.2.0
-      semver: 7.7.1
+      semver: 7.7.2
       shellwords: 0.1.1
       uuid: 8.3.2
       which: 2.0.2
@@ -16507,7 +16507,7 @@ snapshots:
     dependencies:
       hosted-git-info: 8.1.0
       proc-log: 5.0.0
-      semver: 7.7.1
+      semver: 7.7.2
       validate-npm-package-name: 6.0.0
 
   npm-run-path@2.0.2:
@@ -17664,7 +17664,7 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.7.1: {}
+  semver@7.7.2: {}
 
   send@0.19.0:
     dependencies:
@@ -17899,7 +17899,7 @@ snapshots:
       get-stdin: 9.0.0
       git-hooks-list: 3.2.0
       is-plain-obj: 4.1.0
-      semver: 7.7.1
+      semver: 7.7.2
       sort-object-keys: 1.1.3
       tinyglobby: 0.2.13
 
@@ -18603,7 +18603,7 @@ snapshots:
   validate-peer-dependencies@2.2.0:
     dependencies:
       resolve-package-path: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
 
   vary@1.1.2: {}
 
