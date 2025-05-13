@@ -18,6 +18,11 @@ use crates_io_env_vars::{required_var, var, var_parsed};
 use secrecy::SecretString;
 use std::time::Duration;
 
+const DEFAULT_POOL_SIZE: usize = 3;
+const DEFAULT_HELPER_THREADS: usize = 3;
+const DEFAULT_TCP_TIMEOUT: Duration = Duration::from_secs(15);
+const DEFAULT_CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+
 pub struct DatabasePools {
     /// Settings for the primary database. This is usually writeable, but will be read-only in
     /// some configurations.
@@ -58,8 +63,6 @@ impl DatabasePools {
 }
 
 impl DatabasePools {
-    const DEFAULT_POOL_SIZE: usize = 3;
-
     /// Load settings for one or more database pools from the environment
     ///
     /// # Panics
@@ -71,24 +74,26 @@ impl DatabasePools {
         let read_only_mode = var("READ_ONLY_MODE")?.is_some();
 
         let primary_async_pool_size =
-            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+            var_parsed("DB_PRIMARY_ASYNC_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
         let replica_async_pool_size =
-            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(Self::DEFAULT_POOL_SIZE);
+            var_parsed("DB_REPLICA_ASYNC_POOL_SIZE")?.unwrap_or(DEFAULT_POOL_SIZE);
 
         let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
         let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
 
-        let tcp_timeout = var_parsed("DB_TCP_TIMEOUT_MS")?.unwrap_or(15 * 1000);
-        let tcp_timeout = Duration::from_millis(tcp_timeout);
+        let tcp_timeout = var_parsed("DB_TCP_TIMEOUT_MS")?
+            .map(Duration::from_millis)
+            .unwrap_or(DEFAULT_TCP_TIMEOUT);
 
-        let connection_timeout = var_parsed("DB_TIMEOUT")?.unwrap_or(30);
-        let connection_timeout = Duration::from_secs(connection_timeout);
+        let connection_timeout = var_parsed("DB_TIMEOUT")?
+            .map(Duration::from_millis)
+            .unwrap_or(DEFAULT_CONNECTION_TIMEOUT);
 
         // `DB_TIMEOUT` currently configures both the connection timeout and
         // the statement timeout, so we can copy the parsed connection timeout.
         let statement_timeout = connection_timeout;
 
-        let helper_threads = var_parsed("DB_HELPER_THREADS")?.unwrap_or(3);
+        let helper_threads = var_parsed("DB_HELPER_THREADS")?.unwrap_or(DEFAULT_HELPER_THREADS);
 
         let enforce_tls = base.env == Env::Production;
 
