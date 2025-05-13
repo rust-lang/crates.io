@@ -9,7 +9,6 @@ use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
 use rand::distr::{Alphanumeric, SampleString};
-use std::sync::Arc;
 
 pub trait Email {
     fn subject(&self) -> String;
@@ -47,7 +46,7 @@ impl Emails {
             }
             _ => {
                 let transport = AsyncFileTransport::new("/tmp");
-                EmailBackend::FileSystem(Arc::new(transport))
+                EmailBackend::FileSystem(transport)
             }
         };
 
@@ -143,7 +142,7 @@ enum EmailBackend {
     /// This is using `Box` to avoid a large size difference between variants.
     Smtp(Box<AsyncSmtpTransport<Tokio1Executor>>),
     /// Backend used locally during development, will store the emails in the provided directory.
-    FileSystem(Arc<AsyncFileTransport<Tokio1Executor>>),
+    FileSystem(AsyncFileTransport<Tokio1Executor>),
     /// Backend used during tests, will keep messages in memory to allow tests to retrieve them.
     Memory(AsyncStubTransport),
 }
