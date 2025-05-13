@@ -37,7 +37,7 @@ pub struct DbPoolConfig {
     /// packet loss between the application and the database: setting it too high will result in an
     /// unnecessarily long outage (before the unhealthy database logic kicks in), while setting it
     /// too low might result in healthy connections being dropped.
-    pub tcp_timeout_ms: u64,
+    pub tcp_timeout: Duration,
     /// Time to wait for a connection to become available from the connection
     /// pool before returning an error.
     pub connection_timeout: Duration,
@@ -78,7 +78,8 @@ impl DatabasePools {
         let primary_min_idle = var_parsed("DB_PRIMARY_MIN_IDLE")?;
         let replica_min_idle = var_parsed("DB_REPLICA_MIN_IDLE")?;
 
-        let tcp_timeout_ms = var_parsed("DB_TCP_TIMEOUT_MS")?.unwrap_or(15 * 1000);
+        let tcp_timeout = var_parsed("DB_TCP_TIMEOUT_MS")?.unwrap_or(15 * 1000);
+        let tcp_timeout = Duration::from_millis(tcp_timeout);
 
         let connection_timeout = var_parsed("DB_TIMEOUT")?.unwrap_or(30);
         let connection_timeout = Duration::from_secs(connection_timeout);
@@ -102,7 +103,7 @@ impl DatabasePools {
                     read_only_mode: true,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
-                    tcp_timeout_ms,
+                    tcp_timeout,
                     connection_timeout,
                     statement_timeout,
                     helper_threads,
@@ -117,7 +118,7 @@ impl DatabasePools {
                     read_only_mode,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
-                    tcp_timeout_ms,
+                    tcp_timeout,
                     connection_timeout,
                     statement_timeout,
                     helper_threads,
@@ -131,7 +132,7 @@ impl DatabasePools {
                     read_only_mode,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
-                    tcp_timeout_ms,
+                    tcp_timeout,
                     connection_timeout,
                     statement_timeout,
                     helper_threads,
@@ -145,7 +146,7 @@ impl DatabasePools {
                     read_only_mode: true,
                     pool_size: replica_async_pool_size,
                     min_idle: replica_min_idle,
-                    tcp_timeout_ms,
+                    tcp_timeout,
                     connection_timeout,
                     statement_timeout,
                     helper_threads,

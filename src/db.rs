@@ -35,7 +35,7 @@ pub fn connection_url(config: &config::DbPoolConfig) -> String {
     maybe_append_url_param(
         &mut url,
         "tcp_user_timeout",
-        &config.tcp_timeout_ms.to_string(),
+        &config.tcp_timeout.as_millis().to_string(),
     );
 
     url.into()
