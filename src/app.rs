@@ -95,42 +95,38 @@ impl<S: app_builder::State> AppBuilder<S> {
         S::ReplicaDatabase: app_builder::IsUnset,
     {
         let primary_database = {
-            use secrecy::ExposeSecret;
-
             let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.statement_timeout,
+                statement_timeout: config.primary.statement_timeout,
                 read_only: config.primary.read_only_mode,
             };
 
-            let url = connection_url(config, config.primary.url.expose_secret());
-            let manager_config = make_manager_config(config.enforce_tls);
+            let url = connection_url(&config.primary);
+            let manager_config = make_manager_config(config.primary.enforce_tls);
             let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
                 .max_size(config.primary.pool_size)
-                .wait_timeout(Some(config.connection_timeout))
+                .wait_timeout(Some(config.primary.connection_timeout))
                 .post_create(primary_db_connection_config)
                 .build()
                 .unwrap()
         };
 
         let replica_database = if let Some(pool_config) = config.replica.as_ref() {
-            use secrecy::ExposeSecret;
-
             let replica_db_connection_config = ConnectionConfig {
-                statement_timeout: config.statement_timeout,
+                statement_timeout: pool_config.statement_timeout,
                 read_only: pool_config.read_only_mode,
             };
 
-            let url = connection_url(config, pool_config.url.expose_secret());
-            let manager_config = make_manager_config(config.enforce_tls);
+            let url = connection_url(pool_config);
+            let manager_config = make_manager_config(pool_config.enforce_tls);
             let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
 
             let pool = DeadpoolPool::builder(manager)
                 .runtime(Runtime::Tokio1)
                 .max_size(pool_config.pool_size)
-                .wait_timeout(Some(config.connection_timeout))
+                .wait_timeout(Some(pool_config.connection_timeout))
                 .post_create(replica_db_connection_config)
                 .build()
                 .unwrap();

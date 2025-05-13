@@ -29,7 +29,6 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::prefix::PrefixStore;
 use reqwest::Client;
-use secrecy::ExposeSecret;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
@@ -61,7 +60,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    let db_url = db::connection_url(&config.db, config.db.primary.url.expose_secret());
+    let db_url = db::connection_url(&config.db.primary);
 
     if var("HEROKU")?.is_some() {
         ssh::write_known_hosts_file()?;
@@ -84,7 +83,7 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let manager_config = make_manager_config(config.db.enforce_tls);
+    let manager_config = make_manager_config(config.db.primary.enforce_tls);
     let manager = AsyncDieselConnectionManager::new_with_config(db_url, manager_config);
     let deadpool = Pool::builder(manager).max_size(10).build()?;
 

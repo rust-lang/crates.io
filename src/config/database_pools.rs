@@ -24,6 +24,14 @@ pub struct DatabasePools {
     pub primary: DbPoolConfig,
     /// An optional follower database. Always read-only.
     pub replica: Option<DbPoolConfig>,
+}
+
+#[derive(Debug)]
+pub struct DbPoolConfig {
+    pub url: SecretString,
+    pub read_only_mode: bool,
+    pub pool_size: usize,
+    pub min_idle: Option<u32>,
     /// Number of seconds to wait for unacknowledged TCP packets before treating the connection as
     /// broken. This value will determine how long crates.io stays unavailable in case of full
     /// packet loss between the application and the database: setting it too high will result in an
@@ -41,14 +49,6 @@ pub struct DatabasePools {
     pub helper_threads: usize,
     /// Whether to enforce that all the database connections are encrypted with TLS.
     pub enforce_tls: bool,
-}
-
-#[derive(Debug)]
-pub struct DbPoolConfig {
-    pub url: SecretString,
-    pub read_only_mode: bool,
-    pub pool_size: usize,
-    pub min_idle: Option<u32>,
 }
 
 impl DatabasePools {
@@ -102,13 +102,13 @@ impl DatabasePools {
                     read_only_mode: true,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
+                    tcp_timeout_ms,
+                    connection_timeout,
+                    statement_timeout,
+                    helper_threads,
+                    enforce_tls,
                 },
                 replica: None,
-                tcp_timeout_ms,
-                connection_timeout,
-                statement_timeout,
-                helper_threads,
-                enforce_tls,
             },
             // The follower is down, don't configure the replica.
             Some("follower") => Self {
@@ -117,13 +117,13 @@ impl DatabasePools {
                     read_only_mode,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
+                    tcp_timeout_ms,
+                    connection_timeout,
+                    statement_timeout,
+                    helper_threads,
+                    enforce_tls,
                 },
                 replica: None,
-                tcp_timeout_ms,
-                connection_timeout,
-                statement_timeout,
-                helper_threads,
-                enforce_tls,
             },
             _ => Self {
                 primary: DbPoolConfig {
@@ -131,6 +131,11 @@ impl DatabasePools {
                     read_only_mode,
                     pool_size: primary_async_pool_size,
                     min_idle: primary_min_idle,
+                    tcp_timeout_ms,
+                    connection_timeout,
+                    statement_timeout,
+                    helper_threads,
+                    enforce_tls,
                 },
                 replica: follower_url.map(|url| DbPoolConfig {
                     url,
@@ -140,12 +145,12 @@ impl DatabasePools {
                     read_only_mode: true,
                     pool_size: replica_async_pool_size,
                     min_idle: replica_min_idle,
+                    tcp_timeout_ms,
+                    connection_timeout,
+                    statement_timeout,
+                    helper_threads,
+                    enforce_tls,
                 }),
-                tcp_timeout_ms,
-                connection_timeout,
-                statement_timeout,
-                helper_threads,
-                enforce_tls,
             },
         })
     }

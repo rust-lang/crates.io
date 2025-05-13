@@ -14,8 +14,8 @@ use crate::config;
 pub async fn oneoff_connection_with_config(
     config: &config::DatabasePools,
 ) -> ConnectionResult<AsyncPgConnection> {
-    let url = connection_url(config, config.primary.url.expose_secret());
-    establish_async_connection(&url, config.enforce_tls).await
+    let url = connection_url(&config.primary);
+    establish_async_connection(&url, config.primary.enforce_tls).await
 }
 
 pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
@@ -23,8 +23,8 @@ pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
     Ok(oneoff_connection_with_config(&config).await?)
 }
 
-pub fn connection_url(config: &config::DatabasePools, url: &str) -> String {
-    let mut url = Url::parse(url).expect("Invalid database URL");
+pub fn connection_url(config: &config::DbPoolConfig) -> String {
+    let mut url = Url::parse(config.url.expose_secret()).expect("Invalid database URL");
 
     if config.enforce_tls {
         maybe_append_url_param(&mut url, "sslmode", "require");
