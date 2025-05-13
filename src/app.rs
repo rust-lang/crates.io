@@ -94,51 +94,8 @@ impl<S: app_builder::State> AppBuilder<S> {
         S::PrimaryDatabase: app_builder::IsUnset,
         S::ReplicaDatabase: app_builder::IsUnset,
     {
-        let primary_database = {
-            use secrecy::ExposeSecret;
-
-            let primary_db_connection_config = ConnectionConfig {
-                statement_timeout: config.statement_timeout,
-                read_only: config.primary.read_only_mode,
-            };
-
-            let url = connection_url(config, config.primary.url.expose_secret());
-            let manager_config = make_manager_config(config.enforce_tls);
-            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
-
-            DeadpoolPool::builder(manager)
-                .runtime(Runtime::Tokio1)
-                .max_size(config.primary.pool_size)
-                .wait_timeout(Some(config.connection_timeout))
-                .post_create(primary_db_connection_config)
-                .build()
-                .unwrap()
-        };
-
-        let replica_database = if let Some(pool_config) = config.replica.as_ref() {
-            use secrecy::ExposeSecret;
-
-            let replica_db_connection_config = ConnectionConfig {
-                statement_timeout: config.statement_timeout,
-                read_only: pool_config.read_only_mode,
-            };
-
-            let url = connection_url(config, pool_config.url.expose_secret());
-            let manager_config = make_manager_config(config.enforce_tls);
-            let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
-
-            let pool = DeadpoolPool::builder(manager)
-                .runtime(Runtime::Tokio1)
-                .max_size(pool_config.pool_size)
-                .wait_timeout(Some(config.connection_timeout))
-                .post_create(replica_db_connection_config)
-                .build()
-                .unwrap();
-
-            Some(pool)
-        } else {
-            None
-        };
+        let primary_database = create_database_pool(&config.primary);
+        let replica_database = config.replica.as_ref().map(create_database_pool);
 
         self.primary_database(primary_database)
             .maybe_replica_database(replica_database)
@@ -163,6 +120,25 @@ impl<S: app_builder::State> AppBuilder<S> {
     {
         self.rate_limiter(RateLimiter::new(config))
     }
+}
+
+pub fn create_database_pool(config: &config::DbPoolConfig) -> DeadpoolPool<AsyncPgConnection> {
+    let connection_config = ConnectionConfig {
+        statement_timeout: config.statement_timeout,
+        read_only: config.read_only_mode,
+    };
+
+    let url = connection_url(config);
+    let manager_config = make_manager_config(config.enforce_tls);
+    let manager = AsyncDieselConnectionManager::new_with_config(url, manager_config);
+
+    DeadpoolPool::builder(manager)
+        .runtime(Runtime::Tokio1)
+        .max_size(config.pool_size)
+        .wait_timeout(Some(config.connection_timeout))
+        .post_create(connection_config)
+        .build()
+        .unwrap()
 }
 
 impl App {

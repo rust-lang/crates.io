@@ -401,6 +401,11 @@ impl TestAppBuilder {
             read_only_mode: true,
             pool_size: primary.pool_size,
             min_idle: primary.min_idle,
+            tcp_timeout_ms: primary.tcp_timeout_ms,
+            connection_timeout: primary.connection_timeout,
+            statement_timeout: primary.statement_timeout,
+            helper_threads: primary.helper_threads,
+            enforce_tls: primary.enforce_tls,
         });
 
         self
@@ -419,13 +424,13 @@ fn simple_config() -> config::Server {
             read_only_mode: false,
             pool_size: 5,
             min_idle: None,
+            tcp_timeout_ms: 1000, // 1 second
+            connection_timeout: Duration::from_secs(1),
+            statement_timeout: Duration::from_secs(1),
+            helper_threads: 1,
+            enforce_tls: false,
         },
         replica: None,
-        tcp_timeout_ms: 1000, // 1 second
-        connection_timeout: Duration::from_secs(1),
-        statement_timeout: Duration::from_secs(1),
-        helper_threads: 1,
-        enforce_tls: false,
     };
 
     let mut storage = StorageConfig::in_memory();
