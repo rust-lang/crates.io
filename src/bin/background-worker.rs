@@ -14,19 +14,17 @@
 extern crate tracing;
 
 use anyhow::Context;
+use crates_io::app::create_database_pool;
 use crates_io::cloudfront::CloudFront;
-use crates_io::db::make_manager_config;
 use crates_io::fastly::Fastly;
+use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{Emails, config};
-use crates_io::{db, ssh};
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use crates_io_team_repo::TeamRepoImpl;
 use crates_io_worker::Runner;
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::prefix::PrefixStore;
 use reqwest::Client;
 use std::sync::Arc;
@@ -43,7 +41,10 @@ fn main() -> anyhow::Result<()> {
 
     info!("Booting runner");
 
-    let config = config::Server::from_environment()?;
+    let mut config = config::Server::from_environment()?;
+
+    // Override the pool size to 10 for the background worker
+    config.db.primary.pool_size = 10;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -59,8 +60,6 @@ fn main() -> anyhow::Result<()> {
             sleep(Duration::from_secs(60));
         }
     }
-
-    let db_url = db::connection_url(&config.db.primary);
 
     if var("HEROKU")?.is_some() {
         ssh::write_known_hosts_file()?;
@@ -83,9 +82,7 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let manager_config = make_manager_config(config.db.primary.enforce_tls);
-    let manager = AsyncDieselConnectionManager::new_with_config(db_url, manager_config);
-    let deadpool = Pool::builder(manager).max_size(10).build()?;
+    let deadpool = create_database_pool(&config.db.primary);
 
     let environment = Environment::builder()
         .config(Arc::new(config))

@@ -25,7 +25,7 @@ use tikv_jemallocator::Jemalloc;
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
-mod app;
+pub mod app;
 pub mod auth;
 pub mod boot;
 pub mod certs;

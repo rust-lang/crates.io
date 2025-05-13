@@ -122,7 +122,7 @@ impl<S: app_builder::State> AppBuilder<S> {
     }
 }
 
-fn create_database_pool(config: &config::DbPoolConfig) -> DeadpoolPool<AsyncPgConnection> {
+pub fn create_database_pool(config: &config::DbPoolConfig) -> DeadpoolPool<AsyncPgConnection> {
     let connection_config = ConnectionConfig {
         statement_timeout: config.statement_timeout,
         read_only: config.read_only_mode,
