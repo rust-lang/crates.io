@@ -39,7 +39,7 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
 
     let middlewares_1 = tower::ServiceBuilder::new()
         .layer(sentry_tower::NewSentryLayer::new_from_top())
-        .layer(sentry_tower::SentryHttpLayer::with_transaction())
+        .layer(sentry_tower::SentryHttpLayer::new().enable_transaction())
         .layer(from_fn(self::real_ip::middleware))
         .layer(from_fn(log_request::log_requests))
         .layer(CatchPanicLayer::new())
