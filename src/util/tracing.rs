@@ -54,7 +54,7 @@ fn init_with_default_level(level: LevelFilter) {
 pub fn event_filter(metadata: &Metadata<'_>) -> EventFilter {
     match metadata.level() {
         &Level::ERROR if metadata.target() == "http" => EventFilter::Breadcrumb,
-        &Level::ERROR => EventFilter::Exception,
+        &Level::ERROR => EventFilter::Event,
         &Level::WARN | &Level::INFO => EventFilter::Breadcrumb,
         &Level::DEBUG | &Level::TRACE => EventFilter::Ignore,
     }
