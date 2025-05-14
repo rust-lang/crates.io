@@ -1,14 +1,13 @@
 //! Endpoint for triggering a docs.rs rebuild
 
 use super::CrateVersionPath;
-use super::update::authenticate;
 use crate::app::AppState;
-use crate::rate_limiter::LimitedAction;
-use crate::util::HeaderMapExt;
+use crate::auth::AuthCheck;
 use crate::util::errors::{AppResult, forbidden};
-use axum::body::Body;
-use axum::response::Response;
-use http::HeaderValue;
+use crate::worker::jobs;
+use axum::response::{IntoResponse as _, Response};
+use crates_io_worker::BackgroundJob as _;
+use http::StatusCode;
 use http::request::Parts;
 
 /// Trigger a rebuild for the crate documentation on docs.rs.
@@ -17,7 +16,6 @@ use http::request::Parts;
     path = "/api/v1/crates/{name}/{version}/rebuild_docs",
     params(CrateVersionPath),
     security(
-        ("api_token" = []),
         ("cookie" = []),
     ),
     tag = "versions",
@@ -28,43 +26,22 @@ pub async fn rebuild_version_docs(
     path: CrateVersionPath,
     req: Parts,
 ) -> AppResult<Response> {
-    let Some(ref docs_rs_api_token) = app.config.docs_rs_api_token else {
+    if app.config.docs_rs_api_token.is_none() {
         return Err(forbidden("docs.rs integration is not configured"));
     };
 
-    let mut conn = app.db_read().await?;
-    // FIXME: which scope to use?
-    let auth = authenticate(&req, &mut conn, &path.name).await?;
+    let mut conn = app.db_write().await?;
+    AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
-    // FIXME: rate limiting needed here? which Action?
-    app.rate_limiter
-        .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
-        .await?;
+    // validate if version & crate exist
+    path.load_version_and_crate(&mut conn).await?;
 
-    let target_url = app
-        .config
-        .docs_rs_url
-        .join(&format!("/crate/{}/{}/rebuild", path.name, path.version))
-        .unwrap(); // FIXME: handle error
+    if let Err(error) = jobs::DocsRsQueueRebuild::new(path.name, path.version)
+        .enqueue(&mut conn)
+        .await
+    {
+        warn!("docs_rs_queue_rebuild: Failed to enqueue background job: {error}");
+    }
 
-    let client = reqwest::Client::new();
-    let response = client
-        .post(target_url.as_str())
-        .bearer_auth(docs_rs_api_token)
-        .send()
-        .await?;
-
-    const APPLICATION_JSON: HeaderValue = HeaderValue::from_static("application/json");
-
-    Ok(Response::builder()
-        .status(response.status())
-        .header(
-            "content-type",
-            response
-                .headers()
-                .get("content-type")
-                .unwrap_or(&APPLICATION_JSON),
-        )
-        .body(Body::from_stream(response.bytes_stream()))
-        .unwrap())
+    Ok(StatusCode::CREATED.into_response())
 }

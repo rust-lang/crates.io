@@ -26,6 +26,7 @@ use std::sync::LazyLock;
 use std::{rc::Rc, sync::Arc, time::Duration};
 use tokio::runtime::Handle;
 use tokio::task::block_in_place;
+use url::Url;
 
 struct TestAppInner {
     app: Arc<App>,
@@ -482,6 +483,8 @@ fn simple_config() -> config::Server {
         og_image_base_url: None,
         html_render_cache_max_capacity: 1024,
         content_security_policy: None,
+        docs_rs_url: Url::parse("https://docs.rs").unwrap(),
+        docs_rs_api_token: None,
     }
 }
 
