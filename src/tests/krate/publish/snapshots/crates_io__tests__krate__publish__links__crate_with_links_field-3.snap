@@ -7,7 +7,7 @@ expression: crates
     "name": "foo",
     "vers": "1.0.0",
     "deps": [],
-    "cksum": "5631ca06d228e58274bbd8d6a3e81f7138a9e227a84bd63ecedb78afbc8144ea",
+    "cksum": "b2c9e153a8860ce92ba7cbdea7b718409d181c08f4c6c5c2a612919dcb155af2",
     "features": {},
     "yanked": false,
     "links": "git2"

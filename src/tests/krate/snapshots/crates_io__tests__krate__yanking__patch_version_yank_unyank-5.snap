@@ -22,7 +22,7 @@ expression: json
       "version_downloads": "/api/v1/crates/patchable/1.0.0/downloads",
       "authors": "/api/v1/crates/patchable/1.0.0/authors"
     },
-    "crate_size": 151,
+    "crate_size": 156,
     "published_by": {
       "id": 1,
       "login": "foo",
@@ -76,7 +76,7 @@ expression: json
         "time": "[datetime]"
       }
     ],
-    "checksum": "ddfc395ab340f413ee1d1ed0afce51a7c9df1c99c551fed5aef76edd4abe4048",
+    "checksum": "d4d2d515985c394dc9fa95c56b935ab0805f6dfbd91a6dc99af9d316dff96dc0",
     "rust_version": null,
     "has_lib": false,
     "bin_names": [],

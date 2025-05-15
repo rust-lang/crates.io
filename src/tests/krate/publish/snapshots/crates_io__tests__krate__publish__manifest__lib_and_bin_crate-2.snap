@@ -21,9 +21,9 @@ expression: response.json()
       "bar",
       "foo"
     ],
-    "checksum": "ed125a8d83193391762787872f6363ef11d472fe9e963b984a761f970d63a7a8",
+    "checksum": "2af566e52c8fb0376558a00b0bc426c699e8fe2b12807b75cbce7ccf54e37a98",
     "crate": "foo",
-    "crate_size": 241,
+    "crate_size": 251,
     "created_at": "[datetime]",
     "description": "description",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",

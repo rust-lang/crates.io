@@ -7,7 +7,7 @@ expression: crates
     "name": "foo",
     "vers": "1.0.0",
     "deps": [],
-    "cksum": "493720846371607438c1a4eb90c9cc7d7286600ca9c4e2ca04151aad9563b47a",
+    "cksum": "12368623e4c78ae9412ec9a046ed915745bc7901a935ac2a01086ce33064180d",
     "features": {
       "foo.你好世界": []
     },
