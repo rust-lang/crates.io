@@ -33,7 +33,6 @@ pub mod cloudfront;
 pub mod config;
 pub mod controllers;
 pub mod db;
-pub mod docs_rs;
 pub mod email;
 pub mod external_urls;
 pub mod fastly;
