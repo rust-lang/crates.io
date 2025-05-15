@@ -15,11 +15,11 @@ pub enum DocsRsError {
     /// (AKA: "rebuild too often").
     #[error("rate limited")]
     RateLimited,
-    #[error(transparent)]
-    Permission(anyhow::Error),
+    #[error("unauthorized")]
+    Unauthorized,
     /// crate or version not found on docs.rs.
-    /// This can be temporary directly after a release until the docs.rs registry watcher
-    /// queued the build for the release.
+    /// This can be temporary directly after a release until the first
+    /// docs build was started for the crate.
     #[error("crate or version not found on docs.rs")]
     NotFound,
     #[error(transparent)]
@@ -68,6 +68,7 @@ impl DocsRsClient for RealDocsRsClient {
             StatusCode::CREATED => Ok(()),
             StatusCode::NOT_FOUND => Err(DocsRsError::NotFound),
             StatusCode::TOO_MANY_REQUESTS => Err(DocsRsError::RateLimited),
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => Err(DocsRsError::Unauthorized),
             StatusCode::BAD_REQUEST => {
                 #[derive(Deserialize)]
                 struct BadRequestResponse {

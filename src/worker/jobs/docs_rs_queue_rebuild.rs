@@ -1,5 +1,6 @@
 use crate::docs_rs::{DocsRsError, docs_rs_client};
 use crate::worker::Environment;
+use anyhow::anyhow;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
 
@@ -30,15 +31,23 @@ impl BackgroundJob for DocsRsQueueRebuild {
                 warn!(
                     name = self.name,
                     version = self.version,
+                    msg,
                     "couldn't queue docs rebuild"
                 );
                 Ok(())
             }
             Err(DocsRsError::RateLimited) => {
-                // FIXME: how would we enfore a retry-after?
-                Err(err.into())
+                Err(anyhow!("docs rebuild request was rate limited. retrying."))
             }
-            Err(err) => Err(err.into()),
+            Err(err) => {
+                error!(
+                    name = self.name,
+                    version = self.version,
+                    ?err,
+                    "couldn't queue docs rebuild. won't retry"
+                );
+                Ok(())
+            }
         }
     }
 }

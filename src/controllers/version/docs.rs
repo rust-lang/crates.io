@@ -40,7 +40,10 @@ pub async fn rebuild_version_docs(
         .enqueue(&mut conn)
         .await
     {
-        warn!("docs_rs_queue_rebuild: Failed to enqueue background job: {error}");
+        error!(
+            ?error,
+            "docs_rs_queue_rebuild: Failed to enqueue background job"
+        );
     }
 
     Ok(StatusCode::CREATED.into_response())
