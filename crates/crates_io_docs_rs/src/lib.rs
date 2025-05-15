@@ -44,7 +44,10 @@ pub struct RealDocsRsClient {
 impl RealDocsRsClient {
     pub fn new(base_url: impl IntoUrl, api_token: impl Into<String>) -> Result<Self, DocsRsError> {
         Ok(Self {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .user_agent("crates.io")
+                .build()
+                .unwrap(),
             base_url: base_url
                 .into_url()
                 .map_err(|err| DocsRsError::Other(err.into()))?,
