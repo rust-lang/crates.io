@@ -91,7 +91,7 @@ impl DocsRsClient for RealDocsRsClient {
     }
 }
 
-/// Builds an [DocsRsClient] implementation based on the [config::Server]
+/// Builds an [DocsRsClient] implementation based on the [crate::config::Server]
 pub fn docs_rs_client(config: &crate::config::Server) -> Box<dyn DocsRsClient + Send + Sync> {
     if let Some(api_token) = &config.docs_rs_api_token {
         Box::new(RealDocsRsClient::new(config.docs_rs_url.clone(), api_token))
