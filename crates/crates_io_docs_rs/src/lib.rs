@@ -126,7 +126,7 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        assert_eq!(docs_rs.rebuild_docs("krate", "0.1.0").await?, ());
+        docs_rs.rebuild_docs("krate", "0.1.0").await?;
 
         Ok(())
     }
