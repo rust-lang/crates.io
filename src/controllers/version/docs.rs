@@ -3,7 +3,7 @@
 use super::CrateVersionPath;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::util::errors::{AppResult, forbidden};
+use crate::util::errors::{AppResult, forbidden, server_error};
 use crate::worker::jobs;
 use axum::response::{IntoResponse as _, Response};
 use crates_io_worker::BackgroundJob as _;
@@ -36,15 +36,16 @@ pub async fn rebuild_version_docs(
     // validate if version & crate exist
     path.load_version_and_crate(&mut conn).await?;
 
-    if let Err(error) = jobs::DocsRsQueueRebuild::new(path.name, path.version)
+    jobs::DocsRsQueueRebuild::new(path.name, path.version)
         .enqueue(&mut conn)
         .await
-    {
-        error!(
-            ?error,
-            "docs_rs_queue_rebuild: Failed to enqueue background job"
-        );
-    }
+        .map_err(|error| {
+            error!(
+                ?error,
+                "docs_rs_queue_rebuild: Failed to enqueue background job"
+            );
+            server_error("failed to enqueue background job")
+        })?;
 
     Ok(StatusCode::CREATED.into_response())
 }
