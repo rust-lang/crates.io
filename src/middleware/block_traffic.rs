@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::middleware::log_request::RequestLogExt;
 use crate::middleware::real_ip::RealIp;
-use crate::util::errors::custom;
+use crate::util::errors::{BoxedAppError, custom};
 use axum::extract::{Extension, MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
@@ -14,9 +14,9 @@ pub async fn middleware(
     req: Request,
     next: Next,
 ) -> Result<impl IntoResponse, Response> {
-    block_by_ip(&real_ip, &state, req.headers())?;
-    block_by_header(&state, &req)?;
-    block_routes(matched_path.as_ref(), &state)?;
+    block_by_ip(&real_ip, &state, req.headers()).map_err(IntoResponse::into_response)?;
+    block_by_header(&state, &req).map_err(IntoResponse::into_response)?;
+    block_routes(matched_path.as_ref(), &state).map_err(IntoResponse::into_response)?;
 
     Ok(next.run(req).await)
 }
@@ -29,7 +29,7 @@ pub async fn middleware(
 /// to `User-Agent=BLOCKED_UAS` and `BLOCKED_UAS` to `curl/7.54.0,cargo 1.36.0 (c4fcfb725 2019-05-15)`
 /// to block requests from the versions of curl or Cargo specified (values are nonsensical examples).
 /// Values of the headers must match exactly.
-pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), Response> {
+pub fn block_by_header(state: &AppState, req: &Request) -> Result<(), impl IntoResponse> {
     let blocked_traffic = &state.config.blocked_traffic;
 
     for (header_name, blocked_values) in blocked_traffic {
@@ -53,7 +53,7 @@ pub fn block_by_ip(
     real_ip: &RealIp,
     state: &AppState,
     headers: &HeaderMap,
-) -> Result<(), Response> {
+) -> Result<(), impl IntoResponse> {
     if state.config.blocked_ips.contains(real_ip) {
         return Err(rejection_response_from(state, headers));
     }
@@ -61,7 +61,7 @@ pub fn block_by_ip(
     Ok(())
 }
 
-fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> Response {
+fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> impl IntoResponse {
     let domain_name = &state.config.domain_name;
 
     // Heroku should always set this header
@@ -77,17 +77,19 @@ fn rejection_response_from(state: &AppState, headers: &HeaderMap) -> Response {
          Please email help@crates.io and provide the request id {request_id}"
     );
 
-    (StatusCode::FORBIDDEN, body).into_response()
+    (StatusCode::FORBIDDEN, body)
 }
 
 /// Allow blocking individual routes by their pattern through the `BLOCKED_ROUTES`
 /// environment variable.
-pub fn block_routes(matched_path: Option<&MatchedPath>, state: &AppState) -> Result<(), Response> {
+pub fn block_routes(
+    matched_path: Option<&MatchedPath>,
+    state: &AppState,
+) -> Result<(), BoxedAppError> {
     if let Some(matched_path) = matched_path {
         if state.config.blocked_routes.contains(matched_path.as_str()) {
             let body = "This route is temporarily blocked. See https://status.crates.io.";
-            let error = custom(StatusCode::SERVICE_UNAVAILABLE, body);
-            return Err(error.into_response());
+            return Err(custom(StatusCode::SERVICE_UNAVAILABLE, body));
         }
     }
 

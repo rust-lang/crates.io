@@ -17,7 +17,7 @@ pub fn read_fill<R: Read + ?Sized>(r: &mut R, mut slice: &mut [u8]) -> io::Resul
     while !slice.is_empty() {
         let n = r.read(slice)?;
         if n == 0 {
-            return Err(io::Error::new(io::ErrorKind::Other, "end of file reached"));
+            return Err(io::Error::other("end of file reached"));
         }
         slice = &mut mem::take(&mut slice)[n..];
     }

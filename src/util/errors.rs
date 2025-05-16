@@ -311,7 +311,7 @@ mod tests {
             StatusCode::INTERNAL_SERVER_ERROR
         );
         assert_eq!(
-            BoxedAppError::from(::std::io::Error::new(::std::io::ErrorKind::Other, ""))
+            BoxedAppError::from(::std::io::Error::other(""))
                 .response()
                 .status(),
             StatusCode::INTERNAL_SERVER_ERROR
