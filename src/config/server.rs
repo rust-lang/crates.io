@@ -88,7 +88,7 @@ pub struct Server {
 
     pub content_security_policy: Option<HeaderValue>,
 
-    pub docs_rs_url: url::Url,
+    pub docs_rs_base_url: url::Url,
     pub docs_rs_api_token: String,
 }
 
@@ -236,7 +236,7 @@ impl Server {
             og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
-            docs_rs_url: var_parsed("DOCS_RS_HOSTNAME")?
+            docs_rs_base_url: var_parsed("DOCS_RS_BASE_URL")?
                 .unwrap_or_else(|| url::Url::parse("https://docs.rs").unwrap()),
             docs_rs_api_token: required_var("DOCS_RS_API_TOKEN")?,
         })

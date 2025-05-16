@@ -83,8 +83,10 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let docs_rs =
-        RealDocsRsClient::new(config.docs_rs_url.clone(), config.docs_rs_api_token.clone())?;
+    let docs_rs = RealDocsRsClient::new(
+        config.docs_rs_base_url.clone(),
+        config.docs_rs_api_token.clone(),
+    )?;
     let docs_rs = Arc::new(docs_rs);
 
     let deadpool = create_database_pool(&config.db.primary);

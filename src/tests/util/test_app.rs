@@ -492,7 +492,7 @@ fn simple_config() -> config::Server {
         og_image_base_url: None,
         html_render_cache_max_capacity: 1024,
         content_security_policy: None,
-        docs_rs_url: Url::parse("https://docs.rs").unwrap(),
+        docs_rs_base_url: Url::parse("https://docs.rs").unwrap(),
         docs_rs_api_token: "invalid".to_owned(),
     }
 }
