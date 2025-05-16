@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use crates_io_docs_rs::{DocsRsClient, RealDocsRsClient};
 use std::env;
 
