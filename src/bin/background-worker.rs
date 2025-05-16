@@ -46,6 +46,10 @@ fn main() -> anyhow::Result<()> {
     // Override the pool size to 10 for the background worker
     config.db.primary.pool_size = 10;
 
+    // We run some long-running queries in the background worker, so we need to
+    // increase the statement timeout a bit…
+    config.db.primary.statement_timeout = Duration::from_secs(60 * 60);
+
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
