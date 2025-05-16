@@ -11,7 +11,7 @@ use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
-use crates_io_docs_rs::{DocsRsClient, MockDocsRsClient};
+use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
@@ -302,7 +302,7 @@ impl TestAppBuilder {
                 .storage(app.storage.clone())
                 .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
-                .maybe_docs_rs(self.docs_rs.map(Box::new))
+                .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
                 .team_repo(Box::new(self.team_repo))
                 .build();
 
