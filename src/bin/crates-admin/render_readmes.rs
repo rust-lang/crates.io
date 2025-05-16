@@ -169,9 +169,7 @@ async fn get_readme(
         ));
     }
 
-    let reader = response
-        .bytes_stream()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e));
+    let reader = response.bytes_stream().map_err(std::io::Error::other);
     let reader = StreamReader::new(reader);
     let reader = GzipDecoder::new(reader);
     let archive = Archive::new(reader);

@@ -113,7 +113,7 @@ mod tests {
             query_string: None,
             env: Default::default(),
         };
-        let err = std::io::Error::new(std::io::ErrorKind::Other, "error");
+        let err = std::io::Error::other("error");
 
         let opts = options(SentryConfig::default());
         let event_req = req.clone();

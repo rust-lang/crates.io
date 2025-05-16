@@ -25,10 +25,9 @@ impl<R: AsyncRead + Unpin> AsyncRead for LimitErrorReader<R> {
     ) -> Poll<io::Result<()>> {
         let reader = Pin::new(&mut self.inner);
         match reader.poll_read(cx, buf) {
-            Poll::Ready(Ok(())) if self.inner.limit() == 0 => Poll::Ready(Err(io::Error::new(
-                io::ErrorKind::Other,
-                "maximum limit reached when reading",
-            ))),
+            Poll::Ready(Ok(())) if self.inner.limit() == 0 => {
+                Poll::Ready(Err(io::Error::other("maximum limit reached when reading")))
+            }
             e => e,
         }
     }

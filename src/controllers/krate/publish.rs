@@ -67,7 +67,7 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
 )]
 pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();
-    let stream = stream.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err));
+    let stream = stream.map_err(std::io::Error::other);
     let mut reader = StreamReader::new(stream);
 
     // The format of the req.body() of a publish request is as follows:
