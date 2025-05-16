@@ -150,4 +150,4 @@ insta = { version = "=1.43.1", features = ["glob", "json", "redactions"] }
 regex = "=1.11.1"
 sentry = { version = "=0.38.1", features = ["test"] }
 tokio = "=1.45.0"
-zip = { version = "=2.6.1", default-features = false, features = ["deflate"] }
+zip = { version = "=3.0.0", default-features = false, features = ["deflate"] }

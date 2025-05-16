@@ -7,7 +7,7 @@ expression: crates
     "name": "foo_twice",
     "vers": "0.99.0",
     "deps": [],
-    "cksum": "45b0b19cd0280034e07820789d9bb6e4016526eba85c75fc697d49ec99fd2550",
+    "cksum": "99ef473e84e6bede426d948d4dca03d79a64acb51511ffcbeb11d253505c9968",
     "features": {},
     "yanked": false
   },
@@ -15,7 +15,7 @@ expression: crates
     "name": "foo_twice",
     "vers": "2.0.0",
     "deps": [],
-    "cksum": "d6e88a7d30b9e5c3d268ede9a9937b62815e45a06fd2c572d602e0705ab6513d",
+    "cksum": "7e71c271648114db81fa41450dd8d4d50c35622d3630e65c4f8211948bdf83f3",
     "features": {},
     "yanked": false
   }

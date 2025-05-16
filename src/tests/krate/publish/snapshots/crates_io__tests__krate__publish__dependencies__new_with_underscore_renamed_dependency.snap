@@ -18,7 +18,7 @@ expression: crates
         "package": "package-name"
       }
     ],
-    "cksum": "a53250c08af1d1cc060bc5145afadfd0b07708406d8943ae1d6b76131d78955f",
+    "cksum": "608b7a65a1292ef1de0fc4c453b0ec978c93bc36a11eb0b12cd301ab55c3a760",
     "features": {},
     "yanked": false
   }

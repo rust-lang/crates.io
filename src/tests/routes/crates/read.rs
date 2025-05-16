@@ -135,7 +135,7 @@ async fn version_size() {
         .iter()
         .find(|v| v.num == "1.0.0")
         .expect("Could not find v1.0.0");
-    assert_eq!(version1.crate_size, 158);
+    assert_eq!(version1.crate_size, 160);
 
     let version2 = crate_json
         .versions
@@ -144,7 +144,7 @@ async fn version_size() {
         .iter()
         .find(|v| v.num == "2.0.0")
         .expect("Could not find v2.0.0");
-    assert_eq!(version2.crate_size, 184);
+    assert_eq!(version2.crate_size, 191);
 }
 
 #[tokio::test(flavor = "multi_thread")]

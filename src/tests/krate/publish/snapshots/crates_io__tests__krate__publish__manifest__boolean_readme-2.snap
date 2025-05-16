@@ -18,9 +18,9 @@ expression: response.json()
       }
     ],
     "bin_names": [],
-    "checksum": "418c24c55cbcde274a5b1815d2c844203c7116e7f712008f4727d38bc7c82d8d",
+    "checksum": "50da036cb5dfa54c39ab25c02c31ca001fa103b4de41e3f79ca1d3b6877c775f",
     "crate": "foo",
-    "crate_size": 170,
+    "crate_size": 173,
     "created_at": "[datetime]",
     "description": "description",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",

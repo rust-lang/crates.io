@@ -26,7 +26,7 @@ expression: crates
         "kind": "normal"
       }
     ],
-    "cksum": "e2366ac311619de0f137a23f8a88e2b2cc32a6986514fe67b426d5a9f83468fa",
+    "cksum": "8d88a5d9d97c440d32d2f8542395975effc3605b98e076a15f4023a004536ed8",
     "features": {},
     "yanked": false
   }
