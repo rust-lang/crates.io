@@ -1522,6 +1522,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "claims",
  "http 1.3.1",
  "mockall",
  "mockito",

@@ -102,6 +102,7 @@ impl DocsRsClient for RealDocsRsClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::assert_matches;
     use test_case::test_case;
 
     async fn mock(
@@ -138,10 +139,10 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        assert!(matches!(
+        assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
             Err(DocsRsError::NotFound)
-        ));
+        );
 
         Ok(())
     }
@@ -153,10 +154,10 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        assert!(matches!(
+        assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
             Err(DocsRsError::RateLimited)
-        ));
+        );
 
         Ok(())
     }
@@ -170,10 +171,10 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        assert!(matches!(
+        assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
             Err(DocsRsError::Unauthorized)
-        ));
+        );
 
         Ok(())
     }
@@ -188,11 +189,10 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        if let Err(DocsRsError::BadRequest(msg)) = docs_rs.rebuild_docs("krate", "0.1.0").await {
-            assert_eq!(msg, "some error message");
-        } else {
-            panic!("Expected BadRequest error");
-        }
+        assert_matches!(
+            docs_rs.rebuild_docs("krate", "0.1.0").await,
+            Err(DocsRsError::BadRequest(msg)) if msg == "some error message"
+        );
 
         Ok(())
     }
@@ -204,10 +204,10 @@ mod tests {
 
         let docs_rs = RealDocsRsClient::new(server.url(), "test_token")?;
 
-        assert!(matches!(
+        assert_matches!(
             docs_rs.rebuild_docs("krate", "0.1.0").await,
             Err(DocsRsError::Other(_))
-        ));
+        );
 
         Ok(())
     }
