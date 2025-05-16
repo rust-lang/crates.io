@@ -86,7 +86,7 @@ impl DatabasePools {
             .unwrap_or(DEFAULT_TCP_TIMEOUT);
 
         let connection_timeout = var_parsed("DB_TIMEOUT")?
-            .map(Duration::from_millis)
+            .map(Duration::from_secs)
             .unwrap_or(DEFAULT_CONNECTION_TIMEOUT);
 
         // `DB_TIMEOUT` currently configures both the connection timeout and
