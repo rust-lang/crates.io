@@ -73,9 +73,9 @@ mod tests {
             .build(&mut conn)
             .await?;
 
-        let request = cookie_client.post_request("/api/v1/crates/krate/0.1.0/rebuild_docs");
-        let response = cookie_client.run::<()>(request).await;
-
+        let response = cookie_client
+            .post::<()>("/api/v1/crates/krate/0.1.0/rebuild_docs", "")
+            .await;
         assert_eq!(response.status(), StatusCode::CREATED);
 
         app.run_pending_background_jobs().await;
@@ -94,8 +94,9 @@ mod tests {
         let (app, _client, cookie_client) =
             TestApp::full().with_docs_rs(docs_rs_mock).with_user().await;
 
-        let request = cookie_client.post_request("/api/v1/crates/krate/0.1.0/rebuild_docs");
-        let response = cookie_client.run::<()>(request).await;
+        let response = cookie_client
+            .post::<()>("/api/v1/crates/krate/0.1.0/rebuild_docs", "")
+            .await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
