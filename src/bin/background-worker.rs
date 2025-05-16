@@ -83,12 +83,7 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let docs_rs: Option<Box<dyn DocsRsClient>> =
-        if let Some(cl) = RealDocsRsClient::from_environment() {
-            Some(Box::new(cl))
-        } else {
-            None
-        };
+    let docs_rs: Option<Box<dyn DocsRsClient>> = RealDocsRsClient::from_environment().map(Box::new);
 
     let deadpool = create_database_pool(&config.db.primary);
 

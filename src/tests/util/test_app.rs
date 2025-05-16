@@ -296,19 +296,13 @@ impl TestAppBuilder {
                 credentials: Credentials::Missing,
             };
 
-            let docs_rs: Option<Box<dyn DocsRsClient>> = if let Some(cl) = self.docs_rs {
-                Some(Box::new(cl))
-            } else {
-                None
-            };
-
             let environment = Environment::builder()
                 .config(app.config.clone())
                 .repository_config(repository_config)
                 .storage(app.storage.clone())
                 .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
-                .maybe_docs_rs(docs_rs)
+                .maybe_docs_rs(self.docs_rs.map(Box::new))
                 .team_repo(Box::new(self.team_repo))
                 .build();
 
