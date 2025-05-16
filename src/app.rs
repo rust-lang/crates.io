@@ -11,7 +11,6 @@ use crate::rate_limiter::{LimitedAction, RateLimiter, RateLimiterConfig};
 use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
-use crates_io_docs_rs::DocsRsClient;
 use crates_io_github::GitHubClient;
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
@@ -42,9 +41,6 @@ pub struct App {
     /// The GitHub OAuth2 configuration
     pub github_oauth:
         BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>,
-
-    /// Docs.rs API client
-    pub docs_rs: Arc<dyn DocsRsClient>,
 
     /// The server configuration
     pub config: Arc<config::Server>,

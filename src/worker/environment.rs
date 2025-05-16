@@ -31,7 +31,7 @@ pub struct Environment {
     pub deadpool: Pool<AsyncPgConnection>,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
-    pub docs_rs: Arc<dyn DocsRsClient>,
+    pub docs_rs: Option<Box<dyn DocsRsClient>>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(skip)]

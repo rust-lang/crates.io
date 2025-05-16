@@ -21,7 +21,7 @@ use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{Emails, config};
-use crates_io_docs_rs::RealDocsRsClient;
+use crates_io_docs_rs::{DocsRsClient, RealDocsRsClient};
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use crates_io_team_repo::TeamRepoImpl;
@@ -83,11 +83,12 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let docs_rs = RealDocsRsClient::new(
-        config.docs_rs_base_url.clone(),
-        config.docs_rs_api_token.clone(),
-    )?;
-    let docs_rs = Arc::new(docs_rs);
+    let docs_rs: Option<Box<dyn DocsRsClient>> =
+        if let Some(cl) = RealDocsRsClient::from_environment() {
+            Some(Box::new(cl))
+        } else {
+            None
+        };
 
     let deadpool = create_database_pool(&config.db.primary);
 
@@ -100,7 +101,7 @@ fn main() -> anyhow::Result<()> {
         .downloads_archive_store(downloads_archive_store)
         .deadpool(deadpool.clone())
         .emails(emails)
-        .docs_rs(docs_rs)
+        .maybe_docs_rs(docs_rs)
         .team_repo(Box::new(team_repo))
         .build();
 

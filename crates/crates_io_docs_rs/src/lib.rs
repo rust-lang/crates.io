@@ -1,9 +1,11 @@
 #![doc = include_str!("../README.md")]
 
 use async_trait::async_trait;
+use crates_io_env_vars::{var, var_parsed};
 use http::StatusCode;
 use reqwest::IntoUrl;
 use serde::Deserialize;
+use tracing::warn;
 use url::Url;
 
 #[derive(Debug, thiserror::Error)]
@@ -53,6 +55,21 @@ impl RealDocsRsClient {
                 .map_err(|err| DocsRsError::Other(err.into()))?,
             api_token: api_token.into(),
         })
+    }
+
+    pub fn from_environment() -> Option<Self> {
+        let base_url: Url = match var_parsed("DOCS_RS_BASE_URL") {
+            Ok(Some(url)) => url,
+            Ok(None) => Url::parse("https://docs.rs").unwrap(),
+            Err(err) => {
+                warn!(?err, "Failed to parse DOCS_RS_BASE_URL");
+                return None;
+            }
+        };
+
+        let api_token = var("DOCS_RS_API_TOKEN").ok()??;
+
+        Some(Self::new(base_url, api_token).expect("URL is always valid here"))
     }
 }
 

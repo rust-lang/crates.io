@@ -24,7 +24,12 @@ impl BackgroundJob for DocsRsQueueRebuild {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-        match ctx.docs_rs.rebuild_docs(&self.name, &self.version).await {
+        let Some(docs_rs) = ctx.docs_rs.as_ref() else {
+            warn!("docs.rs not configured, skipping rebuild");
+            return Ok(());
+        };
+
+        match docs_rs.rebuild_docs(&self.name, &self.version).await {
             Ok(()) => Ok(()),
             Err(DocsRsError::BadRequest(msg)) => {
                 warn!(
