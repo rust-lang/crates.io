@@ -89,7 +89,7 @@ pub struct Server {
     pub content_security_policy: Option<HeaderValue>,
 
     pub docs_rs_url: url::Url,
-    pub docs_rs_api_token: Option<String>,
+    pub docs_rs_api_token: String,
 }
 
 impl Server {
@@ -238,7 +238,7 @@ impl Server {
             content_security_policy: Some(content_security_policy.parse()?),
             docs_rs_url: var_parsed("DOCS_RS_HOSTNAME")?
                 .unwrap_or_else(|| url::Url::parse("https://docs.rs").unwrap()),
-            docs_rs_api_token: var("DOCS_RS_API_TOKEN")?,
+            docs_rs_api_token: required_var("DOCS_RS_API_TOKEN")?,
         })
     }
 }

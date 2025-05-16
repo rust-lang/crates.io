@@ -1,32 +1,8 @@
 use crate::worker::Environment;
 use anyhow::anyhow;
-use crates_io_docs_rs::{DocsRsClient, DocsRsError, RealDocsRsClient};
+use crates_io_docs_rs::DocsRsError;
 use crates_io_worker::BackgroundJob;
 use std::sync::Arc;
-
-/// Builds an [DocsRsClient] implementation based on the [crate::config::Server]
-pub fn docs_rs_client(
-    config: &crate::config::Server,
-) -> anyhow::Result<Box<dyn DocsRsClient + Send + Sync>> {
-    if let Some(api_token) = &config.docs_rs_api_token {
-        Ok(Box::new(RealDocsRsClient::new(
-            config.docs_rs_url.clone(),
-            api_token,
-        )?))
-    } else {
-        #[cfg(test)]
-        {
-            use crates_io_docs_rs::MockDocsRsClient;
-
-            Ok(Box::new(MockDocsRsClient::new()))
-        }
-        #[cfg(not(test))]
-        {
-            use anyhow::bail;
-            bail!("missing docs.rs API token")
-        }
-    }
-}
 
 /// A background job that queues a docs rebuild for a specific release
 #[derive(Serialize, Deserialize)]
@@ -48,9 +24,7 @@ impl BackgroundJob for DocsRsQueueRebuild {
     type Context = Arc<Environment>;
 
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
-        let client = docs_rs_client(&ctx.config)?;
-
-        match client.rebuild_docs(&self.name, &self.version).await {
+        match ctx.docs_rs.rebuild_docs(&self.name, &self.version).await {
             Ok(()) => Ok(()),
             Err(DocsRsError::BadRequest(msg)) => {
                 warn!(

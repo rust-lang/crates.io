@@ -11,6 +11,7 @@ use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
+use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
@@ -102,6 +103,7 @@ impl TestApp {
             use_chaos_proxy: false,
             team_repo: MockTeamRepo::new(),
             github: None,
+            docs_rs: None,
         }
     }
 
@@ -243,6 +245,7 @@ pub struct TestAppBuilder {
     use_chaos_proxy: bool,
     team_repo: MockTeamRepo,
     github: Option<MockGitHubClient>,
+    docs_rs: Option<MockDocsRsClient>,
 }
 
 impl TestAppBuilder {
@@ -281,7 +284,7 @@ impl TestAppBuilder {
             (primary_proxy, replica_proxy)
         };
 
-        let (app, router) = build_app(self.config, self.github);
+        let (app, router) = build_app(self.config, self.github, self.docs_rs);
 
         let runner = if self.build_job_runner {
             let index = self
@@ -300,6 +303,7 @@ impl TestAppBuilder {
                 .storage(app.storage.clone())
                 .deadpool(app.primary_database.clone())
                 .emails(app.emails.clone())
+                .docs_rs(app.docs_rs.clone())
                 .team_repo(Box::new(self.team_repo))
                 .build();
 
@@ -381,6 +385,11 @@ impl TestAppBuilder {
 
     pub fn with_chaos_proxy(mut self) -> Self {
         self.use_chaos_proxy = true;
+        self
+    }
+
+    pub fn with_docs_rs(mut self, docs_rs: MockDocsRsClient) -> Self {
+        self.docs_rs = Some(docs_rs);
         self
     }
 
@@ -484,11 +493,15 @@ fn simple_config() -> config::Server {
         html_render_cache_max_capacity: 1024,
         content_security_policy: None,
         docs_rs_url: Url::parse("https://docs.rs").unwrap(),
-        docs_rs_api_token: None,
+        docs_rs_api_token: "invalid".to_owned(),
     }
 }
 
-fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<App>, axum::Router) {
+fn build_app(
+    config: config::Server,
+    github: Option<MockGitHubClient>,
+    docs_rs: Option<MockDocsRsClient>,
+) -> (Arc<App>, axum::Router) {
     // Use the in-memory email backend for all tests, allowing tests to analyze the emails sent by
     // the application. This will also prevent cluttering the filesystem.
     let emails = Emails::new_in_memory();
@@ -496,10 +509,14 @@ fn build_app(config: config::Server, github: Option<MockGitHubClient>) -> (Arc<A
     let github = github.unwrap_or_else(|| MOCK_GITHUB_DATA.as_mock_client());
     let github = Box::new(github);
 
+    let docs_rs = docs_rs.unwrap_or_default();
+    let docs_rs = Arc::new(docs_rs);
+
     let app = App::builder()
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .docs_rs(docs_rs)
         .emails(emails)
         .storage_from_config(&config.storage)
         .rate_limiter_from_config(config.rate_limiter.clone())

@@ -6,6 +6,7 @@ use crates_io::{App, Emails, metrics::LogEncoder};
 use std::{sync::Arc, time::Duration};
 
 use axum::ServiceExt;
+use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_github::RealGitHubClient;
 use prometheus::Encoder;
 use reqwest::Client;
@@ -33,10 +34,15 @@ fn main() -> anyhow::Result<()> {
     let github = RealGitHubClient::new(client);
     let github = Box::new(github);
 
+    let docs_rs =
+        RealDocsRsClient::new(config.docs_rs_url.clone(), config.docs_rs_api_token.clone())?;
+    let docs_rs = Arc::new(docs_rs);
+
     let app = App::builder()
         .databases_from_config(&config.db)
         .github(github)
         .github_oauth_from_config(&config)
+        .docs_rs(docs_rs)
         .emails(emails)
         .storage_from_config(&config.storage)
         .rate_limiter_from_config(config.rate_limiter.clone())
