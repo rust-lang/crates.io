@@ -286,6 +286,38 @@ async fn new_krate_with_wildcard_dependency() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn new_krate_with_patch() {
+    let (app, _, user, token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+
+    // Insert a crate directly into the database so that new_wild can depend on it
+    CrateBuilder::new("foo_patch", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    let manifest = r#"
+    [package]
+    name = "new_patch"
+    version = "1.0.0"
+    description = "foo?!"
+    license = "MIT"
+
+    [dependencies]
+    foo_patch = "1.0.0"
+
+    [patch.crates-io]
+    foo_patch = { git = "https://github.com/foo/patch.git" }
+    "#;
+
+    let crate_to_publish = PublishBuilder::new("new_patch", "1.0.0").custom_manifest(manifest);
+
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io does not allow crates to be published with `[patch]` sections in their manifests."}]}"###);
+    assert_that!(app.stored_files().await, empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn new_krate_dependency_missing() {
     let (app, _, _, token) = TestApp::full().with_token().await;
 

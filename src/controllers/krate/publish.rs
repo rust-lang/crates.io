@@ -342,6 +342,13 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         validate_dependency(dep)?;
     }
 
+    // We don't want to allow [patch] sections in manifests at all.
+    if matches!(&tarball_info.manifest.patch, Some(patch) if !patch.is_empty()) {
+        return Err(bad_request(
+            "crates.io does not allow crates to be published with `[patch]` sections in their manifests.",
+        ));
+    }
+
     let api_token_id = auth.api_token_id();
     let user = auth.user();
 
