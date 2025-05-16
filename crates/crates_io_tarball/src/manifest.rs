@@ -7,6 +7,13 @@ pub fn validate_manifest(manifest: &Manifest) -> Result<(), Error> {
     // does not accept workspace manifests.
     let package = package.ok_or(Error::Other("missing field `package`".to_string()))?;
 
+    // We don't want to allow [patch] sections in manifests at all.
+    if matches!(&manifest.patch, Some(patch) if !patch.is_empty()) {
+        return Err(Error::Other(
+            "crates cannot be published with `[patch]` tables".to_string(),
+        ));
+    }
+
     validate_package(package)?;
 
     // These checks ensure that dependency workspace inheritance has been

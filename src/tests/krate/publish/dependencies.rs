@@ -313,7 +313,7 @@ async fn new_krate_with_patch() {
 
     let response = token.publish_crate(crate_to_publish).await;
     assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"crates.io does not allow crates to be published with `[patch]` sections in their manifests."}]}"###);
+    assert_snapshot!(response.text(), @r###"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\ncrates cannot be published with `[patch]` tables"}]}"###);
     assert_that!(app.stored_files().await, empty());
 }
 
