@@ -1,0 +1,32 @@
+---
+source: crates/crates_io_trustpub/src/github/test_helpers.rs
+expression: claims
+---
+{
+  "iss": "https://token.actions.githubusercontent.com",
+  "nbf": "[timestamp]",
+  "exp": "[timestamp]",
+  "iat": "[timestamp]",
+  "jti": "example-id",
+  "sub": "repo:octocat/hello-world",
+  "aud": "crates.io",
+  "ref": "refs/heads/main",
+  "sha": "example-sha",
+  "repository": "octocat/hello-world",
+  "repository_owner": "octocat",
+  "actor_id": "12",
+  "repository_visibility": "private",
+  "repository_id": "74",
+  "repository_owner_id": "123",
+  "run_id": "example-run-id",
+  "run_number": "10",
+  "run_attempt": "2",
+  "runner_environment": "github-hosted",
+  "actor": "octocat",
+  "workflow": "example-workflow",
+  "head_ref": "",
+  "base_ref": "",
+  "event_name": "workflow_dispatch",
+  "ref_type": "branch",
+  "workflow_ref": "octocat/hello-world/.github/workflows/ci.yml@refs/heads/main"
+}
