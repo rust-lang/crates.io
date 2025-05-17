@@ -1,5 +1,6 @@
 pub mod authors;
 pub mod dependencies;
+pub mod docs;
 pub mod downloads;
 pub mod metadata;
 pub mod readme;

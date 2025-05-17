@@ -5,6 +5,7 @@ use crate::storage::Storage;
 use crate::typosquat;
 use anyhow::Context;
 use bon::Builder;
+use crates_io_docs_rs::DocsRsClient;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_team_repo::TeamRepo;
 use diesel_async::AsyncPgConnection;
@@ -30,6 +31,7 @@ pub struct Environment {
     pub deadpool: Pool<AsyncPgConnection>,
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
+    pub docs_rs: Option<Box<dyn DocsRsClient>>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(skip)]

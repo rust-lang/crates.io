@@ -139,6 +139,15 @@ pub trait RequestHelper {
         self.run(request).await
     }
 
+    /// Issue a POST request
+    async fn post<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
+        let request = self
+            .request_builder(Method::POST, path)
+            .with_body(body.into());
+
+        self.run(request).await
+    }
+
     /// Issue a PUT request
     async fn put<T>(&self, path: &str, body: impl Into<Bytes>) -> Response<T> {
         let request = self
