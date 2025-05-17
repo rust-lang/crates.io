@@ -4,7 +4,7 @@ use diesel::sql_types::{Date, Double, Integer, Interval, SingleValue, Text, Time
 define_sql_function!(#[aggregate] fn array_agg<T: SingleValue>(x: T) -> Array<T>);
 define_sql_function!(fn canon_crate_name(x: Text) -> Text);
 define_sql_function!(fn to_char(a: Date, b: Text) -> Text);
-define_sql_function!(fn lower(x: Text) -> Text);
+define_sql_function!(fn lower<T: SingleValue>(x: T) -> T);
 define_sql_function!(fn date_part(x: Text, y: Timestamptz) -> Double);
 define_sql_function! {
     #[sql_name = "date_part"]
