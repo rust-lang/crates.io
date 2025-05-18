@@ -495,9 +495,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudfront"
-version = "1.74.0"
+version = "1.75.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3983d496136db7cdd233c273e54ff0e112033f21292e9b7b3494ed619ad98a99"
+checksum = "30901630a384925e5d7d720614a931c22125e328e52d554d29fbfc3a0ba3db71"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -511,16 +511,15 @@ dependencies = [
  "aws-types",
  "fastrand",
  "http 0.2.12",
- "once_cell",
  "regex-lite",
  "tracing",
 ]
 
 [[package]]
 name = "aws-sdk-sqs"
-version = "1.67.0"
+version = "1.68.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f15bedfb1c4385fccc474f0fe46dffb0335d0b3d6b4413df06fb30d90caba8"
+checksum = "5b484821a335b02b109c17623b8347e692583c2229f8db2f029edd0fdbbd3bea"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -534,7 +533,6 @@ dependencies = [
  "bytes",
  "fastrand",
  "http 0.2.12",
- "once_cell",
  "regex-lite",
  "tracing",
 ]
