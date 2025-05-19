@@ -6,7 +6,6 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::authorization::Rights;
 use crate::util::errors::{AppResult, custom, server_error};
 use crate::worker::jobs;
-use axum::response::{IntoResponse as _, Response};
 use crates_io_worker::BackgroundJob as _;
 use http::StatusCode;
 use http::request::Parts;
@@ -26,7 +25,7 @@ pub async fn rebuild_version_docs(
     app: AppState,
     path: CrateVersionPath,
     req: Parts,
-) -> AppResult<Response> {
+) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
     let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
@@ -54,7 +53,7 @@ pub async fn rebuild_version_docs(
             server_error("failed to enqueue background job")
         })?;
 
-    Ok(StatusCode::CREATED.into_response())
+    Ok(StatusCode::CREATED)
 }
 
 #[cfg(test)]
