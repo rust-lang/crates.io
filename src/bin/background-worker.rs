@@ -21,7 +21,7 @@ use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{Emails, config};
-use crates_io_docs_rs::{DocsRsClient, RealDocsRsClient};
+use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
 use crates_io_team_repo::TeamRepoImpl;
@@ -87,8 +87,7 @@ fn main() -> anyhow::Result<()> {
     let fastly = Fastly::from_environment(client.clone());
     let team_repo = TeamRepoImpl::default();
 
-    let docs_rs: Option<Box<dyn DocsRsClient>> =
-        RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
+    let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
 
     let deadpool = create_database_pool(&config.db.primary);
 
