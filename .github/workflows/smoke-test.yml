@@ -3,6 +3,8 @@ name: Smoke Test
 on:
   workflow_dispatch:
 
+permissions: {}
+
 concurrency:
   group: smoke-test
   cancel-in-progress: true

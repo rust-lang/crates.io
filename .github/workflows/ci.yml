@@ -8,6 +8,8 @@ on:
 
   pull_request:
 
+permissions: {}
+
 concurrency:
   group: ci-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
