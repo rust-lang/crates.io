@@ -7,6 +7,8 @@ use serde::Deserialize;
 use tracing::warn;
 use url::Url;
 
+pub const DEFAULT_BASE_URL: &str = "https://docs.rs";
+
 #[derive(Debug, thiserror::Error)]
 pub enum DocsRsError {
     /// The rebuild couldn't be triggered.
@@ -57,7 +59,7 @@ impl RealDocsRsClient {
     pub fn from_environment() -> Option<Self> {
         let base_url: Url = match var_parsed("DOCS_RS_BASE_URL") {
             Ok(Some(url)) => url,
-            Ok(None) => Url::parse("https://docs.rs").unwrap(),
+            Ok(None) => Url::parse(DEFAULT_BASE_URL).unwrap(),
             Err(err) => {
                 warn!(?err, "Failed to parse DOCS_RS_BASE_URL");
                 return None;
