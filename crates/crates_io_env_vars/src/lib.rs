@@ -139,10 +139,10 @@ mod tests {
     fn test_var() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "test");
+        unsafe { std::env::set_var(TEST_VAR, "test") };
         assert_some_eq!(assert_ok!(var(TEST_VAR)), "test");
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         assert_none!(assert_ok!(var(TEST_VAR)));
     }
 
@@ -150,10 +150,10 @@ mod tests {
     fn test_required_var() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "test");
+        unsafe { std::env::set_var(TEST_VAR, "test") };
         assert_ok_eq!(required_var(TEST_VAR), "test");
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         let error = assert_err!(required_var(TEST_VAR));
         assert_eq!(
             error.to_string(),
@@ -165,17 +165,17 @@ mod tests {
     fn test_var_parsed() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "42");
+        unsafe { std::env::set_var(TEST_VAR, "42") };
         assert_some_eq!(assert_ok!(var_parsed::<i32>(TEST_VAR)), 42);
 
-        std::env::set_var(TEST_VAR, "test");
+        unsafe { std::env::set_var(TEST_VAR, "test") };
         let error = assert_err!(var_parsed::<i32>(TEST_VAR));
         assert_eq!(
             error.to_string(),
             "Failed to parse CRATES_IO_ENV_VARS_TEST_VAR environment variable"
         );
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         assert_none!(assert_ok!(var_parsed::<i32>(TEST_VAR)));
     }
 
@@ -183,17 +183,17 @@ mod tests {
     fn test_required_var_parsed() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "42");
+        unsafe { std::env::set_var(TEST_VAR, "42") };
         assert_ok_eq!(required_var_parsed::<i32>(TEST_VAR), 42);
 
-        std::env::set_var(TEST_VAR, "test");
+        unsafe { std::env::set_var(TEST_VAR, "test") };
         let error = assert_err!(required_var_parsed::<i32>(TEST_VAR));
         assert_eq!(
             error.to_string(),
             "Failed to parse CRATES_IO_ENV_VARS_TEST_VAR environment variable"
         );
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         let error = assert_err!(required_var_parsed::<i32>(TEST_VAR));
         assert_eq!(
             error.to_string(),
@@ -205,16 +205,16 @@ mod tests {
     fn test_list() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "test");
+        unsafe { std::env::set_var(TEST_VAR, "test") };
         assert_ok_eq!(list(TEST_VAR), vec!["test"]);
 
-        std::env::set_var(TEST_VAR, "test, foo,   bar   ");
+        unsafe { std::env::set_var(TEST_VAR, "test, foo,   bar   ") };
         assert_ok_eq!(list(TEST_VAR), vec!["test", "foo", "bar"]);
 
-        std::env::set_var(TEST_VAR, "");
+        unsafe { std::env::set_var(TEST_VAR, "") };
         assert_ok_eq!(list(TEST_VAR), Vec::<String>::new());
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         assert_ok_eq!(list(TEST_VAR), Vec::<String>::new());
     }
 
@@ -222,23 +222,23 @@ mod tests {
     fn test_list_parsed() {
         let _guard = MUTEX.lock().unwrap();
 
-        std::env::set_var(TEST_VAR, "42");
+        unsafe { std::env::set_var(TEST_VAR, "42") };
         assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), vec![42]);
 
-        std::env::set_var(TEST_VAR, "42, 1,   -53   ");
+        unsafe { std::env::set_var(TEST_VAR, "42, 1,   -53   ") };
         assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), vec![42, 1, -53]);
 
-        std::env::set_var(TEST_VAR, "42, what");
+        unsafe { std::env::set_var(TEST_VAR, "42, what") };
         let error = assert_err!(list_parsed(TEST_VAR, i32::from_str));
         assert_eq!(
             error.to_string(),
             "Failed to parse value \"what\" of CRATES_IO_ENV_VARS_TEST_VAR environment variable"
         );
 
-        std::env::set_var(TEST_VAR, "");
+        unsafe { std::env::set_var(TEST_VAR, "") };
         assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), Vec::<i32>::new());
 
-        std::env::remove_var(TEST_VAR);
+        unsafe { std::env::remove_var(TEST_VAR) };
         assert_ok_eq!(list_parsed(TEST_VAR, i32::from_str), Vec::<i32>::new());
     }
 }
