@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
 
     // We run some long-running queries in the background worker, so we need to
     // increase the statement timeout a bit…
-    config.db.primary.statement_timeout = Duration::from_secs(60 * 60);
+    config.db.primary.statement_timeout = Duration::from_secs(4 * 60 * 60);
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
