@@ -1,16 +1,16 @@
 use crate::background_job::DEFAULT_QUEUE;
 use crate::job_registry::JobRegistry;
 use crate::worker::Worker;
-use crate::{storage, BackgroundJob};
+use crate::{BackgroundJob, storage};
 use anyhow::anyhow;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
 use futures_util::future::join_all;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::task::JoinHandle;
-use tracing::{info, info_span, warn, Instrument};
+use tracing::{Instrument, info, info_span, warn};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(1);
 

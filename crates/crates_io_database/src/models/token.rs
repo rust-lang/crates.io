@@ -145,8 +145,9 @@ mod tests {
         };
         let json = serde_json::to_string(&tok).unwrap();
         assert_some!(json.as_str().find(r#""created_at":"2017-01-06T14:23:11Z""#));
-        assert_some!(json
-            .as_str()
-            .find(r#""last_used_at":"2017-01-06T14:23:12Z""#));
+        assert_some!(
+            json.as_str()
+                .find(r#""last_used_at":"2017-01-06T14:23:12Z""#)
+        );
     }
 }

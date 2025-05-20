@@ -3,14 +3,14 @@ use crates_io_test_db::TestDatabase;
 use crates_io_worker::schema::background_jobs;
 use crates_io_worker::{BackgroundJob, Runner};
 use diesel::prelude::*;
-use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_compact_json_snapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
 use tokio::sync::Barrier;
 
 async fn all_jobs(conn: &mut AsyncPgConnection) -> QueryResult<Vec<(String, Value)>> {

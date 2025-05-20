@@ -5,8 +5,8 @@ use diesel::dsl;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use futures_util::future::BoxFuture;
 use futures_util::FutureExt;
+use futures_util::future::BoxFuture;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]

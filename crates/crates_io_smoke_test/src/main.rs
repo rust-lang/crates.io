@@ -9,7 +9,7 @@ mod git;
 extern crate tracing;
 
 use crate::api::ApiClient;
-use anyhow::{anyhow, bail, Context};
+use anyhow::{Context, anyhow, bail};
 use clap::Parser;
 use secrecy::SecretString;
 use std::path::{Path, PathBuf};
@@ -177,7 +177,9 @@ async fn main() -> anyhow::Result<()> {
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
             if !stderr.contains("413 Payload Too Large") {
-                bail!("Expected `cargo publish` to fail with an `413 Payload Too Large` error, but got:\n{stderr}");
+                bail!(
+                    "Expected `cargo publish` to fail with an `413 Payload Too Large` error, but got:\n{stderr}"
+                );
             }
         }
     }

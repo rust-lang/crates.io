@@ -35,9 +35,12 @@ mod tests {
         };
         let mut buffer = Vec::new();
         assert_ok!(write_crate(&krate, &mut buffer));
-        assert_ok_eq!(String::from_utf8(buffer), "\
+        assert_ok_eq!(
+            String::from_utf8(buffer),
+            "\
             {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
-        ");
+        "
+        );
     }
 
     #[test]
@@ -61,11 +64,14 @@ mod tests {
 
         let mut buffer = Vec::new();
         assert_ok!(write_crates(&crates, &mut buffer));
-        assert_ok_eq!(String::from_utf8(buffer), "\
+        assert_ok_eq!(
+            String::from_utf8(buffer),
+            "\
             {\"name\":\"foo\",\"vers\":\"0.1.0\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
             {\"name\":\"foo\",\"vers\":\"1.0.0-beta.1\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
             {\"name\":\"foo\",\"vers\":\"1.0.0\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
             {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
-        ");
+        "
+        );
     }
 }

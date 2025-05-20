@@ -1,11 +1,11 @@
 use anyhow::Context;
 use clap::Parser;
-use crates_io_cdn_logs::{count_downloads, Decompressor};
+use crates_io_cdn_logs::{Decompressor, count_downloads};
 use std::path::PathBuf;
 use tokio::fs::File;
 use tokio::io::BufReader;
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt};
 
 #[derive(Debug, clap::Parser)]
 struct Options {

@@ -1,5 +1,5 @@
-use flate2::read::GzEncoder;
 use flate2::Compression;
+use flate2::read::GzEncoder;
 use std::io::Read;
 
 pub struct TarballBuilder {

@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use clap::Parser;
 use crates_io_tarball::process_tarball;
 use std::path::PathBuf;
 use tokio::fs::File;
-use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::filter::LevelFilter;
 
 /// Read and process a `.crate` file the same way crates.io does when publishing a crate version.
 /// If the crate file has no errors, the metadata that would be written to the database will be

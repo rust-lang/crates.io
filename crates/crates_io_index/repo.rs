@@ -1,6 +1,6 @@
 use crate::credentials::Credentials;
-use anyhow::{anyhow, Context};
-use base64::{engine::general_purpose, Engine};
+use anyhow::{Context, anyhow};
+use base64::{Engine, engine::general_purpose};
 use crates_io_env_vars::{required_var, required_var_parsed, var};
 use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};

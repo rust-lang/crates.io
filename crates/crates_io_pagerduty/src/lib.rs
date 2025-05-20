@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 
-use anyhow::{anyhow, Result};
-use reqwest::{header, Client, StatusCode as Status};
+use anyhow::{Result, anyhow};
+use reqwest::{Client, StatusCode as Status, header};
 use secrecy::{ExposeSecret, SecretString};
 
 #[derive(serde::Serialize, Debug)]

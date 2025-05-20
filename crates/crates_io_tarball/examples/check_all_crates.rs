@@ -1,14 +1,14 @@
 use anyhow::anyhow;
 use clap::Parser;
 use crates_io_tarball::process_tarball;
-use futures_util::{stream, StreamExt};
+use futures_util::{StreamExt, stream};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tokio::fs::File;
 use tracing::{debug, info, warn};
-use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::filter::LevelFilter;
 use walkdir::WalkDir;
 
 /// Runs through all crate files in a folder and shows parsing errors.
