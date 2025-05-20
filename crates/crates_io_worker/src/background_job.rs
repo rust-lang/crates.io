@@ -61,12 +61,12 @@ pub trait BackgroundJob: Serialize + DeserializeOwned + Send + Sync + 'static {
     }
 }
 
-fn enqueue_deduplicated(
+fn enqueue_deduplicated<'a>(
     conn: &mut AsyncPgConnection,
-    job_type: &'static str,
+    job_type: &'a str,
     data: Value,
     priority: i16,
-) -> impl Future<Output = Result<Option<i64>, EnqueueError>> {
+) -> BoxFuture<'a, Result<Option<i64>, EnqueueError>> {
     let similar_jobs = background_jobs::table
         .select(background_jobs::id)
         .filter(background_jobs::job_type.eq(job_type))
@@ -92,15 +92,15 @@ fn enqueue_deduplicated(
         .returning(background_jobs::id)
         .get_result::<i64>(conn);
 
-    async move { Ok(future.await.optional()?) }
+    async move { Ok(future.await.optional()?) }.boxed()
 }
 
-fn enqueue_simple(
+fn enqueue_simple<'a>(
     conn: &mut AsyncPgConnection,
-    job_type: &'static str,
+    job_type: &'a str,
     data: Value,
     priority: i16,
-) -> impl Future<Output = Result<i64, EnqueueError>> {
+) -> BoxFuture<'a, Result<i64, EnqueueError>> {
     let future = diesel::insert_into(background_jobs::table)
         .values((
             background_jobs::job_type.eq(job_type),
@@ -110,5 +110,5 @@ fn enqueue_simple(
         .returning(background_jobs::id)
         .get_result(conn);
 
-    async move { Ok(future.await?) }
+    async move { Ok(future.await?) }.boxed()
 }
