@@ -5,9 +5,8 @@ use diesel::dsl;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use futures_util::future::BoxFuture;
 use futures_util::FutureExt;
-use std::future::Future;
+use futures_util::future::BoxFuture;
 
 #[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
 #[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
@@ -97,12 +96,12 @@ impl Category {
             .await
     }
 
-    pub fn toplevel(
+    pub fn toplevel<'a>(
         conn: &mut AsyncPgConnection,
-        sort: &str,
+        sort: &'a str,
         limit: i64,
         offset: i64,
-    ) -> impl Future<Output = QueryResult<Vec<Category>>> {
+    ) -> BoxFuture<'a, QueryResult<Vec<Category>>> {
         use diesel::sql_types::Int8;
 
         let sort_sql = match sort {
@@ -116,6 +115,7 @@ impl Category {
             .bind::<Int8, _>(limit)
             .bind::<Int8, _>(offset)
             .load(conn)
+            .boxed()
     }
 
     pub fn subcategories(

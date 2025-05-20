@@ -4,7 +4,7 @@
 extern crate tracing;
 
 use oauth2::AccessToken;
-use reqwest::{self, header, RequestBuilder};
+use reqwest::{self, RequestBuilder, header};
 
 use serde::de::DeserializeOwned;
 

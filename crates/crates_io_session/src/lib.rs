@@ -4,7 +4,7 @@ use axum::extract::{Extension, FromRequestParts, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum_extra::extract::SignedCookieJar;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use cookie::time::Duration;
 use cookie::{Cookie, SameSite};
 use parking_lot::RwLock;

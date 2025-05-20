@@ -1,6 +1,6 @@
+use diesel::Queryable;
 use diesel::pg::Pg;
 use diesel::sql_types::Text;
-use diesel::Queryable;
 
 /// A wrapper around `semver::Version` that implements `diesel::Queryable`.
 ///

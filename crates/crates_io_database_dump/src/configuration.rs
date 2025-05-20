@@ -53,7 +53,7 @@ impl VisibilityConfig {
         }
         let mut ready: VecDeque<&str> = num_deps
             .iter()
-            .filter(|(_, &count)| count == 0)
+            .filter(|&(_, &count)| count == 0)
             .map(|(&table, _)| table)
             .collect();
         let mut result = Vec::with_capacity(ready.len());

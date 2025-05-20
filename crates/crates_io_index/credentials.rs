@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use secrecy::{ExposeSecret, SecretString};
 use std::io::Write;
 

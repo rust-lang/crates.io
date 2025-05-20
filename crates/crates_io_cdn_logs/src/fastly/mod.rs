@@ -4,8 +4,8 @@
 
 mod json;
 
-use crate::paths::parse_path;
 use crate::DownloadsMap;
+use crate::paths::parse_path;
 use std::borrow::Cow;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tracing::{debug_span, instrument, warn};

@@ -67,8 +67,8 @@ impl<'a> MarkdownRenderer<'a> {
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> String {
         use comrak::{
-            format_html, parse_document, Arena, ComrakExtensionOptions, ComrakOptions,
-            ComrakRenderOptions,
+            Arena, ComrakExtensionOptions, ComrakOptions, ComrakRenderOptions, format_html,
+            parse_document,
         };
 
         let render_options = ComrakRenderOptions::builder()
@@ -566,8 +566,7 @@ There can also be some text in between!
 
     #[test]
     fn absolute_links_dont_get_resolved() {
-        let text =
-            "[![crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
+        let text = "[![crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap)";
         let repository = "https://github.com/kbknapp/clap-rs/";
         assert_snapshot!(markdown_to_html(text, Some(repository), ""), @r#"<p><a href="https://crates.io/crates/clap" rel="nofollow noopener noreferrer"><img src="https://img.shields.io/crates/v/clap.svg" alt="crates.io"></a></p>"#);
     }
@@ -650,8 +649,7 @@ There can also be some text in between!
 
     #[test]
     fn image_alignment() {
-        let text =
-            "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
+        let text = "<p align=\"center\"><img src=\"https://img.shields.io/crates/v/clap.svg\" alt=\"\"></p>\n";
         assert_snapshot!(markdown_to_html(text, None, ""), @r#"<p align="center"><img src="https://img.shields.io/crates/v/clap.svg" alt=""></p>"#);
     }
 
