@@ -91,6 +91,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // OIDC / Trusted Publishing
         .routes(routes!(
             trustpub::github_configs::create::create_trustpub_github_config,
+            trustpub::github_configs::delete::delete_trustpub_github_config,
         ))
         .split_for_parts();
 
