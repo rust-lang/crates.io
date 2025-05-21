@@ -165,6 +165,9 @@ pub async fn run(command: Command) -> Result<()> {
         Command::TrustpubCleanup => {
             let job = jobs::trustpub::DeleteExpiredTokens;
             job.enqueue(&mut conn).await?;
+
+            let job = jobs::trustpub::DeleteExpiredJtis;
+            job.enqueue(&mut conn).await?;
         }
     };
 
