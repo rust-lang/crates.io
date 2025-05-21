@@ -49,6 +49,7 @@ pub enum Command {
         name: String,
     },
     SyncUpdatesFeed,
+    TrustpubCleanup,
 }
 
 pub async fn run(command: Command) -> Result<()> {
@@ -160,6 +161,10 @@ pub async fn run(command: Command) -> Result<()> {
         }
         Command::SyncUpdatesFeed => {
             jobs::rss::SyncUpdatesFeed.enqueue(&mut conn).await?;
+        }
+        Command::TrustpubCleanup => {
+            let job = jobs::trustpub::DeleteExpiredTokens;
+            job.enqueue(&mut conn).await?;
         }
     };
 

@@ -43,5 +43,6 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::rss::SyncCrateFeed>()
             .register_job_type::<jobs::rss::SyncCratesFeed>()
             .register_job_type::<jobs::rss::SyncUpdatesFeed>()
+            .register_job_type::<jobs::trustpub::DeleteExpiredTokens>()
     }
 }
