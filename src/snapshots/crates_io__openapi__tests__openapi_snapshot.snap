@@ -4173,6 +4173,52 @@ expression: response.json()
       }
     },
     "/api/v1/trusted_publishing/github_configs": {
+      "get": {
+        "operationId": "list_trustpub_github_configs",
+        "parameters": [
+          {
+            "description": "Name of the crate to list Trusted Publishing configurations for.",
+            "in": "query",
+            "name": "crate",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "github_configs": {
+                      "items": {
+                        "$ref": "#/components/schemas/GitHubConfig"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "github_configs"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "List Trusted Publishing configurations for GitHub Actions.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      },
       "put": {
         "operationId": "create_trustpub_github_config",
         "requestBody": {

@@ -47,3 +47,8 @@ pub struct CreateRequest {
 pub struct CreateResponse {
     pub github_config: GitHubConfig,
 }
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct ListResponse {
+    pub github_configs: Vec<GitHubConfig>,
+}
