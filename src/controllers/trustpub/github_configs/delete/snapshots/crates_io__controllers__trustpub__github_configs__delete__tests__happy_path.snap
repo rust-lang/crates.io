@@ -1,0 +1,24 @@
+---
+source: src/controllers/trustpub/github_configs/delete/tests.rs
+expression: app.emails_snapshot().await
+---
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Trusted Publishing configration removed from foo
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello foo!
+
+crates.io user foo has remove a "Trusted Publishing" configuration for GitH=
+ub Actions from a crate that you manage (foo).
+
+Trusted Publishing configuration:
+
+- Repository owner: rust-lang
+- Repository name: foo-rs
+- Workflow filename: publish.yml
+- Environment: (not set)
+
+If you did not make this change and you think it was made maliciously, you =
+can email help@crates.io to communicate with the crates.io support team.
