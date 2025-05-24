@@ -3,6 +3,7 @@ use crate::schema::*;
 use chrono::{DateTime, Utc};
 use diesel::dsl;
 use diesel::prelude::*;
+use diesel::sql_types::Text;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
@@ -19,7 +20,7 @@ pub struct Category {
     pub created_at: DateTime<Utc>,
 }
 
-type WithSlug<'a> = dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<&'a str>>;
+type WithSlug<'a> = dsl::Eq<categories::slug, crates_io_diesel_helpers::lower<Text, &'a str>>;
 
 #[derive(Associations, Insertable, Identifiable, Debug, Clone, Copy)]
 #[diesel(
