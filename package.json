@@ -141,7 +141,7 @@
     "qunit-dom": "3.4.0",
     "tracked-built-ins": "4.0.0",
     "typescript": "5.8.3",
-    "webpack": "5.99.8"
+    "webpack": "5.99.9"
   },
   "resolutions": {
     "ember-auto-import": "2.10.0",
