@@ -12,6 +12,7 @@ mod readmes;
 pub mod rss;
 mod send_publish_notifications;
 mod sync_admins;
+pub mod trustpub;
 mod typosquat;
 mod update_default_version;
 
