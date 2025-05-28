@@ -53,8 +53,8 @@ async-compression = { version = "=0.4.23", default-features = false, features = 
 async-trait = "=0.1.88"
 aws-credential-types = { version = "=1.2.3", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.1198.0"
-aws-sdk-cloudfront = "=1.77.0"
-aws-sdk-sqs = "=1.70.0"
+aws-sdk-cloudfront = "=1.78.0"
+aws-sdk-sqs = "=1.71.0"
 axum = { version = "=0.8.4", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.11.0", features = ["erased-json", "query", "typed-header"] }
 base64 = "=0.22.1"
