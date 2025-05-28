@@ -110,7 +110,7 @@
     "ember-qunit": "9.0.3",
     "ember-resolver": "13.1.1",
     "ember-source": "6.4.0",
-    "ember-svg-jar": "2.6.2",
+    "ember-svg-jar": "2.6.3",
     "ember-template-lint": "7.7.0",
     "ember-test-selectors": "7.1.0",
     "ember-truth-helpers": "4.0.3",
