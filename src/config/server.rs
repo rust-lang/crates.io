@@ -87,6 +87,10 @@ pub struct Server {
     pub html_render_cache_max_capacity: u64,
 
     pub content_security_policy: Option<HeaderValue>,
+
+    /// The expected audience claim (`aud`) for the Trusted Publishing
+    /// token exchange.
+    pub trustpub_audience: String,
 }
 
 impl Server {
@@ -186,6 +190,9 @@ impl Server {
                 .unwrap_or_default()
         );
 
+        let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
+        let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
+
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
             storage,
@@ -210,7 +217,7 @@ impl Server {
             page_offset_ua_blocklist,
             page_offset_cidr_blocklist,
             excluded_crate_names,
-            domain_name: dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into()),
+            domain_name,
             allowed_origins,
             downloads_persist_interval: var_parsed("DOWNLOADS_PERSIST_INTERVAL_MS")?
                 .map(Duration::from_millis)
@@ -233,6 +240,7 @@ impl Server {
             og_image_base_url: var_parsed("OG_IMAGE_BASE_URL")?,
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
+            trustpub_audience,
         })
     }
 }
