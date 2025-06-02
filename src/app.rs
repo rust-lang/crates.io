@@ -12,6 +12,8 @@ use crate::storage::{Storage, StorageConfig};
 use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
 use crates_io_github::GitHubClient;
+use crates_io_trustpub::github::GITHUB_ISSUER_URL;
+use crates_io_trustpub::keystore::{OidcKeyStore, RealOidcKeyStore};
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
 use diesel_async::AsyncPgConnection;
@@ -41,6 +43,13 @@ pub struct App {
     /// The GitHub OAuth2 configuration
     pub github_oauth:
         BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>,
+
+    /// OIDC key stores for "Trusted Publishing"
+    ///
+    /// This is a map of OIDC key stores, where the key is the issuer URL and
+    /// the value is the OIDC key store instance.
+    #[builder(default)]
+    pub oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
 
     /// The server configuration
     pub config: Arc<config::Server>,
@@ -84,6 +93,36 @@ impl<S: app_builder::State> AppBuilder<S> {
             .set_token_uri(token_url);
 
         self.github_oauth(github_oauth)
+    }
+
+    /// Set the "Trusted Publishing" providers supported by the application.
+    ///
+    /// This method configures the OIDC key stores for the specified providers
+    /// and expects a list of provider names as input.
+    ///
+    /// Currently, only "github" is supported as a provider.
+    pub fn trustpub_providers(
+        self,
+        providers: &[String],
+    ) -> AppBuilder<app_builder::SetOidcKeyStores<S>>
+    where
+        S::OidcKeyStores: app_builder::IsUnset,
+    {
+        let mut key_stores: HashMap<String, Box<dyn OidcKeyStore>> = HashMap::new();
+
+        for provider in providers {
+            match provider.as_str() {
+                "github" => {
+                    let key_store = RealOidcKeyStore::new(GITHUB_ISSUER_URL.into());
+                    key_stores.insert(GITHUB_ISSUER_URL.into(), Box::new(key_store));
+                }
+                provider => {
+                    warn!("Unknown Trusted Publishing provider: {provider}");
+                }
+            }
+        }
+
+        self.oidc_key_stores(key_stores)
     }
 
     pub fn databases_from_config(
