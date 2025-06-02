@@ -22,8 +22,8 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       '@sentry/ember':
-        specifier: 9.23.0
-        version: 9.23.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.9)
+        specifier: 9.24.0
+        version: 9.24.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.9)
       chart.js:
         specifier: 4.4.9
         version: 4.4.9
@@ -2087,32 +2087,32 @@ packages:
     resolution: {integrity: sha512-C5DHU6YlKaISB5utGQ+jpsMB57ZtY0uZ8UkD29j855BjqG6eJ98lhA2h/BoJbyPw89RKLP1EEXroy9+5JPoyVw==}
     engines: {node: 12.* || >= 14}
 
-  '@sentry-internal/browser-utils@9.23.0':
-    resolution: {integrity: sha512-hyN2Q6mh7ggw8sDVHeRyWz5LR6gjvf8zHSzQnMaF7QkeSyaeGM/SVSL4ODwqR9TRH7U2ku6nZFMbKhaBPV+Hfg==}
+  '@sentry-internal/browser-utils@9.24.0':
+    resolution: {integrity: sha512-fWIrHyui8KKufnbqhGyDvvr+u9wiOEEzxXEjs/CKp+6fa+jej6Mk8K+su1f/mz7R3HVzhxvht/gZ+y193uK4qw==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/feedback@9.23.0':
-    resolution: {integrity: sha512-Xf+KqV69TBiPo1gk2EsU6O/dumuTMxWOF52uVWJddQYI3pQTU5DqSeoZ5AY76bIIhV9n6AEFDGqNPXmuj4Acrw==}
+  '@sentry-internal/feedback@9.24.0':
+    resolution: {integrity: sha512-Z9jQqKzRppwAEqiytLWNV8JOo52vlxcSGz52FjKx3KXG75PXwk0M3sBXh762WoGLisUIRLTp8LOk6304L/O8dg==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/replay-canvas@9.23.0':
-    resolution: {integrity: sha512-cYlw5svJjyPequm0PJjFGLpee86L1NieONEHlujOXkIG6IEriiorMm+8bNpGsHRuyvg41B+4P/YmcQAGtEGxXg==}
+  '@sentry-internal/replay-canvas@9.24.0':
+    resolution: {integrity: sha512-506RdDF6iE8hMyzpzp9Vc0GM7kELxxs7UCoi/6KpvXFftcydWI3S2bru8dEZsxVoKh2hdle6SpbNgl+iPI0DSQ==}
     engines: {node: '>=18'}
 
-  '@sentry-internal/replay@9.23.0':
-    resolution: {integrity: sha512-0/q15tvSboaK7/05BFQhs71bqgHKejJoDJgXmH0lySqgsRh/S18867ZxQNiuYhuVt337h07u1QaCyjnNJKHfuA==}
+  '@sentry-internal/replay@9.24.0':
+    resolution: {integrity: sha512-312wMPeQI8K2vO/lA/CF6Uv5UReoZC7RarsNUJEoOKa9Bq1BXWUq929oTHzu/2NDv194H2u3eqSGsSp6xiuKTw==}
     engines: {node: '>=18'}
 
-  '@sentry/browser@9.23.0':
-    resolution: {integrity: sha512-QRkNxWys8e088260vByztoTsEVZ0W6v/XnZfKT6wkPPGn0aFeOrg/xjgxfI8D5huqZCxT28Cf23akOOly4FXjg==}
+  '@sentry/browser@9.24.0':
+    resolution: {integrity: sha512-RP+27/owvIqD4J0TibIHK1UcA7iObxLOXBEilDKjaJOZMLhv3JkpU8A+UI9pFzEYqeIGVDDaBzYgbCHrLWcoCA==}
     engines: {node: '>=18'}
 
-  '@sentry/core@9.23.0':
-    resolution: {integrity: sha512-9846pn/BvASGgl7WsnKY4xry98WreP9ToeLfCQTQOf+pNfD/qNPn1/0xPInGni3LVMAXRtfHHMPm2Ghz255N7A==}
+  '@sentry/core@9.24.0':
+    resolution: {integrity: sha512-uRWrB4Y49ZOWcDLCXqdjd2Fs6Onill0GQI+JgXMw7wa+i03+QRiQvUAUyde8O62jR4dvP3GDo9PDWnDNhi3z5A==}
     engines: {node: '>=18'}
 
-  '@sentry/ember@9.23.0':
-    resolution: {integrity: sha512-8xq55RPhiqyVOVr2RiLdMoGSXys4LZ0k+SZ/ejc4tUPBkTFA7jeDB9VTm91kNNpi26jltHUzCah3JJqI6y6REg==}
+  '@sentry/ember@9.24.0':
+    resolution: {integrity: sha512-tUxy2wVCSbzHjF1nWsGOP0Cp3dDCukopdGbfMvfTP67SH2oAfdN1rcXDWXAL7eM4Hg9lQl1I9m1ztDcKb1/Fzw==}
     engines: {node: '>=18'}
     peerDependencies:
       ember-cli: '>=4'
@@ -10796,40 +10796,40 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sentry-internal/browser-utils@9.23.0':
+  '@sentry-internal/browser-utils@9.24.0':
     dependencies:
-      '@sentry/core': 9.23.0
+      '@sentry/core': 9.24.0
 
-  '@sentry-internal/feedback@9.23.0':
+  '@sentry-internal/feedback@9.24.0':
     dependencies:
-      '@sentry/core': 9.23.0
+      '@sentry/core': 9.24.0
 
-  '@sentry-internal/replay-canvas@9.23.0':
+  '@sentry-internal/replay-canvas@9.24.0':
     dependencies:
-      '@sentry-internal/replay': 9.23.0
-      '@sentry/core': 9.23.0
+      '@sentry-internal/replay': 9.24.0
+      '@sentry/core': 9.24.0
 
-  '@sentry-internal/replay@9.23.0':
+  '@sentry-internal/replay@9.24.0':
     dependencies:
-      '@sentry-internal/browser-utils': 9.23.0
-      '@sentry/core': 9.23.0
+      '@sentry-internal/browser-utils': 9.24.0
+      '@sentry/core': 9.24.0
 
-  '@sentry/browser@9.23.0':
+  '@sentry/browser@9.24.0':
     dependencies:
-      '@sentry-internal/browser-utils': 9.23.0
-      '@sentry-internal/feedback': 9.23.0
-      '@sentry-internal/replay': 9.23.0
-      '@sentry-internal/replay-canvas': 9.23.0
-      '@sentry/core': 9.23.0
+      '@sentry-internal/browser-utils': 9.24.0
+      '@sentry-internal/feedback': 9.24.0
+      '@sentry-internal/replay': 9.24.0
+      '@sentry-internal/replay-canvas': 9.24.0
+      '@sentry/core': 9.24.0
 
-  '@sentry/core@9.23.0': {}
+  '@sentry/core@9.24.0': {}
 
-  '@sentry/ember@9.23.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.9)':
+  '@sentry/ember@9.24.0(ember-cli@6.4.0(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.99.9)':
     dependencies:
       '@babel/core': 7.27.4(supports-color@8.1.1)
       '@embroider/macros': 1.18.0
-      '@sentry/browser': 9.23.0
-      '@sentry/core': 9.23.0
+      '@sentry/browser': 9.24.0
+      '@sentry/core': 9.24.0
       ember-auto-import: 2.10.0(webpack@5.99.9)
       ember-cli-babel: 8.2.0(@babel/core@7.27.4)
       ember-cli-htmlbars: 6.3.0
