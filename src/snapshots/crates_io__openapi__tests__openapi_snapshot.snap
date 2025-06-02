@@ -4302,6 +4302,19 @@ expression: response.json()
       }
     },
     "/api/v1/trusted_publishing/tokens": {
+      "delete": {
+        "description": "The access token is expected to be passed in the `Authorization` header\nas a `Bearer` token, similar to how it is used in the publish endpoint.",
+        "operationId": "revoke_trustpub_token",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke a temporary access token.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      },
       "put": {
         "operationId": "exchange_trustpub_token",
         "requestBody": {
