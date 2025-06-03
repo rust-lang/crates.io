@@ -4,8 +4,7 @@ use bon::Builder;
 use chrono::{DateTime, Utc};
 use crates_io_index::features::FeaturesMap;
 use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
 use crate::models::{Crate, User};
@@ -108,21 +107,11 @@ pub struct NewVersion<'a> {
 
 impl NewVersion<'_> {
     pub async fn save(&self, conn: &mut AsyncPgConnection) -> QueryResult<Version> {
-        use diesel::insert_into;
-
-        conn.transaction(|conn| {
-            async move {
-                let version: Version = insert_into(versions::table)
-                    .values(self)
-                    .returning(Version::as_returning())
-                    .get_result(conn)
-                    .await?;
-
-                Ok(version)
-            }
-            .scope_boxed()
-        })
-        .await
+        diesel::insert_into(versions::table)
+            .values(self)
+            .returning(Version::as_returning())
+            .get_result(conn)
+            .await
     }
 }
 
