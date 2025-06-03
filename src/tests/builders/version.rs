@@ -3,6 +3,7 @@ use crate::schema::dependencies;
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
+use crates_io_database::models::versions_published_by;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
@@ -110,7 +111,8 @@ impl VersionBuilder {
             .maybe_created_at(self.created_at.as_ref())
             .build();
 
-        let vers = new_version.save(connection, "someone@example.com").await?;
+        let vers = new_version.save(connection).await?;
+        versions_published_by::insert(vers.id, "someone@example.com", connection).await?;
 
         let new_deps = self
             .dependencies

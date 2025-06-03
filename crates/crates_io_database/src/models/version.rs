@@ -8,7 +8,7 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
-use crate::models::{Crate, User, versions_published_by};
+use crate::models::{Crate, User};
 use crate::schema::{readme_renderings, users, versions};
 
 // Queryable has a custom implementation below
@@ -107,11 +107,7 @@ pub struct NewVersion<'a> {
 }
 
 impl NewVersion<'_> {
-    pub async fn save(
-        &self,
-        conn: &mut AsyncPgConnection,
-        published_by_email: &str,
-    ) -> QueryResult<Version> {
+    pub async fn save(&self, conn: &mut AsyncPgConnection) -> QueryResult<Version> {
         use diesel::insert_into;
 
         conn.transaction(|conn| {
@@ -121,8 +117,6 @@ impl NewVersion<'_> {
                     .returning(Version::as_returning())
                     .get_result(conn)
                     .await?;
-
-                versions_published_by::insert(version.id, published_by_email, conn).await?;
 
                 Ok(version)
             }
