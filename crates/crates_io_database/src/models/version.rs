@@ -8,8 +8,8 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
-use crate::models::{Crate, User};
-use crate::schema::*;
+use crate::models::{Crate, User, versions_published_by};
+use crate::schema::{readme_renderings, users, versions};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
@@ -122,13 +122,7 @@ impl NewVersion<'_> {
                     .get_result(conn)
                     .await?;
 
-                insert_into(versions_published_by::table)
-                    .values((
-                        versions_published_by::version_id.eq(version.id),
-                        versions_published_by::email.eq(published_by_email),
-                    ))
-                    .execute(conn)
-                    .await?;
+                versions_published_by::insert(version.id, published_by_email, conn).await?;
 
                 Ok(version)
             }
