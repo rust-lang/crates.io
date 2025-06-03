@@ -327,11 +327,11 @@ importers:
         version: 7.7.2
     devDependencies:
       happy-dom:
-        specifier: 17.5.6
-        version: 17.5.6
+        specifier: 17.6.1
+        version: 17.6.1
       vitest:
         specifier: 3.2.0
-        version: 3.2.0(@types/node@22.15.29)(happy-dom@17.5.6)(jsdom@25.0.1)(msw@2.9.0(@types/node@22.15.29)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0)
+        version: 3.2.0(@types/node@22.15.29)(happy-dom@17.6.1)(jsdom@25.0.1)(msw@2.9.0(@types/node@22.15.29)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0)
 
 packages:
 
@@ -5238,8 +5238,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@17.5.6:
-    resolution: {integrity: sha512-B4U6jKuiizwCJ2WP0YreQmRdeBrHKOXhpz7YUbbwdSAKfWEhdG4UfWZOZTZ5Oejs/9yJtk7xmbfp8YdVL9LVFA==}
+  happy-dom@17.6.1:
+    resolution: {integrity: sha512-x2Iie2VWObB283X/KXwJ7g5f+4acfm8Pmf9KWUn6gujFUvFlSWytZYTv74bdFH40fPDedbI6/V6U3dYYMtW4SQ==}
     engines: {node: '>=18.0.0'}
 
   has-ansi@3.0.0:
@@ -15078,7 +15078,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  happy-dom@17.5.6:
+  happy-dom@17.6.1:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
@@ -18458,7 +18458,7 @@ snapshots:
       terser: 5.40.0
       yaml: 2.8.0
 
-  vitest@3.2.0(@types/node@22.15.29)(happy-dom@17.5.6)(jsdom@25.0.1)(msw@2.9.0(@types/node@22.15.29)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0):
+  vitest@3.2.0(@types/node@22.15.29)(happy-dom@17.6.1)(jsdom@25.0.1)(msw@2.9.0(@types/node@22.15.29)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.0
@@ -18485,7 +18485,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.15.29
-      happy-dom: 17.5.6
+      happy-dom: 17.6.1
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
