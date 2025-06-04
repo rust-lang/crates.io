@@ -4315,6 +4315,11 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "trustpub_token": []
+          }
+        ],
         "summary": "Revoke a temporary access token.",
         "tags": [
           "trusted_publishing"
