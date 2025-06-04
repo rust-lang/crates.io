@@ -4,12 +4,11 @@ use bon::Builder;
 use chrono::{DateTime, Utc};
 use crates_io_index::features::FeaturesMap;
 use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
 use crate::models::{Crate, User};
-use crate::schema::*;
+use crate::schema::{readme_renderings, users, versions};
 
 // Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
@@ -107,34 +106,12 @@ pub struct NewVersion<'a> {
 }
 
 impl NewVersion<'_> {
-    pub async fn save(
-        &self,
-        conn: &mut AsyncPgConnection,
-        published_by_email: &str,
-    ) -> QueryResult<Version> {
-        use diesel::insert_into;
-
-        conn.transaction(|conn| {
-            async move {
-                let version: Version = insert_into(versions::table)
-                    .values(self)
-                    .returning(Version::as_returning())
-                    .get_result(conn)
-                    .await?;
-
-                insert_into(versions_published_by::table)
-                    .values((
-                        versions_published_by::version_id.eq(version.id),
-                        versions_published_by::email.eq(published_by_email),
-                    ))
-                    .execute(conn)
-                    .await?;
-
-                Ok(version)
-            }
-            .scope_boxed()
-        })
-        .await
+    pub async fn save(&self, conn: &mut AsyncPgConnection) -> QueryResult<Version> {
+        diesel::insert_into(versions::table)
+            .values(self)
+            .returning(Version::as_returning())
+            .get_result(conn)
+            .await
     }
 }
 

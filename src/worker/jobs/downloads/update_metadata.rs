@@ -136,7 +136,8 @@ mod tests {
             .checksum("0000000000000000000000000000000000000000000000000000000000000000")
             .build();
 
-        let version = version.save(conn, "someone@example.com").await.unwrap();
+        let version = version.save(conn).await.unwrap();
+
         (krate, version)
     }
 

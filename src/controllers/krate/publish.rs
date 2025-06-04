@@ -42,6 +42,7 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, interna
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
+use crates_io_database::models::versions_published_by;
 use crates_io_diesel_helpers::canon_crate_name;
 
 const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
@@ -432,7 +433,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .keywords(&keywords)
             .build();
 
-        let version = new_version.save(conn, &verified_email_address).await.map_err(|error| {
+        let version = new_version.save(conn).await.map_err(|error| {
             use diesel::result::{Error, DatabaseErrorKind};
             match error {
                 Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) =>
@@ -440,6 +441,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
                 error => error.into(),
             }
         })?;
+
+        versions_published_by::insert(version.id, &verified_email_address, conn).await?;
 
         NewVersionOwnerAction::builder()
             .version_id(version.id)

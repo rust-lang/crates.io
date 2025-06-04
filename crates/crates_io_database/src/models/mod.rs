@@ -36,3 +36,4 @@ pub mod token;
 pub mod trustpub;
 pub mod user;
 pub mod version;
+pub mod versions_published_by;
