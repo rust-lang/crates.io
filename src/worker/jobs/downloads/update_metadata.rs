@@ -107,7 +107,6 @@ mod tests {
     use super::*;
     use crate::models::{Crate, NewCrate, NewUser, NewVersion, User, Version};
     use crate::schema::{crate_downloads, crates, versions};
-    use crates_io_database::models::versions_published_by;
     use crates_io_test_db::TestDatabase;
     use diesel::sql_types::Timestamptz;
     use diesel_async::AsyncConnection;
@@ -138,10 +137,6 @@ mod tests {
             .build();
 
         let version = version.save(conn).await.unwrap();
-
-        versions_published_by::insert(version.id, "someone@example.com", conn)
-            .await
-            .unwrap();
 
         (krate, version)
     }
