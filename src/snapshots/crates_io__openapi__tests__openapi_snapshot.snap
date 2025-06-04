@@ -1252,6 +1252,11 @@ expression: response.json()
         "in": "cookie",
         "name": "cargo_session",
         "type": "apiKey"
+      },
+      "trustpub_token": {
+        "description": "Temporary access tokens are used by the \"Trusted Publishing\" flow.",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -4310,6 +4315,11 @@ expression: response.json()
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "trustpub_token": []
+          }
+        ],
         "summary": "Revoke a temporary access token.",
         "tags": [
           "trusted_publishing"

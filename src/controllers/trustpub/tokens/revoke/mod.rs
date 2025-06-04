@@ -16,6 +16,7 @@ mod tests;
 #[utoipa::path(
     delete,
     path = "/api/v1/trusted_publishing/tokens",
+    security(("trustpub_token" = [])),
     tag = "trusted_publishing",
     responses((status = 204, description = "Successful Response")),
 )]

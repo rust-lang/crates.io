@@ -1,6 +1,6 @@
 use crates_io_session::COOKIE_NAME;
 use http::header;
-use utoipa::openapi::security::{ApiKey, ApiKeyValue, SecurityScheme};
+use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_axum::router::OpenApiRouter;
 
@@ -72,6 +72,14 @@ impl Modify for SecurityAddon {
             "The API token is used to authenticate requests from cargo and other clients.";
         let api_token = ApiKey::Header(ApiKeyValue::with_description(name, description));
         components.add_security_scheme("api_token", SecurityScheme::ApiKey(api_token));
+
+        let description = "Temporary access tokens are used by the \"Trusted Publishing\" flow.";
+        let trustpub_token = Http::builder()
+            .scheme(HttpAuthScheme::Bearer)
+            .description(Some(description))
+            .build();
+
+        components.add_security_scheme("trustpub_token", SecurityScheme::Http(trustpub_token));
     }
 }
 
