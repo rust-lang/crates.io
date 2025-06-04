@@ -194,6 +194,11 @@ impl TestApp {
             .await
             .into_iter()
             .map(|email| {
+                use quoted_printable::{ParseMode, decode};
+
+                let decoded_email = decode(&email, ParseMode::Robust).unwrap();
+                let email = String::from_utf8_lossy(&decoded_email);
+
                 let email = EMAIL_HEADER_REGEX.replace_all(&email, "");
                 let email = DATE_TIME_REGEX.replace_all(&email, "[0000-00-00T00:00:00Z]");
                 let email = EMAIL_CONFIRM_REGEX.replace_all(&email, "/confirm/[confirm-token]");

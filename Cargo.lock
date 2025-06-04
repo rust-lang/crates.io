@@ -1403,6 +1403,7 @@ dependencies = [
  "paste",
  "postgres-native-tls",
  "prometheus",
+ "quoted_printable",
  "rand 0.9.1",
  "regex",
  "reqwest",

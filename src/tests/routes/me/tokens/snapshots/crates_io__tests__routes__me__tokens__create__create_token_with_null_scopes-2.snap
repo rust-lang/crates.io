@@ -10,8 +10,6 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new API token with the name "bar" was recently added to your crates.io ac=
-count.
+A new API token with the name "bar" was recently added to your crates.io account.
 
-If this wasn't you, you should revoke the token immediately: https://crates=
-.io/settings/tokens
+If this wasn't you, you should revoke the token immediately: https://crates.io/settings/tokens
