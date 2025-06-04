@@ -90,7 +90,7 @@ pub struct NewVersion<'a> {
     license: Option<&'a str>,
     #[builder(default, name = "size")]
     crate_size: i32,
-    published_by: i32,
+    published_by: Option<i32>,
     checksum: &'a str,
     links: Option<&'a str>,
     rust_version: Option<&'a str>,
