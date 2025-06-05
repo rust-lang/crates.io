@@ -290,8 +290,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(@playwright/test@1.52.0)(msw@2.9.0(@types/node@22.15.29)(typescript@5.8.3))
       postcss-preset-env:
-        specifier: 10.2.0
-        version: 10.2.0(postcss@8.5.4)
+        specifier: 10.2.1
+        version: 10.2.1(postcss@8.5.4)
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -6798,8 +6798,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-custom-properties@14.0.5:
-    resolution: {integrity: sha512-UWf/vhMapZatv+zOuqlfLmYXeOhhHLh8U8HAKGI2VJ00xLRYoAJh4xv8iX6FB6+TLXeDnm0DBLMi00E0hodbQw==}
+  postcss-custom-properties@14.0.6:
+    resolution: {integrity: sha512-fTYSp3xuk4BUeVhxCSJdIPhDLpJfNakZKoiTDx7yRGCdlZrSJR7mWKVOBS4sBF+5poPQFMj2YdXx1VHItBGihQ==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -6916,8 +6916,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.2.0:
-    resolution: {integrity: sha512-cl13sPBbSqo1Q7Ryb19oT5NZO5IHFolRbIMdgDq4f9w1MHYiL6uZS7uSsjXJ1KzRIcX5BMjEeyxmAevVXENa3Q==}
+  postcss-preset-env@10.2.1:
+    resolution: {integrity: sha512-mDInnlm4mYhmR0S79hNLzseW9nx4Ihd8s15K99iu6u6QhoSQgqWX9Oj6nTd/8Dz3b0T7v2JSrfnXsDfv9TFvDg==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -16673,7 +16673,7 @@ snapshots:
       '@csstools/media-query-list-parser': 4.0.3(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       postcss: 8.5.4
 
-  postcss-custom-properties@14.0.5(postcss@8.5.4):
+  postcss-custom-properties@14.0.6(postcss@8.5.4):
     dependencies:
       '@csstools/cascade-layer-name-parser': 2.0.5(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
@@ -16786,7 +16786,7 @@ snapshots:
       postcss: 8.5.4
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.2.0(postcss@8.5.4):
+  postcss-preset-env@10.2.1(postcss@8.5.4):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.1(postcss@8.5.4)
       '@csstools/postcss-color-function': 4.0.10(postcss@8.5.4)
@@ -16834,7 +16834,7 @@ snapshots:
       postcss-color-hex-alpha: 10.0.0(postcss@8.5.4)
       postcss-color-rebeccapurple: 10.0.0(postcss@8.5.4)
       postcss-custom-media: 11.0.6(postcss@8.5.4)
-      postcss-custom-properties: 14.0.5(postcss@8.5.4)
+      postcss-custom-properties: 14.0.6(postcss@8.5.4)
       postcss-custom-selectors: 8.0.5(postcss@8.5.4)
       postcss-dir-pseudo-class: 9.0.1(postcss@8.5.4)
       postcss-double-position-gradients: 6.0.2(postcss@8.5.4)
