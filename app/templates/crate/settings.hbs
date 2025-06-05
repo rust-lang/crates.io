@@ -2,17 +2,22 @@
 
 <CrateHeader @crate={{this.crate}} />
 
-<h2>Add Owner</h2>
+<div local-class="owners-header">
+  <h2>Owners</h2>
+  {{#unless this.addOwnerVisible}}
+    <button type="button" class="button button--small" data-test-add-owner-button {{on "click" this.showAddOwnerForm}}>Add Owner</button>
+  {{/unless}}
+</div>
 
-<form local-class="email-form" {{on "submit" (prevent-default (perform this.addOwnerTask))}}>
-  <label local-class="email-input-label" for='new-owner-username'>
-    Username
-  </label>
-  <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
-  <button type="submit" disabled={{not this.username}} class="button button--small" data-test-save-button>Save</button>
-</form>
-
-<h2>Owners</h2>
+{{#if this.addOwnerVisible}}
+  <form local-class="email-form" {{on "submit" (prevent-default (perform this.addOwnerTask))}}>
+    <label local-class="email-input-label" for='new-owner-username'>
+      Username
+    </label>
+    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
+    <button type="submit" disabled={{not this.username}} class="button button--small" data-test-save-button>Save</button>
+  </form>
+{{/if}}
 
 <div local-class='list' data-test-owners>
   {{#each this.crate.owner_team as |team|}}

@@ -19,12 +19,14 @@ test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () =>
 
   test('attempting to add owner without username', async ({ page }) => {
     await page.goto('/crates/nanomsg/settings');
+    await page.click('[data-test-add-owner-button]');
     await page.fill('input[name="username"]', '');
     await expect(page.locator('[data-test-save-button]')).toBeDisabled();
   });
 
   test('attempting to add non-existent owner', async ({ page }) => {
     await page.goto('/crates/nanomsg/settings');
+    await page.click('[data-test-add-owner-button]');
     await page.fill('input[name="username"]', 'spookyghostboo');
     await page.click('[data-test-save-button]');
 
@@ -39,6 +41,7 @@ test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () =>
     msw.db.user.create({ name: 'iain8' });
 
     await page.goto('/crates/nanomsg/settings');
+    await page.click('[data-test-add-owner-button]');
     await page.fill('input[name="username"]', 'iain8');
     await page.click('[data-test-save-button]');
 
@@ -54,6 +57,7 @@ test.describe('Acceptance | Settings | Add Owner', { tag: '@acceptance' }, () =>
     msw.db.team.create({ org: 'rust-lang', name: 'crates-io' });
 
     await page.goto('/crates/nanomsg/settings');
+    await page.click('[data-test-add-owner-button]');
     await page.fill('input[name="username"]', 'github:rust-lang:crates-io');
     await page.click('[data-test-save-button]');
 

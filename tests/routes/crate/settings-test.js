@@ -46,8 +46,7 @@ module('Route | crate.settings', hooks => {
 
     await visit(`/crates/${crate.name}/settings`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
-    // This is the Add Owner button.
-    assert.dom('[data-test-save-button]').exists();
+    assert.dom('[data-test-add-owner-button]').exists();
     assert.dom('[data-test-owners]').exists();
     assert.dom(`[data-test-owner-user="${user.login}"]`).exists();
     assert.dom('[data-test-remove-owner-button]').exists();
