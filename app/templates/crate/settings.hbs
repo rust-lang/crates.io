@@ -2,17 +2,15 @@
 
 <CrateHeader @crate={{this.crate}} />
 
-<div local-class="me-email">
-  <h2>Add Owner</h2>
+<h2>Add Owner</h2>
 
-  <form local-class="email-form" {{on "submit" (prevent-default (perform this.addOwnerTask))}}>
-    <label local-class="email-input-label" for='new-owner-username'>
-      Username
-    </label>
-    <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
-    <button type="submit" disabled={{not this.username}} class="button button--small" data-test-save-button>Save</button>
-  </form>
-</div>
+<form local-class="email-form" {{on "submit" (prevent-default (perform this.addOwnerTask))}}>
+  <label local-class="email-input-label" for='new-owner-username'>
+    Username
+  </label>
+  <Input @type="text" id="new-owner-username" @value={{this.username}} placeholder="Username" local-class="email-input" name="username" />
+  <button type="submit" disabled={{not this.username}} class="button button--small" data-test-save-button>Save</button>
+</form>
 
 <h2>Owners</h2>
 
