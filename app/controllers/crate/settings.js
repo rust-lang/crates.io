@@ -1,5 +1,7 @@
 import Controller from '@ember/controller';
+import { action } from '@ember/object';
 import { service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 
 import { task } from 'ember-concurrency';
 
@@ -8,6 +10,12 @@ export default class CrateSettingsController extends Controller {
 
   crate = null;
   username = '';
+  @tracked addOwnerVisible = false;
+
+  @action showAddOwnerForm() {
+    this.addOwnerVisible = true;
+    this.username = '';
+  }
 
   addOwnerTask = task(async () => {
     const username = this.username;
@@ -20,6 +28,7 @@ export default class CrateSettingsController extends Controller {
       } else {
         this.notifications.success(`An invite has been sent to ${username}`);
       }
+      this.addOwnerVisible = false;
     } catch (error) {
       let detail = error.errors?.[0]?.detail;
       if (detail && !detail.startsWith('{')) {

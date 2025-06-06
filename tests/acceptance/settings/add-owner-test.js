@@ -30,6 +30,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
     prepare(this);
 
     await visit('/crates/nanomsg/settings');
+    await click('[data-test-add-owner-button]');
     await fillIn('input[name="username"]', '');
     assert.dom('[data-test-save-button]').isDisabled();
   });
@@ -38,6 +39,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
     prepare(this);
 
     await visit('/crates/nanomsg/settings');
+    await click('[data-test-add-owner-button]');
     await fillIn('input[name="username"]', 'spookyghostboo');
     await click('[data-test-save-button]');
 
@@ -54,6 +56,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
     this.db.user.create({ name: 'iain8' });
 
     await visit('/crates/nanomsg/settings');
+    await click('[data-test-add-owner-button]');
     await fillIn('input[name="username"]', 'iain8');
     await click('[data-test-save-button]');
 
@@ -69,6 +72,7 @@ module('Acceptance | Settings | Add Owner', function (hooks) {
     this.db.team.create({ org: 'rust-lang', name: 'crates-io' });
 
     await visit('/crates/nanomsg/settings');
+    await click('[data-test-add-owner-button]');
     await fillIn('input[name="username"]', 'github:rust-lang:crates-io');
     await click('[data-test-save-button]');
 
