@@ -1,0 +1,38 @@
+---
+source: src/tests/krate/publish/trustpub.rs
+expression: response.json()
+---
+{
+  "version": {
+    "audit_actions": [],
+    "bin_names": [],
+    "checksum": "f057a5f8094591ca4faccdbcb3cddaf7299f0045c3076065956308eee13f99ac",
+    "crate": "foo",
+    "crate_size": 148,
+    "created_at": "[datetime]",
+    "description": "description",
+    "dl_path": "/api/v1/crates/foo/1.1.0/download",
+    "documentation": null,
+    "downloads": 0,
+    "edition": null,
+    "features": {},
+    "has_lib": false,
+    "homepage": null,
+    "id": 2,
+    "lib_links": null,
+    "license": "MIT",
+    "links": {
+      "authors": "/api/v1/crates/foo/1.1.0/authors",
+      "dependencies": "/api/v1/crates/foo/1.1.0/dependencies",
+      "version_downloads": "/api/v1/crates/foo/1.1.0/downloads"
+    },
+    "num": "1.1.0",
+    "published_by": null,
+    "readme_path": "/api/v1/crates/foo/1.1.0/readme",
+    "repository": null,
+    "rust_version": null,
+    "updated_at": "[datetime]",
+    "yank_message": null,
+    "yanked": false
+  }
+}

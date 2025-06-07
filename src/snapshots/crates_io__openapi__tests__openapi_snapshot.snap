@@ -2021,6 +2021,9 @@ expression: response.json()
             "api_token": []
           },
           {
+            "trustpub_token": []
+          },
+          {
             "cookie": []
           }
         ],
