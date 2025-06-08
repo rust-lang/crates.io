@@ -8,7 +8,6 @@ module.exports = function (/* environment, appConfig */) {
     start_url: '/',
     display: 'standalone',
     background_color: '#3b6837',
-    theme_color: '#f9f7ec',
     icons: [
       {
         src: '/assets/cargo.png',
