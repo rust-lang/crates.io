@@ -130,7 +130,7 @@
     "loader.js": "4.7.0",
     "match-json": "1.3.7",
     "memory-scroll": "2.0.1",
-    "msw": "2.10.1",
+    "msw": "2.10.2",
     "normalize.css": "8.0.1",
     "nyc": "17.1.0",
     "playwright-msw": "3.0.1",
