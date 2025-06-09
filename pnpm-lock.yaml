@@ -278,8 +278,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.27.4)
       msw:
-        specifier: 2.10.1
-        version: 2.10.1(@types/node@22.15.30)(typescript@5.8.3)
+        specifier: 2.10.2
+        version: 2.10.2(@types/node@22.15.30)(typescript@5.8.3)
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -288,7 +288,7 @@ importers:
         version: 17.1.0
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.52.0)(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3))
+        version: 3.0.1(@playwright/test@1.52.0)(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3))
       postcss-preset-env:
         specifier: 10.2.1
         version: 10.2.1(postcss@8.5.4)
@@ -320,8 +320,8 @@ importers:
         specifier: 0.16.2
         version: 0.16.2(@types/node@22.15.30)(typescript@5.8.3)
       msw:
-        specifier: 2.10.1
-        version: 2.10.1(@types/node@22.15.30)(typescript@5.8.3)
+        specifier: 2.10.2
+        version: 2.10.2(@types/node@22.15.30)(typescript@5.8.3)
       semver:
         specifier: 7.7.2
         version: 7.7.2
@@ -331,7 +331,7 @@ importers:
         version: 17.6.3
       vitest:
         specifier: 3.2.2
-        version: 3.2.2(@types/node@22.15.30)(happy-dom@17.6.3)(jsdom@25.0.1)(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0)
+        version: 3.2.2(@types/node@22.15.30)(happy-dom@17.6.3)(jsdom@25.0.1)(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0)
 
 packages:
 
@@ -6252,8 +6252,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  msw@2.10.1:
-    resolution: {integrity: sha512-V/YhZE2QPd48vKFGLo2BZanbBqncJn2k9/+vGtq9IFtv2D78+DIXlKH63emxa8reE/LIQHz9p3ZcFOThhsTSOg==}
+  msw@2.10.2:
+    resolution: {integrity: sha512-RCKM6IZseZQCWcSWlutdf590M8nVfRHG1ImwzOtwz8IYxgT4zhUO0rfTcTvDGiaFE0Rhcc+h43lcF3Jc9gFtwQ==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -10419,7 +10419,7 @@ snapshots:
       strict-event-emitter: 0.5.1
       uuid: 8.3.2
     optionalDependencies:
-      msw: 2.10.1(@types/node@22.15.30)(typescript@5.8.3)
+      msw: 2.10.2(@types/node@22.15.30)(typescript@5.8.3)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -11058,13 +11058,13 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.2(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.30)(terser@5.40.0)(yaml@2.8.0))':
+  '@vitest/mocker@3.2.2(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.30)(terser@5.40.0)(yaml@2.8.0))':
     dependencies:
       '@vitest/spy': 3.2.2
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      msw: 2.10.1(@types/node@22.15.30)(typescript@5.8.3)
+      msw: 2.10.2(@types/node@22.15.30)(typescript@5.8.3)
       vite: 6.3.5(@types/node@22.15.30)(terser@5.40.0)(yaml@2.8.0)
 
   '@vitest/pretty-format@3.2.2':
@@ -16092,7 +16092,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3):
+  msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
@@ -16601,11 +16601,11 @@ snapshots:
 
   playwright-core@1.52.0: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.52.0)(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3)):
+  playwright-msw@3.0.1(@playwright/test@1.52.0)(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
       '@playwright/test': 1.52.0
-      msw: 2.10.1(@types/node@22.15.30)(typescript@5.8.3)
+      msw: 2.10.2(@types/node@22.15.30)(typescript@5.8.3)
       strict-event-emitter: 0.5.1
 
   playwright@1.52.0:
@@ -18289,11 +18289,11 @@ snapshots:
       terser: 5.40.0
       yaml: 2.8.0
 
-  vitest@3.2.2(@types/node@22.15.30)(happy-dom@17.6.3)(jsdom@25.0.1)(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0):
+  vitest@3.2.2(@types/node@22.15.30)(happy-dom@17.6.3)(jsdom@25.0.1)(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3))(terser@5.40.0)(yaml@2.8.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.2
-      '@vitest/mocker': 3.2.2(msw@2.10.1(@types/node@22.15.30)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.30)(terser@5.40.0)(yaml@2.8.0))
+      '@vitest/mocker': 3.2.2(msw@2.10.2(@types/node@22.15.30)(typescript@5.8.3))(vite@6.3.5(@types/node@22.15.30)(terser@5.40.0)(yaml@2.8.0))
       '@vitest/pretty-format': 3.2.2
       '@vitest/runner': 3.2.2
       '@vitest/snapshot': 3.2.2
