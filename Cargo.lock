@@ -5083,9 +5083,9 @@ dependencies = [
 
 [[package]]
 name = "sentry"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a505499b38861edd82b5a688fa06ba4ba5875bb832adeeeba22b7b23fc4bc39a"
+checksum = "0eb7daabbc631b13f48e991f4d828f12ec43e2acd3fb2972b445bdc138231ee2"
 dependencies = [
  "httpdate",
  "native-tls",
@@ -5104,9 +5104,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-actix"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39ad8bfdcfbc6e0d0dacaa5728555085ef459fa9226cfc2fe64eefa4b8038b7f"
+checksum = "e1adf30c8878b392fa48e6a922ccbd5e6f10333f246d81b838750a9ac8f249b0"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -5117,9 +5117,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dace796060e4ad10e3d1405b122ae184a8b2e71dce05ae450e4f81b7686b0d9"
+checksum = "c0cbd964934e339213e5ffe2682575ae390327945856c067408ae121d1ceae72"
 dependencies = [
  "backtrace",
  "regex",
@@ -5128,9 +5128,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87bd9e6b51ffe2bc7188ebe36cb67557cb95749c08a3f81f33e8c9b135e0d1bc"
+checksum = "356d87fef14b05475f46e8554bf26833230c92bcac106d74f0f5719dce4a7850"
 dependencies = [
  "hostname",
  "libc",
@@ -5142,9 +5142,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7426d4beec270cfdbb50f85f0bb2ce176ea57eed0b11741182a163055a558187"
+checksum = "e73bfcabac5a7f9e2e38f898ba0afc6bed36fb96108b246213b698e00f12268c"
 dependencies = [
  "rand 0.9.1",
  "sentry-types",
@@ -5154,9 +5154,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-debug-images"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9df15c066c04f34c4dfd496a8e76590106b93283f72ef1a47d8fb24d88493424"
+checksum = "1cf558b1a0feaa58965051f67a55b1d2ee0a807b326c965564f9867b967c2045"
 dependencies = [
  "findshlibs",
  "sentry-core",
@@ -5164,9 +5164,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c92beed69b776a162b6d269bef1eaa3e614090b6df45a88d9b239c4fdbffdfba"
+checksum = "29abe64e33902f6fefafdb652dc0efed303cea655324e85db9fbb8d83d503c44"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5174,9 +5174,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tower"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53e699974e956e032e08e3595ca67590860b0d7aa522ede2214094eb13200880"
+checksum = "cfe63e8f5f8325ad16d82631ee20985123a1682a99e25d54dba3076852dcb4af"
 dependencies = [
  "axum",
  "http 1.3.1",
@@ -5189,9 +5189,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tracing"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55c323492795de90824f3198562e33dd74ae3bc852fbb13c0cabec54a1cf73cd"
+checksum = "bbfd32bfd54bd829a92ee9b32894b05c726edcdc40d9c580ce7b3f4a56f13a45"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5201,9 +5201,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.38.1"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04b6c9287202294685cb1f749b944dbbce8160b81a1061ecddc073025fed129f"
+checksum = "a7205055c5bde8131c62e4f5367f4291956c331a64e1a32e737e8d81b26b3bcb"
 dependencies = [
  "debugid",
  "hex",
