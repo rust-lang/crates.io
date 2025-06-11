@@ -290,8 +290,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(@playwright/test@1.53.0)(msw@2.10.2(@types/node@22.15.31)(typescript@5.8.3))
       postcss-preset-env:
-        specifier: 10.2.2
-        version: 10.2.2(postcss@8.5.4)
+        specifier: 10.2.3
+        version: 10.2.3(postcss@8.5.4)
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -1064,8 +1064,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@csstools/postcss-is-pseudo-class@5.0.2':
-    resolution: {integrity: sha512-ksUGH8Untwzo/qUwHlFZf2+vGi8sDe1WYDZrCFNVg8EvENhWQvtoPEbRTBmNzGzTJebmHIvaOH8s3B3QKUJV3g==}
+  '@csstools/postcss-is-pseudo-class@5.0.3':
+    resolution: {integrity: sha512-jS/TY4SpG4gszAtIg7Qnf3AS2pjcUM5SzxpApOrlndMeGhIbaTzWBzzP/IApXoNWEW7OhcjkRT48jnAUIFXhAQ==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -6928,8 +6928,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-preset-env@10.2.2:
-    resolution: {integrity: sha512-0w90xwitx3xQOkP1z0TPdt+8vhSAIkcOGmwZUywcWjBH/xI7ekJjZ0DYX1g6/fcpUEUsL7tCILUx4iYbwafxGQ==}
+  postcss-preset-env@10.2.3:
+    resolution: {integrity: sha512-zlQN1yYmA7lFeM1wzQI14z97mKoM8qGng+198w1+h6sCud/XxOjcKtApY9jWr7pXNS3yHDEafPlClSsWnkY8ow==}
     engines: {node: '>=18'}
     peerDependencies:
       postcss: ^8.4
@@ -9441,7 +9441,7 @@ snapshots:
     dependencies:
       postcss: 8.5.4
 
-  '@csstools/postcss-is-pseudo-class@5.0.2(postcss@8.5.4)':
+  '@csstools/postcss-is-pseudo-class@5.0.3(postcss@8.5.4)':
     dependencies:
       '@csstools/selector-specificity': 5.0.0(postcss-selector-parser@7.1.0)
       postcss: 8.5.4
@@ -16818,7 +16818,7 @@ snapshots:
       postcss: 8.5.4
       postcss-value-parser: 4.2.0
 
-  postcss-preset-env@10.2.2(postcss@8.5.4):
+  postcss-preset-env@10.2.3(postcss@8.5.4):
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.1(postcss@8.5.4)
       '@csstools/postcss-color-function': 4.0.10(postcss@8.5.4)
@@ -16832,7 +16832,7 @@ snapshots:
       '@csstools/postcss-hwb-function': 4.0.10(postcss@8.5.4)
       '@csstools/postcss-ic-unit': 4.0.2(postcss@8.5.4)
       '@csstools/postcss-initial': 2.0.1(postcss@8.5.4)
-      '@csstools/postcss-is-pseudo-class': 5.0.2(postcss@8.5.4)
+      '@csstools/postcss-is-pseudo-class': 5.0.3(postcss@8.5.4)
       '@csstools/postcss-light-dark-function': 2.0.9(postcss@8.5.4)
       '@csstools/postcss-logical-float-and-clear': 3.0.0(postcss@8.5.4)
       '@csstools/postcss-logical-overflow': 2.0.0(postcss@8.5.4)
