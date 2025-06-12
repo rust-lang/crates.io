@@ -2,6 +2,7 @@ use rand::distr::{Alphanumeric, SampleString};
 use secrecy::{ExposeSecret, SecretString};
 use sha2::digest::Output;
 use sha2::{Digest, Sha256};
+use std::str::FromStr;
 
 /// A temporary access token used to publish crates to crates.io using
 /// the "Trusted Publishing" feature.
@@ -74,6 +75,17 @@ impl AccessToken {
     /// the database to avoid storing the plaintext token.
     pub fn sha256(&self) -> Output<Sha256> {
         Sha256::digest(self.0.expose_secret())
+    }
+}
+
+impl FromStr for AccessToken {
+    type Err = AccessTokenError;
+
+    /// Parse a string into an access token.
+    ///
+    /// This is equivalent to `AccessToken::from_byte_str`.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_byte_str(s.as_bytes())
     }
 }
 

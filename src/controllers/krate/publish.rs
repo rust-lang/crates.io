@@ -155,7 +155,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
                 return None;
             }
 
-            Some(AccessToken::from_byte_str(token.as_bytes()).map_err(|_| {
+            Some(token.parse::<AccessToken>().map_err(|_| {
                 let message = "Invalid `Authorization` header: Failed to parse token";
                 custom(StatusCode::UNAUTHORIZED, message)
             }))
