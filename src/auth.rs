@@ -25,13 +25,15 @@ impl AuthHeader {
         };
 
         let auth_header = auth_header.to_str().map_err(|_| {
-            let message = "Invalid authorization header";
+            let message = "Invalid `Authorization` header: Found unexpected non-ASCII characters";
             custom(StatusCode::UNAUTHORIZED, message)
         })?;
 
         let (scheme, token) = auth_header.split_once(' ').unwrap_or(("", auth_header));
         if !(scheme.eq_ignore_ascii_case("Bearer") || scheme.is_empty()) {
-            let message = "Invalid authorization header";
+            let message = format!(
+                "Invalid `Authorization` header: Found unexpected authentication scheme `{scheme}`"
+            );
             return Err(custom(StatusCode::UNAUTHORIZED, message));
         }
 
@@ -42,7 +44,7 @@ impl AuthHeader {
     pub async fn from_request_parts(parts: &Parts) -> Result<Self, BoxedAppError> {
         let auth = Self::optional_from_request_parts(parts).await?;
         auth.ok_or_else(|| {
-            let message = "Missing authorization header";
+            let message = "Missing `Authorization` header";
             custom(StatusCode::UNAUTHORIZED, message)
         })
     }

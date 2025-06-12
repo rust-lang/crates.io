@@ -88,7 +88,7 @@ async fn test_missing_authorization_header() -> anyhow::Result<()> {
 
     let response = client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Missing authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Missing `Authorization` header"}]}"#);
 
     Ok(())
 }
@@ -103,7 +103,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
 
     let response = token_client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid `Authorization` header: Failed to parse token"}]}"#);
 
     Ok(())
 }
@@ -118,7 +118,7 @@ async fn test_invalid_token_format() -> anyhow::Result<()> {
 
     let response = token_client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid `Authorization` header: Failed to parse token"}]}"#);
 
     Ok(())
 }

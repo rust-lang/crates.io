@@ -25,7 +25,7 @@ mod tests;
 pub async fn revoke_trustpub_token(app: AppState, auth: AuthHeader) -> AppResult<StatusCode> {
     let token = auth.token().expose_secret();
     let Ok(token) = AccessToken::from_byte_str(token.as_bytes()) else {
-        let message = "Invalid authorization header";
+        let message = "Invalid `Authorization` header: Failed to parse token";
         return Err(custom(StatusCode::UNAUTHORIZED, message));
     };
 
