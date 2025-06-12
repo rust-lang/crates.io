@@ -3,7 +3,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::github_configs::emails::ConfigCreatedEmail;
 use crate::controllers::trustpub::github_configs::json;
-use crate::util::errors::{AppResult, bad_request};
+use crate::util::errors::{AppResult, bad_request, forbidden};
 use axum::Json;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::NewGitHubConfig;
@@ -61,8 +61,14 @@ pub async fn create_trustpub_github_config(
         .load::<(i32, String, String, bool)>(&mut conn)
         .await?;
 
-    if !user_owners.iter().any(|owner| owner.0 == auth_user.id) {
-        return Err(bad_request("You are not an owner of this crate"));
+    let (_, _, _, email_verified) = user_owners
+        .iter()
+        .find(|(id, _, _, _)| *id == auth_user.id)
+        .ok_or_else(|| bad_request("You are not an owner of this crate"))?;
+
+    if !email_verified {
+        let message = "You must verify your email address to create a Trusted Publishing config";
+        return Err(forbidden(message));
     }
 
     // Lookup `repository_owner_id` via GitHub API

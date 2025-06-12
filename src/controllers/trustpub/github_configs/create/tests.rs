@@ -2,7 +2,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, Response, TestApp};
 use anyhow::anyhow;
 use bytes::Bytes;
-use crates_io_database::schema::trustpub_configs_github;
+use crates_io_database::schema::{emails, trustpub_configs_github};
 use crates_io_github::{GitHubError, GitHubUser, MockGitHubClient};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -367,6 +367,41 @@ async fn test_github_error() -> anyhow::Result<()> {
     let response = cookie_client.put::<()>(URL, body).await;
     assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_unverified_email() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full()
+        .with_github(simple_github_mock())
+        .with_user()
+        .await;
+
+    let mut conn = app.db_conn().await;
+
+    diesel::update(emails::table.filter(emails::user_id.eq(cookie_client.as_model().id)))
+        .set(emails::verified.eq(false))
+        .execute(&mut conn)
+        .await?;
+
+    CrateBuilder::new(CRATE_NAME, cookie_client.as_model().id)
+        .build(&mut conn)
+        .await?;
+
+    let body = serde_json::to_vec(&json!({
+        "github_config": {
+            "crate": CRATE_NAME,
+            "repository_owner": "rust-lang",
+            "repository_name": "foo-rs",
+            "workflow_filename": "publish.yml",
+            "environment": null,
+        }
+    }))?;
+
+    let response = cookie_client.put::<()>(URL, body).await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to create a Trusted Publishing config"}]}"#);
 
     Ok(())
 }
