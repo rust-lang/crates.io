@@ -191,7 +191,7 @@ mod tests {
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r"Error(InvalidAudience)");
+        assert_compact_debug_snapshot!(error, @"Error(InvalidAudience)");
 
         Ok(())
     }

@@ -26,7 +26,7 @@ async fn test_jsonb_output() {
             .unwrap_or_default()
     };
 
-    insta::assert_snapshot!(check("0.0.0").await, @r#"[0, 0, 0, {}]"#);
+    insta::assert_snapshot!(check("0.0.0").await, @"[0, 0, 0, {}]");
     insta::assert_snapshot!(check("1.0.0-alpha.1").await, @r#"[1, 0, 0, [true, "alpha", false, 1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, ""]]"#);
 
     // see https://crates.io/crates/cursed-trying-to-break-cargo/1.0.0-0.HDTV-BluRay.1020p.YTSUB.L33TRip.mkv – thanks @Gankra!
