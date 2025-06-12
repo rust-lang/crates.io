@@ -12,7 +12,8 @@ async fn using_token_updates_last_used_at() {
     let (app, anon, user, token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;
 
-    anon.get(url).await.assert_forbidden();
+    let response = anon.get::<()>(url).await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
     user.get::<EncodableMe>(url).await.good();
     assert_none!(token.as_model().last_used_at);
 

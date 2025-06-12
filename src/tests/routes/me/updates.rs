@@ -13,7 +13,8 @@ use insta::assert_snapshot;
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {
     let (_, _, _, token) = TestApp::init().with_token().await;
-    token.get("/api/v1/me/updates").await.assert_forbidden();
+    let response = token.get::<()>("/api/v1/me/updates").await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 }
 
 #[tokio::test(flavor = "multi_thread")]
