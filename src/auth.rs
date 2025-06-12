@@ -14,7 +14,7 @@ use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::{StatusCode, header};
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 
 pub struct AuthHeader(SecretString);
 
@@ -252,17 +252,12 @@ async fn authenticate_via_token(
     parts: &Parts,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<Option<TokenAuthentication>> {
-    let maybe_authorization = parts
-        .headers()
-        .get(header::AUTHORIZATION)
-        .and_then(|h| h.to_str().ok());
-
-    let Some(header_value) = maybe_authorization else {
+    let Some(auth_header) = AuthHeader::optional_from_request_parts(parts).await? else {
         return Ok(None);
     };
 
-    let token =
-        HashedToken::parse(header_value).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
+    let token = auth_header.token().expose_secret();
+    let token = HashedToken::parse(token).map_err(|_| InsecurelyGeneratedTokenRevoked::boxed())?;
 
     let token = ApiToken::find_by_api_token(conn, &token)
         .await
