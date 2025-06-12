@@ -421,10 +421,8 @@ async fn invitations_are_empty_by_default_v1() {
 async fn api_token_cannot_list_invitations_v1() {
     let (_, _, _, token) = TestApp::init().with_token().await;
 
-    token
-        .get("/api/v1/me/crate_owner_invitations")
-        .await
-        .assert_forbidden();
+    let response = token.get::<()>("/api/v1/me/crate_owner_invitations").await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 }
 
 #[tokio::test(flavor = "multi_thread")]

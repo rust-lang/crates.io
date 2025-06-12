@@ -5,6 +5,7 @@ use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
 use crates_io_database::schema::categories;
 use diesel::insert_into;
 use diesel_async::RunQueryDsl;
+use http::StatusCode;
 use insta::assert_json_snapshot;
 use serde_json::Value;
 
@@ -16,7 +17,8 @@ async fn show() -> anyhow::Result<()> {
     let url = "/api/v1/categories/foo-bar";
 
     // Return not found if a category doesn't exist
-    anon.get(url).await.assert_not_found();
+    let response = anon.get::<()>(url).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     // Create a category and a subcategory
     let cats = vec![

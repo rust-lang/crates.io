@@ -8,7 +8,8 @@ use insta::assert_json_snapshot;
 async fn show_token_non_existing() {
     let url = "/api/v1/me/tokens/10086";
     let (_, _, user, _) = TestApp::init().with_token().await;
-    user.get(url).await.assert_not_found();
+    let response = user.get::<()>(url).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -58,7 +59,8 @@ async fn show_token_with_scopes() {
 async fn show_with_anonymous_user() {
     let url = "/api/v1/me/tokens/1";
     let (_, anon) = TestApp::init().empty().await;
-    anon.get(url).await.assert_forbidden();
+    let response = anon.get::<()>(url).await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
 }
 
 #[tokio::test(flavor = "multi_thread")]
