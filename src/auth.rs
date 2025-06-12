@@ -8,7 +8,7 @@ use crate::util::errors::{
     internal,
 };
 use crate::util::token::HashedToken;
-use axum::extract::{FromRequestParts, OptionalFromRequestParts};
+use axum::extract::FromRequestParts;
 use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
@@ -30,7 +30,7 @@ impl AuthHeader {
         })?;
 
         let (scheme, token) = auth_header.split_once(' ').unwrap_or(("", auth_header));
-        if !scheme.eq_ignore_ascii_case("Bearer") {
+        if !(scheme.eq_ignore_ascii_case("Bearer") || scheme.is_empty()) {
             let message = "Invalid authorization header";
             return Err(custom(StatusCode::UNAUTHORIZED, message));
         }
@@ -49,14 +49,6 @@ impl AuthHeader {
 
     pub fn token(&self) -> &SecretString {
         &self.0
-    }
-}
-
-impl<S: Send + Sync> OptionalFromRequestParts<S> for AuthHeader {
-    type Rejection = BoxedAppError;
-
-    async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Option<Self>, Self::Rejection> {
-        Self::optional_from_request_parts(parts).await
     }
 }
 
