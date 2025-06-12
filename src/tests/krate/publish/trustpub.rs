@@ -122,8 +122,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
 
     // Step 4: Publish a new version of the crate using the temporary access token
 
-    let header = format!("Bearer {}", token);
-    let oidc_token_client = MockTokenUser::with_auth_header(header, app.clone());
+    let oidc_token_client = MockTokenUser::with_auth_header(token.to_string(), app.clone());
 
     let pb = PublishBuilder::new(CRATE_NAME, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
@@ -186,8 +185,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
 
     let token = new_token(&mut conn, krate.id).await?;
 
-    let header = format!("Bearer {}", token);
-    let oidc_token_client = MockTokenUser::with_auth_header(header, app);
+    let oidc_token_client = MockTokenUser::with_auth_header(token, app);
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
@@ -226,7 +224,7 @@ async fn test_happy_path_with_fancy_auth_header() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
+async fn test_invalid_token_format() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
 
     let mut conn = app.db_conn().await;
@@ -234,7 +232,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
     let owner_id = cookie_client.as_model().id;
     let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
 
-    // Create a client with an invalid authorization header (missing "Bearer " prefix)
+    // Create a client with an invalid authorization header (missing token prefix)
     let header = "invalid-format".to_string();
     let oidc_token_client = MockTokenUser::with_auth_header(header, app);
 
@@ -247,7 +245,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_invalid_token_format() -> anyhow::Result<()> {
+async fn test_invalid_bearer_token_format() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
 
     let mut conn = app.db_conn().await;
@@ -255,14 +253,14 @@ async fn test_invalid_token_format() -> anyhow::Result<()> {
     let owner_id = cookie_client.as_model().id;
     let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
 
-    // Create a client with an invalid authorization header (missing "Bearer " prefix)
+    // Create a client with an invalid authorization header (missing token prefix)
     let header = "Bearer invalid-token".to_string();
     let oidc_token_client = MockTokenUser::with_auth_header(header, app);
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authentication token"}]}"#);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The given API token does not match the format used by crates.io. Tokens generated before 2020-07-14 were generated with an insecure random number generator, and have been revoked. You can generate a new token at https://crates.io/me. For more information please see https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. We apologize for any inconvenience."}]}"#);
 
     Ok(())
 }
@@ -278,8 +276,7 @@ async fn test_non_existent_token() -> anyhow::Result<()> {
 
     // Generate a valid token format, but it doesn't exist in the database
     let (token, _) = generate_token();
-    let header = format!("Bearer {}", token);
-    let oidc_token_client = MockTokenUser::with_auth_header(header, app);
+    let oidc_token_client = MockTokenUser::with_auth_header(token, app);
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
@@ -295,8 +292,7 @@ async fn test_non_existent_token_with_new_crate() -> anyhow::Result<()> {
 
     // Generate a valid token format, but it doesn't exist in the database
     let (token, _) = generate_token();
-    let header = format!("Bearer {}", token);
-    let oidc_token_client = MockTokenUser::with_auth_header(header, app);
+    let oidc_token_client = MockTokenUser::with_auth_header(token, app);
 
     let pb = PublishBuilder::new("foo", "1.0.0");
     let response = oidc_token_client.publish_crate(pb).await;
@@ -316,8 +312,7 @@ async fn test_token_for_wrong_crate() -> anyhow::Result<()> {
     let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
     let token = new_token(&mut conn, krate.id).await?;
 
-    let header = format!("Bearer {}", token);
-    let oidc_token_client = MockTokenUser::with_auth_header(header, app);
+    let oidc_token_client = MockTokenUser::with_auth_header(token, app);
 
     let krate = CrateBuilder::new("bar", owner_id).build(&mut conn).await?;
 
