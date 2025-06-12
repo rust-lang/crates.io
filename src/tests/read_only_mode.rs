@@ -3,8 +3,7 @@ use crate::tests::{RequestHelper, TestApp};
 
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn can_hit_read_only_endpoints_in_read_only_mode() {
@@ -16,7 +15,7 @@ async fn can_hit_read_only_endpoints_in_read_only_mode() {
         .await;
 
     let response = anon.get::<()>("/api/v1/crates").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -38,7 +37,7 @@ async fn cannot_hit_endpoint_which_writes_db_in_read_only_mode() {
     let response = token
         .delete::<()>("/api/v1/crates/foo_yank_read_only/1.0.0/yank")
         .await;
-    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_snapshot!(response.status(), @"503 Service Unavailable");
     assert_json_snapshot!(response.json());
 }
 
@@ -61,7 +60,7 @@ async fn can_download_crate_in_read_only_mode() {
     let response = anon
         .get::<()>("/api/v1/crates/foo_download_read_only/1.0.0/download")
         .await;
-    assert_eq!(response.status(), StatusCode::FOUND);
+    assert_snapshot!(response.status(), @"302 Found");
 
     // We're in read only mode so the download should not have been counted
 

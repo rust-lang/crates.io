@@ -1,7 +1,6 @@
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableDependency;
-use http::StatusCode;
 use insta::assert_snapshot;
 
 #[derive(Deserialize)]
@@ -35,12 +34,12 @@ async fn dependencies() {
     let response = anon
         .get::<()>("/api/v1/crates/missing-crate/1.0.0/dependencies")
         .await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `missing-crate` does not exist"}]}"#);
 
     let response = anon
         .get::<()>("/api/v1/crates/foo_deps/1.0.2/dependencies")
         .await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo_deps` does not have a version `1.0.2`"}]}"#);
 }

@@ -1,0 +1,15 @@
+---
+source: src/tests/krate/publish/links.rs
+expression: crates
+---
+[
+  {
+    "name": "foo",
+    "vers": "1.0.0",
+    "deps": [],
+    "cksum": "b2c9e153a8860ce92ba7cbdea7b718409d181c08f4c6c5c2a612919dcb155af2",
+    "features": {},
+    "yanked": false,
+    "links": "git2"
+  }
+]

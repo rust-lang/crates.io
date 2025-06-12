@@ -1,7 +1,7 @@
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
-use http::StatusCode;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_crate_with_links_field() {
@@ -22,7 +22,7 @@ async fn test_crate_with_links_field() {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0").await;
     assert_json_snapshot!(response.json(), {
@@ -32,7 +32,7 @@ async fn test_crate_with_links_field() {
         ".version.audit_actions[].time" => "[datetime]",
         ".version.published_by.id" => insta::any_id_redaction(),
     });
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let crates = app.crates_from_index_head("foo");
     assert_json_snapshot!(crates);

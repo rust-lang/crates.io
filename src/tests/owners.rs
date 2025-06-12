@@ -189,7 +189,7 @@ async fn owners_can_remove_self() {
     let response = token
         .remove_named_owner("owners_selfremove", username)
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
 
     create_and_add_owner(&app, &token, "secondowner", &krate).await;
@@ -198,14 +198,14 @@ async fn owners_can_remove_self() {
     let response = token
         .remove_named_owner("owners_selfremove", username)
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 
     // After you delete yourself, you no longer have permissions to manage the crate.
     let response = token
         .remove_named_owner("owners_selfremove", username)
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
@@ -229,7 +229,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     let response = token
         .remove_named_owners("owners_multiple", &[username, "user2", "user3"])
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
     assert_eq!(krate.owners(&mut conn).await?.len(), 3);
 
@@ -237,7 +237,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     let response = token
         .remove_named_owners("owners_multiple", &["user2", "user3"])
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
     assert_eq!(krate.owners(&mut conn).await?.len(), 1);
 
@@ -245,7 +245,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     let response = token
         .add_named_owners("owners_multiple", &["user2", username])
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"`foo` is already an owner"}]}"#);
     assert_eq!(krate.owners(&mut conn).await?.len(), 1);
 
@@ -253,7 +253,7 @@ async fn modify_multiple_owners() -> anyhow::Result<()> {
     let response = token
         .add_named_owners("owners_multiple", &["user2", "user3"])
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate owners_multiple,user user3 has been invited to be an owner of crate owners_multiple","ok":true}"#);
 
     assert_snapshot!(app.emails_snapshot().await);
@@ -397,15 +397,15 @@ async fn test_unknown_crate() {
     app.db_new_user("bar").await;
 
     let response = user.get::<()>("/api/v1/crates/unknown/owners").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 
     let response = user.get::<()>("/api/v1/crates/unknown/owner_team").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 
     let response = user.get::<()>("/api/v1/crates/unknown/owner_user").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
@@ -422,7 +422,7 @@ async fn api_token_cannot_list_invitations_v1() {
     let (_, _, _, token) = TestApp::init().with_token().await;
 
     let response = token.get::<()>("/api/v1/me/crate_owner_invitations").await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -442,7 +442,7 @@ async fn invitations_list_v1() {
         .good();
 
     let response = user.get::<()>("/api/v1/me/crate_owner_invitations").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let invitations = user.list_invitations().await;
     assert_eq!(

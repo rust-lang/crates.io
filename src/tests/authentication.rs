@@ -12,7 +12,7 @@ async fn anonymous_user_unauthorized() {
     let (_, anon) = TestApp::init().empty().await;
     let response: Response<()> = anon.get(URL).await;
 
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
@@ -23,7 +23,7 @@ async fn token_auth_cannot_find_token() {
     request.header(header::AUTHORIZATION, "cio1tkfake-token");
     let response: Response<()> = anon.run(request).await;
 
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"authentication failed"}]}"#);
 }
 

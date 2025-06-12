@@ -709,7 +709,7 @@ mod tests {
         let error = seek.after(&pagination.page).unwrap_err();
         assert_eq!(error.to_string(), "invalid seek parameter");
         let response = error.response();
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_snapshot!(response.status(), @"400 Bad Request");
 
         // Ensures it still encodes compactly with a field struct
         #[derive(Debug, Default, Serialize, PartialEq)]

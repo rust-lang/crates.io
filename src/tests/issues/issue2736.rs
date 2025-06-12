@@ -4,7 +4,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_database::schema::users;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::assert_snapshot;
 
 /// See <https://github.com/rust-lang/crates.io/issues/2736>.
@@ -52,7 +51,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
 
     // Removing an owner, whether it's valid/current or not, should always work (if performed by another valid owner, etc)
     let response = someone_else.remove_named_owner("crate1", "foo").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 
     let owners = krate.owners(&mut conn).await?;
@@ -61,7 +60,7 @@ async fn test_issue_2736() -> anyhow::Result<()> {
 
     // Once that removal works, it should be possible to add the new account as an owner
     let response = someone_else.add_named_owner("crate1", "foo").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user foo has been invited to be an owner of crate crate1","ok":true}"#);
 
     Ok(())

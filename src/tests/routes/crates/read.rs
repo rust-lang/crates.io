@@ -37,7 +37,7 @@ async fn show() {
         .unwrap();
 
     let response = anon.get::<()>("/api/v1/crates/foo_show").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -69,7 +69,7 @@ async fn show_minimal() {
     let response = anon
         .get::<()>("/api/v1/crates/foo_show_minimal?include=")
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -95,7 +95,7 @@ async fn show_all_yanked() {
         .await;
 
     let response = anon.get::<()>("/api/v1/crates/foo_show").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -110,7 +110,7 @@ async fn test_missing() {
     let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.get::<()>("/api/v1/crates/missing").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `missing` does not exist"}]}"#);
 }
 
@@ -172,7 +172,7 @@ async fn test_new_name() {
         .await;
 
     let response = anon.get::<()>("/api/v1/crates/new?include=").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -201,7 +201,7 @@ async fn test_include_default_version() {
     let response = anon
         .get::<()>("/api/v1/crates/foo_default_version?include=default_version")
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",

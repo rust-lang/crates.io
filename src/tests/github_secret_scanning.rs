@@ -6,7 +6,6 @@ use crates_io_github::{GitHubPublicKey, MockGitHubClient};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 static URL: &str = "/api/github/secret-scanning/verify";
@@ -74,7 +73,7 @@ async fn github_secret_alert_revokes_token() {
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 
     // Ensure that the token was revoked
@@ -138,7 +137,7 @@ async fn github_secret_alert_for_revoked_token() {
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 
     // Ensure that the token is still revoked
@@ -191,7 +190,7 @@ async fn github_secret_alert_for_unknown_token() {
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 
     // Ensure that the token was not revoked
@@ -216,27 +215,27 @@ async fn github_secret_alert_invalid_signature_fails() {
     // No headers or request body
     let request = anon.post_request(URL);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 
     // Request body but no headers
     let mut request = anon.post_request(URL);
     *request.body_mut() = GITHUB_ALERT.into();
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 
     // Headers but no request body
     let mut request = anon.post_request(URL);
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", GITHUB_PUBLIC_KEY_SIGNATURE);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 
     // Request body but only key identifier header
     let mut request = anon.post_request(URL);
     *request.body_mut() = GITHUB_ALERT.into();
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 
     // Invalid signature
     let mut request = anon.post_request(URL);
@@ -244,7 +243,7 @@ async fn github_secret_alert_invalid_signature_fails() {
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "bad signature");
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 
     // Invalid signature that is valid base64
     let mut request = anon.post_request(URL);
@@ -252,5 +251,5 @@ async fn github_secret_alert_invalid_signature_fails() {
     request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", GITHUB_PUBLIC_KEY_IDENTIFIER);
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "YmFkIHNpZ25hdHVyZQ==");
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
 }

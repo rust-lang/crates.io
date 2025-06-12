@@ -3,7 +3,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_tarball::TarballBuilder;
 use flate2::Compression;
 use googletest::prelude::*;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -45,7 +44,7 @@ async fn tarball_between_default_axum_limit_and_max_upload_size() {
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
     let response = token.publish_crate(body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -90,7 +89,7 @@ async fn tarball_bigger_than_max_upload_size() {
     let body = PublishBuilder::create_publish_body(&json, &tarball);
 
     let response = token.publish_crate(body).await;
-    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_snapshot!(response.status(), @"413 Payload Too Large");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"max upload size is: 5242880"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
@@ -109,7 +108,7 @@ async fn new_krate_gzip_bomb() {
     let crate_to_publish = PublishBuilder::new("foo", "1.1.0").add_file("foo-1.1.0/a", body);
 
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is malformed or too large when decompressed"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }
@@ -128,7 +127,7 @@ async fn new_krate_too_big() {
         PublishBuilder::new("foo_big", "1.0.0").add_file("foo_big-1.0.0/big", vec![b'a'; 2000]);
 
     let response = user.publish_crate(builder).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is malformed or too large when decompressed"}]}"#);
     assert_that!(app.stored_files().await, empty());
 }

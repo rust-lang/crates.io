@@ -1,8 +1,7 @@
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::insta::{any_id_redaction, id_redaction};
 use crate::tests::util::{RequestHelper, TestApp};
-use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_edition_is_saved() {
@@ -19,14 +18,14 @@ async fn test_edition_is_saved() {
     "#;
     let pb = PublishBuilder::new("foo", "1.0.0").custom_manifest(manifest);
     let response = token.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
 
     let response = token.get::<()>("/api/v1/crates/foo/1.0.0").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",

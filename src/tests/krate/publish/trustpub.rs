@@ -10,7 +10,6 @@ use crates_io_trustpub::keystore::MockOidcKeyStore;
 use crates_io_trustpub::test_keys::encode_for_testing;
 use diesel::QueryResult;
 use diesel_async::AsyncPgConnection;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 use mockall::predicate::*;
 use p256::ecdsa::signature::digest::Output;
@@ -62,7 +61,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(CRATE_NAME, "1.0.0");
     let response = api_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // Step 2: Create a Trusted Publishing configuration
 
@@ -95,7 +94,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
     }
     "#);
 
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // Step 3: Generate a new OIDC token and exchange it for a temporary access token
 
@@ -118,7 +117,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
       "token": "[token]"
     }
     "#);
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     let token = json["token"].as_str().unwrap_or_default();
 
     // Step 4: Publish a new version of the crate using the temporary access token
@@ -128,7 +127,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(CRATE_NAME, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -138,7 +137,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
 
     let url = format!("/api/v1/crates/{CRATE_NAME}/1.1.0");
     let response = client.get::<()>(&url).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".version.created_at" => "[datetime]",
         ".version.updated_at" => "[datetime]",
@@ -150,7 +149,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
     let response = oidc_token_client
         .delete::<()>("/api/v1/trusted_publishing/tokens")
         .await;
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_snapshot!(response.status(), @"204 No Content");
 
     assert_snapshot!(app.emails_snapshot().await);
 
@@ -192,7 +191,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -217,7 +216,7 @@ async fn test_happy_path_with_fancy_auth_header() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -241,7 +240,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The given API token does not match the format used by crates.io. Tokens generated before 2020-07-14 were generated with an insecure random number generator, and have been revoked. You can generate a new token at https://crates.io/me. For more information please see https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. We apologize for any inconvenience."}]}"#);
 
     Ok(())
@@ -262,7 +261,7 @@ async fn test_invalid_token_format() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authentication token"}]}"#);
 
     Ok(())
@@ -284,7 +283,7 @@ async fn test_non_existent_token() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authentication token"}]}"#);
 
     Ok(())
@@ -301,7 +300,7 @@ async fn test_non_existent_token_with_new_crate() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new("foo", "1.0.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Trusted Publishing tokens do not support creating new crates"}]}"#);
 
     Ok(())
@@ -324,7 +323,7 @@ async fn test_token_for_wrong_crate() -> anyhow::Result<()> {
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
     let response = oidc_token_client.publish_crate(pb).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The provided access token is not valid for crate `bar`"}]}"#);
 
     Ok(())

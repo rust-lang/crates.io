@@ -3,7 +3,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde_json::json;
 
@@ -40,13 +39,13 @@ async fn test_happy_path() -> anyhow::Result<()> {
     create_config(&mut conn, bar.id, "BAR").await?;
 
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".github_configs[].created_at" => "[datetime]",
     });
 
     let response = cookie_client.get_with_query::<()>(URL, "crate=Bar").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".github_configs[].created_at" => "[datetime]",
     });
@@ -64,7 +63,7 @@ async fn test_unauthorized() -> anyhow::Result<()> {
     create_config(&mut conn, krate.id, "foo-rs").await?;
 
     let response = anon_client.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     Ok(())
@@ -83,7 +82,7 @@ async fn test_not_owner() -> anyhow::Result<()> {
     // The authenticated user is not an owner of the crate
     let other_user = app.db_new_user("other").await;
     let response = other_user.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
     Ok(())
@@ -103,10 +102,10 @@ async fn test_team_owner() -> anyhow::Result<()> {
 
     let body = json!({ "owners": ["github:test-org:all"] }).to_string();
     let response = user.put::<()>("/api/v1/crates/foo/owners", body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let response = user2.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
     Ok(())
@@ -117,7 +116,7 @@ async fn test_crate_not_found() -> anyhow::Result<()> {
     let (_, _, cookie_client) = TestApp::full().with_user().await;
 
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo` does not exist"}]}"#);
 
     Ok(())
@@ -128,7 +127,7 @@ async fn test_no_query_param() -> anyhow::Result<()> {
     let (_, _, cookie_client) = TestApp::full().with_user().await;
 
     let response = cookie_client.get::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize query string: missing field `crate`"}]}"#);
 
     Ok(())
@@ -144,7 +143,7 @@ async fn test_crate_with_no_configs() -> anyhow::Result<()> {
 
     // No configs have been created for this crate
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".github_configs[].created_at" => "[datetime]",
     });

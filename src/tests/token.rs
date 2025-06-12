@@ -3,7 +3,7 @@ use crate::tests::{RequestHelper, TestApp};
 use crate::{models::ApiToken, views::EncodableMe};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::{StatusCode, header};
+use http::header;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -13,7 +13,7 @@ async fn using_token_updates_last_used_at() {
     let mut conn = app.db_conn().await;
 
     let response = anon.get::<()>(url).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     user.get::<EncodableMe>(url).await.good();
     assert_none!(token.as_model().last_used_at);
 
@@ -41,6 +41,6 @@ async fn old_tokens_give_specific_error_message() {
     let mut request = anon.get_request(url);
     request.header(header::AUTHORIZATION, "oldtoken");
     let response = anon.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The given API token does not match the format used by crates.io. Tokens generated before 2020-07-14 were generated with an insecure random number generator, and have been revoked. You can generate a new token at https://crates.io/me. For more information please see https://blog.rust-lang.org/2020/07/14/crates-io-security-advisory.html. We apologize for any inconvenience."}]}"#);
 }

@@ -2,7 +2,6 @@ use crate::models::CrateOwner;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
-use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -20,7 +19,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"#);
 
     // `owners` is not an array
@@ -28,7 +27,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"#);
 
     // missing `owners` and/or `users` fields
@@ -36,7 +35,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .delete_with_body::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"#);
 }
 
@@ -46,7 +45,7 @@ async fn test_unknown_crate() {
     app.db_new_user("bar").await;
 
     let response = user.remove_named_owner("unknown", "bar").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
@@ -60,7 +59,7 @@ async fn test_unknown_user() {
         .await;
 
     let response = cookie.remove_named_owner("foo", "unknown").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `unknown`"}]}"#);
 }
 
@@ -76,7 +75,7 @@ async fn test_unknown_team() {
     let response = cookie
         .remove_named_owner("foo", "github:unknown:unknown")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:unknown:unknown`"}]}"#);
 }
 
@@ -100,7 +99,7 @@ async fn test_remove_uppercase_user() {
         .unwrap();
 
     let response = cookie.remove_named_owner("foo", "USER2").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
 
@@ -151,11 +150,11 @@ async fn test_remove_uppercase_team() {
         .await;
 
     let response = cookie.add_named_owner("crate42", "github:org:team").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let response = cookie
         .remove_named_owner("crate42", "github:ORG:TEAM")
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }

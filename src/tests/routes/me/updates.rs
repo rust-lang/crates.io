@@ -7,14 +7,13 @@ use diesel::prelude::*;
 use diesel::update;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
-use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {
     let (_, _, _, token) = TestApp::init().with_token().await;
     let response = token.get::<()>("/api/v1/me/updates").await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -103,6 +102,6 @@ async fn following() {
     let response = user
         .get_with_query::<()>("/api/v1/me/updates", "page=0")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize query string: page: invalid value: integer `0`, expected a nonzero u32"}]}"#);
 }

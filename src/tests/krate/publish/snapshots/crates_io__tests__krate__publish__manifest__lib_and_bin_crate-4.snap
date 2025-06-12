@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish/links.rs
+source: src/tests/krate/publish/manifest.rs
 expression: response.json()
 ---
 {
@@ -10,28 +10,31 @@ expression: response.json()
         "time": "[datetime]",
         "user": {
           "avatar": null,
-          "id": 1,
+          "id": "[id]",
           "login": "foo",
           "name": null,
           "url": "https://github.com/foo"
         }
       }
     ],
-    "bin_names": [],
-    "checksum": "b2c9e153a8860ce92ba7cbdea7b718409d181c08f4c6c5c2a612919dcb155af2",
+    "bin_names": [
+      "bar",
+      "foo"
+    ],
+    "checksum": "2af566e52c8fb0376558a00b0bc426c699e8fe2b12807b75cbce7ccf54e37a98",
     "crate": "foo",
-    "crate_size": 167,
+    "crate_size": 251,
     "created_at": "[datetime]",
-    "description": "foo?!",
+    "description": "description",
     "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "documentation": null,
     "downloads": 0,
     "edition": null,
     "features": {},
-    "has_lib": false,
+    "has_lib": true,
     "homepage": null,
     "id": "[id]",
-    "lib_links": "git2",
+    "lib_links": null,
     "license": "MIT",
     "links": {
       "authors": "/api/v1/crates/foo/1.0.0/authors",

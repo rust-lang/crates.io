@@ -3,9 +3,61 @@ source: src/tests/routes/crates/reverse_dependencies.rs
 expression: response.json()
 ---
 {
-  "dependencies": [],
+  "dependencies": [
+    {
+      "crate_id": "c1",
+      "default_features": false,
+      "downloads": 0,
+      "features": [],
+      "id": 2,
+      "kind": "normal",
+      "optional": false,
+      "req": ">= 0",
+      "target": null,
+      "version_id": 3
+    }
+  ],
   "meta": {
-    "total": 0
+    "total": 1
   },
-  "versions": []
+  "versions": [
+    {
+      "audit_actions": [],
+      "bin_names": null,
+      "checksum": "                                                                ",
+      "crate": "c2",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "description": null,
+      "dl_path": "/api/v1/crates/c2/1.1.0/download",
+      "documentation": null,
+      "downloads": 0,
+      "edition": null,
+      "features": {},
+      "has_lib": null,
+      "homepage": null,
+      "id": 3,
+      "lib_links": null,
+      "license": null,
+      "links": {
+        "authors": "/api/v1/crates/c2/1.1.0/authors",
+        "dependencies": "/api/v1/crates/c2/1.1.0/dependencies",
+        "version_downloads": "/api/v1/crates/c2/1.1.0/downloads"
+      },
+      "num": "1.1.0",
+      "published_by": {
+        "avatar": null,
+        "id": 1,
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/c2/1.1.0/readme",
+      "repository": null,
+      "rust_version": null,
+      "updated_at": "[datetime]",
+      "yank_message": null,
+      "yanked": false
+    }
+  ]
 }

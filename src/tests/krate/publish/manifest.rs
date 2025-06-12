@@ -1,7 +1,6 @@
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::insta::{any_id_redaction, id_redaction};
 use crate::tests::util::{RequestHelper, TestApp};
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -21,14 +20,14 @@ async fn boolean_readme() {
             readme = false"#,
         ))
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
 
     let response = token.get::<()>("/api/v1/crates/foo/1.0.0").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",
@@ -46,7 +45,7 @@ async fn missing_manifest() {
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").no_manifest())
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is missing a `Cargo.toml` manifest file"}]}"#);
 }
 
@@ -64,7 +63,7 @@ async fn manifest_casing() {
                 .no_manifest(),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is missing a `Cargo.toml` manifest file; `CARGO.TOML` was found, but must be named `Cargo.toml` with that exact casing"}]}"#);
 }
 
@@ -86,7 +85,7 @@ async fn multiple_manifests() {
                 .no_manifest(),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball contains more than one `Cargo.toml` manifest file; found `Cargo.toml`, `cargo.toml`"}]}"#);
 }
 
@@ -97,7 +96,7 @@ async fn invalid_manifest() {
     let response = token
         .publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(""))
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\nmissing field `name`\n"}]}"#);
 }
 
@@ -110,7 +109,7 @@ async fn invalid_manifest_missing_name() {
             PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nversion = \"1.0.0\""),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\nTOML parse error at line 1, column 1\n  |\n1 | [package]\n  | ^^^^^^^^^\nmissing field `name`\n"}]}"#);
 }
 
@@ -123,7 +122,7 @@ async fn invalid_manifest_missing_version() {
             PublishBuilder::new("foo", "1.0.0").custom_manifest("[package]\nname = \"foo\""),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\nmissing field `version`"}]}"#);
 }
 
@@ -135,7 +134,7 @@ async fn name_mismatch() {
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             "[package]\nname = \"bar\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\n",
         )).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata name `foo` does not match manifest name `bar`"}]}"#);
 }
 
@@ -147,7 +146,7 @@ async fn version_mismatch() {
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             "[package]\nname = \"foo\"\nversion = \"2.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\n",
         )).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"metadata version `1.0.0` does not match manifest version `2.0.0`"}]}"#);
 }
 
@@ -159,13 +158,13 @@ async fn invalid_rust_version() {
         token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
             "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"\"\n",
         )).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value"}]}"#);
 
     let response = token.publish_crate(PublishBuilder::new("foo", "1.0.0").custom_manifest(
         "[package]\nname = \"foo\"\nversion = \"1.0.0\"\ndescription = \"description\"\nlicense = \"MIT\"\nrust-version = \"1.0.0-beta.2\"\n",
     )).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"failed to parse `Cargo.toml` manifest file\n\ninvalid `rust-version` value"}]}"#);
 }
 
@@ -179,14 +178,14 @@ async fn test_lib_and_bin_crate() {
         .add_file("foo-1.0.0/src/bin/bar.rs", "fn main() {}");
 
     let response = token.publish_crate(publish_builder).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
     });
 
     let response = token.get::<()>("/api/v1/crates/foo/1.0.0").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".version.id" => any_id_redaction(),
         ".version.created_at" => "[datetime]",
