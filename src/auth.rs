@@ -4,14 +4,69 @@ use crate::middleware::log_request::RequestLogExt;
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::models::{ApiToken, User};
 use crate::util::errors::{
-    AppResult, InsecurelyGeneratedTokenRevoked, account_locked, forbidden, internal,
+    AppResult, BoxedAppError, InsecurelyGeneratedTokenRevoked, account_locked, custom, forbidden,
+    internal,
 };
 use crate::util::token::HashedToken;
+use axum::extract::{FromRequestParts, OptionalFromRequestParts};
 use chrono::Utc;
 use crates_io_session::SessionExtension;
 use diesel_async::AsyncPgConnection;
-use http::header;
 use http::request::Parts;
+use http::{StatusCode, header};
+use secrecy::SecretString;
+
+pub struct AuthHeader(SecretString);
+
+impl AuthHeader {
+    pub async fn optional_from_request_parts(parts: &Parts) -> Result<Option<Self>, BoxedAppError> {
+        let Some(auth_header) = parts.headers.get(header::AUTHORIZATION) else {
+            return Ok(None);
+        };
+
+        let auth_header = auth_header.to_str().map_err(|_| {
+            let message = "Invalid authorization header";
+            custom(StatusCode::UNAUTHORIZED, message)
+        })?;
+
+        let (scheme, token) = auth_header.split_once(' ').unwrap_or(("", auth_header));
+        if !scheme.eq_ignore_ascii_case("Bearer") {
+            let message = "Invalid authorization header";
+            return Err(custom(StatusCode::UNAUTHORIZED, message));
+        }
+
+        let token = SecretString::from(token.trim_ascii());
+        Ok(Some(AuthHeader(token)))
+    }
+
+    pub async fn from_request_parts(parts: &Parts) -> Result<Self, BoxedAppError> {
+        let auth = Self::optional_from_request_parts(parts).await?;
+        auth.ok_or_else(|| {
+            let message = "Missing authorization header";
+            custom(StatusCode::UNAUTHORIZED, message)
+        })
+    }
+
+    pub fn token(&self) -> &SecretString {
+        &self.0
+    }
+}
+
+impl<S: Send + Sync> OptionalFromRequestParts<S> for AuthHeader {
+    type Rejection = BoxedAppError;
+
+    async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Option<Self>, Self::Rejection> {
+        Self::optional_from_request_parts(parts).await
+    }
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for AuthHeader {
+    type Rejection = BoxedAppError;
+
+    async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
+        Self::from_request_parts(parts).await
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct AuthCheck {
