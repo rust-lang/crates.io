@@ -5,11 +5,21 @@ expression: response.json()
 {
   "github_configs": [
     {
-      "crate": "bar",
+      "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 3,
-      "repository_name": "BAR",
+      "id": 1,
+      "repository_name": "foo-rs",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 2,
+      "repository_name": "foo",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"

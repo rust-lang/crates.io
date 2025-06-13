@@ -5,7 +5,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
-use http::StatusCode;
 use insta::assert_snapshot;
 use serde_json::{Value, json};
 
@@ -15,7 +14,7 @@ static NEW_BAR: &[u8] = br#"{ "api_token": { "name": "bar" } }"#;
 async fn create_token_logged_out() {
     let (_, anon) = TestApp::init().empty().await;
     let response = anon.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -23,7 +22,7 @@ async fn create_token_invalid_request() {
     let (app, _, user) = TestApp::init().with_user().await;
     let invalid: &[u8] = br#"{ "name": "" }"#;
     let response = user.put::<()>("/api/v1/me/tokens", invalid).await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `api_token` at line 1 column 14"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -33,7 +32,7 @@ async fn create_token_no_name() {
     let (app, _, user) = TestApp::init().with_user().await;
     let empty_name: &[u8] = br#"{ "api_token": { "name": "" } }"#;
     let response = user.put::<()>("/api/v1/me/tokens", empty_name).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"name must have a value"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -51,7 +50,7 @@ async fn create_token_exceeded_tokens_per_user() {
     }
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"maximum tokens per user is: 500"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -62,7 +61,7 @@ async fn create_token_success() {
     let mut conn = app.db_conn().await;
 
     let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
@@ -117,7 +116,7 @@ async fn cannot_create_token_with_token() {
             br#"{ "api_token": { "name": "baz" } }"# as &[u8],
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot use an API token to create a new API token"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -138,7 +137,7 @@ async fn create_token_with_scopes() {
     let response = user
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
@@ -188,7 +187,7 @@ async fn create_token_with_null_scopes() {
     let response = user
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",
@@ -228,7 +227,7 @@ async fn create_token_with_empty_crate_scope() {
     let response = user
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid crate scope"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -248,7 +247,7 @@ async fn create_token_with_invalid_endpoint_scope() {
     let response = user
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid endpoint scope"}]}"#);
     assert!(app.emails().await.is_empty());
 }
@@ -269,7 +268,7 @@ async fn create_token_with_expiry_date() {
     let response = user
         .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.id" => insta::any_id_redaction(),
         ".api_token.created_at" => "[datetime]",

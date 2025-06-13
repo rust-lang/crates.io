@@ -279,7 +279,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        assert_snapshot!(response.status(), @"204 No Content");
         assert!(response.body().is_empty());
 
         assert_snapshot!(app.emails_snapshot().await);
@@ -316,7 +316,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        assert_snapshot!(response.status(), @"204 No Content");
         assert!(response.body().is_empty());
 
         assert_snapshot!(app.emails_snapshot().await);
@@ -353,7 +353,7 @@ mod tests {
         ");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        assert_snapshot!(response.status(), @"204 No Content");
         assert!(response.body().is_empty());
 
         assert_snapshot!(app.emails_snapshot().await);
@@ -376,7 +376,7 @@ mod tests {
         publish_crate(&user, "foo").await;
 
         let response = delete_crate(&anon, "foo").await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -391,7 +391,7 @@ mod tests {
         publish_crate(&user, "foo").await;
 
         let response = delete_crate(&token, "foo").await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -404,7 +404,7 @@ mod tests {
         let (_app, _anon, user) = TestApp::full().with_user().await;
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_snapshot!(response.status(), @"404 Not Found");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo` does not exist"}]}"#);
 
         Ok(())
@@ -418,7 +418,7 @@ mod tests {
         publish_crate(&user, "foo").await;
 
         let response = delete_crate(&user2, "foo").await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to delete crates"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -437,10 +437,10 @@ mod tests {
         // Add team owner
         let body = json!({ "owners": ["github:test-org:all"] }).to_string();
         let response = user.put::<()>("/api/v1/crates/foo/owners", body).await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_snapshot!(response.status(), @"200 OK");
 
         let response = delete_crate(&user2, "foo").await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to delete crates"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -468,7 +468,7 @@ mod tests {
             .await?;
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        assert_snapshot!(response.status(), @"422 Unprocessable Entity");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates with a single owner can be deleted after 72 hours"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -486,7 +486,7 @@ mod tests {
         adjust_downloads(&mut conn, crate_id, DOWNLOADS_PER_MONTH_LIMIT + 1).await?;
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        assert_snapshot!(response.status(), @"422 Unprocessable Entity");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates with less than 500 downloads per month can be deleted after 72 hours"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;
@@ -503,10 +503,10 @@ mod tests {
         // Publish another crate
         let pb = PublishBuilder::new("bar", "1.0.0").dependency(DependencyBuilder::new("foo"));
         let response = user.publish_crate(pb).await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_snapshot!(response.status(), @"200 OK");
 
         let response = delete_crate(&user, "foo").await;
-        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        assert_snapshot!(response.status(), @"422 Unprocessable Entity");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only crates without reverse dependencies can be deleted"}]}"#);
 
         assert_crate_exists(&anon, "foo", true).await;

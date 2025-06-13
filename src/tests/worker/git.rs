@@ -5,7 +5,7 @@ use crate::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
+use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn index_smoke_test() {
@@ -17,7 +17,7 @@ async fn index_smoke_test() {
 
     let body = PublishBuilder::new("serde", "1.0.0").body();
     let response = token.put::<()>("/api/v1/crates/new", body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // Check that the git index is updated asynchronously
     assert_ok_eq!(upstream.list_commits(), vec!["Initial Commit"]);
@@ -33,7 +33,7 @@ async fn index_smoke_test() {
     // Yank the crate
 
     let response = token.delete::<()>("/api/v1/crates/serde/1.0.0/yank").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     app.run_pending_background_jobs().await;
     assert_ok_eq!(
@@ -101,7 +101,7 @@ async fn test_config_changes() {
     // Add a new crate
     let body = PublishBuilder::new("serde", "1.0.0").body();
     let response = token.publish_crate(body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // Adjust the `config.json` file on the upstream index
     upstream.write_file("config.json", UPDATED_CONFIG).unwrap();
@@ -110,7 +110,7 @@ async fn test_config_changes() {
     // Update the crate
     let body = PublishBuilder::new("serde", "1.1.0").body();
     let response = token.publish_crate(body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // Check that the `config.json` changes on the upstream index are preserved
     assert_ok_eq!(upstream.read_file("config.json"), UPDATED_CONFIG);

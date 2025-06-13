@@ -2,7 +2,6 @@ use crate::models::token::{CrateScope, EndpointScope};
 use crate::tests::builders::CrateBuilder;
 use crate::tests::owners::expire_invitation;
 use crate::tests::util::{RequestHelper, TestApp};
-use http::StatusCode;
 use insta::assert_snapshot;
 
 // This is testing Cargo functionality! ! !
@@ -48,7 +47,7 @@ async fn owner_change_via_cookie() {
         .await;
 
     let response = cookie.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
@@ -65,7 +64,7 @@ async fn owner_change_via_token() {
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
@@ -85,7 +84,7 @@ async fn owner_change_via_change_owner_token() {
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
@@ -106,7 +105,7 @@ async fn owner_change_via_change_owner_token_with_matching_crate_scope() {
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user-2 has been invited to be an owner of crate foo_crate","ok":true}"#);
 }
 
@@ -127,7 +126,7 @@ async fn owner_change_via_change_owner_token_with_wrong_crate_scope() {
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
 
@@ -147,7 +146,7 @@ async fn owner_change_via_publish_token() {
         .await;
 
     let response = token.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
 }
 
@@ -164,7 +163,7 @@ async fn owner_change_without_auth() {
         .await;
 
     let response = anon.add_named_owner(&krate.name, &user2.gh_login).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
@@ -182,7 +181,7 @@ async fn test_owner_change_with_legacy_field() {
     let response = user1
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user user2 has been invited to be an owner of crate foo","ok":true}"#);
 }
 
@@ -201,7 +200,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: owners[1]: expected value at line 1 column 20"}]}"#);
 
     // `owners` is not an array
@@ -209,7 +208,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: owners: invalid type: string \"foo\", expected a sequence at line 1 column 16"}]}"#);
 
     // missing `owners` and/or `users` fields
@@ -217,7 +216,7 @@ async fn test_owner_change_with_invalid_json() {
     let response = user
         .put::<()>("/api/v1/crates/foo/owners", input.as_bytes())
         .await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `owners` at line 1 column 2"}]}"#);
 }
 
@@ -236,7 +235,7 @@ async fn invite_already_invited_user() {
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
@@ -244,7 +243,7 @@ async fn invite_already_invited_user() {
 
     // Then invite the user a second time, the message should point out the user is already invited
     let response = owner.add_named_owner("crate_name", "invited_user").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user already has a pending invitation to be an owner of crate crate_name","ok":true}"#);
 
     // Check that no new email is sent after the second invitation
@@ -266,7 +265,7 @@ async fn invite_with_existing_expired_invite() {
 
     // Invite the user the first time
     let response = owner.add_named_owner("crate_name", "invited_user").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check one email was sent, this will be the ownership invite email
@@ -277,7 +276,7 @@ async fn invite_with_existing_expired_invite() {
 
     // Then invite the user a second time, a new invite is created as the old one expired
     let response = owner.add_named_owner("crate_name", "invited_user").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"user invited_user has been invited to be an owner of crate crate_name","ok":true}"#);
 
     // Check that the email for the second invite was sent
@@ -290,7 +289,7 @@ async fn test_unknown_crate() {
     app.db_new_user("bar").await;
 
     let response = user.add_named_owner("unknown", "bar").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `unknown` does not exist"}]}"#);
 }
 
@@ -304,7 +303,7 @@ async fn test_unknown_user() {
         .await;
 
     let response = cookie.add_named_owner("foo", "unknown").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `unknown`"}]}"#);
 }
 
@@ -320,7 +319,7 @@ async fn test_unknown_team() {
     let response = cookie
         .add_named_owner("foo", "github:unknown:unknown")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find the github team unknown/unknown. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"#);
 }
 
@@ -343,7 +342,7 @@ async fn max_invites_per_request() {
     }
 
     let response = owner.add_named_owners("crate_name", &usernames).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"too many invites for this request - maximum 10"}]}"#);
 }
 
@@ -369,7 +368,7 @@ async fn no_invite_emails_for_txn_rollback() {
     usernames.push("bananas".to_string());
 
     let response = token.add_named_owners("crate_name", &usernames).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find user with login `bananas`"}]}"#);
 
     // No emails should have been sent.
@@ -379,7 +378,7 @@ async fn no_invite_emails_for_txn_rollback() {
     let _ = usernames.pop();
 
     let response = token.add_named_owners("crate_name", &usernames).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // 9 emails to the good invitees should have been sent.
     assert_eq!(app.emails().await.len(), 9);

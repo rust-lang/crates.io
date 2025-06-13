@@ -8,7 +8,6 @@ use crates_io_trustpub::github::test_helpers::FullGitHubClaims;
 use crates_io_trustpub::keystore::MockOidcKeyStore;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::{assert_compact_debug_snapshot, assert_json_snapshot, assert_snapshot};
 use jsonwebtoken::{EncodingKey, Header};
 use mockall::predicate::*;
@@ -74,7 +73,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let json = response.json();
     assert_json_snapshot!(json, { ".token" => "[token]" }, @r#"
@@ -110,7 +109,7 @@ async fn test_happy_path_with_environment() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }
@@ -124,7 +123,7 @@ async fn test_happy_path_with_ignored_environment() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }
@@ -135,7 +134,7 @@ async fn test_broken_jwt() -> anyhow::Result<()> {
 
     let body = serde_json::to_vec(&json!({ "jwt": "broken" }))?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Failed to decode JWT"}]}"#);
 
     Ok(())
@@ -156,7 +155,7 @@ async fn test_unsupported_issuer() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unsupported JWT issuer"}]}"#);
 
     Ok(())
@@ -172,7 +171,7 @@ async fn test_missing_key_id() -> anyhow::Result<()> {
     let body = serde_json::to_vec(&json!({ "jwt": jwt }))?;
 
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Missing JWT key ID"}]}"#);
 
     Ok(())
@@ -200,7 +199,7 @@ async fn test_unknown_key() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Invalid JWT key ID"}]}"#);
 
     Ok(())
@@ -228,7 +227,7 @@ async fn test_key_store_error() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert_snapshot!(response.status(), @"500 Internal Server Error");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Failed to load OIDC key set"}]}"#);
 
     Ok(())
@@ -243,7 +242,7 @@ async fn test_invalid_audience() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Failed to decode JWT"}]}"#);
 
     Ok(())
@@ -258,11 +257,11 @@ async fn test_token_reuse() -> anyhow::Result<()> {
 
     // The first exchange should succeed
     let response = client.put::<()>(URL, body.clone()).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     // The second exchange should fail
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"JWT has already been used"}]}"#);
 
     Ok(())
@@ -277,7 +276,7 @@ async fn test_invalid_repository() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unexpected `repository` value"}]}"#);
 
     Ok(())
@@ -292,7 +291,7 @@ async fn test_invalid_workflow() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unexpected `workflow_ref` value"}]}"#);
 
     Ok(())
@@ -307,7 +306,7 @@ async fn test_invalid_owner_id() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unexpected `repository_owner_id` value"}]}"#);
 
     Ok(())
@@ -322,7 +321,7 @@ async fn test_missing_config() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
 
     Ok(())
@@ -334,7 +333,7 @@ async fn test_missing_environment() -> anyhow::Result<()> {
 
     let body = default_claims().as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
 
     Ok(())
@@ -349,7 +348,7 @@ async fn test_wrong_environment() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
 
     Ok(())
@@ -371,7 +370,7 @@ async fn test_case_insensitive() -> anyhow::Result<()> {
 
     let body = claims.as_exchange_body()?;
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }

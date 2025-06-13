@@ -5,7 +5,6 @@ use crates_io_database::schema::trustpub_tokens;
 use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use http::StatusCode;
 use insta::assert_compact_debug_snapshot;
 use insta::assert_snapshot;
 use secrecy::ExposeSecret;
@@ -53,7 +52,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     let token_client = MockTokenUser::with_auth_header(header, app.clone());
 
     let response = token_client.delete::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_snapshot!(response.status(), @"204 No Content");
     assert_eq!(response.text(), "");
 
     // Check that the token is deleted
@@ -67,7 +66,7 @@ async fn test_missing_authorization_header() -> anyhow::Result<()> {
     let (_app, client) = TestApp::full().empty().await;
 
     let response = client.delete::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Missing authorization header"}]}"#);
 
     Ok(())
@@ -82,7 +81,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
     let token_client = MockTokenUser::with_auth_header(header, app.clone());
 
     let response = token_client.delete::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
 
     Ok(())
@@ -97,7 +96,7 @@ async fn test_invalid_token_format() -> anyhow::Result<()> {
     let token_client = MockTokenUser::with_auth_header(header, app.clone());
 
     let response = token_client.delete::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_snapshot!(response.status(), @"401 Unauthorized");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
 
     Ok(())
@@ -114,7 +113,7 @@ async fn test_non_existent_token() -> anyhow::Result<()> {
 
     // The request should succeed with 204 No Content even though the token doesn't exist
     let response = token_client.delete::<()>(URL).await;
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_snapshot!(response.status(), @"204 No Content");
     assert_eq!(response.text(), "");
 
     Ok(())

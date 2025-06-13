@@ -43,7 +43,7 @@ async fn test_empty_email_not_added() {
     let model = user.as_model();
 
     let response = user.update_email_more_control(model.id, Some("")).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"empty email rejected"}]}"#);
 }
 
@@ -55,7 +55,7 @@ async fn test_ignore_empty() {
     let url = format!("/api/v1/users/{}", model.id);
     let payload = json!({"user": {}});
     let response = user.put::<()>(&url, payload.to_string()).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 }
 
@@ -67,7 +67,7 @@ async fn test_ignore_nulls() {
     let url = format!("/api/v1/users/{}", model.id);
     let payload = json!({"user": { "email": null }});
     let response = user.put::<()>(&url, payload.to_string()).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 }
 
@@ -88,7 +88,7 @@ async fn test_other_users_cannot_change_my_email() {
             Some("pineapple@pineapples.pineapple"),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
     let response = anon
@@ -97,7 +97,7 @@ async fn test_other_users_cannot_change_my_email() {
             Some("pineapple@pineapples.pineapple"),
         )
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
@@ -107,7 +107,7 @@ async fn test_invalid_email_address() {
     let model = user.as_model();
 
     let response = user.update_email_more_control(model.id, Some("foo")).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid email address"}]}"#);
 }
 
@@ -118,6 +118,6 @@ async fn test_invalid_json() {
 
     let url = format!("/api/v1/users/{}", model.id);
     let response = user.put::<()>(&url, r#"{ "user": foo }"#).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to parse the request body as JSON: user: expected ident at line 1 column 12"}]}"#);
 }

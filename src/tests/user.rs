@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
+use insta::assert_snapshot;
 use secrecy::ExposeSecret;
 use serde_json::json;
 
@@ -16,7 +16,7 @@ impl crate::tests::util::MockCookieUser {
     async fn confirm_email(&self, email_token: &str) {
         let url = format!("/api/v1/confirm/{email_token}");
         let response = self.put::<()>(&url, &[] as &[u8]).await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_snapshot!(response.status(), @"200 OK");
         assert_eq!(response.json(), json!({ "ok": true }));
     }
 }

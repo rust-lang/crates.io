@@ -1,15 +1,14 @@
 use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
-use http::StatusCode;
-use insta::assert_json_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_token_non_existing() {
     let url = "/api/v1/me/tokens/10086";
     let (_, _, user, _) = TestApp::init().with_token().await;
     let response = user.get::<()>(url).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -18,7 +17,7 @@ async fn show() {
     let token = token.as_model();
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user.get::<()>(&url).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.created_at" => "[datetime]",
     });
@@ -48,7 +47,7 @@ async fn show_token_with_scopes() {
 
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user.get::<()>(&url).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".api_token.created_at" => "[datetime]",
         ".api_token.expired_at" => "[datetime]",
@@ -60,7 +59,7 @@ async fn show_with_anonymous_user() {
     let url = "/api/v1/me/tokens/1";
     let (_, anon) = TestApp::init().empty().await;
     let response = anon.get::<()>(url).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -75,5 +74,5 @@ async fn show_other_user_token() {
 
     let url = format!("/api/v1/me/tokens/{}", token.id);
     let response = user1.get::<()>(&url).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 }

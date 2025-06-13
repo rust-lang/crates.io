@@ -1,7 +1,6 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{EncodablePrivateUser, OwnedCrate};
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 impl crate::tests::util::MockCookieUser {
@@ -23,11 +22,11 @@ async fn me() {
     let mut conn = app.db_conn().await;
 
     let response = anon.get::<()>("/api/v1/me").await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     let response = user.get::<()>("/api/v1/me").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 
     CrateBuilder::new("foo_my_packages", user.as_model().id)
@@ -35,7 +34,7 @@ async fn me() {
         .await;
 
     let response = user.get::<()>("/api/v1/me").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json());
 }
 

@@ -99,7 +99,6 @@ pub async fn resend_email_verification(
 #[cfg(test)]
 mod tests {
     use crate::tests::util::{RequestHelper, TestApp};
-    use http::StatusCode;
     use insta::assert_snapshot;
 
     #[tokio::test(flavor = "multi_thread")]
@@ -108,7 +107,7 @@ mod tests {
 
         let url = format!("/api/v1/users/{}/resend", user.as_model().id);
         let response = anon.put::<()>(&url, "").await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
         assert_eq!(app.emails().await.len(), 0);
@@ -121,7 +120,7 @@ mod tests {
 
         let url = format!("/api/v1/users/{}/resend", user2.as_model().id);
         let response = user.put::<()>(&url, "").await;
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_snapshot!(response.status(), @"400 Bad Request");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
         assert_eq!(app.emails().await.len(), 0);
@@ -133,7 +132,7 @@ mod tests {
 
         let url = format!("/api/v1/users/{}/resend", user.as_model().id);
         let response = user.put::<()>(&url, "").await;
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_snapshot!(response.status(), @"200 OK");
         assert_snapshot!(response.text(), @r#"{"ok":true}"#);
 
         assert_snapshot!(app.emails_snapshot().await);

@@ -1,22 +1,42 @@
 ---
 source: src/tests/krate/publish/basics.rs
-expression: crates
+expression: response.json()
 ---
-[
-  {
+{
+  "crate": {
+    "badges": [],
+    "categories": null,
+    "created_at": "[datetime]",
+    "default_version": "2.0.0",
+    "description": "2.0.0 description",
+    "documentation": null,
+    "downloads": 0,
+    "exact_match": false,
+    "homepage": null,
+    "id": "foo_twice",
+    "keywords": null,
+    "links": {
+      "owner_team": "/api/v1/crates/foo_twice/owner_team",
+      "owner_user": "/api/v1/crates/foo_twice/owner_user",
+      "owners": "/api/v1/crates/foo_twice/owners",
+      "reverse_dependencies": "/api/v1/crates/foo_twice/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo_twice/downloads",
+      "versions": "/api/v1/crates/foo_twice/versions"
+    },
+    "max_stable_version": "2.0.0",
+    "max_version": "2.0.0",
     "name": "foo_twice",
-    "vers": "0.99.0",
-    "deps": [],
-    "cksum": "99ef473e84e6bede426d948d4dca03d79a64acb51511ffcbeb11d253505c9968",
-    "features": {},
+    "newest_version": "2.0.0",
+    "num_versions": 2,
+    "recent_downloads": null,
+    "repository": null,
+    "updated_at": "[datetime]",
+    "versions": null,
     "yanked": false
   },
-  {
-    "name": "foo_twice",
-    "vers": "2.0.0",
-    "deps": [],
-    "cksum": "7e71c271648114db81fa41450dd8d4d50c35622d3630e65c4f8211948bdf83f3",
-    "features": {},
-    "yanked": false
+  "warnings": {
+    "invalid_badges": [],
+    "invalid_categories": [],
+    "other": []
   }
-]
+}

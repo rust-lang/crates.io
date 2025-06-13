@@ -1,6 +1,5 @@
 use crate::tests::TestApp;
 use crate::tests::util::{MockRequestExt, RequestHelper};
-use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -16,7 +15,7 @@ async fn test_with_matching_origin() {
     request.header("Origin", "https://crates.io");
 
     let response = cookie.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -32,7 +31,7 @@ async fn test_with_unknown_origin() {
     request.header("Origin", "https://evil.hacker.io");
 
     let response = cookie.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid origin header"}]}"#);
 }
 
@@ -50,6 +49,6 @@ async fn test_with_multiple_origins() {
     request.header("Origin", "https://crates.io");
 
     let response = cookie.run::<()>(request).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid origin header"}]}"#);
 }

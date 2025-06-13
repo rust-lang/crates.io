@@ -1,0 +1,56 @@
+---
+source: src/tests/krate/publish/manifest.rs
+expression: response.json()
+---
+{
+  "version": {
+    "audit_actions": [
+      {
+        "action": "publish",
+        "time": "[datetime]",
+        "user": {
+          "avatar": null,
+          "id": "[id]",
+          "login": "foo",
+          "name": null,
+          "url": "https://github.com/foo"
+        }
+      }
+    ],
+    "bin_names": [],
+    "checksum": "50da036cb5dfa54c39ab25c02c31ca001fa103b4de41e3f79ca1d3b6877c775f",
+    "crate": "foo",
+    "crate_size": 173,
+    "created_at": "[datetime]",
+    "description": "description",
+    "dl_path": "/api/v1/crates/foo/1.0.0/download",
+    "documentation": null,
+    "downloads": 0,
+    "edition": null,
+    "features": {},
+    "has_lib": false,
+    "homepage": null,
+    "id": "[id]",
+    "lib_links": null,
+    "license": "MIT",
+    "links": {
+      "authors": "/api/v1/crates/foo/1.0.0/authors",
+      "dependencies": "/api/v1/crates/foo/1.0.0/dependencies",
+      "version_downloads": "/api/v1/crates/foo/1.0.0/downloads"
+    },
+    "num": "1.0.0",
+    "published_by": {
+      "avatar": null,
+      "id": "[id]",
+      "login": "foo",
+      "name": null,
+      "url": "https://github.com/foo"
+    },
+    "readme_path": "/api/v1/crates/foo/1.0.0/readme",
+    "repository": null,
+    "rust_version": "1.69",
+    "updated_at": "[datetime]",
+    "yank_message": null,
+    "yanked": false
+  }
+}

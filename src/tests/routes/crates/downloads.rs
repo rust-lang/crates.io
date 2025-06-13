@@ -137,7 +137,7 @@ async fn test_crate_downloads() {
     save_version_downloads("foo", "1.1.0", 1, &mut conn).await;
 
     let response = anon.get::<()>("/api/v1/crates/foo/downloads").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
         ".version_downloads[].date" => "[date]",
@@ -145,7 +145,7 @@ async fn test_crate_downloads() {
 
     // check different crate name
     let response = anon.get::<()>("/api/v1/crates/bar/downloads").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(
         response.text(),
         @r#"{"errors":[{"detail":"crate `bar` does not exist"}]}"#
@@ -153,7 +153,7 @@ async fn test_crate_downloads() {
 
     // check non-canonical crate name
     let response = anon.get::<()>("/api/v1/crates/FOO/downloads").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_eq!(response.json(), json);
 }
 
@@ -178,7 +178,7 @@ async fn test_version_downloads() {
     save_version_downloads("foo", "1.1.0", 1, &mut conn).await;
 
     let response = anon.get::<()>("/api/v1/crates/foo/1.0.0/downloads").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
         ".version_downloads[].date" => "[date]",
@@ -186,7 +186,7 @@ async fn test_version_downloads() {
 
     // check different crate name
     let response = anon.get::<()>("/api/v1/crates/bar/1.0.0/downloads").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(
         response.text(),
         @r#"{"errors":[{"detail":"crate `bar` does not exist"}]}"#
@@ -194,12 +194,12 @@ async fn test_version_downloads() {
 
     // check non-canonical crate name
     let response = anon.get::<()>("/api/v1/crates/FOO/1.0.0/downloads").await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_eq!(response.json(), json);
 
     // check missing version
     let response = anon.get::<()>("/api/v1/crates/foo/2.0.0/downloads").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(
         response.text(),
         @r#"{"errors":[{"detail":"crate `foo` does not have a version `2.0.0`"}]}"#
@@ -209,7 +209,7 @@ async fn test_version_downloads() {
     let response = anon
         .get::<()>("/api/v1/crates/foo/invalid-version/downloads")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(
         response.text(),
         @r#"{"errors":[{"detail":"Invalid URL: unexpected character 'i' while parsing major version number"}]}"#

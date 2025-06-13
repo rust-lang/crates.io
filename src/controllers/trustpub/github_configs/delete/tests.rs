@@ -5,7 +5,6 @@ use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use crates_io_database::schema::trustpub_configs_github;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use http::StatusCode;
 use insta::assert_snapshot;
 use serde_json::json;
 
@@ -50,7 +49,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     let config = create_config(&mut conn, krate.id).await?;
 
     let response = cookie_client.delete::<()>(&delete_url(config.id)).await;
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_snapshot!(response.status(), @"204 No Content");
     assert_eq!(response.text(), "");
 
     // Verify the config was deleted from the database
@@ -73,7 +72,7 @@ async fn test_unauthenticated() -> anyhow::Result<()> {
     let config = create_config(&mut conn, krate.id).await?;
 
     let response = client.delete::<()>(&delete_url(config.id)).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     // Verify the config was not deleted
@@ -96,7 +95,7 @@ async fn test_token_auth() -> anyhow::Result<()> {
     let config = create_config(&mut conn, krate.id).await?;
 
     let response = token_client.delete::<()>(&delete_url(config.id)).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
 
     // Verify the config was not deleted
@@ -115,7 +114,7 @@ async fn test_config_not_found() -> anyhow::Result<()> {
     let (app, _client, cookie_client) = TestApp::full().with_user().await;
 
     let response = cookie_client.delete::<()>(&delete_url(42)).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Not Found"}]}"#);
 
     // Verify no emails were sent to crate owners
@@ -137,7 +136,7 @@ async fn test_non_owner() -> anyhow::Result<()> {
     let other_client = app.db_new_user("other_user").await;
 
     let response = other_client.delete::<()>(&delete_url(config.id)).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
     // Verify the config was not deleted
@@ -165,10 +164,10 @@ async fn test_team_owner() -> anyhow::Result<()> {
 
     let body = json!({ "owners": ["github:test-org:all"] }).to_string();
     let response = user.put::<()>("/api/v1/crates/foo/owners", body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
 
     let response = user2.delete::<()>(&delete_url(config.id)).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
     // Verify the config was not deleted

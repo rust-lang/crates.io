@@ -4,7 +4,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use diesel::QueryDsl;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use googletest::prelude::*;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -14,7 +13,7 @@ async fn new_krate() {
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = user.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -47,7 +46,7 @@ async fn new_krate_with_token() {
 
     let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -68,7 +67,7 @@ async fn new_krate_weird_version() {
 
     let crate_to_publish = PublishBuilder::new("foo_weird", "0.0.0-pre");
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -93,7 +92,7 @@ async fn new_krate_twice() {
     let crate_to_publish =
         PublishBuilder::new("foo_twice", "2.0.0").description("2.0.0 description");
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -124,7 +123,7 @@ async fn new_krate_twice_alt() {
 
     let crate_to_publish = PublishBuilder::new("foo_twice", "0.99.0");
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".crate.created_at" => "[datetime]",
         ".crate.updated_at" => "[datetime]",
@@ -156,7 +155,7 @@ async fn new_krate_duplicate_version() {
 
     let crate_to_publish = PublishBuilder::new("foo_dupe", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate version `1.0.0` is already uploaded"}]}"#);
 
     assert_that!(app.stored_files().await, empty());

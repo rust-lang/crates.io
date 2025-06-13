@@ -3,54 +3,40 @@ source: src/tests/krate/publish/edition.rs
 expression: response.json()
 ---
 {
-  "version": {
-    "audit_actions": [
-      {
-        "action": "publish",
-        "time": "[datetime]",
-        "user": {
-          "avatar": null,
-          "id": "[id]",
-          "login": "foo",
-          "name": null,
-          "url": "https://github.com/foo"
-        }
-      }
-    ],
-    "bin_names": [],
-    "checksum": "7008c5c6b6cbf418070a998fad244bbde3ca712148e61e4d4b0d257682e30ad2",
-    "crate": "foo",
-    "crate_size": 172,
+  "crate": {
+    "badges": [],
+    "categories": null,
     "created_at": "[datetime]",
+    "default_version": "1.0.0",
     "description": "description",
-    "dl_path": "/api/v1/crates/foo/1.0.0/download",
     "documentation": null,
     "downloads": 0,
-    "edition": "2021",
-    "features": {},
-    "has_lib": false,
+    "exact_match": false,
     "homepage": null,
-    "id": "[id]",
-    "lib_links": null,
-    "license": "MIT",
+    "id": "foo",
+    "keywords": null,
     "links": {
-      "authors": "/api/v1/crates/foo/1.0.0/authors",
-      "dependencies": "/api/v1/crates/foo/1.0.0/dependencies",
-      "version_downloads": "/api/v1/crates/foo/1.0.0/downloads"
+      "owner_team": "/api/v1/crates/foo/owner_team",
+      "owner_user": "/api/v1/crates/foo/owner_user",
+      "owners": "/api/v1/crates/foo/owners",
+      "reverse_dependencies": "/api/v1/crates/foo/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo/downloads",
+      "versions": "/api/v1/crates/foo/versions"
     },
-    "num": "1.0.0",
-    "published_by": {
-      "avatar": null,
-      "id": "[id]",
-      "login": "foo",
-      "name": null,
-      "url": "https://github.com/foo"
-    },
-    "readme_path": "/api/v1/crates/foo/1.0.0/readme",
+    "max_stable_version": "1.0.0",
+    "max_version": "1.0.0",
+    "name": "foo",
+    "newest_version": "1.0.0",
+    "num_versions": 1,
+    "recent_downloads": null,
     "repository": null,
-    "rust_version": "1.0",
     "updated_at": "[datetime]",
-    "yank_message": null,
+    "versions": null,
     "yanked": false
+  },
+  "warnings": {
+    "invalid_badges": [],
+    "invalid_categories": [],
+    "other": []
   }
 }

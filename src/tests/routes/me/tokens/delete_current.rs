@@ -3,7 +3,6 @@ use crate::schema::api_tokens;
 use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -25,7 +24,7 @@ async fn revoke_current_token_success() {
 
     // Revoke the token
     let response = token.delete::<()>("/api/v1/tokens/current").await;
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert_snapshot!(response.status(), @"204 No Content");
 
     // Ensure that the token was removed from the database
 
@@ -44,7 +43,7 @@ async fn revoke_current_token_without_auth() {
     let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.delete::<()>("/api/v1/tokens/current").await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }
 
@@ -67,7 +66,7 @@ async fn revoke_current_token_with_cookie_user() {
 
     // Revoke the token
     let response = user.delete::<()>("/api/v1/tokens/current").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"token not provided"}]}"#);
 
     // Ensure that the token still exists in the database after the failed request

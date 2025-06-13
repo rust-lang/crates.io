@@ -53,13 +53,13 @@ pub async fn rebuild_version_docs(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::tests::{
         builders::{CrateBuilder, VersionBuilder},
         util::{RequestHelper as _, TestApp},
     };
     use crates_io_database::models::NewUser;
     use crates_io_docs_rs::MockDocsRsClient;
+    use insta::assert_snapshot;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_trigger_rebuild_ok() -> anyhow::Result<()> {
@@ -82,7 +82,7 @@ mod tests {
         let response = cookie_client
             .post::<()>("/api/v1/crates/krate/0.1.0/rebuild_docs", "")
             .await;
-        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_snapshot!(response.status(), @"201 Created");
 
         app.run_pending_background_jobs().await;
 
@@ -118,7 +118,7 @@ mod tests {
         let response = cookie_client
             .post::<()>("/api/v1/crates/krate/0.1.0/rebuild_docs", "")
             .await;
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_snapshot!(response.status(), @"403 Forbidden");
 
         app.run_pending_background_jobs().await;
 
@@ -140,7 +140,7 @@ mod tests {
             .post::<()>("/api/v1/crates/krate/0.1.0/rebuild_docs", "")
             .await;
 
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_snapshot!(response.status(), @"404 Not Found");
 
         app.run_pending_background_jobs().await;
 

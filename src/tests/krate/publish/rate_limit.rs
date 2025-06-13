@@ -5,7 +5,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{DateTime, Utc};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::assert_snapshot;
 use std::thread;
 use std::time::Duration;
@@ -43,7 +42,7 @@ async fn publish_new_crate_ratelimit_hit() {
     assert_eq!(app.stored_files().await.len(), 0);
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -160,7 +159,7 @@ async fn publish_new_crate_override_loosens_ratelimit() {
     ");
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited3").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -219,7 +218,7 @@ async fn publish_new_crate_expired_override_ignored() {
     ");
 
     let response = anon.get::<()>("/api/v1/crates/rate_limited2").await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 }
 
 #[tokio::test(flavor = "multi_thread")]

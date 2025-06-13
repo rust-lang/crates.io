@@ -1,7 +1,6 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
-use http::StatusCode;
 use insta::assert_snapshot;
 
 /// See <https://github.com/rust-lang/crates.io/issues/1205>.
@@ -23,7 +22,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
     let response = user
         .add_named_owner(CRATE_NAME, "github:rustaudio:owners")
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"team github:rustaudio:owners has been added as an owner of crate deepspeech-sys","ok":true}"#);
 
     let owners = krate.owners(&mut conn).await?;
@@ -34,7 +33,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
     let response = user
         .add_named_owner(CRATE_NAME, "github:rustaudio:cratesio-push")
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"team github:rustaudio:cratesio-push has been added as an owner of crate deepspeech-sys","ok":true}"#);
 
     let owners = krate.owners(&mut conn).await?;
@@ -45,7 +44,7 @@ async fn test_issue_1205() -> anyhow::Result<()> {
     let response = user
         .remove_named_owner(CRATE_NAME, "github:rustaudio:owners")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find owner with login `github:rustaudio:owners`"}]}"#);
 
     Ok(())

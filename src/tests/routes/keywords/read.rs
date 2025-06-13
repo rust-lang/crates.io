@@ -2,7 +2,7 @@ use crate::models::Keyword;
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableKeyword;
-use http::StatusCode;
+use insta::assert_snapshot;
 
 #[derive(Deserialize)]
 struct GoodKeyword {
@@ -16,7 +16,7 @@ async fn show() -> anyhow::Result<()> {
     let mut conn = app.db_conn().await;
 
     let response = anon.get::<()>(url).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 
     Keyword::find_or_create_all(&mut conn, &["foo"]).await?;
 
@@ -33,7 +33,7 @@ async fn uppercase() -> anyhow::Result<()> {
     let mut conn = app.db_conn().await;
 
     let response = anon.get::<()>(url).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
 
     Keyword::find_or_create_all(&mut conn, &["UPPER"]).await?;
 

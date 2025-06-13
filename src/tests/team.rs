@@ -4,7 +4,6 @@ use crate::tests::{OwnerTeamsResponse, RequestHelper, TestApp, add_team_to_crate
 
 use diesel::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::assert_snapshot;
 
 impl crate::tests::util::MockAnonymousUser {
@@ -32,7 +31,7 @@ async fn not_github() {
     let response = token
         .add_named_owner("foo_not_github", "dropbox:foo:foo")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"unknown organization handler, only 'github:org:team' is supported"}]}"#);
 }
 
@@ -48,7 +47,7 @@ async fn weird_name() {
     let response = token
         .add_named_owner("foo_weird_name", "github:foo/../bar:wut")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"organization cannot contain special characters like /"}]}"#);
 }
 
@@ -63,7 +62,7 @@ async fn one_colon() {
         .await;
 
     let response = token.add_named_owner("foo_one_colon", "github:foo").await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"missing github team argument; format is github:org:team"}]}"#);
 }
 
@@ -79,7 +78,7 @@ async fn add_nonexistent_team() {
     let response = token
         .add_named_owner("foo_add_nonexistent", "github:test-org:this-does-not-exist")
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"could not find the github team test-org/this-does-not-exist. Make sure that you have the right permissions in GitHub. See https://doc.rust-lang.org/cargo/reference/publishing.html#github-permissions"}]}"#);
 }
 
@@ -199,7 +198,7 @@ async fn add_team_as_non_member() {
     let response = token
         .add_named_owner("foo_team_non_member", "github:test-org:core")
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only members of a team or organization owners can add it as an owner"}]}"#);
 }
 
@@ -227,7 +226,7 @@ async fn remove_team_as_named_owner() {
     let response = token_on_both_teams
         .remove_named_owner("foo_remove_team", username)
         .await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot remove all individual owners of a crate. Team member don't have permission to modify owners, so at least one individual owner is required."}]}"#);
 
     token_on_both_teams
@@ -238,7 +237,7 @@ async fn remove_team_as_named_owner() {
     let user_on_one_team = app.db_new_user("user-one-team").await;
     let crate_to_publish = PublishBuilder::new("foo_remove_team", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
@@ -266,7 +265,7 @@ async fn remove_team_as_team_owner() {
     let response = token_on_one_team
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to modify owners"}]}"#);
 
     let user_org_owner = app.db_new_user("user-org-owner").await;
@@ -274,7 +273,7 @@ async fn remove_team_as_team_owner() {
     let response = token_org_owner
         .remove_named_owner("foo_remove_team_owner", "github:test-org:all")
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
@@ -311,7 +310,7 @@ async fn remove_nonexistent_team() {
             "github:test-org:this-does-not-exist",
         )
         .await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_snapshot!(response.text(), @r#"{"msg":"owners successfully removed","ok":true}"#);
 }
 
@@ -338,7 +337,7 @@ async fn publish_not_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_on_one_team.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
@@ -364,7 +363,7 @@ async fn publish_org_owner_owned() {
 
     let crate_to_publish = PublishBuilder::new("foo_not_owned", "2.0.0");
     let response = user_org_owner.publish_crate(crate_to_publish).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this crate exists but you don't seem to be an owner. If you believe this is a mistake, perhaps you need to accept an invitation to be an owner before publishing."}]}"#);
 }
 
@@ -423,7 +422,7 @@ async fn add_owners_as_org_owner() {
     let response = token_org_owner
         .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"only owners have permission to modify owners"}]}"#);
 }
 
@@ -451,7 +450,7 @@ async fn add_owners_as_team_owner() {
     let response = token_on_one_team
         .add_named_owner("foo_add_owner", "arbitrary_username")
         .await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"team members don't have permission to modify owners"}]}"#);
 }
 

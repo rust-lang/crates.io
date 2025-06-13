@@ -6,7 +6,6 @@ use crates_io_database::schema::{emails, trustpub_configs_github};
 use crates_io_github::{GitHubError, GitHubUser, MockGitHubClient};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde_json::json;
 
@@ -61,7 +60,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     }))?;
 
     let (app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), { ".github_config.created_at" => "[datetime]" });
 
     assert_snapshot!(app.emails_snapshot().await);
@@ -91,7 +90,7 @@ async fn test_happy_path_with_environment() -> anyhow::Result<()> {
     }))?;
 
     let (_app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), { ".github_config.created_at" => "[datetime]" });
 
     Ok(())
@@ -100,7 +99,7 @@ async fn test_happy_path_with_environment() -> anyhow::Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_empty_body() -> anyhow::Result<()> {
     let (_app, response) = run_test("").await;
-    assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
+    assert_snapshot!(response.status(), @"415 Unsupported Media Type");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Expected request with `Content-Type: application/json`"}]}"#);
 
     Ok(())
@@ -109,7 +108,7 @@ async fn test_empty_body() -> anyhow::Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_empty_json_object() -> anyhow::Result<()> {
     let (_app, response) = run_test("{}").await;
-    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert_snapshot!(response.status(), @"422 Unprocessable Entity");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize the JSON body into the target type: missing field `github_config` at line 1 column 2"}]}"#);
 
     Ok(())
@@ -128,7 +127,7 @@ async fn test_invalid_owner() -> anyhow::Result<()> {
     }))?;
 
     let (_app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid GitHub repository owner name"}]}"#);
 
     Ok(())
@@ -147,7 +146,7 @@ async fn test_invalid_repo() -> anyhow::Result<()> {
     }))?;
 
     let (_app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid GitHub repository name"}]}"#);
 
     Ok(())
@@ -166,7 +165,7 @@ async fn test_invalid_workflow() -> anyhow::Result<()> {
     }))?;
 
     let (_app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Workflow filename must end with `.yml` or `.yaml`"}]}"#);
 
     Ok(())
@@ -185,7 +184,7 @@ async fn test_invalid_environment() -> anyhow::Result<()> {
     }))?;
 
     let (_app, response) = run_test(body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Environment name may not be empty (use `null` to omit)"}]}"#);
 
     Ok(())
@@ -215,7 +214,7 @@ async fn test_unauthenticated() -> anyhow::Result<()> {
     }))?;
 
     let response = client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
     Ok(())
@@ -245,7 +244,7 @@ async fn test_token_auth() -> anyhow::Result<()> {
     }))?;
 
     let response = token_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
 
     Ok(())
@@ -269,7 +268,7 @@ async fn test_missing_crate() -> anyhow::Result<()> {
     }))?;
 
     let response = cookie_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo` does not exist"}]}"#);
 
     Ok(())
@@ -301,7 +300,7 @@ async fn test_non_owner() -> anyhow::Result<()> {
     }))?;
 
     let response = other_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
     Ok(())
@@ -333,7 +332,7 @@ async fn test_unknown_github_user() -> anyhow::Result<()> {
     }))?;
 
     let response = cookie_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Unknown GitHub user or organization"}]}"#);
 
     Ok(())
@@ -365,7 +364,7 @@ async fn test_github_error() -> anyhow::Result<()> {
     }))?;
 
     let response = cookie_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert_snapshot!(response.status(), @"500 Internal Server Error");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
 
     Ok(())
@@ -400,7 +399,7 @@ async fn test_unverified_email() -> anyhow::Result<()> {
     }))?;
 
     let response = cookie_client.put::<()>(URL, body).await;
-    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to create a Trusted Publishing config"}]}"#);
 
     Ok(())
