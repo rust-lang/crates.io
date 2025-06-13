@@ -221,8 +221,8 @@ importers:
         specifier: 2.6.3
         version: 2.6.3
       ember-template-lint:
-        specifier: 7.9.0
-        version: 7.9.0
+        specifier: 7.9.1
+        version: 7.9.1
       ember-test-selectors:
         specifier: 7.1.0
         version: 7.1.0
@@ -4382,8 +4382,8 @@ packages:
     resolution: {integrity: sha512-+hgqDIVmtyHcBWOKfRlvxWvTWGJ8Ly4t9NjGsRGSu8qfP/w/TP6IgYJNUgN9MU9ZkU24Sg02RzIkfuXvIhoYJg==}
     engines: {node: 12.* || 14.* || >= 16}
 
-  ember-template-lint@7.9.0:
-    resolution: {integrity: sha512-J2/d9S5mnNVoE2ZjWmbeCd3Dk6y0e5DyK4/z4BoY8XlyBkkA1Jg4wttlN15Jd2dQhPQZK7KMMLj9ZxLY4U7jZQ==}
+  ember-template-lint@7.9.1:
+    resolution: {integrity: sha512-uh5WU2sJKkQgDgIQovwv1D0fw2/RJnmyAHqIhaTYk68CfKQ/O5v31c1iXNu71qv3xeONi3QPl/rBW0EMdIFXWA==}
     engines: {node: ^18.18.0 || >= 20.9.0}
     hasBin: true
 
@@ -13811,7 +13811,7 @@ snapshots:
       - '@glint/template'
       - supports-color
 
-  ember-template-lint@7.9.0:
+  ember-template-lint@7.9.1:
     dependencies:
       '@lint-todo/utils': 13.1.1
       content-tag: 3.1.3
