@@ -1,7 +1,7 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::app::AppState;
-use crate::auth::{AuthCheck, Authentication};
+use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
@@ -19,8 +19,9 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::TryFutureExt;
 use futures_util::TryStreamExt;
 use hex::ToHex;
+use http::StatusCode;
 use http::request::Parts;
-use http::{StatusCode, header};
+use secrecy::ExposeSecret;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
@@ -146,21 +147,20 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         .await
         .optional()?;
 
-    // Trusted publishing tokens are distinguished from regular crates.io API
-    // tokens because they use the `Bearer` auth scheme, so we look for that
-    // specific prefix.
-    let trustpub_token = req
-        .headers
-        .get(header::AUTHORIZATION)
-        .and_then(|h| {
-            let mut split = h.as_bytes().splitn(2, |b| *b == b' ');
-            Some((split.next()?, split.next()?))
+    let auth_header = AuthHeader::optional_from_request_parts(&req).await?;
+    let trustpub_token = auth_header
+        .and_then(|auth| {
+            let token = auth.token().expose_secret();
+            if !token.starts_with(AccessToken::PREFIX) {
+                return None;
+            }
+
+            Some(token.parse::<AccessToken>().map_err(|_| {
+                let message = "Invalid `Authorization` header: Failed to parse token";
+                custom(StatusCode::UNAUTHORIZED, message)
+            }))
         })
-        .filter(|(scheme, _token)| scheme.eq_ignore_ascii_case(b"Bearer"))
-        .map(|(_scheme, token)| token.trim_ascii())
-        .map(AccessToken::from_byte_str)
-        .transpose()
-        .map_err(|_| forbidden("Invalid authentication token"))?;
+        .transpose()?;
 
     let auth = if let Some(trustpub_token) = trustpub_token {
         let Some(existing_crate) = &existing_crate else {

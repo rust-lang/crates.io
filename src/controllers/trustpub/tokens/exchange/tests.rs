@@ -83,7 +83,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     "#);
 
     let token = json["token"].as_str().unwrap();
-    let token = assert_ok!(AccessToken::from_byte_str(token.as_bytes()));
+    let token = assert_ok!(token.parse::<AccessToken>());
     let hashed_token = token.sha256();
 
     let mut conn = client.app().db_conn().await;

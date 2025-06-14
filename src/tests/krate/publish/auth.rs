@@ -1,10 +1,10 @@
 use crate::schema::api_tokens;
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::tests::util::{MockTokenUser, RequestHelper, TestApp};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
-use insta::assert_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_wrong_token() {
@@ -53,4 +53,28 @@ async fn new_krate_wrong_user() {
 
     assert_that!(app.stored_files().await, empty());
     assert_that!(app.emails().await, empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn new_krate_with_bearer_token() {
+    let (app, _, _, token) = TestApp::full().with_token().await;
+
+    let token = format!("Bearer {}", token.plaintext());
+    let token = MockTokenUser::with_auth_header(token, app.clone());
+
+    let crate_to_publish = PublishBuilder::new("foo_new", "1.0.0");
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    assert_snapshot!(app.stored_files().await.join("\n"), @r"
+    crates/foo_new/foo_new-1.0.0.crate
+    index/fo/o_/foo_new
+    rss/crates.xml
+    rss/crates/foo_new.xml
+    rss/updates.xml
+    ");
 }

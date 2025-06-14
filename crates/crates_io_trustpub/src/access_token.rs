@@ -2,6 +2,7 @@ use rand::distr::{Alphanumeric, SampleString};
 use secrecy::{ExposeSecret, SecretString};
 use sha2::digest::Output;
 use sha2::{Digest, Sha256};
+use std::str::FromStr;
 
 /// A temporary access token used to publish crates to crates.io using
 /// the "Trusted Publishing" feature.
@@ -29,36 +30,6 @@ impl AccessToken {
         Self(raw.into())
     }
 
-    /// Parse a byte string into an access token.
-    ///
-    /// This can be used to convert an HTTP header value into an access token.
-    pub fn from_byte_str(byte_str: &[u8]) -> Result<Self, AccessTokenError> {
-        let suffix = byte_str
-            .strip_prefix(Self::PREFIX.as_bytes())
-            .ok_or(AccessTokenError::MissingPrefix)?;
-
-        if suffix.len() != Self::RAW_LENGTH + 1 {
-            return Err(AccessTokenError::InvalidLength);
-        }
-
-        let suffix = std::str::from_utf8(suffix).map_err(|_| AccessTokenError::InvalidCharacter)?;
-        if !suffix.chars().all(|c| char::is_ascii_alphanumeric(&c)) {
-            return Err(AccessTokenError::InvalidCharacter);
-        }
-
-        let raw = suffix.chars().take(Self::RAW_LENGTH).collect::<String>();
-        let claimed_checksum = suffix.chars().nth(Self::RAW_LENGTH).unwrap();
-        let actual_checksum = checksum(raw.as_bytes());
-        if claimed_checksum != actual_checksum {
-            return Err(AccessTokenError::InvalidChecksum {
-                claimed: claimed_checksum,
-                actual: actual_checksum,
-            });
-        }
-
-        Ok(Self(raw.into()))
-    }
-
     /// Wrap the raw access token with the token prefix and a checksum.
     ///
     /// This turns e.g. `ABC` into `cio_tp_ABC{checksum}`.
@@ -74,6 +45,37 @@ impl AccessToken {
     /// the database to avoid storing the plaintext token.
     pub fn sha256(&self) -> Output<Sha256> {
         Sha256::digest(self.0.expose_secret())
+    }
+}
+
+impl FromStr for AccessToken {
+    type Err = AccessTokenError;
+
+    /// Parse a string into an access token.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let suffix = s
+            .strip_prefix(Self::PREFIX)
+            .ok_or(AccessTokenError::MissingPrefix)?;
+
+        if suffix.len() != Self::RAW_LENGTH + 1 {
+            return Err(AccessTokenError::InvalidLength);
+        }
+
+        if !suffix.chars().all(|c| char::is_ascii_alphanumeric(&c)) {
+            return Err(AccessTokenError::InvalidCharacter);
+        }
+
+        let raw = suffix.chars().take(Self::RAW_LENGTH).collect::<String>();
+        let claimed_checksum = suffix.chars().nth(Self::RAW_LENGTH).unwrap();
+        let actual_checksum = checksum(raw.as_bytes());
+        if claimed_checksum != actual_checksum {
+            return Err(AccessTokenError::InvalidChecksum {
+                claimed: claimed_checksum,
+                actual: actual_checksum,
+            });
+        }
+
+        Ok(Self(raw.into()))
     }
 }
 
@@ -129,42 +131,33 @@ mod tests {
     }
 
     #[test]
-    fn test_from_byte_str() {
+    fn test_from_str() {
         let token = AccessToken::generate().finalize();
         let token = token.expose_secret();
-        let token2 = assert_ok!(AccessToken::from_byte_str(token.as_bytes()));
+        let token2 = assert_ok!(token.parse::<AccessToken>());
         assert_eq!(token2.finalize().expose_secret(), token);
 
-        let bytes = b"cio_tp_0000000000000000000000000000000w";
-        assert_ok!(AccessToken::from_byte_str(bytes));
+        let str = "cio_tp_0000000000000000000000000000000w";
+        assert_ok!(str.parse::<AccessToken>());
 
-        let bytes = b"invalid_token";
-        assert_err_eq!(
-            AccessToken::from_byte_str(bytes),
-            AccessTokenError::MissingPrefix
-        );
+        let str = "invalid_token";
+        assert_err_eq!(str.parse::<AccessToken>(), AccessTokenError::MissingPrefix);
 
-        let bytes = b"cio_tp_invalid_token";
-        assert_err_eq!(
-            AccessToken::from_byte_str(bytes),
-            AccessTokenError::InvalidLength
-        );
+        let str = "cio_tp_invalid_token";
+        assert_err_eq!(str.parse::<AccessToken>(), AccessTokenError::InvalidLength);
 
-        let bytes = b"cio_tp_00000000000000000000000000";
-        assert_err_eq!(
-            AccessToken::from_byte_str(bytes),
-            AccessTokenError::InvalidLength
-        );
+        let str = "cio_tp_00000000000000000000000000";
+        assert_err_eq!(str.parse::<AccessToken>(), AccessTokenError::InvalidLength);
 
-        let bytes = b"cio_tp_000000@0000000000000000000000000";
+        let str = "cio_tp_000000@0000000000000000000000000";
         assert_err_eq!(
-            AccessToken::from_byte_str(bytes),
+            str.parse::<AccessToken>(),
             AccessTokenError::InvalidCharacter
         );
 
-        let bytes = b"cio_tp_00000000000000000000000000000000";
+        let str = "cio_tp_00000000000000000000000000000000";
         assert_err_eq!(
-            AccessToken::from_byte_str(bytes),
+            str.parse::<AccessToken>(),
             AccessTokenError::InvalidChecksum {
                 claimed: '0',
                 actual: 'w',

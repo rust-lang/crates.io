@@ -62,12 +62,33 @@ async fn test_happy_path() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_happy_path_without_auth_scheme() -> anyhow::Result<()> {
+    let (app, _client) = TestApp::full().empty().await;
+    let mut conn = app.db_conn().await;
+
+    let token1 = new_token(&mut conn, 1).await?;
+    let _token2 = new_token(&mut conn, 2).await?;
+    assert_compact_debug_snapshot!(all_crate_ids(&mut conn).await?, @"[[Some(1)], [Some(2)]]");
+
+    let token_client = MockTokenUser::with_auth_header(token1, app.clone());
+
+    let response = token_client.delete::<()>(URL).await;
+    assert_snapshot!(response.status(), @"204 No Content");
+    assert_eq!(response.text(), "");
+
+    // Check that the token is deleted
+    assert_compact_debug_snapshot!(all_crate_ids(&mut conn).await?, @"[[Some(2)]]");
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_missing_authorization_header() -> anyhow::Result<()> {
     let (_app, client) = TestApp::full().empty().await;
 
     let response = client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Missing authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Missing `Authorization` header"}]}"#);
 
     Ok(())
 }
@@ -82,7 +103,7 @@ async fn test_invalid_authorization_header_format() -> anyhow::Result<()> {
 
     let response = token_client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid `Authorization` header: Failed to parse token"}]}"#);
 
     Ok(())
 }
@@ -97,7 +118,7 @@ async fn test_invalid_token_format() -> anyhow::Result<()> {
 
     let response = token_client.delete::<()>(URL).await;
     assert_snapshot!(response.status(), @"401 Unauthorized");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid authorization header"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Invalid `Authorization` header: Failed to parse token"}]}"#);
 
     Ok(())
 }
