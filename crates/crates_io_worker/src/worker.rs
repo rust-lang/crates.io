@@ -12,7 +12,7 @@ use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use tracing::{debug, error, info_span, warn};
+use tracing::{Instrument, debug, error, info_span, warn};
 
 pub struct Worker<Context> {
     pub(crate) connection_pool: Pool<AsyncPgConnection>,
@@ -70,7 +70,6 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                 };
 
                 let span = info_span!("job", job.id = %job.id, job.typ = %job.job_type);
-                let _enter = span.enter();
 
                 let job_id = job.id;
                 debug!("Running job…");
@@ -88,9 +87,15 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         .and_then(std::convert::identity)
                 });
 
-                match future.bind_hub(Hub::current()).await {
+                let result = future
+                    .instrument(span.clone())
+                    .bind_hub(Hub::current())
+                    .await;
+
+                let _enter = span.enter();
+                match result {
                     Ok(_) => {
-                        debug!("Deleting successful job…");
+                        warn!("Deleting successful job…");
                         storage::delete_successful_job(conn, job_id).await?
                     }
                     Err(error) => {
