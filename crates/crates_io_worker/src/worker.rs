@@ -95,7 +95,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                 let _enter = span.enter();
                 match result {
                     Ok(_) => {
-                        warn!("Deleting successful job…");
+                        debug!("Deleting successful job…");
                         storage::delete_successful_job(conn, job_id).await?
                     }
                     Err(error) => {
