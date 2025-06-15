@@ -235,11 +235,37 @@
     margin-top: var(--space-2xs);
 }
 
-.yank-button {
-    position: relative;
-    margin-left: var(--space-xs);
+.dropdown {
+    line-height: 1rem;
+}
 
-    @media only screen and (max-width: 550px) {
-        display: none;
+.icon {
+    width: 1.4em;
+    height: auto;
+}
+
+.trigger {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.menu {
+    right: 0;
+    min-width: max-content;
+}
+
+.menu-button {
+    align-items: center;
+    gap: var(--space-2xs);
+    cursor: pointer;
+    text-transform: capitalize;
+
+    /* This duplicates the styles in .button[disabled] as there's no
+     * obvious way to compose them, given the target selectors. */
+    &[disabled] {
+        background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+        color: var(--disabled-text-color) !important;
+        cursor: not-allowed;
     }
 }

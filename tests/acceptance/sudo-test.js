@@ -57,6 +57,8 @@ module('Acceptance | sudo', function (hooks) {
     assert.dom('[data-test-disable-admin-actions]').doesNotExist();
     assert.dom('[data-test-enable-admin-actions]').exists();
 
+    await click('[data-test-actions-toggle]');
+
     // Test that the fieldset is present and disabled.
     assert.dom('[data-test-placeholder-fieldset]').exists().isDisabled();
 
@@ -90,6 +92,8 @@ module('Acceptance | sudo', function (hooks) {
     }
     assert.strictEqual(seen, 1);
 
+    await click('[data-test-actions-toggle]');
+
     // Test that the fieldset is not present.
     assert.dom('[data-test-placeholder-fieldset]').doesNotExist();
     assert.dom('[data-test-version-yank-button="0.1.0"]').exists();
@@ -100,6 +104,8 @@ module('Acceptance | sudo', function (hooks) {
 
     await visit('/crates/foo/versions');
     await click('[data-test-enable-admin-actions]');
+
+    await click('[data-test-actions-toggle]');
 
     await click('[data-test-version-yank-button="0.1.0"]');
 

@@ -52,6 +52,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-disable-admin-actions]')).toHaveCount(0);
     await expect(page.locator('[data-test-enable-admin-actions]')).toBeVisible();
 
+    await page.locator('[data-test-actions-toggle]').click();
+
     // Test that the fieldset is present and disabled.
     await expect(page.locator('[data-test-placeholder-fieldset]')).toBeVisible();
     // NOTE: `toBeDisabled()` is not working as expected because the element is not a form control element.
@@ -93,6 +95,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     });
     expect(seen).toBe(1);
 
+    await page.locator('[data-test-actions-toggle]').click();
+
     // Test that the fieldset is not present.
     await expect(page.locator('[data-test-placeholder-fieldset]')).toHaveCount(0);
     await expect(page.locator('[data-test-version-yank-button="0.1.0"]')).toBeVisible();
@@ -105,6 +109,8 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
 
     await page.locator('[data-test-user-menu]').getByRole('button').click();
     await page.getByRole('button', { name: 'Enable admin actions' }).click();
+
+    await page.locator('[data-test-actions-toggle]').click();
 
     const yankButton = page.locator('[data-test-version-yank-button="0.1.0"]');
     const unyankButton = page.locator('[data-test-version-unyank-button="0.1.0"]');

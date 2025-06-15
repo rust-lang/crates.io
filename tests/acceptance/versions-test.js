@@ -57,6 +57,8 @@ module('Acceptance | crate versions page', function (hooks) {
       .hasNoClass(/.*latest/)
       .hasNoClass(/.yanked/);
 
+    await click('[data-test-actions-toggle]');
+
     // yanking
     await click('[data-test-version-yank-button="0.2.1"]');
     assert

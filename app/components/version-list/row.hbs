@@ -117,7 +117,18 @@
     {{/if}}
   </div>
 
-  <PrivilegedAction @userAuthorised={{this.isOwner}}>
-    <YankButton @version={{@version}} local-class="yank-button" />
-  </PrivilegedAction>
+  <Dropdown local-class="dropdown" data-test-actions-menu as |dd|>
+    <dd.Trigger @hideArrow={{true}} local-class="trigger" data-test-actions-toggle>
+      {{svg-jar "ellipsis-circle" local-class="icon"}}
+      <span class="sr-only">Actions</span>
+    </dd.Trigger>
+
+    <dd.Menu local-class="menu" as |menu|>
+      <menu.Item>
+        <PrivilegedAction @userAuthorised={{this.isOwner}}>
+          <YankButton @version={{@version}} class="button-reset" local-class="menu-button" />
+        </PrivilegedAction>
+      </menu.Item>
+    </dd.Menu>
+  </Dropdown>
 </div>
