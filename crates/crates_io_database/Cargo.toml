@@ -25,7 +25,7 @@ sha2 = "=0.10.9"
 thiserror = "=2.0.12"
 tracing = "=0.1.41"
 unicode-xid = "=0.2.6"
-utoipa = { version = "=5.3.1", features = ["chrono"] }
+utoipa = { version = "=5.4.0", features = ["chrono"] }
 
 [dev-dependencies]
 claims = "=0.8.0"
