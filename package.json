@@ -71,7 +71,7 @@
     "@glimmer/component": "2.0.0",
     "@glimmer/tracking": "1.1.2",
     "@mainmatter/ember-api-actions": "0.6.0",
-    "@percy/cli": "1.30.11",
+    "@percy/cli": "1.31.0",
     "@percy/ember": "4.2.0",
     "@percy/playwright": "1.0.8",
     "@playwright/test": "1.53.0",
