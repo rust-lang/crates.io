@@ -1,7 +1,7 @@
 //! Endpoints for managing a per user list of followed crates
 
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{CookieCredentials, Permission, UserCredentials};
 use crate::controllers::helpers::OkResponse;
 use crate::controllers::krate::CratePath;
 use crate::models::{Crate, Follow};
@@ -39,9 +39,17 @@ async fn follow_target(
     tag = "crates",
     responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
-pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
+pub async fn follow_crate(
+    app: AppState,
+    path: CratePath,
+    creds: UserCredentials,
+    req: Parts,
+) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
-    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
+
+    let permission = Permission::FollowCrate;
+    let user_id = creds.validate(&mut conn, &req, permission).await?.user_id();
+
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
     diesel::insert_into(follows::table)
         .values(&follow)
@@ -64,9 +72,17 @@ pub async fn follow_crate(app: AppState, path: CratePath, req: Parts) -> AppResu
     tag = "crates",
     responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
-pub async fn unfollow_crate(app: AppState, path: CratePath, req: Parts) -> AppResult<OkResponse> {
+pub async fn unfollow_crate(
+    app: AppState,
+    path: CratePath,
+    creds: UserCredentials,
+    req: Parts,
+) -> AppResult<OkResponse> {
     let mut conn = app.db_write().await?;
-    let user_id = AuthCheck::default().check(&req, &mut conn).await?.user_id();
+
+    let permission = Permission::UnfollowCrate;
+    let user_id = creds.validate(&mut conn, &req, permission).await?.user_id();
+
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
     diesel::delete(&follow).execute(&mut conn).await?;
 
@@ -91,15 +107,15 @@ pub struct FollowingResponse {
 pub async fn get_following_crate(
     app: AppState,
     path: CratePath,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<Json<FollowingResponse>> {
     use diesel::dsl::exists;
 
     let mut conn = app.db_read_prefer_primary().await?;
-    let user_id = AuthCheck::only_cookie()
-        .check(&req, &mut conn)
-        .await?
-        .user_id();
+
+    let permission = Permission::ReadFollowState;
+    let user_id = creds.validate(&mut conn, &req, permission).await?.user_id();
 
     let follow = follow_target(&path.name, &mut conn, user_id).await?;
     let following = diesel::select(exists(follows::table.find(follow.id())))

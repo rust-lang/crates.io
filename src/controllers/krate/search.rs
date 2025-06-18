@@ -1,8 +1,7 @@
 //! Endpoint for searching and discovery functionality
 
-use crate::auth::AuthCheck;
-use axum::Json;
 use axum::extract::FromRequestParts;
+use axum::{Json, RequestPartsExt};
 use axum_extra::extract::Query;
 use derive_more::Deref;
 use diesel::dsl::{InnerJoinQuerySource, LeftJoinQuerySource, exists};
@@ -21,6 +20,7 @@ use crate::schema::*;
 use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableCrate;
 
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::krate::ALL_COLUMNS;
 use crate::util::RequestUtils;
@@ -71,7 +71,7 @@ pub struct ListMeta {
 pub async fn list_crates(
     app: AppState,
     params: ListQueryParams,
-    req: Parts,
+    mut req: Parts,
 ) -> AppResult<Json<ListResponse>> {
     // Notes:
     // The different use cases this function covers is handled through passing
@@ -93,7 +93,7 @@ pub async fn list_crates(
     use diesel::sql_types::Float;
     use seek::*;
 
-    let filter_params = FilterParams::from(params, &req, &mut conn).await?;
+    let filter_params = FilterParams::from(params, &mut req, &mut conn).await?;
     let sort = filter_params.sort.as_deref();
 
     let selection = (
@@ -356,7 +356,7 @@ struct FilterParams {
 impl FilterParams {
     async fn from(
         search_params: ListQueryParams,
-        parts: &Parts,
+        parts: &mut Parts,
         conn: &mut AsyncPgConnection,
     ) -> AppResult<Self> {
         const LETTER_ERROR: &str = "letter value must contain 1 character";
@@ -366,7 +366,11 @@ impl FilterParams {
         };
 
         let auth_user_id = match search_params.following {
-            Some(_) => Some(AuthCheck::default().check(parts, conn).await?.user_id()),
+            Some(_) => {
+                let creds = parts.extract::<UserCredentials>().await?;
+                let permission = Permission::ListFollowedCrates;
+                Some(creds.validate(conn, parts, permission).await?.user_id())
+            }
             None => None,
         };
 

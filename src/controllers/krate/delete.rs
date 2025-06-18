@@ -1,6 +1,5 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
-use crate::controllers::helpers::authorization::Rights;
+use crate::auth::{CookieCredentials, Permission};
 use crate::controllers::krate::CratePath;
 use crate::email::Email;
 use crate::models::NewDeletedCrate;
@@ -55,31 +54,24 @@ impl DeleteQueryParams {
 pub async fn delete_crate(
     path: CratePath,
     params: DeleteQueryParams,
+    creds: CookieCredentials,
     parts: Parts,
     app: AppState,
 ) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
 
-    // Check that the user is authenticated
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-
     // Check that the crate exists
     let krate = path.load_crate(&mut conn).await?;
-
-    // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
-    let user = auth.user();
     let owners = krate.owners(&mut conn).await?;
-    match Rights::get(user, &*app.github, &owners).await? {
-        Rights::Full => {}
-        Rights::Publish => {
-            let msg = "team members don't have permission to delete crates";
-            return Err(custom(StatusCode::FORBIDDEN, msg));
-        }
-        Rights::None => {
-            let msg = "only owners have permission to delete crates";
-            return Err(custom(StatusCode::FORBIDDEN, msg));
-        }
-    }
+
+    // Check that the user is authenticated and an owner of the crate
+    // (team owners are not allowed to delete crates)
+    let permission = Permission::DeleteCrate {
+        krate: &krate,
+        owners: &owners,
+    };
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
+    let user = auth.user();
 
     let created_at = krate.created_at;
 

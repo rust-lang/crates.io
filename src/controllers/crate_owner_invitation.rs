@@ -1,6 +1,5 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
-use crate::auth::Authentication;
+use crate::auth::{CookieCredentials, Permission, UserCredentials};
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::helpers::pagination::{Page, PaginationOptions, PaginationQueryParams};
 use crate::models::crate_owner_invitation::AcceptError;
@@ -43,16 +42,18 @@ pub struct LegacyListResponse {
 )]
 pub async fn list_crate_owner_invitations_for_user(
     app: AppState,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<Json<LegacyListResponse>> {
     let mut conn = app.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
-    let user_id = auth.user_id();
+    let permission = Permission::ListOwnCrateOwnerInvitations;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
+    let user = auth.user();
 
     let PrivateListResponse {
         invitations, users, ..
-    } = prepare_list(&app, &req, auth, ListFilter::InviteeId(user_id), &mut conn).await?;
+    } = prepare_list(&app, &req, user, ListFilter::InviteeId(user.id), &mut conn).await?;
 
     // The schema for the private endpoints is converted to the schema used by v1 endpoints.
     let crate_owner_invitations = invitations
@@ -108,13 +109,17 @@ pub struct ListQueryParams {
 pub async fn list_crate_owner_invitations(
     app: AppState,
     params: ListQueryParams,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<Json<PrivateListResponse>> {
     let mut conn = app.db_read().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
+
+    let permission = Permission::ListCrateOwnerInvitations;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
+    let user = auth.user();
 
     let filter = params.try_into()?;
-    let list = prepare_list(&app, &req, auth, filter, &mut conn).await?;
+    let list = prepare_list(&app, &req, user, filter, &mut conn).await?;
     Ok(Json(list))
 }
 
@@ -142,7 +147,7 @@ impl TryFrom<ListQueryParams> for ListFilter {
 async fn prepare_list(
     state: &AppState,
     req: &Parts,
-    auth: Authentication,
+    user: &User,
     filter: ListFilter,
     conn: &mut AsyncPgConnection,
 ) -> AppResult<PrivateListResponse> {
@@ -150,8 +155,6 @@ async fn prepare_list(
         .enable_pages(false)
         .enable_seek(true)
         .gather(req)?;
-
-    let user = auth.user();
 
     let config = &state.config;
 
@@ -350,17 +353,19 @@ pub struct HandleResponse {
 pub async fn handle_crate_owner_invitation(
     state: AppState,
     parts: Parts,
+    creds: UserCredentials,
     Json(crate_invite): Json<OwnerInvitation>,
 ) -> AppResult<Json<HandleResponse>> {
     let crate_invite = crate_invite.crate_owner_invite;
 
     let mut conn = state.db_write().await?;
-    let user_id = AuthCheck::default()
-        .check(&parts, &mut conn)
-        .await?
-        .user_id();
+
+    let permission = Permission::HandleCrateOwnerInvitation;
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
+    let user = auth.user();
+
     let invitation =
-        CrateOwnerInvitation::find_by_id(user_id, crate_invite.crate_id, &mut conn).await?;
+        CrateOwnerInvitation::find_by_id(user.id, crate_invite.crate_id, &mut conn).await?;
 
     if crate_invite.accepted {
         invitation.accept(&mut conn).await?;

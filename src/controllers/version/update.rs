@@ -1,19 +1,17 @@
 use super::CrateVersionPath;
 use crate::app::AppState;
-use crate::auth::{AuthCheck, Authentication};
-use crate::controllers::helpers::authorization::Rights;
-use crate::models::token::EndpointScope;
+use crate::auth::{AuthorizedUser, Permission, UserCredentials};
 use crate::models::{Crate, NewVersionOwnerAction, Version, VersionAction, VersionOwnerAction};
 use crate::rate_limiter::LimitedAction;
 use crate::schema::versions;
-use crate::util::errors::{AppResult, bad_request, custom};
+use crate::util::errors::{AppResult, bad_request};
 use crate::views::EncodableVersion;
 use crate::worker::jobs::{SyncToGitIndex, SyncToSparseIndex, UpdateDefaultVersion};
 use axum::Json;
+use crates_io_database::models::ApiToken;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use http::StatusCode;
 use http::request::Parts;
 use serde::Deserialize;
 
@@ -49,13 +47,16 @@ pub struct UpdateResponse {
 pub async fn update_version(
     state: AppState,
     path: CrateVersionPath,
+    creds: UserCredentials,
     req: Parts,
     Json(update_request): Json<VersionUpdateRequest>,
 ) -> AppResult<Json<UpdateResponse>> {
     let mut conn = state.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
     validate_yank_update(&update_request.version, &version)?;
-    let auth = authenticate(&req, &mut conn, &krate.name).await?;
+
+    let permission = Permission::UpdateVersion { krate: &krate };
+    let auth = creds.validate(&mut conn, &req, permission).await?;
 
     state
         .rate_limiter
@@ -63,7 +64,6 @@ pub async fn update_version(
         .await?;
 
     perform_version_yank_update(
-        &state,
         &mut conn,
         &mut version,
         &krate,
@@ -97,47 +97,18 @@ fn validate_yank_update(update_data: &VersionUpdate, version: &Version) -> AppRe
     Ok(())
 }
 
-pub async fn authenticate(
-    req: &Parts,
-    conn: &mut AsyncPgConnection,
-    name: &str,
-) -> AppResult<Authentication> {
-    AuthCheck::default()
-        .with_endpoint_scope(EndpointScope::Yank)
-        .for_crate(name)
-        .check(req, conn)
-        .await
-}
-
 pub async fn perform_version_yank_update(
-    state: &AppState,
     conn: &mut AsyncPgConnection,
     version: &mut Version,
     krate: &Crate,
-    auth: &Authentication,
+    auth: &AuthorizedUser<Option<ApiToken>>,
     yanked: Option<bool>,
     yank_message: Option<String>,
 ) -> AppResult<()> {
     let api_token_id = auth.api_token_id();
     let user = auth.user();
-    let owners = krate.owners(conn).await?;
 
     let yanked = yanked.unwrap_or(version.yanked);
-
-    if Rights::get(user, &*state.github, &owners).await? < Rights::Publish {
-        if user.is_admin {
-            let action = if yanked { "yanking" } else { "unyanking" };
-            warn!(
-                "Admin {} is {action} {}@{}",
-                user.gh_login, krate.name, version.num
-            );
-        } else {
-            return Err(custom(
-                StatusCode::FORBIDDEN,
-                "must already be an owner to yank or unyank",
-            ));
-        }
-    }
 
     // Check if the yanked state or yank message has changed and update if necessary
     let updated_cnt = diesel::update(

@@ -1,4 +1,3 @@
-use crate::auth::AuthCheck;
 use axum::Json;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -6,6 +5,7 @@ use futures_util::FutureExt;
 use http::request::Parts;
 
 use crate::app::AppState;
+use crate::auth::{CookieCredentials, Permission};
 use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
@@ -22,12 +22,16 @@ use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCra
     tag = "users",
     responses((status = 200, description = "Successful Response", body = inline(EncodableMe))),
 )]
-pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
+pub async fn get_authenticated_user(
+    app: AppState,
+    creds: CookieCredentials,
+    req: Parts,
+) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let user_id = AuthCheck::only_cookie()
-        .check(&req, &mut conn)
-        .await?
-        .user_id();
+
+    let permission = Permission::ReadUser;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
+    let user_id = auth.user_id();
 
     let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
         users::table
@@ -92,11 +96,13 @@ pub struct UpdatesResponseMeta {
 )]
 pub async fn get_authenticated_user_updates(
     app: AppState,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<Json<UpdatesResponse>> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
+    let permission = Permission::ListUpdates;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
     let user = auth.user();
 
     let followed_crates = Follow::belonging_to(user).select(follows::crate_id);

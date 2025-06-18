@@ -1,18 +1,18 @@
 //! All routes related to managing owners of a crate
 
-use crate::controllers::helpers::authorization::Rights;
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::krate::CratePath;
+use crate::email::Email;
 use crate::models::krate::OwnerRemoveError;
 use crate::models::{Crate, Owner, Team, User};
 use crate::models::{
     CrateOwner, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome, NewTeam,
-    krate::NewOwnerInvite, token::EndpointScope,
+    krate::NewOwnerInvite,
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
-use crate::{auth::AuthCheck, email::Email};
-use axum::Json;
+use axum::{Json, RequestPartsExt};
 use chrono::Utc;
 use crates_io_github::{GitHubClient, GitHubError};
 use diesel::prelude::*;
@@ -161,7 +161,7 @@ pub struct ChangeOwnersRequest {
 async fn modify_owners(
     app: AppState,
     crate_name: String,
-    parts: Parts,
+    mut parts: Parts,
     body: ChangeOwnersRequest,
     add: bool,
 ) -> AppResult<Json<ModifyResponse>> {
@@ -176,43 +176,27 @@ async fn modify_owners(
     }
 
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default()
-        .with_endpoint_scope(EndpointScope::ChangeOwners)
-        .for_crate(&crate_name)
-        .check(&parts, &mut conn)
-        .await?;
 
+    let krate: Crate = Crate::by_name(&crate_name)
+        .first(&mut conn)
+        .await
+        .optional()?
+        .ok_or_else(|| crate_not_found(&crate_name))?;
+
+    let owners = krate.owners(&mut conn).await?;
+
+    let creds = parts.extract::<UserCredentials>().await?;
+    let permission = Permission::ModifyOwners {
+        krate: &krate,
+        owners: &owners,
+    };
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
     let user = auth.user();
 
     let (msg, emails) = conn
         .transaction(|conn| {
             let app = app.clone();
             async move {
-                let krate: Crate = Crate::by_name(&crate_name)
-                    .first(conn)
-                    .await
-                    .optional()?
-                    .ok_or_else(|| crate_not_found(&crate_name))?;
-
-                let owners = krate.owners(conn).await?;
-
-                match Rights::get(user, &*app.github, &owners).await? {
-                    Rights::Full => {}
-                    // Yes!
-                    Rights::Publish => {
-                        return Err(custom(
-                            StatusCode::FORBIDDEN,
-                            "team members don't have permission to modify owners",
-                        ));
-                    }
-                    Rights::None => {
-                        return Err(custom(
-                            StatusCode::FORBIDDEN,
-                            "only owners have permission to modify owners",
-                        ));
-                    }
-                }
-
                 // The set of emails to send out after invite processing is complete and
                 // the database transaction has committed.
                 let mut emails = Vec::with_capacity(logins.len());

@@ -43,8 +43,8 @@ async fn revoke_current_token_without_auth() {
     let (_, anon) = TestApp::init().empty().await;
 
     let response = anon.delete::<()>("/api/v1/tokens/current").await;
-    assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"token not provided"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]

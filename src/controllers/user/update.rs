@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::helpers::OkResponse;
 use crate::models::NewEmail;
 use crate::schema::users;
@@ -44,12 +44,14 @@ pub struct User {
 pub async fn update_user(
     state: AppState,
     Path(param_user_id): Path<i32>,
+    creds: UserCredentials,
     req: Parts,
     Json(user_update): Json<UserUpdate>,
 ) -> AppResult<OkResponse> {
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().check(&req, &mut conn).await?;
 
+    let permission = Permission::UpdateUser;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
     let user = auth.user();
 
     // need to check if current user matches user to be updated

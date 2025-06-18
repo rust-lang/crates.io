@@ -1,6 +1,6 @@
 use super::update::UserConfirmEmail;
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::helpers::OkResponse;
 use crate::models::Email;
 use crate::util::errors::AppResult;
@@ -58,10 +58,13 @@ pub async fn confirm_user_email(
 pub async fn resend_email_verification(
     state: AppState,
     Path(param_user_id): Path<i32>,
+    creds: UserCredentials,
     req: Parts,
 ) -> AppResult<OkResponse> {
     let mut conn = state.db_write().await?;
-    let auth = AuthCheck::default().check(&req, &mut conn).await?;
+
+    let permission = Permission::ResendEmailVerification;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
 
     // need to check if current user matches user to be updated
     if auth.user_id() != param_user_id {

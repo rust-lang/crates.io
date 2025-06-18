@@ -1,14 +1,12 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{CookieCredentials, Permission};
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::github_configs::json::{self, ListResponse};
-use crate::util::errors::{AppResult, bad_request};
+use crate::util::errors::AppResult;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
-use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::GitHubConfig;
-use crates_io_database::schema::{crate_owners, trustpub_configs_github};
-use diesel::dsl::{exists, select};
+use crates_io_database::schema::trustpub_configs_github;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
@@ -37,29 +35,15 @@ pub struct ListQueryParams {
 pub async fn list_trustpub_github_configs(
     state: AppState,
     params: ListQueryParams,
+    creds: CookieCredentials,
     parts: Parts,
 ) -> AppResult<Json<ListResponse>> {
     let mut conn = state.db_read().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-    let auth_user = auth.user();
-
     let krate = load_crate(&mut conn, &params.krate).await?;
 
-    // Check if the authenticated user is an owner of the crate
-    let is_owner = select(exists(
-        crate_owners::table
-            .filter(crate_owners::crate_id.eq(krate.id))
-            .filter(crate_owners::deleted.eq(false))
-            .filter(crate_owners::owner_kind.eq(OwnerKind::User))
-            .filter(crate_owners::owner_id.eq(auth_user.id)),
-    ))
-    .get_result::<bool>(&mut conn)
-    .await?;
-
-    if !is_owner {
-        return Err(bad_request("You are not an owner of this crate"));
-    }
+    let permission = Permission::ListTrustPubGitHubConfigs { krate: &krate };
+    creds.validate(&mut conn, &parts, permission).await?;
 
     let configs = trustpub_configs_github::table
         .filter(trustpub_configs_github::crate_id.eq(krate.id))

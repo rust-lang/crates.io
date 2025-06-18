@@ -7,6 +7,7 @@ use http::request::Parts;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 
 use crate::app::AppState;
+use crate::auth::CookieCredentials;
 use crate::controllers::user::update::UserConfirmEmail;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
@@ -120,7 +121,8 @@ pub async fn authorize_session(
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
 
-    super::user::me::get_authenticated_user(app, req).await
+    let credentials = CookieCredentials::new(user.id);
+    super::user::me::get_authenticated_user(app, credentials, req).await
 }
 
 pub async fn save_user_to_database(
