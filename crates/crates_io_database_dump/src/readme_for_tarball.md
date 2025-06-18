@@ -21,6 +21,10 @@ This is a dump of the public information in the crates.io database.
 - `crate_owners.owner_id` - if the owner is a user, this is their ID in `users.id`, otherwise it's the ID in `teams.id`.
 - `teams.login` - this will look something like `github:foo:bar`, referring to the `bar` team in the `foo` organisation. At present, as we only support GitHub, the first component will always be `github`.
 
+## Historical version downloads
+
+For performance reasons, the live `version_downloads` table only includes data for the last 90 days. All available historical data (back to November 2014) archived from the table is available at https://static.crates.io/archive/version-downloads/ in CSV form.
+
 ## Restoring to a Local crates.io Database
 
 1.  Create a new database.
