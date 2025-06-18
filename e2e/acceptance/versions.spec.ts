@@ -52,6 +52,8 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
     await expect(v020).not.toHaveClass(/.*latest/);
     await expect(v020).not.toHaveClass(/.yanked/);
 
+    await v021.locator('[data-test-actions-toggle]').click();
+
     // yanking
     await page.locator('[data-test-version-yank-button="0.2.1"]').click();
     await expect(v021).not.toHaveClass(/.*latest/);
