@@ -4878,7 +4878,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
 dependencies = [
  "openssl-probe",
- "rustls-pemfile",
+ "rustls-pemfile 1.0.4",
  "schannel",
  "security-framework 2.11.1",
 ]
@@ -4902,6 +4902,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c74cae0a4cf6ccbbf5f359f08efdf8ee7e1dc532573bf0db71968cb56b1448c"
 dependencies = [
  "base64 0.21.7",
+]
+
+[[package]]
+name = "rustls-pemfile"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
+dependencies = [
+ "rustls-pki-types",
 ]
 
 [[package]]
@@ -5081,9 +5090,9 @@ dependencies = [
 
 [[package]]
 name = "sentry"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eb7daabbc631b13f48e991f4d828f12ec43e2acd3fb2972b445bdc138231ee2"
+checksum = "69ccd7644577f876e92e7873d505ad35c30fc4fcf1654d4885c74605c95d0a07"
 dependencies = [
  "httpdate",
  "native-tls",
@@ -5102,9 +5111,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-actix"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1adf30c8878b392fa48e6a922ccbd5e6f10333f246d81b838750a9ac8f249b0"
+checksum = "814b593d16ab5b85ceef164a8942126de4ee249052c62d80aa5ac3c3a1b8a6a0"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -5115,9 +5124,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0cbd964934e339213e5ffe2682575ae390327945856c067408ae121d1ceae72"
+checksum = "cd11d45dfae763b628d5dc45872ade9dc7b1e6894e3d3787ee8d95bf426afe12"
 dependencies = [
  "backtrace",
  "regex",
@@ -5126,9 +5135,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "356d87fef14b05475f46e8554bf26833230c92bcac106d74f0f5719dce4a7850"
+checksum = "42cd374f0936ce0fdb0afcfbd896aa2db5f828b4b4c6883d4b9c4e680577a9cd"
 dependencies = [
  "hostname",
  "libc",
@@ -5140,9 +5149,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e73bfcabac5a7f9e2e38f898ba0afc6bed36fb96108b246213b698e00f12268c"
+checksum = "36e9d6c4dbf4db62c8aa6f9808ce16447ac265221c8620f78e63c159256c5f85"
 dependencies = [
  "rand 0.9.1",
  "sentry-types",
@@ -5152,9 +5161,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-debug-images"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cf558b1a0feaa58965051f67a55b1d2ee0a807b326c965564f9867b967c2045"
+checksum = "44914f42e18b368eb6a87e5334cf315a86997e1dfdacf284fe9d32002453d3a8"
 dependencies = [
  "findshlibs",
  "sentry-core",
@@ -5162,9 +5171,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29abe64e33902f6fefafdb652dc0efed303cea655324e85db9fbb8d83d503c44"
+checksum = "f87e3fc5a8ba378c259f93f050a1f44143619daa3402f51eadacc08002160110"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5172,9 +5181,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tower"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfe63e8f5f8325ad16d82631ee20985123a1682a99e25d54dba3076852dcb4af"
+checksum = "680b07c5782f1c72a0108abffca878aaac1560b2992aa5551da0efc6916c8f7e"
 dependencies = [
  "axum",
  "http 1.3.1",
@@ -5187,9 +5196,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tracing"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbfd32bfd54bd829a92ee9b32894b05c726edcdc40d9c580ce7b3f4a56f13a45"
+checksum = "532c5f7a9b633e6f2bf6623223cede95b112a7f104141a8cf050003417fc4d54"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5199,9 +5208,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7205055c5bde8131c62e4f5367f4291956c331a64e1a32e737e8d81b26b3bcb"
+checksum = "aad0332036824f2c4e5f241495107a4769a64f4b46a8e95db1108a124e6d2d00"
 dependencies = [
  "debugid",
  "hex",
@@ -6188,15 +6197,32 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "ureq"
-version = "2.12.1"
+version = "3.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02d1a66277ed75f640d608235660df48c8e3c19f3b4edb6a263315626cc3c01d"
+checksum = "9f0fde9bc91026e381155f8c67cb354bcd35260b2f4a29bcc84639f762760c39"
 dependencies = [
  "base64 0.22.1",
+ "der",
  "log",
  "native-tls",
- "once_cell",
- "url",
+ "percent-encoding",
+ "rustls-pemfile 2.2.0",
+ "rustls-pki-types",
+ "ureq-proto",
+ "utf-8",
+ "webpki-root-certs 0.26.11",
+]
+
+[[package]]
+name = "ureq-proto"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59db78ad1923f2b1be62b6da81fe80b173605ca0d57f85da2e005382adf693f7"
+dependencies = [
+ "base64 0.22.1",
+ "http 1.3.1",
+ "httparse",
+ "log",
 ]
 
 [[package]]
@@ -6459,6 +6485,24 @@ dependencies = [
  "phf_codegen",
  "string_cache",
  "string_cache_codegen",
+]
+
+[[package]]
+name = "webpki-root-certs"
+version = "0.26.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75c7f0ef91146ebfb530314f5f1d24528d7f0767efbfd31dce919275413e393e"
+dependencies = [
+ "webpki-root-certs 1.0.0",
+]
+
+[[package]]
+name = "webpki-root-certs"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01a83f7e1a9f8712695c03eabe9ed3fbca0feff0152f33f12593e5a6303cb1a4"
+dependencies = [
+ "rustls-pki-types",
 ]
 
 [[package]]
