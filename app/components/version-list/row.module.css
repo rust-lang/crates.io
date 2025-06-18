@@ -248,6 +248,14 @@
     background: none;
     border: none;
     padding: 0;
+    border-radius: 99999px;
+    color: var(--grey600);
+
+    :hover {
+        border-radius: 99999px;
+        color: var(--grey900);
+        background-color: white;
+    }
 }
 
 .menu {
