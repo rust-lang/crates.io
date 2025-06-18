@@ -236,6 +236,7 @@
 }
 
 .dropdown {
+    font-size: initial;
     line-height: 1rem;
 }
 
