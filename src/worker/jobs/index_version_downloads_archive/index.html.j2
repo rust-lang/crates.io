@@ -22,11 +22,17 @@
         </p>
 
         <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th style="padding-left: 1em">Size</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for file in files %}
                     <tr>
                         <td><a href="{{ file.name }}">{{ file.name }}</a></td>
-                        <td>{{ file.size }}</td>
+                        <td style="padding-left: 1em; text-align: right">{{ file.size }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
