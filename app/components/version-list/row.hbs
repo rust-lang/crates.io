@@ -117,7 +117,7 @@
     {{/if}}
   </div>
 
-  <PrivilegedAction @userAuthorised={{this.isOwner}}>
+  <PrivilegedAction @userAuthorised={{this.isOwner}} local-class="actions">
     <Dropdown local-class="dropdown" data-test-actions-menu as |dd|>
       <dd.Trigger @hideArrow={{true}} local-class="trigger" data-test-actions-toggle>
         {{svg-jar "ellipsis-circle" local-class="icon"}}

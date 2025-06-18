@@ -235,7 +235,12 @@
     margin-top: var(--space-2xs);
 }
 
+.actions {
+    display: flex;
+}
+
 .dropdown {
+    display: flex;
     font-size: initial;
     line-height: 1rem;
 }
@@ -260,6 +265,7 @@
 }
 
 .menu {
+    top: 100%;
     right: 0;
     min-width: max-content;
 }
