@@ -9,6 +9,7 @@ import playgroundHandlers from './handlers/playground.js';
 import sessionHandlers from './handlers/sessions.js';
 import summaryHandlers from './handlers/summary.js';
 import teamHandlers from './handlers/teams.js';
+import trustpubHandlers from './handlers/trustpub.js';
 import userHandlers from './handlers/users.js';
 import versionHandlers from './handlers/versions.js';
 import apiToken from './models/api-token.js';
@@ -20,6 +21,7 @@ import dependency from './models/dependency.js';
 import keyword from './models/keyword.js';
 import mswSession from './models/msw-session.js';
 import team from './models/team.js';
+import trustpubGithubConfig from './models/trustpub/github-config.js';
 import user from './models/user.js';
 import versionDownload from './models/version-download.js';
 import version from './models/version.js';
@@ -37,6 +39,7 @@ export const handlers = [
   ...sessionHandlers,
   ...summaryHandlers,
   ...teamHandlers,
+  ...trustpubHandlers,
   ...userHandlers,
   ...versionHandlers,
 ];
@@ -51,6 +54,7 @@ export const db = factory({
   keyword,
   mswSession,
   team,
+  trustpubGithubConfig,
   user,
   versionDownload,
   version,
