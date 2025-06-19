@@ -77,7 +77,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
     }))?;
 
     let url = "/api/v1/trusted_publishing/github_configs";
-    let response = cookie_client.put::<()>(url, body).await;
+    let response = cookie_client.post::<()>(url, body).await;
 
     assert_json_snapshot!(response.json(), { ".github_config.created_at" => "[datetime]" }, @r#"
     {

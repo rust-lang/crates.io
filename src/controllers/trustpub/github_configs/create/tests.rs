@@ -41,7 +41,7 @@ async fn run_test(payload: impl Into<Bytes>) -> (TestApp, Response<()>) {
             .await
             .unwrap();
 
-        (app, cookie_client.put::<()>(URL, payload).await)
+        (app, cookie_client.post::<()>(URL, payload).await)
     }
 
     inner(payload.into()).await
@@ -213,7 +213,7 @@ async fn test_unauthenticated() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = client.put::<()>(URL, body).await;
+    let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 
@@ -243,7 +243,7 @@ async fn test_token_auth() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = token_client.put::<()>(URL, body).await;
+    let response = token_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
 
@@ -267,7 +267,7 @@ async fn test_missing_crate() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = cookie_client.put::<()>(URL, body).await;
+    let response = cookie_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate `foo` does not exist"}]}"#);
 
@@ -299,7 +299,7 @@ async fn test_non_owner() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = other_client.put::<()>(URL, body).await;
+    let response = other_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You are not an owner of this crate"}]}"#);
 
@@ -331,7 +331,7 @@ async fn test_unknown_github_user() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = cookie_client.put::<()>(URL, body).await;
+    let response = cookie_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Unknown GitHub user or organization"}]}"#);
 
@@ -363,7 +363,7 @@ async fn test_github_error() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = cookie_client.put::<()>(URL, body).await;
+    let response = cookie_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"500 Internal Server Error");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Internal Server Error"}]}"#);
 
@@ -398,7 +398,7 @@ async fn test_unverified_email() -> anyhow::Result<()> {
         }
     }))?;
 
-    let response = cookie_client.put::<()>(URL, body).await;
+    let response = cookie_client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You must verify your email address to create a Trusted Publishing config"}]}"#);
 
