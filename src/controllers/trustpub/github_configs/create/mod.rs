@@ -23,7 +23,7 @@ mod tests;
 
 /// Create a new Trusted Publishing configuration for GitHub Actions.
 #[utoipa::path(
-    put,
+    post,
     path = "/api/v1/trusted_publishing/github_configs",
     security(("cookie" = [])),
     request_body = inline(json::CreateRequest),

@@ -4227,7 +4227,7 @@ expression: response.json()
           "trusted_publishing"
         ]
       },
-      "put": {
+      "post": {
         "operationId": "create_trustpub_github_config",
         "requestBody": {
           "content": {
