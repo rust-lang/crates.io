@@ -3,7 +3,7 @@ use crate::schema::api_tokens;
 use crate::views::EncodableApiTokenWithToken;
 
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{ApiTokenCredentials, CookieCredentials, Permission, UserCredentials};
 use crate::models::token::{CrateScope, EndpointScope};
 use crate::util::errors::{AppResult, bad_request};
 use crate::util::token::PlainToken;
@@ -53,10 +53,13 @@ pub struct ListResponse {
 pub async fn list_api_tokens(
     app: AppState,
     Query(params): Query<GetParams>,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<ErasedJson> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
+
+    let permission = Permission::ListApiTokens;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
     let user = auth.user();
 
     let tokens: Vec<ApiToken> = ApiToken::belonging_to(user)
@@ -104,6 +107,7 @@ pub struct CreateResponse {
 )]
 pub async fn create_api_token(
     app: AppState,
+    creds: CookieCredentials,
     parts: Parts,
     Json(new): Json<NewApiTokenRequest>,
 ) -> AppResult<Json<CreateResponse>> {
@@ -112,14 +116,9 @@ pub async fn create_api_token(
     }
 
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().check(&parts, &mut conn).await?;
 
-    if auth.api_token_id().is_some() {
-        return Err(bad_request(
-            "cannot use an API token to create a new API token",
-        ));
-    }
-
+    let permission = Permission::CreateApiToken;
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
     let user = auth.user();
 
     let max_token_per_user = 500;
@@ -216,11 +215,15 @@ pub struct GetResponse {
 pub async fn find_api_token(
     app: AppState,
     Path(id): Path<i32>,
+    creds: UserCredentials,
     req: Parts,
 ) -> AppResult<Json<GetResponse>> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().check(&req, &mut conn).await?;
+
+    let permission = Permission::ReadApiToken;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
     let user = auth.user();
+
     let api_token = ApiToken::belonging_to(user)
         .find(id)
         .select(ApiToken::as_select())
@@ -247,11 +250,15 @@ pub async fn find_api_token(
 pub async fn revoke_api_token(
     app: AppState,
     Path(id): Path<i32>,
+    creds: UserCredentials,
     req: Parts,
 ) -> AppResult<ErasedJson> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().check(&req, &mut conn).await?;
+
+    let permission = Permission::RevokeApiToken;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
     let user = auth.user();
+
     diesel::update(ApiToken::belonging_to(user).find(id))
         .set(api_tokens::revoked.eq(true))
         .execute(&mut conn)
@@ -271,14 +278,18 @@ pub async fn revoke_api_token(
     tag = "api_tokens",
     responses((status = 204, description = "Successful Response")),
 )]
-pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Response> {
+pub async fn revoke_current_api_token(
+    app: AppState,
+    creds: ApiTokenCredentials,
+    req: Parts,
+) -> AppResult<Response> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::default().check(&req, &mut conn).await?;
-    let api_token_id = auth
-        .api_token_id()
-        .ok_or_else(|| bad_request("token not provided"))?;
 
-    diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token_id)))
+    let permission = Permission::RevokeCurrentApiToken;
+    let auth = creds.validate(&mut conn, &req, permission).await?;
+    let api_token = auth.api_token();
+
+    diesel::update(api_tokens::table.filter(api_tokens::id.eq(api_token.id)))
         .set(api_tokens::revoked.eq(true))
         .execute(&mut conn)
         .await?;

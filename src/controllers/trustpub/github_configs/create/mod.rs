@@ -1,9 +1,9 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{CookieCredentials, Permission};
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::github_configs::emails::ConfigCreatedEmail;
 use crate::controllers::trustpub::github_configs::json;
-use crate::util::errors::{AppResult, bad_request, forbidden};
+use crate::util::errors::{AppResult, bad_request};
 use axum::Json;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::NewGitHubConfig;
@@ -32,6 +32,7 @@ mod tests;
 )]
 pub async fn create_trustpub_github_config(
     state: AppState,
+    creds: CookieCredentials,
     parts: Parts,
     json: json::CreateRequest,
 ) -> AppResult<Json<json::CreateResponse>> {
@@ -46,9 +47,6 @@ pub async fn create_trustpub_github_config(
 
     let mut conn = state.db_write().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-    let auth_user = auth.user();
-
     let krate = load_crate(&mut conn, &json_config.krate).await?;
 
     let user_owners = crate_owners::table
@@ -61,15 +59,11 @@ pub async fn create_trustpub_github_config(
         .load::<(i32, String, String, bool)>(&mut conn)
         .await?;
 
-    let (_, _, _, email_verified) = user_owners
-        .iter()
-        .find(|(id, _, _, _)| *id == auth_user.id)
-        .ok_or_else(|| bad_request("You are not an owner of this crate"))?;
+    let user_owner_ids = user_owners.iter().map(|(id, _, _, _)| *id).collect();
 
-    if !email_verified {
-        let message = "You must verify your email address to create a Trusted Publishing config";
-        return Err(forbidden(message));
-    }
+    let permission = Permission::CreateTrustPubGitHubConfig { user_owner_ids };
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
+    let auth_user = auth.user();
 
     // Lookup `repository_owner_id` via GitHub API
 

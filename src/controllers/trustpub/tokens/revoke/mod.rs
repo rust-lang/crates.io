@@ -1,12 +1,10 @@
 use crate::app::AppState;
-use crate::auth::AuthHeader;
-use crate::util::errors::{AppResult, custom};
+use crate::auth::TrustPubCredentials;
+use crate::util::errors::AppResult;
 use crates_io_database::schema::trustpub_tokens;
-use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
-use secrecy::ExposeSecret;
 
 #[cfg(test)]
 mod tests;
@@ -22,13 +20,11 @@ mod tests;
     tag = "trusted_publishing",
     responses((status = 204, description = "Successful Response")),
 )]
-pub async fn revoke_trustpub_token(app: AppState, auth: AuthHeader) -> AppResult<StatusCode> {
-    let token = auth.token().expose_secret();
-    let Ok(token) = token.parse::<AccessToken>() else {
-        let message = "Invalid `Authorization` header: Failed to parse token";
-        return Err(custom(StatusCode::UNAUTHORIZED, message));
-    };
-
+pub async fn revoke_trustpub_token(
+    app: AppState,
+    creds: TrustPubCredentials,
+) -> AppResult<StatusCode> {
+    let token = creds.unvalidated_token();
     let hashed_token = token.sha256();
 
     let mut conn = app.db_write().await?;

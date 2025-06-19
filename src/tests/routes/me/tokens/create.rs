@@ -116,8 +116,8 @@ async fn cannot_create_token_with_token() {
             br#"{ "api_token": { "name": "baz" } }"# as &[u8],
         )
         .await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot use an API token to create a new API token"}]}"#);
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
     assert!(app.emails().await.is_empty());
 }
 

@@ -80,11 +80,15 @@ impl FromStr for AccessToken {
 }
 
 /// The error type for parsing access tokens.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum AccessTokenError {
+    #[error("Missing prefix `{}`", AccessToken::PREFIX)]
     MissingPrefix,
+    #[error("Invalid token length")]
     InvalidLength,
+    #[error("Invalid character in token")]
     InvalidCharacter,
+    #[error("Invalid checksum: claimed `{claimed}`, actual `{actual}`")]
     InvalidChecksum { claimed: char, actual: char },
 }
 

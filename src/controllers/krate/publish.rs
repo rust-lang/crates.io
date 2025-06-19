@@ -1,7 +1,6 @@
 //! Functionality related to publishing a new crate or version of a crate.
 
 use crate::app::AppState;
-use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
     self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
@@ -11,7 +10,7 @@ use cargo_manifest::{Dependency, DepsSet, TargetDepsSet};
 use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_tarball::{TarballError, process_tarball};
 use crates_io_worker::{BackgroundJob, EnqueueError};
-use diesel::dsl::{exists, now, select};
+use diesel::dsl::{exists, select};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -21,7 +20,6 @@ use futures_util::TryStreamExt;
 use hex::ToHex;
 use http::StatusCode;
 use http::request::Parts;
-use secrecy::ExposeSecret;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
@@ -33,44 +31,19 @@ use crate::models::{
     VersionAction, default_versions::Version as DefaultVersion,
 };
 
-use crate::controllers::helpers::authorization::Rights;
+use crate::auth::{Permission, PublishCredentials};
 use crate::licenses::parse_license_expr;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::token::EndpointScope;
 use crate::rate_limiter::LimitedAction;
 use crate::schema::*;
-use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidden, internal};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, internal};
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
-use crates_io_database::models::{User, versions_published_by};
+use crates_io_database::models::versions_published_by;
 use crates_io_diesel_helpers::canon_crate_name;
-use crates_io_trustpub::access_token::AccessToken;
-
-const MISSING_RIGHTS_ERROR_MESSAGE: &str = "this crate exists but you don't seem to be an owner. \
-     If you believe this is a mistake, perhaps you need \
-     to accept an invitation to be an owner before \
-     publishing.";
 
 const MAX_DESCRIPTION_LENGTH: usize = 1000;
-
-enum AuthType {
-    Regular(Box<Authentication>),
-    TrustPub,
-}
-
-impl AuthType {
-    fn user(&self) -> Option<&User> {
-        match self {
-            AuthType::Regular(auth) => Some(auth.user()),
-            AuthType::TrustPub => None,
-        }
-    }
-
-    fn user_id(&self) -> Option<i32> {
-        self.user().map(|u| u.id)
-    }
-}
 
 /// Publish a new crate/version.
 ///
@@ -87,7 +60,12 @@ impl AuthType {
     tag = "publish",
     responses((status = 200, description = "Successful Response", body = inline(GoodCrate))),
 )]
-pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<GoodCrate>> {
+pub async fn publish(
+    app: AppState,
+    creds: PublishCredentials,
+    req: Parts,
+    body: Body,
+) -> AppResult<Json<GoodCrate>> {
     let stream = body.into_data_stream();
     let stream = stream.map_err(std::io::Error::other);
     let mut reader = StreamReader::new(stream);
@@ -147,59 +125,14 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         .await
         .optional()?;
 
-    let auth_header = AuthHeader::optional_from_request_parts(&req).await?;
-    let trustpub_token = auth_header
-        .and_then(|auth| {
-            let token = auth.token().expose_secret();
-            if !token.starts_with(AccessToken::PREFIX) {
-                return None;
-            }
-
-            Some(token.parse::<AccessToken>().map_err(|_| {
-                let message = "Invalid `Authorization` header: Failed to parse token";
-                custom(StatusCode::UNAUTHORIZED, message)
-            }))
-        })
-        .transpose()?;
-
-    let auth = if let Some(trustpub_token) = trustpub_token {
-        let Some(existing_crate) = &existing_crate else {
-            let error = forbidden("Trusted Publishing tokens do not support creating new crates");
-            return Err(error);
-        };
-
-        let hashed_token = trustpub_token.sha256();
-
-        let crate_ids: Vec<Option<i32>> = trustpub_tokens::table
-            .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
-            .filter(trustpub_tokens::expires_at.gt(now))
-            .select(trustpub_tokens::crate_ids)
-            .get_result(&mut conn)
-            .await
-            .optional()?
-            .ok_or_else(|| forbidden("Invalid authentication token"))?;
-
-        if !crate_ids.contains(&Some(existing_crate.id)) {
-            let name = &existing_crate.name;
-            let error = format!("The provided access token is not valid for crate `{name}`");
-            return Err(forbidden(error));
-        }
-
-        AuthType::TrustPub
-    } else {
-        let endpoint_scope = match existing_crate {
-            Some(_) => EndpointScope::PublishUpdate,
-            None => EndpointScope::PublishNew,
-        };
-
-        let auth = AuthCheck::default()
-            .with_endpoint_scope(endpoint_scope)
-            .for_crate(&metadata.name)
-            .check(&req, &mut conn)
-            .await?;
-
-        AuthType::Regular(Box::new(auth))
+    let permission = match &existing_crate {
+        Some(krate) => Permission::PublishUpdate { krate },
+        None => Permission::PublishNew {
+            name: &metadata.name,
+        },
     };
+
+    let auth = creds.validate(&mut conn, &req, permission).await?;
 
     let verified_email_address = if let Some(user) = auth.user() {
         let verified_email_address = user.verified_email(&mut conn).await?;
@@ -431,19 +364,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         }
 
         let krate = if let Some(user) = auth.user() {
-            // To avoid race conditions, we try to insert
-            // first so we know whether to add an owner
-            let krate = match persist.create(conn, user.id).await.optional()? {
+            match persist.create(conn, user.id).await.optional()? {
                 Some(krate) => krate,
                 None => persist.update(conn).await?,
-            };
-
-            let owners = krate.owners(conn).await?;
-            if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
-                return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
             }
-
-            krate
         } else {
             // Trusted Publishing does not support creating new crates
             persist.update(conn).await?
@@ -514,10 +438,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             versions_published_by::insert(version.id, &email_address, conn).await?;
         }
 
-        if let AuthType::Regular(auth) = &auth {
+        if let Some(auth) = auth.user_auth() {
             NewVersionOwnerAction::builder()
                 .version_id(version.id)
-                .user_id(auth.user().id)
+                .user_id(auth.user_id())
                 .maybe_api_token_id(auth.api_token_id())
                 .action(VersionAction::Publish)
                 .build()

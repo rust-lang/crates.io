@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::helpers::OkResponse;
 use crate::models::{CrateOwner, OwnerKind};
 use crate::schema::crate_owners;
@@ -33,6 +33,7 @@ pub struct CrateEmailNotifications {
 #[deprecated]
 pub async fn update_email_notifications(
     app: AppState,
+    creds: UserCredentials,
     parts: Parts,
     Json(updates): Json<Vec<CrateEmailNotifications>>,
 ) -> AppResult<OkResponse> {
@@ -44,10 +45,10 @@ pub async fn update_email_notifications(
         .collect();
 
     let mut conn = app.db_write().await?;
-    let user_id = AuthCheck::default()
-        .check(&parts, &mut conn)
-        .await?
-        .user_id();
+
+    let permission = Permission::UpdateEmailNotifications;
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
+    let user_id = auth.user_id();
 
     // Build inserts from existing crates belonging to the current user
     let to_insert = CrateOwner::by_owner_kind(OwnerKind::User)

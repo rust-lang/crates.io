@@ -1,11 +1,13 @@
 //! Endpoints for yanking and unyanking specific versions of crates
 
 use super::CrateVersionPath;
-use super::update::{authenticate, perform_version_yank_update};
+use super::update::perform_version_yank_update;
 use crate::app::AppState;
+use crate::auth::{Permission, UserCredentials};
 use crate::controllers::helpers::OkResponse;
 use crate::rate_limiter::LimitedAction;
 use crate::util::errors::AppResult;
+use axum::RequestPartsExt;
 use http::request::Parts;
 
 /// Yank a crate version.
@@ -62,7 +64,7 @@ pub async fn unyank_version(
 async fn modify_yank(
     path: CrateVersionPath,
     state: AppState,
-    req: Parts,
+    mut req: Parts,
     yanked: bool,
 ) -> AppResult<OkResponse> {
     // FIXME: Should reject bad requests before authentication, but can't due to
@@ -70,23 +72,20 @@ async fn modify_yank(
 
     let mut conn = state.db_write().await?;
     let (mut version, krate) = path.load_version_and_crate(&mut conn).await?;
-    let auth = authenticate(&req, &mut conn, &krate.name).await?;
+
+    let creds = req.extract::<UserCredentials>().await?;
+    let permission = match yanked {
+        true => Permission::YankVersion { krate: &krate },
+        false => Permission::UnyankVersion { krate: &krate },
+    };
+    let auth = creds.validate(&mut conn, &req, permission).await?;
 
     state
         .rate_limiter
         .check_rate_limit(auth.user_id(), LimitedAction::YankUnyank, &mut conn)
         .await?;
 
-    perform_version_yank_update(
-        &state,
-        &mut conn,
-        &mut version,
-        &krate,
-        &auth,
-        Some(yanked),
-        None,
-    )
-    .await?;
+    perform_version_yank_update(&mut conn, &mut version, &krate, &auth, Some(yanked), None).await?;
 
     Ok(OkResponse::new())
 }

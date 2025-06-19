@@ -1,7 +1,7 @@
 use crate::app::AppState;
-use crate::auth::AuthCheck;
+use crate::auth::{CookieCredentials, Permission};
 use crate::controllers::trustpub::github_configs::emails::ConfigDeletedEmail;
-use crate::util::errors::{AppResult, bad_request, not_found};
+use crate::util::errors::{AppResult, not_found};
 use axum::extract::Path;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::GitHubConfig;
@@ -28,12 +28,10 @@ mod tests;
 pub async fn delete_trustpub_github_config(
     state: AppState,
     Path(id): Path<i32>,
+    creds: CookieCredentials,
     parts: Parts,
 ) -> AppResult<StatusCode> {
     let mut conn = state.db_write().await?;
-
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-    let auth_user = auth.user();
 
     // Check that a trusted publishing config with the given ID exists,
     // and fetch the corresponding crate ID and name.
@@ -57,10 +55,11 @@ pub async fn delete_trustpub_github_config(
         .load::<(i32, String, String, bool)>(&mut conn)
         .await?;
 
-    // Check if the authenticated user is an owner of the crate
-    if !user_owners.iter().any(|owner| owner.0 == auth_user.id) {
-        return Err(bad_request("You are not an owner of this crate"));
-    }
+    let user_owner_ids = user_owners.iter().map(|(id, _, _, _)| *id).collect();
+
+    let permission = Permission::DeleteTrustPubGitHubConfig { user_owner_ids };
+    let auth = creds.validate(&mut conn, &parts, permission).await?;
+    let auth_user = auth.user();
 
     // Delete the configuration from the database
     diesel::delete(trustpub_configs_github::table.filter(trustpub_configs_github::id.eq(id)))

@@ -2,9 +2,8 @@
 
 use super::CrateVersionPath;
 use crate::app::AppState;
-use crate::auth::AuthCheck;
-use crate::controllers::helpers::authorization::Rights;
-use crate::util::errors::{AppResult, custom, server_error};
+use crate::auth::{CookieCredentials, Permission};
+use crate::util::errors::{AppResult, server_error};
 use crate::worker::jobs;
 use crates_io_worker::BackgroundJob as _;
 use http::StatusCode;
@@ -24,23 +23,16 @@ use http::request::Parts;
 pub async fn rebuild_version_docs(
     app: AppState,
     path: CrateVersionPath,
+    creds: CookieCredentials,
     req: Parts,
 ) -> AppResult<StatusCode> {
     let mut conn = app.db_write().await?;
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
     // validate if version & crate exist
-    let (_, krate) = path.load_version_and_crate(&mut conn).await?;
+    let (_, ref krate) = path.load_version_and_crate(&mut conn).await?;
 
-    // Check that the user is an owner of the crate, or a team member (= publish rights)
-    let user = auth.user();
-    let owners = krate.owners(&mut conn).await?;
-    if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
-        return Err(custom(
-            StatusCode::FORBIDDEN,
-            "user doesn't have permission to trigger a docs rebuild",
-        ));
-    }
+    let permission = Permission::RebuildDocs { krate };
+    creds.validate(&mut conn, &req, permission).await?;
 
     let job = jobs::DocsRsQueueRebuild::new(path.name, path.version);
     job.enqueue(&mut conn).await.map_err(|error| {
