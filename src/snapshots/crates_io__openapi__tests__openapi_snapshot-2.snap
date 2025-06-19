@@ -4328,7 +4328,7 @@ expression: response.json()
           "trusted_publishing"
         ]
       },
-      "put": {
+      "post": {
         "operationId": "exchange_trustpub_token",
         "requestBody": {
           "content": {

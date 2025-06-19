@@ -20,7 +20,7 @@ mod tests;
 
 /// Exchange an OIDC token for a temporary access token.
 #[utoipa::path(
-    put,
+    post,
     path = "/api/v1/trusted_publishing/tokens",
     request_body = inline(json::ExchangeRequest),
     tag = "trusted_publishing",

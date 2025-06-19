@@ -109,7 +109,7 @@ async fn test_full_flow() -> anyhow::Result<()> {
 
     let body = serde_json::to_vec(&json!({ "jwt": jwt }))?;
     let response = client
-        .put::<()>("/api/v1/trusted_publishing/tokens", body)
+        .post::<()>("/api/v1/trusted_publishing/tokens", body)
         .await;
     let json = response.json();
     assert_json_snapshot!(json, { ".token" => "[token]" }, @r#"
