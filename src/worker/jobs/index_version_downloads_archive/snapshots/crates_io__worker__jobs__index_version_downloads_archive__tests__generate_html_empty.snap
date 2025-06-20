@@ -26,6 +26,12 @@ expression: "std::str::from_utf8(&index)?"
         </p>
 
         <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th style="padding-left: 1em">Size</th>
+                </tr>
+            </thead>
             <tbody>
                 
             </tbody>
