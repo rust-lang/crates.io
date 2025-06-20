@@ -26,26 +26,32 @@ expression: "std::str::from_utf8(&index)?"
         </p>
 
         <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th style="padding-left: 1em">Size</th>
+                </tr>
+            </thead>
             <tbody>
                 
                     <tr>
                         <td><a href="2024-08-01.csv">2024-08-01.csv</a></td>
-                        <td>138</td>
+                        <td style="padding-left: 1em; text-align: right">138</td>
                     </tr>
                 
                     <tr>
                         <td><a href="2024-07-31.csv">2024-07-31.csv</a></td>
-                        <td>123</td>
+                        <td style="padding-left: 1em; text-align: right">123</td>
                     </tr>
                 
                     <tr>
                         <td><a href="2024-07-30.csv">2024-07-30.csv</a></td>
-                        <td>124</td>
+                        <td style="padding-left: 1em; text-align: right">124</td>
                     </tr>
                 
                     <tr>
                         <td><a href="2024-07-29.csv">2024-07-29.csv</a></td>
-                        <td>234</td>
+                        <td style="padding-left: 1em; text-align: right">234</td>
                     </tr>
                 
             </tbody>
