@@ -1,4 +1,4 @@
-.owners-header {
+.owners-header, .trusted-publishing-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

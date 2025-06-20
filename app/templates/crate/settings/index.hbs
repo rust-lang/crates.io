@@ -56,7 +56,12 @@
 
 {{! The "Trusted Publishing" section is hidden for now until we make this feature publicly available. }}
 {{#if this.githubConfigs}}
-  <h2>Trusted Publishing</h2>
+  <div local-class="trusted-publishing-header">
+    <h2>Trusted Publishing</h2>
+    <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
+      Add
+    </LinkTo>
+  </div>
 
   <table local-class="trustpub" data-test-trusted-publishing>
     <thead>

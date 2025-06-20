@@ -86,6 +86,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await percy.snapshot();
 
       await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
+      await expect(page.locator('[data-test-add-trusted-publisher-button]')).toBeVisible();
       await expect(page.locator('[data-test-github-config]')).toHaveCount(2);
       await expect(page.locator('[data-test-github-config="1"] td:nth-child(1)')).toHaveText('GitHub');
       let details = page.locator('[data-test-github-config="1"] td:nth-child(2)');
