@@ -297,7 +297,7 @@ async fn test_non_existent_token_with_new_crate() -> anyhow::Result<()> {
     let pb = PublishBuilder::new("foo", "1.0.0");
     let response = oidc_token_client.publish_crate(pb).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Trusted Publishing tokens do not support creating new crates"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Trusted Publishing tokens do not support creating new crates. Publish the crate manually, first"}]}"#);
 
     Ok(())
 }
