@@ -63,6 +63,7 @@
     <tr>
       <th>Publisher</th>
       <th>Details</th>
+      <th></th>
     </tr>
     </thead>
     <tbody>
@@ -76,10 +77,13 @@
             <strong>Environment:</strong> {{config.environment}}
           {{/if}}
         </td>
+        <td local-class="actions">
+          <button type="button" class="button button--small" data-test-remove-config-button {{on "click" (perform this.removeConfigTask config)}}>Remove</button>
+        </td>
       </tr>
     {{else}}
       <tr data-test-no-config>
-        <td colspan="2">No trusted publishers configured for this crate.</td>
+        <td colspan="3">No trusted publishers configured for this crate.</td>
       </tr>
     {{/each}}
     </tbody>
