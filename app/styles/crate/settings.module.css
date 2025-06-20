@@ -43,6 +43,26 @@
     }
 }
 
+.trustpub {
+    background-color: light-dark(white, #141413);
+    border-radius: var(--space-3xs);
+    box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+
+    tbody > tr > td {
+        border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #232321);
+    }
+
+    th, td {
+        text-align: left;
+        padding: var(--space-s) var(--space-m);
+    }
+
+    .details {
+        font-size: 0.85em;
+        line-height: 1.5;
+    }
+}
+
 .email-column {
     width: 25%;
     color: var(--main-color-light);
