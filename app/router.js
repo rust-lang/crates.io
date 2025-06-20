@@ -19,7 +19,7 @@ Router.map(function () {
     this.route('reverse-dependencies', { path: 'reverse_dependencies' });
 
     this.route('owners');
-    this.route('settings');
+    this.route('settings', function () {});
     this.route('delete');
 
     // Well-known routes
