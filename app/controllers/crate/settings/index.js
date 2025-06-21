@@ -7,6 +7,7 @@ import { task } from 'ember-concurrency';
 
 export default class CrateSettingsController extends Controller {
   @service notifications;
+  @service store;
 
   crate = null;
   username = '';
@@ -55,6 +56,22 @@ export default class CrateSettingsController extends Controller {
     } catch (error) {
       let subject = owner.kind === 'team' ? `team ${owner.get('display_name')}` : `user ${owner.get('login')}`;
       let message = `Failed to remove the ${subject} as crate owner`;
+
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        message += `: ${detail}`;
+      }
+
+      this.notifications.error(message);
+    }
+  });
+
+  removeConfigTask = task(async config => {
+    try {
+      await config.destroyRecord();
+      this.notifications.success('Trusted Publishing configuration removed successfully');
+    } catch (error) {
+      let message = 'Failed to remove Trusted Publishing configuration';
 
       let detail = error.errors?.[0]?.detail;
       if (detail && !detail.startsWith('{')) {

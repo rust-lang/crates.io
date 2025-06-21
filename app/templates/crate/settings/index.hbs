@@ -54,6 +54,47 @@
   {{/each}}
 </div>
 
+{{! The "Trusted Publishing" section is hidden for now until we make this feature publicly available. }}
+{{#if this.githubConfigs}}
+  <div local-class="trusted-publishing-header">
+    <h2>Trusted Publishing</h2>
+    <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
+      Add
+    </LinkTo>
+  </div>
+
+  <table local-class="trustpub" data-test-trusted-publishing>
+    <thead>
+    <tr>
+      <th>Publisher</th>
+      <th>Details</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#each this.githubConfigs as |config|}}
+      <tr data-test-github-config={{config.id}}>
+        <td>GitHub</td>
+        <td local-class="details">
+          <strong>Repository:</strong> {{config.repository_owner}}/{{config.repository_name}}<br>
+          <strong>Workflow:</strong> {{config.workflow_filename}}<br>
+          {{#if config.environment}}
+            <strong>Environment:</strong> {{config.environment}}
+          {{/if}}
+        </td>
+        <td local-class="actions">
+          <button type="button" class="button button--small" data-test-remove-config-button {{on "click" (perform this.removeConfigTask config)}}>Remove</button>
+        </td>
+      </tr>
+    {{else}}
+      <tr data-test-no-config>
+        <td colspan="3">No trusted publishers configured for this crate.</td>
+      </tr>
+    {{/each}}
+    </tbody>
+  </table>
+{{/if}}
+
 <h2>Danger Zone</h2>
 
 <div>
