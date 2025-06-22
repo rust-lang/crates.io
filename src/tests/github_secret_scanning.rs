@@ -1,15 +1,21 @@
 use crate::tests::util::MockRequestExt;
+use crate::tests::util::insta::api_token_redaction;
 use crate::tests::{RequestHelper, TestApp};
 use crate::util::token::HashedToken;
 use crate::{models::ApiToken, schema::api_tokens};
 use base64::{Engine as _, engine::general_purpose};
+use chrono::{TimeDelta, Utc};
+use crates_io_database::models::trustpub::NewToken;
+use crates_io_database::schema::trustpub_tokens;
 use crates_io_github::{GitHubPublicKey, MockGitHubClient};
+use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use insta::{assert_json_snapshot, assert_snapshot};
 use p256::ecdsa::{Signature, SigningKey, signature::Signer};
 use p256::pkcs8::DecodePrivateKey;
+use secrecy::ExposeSecret;
 use std::sync::LazyLock;
 
 static URL: &str = "/api/github/secret-scanning/verify";
@@ -17,6 +23,14 @@ static URL: &str = "/api/github/secret-scanning/verify";
 // Test request payload for GitHub secret scanning
 static GITHUB_ALERT: &[u8] =
     br#"[{"token":"some_token","type":"some_type","url":"some_url","source":"some_source"}]"#;
+
+/// Generate a GitHub alert with a given token
+fn github_alert_with_token(token: &str) -> Vec<u8> {
+    format!(
+        r#"[{{"token":"{token}","type":"some_type","url":"some_url","source":"some_source"}}]"#,
+    )
+    .into_bytes()
+}
 
 /// Private key for signing payloads (ECDSA P-256)
 ///
@@ -46,6 +60,29 @@ static SIGNING_KEY: LazyLock<SigningKey> =
 fn sign_payload(payload: &[u8]) -> String {
     let signature: Signature = SIGNING_KEY.sign(payload);
     general_purpose::STANDARD.encode(signature.to_der())
+}
+
+/// Generate a new Trusted Publishing token and its SHA256 hash
+fn generate_trustpub_token() -> (String, Vec<u8>) {
+    let token = AccessToken::generate();
+    let finalized_token = token.finalize().expose_secret().to_string();
+    let hashed_token = token.sha256().to_vec();
+    (finalized_token, hashed_token)
+}
+
+/// Create a new Trusted Publishing token in the database
+async fn insert_trustpub_token(conn: &mut diesel_async::AsyncPgConnection) -> QueryResult<String> {
+    let (token, hashed_token) = generate_trustpub_token();
+
+    let new_token = NewToken {
+        expires_at: Utc::now() + TimeDelta::minutes(30),
+        hashed_token: &hashed_token,
+        crate_ids: &[1], // Arbitrary crate ID for testing
+    };
+
+    new_token.insert(conn).await?;
+
+    Ok(token)
 }
 
 fn github_mock() -> MockGitHubClient {
@@ -278,4 +315,78 @@ async fn github_secret_alert_invalid_signature_fails() {
     request.header("GITHUB-PUBLIC-KEY-SIGNATURE", "YmFkIHNpZ25hdHVyZQ==");
     let response = anon.run::<()>(request).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_revokes_trustpub_token() {
+    let (app, anon) = TestApp::init().with_github(github_mock()).empty().await;
+    let mut conn = app.db_conn().await;
+
+    // Generate a valid Trusted Publishing token
+    let token = insert_trustpub_token(&mut conn).await.unwrap();
+
+    // Verify the token exists in the database
+    let count = trustpub_tokens::table
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(count, 1);
+
+    // Send the GitHub alert to the API endpoint
+    let mut request = anon.post_request(URL);
+    let vec = github_alert_with_token(&token);
+    request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", KEY_IDENTIFIER);
+    request.header("GITHUB-PUBLIC-KEY-SIGNATURE", &sign_payload(&vec));
+    *request.body_mut() = vec.into();
+    let response = anon.run::<()>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        "[].token_raw" => api_token_redaction()
+    });
+
+    // Verify the token was deleted from the database
+    let count = trustpub_tokens::table
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_for_unknown_trustpub_token() {
+    let (app, anon) = TestApp::init().with_github(github_mock()).empty().await;
+    let mut conn = app.db_conn().await;
+
+    // Generate a valid Trusted Publishing token but don't insert it into the database
+    let (token, _) = generate_trustpub_token();
+
+    // Verify no tokens exist in the database
+    let count = trustpub_tokens::table
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
+
+    // Send the GitHub alert to the API endpoint
+    let mut request = anon.post_request(URL);
+    let vec = github_alert_with_token(&token);
+    request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", KEY_IDENTIFIER);
+    request.header("GITHUB-PUBLIC-KEY-SIGNATURE", &sign_payload(&vec));
+    *request.body_mut() = vec.into();
+    let response = anon.run::<()>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        "[].token_raw" => api_token_redaction()
+    });
+
+    // Verify still no tokens exist in the database
+    let count = trustpub_tokens::table
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(count, 0);
 }
