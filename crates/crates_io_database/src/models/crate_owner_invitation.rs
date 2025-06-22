@@ -4,8 +4,8 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
-use crate::models::CrateOwner;
-use crate::schema::{crate_owner_invitations, crates};
+use crate::models::{CrateOwner, User};
+use crate::schema::{crate_owner_invitations, crates, users};
 
 #[derive(Debug)]
 pub enum NewCrateOwnerInvitationOutcome {
@@ -89,14 +89,26 @@ impl CrateOwnerInvitation {
     }
 
     pub async fn accept(self, conn: &mut AsyncPgConnection) -> Result<(), AcceptError> {
-        if self.is_expired() {
-            let crate_name: String = crates::table
+        let get_crate_name = async |conn| {
+            crates::table
                 .find(self.crate_id)
                 .select(crates::name)
                 .first(conn)
-                .await?;
+                .await
+        };
 
+        if self.is_expired() {
+            let crate_name = get_crate_name(conn).await?;
             return Err(AcceptError::Expired { crate_name });
+        }
+
+        // Get the user and check if they have a verified email
+        let user: User = users::table.find(self.invited_user_id).first(conn).await?;
+
+        let verified_email = user.verified_email(conn).await?;
+        if verified_email.is_none() {
+            let crate_name = get_crate_name(conn).await?;
+            return Err(AcceptError::EmailNotVerified { crate_name });
         }
 
         conn.transaction(|conn| {
@@ -132,4 +144,6 @@ pub enum AcceptError {
     Diesel(#[from] diesel::result::Error),
     #[error("The invitation has expired")]
     Expired { crate_name: String },
+    #[error("Email verification required")]
+    EmailNotVerified { crate_name: String },
 }

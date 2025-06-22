@@ -1,4 +1,5 @@
 use crate::models::Crate;
+use crate::schema::emails;
 use crate::tests::builders::{CrateBuilder, PublishBuilder};
 use crate::tests::util::{
     MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response,
@@ -707,6 +708,54 @@ async fn test_decline_expired_invitation() {
 
     // Invited user is NOT listed as an owner, so the crate still only has one owner
     let json = anon.show_crate_owners("demo_crate").await;
+    assert_eq!(json.users.len(), 1);
+}
+
+/// Given a user inviting a different user to be a crate
+/// owner, check that the user invited cannot accept their
+/// invitation if they don't have a verified email address.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_accept_invitation_without_verified_email() {
+    let (app, anon, owner, owner_token) = TestApp::init().with_token().await;
+    let mut conn = app.db_conn().await;
+    let owner = owner.as_model();
+
+    // Create a user with a verified email (default behavior of db_new_user)
+    let invited_user = app.db_new_user("user_unverified").await;
+
+    // Update the email to be unverified
+    diesel::update(emails::table)
+        .filter(emails::user_id.eq(invited_user.as_model().id))
+        .set(emails::verified.eq(false))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let krate = CrateBuilder::new("foo", owner.id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Invite the unverified user
+    owner_token
+        .add_named_owner("foo", "user_unverified")
+        .await
+        .good();
+
+    // Attempt to accept the invitation - this should fail
+    let response = invited_user
+        .try_accept_ownership_invitation::<()>(&krate.name, krate.id)
+        .await;
+
+    // Verify that the response is a 403 Forbidden with the expected error message
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You need to verify your email address before you can accept the invitation to become an owner of the foo crate."}]}"#);
+
+    // Verify that the invitation still exists
+    let json = invited_user.list_invitations().await;
+    assert_eq!(json.crate_owner_invitations.len(), 1);
+
+    // Verify that the user is not listed as an owner
+    let json = anon.show_crate_owners("foo").await;
     assert_eq!(json.users.len(), 1);
 }
 
