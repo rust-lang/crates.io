@@ -415,6 +415,14 @@ impl From<AcceptError> for BoxedAppError {
 
                 custom(StatusCode::GONE, detail)
             }
+            AcceptError::EmailNotVerified { crate_name } => {
+                let detail = format!(
+                    "You need to verify your email address before you can accept the invitation \
+                    to become an owner of the {crate_name} crate.",
+                );
+
+                custom(StatusCode::FORBIDDEN, detail)
+            }
         }
     }
 }
