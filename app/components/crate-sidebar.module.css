@@ -22,7 +22,8 @@
 .msrv,
 .edition,
 .license,
-.bytes {
+.bytes,
+.purl {
     display: flex;
     align-items: center;
 
@@ -50,6 +51,40 @@
 
 .bytes {
     font-variant-numeric: tabular-nums;
+}
+
+.purl {
+    align-items: flex-start;
+}
+
+.purl-copy-button {
+    text-align: left;
+    width: 100%;
+    min-width: 0;
+    cursor: pointer;
+
+    &:focus {
+        outline: 2px solid var(--yellow500);
+        outline-offset: 1px;
+        border-radius: var(--space-3xs);
+    }
+}
+
+.purl-text {
+    word-break: break-all;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.purl-tooltip {
+    word-break: break-all;
+
+    > small {
+        word-break: normal;
+    }
 }
 
 .links {
