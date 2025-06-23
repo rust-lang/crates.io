@@ -2,7 +2,7 @@
 
 <CrateHeader @crate={{this.crate}} />
 
-<div local-class="owners-header">
+<div local-class="header">
   <h2>Owners</h2>
   {{#unless this.addOwnerVisible}}
     <button type="button" class="button button--small" data-test-add-owner-button {{on "click" this.showAddOwnerForm}}>Add Owner</button>
@@ -56,11 +56,16 @@
 
 {{! The "Trusted Publishing" section is hidden for now until we make this feature publicly available. }}
 {{#if this.githubConfigs}}
-  <div local-class="trusted-publishing-header">
+  <div local-class="header">
     <h2>Trusted Publishing</h2>
-    <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
-      Add
-    </LinkTo>
+    <div>
+      <LinkTo @route="docs.trusted-publishing" class="button button--tan button--small" data-test-trusted-publishing-docs-button>
+        Learn more
+      </LinkTo>
+      <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
+        Add
+      </LinkTo>
+    </div>
   </div>
 
   <table local-class="trustpub" data-test-trusted-publishing>
@@ -95,7 +100,7 @@
   </table>
 {{/if}}
 
-<h2>Danger Zone</h2>
+<h2 local-class="header">Danger Zone</h2>
 
 <div>
   <LinkTo @route="crate.delete" class="button button--red" data-test-delete-button>

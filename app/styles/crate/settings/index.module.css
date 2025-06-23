@@ -1,7 +1,14 @@
-.owners-header, .trusted-publishing-header {
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    margin: var(--space-m) 0;
+
+    > h2 {
+        margin: 0;
+    }
 }
 
 .email-form {
