@@ -135,7 +135,7 @@
     "nyc": "17.1.0",
     "playwright-msw": "3.0.1",
     "postcss-preset-env": "10.2.3",
-    "prettier": "3.5.3",
+    "prettier": "3.6.0",
     "qunit": "2.24.1",
     "qunit-console-grouper": "0.3.0",
     "qunit-dom": "3.4.0",
