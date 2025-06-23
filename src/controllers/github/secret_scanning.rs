@@ -8,7 +8,9 @@ use anyhow::{Context, anyhow};
 use axum::Json;
 use axum::body::Bytes;
 use base64::{Engine, engine::general_purpose};
+use crates_io_database::schema::trustpub_tokens;
 use crates_io_github::GitHubPublicKey;
+use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::HeaderMap;
@@ -126,12 +128,32 @@ struct GitHubSecretAlert {
     source: String,
 }
 
-/// Revokes an API token and notifies the token owner
+/// Revokes an API token or Trusted Publishing token and notifies the token owner
 async fn alert_revoke_token(
     state: &AppState,
     alert: &GitHubSecretAlert,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<GitHubSecretAlertFeedbackLabel> {
+    // First, try to handle as a Trusted Publishing token
+    if let Ok(token) = alert.token.parse::<AccessToken>() {
+        let hashed_token = token.sha256();
+
+        // Check if the token exists in the database
+        let deleted_count = diesel::delete(trustpub_tokens::table)
+            .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
+            .execute(conn)
+            .await?;
+
+        if deleted_count > 0 {
+            warn!("Active Trusted Publishing token received and revoked (true positive)");
+            return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
+        } else {
+            debug!("Unknown Trusted Publishing token received (false positive)");
+            return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
+        }
+    }
+
+    // If not a Trusted Publishing token or not found, try as a regular API token
     let hashed_token = HashedToken::hash(&alert.token);
 
     // Not using `ApiToken::find_by_api_token()` in order to preserve `last_used_at`
@@ -143,7 +165,7 @@ async fn alert_revoke_token(
         .optional()?;
 
     let Some(token) = token else {
-        debug!("Unknown API token received (false positive)");
+        debug!("Unknown token received (false positive)");
         return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
     };
 
