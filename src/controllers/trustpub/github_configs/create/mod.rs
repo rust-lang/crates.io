@@ -1,9 +1,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
-use crate::controllers::trustpub::github_configs::emails::ConfigCreatedEmail;
 use crate::controllers::trustpub::github_configs::json;
+use crate::email::EmailMessage;
 use crate::util::errors::{AppResult, bad_request, forbidden};
+use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::NewGitHubConfig;
@@ -15,6 +16,7 @@ use crates_io_trustpub::github::validation::{
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use minijinja::context;
 use oauth2::AccessToken;
 use secrecy::ExposeSecret;
 
@@ -105,18 +107,18 @@ pub async fn create_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let email = ConfigCreatedEmail {
-            recipient,
-            user: &auth_user.gh_login,
-            krate: &krate.name,
-            repository_owner: &saved_config.repository_owner,
-            repository_name: &saved_config.repository_name,
-            workflow_filename: &saved_config.workflow_filename,
-            environment: saved_config.environment.as_deref().unwrap_or("(not set)"),
+        let context = context! {
+            recipient => recipient,
+            user => auth_user.gh_login,
+            krate => krate.name,
+            repository_owner => saved_config.repository_owner,
+            repository_name => saved_config.repository_name,
+            workflow_filename => saved_config.workflow_filename,
+            environment => saved_config.environment
         };
 
-        if let Err(err) = state.emails.send(email_address, email).await {
-            warn!("Failed to send trusted publishing notification to {email_address}: {err}")
+        if let Err(err) = send_notification_email(&state, email_address, context).await {
+            warn!("Failed to send trusted publishing notification to {email_address}: {err}");
         }
     }
 
@@ -132,4 +134,19 @@ pub async fn create_trustpub_github_config(
     };
 
     Ok(Json(json::CreateResponse { github_config }))
+}
+
+async fn send_notification_email(
+    state: &AppState,
+    email_address: &str,
+    context: minijinja::Value,
+) -> anyhow::Result<()> {
+    let email = EmailMessage::from_template("config_created", context)
+        .context("Failed to render email template")?;
+
+    state
+        .emails
+        .send(email_address, email)
+        .await
+        .context("Failed to send email")
 }

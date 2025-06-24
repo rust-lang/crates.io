@@ -1,7 +1,8 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::trustpub::github_configs::emails::ConfigDeletedEmail;
+use crate::email::EmailMessage;
 use crate::util::errors::{AppResult, bad_request, not_found};
+use anyhow::Context;
 use axum::extract::Path;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::GitHubConfig;
@@ -10,6 +11,8 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http::request::Parts;
+use minijinja::context;
+use tracing::warn;
 
 #[cfg(test)]
 mod tests;
@@ -76,20 +79,35 @@ pub async fn delete_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let email = ConfigDeletedEmail {
-            recipient,
-            user: &auth_user.gh_login,
-            krate: &crate_name,
-            repository_owner: &config.repository_owner,
-            repository_name: &config.repository_name,
-            workflow_filename: &config.workflow_filename,
-            environment: config.environment.as_deref().unwrap_or("(not set)"),
+        let context = context! {
+            recipient => recipient,
+            user => auth_user.gh_login,
+            krate => crate_name,
+            repository_owner => config.repository_owner,
+            repository_name => config.repository_name,
+            workflow_filename => config.workflow_filename,
+            environment => config.environment
         };
 
-        if let Err(err) = state.emails.send(email_address, email).await {
-            warn!("Failed to send trusted publishing notification to {email_address}: {err}")
+        if let Err(err) = send_notification_email(&state, email_address, context).await {
+            warn!("Failed to send trusted publishing notification to {email_address}: {err}");
         }
     }
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+async fn send_notification_email(
+    state: &AppState,
+    email_address: &str,
+    context: minijinja::Value,
+) -> anyhow::Result<()> {
+    let email = EmailMessage::from_template("config_deleted", context)
+        .context("Failed to render email template")?;
+
+    state
+        .emails
+        .send(email_address, email)
+        .await
+        .context("Failed to send email")
 }
