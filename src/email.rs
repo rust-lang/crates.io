@@ -249,24 +249,16 @@ pub struct StoredEmail {
 mod tests {
     use super::*;
 
-    struct TestEmail;
-
-    impl Email for TestEmail {
-        fn subject(&self) -> String {
-            "test".into()
-        }
-
-        fn body(&self) -> String {
-            "test".into()
-        }
-    }
-
     #[tokio::test]
     async fn sending_to_invalid_email_fails() {
         let emails = Emails::new_in_memory();
 
         let address = "String.Format(\"{0}.{1}@live.com\", FirstName, LastName)";
-        assert_err!(emails.send(address, TestEmail).await);
+        let email = EmailMessage {
+            subject: "test".into(),
+            body_text: "test".into(),
+        };
+        assert_err!(emails.send(address, email).await);
     }
 
     #[tokio::test]
@@ -274,6 +266,10 @@ mod tests {
         let emails = Emails::new_in_memory();
 
         let address = "someone@example.com";
-        assert_ok!(emails.send(address, TestEmail).await);
+        let email = EmailMessage {
+            subject: "test".into(),
+            body_text: "test".into(),
+        };
+        assert_ok!(emails.send(address, email).await);
     }
 }
