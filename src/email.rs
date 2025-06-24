@@ -8,11 +8,90 @@ use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::transport::stub::AsyncStubTransport;
 use lettre::{Address, AsyncTransport, Message, Tokio1Executor};
+use minijinja::Environment;
 use rand::distr::{Alphanumeric, SampleString};
+use serde::Serialize;
+use std::sync::LazyLock;
+
+static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
+    let mut env = Environment::new();
+
+    // Load templates from each email directory
+    let entries = std::fs::read_dir("src/email/templates");
+    let entries = entries.expect("Failed to read email templates directory");
+
+    for entry in entries {
+        let entry = entry.expect("Failed to read directory entry");
+
+        let file_type = entry.file_type().expect("Failed to get file type");
+        if !file_type.is_dir() {
+            continue;
+        }
+
+        let dir_name = entry.file_name();
+        let email_name = dir_name.to_str();
+        let email_name = email_name.expect("Invalid UTF-8 in email template directory name");
+
+        // Load subject.txt.j2 file
+        let subject_path = entry.path().join("subject.txt.j2");
+        let subject_contents = std::fs::read_to_string(&subject_path).unwrap_or_else(|error| {
+            panic!("Failed to read subject template for {email_name}: {error}")
+        });
+        let filename = format!("{}/subject.txt.j2", email_name);
+        env.add_template_owned(filename, subject_contents)
+            .expect("Failed to add subject template");
+
+        // Load body.txt.j2 file
+        let body_path = entry.path().join("body.txt.j2");
+        let body_contents = std::fs::read_to_string(&body_path).unwrap_or_else(|error| {
+            panic!("Failed to read body template for {email_name}: {error}")
+        });
+        let filename = format!("{}/body.txt.j2", email_name);
+        env.add_template_owned(filename, body_contents)
+            .expect("Failed to add body template");
+    }
+
+    env
+});
+
+fn render_template(
+    template_name: &str,
+    context: impl Serialize,
+) -> Result<String, minijinja::Error> {
+    EMAIL_ENV.get_template(template_name)?.render(context)
+}
 
 pub trait Email {
     fn subject(&self) -> String;
     fn body(&self) -> String;
+}
+
+#[derive(Debug, Clone)]
+pub struct EmailMessage {
+    pub subject: String,
+    pub body_text: String,
+}
+
+impl EmailMessage {
+    pub fn from_template(
+        template_name: &str,
+        context: impl Serialize,
+    ) -> Result<Self, minijinja::Error> {
+        let subject = render_template(&format!("{}/subject.txt.j2", template_name), &context)?;
+        let body_text = render_template(&format!("{}/body.txt.j2", template_name), context)?;
+
+        Ok(EmailMessage { subject, body_text })
+    }
+}
+
+impl Email for EmailMessage {
+    fn subject(&self) -> String {
+        self.subject.clone()
+    }
+
+    fn body(&self) -> String {
+        self.body_text.clone()
+    }
 }
 
 #[derive(Debug, Clone)]
