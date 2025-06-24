@@ -81,4 +81,29 @@ module('Acceptance | crate versions page', function (hooks) {
       .hasNoClass(/.*latest/)
       .hasNoClass(/.yanked/);
   });
+
+  test('triggers a rebuild for crate documentation', async function (assert) {
+    let user = this.db.user.create();
+    this.authenticateAs(user);
+
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.crateOwnership.create({ crate, user });
+
+    this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+
+    await visit('/crates/nanomsg/versions');
+    assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
+
+    let versions = findAll('[data-test-version]').map(it => it.dataset.testVersion);
+    assert.deepEqual(versions, ['0.2.1', '0.3.0', '0.2.0', '0.1.0']);
+
+    await click('[data-test-version="0.2.1"] [data-test-actions-toggle]');
+    await click('[data-test-version="0.2.1"] [data-test-id="btn-rebuild-docs"]');
+
+    let message = 'Docs rebuild task was enqueued successfully!';
+    assert.dom('[data-test-notification-message="success"]').hasText(message);
+  });
 });
