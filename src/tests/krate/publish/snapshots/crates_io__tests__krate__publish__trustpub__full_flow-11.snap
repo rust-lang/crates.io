@@ -17,13 +17,13 @@ If you have questions or security concerns, you can contact us at help@crates.io
 
 To: foo@example.com
 From: crates.io <noreply@crates.io>
-Subject: crates.io: Trusted Publishing configration added to foo
+Subject: crates.io: Trusted Publishing configuration added to foo
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-crates.io user foo has added a new "Trusted Publishing" configuration for GitHub Actions to a crate that you manage (foo). Trusted publishers act as trusted users and can publish new versions of the crate automatically.
+crates.io user foo added a new "Trusted Publishing" configuration for GitHub Actions to a crate that you manage (foo). Trusted publishers act as trusted users and can publish new versions of the crate automatically.
 
 Trusted Publishing configuration:
 
