@@ -1,23 +1,26 @@
 use crate::app::AppState;
 use crate::email::Email;
 use crate::models::{ApiToken, User};
-use crate::schema::api_tokens;
+use crate::schema::{api_tokens, crate_owners, crates, emails};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
 use crate::util::token::HashedToken;
 use anyhow::{Context, anyhow};
 use axum::Json;
 use axum::body::Bytes;
 use base64::{Engine, engine::general_purpose};
+use crates_io_database::models::OwnerKind;
 use crates_io_database::schema::trustpub_tokens;
 use crates_io_github::GitHubPublicKey;
 use crates_io_trustpub::access_token::AccessToken;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use futures_util::TryStreamExt;
 use http::HeaderMap;
 use p256::PublicKey;
 use p256::ecdsa::VerifyingKey;
 use p256::ecdsa::signature::Verifier;
 use serde_json as json;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::str::FromStr;
 use std::sync::LazyLock;
 use std::time::Duration;
@@ -138,19 +141,31 @@ async fn alert_revoke_token(
     if let Ok(token) = alert.token.parse::<AccessToken>() {
         let hashed_token = token.sha256();
 
-        // Check if the token exists in the database
-        let deleted_count = diesel::delete(trustpub_tokens::table)
+        // Delete the token and return crate_ids for notifications
+        let crate_ids = diesel::delete(trustpub_tokens::table)
             .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
-            .execute(conn)
-            .await?;
+            .returning(trustpub_tokens::crate_ids)
+            .get_result::<Vec<Option<i32>>>(conn)
+            .await
+            .optional()?;
 
-        if deleted_count > 0 {
-        warn!("Active Trusted Publishing token received and revoked (true positive)");
-            return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
-        } else {
+        let Some(crate_ids) = crate_ids else {
             debug!("Unknown Trusted Publishing token received (false positive)");
             return Ok(GitHubSecretAlertFeedbackLabel::FalsePositive);
+        };
+
+        warn!("Active Trusted Publishing token received and revoked (true positive)");
+
+        // Send notification emails to all affected crate owners
+        let actual_crate_ids: Vec<i32> = crate_ids.into_iter().flatten().collect();
+        let result = send_trustpub_notification_emails(&actual_crate_ids, alert, state, conn).await;
+        if let Err(error) = result {
+            warn!(
+                "Failed to send trusted publishing token exposure notifications for crates {actual_crate_ids:?}: {error}",
+            );
         }
+
+        return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
     }
 
     // If not a Trusted Publishing token or not found, try as a regular API token
@@ -220,6 +235,71 @@ async fn send_notification_email(
     };
 
     state.emails.send(&recipient, email).await?;
+
+    Ok(())
+}
+
+async fn send_trustpub_notification_emails(
+    crate_ids: &[i32],
+    alert: &GitHubSecretAlert,
+    state: &AppState,
+    conn: &mut AsyncPgConnection,
+) -> anyhow::Result<()> {
+    // Build a mapping from crate_id to crate_name directly from the query
+    let crate_id_to_name: HashMap<i32, String> = crates::table
+        .select((crates::id, crates::name))
+        .filter(crates::id.eq_any(crate_ids))
+        .load_stream::<(i32, String)>(conn)
+        .await?
+        .try_fold(HashMap::new(), |mut map, (id, name)| {
+            map.insert(id, name);
+            std::future::ready(Ok(map))
+        })
+        .await
+        .context("Failed to query crate names")?;
+
+    // Then, get all verified owner emails for these crates
+    let owner_emails = crate_owners::table
+        .filter(crate_owners::crate_id.eq_any(crate_ids))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User)) // OwnerKind::User
+        .filter(crate_owners::deleted.eq(false))
+        .inner_join(emails::table.on(crate_owners::owner_id.eq(emails::user_id)))
+        .filter(emails::verified.eq(true))
+        .select((crate_owners::crate_id, emails::email))
+        .order((emails::email, crate_owners::crate_id))
+        .load::<(i32, String)>(conn)
+        .await
+        .context("Failed to query crate owners")?;
+
+    // Group by email address to send one notification per user
+    let mut notifications: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+
+    for (crate_id, email) in owner_emails {
+        if let Some(crate_name) = crate_id_to_name.get(&crate_id) {
+            notifications
+                .entry(email)
+                .or_default()
+                .insert(crate_name.clone());
+        }
+    }
+
+    // Send notifications in sorted order by email for consistent testing
+    for (email, crate_names) in notifications {
+        let email_template = TrustedPublishingTokenExposedEmail {
+            domain: &state.config.domain_name,
+            reporter: "GitHub",
+            source: &alert.source,
+            crate_names: &crate_names.iter().cloned().collect::<Vec<_>>(),
+            url: &alert.url,
+        };
+
+        if let Err(error) = state.emails.send(&email, email_template).await {
+            warn!(
+                %email, ?crate_names, ?error,
+                "Failed to send trusted publishing token exposure notification"
+            );
+        }
+    }
 
     Ok(())
 }
