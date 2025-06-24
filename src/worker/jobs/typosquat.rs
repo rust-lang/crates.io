@@ -5,9 +5,12 @@ use diesel_async::AsyncPgConnection;
 use typomania::Package;
 
 use crate::Emails;
-use crate::email::Email;
+use crate::email::EmailMessage;
 use crate::typosquat::{Cache, Crate};
 use crate::worker::Environment;
+use anyhow::Context;
+use minijinja::context;
+use tracing::{error, info};
 
 /// A job to check the name of a newly published crate against the most popular crates to see if
 /// the new crate might be typosquatting an existing, popular crate.
@@ -55,14 +58,25 @@ async fn check(
             // hopefully care to check into things more closely.
             info!(?squats, "Found potential typosquatting");
 
-            let email = PossibleTyposquatEmail {
-                domain: &emails.domain,
-                crate_name: name,
-                squats: &squats,
+            let squats_data: Vec<_> = squats
+                .iter()
+                .map(|squat| {
+                    context! {
+                        display => squat.to_string(),
+                        package => squat.package()
+                    }
+                })
+                .collect();
+
+            let email_context = context! {
+                domain => emails.domain,
+                crate_name => name,
+                squats => squats_data
             };
 
             for recipient in cache.iter_emails() {
-                if let Err(error) = emails.send(recipient, email.clone()).await {
+                if let Err(error) = send_notification_email(emails, recipient, &email_context).await
+                {
                     error!(
                         ?error,
                         ?recipient,
@@ -76,45 +90,18 @@ async fn check(
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-struct PossibleTyposquatEmail<'a> {
-    domain: &'a str,
-    crate_name: &'a str,
-    squats: &'a [typomania::checks::Squat],
-}
+async fn send_notification_email(
+    emails: &Emails,
+    recipient: &str,
+    context: &minijinja::Value,
+) -> anyhow::Result<()> {
+    let email = EmailMessage::from_template("possible_typosquat", context)
+        .context("Failed to render email template")?;
 
-impl Email for PossibleTyposquatEmail<'_> {
-    fn subject(&self) -> String {
-        format!(
-            "crates.io: Possible typosquatting in new crate \"{}\"",
-            self.crate_name
-        )
-    }
-
-    fn body(&self) -> String {
-        let squats = self
-            .squats
-            .iter()
-            .map(|squat| {
-                let domain = self.domain;
-                let crate_name = squat.package();
-                format!("- {squat} (https://{domain}/crates/{crate_name})\n")
-            })
-            .collect::<Vec<_>>()
-            .join("");
-
-        format!(
-            "New crate {crate_name} may be typosquatting one or more other crates.
-
-Visit https://{domain}/crates/{crate_name} to see the offending crate.
-
-Specific squat checks that triggered:
-
-{squats}",
-            domain = self.domain,
-            crate_name = self.crate_name,
-        )
-    }
+    emails
+        .send(recipient, email)
+        .await
+        .context("Failed to send email")
 }
 
 #[cfg(test)]
