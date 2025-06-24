@@ -21,7 +21,7 @@ env:
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.8.0
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 10.12.1
+  PNPM_VERSION: 10.12.2
   # renovate: datasource=docker depName=postgres
   POSTGRES_VERSION: 16
   # renovate: datasource=pypi depName=zizmor
