@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::authorization::Rights;
 use crate::controllers::krate::CratePath;
-use crate::email::Email;
+use crate::email::EmailMessage;
 use crate::models::NewDeletedCrate;
 use crate::schema::{crate_downloads, crates, dependencies};
 use crate::util::errors::{AppResult, BoxedAppError, custom};
@@ -18,6 +18,8 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
+use minijinja::context;
+use tracing::error;
 
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;
 const AVAILABLE_AFTER: TimeDelta = TimeDelta::hours(24);
@@ -147,10 +149,13 @@ pub async fn delete_crate(
 
     let email_future = async {
         if let Some(recipient) = user.email(&mut conn).await? {
-            let email = CrateDeletionEmail {
-                user: &user.gh_login,
-                krate: &crate_name,
-            };
+            let email = EmailMessage::from_template(
+                "crate_deletion",
+                context! {
+                    user => user.gh_login,
+                    krate => crate_name
+                },
+            )?;
 
             app.emails.send(&recipient, email).await?
         }
@@ -191,33 +196,6 @@ async fn has_rev_dep(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult
         .optional()?;
 
     Ok(rev_dep.is_some())
-}
-
-/// Email template for notifying a crate owner about a crate being deleted.
-///
-/// The owner usually should be aware of the deletion since they initiated it,
-/// but this email can be helpful in detecting malicious account activity.
-#[derive(Debug, Clone)]
-struct CrateDeletionEmail<'a> {
-    user: &'a str,
-    krate: &'a str,
-}
-
-impl Email for CrateDeletionEmail<'_> {
-    fn subject(&self) -> String {
-        format!("crates.io: Deleted \"{}\" crate", self.krate)
-    }
-
-    fn body(&self) -> String {
-        format!(
-            "Hi {},
-
-Your \"{}\" crate has been deleted, per your request.
-
-If you did not initiate this deletion, your account may have been compromised. Please contact us at help@crates.io.",
-            self.user, self.krate
-        )
-    }
 }
 
 #[cfg(test)]
