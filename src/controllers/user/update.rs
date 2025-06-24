@@ -70,15 +70,23 @@ pub async fn update_user(
                 let email_address = user.verified_email(&mut conn).await?;
 
                 if let Some(email_address) = email_address {
-                    let email = PublishNotificationsUnsubscribeEmail {
-                        user_name: &user.gh_login,
-                        domain: &state.emails.domain,
-                    };
+                    let email = EmailMessage::from_template(
+                        "unsubscribe_notifications",
+                        context! {
+                            user_name => user.gh_login,
+                            domain => state.emails.domain
+                        },
+                    );
 
-                    if let Err(error) = state.emails.send(&email_address, email).await {
-                        warn!(
-                            "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
-                        );
+                    match email {
+                        Ok(email) => {
+                            if let Err(error) = state.emails.send(&email_address, email).await {
+                                warn!(
+                                    "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
+                                );
+                            }
+                        }
+                        Err(error) => warn!("Failed to render unsubscribe email template: {error}"),
                     }
                 }
             }
@@ -128,26 +136,4 @@ pub async fn update_user(
     }
 
     Ok(OkResponse::new())
-}
-
-pub struct PublishNotificationsUnsubscribeEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-}
-
-impl crate::email::Email for PublishNotificationsUnsubscribeEmail<'_> {
-    fn subject(&self) -> String {
-        "crates.io: Unsubscribed from publish notifications".into()
-    }
-
-    fn body(&self) -> String {
-        let Self { user_name, domain } = self;
-        format!(
-            "Hello {user_name}!
-
-You have been unsubscribed from publish notifications.
-
-If you would like to resubscribe, please visit https://{domain}/settings/profile",
-        )
-    }
 }
