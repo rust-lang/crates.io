@@ -1,0 +1,13 @@
+{% if added_admins -%}
+Granted admin access:
+
+{% for admin in added_admins -%}
+- {{ admin }}
+{% endfor %}
+{% endif -%}
+{% if removed_admins -%}
+Revoked admin access:
+{% for admin in removed_admins -%}
+- {{ admin }}
+{% endfor -%}
+{% endif %}
