@@ -145,7 +145,7 @@ async fn alert_revoke_token(
             .await?;
 
         if deleted_count > 0 {
-            warn!("Active Trusted Publishing token received and revoked (true positive)");
+        warn!("Active Trusted Publishing token received and revoked (true positive)");
             return Ok(GitHubSecretAlertFeedbackLabel::TruePositive);
         } else {
             debug!("Unknown Trusted Publishing token received (false positive)");
@@ -259,6 +259,64 @@ Source type: {source}",
         } else {
             body.push_str(&format!("\n\nURL where the token was found: {}", self.url));
         }
+
+        body
+    }
+}
+
+struct TrustedPublishingTokenExposedEmail<'a> {
+    domain: &'a str,
+    reporter: &'a str,
+    source: &'a str,
+    crate_names: &'a [String],
+    url: &'a str,
+}
+
+impl Email for TrustedPublishingTokenExposedEmail<'_> {
+    fn subject(&self) -> String {
+        "crates.io: Your Trusted Publishing token has been revoked".to_string()
+    }
+
+    fn body(&self) -> String {
+        let authorization = if self.crate_names.len() == 1 {
+            format!(
+                "This token was only authorized to publish the \"{}\" crate.",
+                self.crate_names[0]
+            )
+        } else {
+            format!(
+                "This token was authorized to publish the following crates: \"{}\".",
+                self.crate_names.join("\", \"")
+            )
+        };
+
+        let mut body = format!(
+            "{reporter} has notified us that one of your crates.io Trusted Publishing tokens \
+has been exposed publicly. We have revoked this token as a precaution.
+
+{authorization}
+
+Please review your account at https://{domain} and your GitHub repository \
+settings to confirm that no unexpected changes have been made to your crates \
+or trusted publishing configurations.
+
+Source type: {source}",
+            domain = self.domain,
+            reporter = self.reporter,
+            source = self.source,
+        );
+
+        if self.url.is_empty() {
+            body.push_str("\n\nWe were not informed of the URL where the token was found.");
+        } else {
+            body.push_str(&format!("\n\nURL where the token was found: {}", self.url));
+        }
+
+        body.push_str(
+            "\n\nTrusted Publishing tokens are temporary and used for automated \
+publishing from GitHub Actions. If this exposure was unexpected, please review \
+your repository's workflow files and secrets.",
+        );
 
         body
     }
