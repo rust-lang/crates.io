@@ -16,7 +16,7 @@ pub struct ConfigCreatedEmail<'a> {
 impl Email for ConfigCreatedEmail<'_> {
     fn subject(&self) -> String {
         let Self { krate, .. } = self;
-        format!("crates.io: Trusted Publishing configration added to {krate}")
+        format!("crates.io: Trusted Publishing configuration added to {krate}")
     }
 
     fn body(&self) -> String {
@@ -33,7 +33,7 @@ impl Email for ConfigCreatedEmail<'_> {
         format!(
             "Hello {recipient}!
 
-crates.io user {user} has added a new \"Trusted Publishing\" configuration for GitHub Actions to a crate that you manage ({krate}). Trusted publishers act as trusted users and can publish new versions of the crate automatically.
+crates.io user {user} added a new \"Trusted Publishing\" configuration for GitHub Actions to a crate that you manage ({krate}). Trusted publishers act as trusted users and can publish new versions of the crate automatically.
 
 Trusted Publishing configuration:
 
@@ -65,7 +65,7 @@ pub struct ConfigDeletedEmail<'a> {
 impl Email for ConfigDeletedEmail<'_> {
     fn subject(&self) -> String {
         let Self { krate, .. } = self;
-        format!("crates.io: Trusted Publishing configration removed from {krate}")
+        format!("crates.io: Trusted Publishing configuration removed from {krate}")
     }
 
     fn body(&self) -> String {
@@ -82,7 +82,7 @@ impl Email for ConfigDeletedEmail<'_> {
         format!(
             "Hello {recipient}!
 
-crates.io user {user} has remove a \"Trusted Publishing\" configuration for GitHub Actions from a crate that you manage ({krate}).
+crates.io user {user} removed a \"Trusted Publishing\" configuration for GitHub Actions from a crate that you manage ({krate}).
 
 Trusted Publishing configuration:
 

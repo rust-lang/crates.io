@@ -4,13 +4,13 @@ expression: app.emails_snapshot().await
 ---
 To: foo@example.com
 From: crates.io <noreply@crates.io>
-Subject: crates.io: Trusted Publishing configration removed from foo
+Subject: crates.io: Trusted Publishing configuration removed from foo
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-crates.io user foo has remove a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage (foo).
+crates.io user foo removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage (foo).
 
 Trusted Publishing configuration:
 
