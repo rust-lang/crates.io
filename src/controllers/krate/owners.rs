@@ -11,7 +11,7 @@ use crate::models::{
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
-use crate::{auth::AuthCheck, email::Email};
+use crate::{auth::AuthCheck, email::EmailMessage};
 use axum::Json;
 use chrono::Utc;
 use crates_io_github::{GitHubClient, GitHubError};
@@ -20,9 +20,11 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
+use minijinja::context;
 use oauth2::AccessToken;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::ExposeSecret;
 use thiserror::Error;
+use tracing::warn;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct UsersResponse {
@@ -240,13 +242,20 @@ async fn modify_owners(
                                 if let Some(recipient) =
                                     invitee.verified_email(conn).await.ok().flatten()
                                 {
-                                    emails.push(OwnerInviteEmail {
-                                        recipient_email_address: recipient,
-                                        inviter: user.gh_login.clone(),
-                                        domain: app.emails.domain.clone(),
-                                        crate_name: krate.name.clone(),
-                                        token,
-                                    });
+                                    let email = EmailMessage::from_template(
+                                        "owner_invite",
+                                        context! {
+                                            inviter => user.gh_login,
+                                            domain => app.emails.domain,
+                                            crate_name => krate.name,
+                                            token => token.expose_secret()
+                                        },
+                                    );
+
+                                    match email {
+                                        Ok(email_msg) => emails.push((recipient, email_msg)),
+                                        Err(error) => warn!("Failed to render owner invite email template: {error}"),
+                                    }
                                 }
                             }
 
@@ -291,11 +300,9 @@ async fn modify_owners(
 
     // Send the accumulated invite emails now the database state has
     // committed.
-    for email in emails {
-        let addr = email.recipient_email_address().to_string();
-
-        if let Err(e) = app.emails.send(&addr, email).await {
-            warn!("Failed to send co-owner invite email: {e}");
+    for (recipient, email) in emails {
+        if let Err(error) = app.emails.send(&recipient, email).await {
+            warn!("Failed to send owner invite email to {recipient}: {error}");
         }
     }
 
@@ -501,43 +508,5 @@ impl From<OwnerRemoveError> for BoxedAppError {
                 bad_request(format!("could not find owner with login `{login}`"))
             }
         }
-    }
-}
-
-pub struct OwnerInviteEmail {
-    /// The destination email address for this email.
-    recipient_email_address: String,
-
-    /// Email body variables.
-    inviter: String,
-    domain: String,
-    crate_name: String,
-    token: SecretString,
-}
-
-impl OwnerInviteEmail {
-    pub fn recipient_email_address(&self) -> &str {
-        &self.recipient_email_address
-    }
-}
-
-impl Email for OwnerInviteEmail {
-    fn subject(&self) -> String {
-        format!(
-            "crates.io: Ownership invitation for \"{}\"",
-            self.crate_name
-        )
-    }
-
-    fn body(&self) -> String {
-        format!(
-            "{user_name} has invited you to become an owner of the crate {crate_name}!\n
-Visit https://{domain}/accept-invite/{token} to accept this invitation,
-or go to https://{domain}/me/pending-invites to manage all of your crate ownership invitations.",
-            user_name = self.inviter,
-            domain = self.domain,
-            crate_name = self.crate_name,
-            token = self.token.expose_secret(),
-        )
     }
 }
