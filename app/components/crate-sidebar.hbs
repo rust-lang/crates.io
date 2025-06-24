@@ -16,6 +16,16 @@
         <span local-class="purl-text">{{@version.purl}}</span>
         <Tooltip local-class="purl-tooltip"><strong>Package URL:</strong> {{@version.purl}} <small>(click to copy)</small></Tooltip>
       </CopyButton>
+      <a
+        href="https://github.com/package-url/purl-spec"
+        target="_blank"
+        rel="noopener noreferrer"
+        local-class="purl-help-link"
+        aria-label="Learn more"
+      >
+        {{svg-jar "circle-question"}}
+        <Tooltip @text="Learn more about Package URLs" />
+      </a>
     </div>
 
     <time

@@ -87,6 +87,26 @@
     }
 }
 
+.purl-help-link {
+    color: unset;
+    margin-left: var(--space-2xs);
+    flex-shrink: 0;
+
+    &:hover {
+        color: unset;
+    }
+
+    &:focus {
+        outline: 2px solid var(--yellow500);
+        outline-offset: 1px;
+        border-radius: var(--space-3xs);
+    }
+
+    svg {
+        margin: 0;
+    }
+}
+
 .links {
     > * + * {
         margin-top: var(--space-m);
