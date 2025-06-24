@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::email::Email;
+use crate::email::{Email, EmailMessage};
 use crate::models::{ApiToken, User};
 use crate::schema::{api_tokens, crate_owners, crates, emails};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
@@ -16,6 +16,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::TryStreamExt;
 use http::HeaderMap;
+use minijinja::context;
 use p256::PublicKey;
 use p256::ecdsa::VerifyingKey;
 use p256::ecdsa::signature::Verifier;
@@ -25,6 +26,7 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tokio::sync::Mutex;
+use tracing::warn;
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
 const PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours
@@ -226,13 +228,16 @@ async fn send_notification_email(
         return Err(anyhow!("No address found"));
     };
 
-    let email = TokenExposedEmail {
-        domain: &state.config.domain_name,
-        reporter: "GitHub",
-        source: &alert.source,
-        token_name: &token.name,
-        url: &alert.url,
-    };
+    let email = EmailMessage::from_template(
+        "token_exposed",
+        context! {
+            domain => state.config.domain_name,
+            reporter => "GitHub",
+            source => alert.source,
+            token_name => token.name,
+            url => if alert.url.is_empty() { "" } else { &alert.url }
+        },
+    )?;
 
     state.emails.send(&recipient, email).await?;
 
@@ -302,46 +307,6 @@ async fn send_trustpub_notification_emails(
     }
 
     Ok(())
-}
-
-struct TokenExposedEmail<'a> {
-    domain: &'a str,
-    reporter: &'a str,
-    source: &'a str,
-    token_name: &'a str,
-    url: &'a str,
-}
-
-impl Email for TokenExposedEmail<'_> {
-    fn subject(&self) -> String {
-        format!(
-            "crates.io: Your API token \"{}\" has been revoked",
-            self.token_name
-        )
-    }
-
-    fn body(&self) -> String {
-        let mut body = format!(
-            "{reporter} has notified us that your crates.io API token {token_name} \
-has been exposed publicly. We have revoked this token as a precaution.
-
-Please review your account at https://{domain} to confirm that no \
-unexpected changes have been made to your settings or crates.
-
-Source type: {source}",
-            domain = self.domain,
-            reporter = self.reporter,
-            source = self.source,
-            token_name = self.token_name,
-        );
-        if self.url.is_empty() {
-            body.push_str("\n\nWe were not informed of the URL where the token was found.");
-        } else {
-            body.push_str(&format!("\n\nURL where the token was found: {}", self.url));
-        }
-
-        body
-    }
 }
 
 struct TrustedPublishingTokenExposedEmail<'a> {
