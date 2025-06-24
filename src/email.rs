@@ -61,11 +61,6 @@ fn render_template(
     EMAIL_ENV.get_template(template_name)?.render(context)
 }
 
-pub trait Email {
-    fn subject(&self) -> String;
-    fn body(&self) -> String;
-}
-
 #[derive(Debug, Clone)]
 pub struct EmailMessage {
     pub subject: String,
@@ -81,16 +76,6 @@ impl EmailMessage {
         let body_text = render_template(&format!("{}/body.txt.j2", template_name), context)?;
 
         Ok(EmailMessage { subject, body_text })
-    }
-}
-
-impl Email for EmailMessage {
-    fn subject(&self) -> String {
-        self.subject.clone()
-    }
-
-    fn body(&self) -> String {
-        self.body_text.clone()
     }
 }
 
@@ -194,8 +179,8 @@ impl Emails {
         Ok(message)
     }
 
-    pub async fn send<E: Email>(&self, recipient: &str, email: E) -> Result<(), EmailError> {
-        let email = self.build_message(recipient, email.subject(), email.body())?;
+    pub async fn send(&self, recipient: &str, email: EmailMessage) -> Result<(), EmailError> {
+        let email = self.build_message(recipient, email.subject, email.body_text)?;
 
         self.backend
             .send(email)
