@@ -123,7 +123,7 @@
     dy: 60pt,
     block(height: 100% - header-height, inset: 35pt, clip: true, {
         // Crate name
-        block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width("{{ data.name }}")))
+        block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width("{{ data.name | typst_escape }}")))
 
         {% if data.tags -%}
         // Tags
@@ -131,25 +131,25 @@
         {%- if not loop.first %}
         h(3pt)
         {% endif -%}
-        render-tag(text(size: 8pt, weight: "medium")[\#{{ tag }}])
+        render-tag(text(size: 8pt, weight: "medium", "#{{ tag | typst_escape }}"))
         {%- endfor %}
         linebreak()
         {%- endif %}
 
         // Description
-        block(text(size: 14pt, weight: "regular", truncate_to_height("{{ data.description }}", maxHeight: 60pt)))
+        block(text(size: 14pt, weight: "regular", truncate_to_height("{{ data.description | typst_escape }}", maxHeight: 60pt)))
 
         // Authors
         {%- if data.authors %}
         set text(size: 10pt, fill: colors.text-light)
-        text[by {{ data.authors | map(attribute="name") | join(", ") }}]
+        text("by {{ data.authors | map(attribute="name") | map("typst_escape") | join(", ") }}")
         {%- endif %}
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
                 render-metadata("Releases", "{{ data.releases }}")
-                render-metadata("Latest", "{{ data.version }}")
-                render-metadata("License", "{{ data.license }}")
+                render-metadata("Latest", "{{ data.version | typst_escape }}")
+                render-metadata("License", "{{ data.license | typst_escape }}")
                 {%- if data.lines_of_code %}
                 render-metadata("SLoC", "{{ data.lines_of_code }}")
                 {%- endif %}
