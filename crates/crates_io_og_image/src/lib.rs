@@ -1,7 +1,16 @@
 //! OpenGraph image generation for crates.io
 
+use anyhow::anyhow;
 use crates_io_env_vars::var;
 use std::path::PathBuf;
+use tempfile::NamedTempFile;
+use tokio::process::Command;
+
+/// Data structure containing information needed to generate an OpenGraph image
+/// for a crates.io crate.
+pub struct OgImageData {
+    // Placeholder for now
+}
 
 /// Generator for creating OpenGraph images using the Typst typesetting system.
 ///
@@ -45,6 +54,55 @@ impl OgImageGenerator {
         } else {
             Ok(Self::default())
         }
+    }
+
+    /// Generates an OpenGraph image using the provided data.
+    ///
+    /// This method creates a temporary directory with all the necessary files
+    /// to create the OpenGraph image, compiles it to PNG using the Typst
+    /// binary, and returns the resulting image as a `NamedTempFile`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use crates_io_og_image::{OgImageGenerator, OgImageData};
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let generator = OgImageGenerator::default();
+    /// let data = OgImageData {};
+    /// let image_file = generator.generate(data).await?;
+    /// println!("Generated image at: {:?}", image_file.path());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn generate(&self, _data: OgImageData) -> anyhow::Result<NamedTempFile> {
+        // Create a temporary folder
+        let temp_dir = tempfile::tempdir()?;
+
+        // Create a basic og-image.typ file in the temporary folder
+        let typ_file_path = temp_dir.path().join("og-image.typ");
+        std::fs::write(&typ_file_path, "Hello World")?;
+
+        // Create a named temp file for the output PNG
+        let output_file = NamedTempFile::new()?;
+
+        // Run typst compile command
+        let output = Command::new(&self.typst_binary_path)
+            .arg("compile")
+            .arg("--format")
+            .arg("png")
+            .arg(&typ_file_path)
+            .arg(output_file.path())
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow!("typst compile failed: {stderr}"));
+        }
+
+        Ok(output_file)
     }
 }
 
