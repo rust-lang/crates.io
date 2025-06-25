@@ -30,6 +30,30 @@
 // These functions handle text overflow by adding ellipsis when content
 // exceeds specified dimensions
 
+// Truncates text to fit within a maximum height
+// @param text: The text content to truncate
+// @param maxHeight: Maximum height constraint (optional, defaults to single line height)
+#let truncate_to_height(text, maxHeight: none) = {
+    layout(size => {
+        let text = text
+
+        let maxHeight = if maxHeight != none {
+            maxHeight
+        } else {
+            measure(text).height
+        }
+
+        if measure(width: size.width, text).height <= maxHeight {
+            return text
+        } else {
+            while measure(width: size.width, text + "…").height > maxHeight {
+                text = text.slice(0, text.len() - 1).trim()
+            }
+            return text + "…"
+        }
+    })
+}
+
 // Truncates text to fit within a maximum width
 // @param text: The text content to truncate
 // @param maxWidth: Maximum width constraint (optional, defaults to container width)
@@ -113,7 +137,7 @@
         {%- endif %}
 
         // Description
-        block(text(size: 14pt)[{{ data.description }}])
+        block(text(size: 14pt, weight: "regular", truncate_to_height("{{ data.description }}", maxHeight: 60pt)))
 
         // Authors
         {%- if data.authors %}
