@@ -93,6 +93,16 @@ impl OgImageGenerator {
         }
     }
 
+    /// Generates the Typst template content from the provided data.
+    ///
+    /// This private method renders the Jinja2 template with the provided data
+    /// and returns the resulting Typst markup as a string.
+    fn generate_template(&self, data: OgImageData<'_>) -> anyhow::Result<String> {
+        let template = TEMPLATE_ENV.get_template("og-image.typ")?;
+        let rendered = template.render(context! { data })?;
+        Ok(rendered)
+    }
+
     /// Generates an OpenGraph image using the provided data.
     ///
     /// This method creates a temporary directory with all the necessary files
@@ -134,8 +144,7 @@ impl OgImageGenerator {
         std::fs::write(assets_dir.join("cargo.png"), cargo_logo)?;
 
         // Create og-image.typ file using minijinja template
-        let template = TEMPLATE_ENV.get_template("og-image.typ")?;
-        let rendered = template.render(context! { data })?;
+        let rendered = self.generate_template(data)?;
         let typ_file_path = temp_dir.path().join("og-image.typ");
         std::fs::write(&typ_file_path, rendered)?;
 
@@ -174,6 +183,38 @@ impl Default for OgImageGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_generate_template_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {
+            name: "example-crate",
+            version: "v2.1.0",
+            description: "A comprehensive example crate showcasing various OpenGraph features",
+            license: "MIT OR Apache-2.0",
+            tags: &["web", "api", "async", "json", "http"],
+            authors: &[
+                OgImageAuthorData {
+                    name: "alice",
+                    avatar: Some("avatar1.png"),
+                },
+                OgImageAuthorData {
+                    name: "bob",
+                    avatar: None,
+                },
+            ],
+            lines_of_code: Some(5500),
+            crate_size: 128,
+            releases: 15,
+        };
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        // Use insta to create a snapshot of the generated Typst template
+        insta::assert_snapshot!("generated_template.typ", template_content);
+    }
 
     #[tokio::test]
     async fn test_generate_og_image_snapshot() {
