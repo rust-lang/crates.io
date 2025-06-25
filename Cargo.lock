@@ -1600,6 +1600,8 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "crates_io_env_vars",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]
