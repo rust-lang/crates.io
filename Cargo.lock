@@ -1610,6 +1610,10 @@ dependencies = [
 [[package]]
 name = "crates_io_og_image"
 version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "crates_io_env_vars",
+]
 
 [[package]]
 name = "crates_io_pagerduty"

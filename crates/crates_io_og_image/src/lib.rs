@@ -1,5 +1,6 @@
 //! OpenGraph image generation for crates.io
 
+use crates_io_env_vars::var;
 use std::path::PathBuf;
 
 /// Generator for creating OpenGraph images using the Typst typesetting system.
@@ -23,6 +24,27 @@ impl OgImageGenerator {
     /// ```
     pub fn new(typst_binary_path: PathBuf) -> Self {
         Self { typst_binary_path }
+    }
+
+    /// Creates a new `OgImageGenerator` using the `TYPST_PATH` environment variable.
+    ///
+    /// If the `TYPST_PATH` environment variable is set, uses that path.
+    /// Otherwise, falls back to the default behavior (assumes "typst" is in PATH).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use crates_io_og_image::OgImageGenerator;
+    ///
+    /// let generator = OgImageGenerator::from_environment()?;
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
+    pub fn from_environment() -> anyhow::Result<Self> {
+        if let Some(path) = var("TYPST_PATH")? {
+            Ok(Self::new(PathBuf::from(path)))
+        } else {
+            Ok(Self::default())
+        }
     }
 }
 
