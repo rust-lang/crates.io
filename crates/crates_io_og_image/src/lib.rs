@@ -279,4 +279,86 @@ mod tests {
         // Use insta to create a binary snapshot of the generated PNG
         insta::assert_binary_snapshot!("generated_og_image.png", image_data);
     }
+
+    #[tokio::test]
+    async fn test_generate_og_image_overflow_snapshot() {
+        // Skip test if typst is not available
+        if std::process::Command::new("typst")
+            .arg("--version")
+            .output()
+            .is_err()
+        {
+            eprintln!("Skipping test: typst binary not found in PATH");
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {
+            name: "super-long-crate-name-for-testing-overflow-behavior",
+            version: "v2.1.0-beta.1+build.12345",
+            description: "This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design. This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design.",
+            license: "MIT/Apache-2.0/ISC/BSD-3-Clause",
+            tags: &[
+                "web-framework",
+                "async-runtime",
+                "database-orm",
+                "serialization",
+                "networking",
+            ],
+            authors: &[
+                OgImageAuthorData {
+                    name: "alice-wonderland",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "bob-the-builder",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "charlie-brown",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "diana-prince",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "edward-scissorhands",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "fiona-apple",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "george-washington",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "helen-keller",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "isaac-newton",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "jane-doe",
+                    avatar: None,
+                },
+            ],
+            lines_of_code: Some(147000),
+            crate_size: 2847,
+            releases: 1432,
+        };
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
+
+        // Use insta to create a binary snapshot of the generated PNG
+        insta::assert_binary_snapshot!("generated_og_image_overflow.png", image_data);
+    }
 }
