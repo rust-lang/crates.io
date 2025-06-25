@@ -29,8 +29,39 @@ expression: template_content
 #let header-height = 60pt
 
 // =============================================================================
+// TEXT TRUNCATION UTILITIES
+// =============================================================================
+// These functions handle text overflow by adding ellipsis when content
+// exceeds specified dimensions
+
+// Truncates text to fit within a maximum width
+// @param text: The text content to truncate
+// @param maxWidth: Maximum width constraint (optional, defaults to container width)
+#let truncate_to_width(text, maxWidth: none) = {
+    layout(size => {
+        let text = text
+
+        let maxWidth = if maxWidth != none {
+            maxWidth
+        } else {
+            size.width
+        }
+
+        if measure(text).width <= maxWidth {
+            return text
+        } else {
+            while measure(text + "…").width > maxWidth {
+                text = text.slice(0, text.len() - 1).trim()
+            }
+            return text + "…"
+        }
+    })
+}
+
+// =============================================================================
 // VISUAL COMPONENTS
 // =============================================================================
+// Reusable components for consistent styling
 
 #let render-header = {
     rect(width: 100%, height: header-height, fill: colors.header-bg, {
@@ -72,7 +103,7 @@ expression: template_content
     dy: 60pt,
     block(height: 100% - header-height, inset: 35pt, clip: true, {
         // Crate name
-        block(text(size: 36pt, weight: "semibold", fill: colors.primary)[example-crate])
+        block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width("example-crate")))
 
         // Tags
         render-tag(text(size: 8pt, weight: "medium")[\#web])
