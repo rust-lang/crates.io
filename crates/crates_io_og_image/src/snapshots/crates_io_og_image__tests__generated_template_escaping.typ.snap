@@ -147,8 +147,8 @@ expression: template_content
         place(bottom + left, float: true,
             stack(dir: ltr, {
                 render-metadata("Releases", "5")
-                render-metadata("Latest", "v1.0.0-\"beta\"")
-                render-metadata("License", "MIT OR \"Apache-2.0\"")
+                render-metadata("Latest", truncate_to_width("v1.0.0-\"beta\"", maxWidth: 80pt))
+                render-metadata("License", truncate_to_width("MIT OR \"Apache-2.0\"", maxWidth: 100pt))
                 render-metadata("SLoC", "42")
                 render-metadata("Size", "256 kB")
             })
