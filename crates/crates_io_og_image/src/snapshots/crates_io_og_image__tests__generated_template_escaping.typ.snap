@@ -105,10 +105,11 @@ expression: template_content
     )
 }
 
-// Renders a metadata item with title and content (without icon)
-#let render-metadata(title, content) = {
+// Renders a metadata item with icon, title, and content
+#let render-metadata(title, content, icon-name) = {
     box(inset: (right: 20pt),
-        grid(columns: (auto), rows: (auto, auto), row-gutter: .5em,
+        grid(columns: (auto, auto), rows: (auto, auto), column-gutter: .75em, row-gutter: .5em,
+            grid.cell(rowspan: 2, align: horizon, image("assets/" + icon-name + ".svg", height: 1.2em)),
             text(size: 8pt, fill: colors.text-light, upper(title)),
             text(size: 12pt, content)
         )
@@ -146,11 +147,11 @@ expression: template_content
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
-                render-metadata("Releases", "5")
-                render-metadata("Latest", truncate_to_width("v1.0.0-\"beta\"", maxWidth: 80pt))
-                render-metadata("License", truncate_to_width("MIT OR \"Apache-2.0\"", maxWidth: 100pt))
-                render-metadata("SLoC", "42")
-                render-metadata("Size", "256 kB")
+                render-metadata("Releases", "5", "tag")
+                render-metadata("Latest", truncate_to_width("v1.0.0-\"beta\"", maxWidth: 80pt), "code-branch")
+                render-metadata("License", truncate_to_width("MIT OR \"Apache-2.0\"", maxWidth: 100pt), "scale-balanced")
+                render-metadata("SLoC", "42", "code")
+                render-metadata("Size", "256 kB", "weight-hanging")
             })
         )
     })

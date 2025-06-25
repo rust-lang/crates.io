@@ -101,10 +101,11 @@
     )
 }
 
-// Renders a metadata item with title and content (without icon)
-#let render-metadata(title, content) = {
+// Renders a metadata item with icon, title, and content
+#let render-metadata(title, content, icon-name) = {
     box(inset: (right: 20pt),
-        grid(columns: (auto), rows: (auto, auto), row-gutter: .5em,
+        grid(columns: (auto, auto), rows: (auto, auto), column-gutter: .75em, row-gutter: .5em,
+            grid.cell(rowspan: 2, align: horizon, image("assets/" + icon-name + ".svg", height: 1.2em)),
             text(size: 8pt, fill: colors.text-light, upper(title)),
             text(size: 12pt, content)
         )
@@ -147,13 +148,13 @@
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
-                render-metadata("Releases", "{{ data.releases }}")
-                render-metadata("Latest", truncate_to_width("{{ data.version | typst_escape }}", maxWidth: 80pt))
-                render-metadata("License", truncate_to_width("{{ data.license | typst_escape }}", maxWidth: 100pt))
+                render-metadata("Releases", "{{ data.releases }}", "tag")
+                render-metadata("Latest", truncate_to_width("{{ data.version | typst_escape }}", maxWidth: 80pt), "code-branch")
+                render-metadata("License", truncate_to_width("{{ data.license | typst_escape }}", maxWidth: 100pt), "scale-balanced")
                 {%- if data.lines_of_code %}
-                render-metadata("SLoC", "{{ data.lines_of_code }}")
+                render-metadata("SLoC", "{{ data.lines_of_code }}", "code")
                 {%- endif %}
-                render-metadata("Size", "{{ data.crate_size }} kB")
+                render-metadata("Size", "{{ data.crate_size }} kB", "weight-hanging")
             })
         )
     })

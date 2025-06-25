@@ -146,11 +146,23 @@ impl OgImageGenerator {
         // Create a temporary folder
         let temp_dir = tempfile::tempdir()?;
 
-        // Create assets directory and copy logo
+        // Create assets directory and copy logo and icons
         let assets_dir = temp_dir.path().join("assets");
         std::fs::create_dir(&assets_dir)?;
         let cargo_logo = include_bytes!("../assets/cargo.png");
         std::fs::write(assets_dir.join("cargo.png"), cargo_logo)?;
+
+        // Copy SVG icons
+        let code_branch_svg = include_bytes!("../assets/code-branch.svg");
+        std::fs::write(assets_dir.join("code-branch.svg"), code_branch_svg)?;
+        let code_svg = include_bytes!("../assets/code.svg");
+        std::fs::write(assets_dir.join("code.svg"), code_svg)?;
+        let scale_balanced_svg = include_bytes!("../assets/scale-balanced.svg");
+        std::fs::write(assets_dir.join("scale-balanced.svg"), scale_balanced_svg)?;
+        let tag_svg = include_bytes!("../assets/tag.svg");
+        std::fs::write(assets_dir.join("tag.svg"), tag_svg)?;
+        let weight_hanging_svg = include_bytes!("../assets/weight-hanging.svg");
+        std::fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg)?;
 
         // Create og-image.typ file using minijinja template
         let rendered = self.generate_template(data)?;
