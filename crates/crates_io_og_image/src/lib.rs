@@ -25,3 +25,13 @@ impl OgImageGenerator {
         Self { typst_binary_path }
     }
 }
+
+impl Default for OgImageGenerator {
+    /// Creates a default `OgImageGenerator` that assumes the Typst binary is available
+    /// as "typst" in the system PATH.
+    fn default() -> Self {
+        Self {
+            typst_binary_path: PathBuf::from("typst"),
+        }
+    }
+}
