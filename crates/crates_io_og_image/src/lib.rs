@@ -115,3 +115,33 @@ impl Default for OgImageGenerator {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_generate_og_image_snapshot() {
+        // Skip test if typst is not available
+        if std::process::Command::new("typst")
+            .arg("--version")
+            .output()
+            .is_err()
+        {
+            eprintln!("Skipping test: typst binary not found in PATH");
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {};
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
+
+        // Use insta to create a binary snapshot of the generated PNG
+        insta::assert_binary_snapshot!("generated_og_image.png", image_data);
+    }
+}
