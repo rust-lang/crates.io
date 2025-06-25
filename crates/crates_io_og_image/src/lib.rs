@@ -9,3 +9,19 @@ use std::path::PathBuf;
 pub struct OgImageGenerator {
     typst_binary_path: PathBuf,
 }
+
+impl OgImageGenerator {
+    /// Creates a new `OgImageGenerator` with the specified path to the Typst binary.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::PathBuf;
+    /// use crates_io_og_image::OgImageGenerator;
+    ///
+    /// let generator = OgImageGenerator::new(PathBuf::from("/usr/local/bin/typst"));
+    /// ```
+    pub fn new(typst_binary_path: PathBuf) -> Self {
+        Self { typst_binary_path }
+    }
+}
