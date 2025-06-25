@@ -2,13 +2,23 @@
 
 use anyhow::anyhow;
 use crates_io_env_vars::var;
+use minijinja::{Environment, context};
+use serde::Serialize;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 use tempfile::NamedTempFile;
 use tokio::process::Command;
 
+static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
+    let mut env = Environment::new();
+    let template_str = include_str!("../templates/og-image.typ.j2");
+    env.add_template("og-image.typ", template_str).unwrap();
+    env
+});
+
 /// Data structure containing information needed to generate an OpenGraph image
 /// for a crates.io crate.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct OgImageData<'a> {
     /// The crate name
     pub name: &'a str,
@@ -31,7 +41,7 @@ pub struct OgImageData<'a> {
 }
 
 /// Author information for OpenGraph image generation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct OgImageAuthorData<'a> {
     /// Author username/name
     pub name: &'a str,
@@ -117,23 +127,11 @@ impl OgImageGenerator {
         // Create a temporary folder
         let temp_dir = tempfile::tempdir()?;
 
-        // Create basic og-image.typ file with the data
+        // Create og-image.typ file using minijinja template
+        let template = TEMPLATE_ENV.get_template("og-image.typ")?;
+        let rendered = template.render(context! { data })?;
         let typ_file_path = temp_dir.path().join("og-image.typ");
-        let dummy_content = format!(
-            "= {}\n\nVersion: {}\n\n{}\n\nLicense: {}\n\nTags: {}\n\nAuthors: {}\n\nReleases: {}",
-            data.name,
-            data.version,
-            data.description,
-            data.license,
-            data.tags.join(", "),
-            data.authors
-                .iter()
-                .map(|a| a.name)
-                .collect::<Vec<_>>()
-                .join(", "),
-            data.releases
-        );
-        std::fs::write(&typ_file_path, dummy_content)?;
+        std::fs::write(&typ_file_path, rendered)?;
 
         // Create a named temp file for the output PNG
         let output_file = NamedTempFile::new()?;

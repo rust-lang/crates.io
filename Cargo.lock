@@ -1614,6 +1614,8 @@ dependencies = [
  "anyhow",
  "crates_io_env_vars",
  "insta",
+ "minijinja",
+ "serde",
  "tempfile",
  "tokio",
 ]
