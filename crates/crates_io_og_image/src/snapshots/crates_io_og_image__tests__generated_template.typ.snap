@@ -1,0 +1,121 @@
+---
+source: crates/crates_io_og_image/src/lib.rs
+expression: template_content
+---
+// =============================================================================
+// CRATES.IO OG-IMAGE TEMPLATE
+// =============================================================================
+// This template generates Open Graph images for crates.io crate.
+
+// =============================================================================
+// COLOR PALETTE
+// =============================================================================
+#let colors = (
+    bg: oklch(97%, 0.0147, 98deg),
+    header-bg: oklch(36%, 0.07, 144deg),
+    header-text: oklch(100%, 0, 0deg),
+    primary: oklch(36%, 0.07, 144deg),
+    text: oklch(51%, 0.05, 144deg),
+    tag-bg: oklch(36%, 0.07, 144deg),
+    tag-text: oklch(100%, 0, 0deg),
+)
+
+// =============================================================================
+// LAYOUT CONSTANTS
+// =============================================================================
+#let header-height = 60pt
+
+// =============================================================================
+// VISUAL COMPONENTS
+// =============================================================================
+
+#let render-header = {
+    rect(width: 100%, height: header-height, fill: colors.header-bg, {
+        place(left + horizon, dx: 30pt, {
+            box(baseline: 30%, image("assets/cargo.png", width: 35pt))
+            h(10pt)
+            text(size: 22pt, fill: colors.header-text, weight: "semibold")[crates.io]
+        })
+    })
+}
+
+// Renders a tag/keyword with consistent styling
+#let render-tag(content) = {
+    set text(fill: colors.tag-text)
+    box(fill: colors.tag-bg, radius: .15em, inset: (x: .4em, y: .25em),
+        content
+    )
+}
+
+#set page(width: 600pt, height: 315pt, margin: 0pt, fill: colors.bg)
+#set text(font: "Fira Sans", fill: colors.text)
+
+// Header with crates.io branding
+#render-header
+
+// Main content area
+#place(
+    left + top,
+    dy: 60pt,
+    block(height: 100% - header-height, inset: 35pt, clip: true, {
+        // Crate name
+        block(text(size: 36pt, weight: "semibold", fill: colors.primary)[example-crate])
+
+        // Version
+        text(size: 14pt)[Version: v2.1.0]
+        linebreak()
+
+        // Tags
+        
+        
+        
+        render-tag(text(size: 8pt, weight: "medium")[\#web])
+        
+        
+        h(3pt)
+        
+        render-tag(text(size: 8pt, weight: "medium")[\#api])
+        
+        
+        h(3pt)
+        
+        render-tag(text(size: 8pt, weight: "medium")[\#async])
+        
+        
+        h(3pt)
+        
+        render-tag(text(size: 8pt, weight: "medium")[\#json])
+        
+        
+        h(3pt)
+        
+        render-tag(text(size: 8pt, weight: "medium")[\#http])
+        
+        linebreak()
+        
+
+        // Description
+        block(text(size: 14pt)[A comprehensive example crate showcasing various OpenGraph features])
+
+        // License
+        text(size: 12pt)[License: MIT OR Apache-2.0]
+        linebreak()
+
+        // Authors
+        text(size: 12pt)[Authors: alice, bob]
+        linebreak()
+
+        // Releases
+        text(size: 12pt)[Releases: 15]
+        linebreak()
+
+        
+        // Lines of Code
+        text(size: 12pt)[Lines of Code: 5500]
+        linebreak()
+        
+
+        // Size
+        text(size: 12pt)[Size: 128 KB]
+    })
+)
