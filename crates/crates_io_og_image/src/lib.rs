@@ -11,6 +11,15 @@ use tokio::process::Command;
 
 static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
     let mut env = Environment::new();
+
+    // Add custom filter for escaping Typst special characters
+    env.add_filter("typst_escape", |value: String| -> String {
+        value
+            .replace('\\', "\\\\") // Escape backslashes first
+            .replace('"', "\\\"") // Escape double quotes
+        // Note: No need to escape # characters when inside double-quoted strings
+    });
+
     let template_str = include_str!("../templates/og-image.typ.j2");
     env.add_template("og-image.typ", template_str).unwrap();
     env
@@ -242,6 +251,46 @@ mod tests {
         insta::assert_snapshot!("generated_template_minimal.typ", template_content);
     }
 
+    #[test]
+    fn test_generate_template_escaping_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {
+            name: "crate-with-\"quotes\"",
+            version: "v1.0.0-\"beta\"",
+            description: "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
+            license: "MIT OR \"Apache-2.0\"",
+            tags: &[
+                "tag-with-\"quotes\"",
+                "tag\\with\\backslashes",
+                "tag#with#symbols",
+            ],
+            authors: &[
+                OgImageAuthorData {
+                    name: "author \"with quotes\"",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "author\\with\\backslashes",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "author#with#hashes",
+                    avatar: None,
+                },
+            ],
+            lines_of_code: Some(42),
+            crate_size: 256,
+            releases: 5,
+        };
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        // Use insta to create a snapshot of the generated Typst template
+        insta::assert_snapshot!("generated_template_escaping.typ", template_content);
+    }
+
     #[tokio::test]
     async fn test_generate_og_image_snapshot() {
         // Skip test if typst is not available
@@ -360,5 +409,57 @@ mod tests {
 
         // Use insta to create a binary snapshot of the generated PNG
         insta::assert_binary_snapshot!("generated_og_image_overflow.png", image_data);
+    }
+
+    #[tokio::test]
+    async fn test_generate_og_image_escaping_snapshot() {
+        // Skip test if typst is not available
+        if std::process::Command::new("typst")
+            .arg("--version")
+            .output()
+            .is_err()
+        {
+            eprintln!("Skipping test: typst binary not found in PATH");
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {
+            name: "crate-with-\"quotes\"",
+            version: "v1.0.0-\"beta\"",
+            description: "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
+            license: "MIT OR \"Apache-2.0\"",
+            tags: &[
+                "tag-with-\"quotes\"",
+                "tag\\with\\backslashes",
+                "tag#with#symbols",
+            ],
+            authors: &[
+                OgImageAuthorData {
+                    name: "author \"with quotes\"",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "author\\with\\backslashes",
+                    avatar: None,
+                },
+                OgImageAuthorData {
+                    name: "author#with#hashes",
+                    avatar: None,
+                },
+            ],
+            lines_of_code: Some(42),
+            crate_size: 256,
+            releases: 5,
+        };
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
+
+        // Use insta to create a binary snapshot of the generated PNG
+        insta::assert_binary_snapshot!("generated_og_image_escaping.png", image_data);
     }
 }

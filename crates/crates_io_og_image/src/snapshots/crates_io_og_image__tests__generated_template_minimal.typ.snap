@@ -136,7 +136,7 @@ expression: template_content
 
         // Authors
         set text(size: 10pt, fill: colors.text-light)
-        text[by author]
+        text("by author")
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
