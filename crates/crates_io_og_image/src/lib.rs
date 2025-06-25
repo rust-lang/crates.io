@@ -216,6 +216,32 @@ mod tests {
         insta::assert_snapshot!("generated_template.typ", template_content);
     }
 
+    #[test]
+    fn test_generate_template_minimal_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = OgImageData {
+            name: "minimal-crate",
+            version: "v1.0.0",
+            description: "A minimal crate",
+            license: "MIT",
+            tags: &[],
+            authors: &[OgImageAuthorData {
+                name: "author",
+                avatar: None,
+            }],
+            lines_of_code: None,
+            crate_size: 10,
+            releases: 1,
+        };
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        // Use insta to create a snapshot of the generated Typst template
+        insta::assert_snapshot!("generated_template_minimal.typ", template_content);
+    }
+
     #[tokio::test]
     async fn test_generate_og_image_snapshot() {
         // Skip test if typst is not available
