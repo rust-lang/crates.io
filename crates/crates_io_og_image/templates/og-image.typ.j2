@@ -25,6 +25,8 @@
 #let render-header = {
     rect(width: 100%, height: header-height, fill: colors.header-bg, {
         place(left + horizon, dx: 30pt, {
+            box(baseline: 30%, image("assets/cargo.png", width: 35pt))
+            h(10pt)
             text(size: 22pt, fill: colors.header-text, weight: "semibold")[crates.io]
         })
     })

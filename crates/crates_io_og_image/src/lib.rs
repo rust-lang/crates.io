@@ -127,6 +127,12 @@ impl OgImageGenerator {
         // Create a temporary folder
         let temp_dir = tempfile::tempdir()?;
 
+        // Create assets directory and copy logo
+        let assets_dir = temp_dir.path().join("assets");
+        std::fs::create_dir(&assets_dir)?;
+        let cargo_logo = include_bytes!("../assets/cargo.png");
+        std::fs::write(assets_dir.join("cargo.png"), cargo_logo)?;
+
         // Create og-image.typ file using minijinja template
         let template = TEMPLATE_ENV.get_template("og-image.typ")?;
         let rendered = template.render(context! { data })?;
