@@ -193,10 +193,8 @@ impl Default for OgImageGenerator {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_generate_template_snapshot() {
-        let generator = OgImageGenerator::default();
-        let data = OgImageData {
+    fn create_standard_test_data() -> OgImageData<'static> {
+        OgImageData {
             name: "example-crate",
             version: "v2.1.0",
             description: "A comprehensive example crate showcasing various OpenGraph features",
@@ -215,20 +213,11 @@ mod tests {
             lines_of_code: Some(5500),
             crate_size: 128,
             releases: 15,
-        };
-
-        let template_content = generator
-            .generate_template(data)
-            .expect("Failed to generate template");
-
-        // Use insta to create a snapshot of the generated Typst template
-        insta::assert_snapshot!("generated_template.typ", template_content);
+        }
     }
 
-    #[test]
-    fn test_generate_template_minimal_snapshot() {
-        let generator = OgImageGenerator::default();
-        let data = OgImageData {
+    fn create_minimal_test_data() -> OgImageData<'static> {
+        OgImageData {
             name: "minimal-crate",
             version: "v1.0.0",
             description: "A minimal crate",
@@ -241,20 +230,11 @@ mod tests {
             lines_of_code: None,
             crate_size: 10,
             releases: 1,
-        };
-
-        let template_content = generator
-            .generate_template(data)
-            .expect("Failed to generate template");
-
-        // Use insta to create a snapshot of the generated Typst template
-        insta::assert_snapshot!("generated_template_minimal.typ", template_content);
+        }
     }
 
-    #[test]
-    fn test_generate_template_escaping_snapshot() {
-        let generator = OgImageGenerator::default();
-        let data = OgImageData {
+    fn create_escaping_test_data() -> OgImageData<'static> {
+        OgImageData {
             name: "crate-with-\"quotes\"",
             version: "v1.0.0-\"beta\"",
             description: "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
@@ -281,68 +261,11 @@ mod tests {
             lines_of_code: Some(42),
             crate_size: 256,
             releases: 5,
-        };
-
-        let template_content = generator
-            .generate_template(data)
-            .expect("Failed to generate template");
-
-        // Use insta to create a snapshot of the generated Typst template
-        insta::assert_snapshot!("generated_template_escaping.typ", template_content);
+        }
     }
 
-    #[tokio::test]
-    async fn test_generate_og_image_snapshot() {
-        // Skip test if typst is not available
-        if std::process::Command::new("typst")
-            .arg("--version")
-            .output()
-            .is_err()
-        {
-            eprintln!("Skipping test: typst binary not found in PATH");
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
-        let data = OgImageData {
-            name: "test-crate",
-            version: "v1.0.0",
-            description: "A test crate for OpenGraph image generation",
-            license: "MIT/Apache-2.0",
-            tags: &["testing", "og-image"],
-            authors: &[OgImageAuthorData {
-                name: "test-user",
-                avatar: None,
-            }],
-            lines_of_code: Some(1000),
-            crate_size: 42,
-            releases: 1,
-        };
-
-        let temp_file = generator
-            .generate(data)
-            .await
-            .expect("Failed to generate image");
-        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
-
-        // Use insta to create a binary snapshot of the generated PNG
-        insta::assert_binary_snapshot!("generated_og_image.png", image_data);
-    }
-
-    #[tokio::test]
-    async fn test_generate_og_image_overflow_snapshot() {
-        // Skip test if typst is not available
-        if std::process::Command::new("typst")
-            .arg("--version")
-            .output()
-            .is_err()
-        {
-            eprintln!("Skipping test: typst binary not found in PATH");
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
-        let data = OgImageData {
+    fn create_overflow_test_data() -> OgImageData<'static> {
+        OgImageData {
             name: "super-long-crate-name-for-testing-overflow-behavior",
             version: "v2.1.0-beta.1+build.12345",
             description: "This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design. This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design.",
@@ -399,7 +322,99 @@ mod tests {
             lines_of_code: Some(147000),
             crate_size: 2847,
             releases: 1432,
-        };
+        }
+    }
+
+    fn create_simple_test_data() -> OgImageData<'static> {
+        OgImageData {
+            name: "test-crate",
+            version: "v1.0.0",
+            description: "A test crate for OpenGraph image generation",
+            license: "MIT/Apache-2.0",
+            tags: &["testing", "og-image"],
+            authors: &[OgImageAuthorData {
+                name: "test-user",
+                avatar: None,
+            }],
+            lines_of_code: Some(1000),
+            crate_size: 42,
+            releases: 1,
+        }
+    }
+
+    fn skip_if_typst_unavailable() -> bool {
+        std::process::Command::new("typst")
+            .arg("--version")
+            .output()
+            .inspect_err(|_| {
+                eprintln!("Skipping test: typst binary not found in PATH");
+            })
+            .is_err()
+    }
+
+    #[test]
+    fn test_generate_template_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = create_standard_test_data();
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        insta::assert_snapshot!("generated_template.typ", template_content);
+    }
+
+    #[test]
+    fn test_generate_template_minimal_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = create_minimal_test_data();
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        insta::assert_snapshot!("generated_template_minimal.typ", template_content);
+    }
+
+    #[test]
+    fn test_generate_template_escaping_snapshot() {
+        let generator = OgImageGenerator::default();
+        let data = create_escaping_test_data();
+
+        let template_content = generator
+            .generate_template(data)
+            .expect("Failed to generate template");
+
+        insta::assert_snapshot!("generated_template_escaping.typ", template_content);
+    }
+
+    #[tokio::test]
+    async fn test_generate_og_image_snapshot() {
+        if skip_if_typst_unavailable() {
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = create_simple_test_data();
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
+
+        // Use insta to create a binary snapshot of the generated PNG
+        insta::assert_binary_snapshot!("generated_og_image.png", image_data);
+    }
+
+    #[tokio::test]
+    async fn test_generate_og_image_overflow_snapshot() {
+        if skip_if_typst_unavailable() {
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = create_overflow_test_data();
 
         let temp_file = generator
             .generate(data)
@@ -413,45 +428,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_escaping_snapshot() {
-        // Skip test if typst is not available
-        if std::process::Command::new("typst")
-            .arg("--version")
-            .output()
-            .is_err()
-        {
-            eprintln!("Skipping test: typst binary not found in PATH");
+        if skip_if_typst_unavailable() {
             return;
         }
 
         let generator = OgImageGenerator::default();
-        let data = OgImageData {
-            name: "crate-with-\"quotes\"",
-            version: "v1.0.0-\"beta\"",
-            description: "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
-            license: "MIT OR \"Apache-2.0\"",
-            tags: &[
-                "tag-with-\"quotes\"",
-                "tag\\with\\backslashes",
-                "tag#with#symbols",
-            ],
-            authors: &[
-                OgImageAuthorData {
-                    name: "author \"with quotes\"",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "author\\with\\backslashes",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "author#with#hashes",
-                    avatar: None,
-                },
-            ],
-            lines_of_code: Some(42),
-            crate_size: 256,
-            releases: 5,
-        };
+        let data = create_escaping_test_data();
 
         let temp_file = generator
             .generate(data)
