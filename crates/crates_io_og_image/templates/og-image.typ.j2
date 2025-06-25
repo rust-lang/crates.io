@@ -6,6 +6,7 @@
 // =============================================================================
 // COLOR PALETTE
 // =============================================================================
+
 #let colors = (
     bg: oklch(97%, 0.0147, 98deg),
     header-bg: oklch(36%, 0.07, 144deg),
@@ -19,6 +20,7 @@
 // =============================================================================
 // LAYOUT CONSTANTS
 // =============================================================================
+
 #let header-height = 60pt
 
 // =============================================================================
@@ -62,15 +64,15 @@
         linebreak()
 
         // Tags
-        {% if data.tags %}
-        {% for tag in data.tags %}
-        {% if not loop.first %}
+        {% if data.tags -%}
+        {%- for tag in data.tags -%}
+        {%- if not loop.first %}
         h(3pt)
-        {% endif %}
+        {% endif -%}
         render-tag(text(size: 8pt, weight: "medium")[\#{{ tag }}])
-        {% endfor %}
+        {%- endfor %}
         linebreak()
-        {% endif %}
+        {%- endif %}
 
         // Description
         block(text(size: 14pt)[{{ data.description }}])
@@ -87,11 +89,11 @@
         text(size: 12pt)[Releases: {{ data.releases }}]
         linebreak()
 
-        {% if data.lines_of_code %}
+        {% if data.lines_of_code -%}
         // Lines of Code
         text(size: 12pt)[Lines of Code: {{ data.lines_of_code }}]
         linebreak()
-        {% endif %}
+        {%- endif %}
 
         // Size
         text(size: 12pt)[Size: {{ data.crate_size }} KB]

@@ -10,6 +10,7 @@ expression: template_content
 // =============================================================================
 // COLOR PALETTE
 // =============================================================================
+
 #let colors = (
     bg: oklch(97%, 0.0147, 98deg),
     header-bg: oklch(36%, 0.07, 144deg),
@@ -23,6 +24,7 @@ expression: template_content
 // =============================================================================
 // LAYOUT CONSTANTS
 // =============================================================================
+
 #let header-height = 60pt
 
 // =============================================================================
@@ -66,33 +68,16 @@ expression: template_content
         linebreak()
 
         // Tags
-        
-        
-        
         render-tag(text(size: 8pt, weight: "medium")[\#web])
-        
-        
         h(3pt)
-        
         render-tag(text(size: 8pt, weight: "medium")[\#api])
-        
-        
         h(3pt)
-        
         render-tag(text(size: 8pt, weight: "medium")[\#async])
-        
-        
         h(3pt)
-        
         render-tag(text(size: 8pt, weight: "medium")[\#json])
-        
-        
         h(3pt)
-        
         render-tag(text(size: 8pt, weight: "medium")[\#http])
-        
         linebreak()
-        
 
         // Description
         block(text(size: 14pt)[A comprehensive example crate showcasing various OpenGraph features])
@@ -109,11 +94,9 @@ expression: template_content
         text(size: 12pt)[Releases: 15]
         linebreak()
 
-        
         // Lines of Code
         text(size: 12pt)[Lines of Code: 5500]
         linebreak()
-        
 
         // Size
         text(size: 12pt)[Size: 128 KB]
