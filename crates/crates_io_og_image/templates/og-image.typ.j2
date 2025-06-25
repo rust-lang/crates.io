@@ -13,6 +13,7 @@
     header-text: oklch(100%, 0, 0deg),
     primary: oklch(36%, 0.07, 144deg),
     text: oklch(51%, 0.05, 144deg),
+    text-light: oklch(60%, 0.05, 144deg),
     tag-bg: oklch(36%, 0.07, 144deg),
     tag-text: oklch(100%, 0, 0deg),
 )
@@ -42,6 +43,16 @@
     set text(fill: colors.tag-text)
     box(fill: colors.tag-bg, radius: .15em, inset: (x: .4em, y: .25em),
         content
+    )
+}
+
+// Renders a metadata item with title and content (without icon)
+#let render-metadata(title, content) = {
+    box(inset: (right: 20pt),
+        grid(columns: (auto), rows: (auto, auto), row-gutter: .5em,
+            text(size: 8pt, fill: colors.text-light, upper(title)),
+            text(size: 12pt, content)
+        )
     )
 }
 
@@ -77,25 +88,22 @@
         // Description
         block(text(size: 14pt)[{{ data.description }}])
 
-        // License
-        text(size: 12pt)[License: {{ data.license }}]
-        linebreak()
-
         // Authors
-        text(size: 12pt)[Authors: {{ data.authors | map(attribute="name") | join(", ") }}]
-        linebreak()
-
-        // Releases
-        text(size: 12pt)[Releases: {{ data.releases }}]
-        linebreak()
-
-        {% if data.lines_of_code -%}
-        // Lines of Code
-        text(size: 12pt)[Lines of Code: {{ data.lines_of_code }}]
-        linebreak()
+        {%- if data.authors %}
+        set text(size: 10pt, fill: colors.text-light)
+        text[by {{ data.authors | map(attribute="name") | join(", ") }}]
         {%- endif %}
 
-        // Size
-        text(size: 12pt)[Size: {{ data.crate_size }} KB]
+        place(bottom + left, float: true,
+            stack(dir: ltr, {
+                render-metadata("Releases", "{{ data.releases }}")
+                render-metadata("Latest", "{{ data.version }}")
+                render-metadata("License", "{{ data.license }}")
+                {%- if data.lines_of_code %}
+                render-metadata("SLoC", "{{ data.lines_of_code }}")
+                {%- endif %}
+                render-metadata("Size", "{{ data.crate_size }} kB")
+            })
+        )
     })
 )
