@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::email::{Email, EmailMessage};
+use crate::email::EmailMessage;
 use crate::models::{ApiToken, User};
 use crate::schema::{api_tokens, crate_owners, crates, emails};
 use crate::util::errors::{AppResult, BoxedAppError, bad_request};
@@ -290,12 +290,24 @@ async fn send_trustpub_notification_emails(
 
     // Send notifications in sorted order by email for consistent testing
     for (email, crate_names) in notifications {
-        let email_template = TrustedPublishingTokenExposedEmail {
-            domain: &state.config.domain_name,
-            reporter: "GitHub",
-            source: &alert.source,
-            crate_names: &crate_names.iter().cloned().collect::<Vec<_>>(),
-            url: &alert.url,
+        let message = EmailMessage::from_template(
+            "trustpub_token_exposed",
+            context! {
+                domain => state.config.domain_name,
+                reporter => "GitHub",
+                source => alert.source,
+                crate_names,
+                url => alert.url
+            },
+        );
+
+        let Ok(email_template) = message.inspect_err(|error| {
+            warn!(
+                %email, ?crate_names, ?error,
+                "Failed to create trusted publishing token exposure email template"
+            );
+        }) else {
+            continue;
         };
 
         if let Err(error) = state.emails.send(&email, email_template).await {
@@ -307,64 +319,6 @@ async fn send_trustpub_notification_emails(
     }
 
     Ok(())
-}
-
-struct TrustedPublishingTokenExposedEmail<'a> {
-    domain: &'a str,
-    reporter: &'a str,
-    source: &'a str,
-    crate_names: &'a [String],
-    url: &'a str,
-}
-
-impl Email for TrustedPublishingTokenExposedEmail<'_> {
-    fn subject(&self) -> String {
-        "crates.io: Your Trusted Publishing token has been revoked".to_string()
-    }
-
-    fn body(&self) -> String {
-        let authorization = if self.crate_names.len() == 1 {
-            format!(
-                "This token was only authorized to publish the \"{}\" crate.",
-                self.crate_names[0]
-            )
-        } else {
-            format!(
-                "This token was authorized to publish the following crates: \"{}\".",
-                self.crate_names.join("\", \"")
-            )
-        };
-
-        let mut body = format!(
-            "{reporter} has notified us that one of your crates.io Trusted Publishing tokens \
-has been exposed publicly. We have revoked this token as a precaution.
-
-{authorization}
-
-Please review your account at https://{domain} and your GitHub repository \
-settings to confirm that no unexpected changes have been made to your crates \
-or trusted publishing configurations.
-
-Source type: {source}",
-            domain = self.domain,
-            reporter = self.reporter,
-            source = self.source,
-        );
-
-        if self.url.is_empty() {
-            body.push_str("\n\nWe were not informed of the URL where the token was found.");
-        } else {
-            body.push_str(&format!("\n\nURL where the token was found: {}", self.url));
-        }
-
-        body.push_str(
-            "\n\nTrusted Publishing tokens are temporary and used for automated \
-publishing from GitHub Actions. If this exposure was unexpected, please review \
-your repository's workflow files and secrets.",
-        );
-
-        body
-    }
 }
 
 #[derive(Deserialize, Serialize)]
