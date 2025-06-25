@@ -113,13 +113,27 @@ impl OgImageGenerator {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn generate(&self, _data: OgImageData<'_>) -> anyhow::Result<NamedTempFile> {
+    pub async fn generate(&self, data: OgImageData<'_>) -> anyhow::Result<NamedTempFile> {
         // Create a temporary folder
         let temp_dir = tempfile::tempdir()?;
 
-        // Create a basic og-image.typ file in the temporary folder
+        // Create basic og-image.typ file with the data
         let typ_file_path = temp_dir.path().join("og-image.typ");
-        std::fs::write(&typ_file_path, "Hello World")?;
+        let dummy_content = format!(
+            "= {}\n\nVersion: {}\n\n{}\n\nLicense: {}\n\nTags: {}\n\nAuthors: {}\n\nReleases: {}",
+            data.name,
+            data.version,
+            data.description,
+            data.license,
+            data.tags.join(", "),
+            data.authors
+                .iter()
+                .map(|a| a.name)
+                .collect::<Vec<_>>()
+                .join(", "),
+            data.releases
+        );
+        std::fs::write(&typ_file_path, dummy_content)?;
 
         // Create a named temp file for the output PNG
         let output_file = NamedTempFile::new()?;
