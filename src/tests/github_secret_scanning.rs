@@ -1,3 +1,4 @@
+use crate::tests::builders::CrateBuilder;
 use crate::tests::util::MockRequestExt;
 use crate::tests::util::insta::api_token_redaction;
 use crate::tests::{RequestHelper, TestApp};
@@ -5,6 +6,7 @@ use crate::util::token::HashedToken;
 use crate::{models::ApiToken, schema::api_tokens};
 use base64::{Engine as _, engine::general_purpose};
 use chrono::{TimeDelta, Utc};
+use crates_io_database::models::CrateOwner;
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_database::schema::trustpub_tokens;
 use crates_io_github::{GitHubPublicKey, MockGitHubClient};
@@ -71,13 +73,16 @@ fn generate_trustpub_token() -> (String, Vec<u8>) {
 }
 
 /// Create a new Trusted Publishing token in the database
-async fn insert_trustpub_token(conn: &mut diesel_async::AsyncPgConnection) -> QueryResult<String> {
+async fn insert_trustpub_token(
+    conn: &mut diesel_async::AsyncPgConnection,
+    crate_ids: &[i32],
+) -> QueryResult<String> {
     let (token, hashed_token) = generate_trustpub_token();
 
     let new_token = NewToken {
         expires_at: Utc::now() + TimeDelta::minutes(30),
         hashed_token: &hashed_token,
-        crate_ids: &[1], // Arbitrary crate ID for testing
+        crate_ids,
     };
 
     new_token.insert(conn).await?;
@@ -319,11 +324,16 @@ async fn github_secret_alert_invalid_signature_fails() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn github_secret_alert_revokes_trustpub_token() {
-    let (app, anon) = TestApp::init().with_github(github_mock()).empty().await;
+    let (app, anon, cookie) = TestApp::init().with_github(github_mock()).with_user().await;
     let mut conn = app.db_conn().await;
 
+    let krate = CrateBuilder::new("foo", cookie.as_model().id)
+        .build(&mut conn)
+        .await
+        .unwrap();
+
     // Generate a valid Trusted Publishing token
-    let token = insert_trustpub_token(&mut conn).await.unwrap();
+    let token = insert_trustpub_token(&mut conn, &[krate.id]).await.unwrap();
 
     // Verify the token exists in the database
     let count = trustpub_tokens::table
@@ -352,6 +362,9 @@ async fn github_secret_alert_revokes_trustpub_token() {
         .await
         .unwrap();
     assert_eq!(count, 0);
+
+    // Ensure an email was sent notifying about the token revocation
+    assert_snapshot!(app.emails_snapshot().await);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -389,4 +402,58 @@ async fn github_secret_alert_for_unknown_trustpub_token() {
         .await
         .unwrap();
     assert_eq!(count, 0);
+
+    // Ensure no emails were sent
+    assert_eq!(app.emails().await.len(), 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn github_secret_alert_revokes_trustpub_token_multiple_users() {
+    let (app, anon) = TestApp::init().with_github(github_mock()).empty().await;
+    let mut conn = app.db_conn().await;
+
+    // Create two users
+    let user1 = app.db_new_user("user1").await;
+    let user2 = app.db_new_user("user2").await;
+
+    // Create two crates
+    // User 1 owns both crates 1 and 2
+    let crate1 = CrateBuilder::new("crate1", user1.as_model().id)
+        .build(&mut conn)
+        .await
+        .unwrap();
+    let crate2 = CrateBuilder::new("crate2", user1.as_model().id)
+        .build(&mut conn)
+        .await
+        .unwrap();
+
+    // Add user 2 as owner of crate2
+    CrateOwner::builder()
+        .crate_id(crate2.id)
+        .user_id(user2.as_model().id)
+        .created_by(user1.as_model().id)
+        .build()
+        .insert(&mut conn)
+        .await
+        .unwrap();
+
+    // Generate a trusted publishing token that has access to both crates
+    let token = insert_trustpub_token(&mut conn, &[crate1.id, crate2.id])
+        .await
+        .unwrap();
+
+    // Send the GitHub alert to the API endpoint
+    let mut request = anon.post_request(URL);
+    let vec = github_alert_with_token(&token);
+    request.header("GITHUB-PUBLIC-KEY-IDENTIFIER", KEY_IDENTIFIER);
+    request.header("GITHUB-PUBLIC-KEY-SIGNATURE", &sign_payload(&vec));
+    *request.body_mut() = vec.into();
+    let response = anon.run::<()>(request).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        "[].token_raw" => api_token_redaction()
+    });
+
+    // Take a snapshot of all emails for detailed verification
+    assert_snapshot!(app.emails_snapshot().await);
 }
