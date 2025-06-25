@@ -200,4 +200,8 @@ export default class Version extends Model {
     this.store.pushPayload(payload);
     await waitForPromise(this.releaseTracks.refreshTask.perform(this.crateName, false));
   });
+
+  async rebuildDocs() {
+    return await waitForPromise(apiAction(this, { method: 'POST', path: 'rebuild_docs' }));
+  }
 }

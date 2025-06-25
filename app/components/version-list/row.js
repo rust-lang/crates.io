@@ -4,9 +4,12 @@ import { htmlSafe } from '@ember/template';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
+import { keepLatestTask } from 'ember-concurrency';
+
 import styles from './row.module.css';
 
 export default class VersionRow extends Component {
+  @service notifications;
   @service session;
 
   @tracked focused = false;
@@ -59,4 +62,16 @@ export default class VersionRow extends Component {
   @action setFocused(value) {
     this.focused = value;
   }
+
+  rebuildDocsTask = keepLatestTask(async () => {
+    let { version } = this.args;
+    try {
+      await version.rebuildDocs();
+      this.notifications.success('Docs rebuild task was enqueued successfully!');
+    } catch (error) {
+      let reason = error?.errors?.[0]?.detail ?? 'Failed to equeue docs rebuild task.';
+      let msg = `Error: ${reason}`;
+      this.notifications.error(msg);
+    }
+  });
 }
