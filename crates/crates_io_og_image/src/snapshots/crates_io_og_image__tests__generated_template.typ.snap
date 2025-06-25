@@ -74,10 +74,6 @@ expression: template_content
         // Crate name
         block(text(size: 36pt, weight: "semibold", fill: colors.primary)[example-crate])
 
-        // Version
-        text(size: 14pt)[Version: v2.1.0]
-        linebreak()
-
         // Tags
         render-tag(text(size: 8pt, weight: "medium")[\#web])
         h(3pt)
