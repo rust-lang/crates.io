@@ -148,8 +148,8 @@
         place(bottom + left, float: true,
             stack(dir: ltr, {
                 render-metadata("Releases", "{{ data.releases }}")
-                render-metadata("Latest", "{{ data.version | typst_escape }}")
-                render-metadata("License", "{{ data.license | typst_escape }}")
+                render-metadata("Latest", truncate_to_width("{{ data.version | typst_escape }}", maxWidth: 80pt))
+                render-metadata("License", truncate_to_width("{{ data.license | typst_escape }}", maxWidth: 100pt))
                 {%- if data.lines_of_code %}
                 render-metadata("SLoC", "{{ data.lines_of_code }}")
                 {%- endif %}
