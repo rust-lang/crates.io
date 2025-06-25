@@ -1,0 +1,19 @@
+= {{ data.name }}
+
+Version: {{ data.version }}
+
+{{ data.description }}
+
+License: {{ data.license }}
+
+Tags: {{ data.tags | join(", ") }}
+
+Authors: {{ data.authors | map(attribute="name") | join(", ") }}
+
+Releases: {{ data.releases }}
+
+{% if data.lines_of_code %}
+Lines of Code: {{ data.lines_of_code }}
+
+{% endif %}
+Size: {{ data.crate_size }} KB
