@@ -9,3 +9,5 @@ description = "OpenGraph image generation for crates.io"
 workspace = true
 
 [dependencies]
+anyhow = "=1.0.98"
+crates_io_env_vars = { path = "../crates_io_env_vars" }
