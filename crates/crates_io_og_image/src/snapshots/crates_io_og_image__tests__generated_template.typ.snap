@@ -84,6 +84,94 @@ expression: template_content
 }
 
 // =============================================================================
+// AUTHOR HANDLING
+// =============================================================================
+// Complex logic for displaying multiple authors with proper grammar
+
+// Renders an author name (without avatar for now)
+#let render-author(author) = {
+    author.name
+}
+
+// Generates grammatically correct author list text
+#let generate-authors-text(authors, maxVisible: none) = {
+    if authors.len() == 0 {
+        return ""
+    }
+
+    let prefix = "by "
+    let visible = if maxVisible != none {
+        calc.min(maxVisible, authors.len())
+    } else {
+        authors.len()
+    }
+
+    if authors.len() == 1 {
+        return prefix + render-author(authors.at(0))
+    }
+
+    // Build the visible authors list
+    let authors-text = ""
+    for i in range(visible) {
+        if i == 0 {
+            authors-text += render-author(authors.at(i))
+        } else if i == visible - 1 and visible == authors.len() {
+            // Last author and we're showing all authors
+            authors-text += " and " + render-author(authors.at(i))
+        } else {
+            // Not the last author, or we're truncating
+            authors-text += ", " + render-author(authors.at(i))
+        }
+    }
+
+    // Add "and X others" suffix if truncated
+    if visible < authors.len() {
+        let remaining = authors.len() - visible
+        let suffix = " and " + str(remaining) + " other"
+        if remaining > 1 {
+            suffix += "s"
+        }
+        authors-text += suffix
+    }
+
+    return prefix + authors-text
+}
+
+// Renders authors list with intelligent truncation based on available width
+#let render-authors-list(authors, maxWidth: none) = {
+    layout(size => {
+        let maxWidth = if maxWidth != none {
+            maxWidth
+        } else {
+            size.width
+        }
+
+        if authors.len() == 0 {
+            return ""
+        }
+
+        // Try showing all authors first
+        let full-text = generate-authors-text(authors)
+        if measure(full-text).width <= maxWidth {
+            return full-text
+        }
+
+        // Reduce maxVisible until text fits
+        let maxVisible = authors.len() - 1
+        while maxVisible >= 1 {
+            let truncated-text = generate-authors-text(authors, maxVisible: maxVisible)
+            if measure(truncated-text).width <= maxWidth {
+                return truncated-text
+            }
+            maxVisible -= 1
+        }
+
+        // Fallback: just show first author and "and X others"
+        return generate-authors-text(authors, maxVisible: 1)
+    })
+}
+
+// =============================================================================
 // VISUAL COMPONENTS
 // =============================================================================
 // Reusable components for consistent styling
@@ -158,7 +246,10 @@ expression: template_content
 
         // Authors
         set text(size: 10pt, fill: colors.text-light)
-        text("by alice, bob")
+        render-authors-list((
+            (name: "alice", avatar: "avatar1.png"),
+            (name: "bob", avatar: none),
+        ))
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
