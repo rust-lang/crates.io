@@ -63,9 +63,9 @@
         text(size: 14pt)[Version: {{ data.version }}]
         linebreak()
 
-        // Tags
         {% if data.tags -%}
-        {%- for tag in data.tags -%}
+        // Tags
+        {% for tag in data.tags -%}
         {%- if not loop.first %}
         h(3pt)
         {% endif -%}
