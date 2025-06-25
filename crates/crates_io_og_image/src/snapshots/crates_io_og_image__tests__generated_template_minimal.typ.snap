@@ -67,7 +67,6 @@ expression: template_content
         text(size: 14pt)[Version: v1.0.0]
         linebreak()
 
-        // Tags
         
 
         // Description
