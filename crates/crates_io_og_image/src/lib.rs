@@ -58,6 +58,13 @@ pub struct OgImageAuthorData<'a> {
     pub avatar: Option<&'a str>,
 }
 
+impl<'a> OgImageAuthorData<'a> {
+    /// Creates a new `OgImageAuthorData` with the specified name and optional avatar.
+    pub const fn new(name: &'a str, avatar: Option<&'a str>) -> Self {
+        Self { name, avatar }
+    }
+}
+
 /// Generator for creating OpenGraph images using the Typst typesetting system.
 ///
 /// This struct manages the path to the Typst binary and provides methods for
@@ -207,23 +214,21 @@ impl Default for OgImageGenerator {
 mod tests {
     use super::*;
 
+    const fn author<'a>(name: &'a str, avatar: Option<&'a str>) -> OgImageAuthorData<'a> {
+        OgImageAuthorData::new(name, avatar)
+    }
+
     fn create_standard_test_data() -> OgImageData<'static> {
+        static AUTHORS: &[OgImageAuthorData<'_>] =
+            &[author("alice", Some("avatar1.png")), author("bob", None)];
+
         OgImageData {
             name: "example-crate",
             version: "v2.1.0",
             description: "A comprehensive example crate showcasing various OpenGraph features",
             license: "MIT OR Apache-2.0",
             tags: &["web", "api", "async", "json", "http"],
-            authors: &[
-                OgImageAuthorData {
-                    name: "alice",
-                    avatar: Some("avatar1.png"),
-                },
-                OgImageAuthorData {
-                    name: "bob",
-                    avatar: None,
-                },
-            ],
+            authors: AUTHORS,
             lines_of_code: Some(5500),
             crate_size: 128,
             releases: 15,
@@ -231,16 +236,15 @@ mod tests {
     }
 
     fn create_minimal_test_data() -> OgImageData<'static> {
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("author", None)];
+
         OgImageData {
             name: "minimal-crate",
             version: "v1.0.0",
             description: "A minimal crate",
             license: "MIT",
             tags: &[],
-            authors: &[OgImageAuthorData {
-                name: "author",
-                avatar: None,
-            }],
+            authors: AUTHORS,
             lines_of_code: None,
             crate_size: 10,
             releases: 1,
@@ -248,6 +252,12 @@ mod tests {
     }
 
     fn create_escaping_test_data() -> OgImageData<'static> {
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[
+            author("author \"with quotes\"", None),
+            author("author\\with\\backslashes", None),
+            author("author#with#hashes", None),
+        ];
+
         OgImageData {
             name: "crate-with-\"quotes\"",
             version: "v1.0.0-\"beta\"",
@@ -258,20 +268,7 @@ mod tests {
                 "tag\\with\\backslashes",
                 "tag#with#symbols",
             ],
-            authors: &[
-                OgImageAuthorData {
-                    name: "author \"with quotes\"",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "author\\with\\backslashes",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "author#with#hashes",
-                    avatar: None,
-                },
-            ],
+            authors: AUTHORS,
             lines_of_code: Some(42),
             crate_size: 256,
             releases: 5,
@@ -279,6 +276,19 @@ mod tests {
     }
 
     fn create_overflow_test_data() -> OgImageData<'static> {
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[
+            author("alice-wonderland", None),
+            author("bob-the-builder", None),
+            author("charlie-brown", None),
+            author("diana-prince", None),
+            author("edward-scissorhands", None),
+            author("fiona-apple", None),
+            author("george-washington", None),
+            author("helen-keller", None),
+            author("isaac-newton", None),
+            author("jane-doe", None),
+        ];
+
         OgImageData {
             name: "super-long-crate-name-for-testing-overflow-behavior",
             version: "v2.1.0-beta.1+build.12345",
@@ -291,48 +301,7 @@ mod tests {
                 "serialization",
                 "networking",
             ],
-            authors: &[
-                OgImageAuthorData {
-                    name: "alice-wonderland",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "bob-the-builder",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "charlie-brown",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "diana-prince",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "edward-scissorhands",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "fiona-apple",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "george-washington",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "helen-keller",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "isaac-newton",
-                    avatar: None,
-                },
-                OgImageAuthorData {
-                    name: "jane-doe",
-                    avatar: None,
-                },
-            ],
+            authors: AUTHORS,
             lines_of_code: Some(147000),
             crate_size: 2847,
             releases: 1432,
@@ -340,16 +309,15 @@ mod tests {
     }
 
     fn create_simple_test_data() -> OgImageData<'static> {
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("test-user", None)];
+
         OgImageData {
             name: "test-crate",
             version: "v1.0.0",
             description: "A test crate for OpenGraph image generation",
             license: "MIT/Apache-2.0",
             tags: &["testing", "og-image"],
-            authors: &[OgImageAuthorData {
-                name: "test-user",
-                avatar: None,
-            }],
+            authors: AUTHORS,
             lines_of_code: Some(1000),
             crate_size: 42,
             releases: 1,
