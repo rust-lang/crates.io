@@ -148,7 +148,7 @@ crates_io_test_db = { path = "crates/crates_io_test_db" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub", features = ["test-helpers"] }
 claims = "=0.8.0"
 diesel = { version = "=2.2.11", features = ["r2d2"] }
-googletest = "=0.14.1"
+googletest = "=0.14.2"
 insta = { version = "=1.43.1", features = ["glob", "json", "redactions"] }
 jsonwebtoken = "=9.3.1"
 quoted_printable = "=0.5.1"
