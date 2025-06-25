@@ -8,8 +8,35 @@ use tokio::process::Command;
 
 /// Data structure containing information needed to generate an OpenGraph image
 /// for a crates.io crate.
-pub struct OgImageData {
-    // Placeholder for now
+#[derive(Debug, Clone)]
+pub struct OgImageData<'a> {
+    /// The crate name
+    pub name: &'a str,
+    /// Latest version string (e.g., "v1.0.210")
+    pub version: &'a str,
+    /// Crate description text
+    pub description: &'a str,
+    /// License information (e.g., "MIT/Apache-2.0")
+    pub license: &'a str,
+    /// Keywords/categories for the crate
+    pub tags: &'a [&'a str],
+    /// Author information
+    pub authors: &'a [OgImageAuthorData<'a>],
+    /// Source lines of code count (optional)
+    pub lines_of_code: Option<u32>,
+    /// Package size in bytes
+    pub crate_size: u32,
+    /// Total number of releases
+    pub releases: u32,
+}
+
+/// Author information for OpenGraph image generation
+#[derive(Debug, Clone)]
+pub struct OgImageAuthorData<'a> {
+    /// Author username/name
+    pub name: &'a str,
+    /// Optional path to avatar image file
+    pub avatar: Option<&'a str>,
 }
 
 /// Generator for creating OpenGraph images using the Typst typesetting system.
@@ -65,18 +92,28 @@ impl OgImageGenerator {
     /// # Examples
     ///
     /// ```no_run
-    /// use crates_io_og_image::{OgImageGenerator, OgImageData};
+    /// use crates_io_og_image::{OgImageGenerator, OgImageData, OgImageAuthorData};
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// let generator = OgImageGenerator::default();
-    /// let data = OgImageData {};
+    /// let data = OgImageData {
+    ///     name: "my-crate",
+    ///     version: "v1.0.0",
+    ///     description: "A sample crate",
+    ///     license: "MIT",
+    ///     tags: &["web", "api"],
+    ///     authors: &[OgImageAuthorData { name: "user", avatar: None }],
+    ///     lines_of_code: Some(5000),
+    ///     crate_size: 100,
+    ///     releases: 10,
+    /// };
     /// let image_file = generator.generate(data).await?;
     /// println!("Generated image at: {:?}", image_file.path());
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn generate(&self, _data: OgImageData) -> anyhow::Result<NamedTempFile> {
+    pub async fn generate(&self, _data: OgImageData<'_>) -> anyhow::Result<NamedTempFile> {
         // Create a temporary folder
         let temp_dir = tempfile::tempdir()?;
 
@@ -133,7 +170,20 @@ mod tests {
         }
 
         let generator = OgImageGenerator::default();
-        let data = OgImageData {};
+        let data = OgImageData {
+            name: "test-crate",
+            version: "v1.0.0",
+            description: "A test crate for OpenGraph image generation",
+            license: "MIT/Apache-2.0",
+            tags: &["testing", "og-image"],
+            authors: &[OgImageAuthorData {
+                name: "test-user",
+                avatar: None,
+            }],
+            lines_of_code: Some(1000),
+            crate_size: 42,
+            releases: 1,
+        };
 
         let temp_file = generator
             .generate(data)

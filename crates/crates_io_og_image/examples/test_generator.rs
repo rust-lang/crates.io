@@ -1,4 +1,4 @@
-use crates_io_og_image::{OgImageData, OgImageGenerator};
+use crates_io_og_image::{OgImageAuthorData, OgImageData, OgImageGenerator};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -8,7 +8,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Created generator from environment");
 
     // Test generating an image
-    let data = OgImageData {};
+    let data = OgImageData {
+        name: "example-crate",
+        version: "v1.2.3",
+        description: "An example crate for testing OpenGraph image generation",
+        license: "MIT/Apache-2.0",
+        tags: &["example", "testing", "og-image"],
+        authors: &[OgImageAuthorData {
+            name: "example-user",
+            avatar: None,
+        }],
+        lines_of_code: Some(2000),
+        crate_size: 75,
+        releases: 5,
+    };
     match generator.generate(data).await {
         Ok(temp_file) => {
             let output_path = "test_og_image.png";
