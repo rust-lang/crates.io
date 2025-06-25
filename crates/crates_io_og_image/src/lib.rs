@@ -151,6 +151,8 @@ impl OgImageGenerator {
         std::fs::create_dir(&assets_dir)?;
         let cargo_logo = include_bytes!("../assets/cargo.png");
         std::fs::write(assets_dir.join("cargo.png"), cargo_logo)?;
+        let rust_logo_svg = include_bytes!("../assets/rust-logo.svg");
+        std::fs::write(assets_dir.join("rust-logo.svg"), rust_logo_svg)?;
 
         // Copy SVG icons
         let code_branch_svg = include_bytes!("../assets/code-branch.svg");

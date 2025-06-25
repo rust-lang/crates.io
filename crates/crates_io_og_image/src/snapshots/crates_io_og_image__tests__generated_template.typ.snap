@@ -27,6 +27,7 @@ expression: template_content
 // =============================================================================
 
 #let header-height = 60pt
+#let footer-height = 4pt
 
 // =============================================================================
 // TEXT TRUNCATION UTILITIES
@@ -122,11 +123,21 @@ expression: template_content
 // Header with crates.io branding
 #render-header
 
+// Bottom border accent
+#place(bottom,
+    rect(width: 100%, height: footer-height, fill: colors.header-bg)
+)
+
+// Rust logo overlay (20% opacity watermark)
+#place(bottom + right, dx: 200pt, dy: 100pt,
+    image("assets/rust-logo.svg", width: 300pt)
+)
+
 // Main content area
 #place(
     left + top,
     dy: 60pt,
-    block(height: 100% - header-height, inset: 35pt, clip: true, {
+    block(height: 100% - header-height - footer-height, inset: 35pt, clip: true, {
         // Crate name
         block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width("example-crate")))
 
