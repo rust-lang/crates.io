@@ -74,10 +74,6 @@ expression: template_content
         // Crate name
         block(text(size: 36pt, weight: "semibold", fill: colors.primary)[minimal-crate])
 
-        // Version
-        text(size: 14pt)[Version: v1.0.0]
-        linebreak()
-
         
 
         // Description

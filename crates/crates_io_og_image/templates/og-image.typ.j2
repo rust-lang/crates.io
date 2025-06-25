@@ -70,10 +70,6 @@
         // Crate name
         block(text(size: 36pt, weight: "semibold", fill: colors.primary)[{{ data.name }}])
 
-        // Version
-        text(size: 14pt)[Version: {{ data.version }}]
-        linebreak()
-
         {% if data.tags -%}
         // Tags
         {% for tag in data.tags -%}
