@@ -17,6 +17,7 @@ expression: template_content
     header-text: oklch(100%, 0, 0deg),
     primary: oklch(36%, 0.07, 144deg),
     text: oklch(51%, 0.05, 144deg),
+    text-light: oklch(60%, 0.05, 144deg),
     tag-bg: oklch(36%, 0.07, 144deg),
     tag-text: oklch(100%, 0, 0deg),
 )
@@ -49,6 +50,16 @@ expression: template_content
     )
 }
 
+// Renders a metadata item with title and content (without icon)
+#let render-metadata(title, content) = {
+    box(inset: (right: 20pt),
+        grid(columns: (auto), rows: (auto, auto), row-gutter: .5em,
+            text(size: 8pt, fill: colors.text-light, upper(title)),
+            text(size: 12pt, content)
+        )
+    )
+}
+
 #set page(width: 600pt, height: 315pt, margin: 0pt, fill: colors.bg)
 #set text(font: "Fira Sans", fill: colors.text)
 
@@ -72,21 +83,17 @@ expression: template_content
         // Description
         block(text(size: 14pt)[A minimal crate])
 
-        // License
-        text(size: 12pt)[License: MIT]
-        linebreak()
-
         // Authors
-        text(size: 12pt)[Authors: author]
-        linebreak()
+        set text(size: 10pt, fill: colors.text-light)
+        text[by author]
 
-        // Releases
-        text(size: 12pt)[Releases: 1]
-        linebreak()
-
-        
-
-        // Size
-        text(size: 12pt)[Size: 10 KB]
+        place(bottom + left, float: true,
+            stack(dir: ltr, {
+                render-metadata("Releases", "1")
+                render-metadata("Latest", "v1.0.0")
+                render-metadata("License", "MIT")
+                render-metadata("Size", "10 kB")
+            })
+        )
     })
 )
