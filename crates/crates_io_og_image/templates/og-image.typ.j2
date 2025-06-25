@@ -12,6 +12,8 @@
     header-text: oklch(100%, 0, 0deg),
     primary: oklch(36%, 0.07, 144deg),
     text: oklch(51%, 0.05, 144deg),
+    tag-bg: oklch(36%, 0.07, 144deg),
+    tag-text: oklch(100%, 0, 0deg),
 )
 
 // =============================================================================
@@ -20,8 +22,9 @@
 #let header-height = 60pt
 
 // =============================================================================
-// HEADER COMPONENT
+// VISUAL COMPONENTS
 // =============================================================================
+
 #let render-header = {
     rect(width: 100%, height: header-height, fill: colors.header-bg, {
         place(left + horizon, dx: 30pt, {
@@ -30,6 +33,14 @@
             text(size: 22pt, fill: colors.header-text, weight: "semibold")[crates.io]
         })
     })
+}
+
+// Renders a tag/keyword with consistent styling
+#let render-tag(content) = {
+    set text(fill: colors.tag-text)
+    box(fill: colors.tag-bg, radius: .15em, inset: (x: .4em, y: .25em),
+        content
+    )
 }
 
 #set page(width: 600pt, height: 315pt, margin: 0pt, fill: colors.bg)
@@ -50,15 +61,22 @@
         text(size: 14pt)[Version: {{ data.version }}]
         linebreak()
 
+        // Tags
+        {% if data.tags %}
+        {% for tag in data.tags %}
+        {% if not loop.first %}
+        h(3pt)
+        {% endif %}
+        render-tag(text(size: 8pt, weight: "medium")[\#{{ tag }}])
+        {% endfor %}
+        linebreak()
+        {% endif %}
+
         // Description
         block(text(size: 14pt)[{{ data.description }}])
 
         // License
         text(size: 12pt)[License: {{ data.license }}]
-        linebreak()
-
-        // Tags
-        text(size: 12pt)[Tags: {{ data.tags | join(", ") }}]
         linebreak()
 
         // Authors
