@@ -3,24 +3,77 @@
 // =============================================================================
 // This template generates Open Graph images for crates.io crate.
 
-#set page(width: 600pt, height: 315pt, margin: 0pt)
+// =============================================================================
+// COLOR PALETTE
+// =============================================================================
+#let colors = (
+    bg: oklch(97%, 0.0147, 98deg),
+    header-bg: oklch(36%, 0.07, 144deg),
+    header-text: oklch(100%, 0, 0deg),
+    primary: oklch(36%, 0.07, 144deg),
+    text: oklch(51%, 0.05, 144deg),
+)
 
-= {{ data.name }}
+// =============================================================================
+// LAYOUT CONSTANTS
+// =============================================================================
+#let header-height = 60pt
 
-Version: {{ data.version }}
+// =============================================================================
+// HEADER COMPONENT
+// =============================================================================
+#let render-header = {
+    rect(width: 100%, height: header-height, fill: colors.header-bg, {
+        place(left + horizon, dx: 30pt, {
+            text(size: 22pt, fill: colors.header-text, weight: "semibold")[crates.io]
+        })
+    })
+}
 
-{{ data.description }}
+#set page(width: 600pt, height: 315pt, margin: 0pt, fill: colors.bg)
+#set text(font: "Fira Sans", fill: colors.text)
 
-License: {{ data.license }}
+// Header with crates.io branding
+#render-header
 
-Tags: {{ data.tags | join(", ") }}
+// Main content area
+#place(
+    left + top,
+    dy: 60pt,
+    block(height: 100% - header-height, inset: 35pt, clip: true, {
+        // Crate name
+        block(text(size: 36pt, weight: "semibold", fill: colors.primary)[{{ data.name }}])
 
-Authors: {{ data.authors | map(attribute="name") | join(", ") }}
+        // Version
+        text(size: 14pt)[Version: {{ data.version }}]
+        linebreak()
 
-Releases: {{ data.releases }}
+        // Description
+        block(text(size: 14pt)[{{ data.description }}])
 
-{% if data.lines_of_code %}
-Lines of Code: {{ data.lines_of_code }}
+        // License
+        text(size: 12pt)[License: {{ data.license }}]
+        linebreak()
 
-{% endif %}
-Size: {{ data.crate_size }} KB
+        // Tags
+        text(size: 12pt)[Tags: {{ data.tags | join(", ") }}]
+        linebreak()
+
+        // Authors
+        text(size: 12pt)[Authors: {{ data.authors | map(attribute="name") | join(", ") }}]
+        linebreak()
+
+        // Releases
+        text(size: 12pt)[Releases: {{ data.releases }}]
+        linebreak()
+
+        {% if data.lines_of_code %}
+        // Lines of Code
+        text(size: 12pt)[Lines of Code: {{ data.lines_of_code }}]
+        linebreak()
+        {% endif %}
+
+        // Size
+        text(size: 12pt)[Size: {{ data.crate_size }} KB]
+    })
+)
