@@ -411,6 +411,21 @@ mod tests {
             .is_err()
     }
 
+    async fn generate_image(data: OgImageData<'_>) -> Option<Vec<u8>> {
+        if skip_if_typst_unavailable() {
+            return None;
+        }
+
+        let generator = OgImageGenerator::default();
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+
+        Some(std::fs::read(temp_file.path()).expect("Failed to read generated image"))
+    }
+
     #[test]
     fn test_generate_template_snapshot() {
         let generator = OgImageGenerator::default();
@@ -452,77 +467,37 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_snapshot() {
-        if skip_if_typst_unavailable() {
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
         let data = create_simple_test_data();
 
-        let temp_file = generator
-            .generate(data)
-            .await
-            .expect("Failed to generate image");
-        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
-
-        // Use insta to create a binary snapshot of the generated PNG
-        insta::assert_binary_snapshot!("generated_og_image.png", image_data);
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("generated_og_image.png", image_data);
+        }
     }
 
     #[tokio::test]
     async fn test_generate_og_image_overflow_snapshot() {
-        if skip_if_typst_unavailable() {
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
         let data = create_overflow_test_data();
 
-        let temp_file = generator
-            .generate(data)
-            .await
-            .expect("Failed to generate image");
-        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
-
-        // Use insta to create a binary snapshot of the generated PNG
-        insta::assert_binary_snapshot!("generated_og_image_overflow.png", image_data);
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("generated_og_image_overflow.png", image_data);
+        }
     }
 
     #[tokio::test]
     async fn test_generate_og_image_minimal_snapshot() {
-        if skip_if_typst_unavailable() {
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
         let data = create_minimal_test_data();
 
-        let temp_file = generator
-            .generate(data)
-            .await
-            .expect("Failed to generate image");
-        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
-
-        // Use insta to create a binary snapshot of the generated PNG
-        insta::assert_binary_snapshot!("generated_og_image_minimal.png", image_data);
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("generated_og_image_minimal.png", image_data);
+        }
     }
 
     #[tokio::test]
     async fn test_generate_og_image_escaping_snapshot() {
-        if skip_if_typst_unavailable() {
-            return;
-        }
-
-        let generator = OgImageGenerator::default();
         let data = create_escaping_test_data();
 
-        let temp_file = generator
-            .generate(data)
-            .await
-            .expect("Failed to generate image");
-        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
-
-        // Use insta to create a binary snapshot of the generated PNG
-        insta::assert_binary_snapshot!("generated_og_image_escaping.png", image_data);
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("generated_og_image_escaping.png", image_data);
+        }
     }
 }
