@@ -46,6 +46,18 @@ impl<'a> MarkdownRenderer<'a> {
                 ]),
             ),
             ("section", hashset(&["footnotes"])),
+            (
+                "div",
+                hashset(&[
+                    "markdown-alert",
+                    "markdown-alert-note",
+                    "markdown-alert-tip",
+                    "markdown-alert-important",
+                    "markdown-alert-warning",
+                    "markdown-alert-caution",
+                ]),
+            ),
+            ("p", hashset(&["markdown-alert-title"])),
         ]);
         let sanitize_url = UrlRelative::Custom(Box::new(SanitizeUrl::new(base_url, base_dir)));
 
@@ -77,7 +89,9 @@ impl<'a> MarkdownRenderer<'a> {
             .build();
 
         let extension_options = ComrakExtensionOptions::builder()
+            .alerts(true)
             .autolink(true)
+            .multiline_block_quotes(true)
             .strikethrough(true)
             .table(true)
             .tagfilter(true)
@@ -429,7 +443,7 @@ mod tests {
     #[test]
     fn text_with_forbidden_class_attribute() {
         let text = "<p class='bad-class'>Hello World!</p>";
-        assert_snapshot!(markdown_to_html(text, None, ""), @"<p>Hello World!</p>");
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"<p class="">Hello World!</p>"#);
     }
 
     #[test]
@@ -683,5 +697,37 @@ There can also be some text in between!
         <li><input type="checkbox" disabled=""> <a href="#anchor" rel="nofollow noopener noreferrer">link</a></li>
         </ul>
         "##);
+    }
+
+    #[test]
+    fn alerts_note() {
+        let text = r#"
+> [!note]
+> Hello, world!
+        "#;
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <div class="markdown-alert markdown-alert-note">
+        <p class="markdown-alert-title">Note</p>
+        <p>Hello, world!</p>
+        </div>
+        "#);
+    }
+
+    #[test]
+    fn alerts_note_multiline_block_quotes() {
+        let text = r#"
+>>> [!note]
+Hello,
+
+world!
+>>>
+"#;
+        assert_snapshot!(markdown_to_html(text, None, ""), @r#"
+        <div class="markdown-alert markdown-alert-note">
+        <p class="markdown-alert-title">Note</p>
+        <p>Hello,</p>
+        <p>world!</p>
+        </div>
+        "#);
     }
 }
