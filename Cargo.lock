@@ -1602,6 +1602,7 @@ dependencies = [
  "crates_io_env_vars",
  "insta",
  "minijinja",
+ "reqwest",
  "serde",
  "tempfile",
  "tokio",

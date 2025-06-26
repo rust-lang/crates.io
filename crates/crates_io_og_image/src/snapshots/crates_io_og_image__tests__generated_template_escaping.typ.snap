@@ -266,7 +266,7 @@ expression: template_content
         // Authors
         set text(size: 10pt, fill: colors.text-light)
         render-authors-list((
-            (name: "author \"with quotes\"", avatar: none),
+            (name: "author \"with quotes\"", avatar: "assets/avatar_0.png"),
             (name: "author\\with\\backslashes", avatar: none),
             (name: "author#with#hashes", avatar: none),
         ))

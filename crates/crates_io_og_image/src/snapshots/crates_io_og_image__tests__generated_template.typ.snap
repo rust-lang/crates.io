@@ -270,7 +270,7 @@ expression: template_content
         // Authors
         set text(size: 10pt, fill: colors.text-light)
         render-authors-list((
-            (name: "alice", avatar: "avatar1.png"),
+            (name: "alice", avatar: "assets/avatar_0.png"),
             (name: "bob", avatar: none),
         ))
 
