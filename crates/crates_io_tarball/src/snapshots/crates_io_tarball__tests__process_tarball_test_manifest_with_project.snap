@@ -27,7 +27,11 @@ TarballInfo {
                 license_file: None,
                 repository: None,
                 metadata: None,
-                rust_version: None,
+                rust_version: Some(
+                    Local(
+                        "1.23",
+                    ),
+                ),
                 exclude: None,
                 include: None,
                 default_run: None,
@@ -47,26 +51,7 @@ TarballInfo {
         build_dependencies: None,
         target: None,
         features: None,
-        bin: [
-            Product {
-                path: Some(
-                    "src/main.rs",
-                ),
-                name: Some(
-                    "foo",
-                ),
-                test: true,
-                doctest: true,
-                bench: true,
-                doc: true,
-                plugin: false,
-                proc_macro: false,
-                harness: true,
-                edition: None,
-                required_features: [],
-                crate_type: None,
-            },
-        ],
+        bin: [],
         bench: [],
         test: [],
         example: [],

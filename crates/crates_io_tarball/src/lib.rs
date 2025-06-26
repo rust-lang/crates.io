@@ -183,7 +183,6 @@ impl AbstractFilesystem for PathsFileSystem {
 mod tests {
     use super::process_tarball;
     use crate::TarballBuilder;
-    use cargo_manifest::{MaybeInherited, StringOrBool};
     use insta::{assert_debug_snapshot, assert_snapshot};
 
     const MANIFEST: &[u8] = b"[package]\nname = \"foo\"\nversion = \"0.0.1\"\n";
@@ -196,10 +195,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        assert_none!(tarball_info.vcs_info);
-        assert_none!(tarball_info.manifest.lib);
-        assert_eq!(tarball_info.manifest.bin, vec![]);
-        assert_eq!(tarball_info.manifest.example, vec![]);
+        assert_debug_snapshot!(tarball_info);
 
         let err = assert_err!(process_tarball("bar-0.0.1", &*tarball, MAX_SIZE).await);
         assert_snapshot!(err, @"invalid path found: foo-0.0.1/Cargo.toml");
@@ -224,8 +220,8 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let vcs_info = assert_some!(tarball_info.vcs_info);
-        assert_eq!(vcs_info.path_in_vcs, "");
+        assert_some!(&tarball_info.vcs_info);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -237,8 +233,8 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let vcs_info = assert_some!(tarball_info.vcs_info);
-        assert_eq!(vcs_info.path_in_vcs, "path/in/vcs");
+        assert_some!(&tarball_info.vcs_info);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -256,10 +252,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::String(s))) if s == "README.md");
-        assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
-        assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.59");
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -275,8 +268,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.rust_version, Some(MaybeInherited::Local(s)) if s == "1.23");
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -286,8 +278,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let package = assert_some!(tarball_info.manifest.package);
-        assert_none!(package.readme);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -303,8 +294,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.readme, Some(MaybeInherited::Local(StringOrBool::Bool(b))) if !b);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -320,8 +310,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let package = assert_some!(tarball_info.manifest.package);
-        assert_matches!(package.repository, Some(MaybeInherited::Local(s)) if s ==  "https://github.com/foo/bar");
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -372,10 +361,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let lib = assert_some!(tarball_info.manifest.lib);
-        assert_debug_snapshot!(lib);
-        assert_eq!(tarball_info.manifest.bin, vec![]);
-        assert_eq!(tarball_info.manifest.example, vec![]);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -389,10 +375,7 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        let lib = assert_some!(tarball_info.manifest.lib);
-        assert_debug_snapshot!(lib);
-        assert_debug_snapshot!(tarball_info.manifest.bin);
-        assert_debug_snapshot!(tarball_info.manifest.example);
+        assert_debug_snapshot!(tarball_info);
     }
 
     #[tokio::test]
@@ -403,8 +386,6 @@ mod tests {
             .build();
 
         let tarball_info = assert_ok!(process_tarball("foo-0.0.1", &*tarball, MAX_SIZE).await);
-        assert_none!(tarball_info.manifest.lib);
-        assert_debug_snapshot!(tarball_info.manifest.bin);
-        assert_eq!(tarball_info.manifest.example, vec![]);
+        assert_debug_snapshot!(tarball_info);
     }
 }

@@ -20,7 +20,13 @@ TarballInfo {
                 description: None,
                 homepage: None,
                 documentation: None,
-                readme: None,
+                readme: Some(
+                    Local(
+                        Bool(
+                            false,
+                        ),
+                    ),
+                ),
                 keywords: None,
                 categories: None,
                 license: None,
@@ -47,26 +53,7 @@ TarballInfo {
         build_dependencies: None,
         target: None,
         features: None,
-        bin: [
-            Product {
-                path: Some(
-                    "src/main.rs",
-                ),
-                name: Some(
-                    "foo",
-                ),
-                test: true,
-                doctest: true,
-                bench: true,
-                doc: true,
-                plugin: false,
-                proc_macro: false,
-                harness: true,
-                edition: None,
-                required_features: [],
-                crate_type: None,
-            },
-        ],
+        bin: [],
         bench: [],
         test: [],
         example: [],
