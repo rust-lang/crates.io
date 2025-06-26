@@ -37,7 +37,7 @@ static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
         let subject_contents = std::fs::read_to_string(&subject_path).unwrap_or_else(|error| {
             panic!("Failed to read subject template for {email_name}: {error}")
         });
-        let filename = format!("{}/subject.txt.j2", email_name);
+        let filename = format!("{email_name}/subject.txt.j2");
         env.add_template_owned(filename, subject_contents)
             .expect("Failed to add subject template");
 
@@ -46,7 +46,7 @@ static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
         let body_contents = std::fs::read_to_string(&body_path).unwrap_or_else(|error| {
             panic!("Failed to read body template for {email_name}: {error}")
         });
-        let filename = format!("{}/body.txt.j2", email_name);
+        let filename = format!("{email_name}/body.txt.j2");
         env.add_template_owned(filename, body_contents)
             .expect("Failed to add body template");
     }
@@ -72,8 +72,8 @@ impl EmailMessage {
         template_name: &str,
         context: impl Serialize,
     ) -> Result<Self, minijinja::Error> {
-        let subject = render_template(&format!("{}/subject.txt.j2", template_name), &context)?;
-        let body_text = render_template(&format!("{}/body.txt.j2", template_name), context)?;
+        let subject = render_template(&format!("{template_name}/subject.txt.j2"), &context)?;
+        let body_text = render_template(&format!("{template_name}/body.txt.j2"), context)?;
 
         Ok(EmailMessage { subject, body_text })
     }

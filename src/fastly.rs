@@ -48,7 +48,7 @@ impl Fastly {
         let path = path.trim_start_matches('/');
 
         for domain in domains.iter() {
-            let url = format!("https://api.fastly.com/purge/{}/{}", domain, path);
+            let url = format!("https://api.fastly.com/purge/{domain}/{path}");
             self.purge_url(&url).await?;
         }
 

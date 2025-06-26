@@ -88,7 +88,7 @@ async fn create_user(
     diesel::insert_into(emails::table)
         .values((
             emails::user_id.eq(user_id),
-            emails::email.eq(format!("{}@crates.io", name)),
+            emails::email.eq(format!("{name}@crates.io")),
             emails::verified.eq(true),
         ))
         .execute(conn)

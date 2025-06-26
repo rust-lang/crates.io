@@ -58,7 +58,7 @@ impl BackgroundJob for SyncAdmins {
             database_admins
                 .iter()
                 .filter(|(gh_id, _, _)| github_ids.contains(gh_id))
-                .map(|(gh_id, login, _)| format!("{} (github_id: {})", login, gh_id))
+                .map(|(gh_id, login, _)| format!("{login} (github_id: {gh_id})"))
                 .collect::<Vec<_>>()
         };
 

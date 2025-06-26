@@ -200,7 +200,7 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
         if let Some(clean) = url.strip_prefix('#') {
             // Handle auto-generated footnote links
             if clean.starts_with("fn-") || clean.starts_with("fnref-") {
-                return Some(Cow::Owned(format!("#user-content-{}", clean)));
+                return Some(Cow::Owned(format!("#user-content-{clean}")));
             }
 
             // Always allow fragment URLs.

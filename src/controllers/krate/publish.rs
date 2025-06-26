@@ -579,7 +579,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         if !unknown_categories.is_empty() {
             let unknown_categories = unknown_categories.join(", ");
             let domain = &app.config.domain_name;
-            return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {}\n\nSee https://{}/category_slugs for a list of supported slugs.", unknown_categories, domain)));
+            return Err(bad_request(format!("The following category slugs are not currently supported on crates.io: {unknown_categories}\n\nSee https://{domain}/category_slugs for a list of supported slugs.")));
         }
 
         let top_versions = krate.top_versions(conn).await?;
@@ -734,7 +734,7 @@ async fn read_tarball_bytes<R: AsyncRead + Unpin>(
     })?;
 
     if tarball_len > max_length {
-        let message = format!("max upload size is: {}", max_length);
+        let message = format!("max upload size is: {max_length}");
         return Err(custom(StatusCode::PAYLOAD_TOO_LARGE, message));
     }
 
