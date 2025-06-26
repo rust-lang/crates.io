@@ -14,6 +14,8 @@
     primary: oklch(36%, 0.07, 144deg),
     text: oklch(51%, 0.05, 144deg),
     text-light: oklch(60%, 0.05, 144deg),
+    avatar-bg: oklch(100%, 0, 0deg),
+    avatar-border: oklch(87%, 0.01, 98deg),
     tag-bg: oklch(36%, 0.07, 144deg),
     tag-text: oklch(100%, 0, 0deg),
 )
@@ -80,12 +82,33 @@
 }
 
 // =============================================================================
+// AVATAR RENDERING
+// =============================================================================
+// Functions for rendering circular avatar images
+
+// Renders a circular avatar image with border
+// @param avatar-path: Path to the avatar image file
+// @param size: Size of the avatar (default: 1em)
+#let render-avatar(avatar-path, size: 1em) = {
+    box(clip: true, fill: colors.avatar-bg, stroke: 0.5pt + colors.avatar-border,
+        radius: 50%, inset: 1pt,
+        box(clip: true, radius: 50%, image(avatar-path, width: size))
+    )
+}
+
+// =============================================================================
 // AUTHOR HANDLING
 // =============================================================================
 // Complex logic for displaying multiple authors with proper grammar
 
-// Renders an author name (without avatar for now)
+// Renders an author with optional avatar and name
+// @param author: Object with 'name' and optional 'avatar' properties
 #let render-author(author) = {
+    if author.avatar != none {
+        h(0.2em)
+        box(baseline: 30%, [#render-avatar(author.avatar, size: 1.5em)])
+        h(0.2em)
+    }
     author.name
 }
 
