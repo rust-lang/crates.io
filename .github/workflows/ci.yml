@@ -27,6 +27,8 @@ env:
   PNPM_VERSION: 10.12.4
   # renovate: datasource=docker depName=postgres
   POSTGRES_VERSION: 16
+  # renovate: datasource=github-releases depName=typst/typst versioning=semver
+  TYPST_VERSION: 0.13.1
   # renovate: datasource=pypi depName=zizmor
   ZIZMOR_VERSION: 1.11.0
 
@@ -171,6 +173,14 @@ jobs:
 
       # Remove the Android SDK to free up space
       - run: sudo rm -rf /usr/local/lib/android
+
+      - name: Install Typst
+        run: |
+          wget -q "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz"
+          tar -xf "typst-x86_64-unknown-linux-musl.tar.xz"
+          sudo mv "typst-x86_64-unknown-linux-musl/typst" /usr/local/bin/
+          rm -rf "typst-x86_64-unknown-linux-musl" "typst-x86_64-unknown-linux-musl.tar.xz"
+          typst --version
 
       - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
         with:
