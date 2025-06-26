@@ -1073,7 +1073,7 @@ async fn seek_based_pagination() -> anyhow::Result<()> {
             assert_eq!(resp.meta.total, 3);
             assert!(default_versions_iter(&resp.crates).all(Option::is_some));
         } else {
-            assert_that!(resp.crates, empty());
+            assert_that!(resp.crates, is_empty());
             assert_eq!(resp.meta.total, 0);
         }
 
@@ -1269,7 +1269,7 @@ async fn page_with_seek<U: RequestHelper>(
             assert_ne!(resp.meta.total, 0);
             assert!(default_versions_iter(&resp.crates).all(Option::is_some));
         } else {
-            assert_that!(resp.crates, empty());
+            assert_that!(resp.crates, is_empty());
             assert_eq!(resp.meta.total, 0);
         }
         results.push(resp);

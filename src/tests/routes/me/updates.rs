@@ -53,7 +53,7 @@ async fn following() {
         .await;
 
     let r: R = user.get("/api/v1/me/updates").await.good();
-    assert_that!(r.versions, empty());
+    assert_that!(r.versions, is_empty());
     assert!(!r.meta.more);
 
     user.put::<OkBool>("/api/v1/crates/foo_fighters/follow", b"" as &[u8])
@@ -96,7 +96,7 @@ async fn following() {
         .get_with_query("/api/v1/me/updates", "page=2&per_page=1")
         .await
         .good();
-    assert_that!(r.versions, empty());
+    assert_that!(r.versions, is_empty());
     assert!(!r.meta.more);
 
     let response = user

@@ -91,7 +91,7 @@ async fn tarball_bigger_than_max_upload_size() {
     let response = token.publish_crate(body).await;
     assert_snapshot!(response.status(), @"413 Payload Too Large");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"max upload size is: 5242880"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -110,7 +110,7 @@ async fn new_krate_gzip_bomb() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is malformed or too large when decompressed"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -129,7 +129,7 @@ async fn new_krate_too_big() {
     let response = user.publish_crate(builder).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"uploaded tarball is malformed or too large when decompressed"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]

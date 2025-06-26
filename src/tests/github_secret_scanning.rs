@@ -152,7 +152,7 @@ async fn github_secret_alert_revokes_token() {
             .load(&mut conn)
             .await
     );
-    assert_that!(tokens, empty());
+    assert_that!(tokens, is_empty());
 
     let tokens: Vec<ApiToken> = assert_ok!(
         ApiToken::belonging_to(user.as_model())
@@ -216,7 +216,7 @@ async fn github_secret_alert_for_revoked_token() {
             .load(&mut conn)
             .await
     );
-    assert_that!(tokens, empty());
+    assert_that!(tokens, is_empty());
 
     let tokens: Vec<ApiToken> = assert_ok!(
         ApiToken::belonging_to(user.as_model())
