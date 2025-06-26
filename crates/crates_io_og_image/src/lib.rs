@@ -489,6 +489,25 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_generate_og_image_minimal_snapshot() {
+        if skip_if_typst_unavailable() {
+            return;
+        }
+
+        let generator = OgImageGenerator::default();
+        let data = create_minimal_test_data();
+
+        let temp_file = generator
+            .generate(data)
+            .await
+            .expect("Failed to generate image");
+        let image_data = std::fs::read(temp_file.path()).expect("Failed to read generated image");
+
+        // Use insta to create a binary snapshot of the generated PNG
+        insta::assert_binary_snapshot!("generated_og_image_minimal.png", image_data);
+    }
+
+    #[tokio::test]
     async fn test_generate_og_image_escaping_snapshot() {
         if skip_if_typst_unavailable() {
             return;
