@@ -105,24 +105,22 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
-        if entry_path.parent() == Some(pkg_root) {
-            let entry_file = entry_path.file_name().unwrap_or_default();
-            if entry_file == ".cargo_vcs_info.json" {
-                let mut contents = String::new();
-                entry.read_to_string(&mut contents).await?;
-                vcs_info = CargoVcsInfo::from_contents(&contents).ok();
-            } else if entry_file.eq_ignore_ascii_case("cargo.toml") {
-                // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
-                // cannot be read.
-                let owned_entry_path = entry_path.into_owned();
-                let mut contents = String::new();
-                entry.read_to_string(&mut contents).await?;
+        let in_pkg_path_str = in_pkg_path.to_string_lossy();
+        if in_pkg_path_str == ".cargo_vcs_info.json" {
+            let mut contents = String::new();
+            entry.read_to_string(&mut contents).await?;
+            vcs_info = CargoVcsInfo::from_contents(&contents).ok();
+        } else if in_pkg_path_str.eq_ignore_ascii_case("cargo.toml") {
+            // Try to extract and read the Cargo.toml from the tarball, silently erroring if it
+            // cannot be read.
+            let owned_entry_path = entry_path.into_owned();
+            let mut contents = String::new();
+            entry.read_to_string(&mut contents).await?;
 
-                let manifest = Manifest::from_str(&contents)?;
-                validate_manifest(&manifest)?;
+            let manifest = Manifest::from_str(&contents)?;
+            validate_manifest(&manifest)?;
 
-                manifests.insert(owned_entry_path, manifest);
-            }
+            manifests.insert(owned_entry_path, manifest);
         }
     }
 
