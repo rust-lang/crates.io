@@ -133,7 +133,7 @@ impl OgImageGenerator {
                 // Get the bytes either from the included asset or download from URL
                 let bytes = if *avatar == "test-avatar" {
                     // Copy directly from included bytes
-                    Bytes::from_static(include_bytes!("../assets/test-avatar.png"))
+                    Bytes::from_static(include_bytes!("../template/assets/test-avatar.png"))
                 } else {
                     // Download the avatar from the URL
                     let response = client.get(*avatar).send().await.map_err(|err| {
@@ -203,28 +203,28 @@ impl OgImageGenerator {
         // Create assets directory and copy logo and icons
         let assets_dir = temp_dir.path().join("assets");
         fs::create_dir(&assets_dir).await?;
-        let cargo_logo = include_bytes!("../assets/cargo.png");
+        let cargo_logo = include_bytes!("../template/assets/cargo.png");
         fs::write(assets_dir.join("cargo.png"), cargo_logo).await?;
-        let rust_logo_svg = include_bytes!("../assets/rust-logo.svg");
+        let rust_logo_svg = include_bytes!("../template/assets/rust-logo.svg");
         fs::write(assets_dir.join("rust-logo.svg"), rust_logo_svg).await?;
 
         // Copy SVG icons
-        let code_branch_svg = include_bytes!("../assets/code-branch.svg");
+        let code_branch_svg = include_bytes!("../template/assets/code-branch.svg");
         fs::write(assets_dir.join("code-branch.svg"), code_branch_svg).await?;
-        let code_svg = include_bytes!("../assets/code.svg");
+        let code_svg = include_bytes!("../template/assets/code.svg");
         fs::write(assets_dir.join("code.svg"), code_svg).await?;
-        let scale_balanced_svg = include_bytes!("../assets/scale-balanced.svg");
+        let scale_balanced_svg = include_bytes!("../template/assets/scale-balanced.svg");
         fs::write(assets_dir.join("scale-balanced.svg"), scale_balanced_svg).await?;
-        let tag_svg = include_bytes!("../assets/tag.svg");
+        let tag_svg = include_bytes!("../template/assets/tag.svg");
         fs::write(assets_dir.join("tag.svg"), tag_svg).await?;
-        let weight_hanging_svg = include_bytes!("../assets/weight-hanging.svg");
+        let weight_hanging_svg = include_bytes!("../template/assets/weight-hanging.svg");
         fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg).await?;
 
         // Process avatars - download URLs and copy assets
         let avatar_map = self.process_avatars(&data, &assets_dir).await?;
 
         // Copy the static Typst template file
-        let template_content = include_str!("../templates/og-image.typ");
+        let template_content = include_str!("../template/og-image.typ");
         let typ_file_path = temp_dir.path().join("og-image.typ");
         fs::write(&typ_file_path, template_content).await?;
 
