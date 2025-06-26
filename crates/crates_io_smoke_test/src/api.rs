@@ -17,10 +17,7 @@ impl ApiClient {
     }
 
     pub async fn load_crate<N: Display>(&self, name: N) -> anyhow::Result<CrateResponse> {
-        let url = format!(
-            "https://staging.crates.io/api/v1/crates/{}?include=versions",
-            name
-        );
+        let url = format!("https://staging.crates.io/api/v1/crates/{name}?include=versions");
 
         let response = self.http_client.get(url).send().await?;
         let response = response.error_for_status()?;
@@ -32,10 +29,7 @@ impl ApiClient {
         name: N,
         version: V,
     ) -> anyhow::Result<VersionResponse> {
-        let url = format!(
-            "https://staging.crates.io/api/v1/crates/{}/{}",
-            name, version
-        );
+        let url = format!("https://staging.crates.io/api/v1/crates/{name}/{version}");
 
         let response = self.http_client.get(url).send().await?;
         let response = response.error_for_status()?;
@@ -47,10 +41,7 @@ impl ApiClient {
         name: N,
         version: V,
     ) -> anyhow::Result<Bytes> {
-        let url = format!(
-            "https://staging.crates.io/api/v1/crates/{}/{}/download",
-            name, version
-        );
+        let url = format!("https://staging.crates.io/api/v1/crates/{name}/{version}/download");
 
         let response = self.http_client.get(url).send().await?;
         let response = response.error_for_status()?;
@@ -62,10 +53,7 @@ impl ApiClient {
         name: N,
         version: V,
     ) -> anyhow::Result<Bytes> {
-        let url = format!(
-            "https://static.staging.crates.io/crates/{}/{}/download",
-            name, version
-        );
+        let url = format!("https://static.staging.crates.io/crates/{name}/{version}/download");
 
         let response = self.http_client.get(url).send().await?;
         let response = response.error_for_status()?;

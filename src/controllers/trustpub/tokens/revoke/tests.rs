@@ -48,7 +48,7 @@ async fn test_happy_path() -> anyhow::Result<()> {
     let _token2 = new_token(&mut conn, 2).await?;
     assert_compact_debug_snapshot!(all_crate_ids(&mut conn).await?, @"[[Some(1)], [Some(2)]]");
 
-    let header = format!("Bearer {}", token1);
+    let header = format!("Bearer {token1}");
     let token_client = MockTokenUser::with_auth_header(header, app.clone());
 
     let response = token_client.delete::<()>(URL).await;
@@ -129,7 +129,7 @@ async fn test_non_existent_token() -> anyhow::Result<()> {
 
     // Generate a valid token format, but it doesn't exist in the database
     let (token, _) = generate_token();
-    let header = format!("Bearer {}", token);
+    let header = format!("Bearer {token}");
     let token_client = MockTokenUser::with_auth_header(header, app.clone());
 
     // The request should succeed with 204 No Content even though the token doesn't exist

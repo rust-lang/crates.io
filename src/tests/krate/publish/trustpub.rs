@@ -209,7 +209,7 @@ async fn test_happy_path_with_fancy_auth_header() -> anyhow::Result<()> {
 
     let token = new_token(&mut conn, krate.id).await?;
 
-    let header = format!("beaReR     {}", token);
+    let header = format!("beaReR     {token}");
     let oidc_token_client = MockTokenUser::with_auth_header(header, app);
 
     let pb = PublishBuilder::new(&krate.name, "1.1.0");
