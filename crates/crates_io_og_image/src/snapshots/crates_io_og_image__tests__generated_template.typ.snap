@@ -223,7 +223,7 @@ expression: template_content
         grid(columns: (auto, auto), rows: (auto, auto), column-gutter: .75em, row-gutter: .5em,
             grid.cell(rowspan: 2, align: horizon, image("assets/" + icon-name + ".svg", height: 1.2em)),
             text(size: 8pt, fill: colors.text-light, upper(title)),
-            text(size: 12pt, content)
+            text(size: 12pt, fill: colors.primary, content)
         )
     )
 }
