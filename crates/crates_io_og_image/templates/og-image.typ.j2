@@ -267,7 +267,7 @@
         set text(size: 10pt, fill: colors.text-light)
         render-authors-list((
             {%- for author in data.authors %}
-            (name: "{{ author.name | typst_escape }}", avatar: {% if author.avatar %}"{{ author.avatar | typst_escape }}"{% else %}none{% endif %}),
+            (name: "{{ author.name | typst_escape }}", avatar: {% if author.avatar %}"assets/{{ avatar_map[author.avatar] | typst_escape }}"{% else %}none{% endif %}),
             {%- endfor %}
         ))
         {%- endif %}

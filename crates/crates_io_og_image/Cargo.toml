@@ -12,6 +12,7 @@ workspace = true
 anyhow = "=1.0.98"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
 minijinja = { version = "=2.11.0", features = ["builtins"] }
+reqwest = "=0.12.21"
 serde = { version = "=1.0.219", features = ["derive"] }
 tempfile = "=3.20.0"
 tokio = { version = "=1.45.1", features = ["process", "fs"] }

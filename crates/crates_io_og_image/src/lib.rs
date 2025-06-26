@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use crates_io_env_vars::var;
 use minijinja::{Environment, context};
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tempfile::NamedTempFile;
@@ -54,7 +55,7 @@ pub struct OgImageData<'a> {
 pub struct OgImageAuthorData<'a> {
     /// Author username/name
     pub name: &'a str,
-    /// Optional path to avatar image file
+    /// Optional avatar - either "test-avatar" for the test avatar or a URL
     pub avatar: Option<&'a str>,
 }
 
@@ -62,6 +63,16 @@ impl<'a> OgImageAuthorData<'a> {
     /// Creates a new `OgImageAuthorData` with the specified name and optional avatar.
     pub const fn new(name: &'a str, avatar: Option<&'a str>) -> Self {
         Self { name, avatar }
+    }
+
+    /// Creates a new `OgImageAuthorData` with a URL-based avatar.
+    pub fn with_url(name: &'a str, url: &'a str) -> Self {
+        Self::new(name, Some(url))
+    }
+
+    /// Creates a new `OgImageAuthorData` with the test avatar.
+    pub fn with_test_avatar(name: &'a str) -> Self {
+        Self::with_url(name, "test-avatar")
     }
 }
 
@@ -109,13 +120,57 @@ impl OgImageGenerator {
         }
     }
 
+    /// Processes avatars by downloading URLs and copying assets to the assets directory.
+    ///
+    /// This method handles both asset-based avatars (which are copied from the bundled assets)
+    /// and URL-based avatars (which are downloaded from the internet).
+    /// Returns a mapping from avatar source to the local filename.
+    async fn process_avatars(
+        &self,
+        data: &OgImageData<'_>,
+        assets_dir: &std::path::Path,
+    ) -> anyhow::Result<HashMap<String, String>> {
+        let mut avatar_map = HashMap::new();
+
+        let client = reqwest::Client::new();
+        for (index, author) in data.authors.iter().enumerate() {
+            if let Some(avatar) = &author.avatar {
+                let filename = format!("avatar_{index}.png");
+                let avatar_path = assets_dir.join(&filename);
+
+                if *avatar == "test-avatar" {
+                    // Copy directly from included bytes
+                    let test_avatar_png = include_bytes!("../assets/test-avatar.png");
+                    std::fs::write(&avatar_path, test_avatar_png)?;
+
+                    // Store the mapping from the test avatar to the numbered filename
+                    avatar_map.insert("test-avatar".to_string(), filename);
+                } else {
+                    // Download the avatar from the URL
+                    let response = client.get(*avatar).send().await?;
+                    let bytes = response.bytes().await?;
+                    std::fs::write(&avatar_path, bytes)?;
+
+                    // Store the mapping from the URL to the numbered filename
+                    avatar_map.insert((*avatar).to_string(), filename);
+                }
+            }
+        }
+
+        Ok(avatar_map)
+    }
+
     /// Generates the Typst template content from the provided data.
     ///
     /// This private method renders the Jinja2 template with the provided data
     /// and returns the resulting Typst markup as a string.
-    fn generate_template(&self, data: OgImageData<'_>) -> anyhow::Result<String> {
+    fn generate_template(
+        &self,
+        data: OgImageData<'_>,
+        avatar_map: &HashMap<String, String>,
+    ) -> anyhow::Result<String> {
         let template = TEMPLATE_ENV.get_template("og-image.typ")?;
-        let rendered = template.render(context! { data })?;
+        let rendered = template.render(context! { data, avatar_map })?;
         Ok(rendered)
     }
 
@@ -173,8 +228,11 @@ impl OgImageGenerator {
         let weight_hanging_svg = include_bytes!("../assets/weight-hanging.svg");
         std::fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg)?;
 
+        // Process avatars - download URLs and copy assets
+        let avatar_map = self.process_avatars(&data, &assets_dir).await?;
+
         // Create og-image.typ file using minijinja template
-        let rendered = self.generate_template(data)?;
+        let rendered = self.generate_template(data, &avatar_map)?;
         let typ_file_path = temp_dir.path().join("og-image.typ");
         std::fs::write(&typ_file_path, rendered)?;
 
@@ -214,13 +272,16 @@ impl Default for OgImageGenerator {
 mod tests {
     use super::*;
 
-    const fn author<'a>(name: &'a str, avatar: Option<&'a str>) -> OgImageAuthorData<'a> {
-        OgImageAuthorData::new(name, avatar)
+    const fn author(name: &str) -> OgImageAuthorData<'_> {
+        OgImageAuthorData::new(name, None)
+    }
+
+    const fn author_with_avatar(name: &str) -> OgImageAuthorData<'_> {
+        OgImageAuthorData::new(name, Some("test-avatar"))
     }
 
     fn create_standard_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] =
-            &[author("alice", Some("avatar1.png")), author("bob", None)];
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author_with_avatar("alice"), author("bob")];
 
         OgImageData {
             name: "example-crate",
@@ -236,7 +297,7 @@ mod tests {
     }
 
     fn create_minimal_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("author", None)];
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("author")];
 
         OgImageData {
             name: "minimal-crate",
@@ -253,9 +314,9 @@ mod tests {
 
     fn create_escaping_test_data() -> OgImageData<'static> {
         static AUTHORS: &[OgImageAuthorData<'_>] = &[
-            author("author \"with quotes\"", None),
-            author("author\\with\\backslashes", None),
-            author("author#with#hashes", None),
+            author_with_avatar("author \"with quotes\""),
+            author("author\\with\\backslashes"),
+            author("author#with#hashes"),
         ];
 
         OgImageData {
@@ -277,16 +338,16 @@ mod tests {
 
     fn create_overflow_test_data() -> OgImageData<'static> {
         static AUTHORS: &[OgImageAuthorData<'_>] = &[
-            author("alice-wonderland", None),
-            author("bob-the-builder", None),
-            author("charlie-brown", None),
-            author("diana-prince", None),
-            author("edward-scissorhands", None),
-            author("fiona-apple", None),
-            author("george-washington", None),
-            author("helen-keller", None),
-            author("isaac-newton", None),
-            author("jane-doe", None),
+            author_with_avatar("alice-wonderland"),
+            author("bob-the-builder"),
+            author_with_avatar("charlie-brown"),
+            author("diana-prince"),
+            author_with_avatar("edward-scissorhands"),
+            author("fiona-apple"),
+            author("george-washington"),
+            author_with_avatar("helen-keller"),
+            author("isaac-newton"),
+            author("jane-doe"),
         ];
 
         OgImageData {
@@ -309,7 +370,7 @@ mod tests {
     }
 
     fn create_simple_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("test-user", None)];
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("test-user")];
 
         OgImageData {
             name: "test-crate",
@@ -338,9 +399,10 @@ mod tests {
     fn test_generate_template_snapshot() {
         let generator = OgImageGenerator::default();
         let data = create_standard_test_data();
+        let avatar_map = HashMap::from([("test-avatar".to_string(), "avatar_0.png".to_string())]);
 
         let template_content = generator
-            .generate_template(data)
+            .generate_template(data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template.typ", template_content);
@@ -350,9 +412,10 @@ mod tests {
     fn test_generate_template_minimal_snapshot() {
         let generator = OgImageGenerator::default();
         let data = create_minimal_test_data();
+        let avatar_map = HashMap::new();
 
         let template_content = generator
-            .generate_template(data)
+            .generate_template(data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template_minimal.typ", template_content);
@@ -362,9 +425,10 @@ mod tests {
     fn test_generate_template_escaping_snapshot() {
         let generator = OgImageGenerator::default();
         let data = create_escaping_test_data();
+        let avatar_map = HashMap::from([("test-avatar".to_string(), "avatar_0.png".to_string())]);
 
         let template_content = generator
-            .generate_template(data)
+            .generate_template(data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template_escaping.typ", template_content);

@@ -14,10 +14,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         description: "An example crate for testing OpenGraph image generation",
         license: "MIT/Apache-2.0",
         tags: &["example", "testing", "og-image"],
-        authors: &[OgImageAuthorData {
-            name: "example-user",
-            avatar: None,
-        }],
+        authors: &[
+            OgImageAuthorData::new("example-user", None),
+            OgImageAuthorData::with_url(
+                "Turbo87",
+                "https://avatars.githubusercontent.com/u/141300",
+            ),
+        ],
         lines_of_code: Some(2000),
         crate_size: 75,
         releases: 5,
