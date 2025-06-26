@@ -1,7 +1,3 @@
----
-source: crates/crates_io_og_image/src/lib.rs
-expression: template_content
----
 // =============================================================================
 // CRATES.IO OG-IMAGE TEMPLATE
 // =============================================================================
@@ -228,6 +224,18 @@ expression: template_content
     )
 }
 
+// =============================================================================
+// DATA LOADING
+// =============================================================================
+// Load data from sys.inputs
+
+#let data = json(bytes(sys.inputs.data))
+#let avatar_map = json(bytes(sys.inputs.at("avatar_map", default: "{}")))
+
+// =============================================================================
+// MAIN DOCUMENT
+// =============================================================================
+
 #set page(width: 600pt, height: 315pt, margin: 0pt, fill: colors.bg)
 #set text(font: "Fira Sans", fill: colors.text)
 
@@ -250,37 +258,50 @@ expression: template_content
     dy: 60pt,
     block(height: 100% - header-height - footer-height, inset: 35pt, clip: true, {
         // Crate name
-        block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width("example-crate")))
+        block(text(size: 36pt, weight: "semibold", fill: colors.primary, truncate_to_width(data.name)))
 
         // Tags
-        render-tag(text(size: 8pt, weight: "medium", "#web"))
-        h(3pt)
-        render-tag(text(size: 8pt, weight: "medium", "#api"))
-        h(3pt)
-        render-tag(text(size: 8pt, weight: "medium", "#async"))
-        h(3pt)
-        render-tag(text(size: 8pt, weight: "medium", "#json"))
-        h(3pt)
-        render-tag(text(size: 8pt, weight: "medium", "#http"))
-        linebreak()
+        if data.at("tags", default: ()).len() > 0 {
+            for (i, tag) in data.tags.enumerate() {
+                if i > 0 {
+                    h(3pt)
+                }
+                render-tag(text(size: 8pt, weight: "medium", "#" + tag))
+            }
+            linebreak()
+        }
 
         // Description
-        block(text(size: 14pt, weight: "regular", truncate_to_height("A comprehensive example crate showcasing various OpenGraph features", maxHeight: 60pt)))
+        block(text(size: 14pt, weight: "regular", truncate_to_height(data.at("description", default: ""), maxHeight: 60pt)))
 
         // Authors
-        set text(size: 10pt, fill: colors.text-light)
-        render-authors-list((
-            (name: "alice", avatar: "assets/avatar_0.png"),
-            (name: "bob", avatar: none),
-        ))
+        if data.at("authors", default: ()).len() > 0 {
+            set text(size: 10pt, fill: colors.text-light)
+            let authors-with-avatars = data.authors.map(author => {
+                let avatar = none
+                if author.avatar != none {
+                    avatar = "assets/" + avatar_map.at(author.avatar)
+                }
+                (name: author.name, avatar: avatar)
+            })
+            render-authors-list(authors-with-avatars)
+        }
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
-                render-metadata("Releases", "15", "tag")
-                render-metadata("Latest", truncate_to_width("v2.1.0", maxWidth: 80pt), "code-branch")
-                render-metadata("License", truncate_to_width("MIT OR Apache-2.0", maxWidth: 100pt), "scale-balanced")
-                render-metadata("SLoC", "5.5k", "code")
-                render-metadata("Size", "125 kB", "weight-hanging")
+                if data.at("releases", default: none) != none {
+                    render-metadata("Releases", data.releases, "tag")
+                }
+                render-metadata("Latest", truncate_to_width(data.version, maxWidth: 80pt), "code-branch")
+                if data.at("license", default: none) != none {
+                    render-metadata("License", truncate_to_width(data.license, maxWidth: 100pt), "scale-balanced")
+                }
+                if data.at("lines_of_code", default: none) != none {
+                    render-metadata("SLoC", data.lines_of_code, "code")
+                }
+                if data.at("crate_size", default: none) != none {
+                    render-metadata("Size", data.crate_size, "weight-hanging")
+                }
             })
         )
     })

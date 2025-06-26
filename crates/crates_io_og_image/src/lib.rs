@@ -5,39 +5,15 @@ mod formatting;
 
 pub use error::OgImageError;
 
-use crate::formatting::{format_bytes, format_number};
+use crate::formatting::{serialize_bytes, serialize_number, serialize_optional_number};
 use bytes::Bytes;
 use crates_io_env_vars::var;
-use minijinja::{Environment, context};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::LazyLock;
 use tempfile::NamedTempFile;
 use tokio::fs;
 use tokio::process::Command;
-
-static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
-    let mut env = Environment::new();
-
-    // Add custom filter for escaping Typst special characters
-    env.add_filter("typst_escape", |value: String| -> String {
-        value
-            .replace('\\', "\\\\") // Escape backslashes first
-            .replace('"', "\\\"") // Escape double quotes
-        // Note: No need to escape # characters when inside double-quoted strings
-    });
-
-    // Add custom filter for formatting byte sizes
-    env.add_filter("format_bytes", format_bytes);
-
-    // Add custom filter for formatting numbers with k/M suffixes
-    env.add_filter("format_number", format_number);
-
-    let template_str = include_str!("../templates/og-image.typ.j2");
-    env.add_template("og-image.typ", template_str).unwrap();
-    env
-});
 
 /// Data structure containing information needed to generate an OpenGraph image
 /// for a crates.io crate.
@@ -56,10 +32,13 @@ pub struct OgImageData<'a> {
     /// Author information
     pub authors: &'a [OgImageAuthorData<'a>],
     /// Source lines of code count (optional)
+    #[serde(serialize_with = "serialize_optional_number")]
     pub lines_of_code: Option<u32>,
     /// Package size in bytes
+    #[serde(serialize_with = "serialize_bytes")]
     pub crate_size: u32,
     /// Total number of releases
+    #[serde(serialize_with = "serialize_number")]
     pub releases: u32,
 }
 
@@ -187,20 +166,6 @@ impl OgImageGenerator {
         Ok(avatar_map)
     }
 
-    /// Generates the Typst template content from the provided data.
-    ///
-    /// This private method renders the Jinja2 template with the provided data
-    /// and returns the resulting Typst markup as a string.
-    fn generate_template(
-        &self,
-        data: &OgImageData<'_>,
-        avatar_map: &HashMap<&str, String>,
-    ) -> Result<String, OgImageError> {
-        let template = TEMPLATE_ENV.get_template("og-image.typ")?;
-        let rendered = template.render(context! { data, avatar_map })?;
-        Ok(rendered)
-    }
-
     /// Generates an OpenGraph image using the provided data.
     ///
     /// This method creates a temporary directory with all the necessary files
@@ -258,19 +223,30 @@ impl OgImageGenerator {
         // Process avatars - download URLs and copy assets
         let avatar_map = self.process_avatars(&data, &assets_dir).await?;
 
-        // Create og-image.typ file using minijinja template
-        let rendered = self.generate_template(&data, &avatar_map)?;
+        // Copy the static Typst template file
+        let template_content = include_str!("../templates/og-image.typ");
         let typ_file_path = temp_dir.path().join("og-image.typ");
-        fs::write(&typ_file_path, rendered).await?;
+        fs::write(&typ_file_path, template_content).await?;
 
         // Create a named temp file for the output PNG
         let output_file = NamedTempFile::new().map_err(OgImageError::TempFileError)?;
 
-        // Run typst compile command
+        // Serialize data and avatar_map to JSON
+        let json_data = serde_json::to_string(&data);
+        let json_data = json_data.map_err(OgImageError::JsonSerializationError)?;
+
+        let json_avatar_map = serde_json::to_string(&avatar_map);
+        let json_avatar_map = json_avatar_map.map_err(OgImageError::JsonSerializationError)?;
+
+        // Run typst compile command with input data
         let output = Command::new(&self.typst_binary_path)
             .arg("compile")
             .arg("--format")
             .arg("png")
+            .arg("--input")
+            .arg(format!("data={json_data}"))
+            .arg("--input")
+            .arg(format!("avatar_map={json_avatar_map}"))
             .arg(&typ_file_path)
             .arg(output_file.path())
             .output()
@@ -311,22 +287,6 @@ mod tests {
 
     const fn author_with_avatar(name: &str) -> OgImageAuthorData<'_> {
         OgImageAuthorData::new(name, Some("test-avatar"))
-    }
-
-    fn create_standard_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] = &[author_with_avatar("alice"), author("bob")];
-
-        OgImageData {
-            name: "example-crate",
-            version: "v2.1.0",
-            description: "A comprehensive example crate showcasing various OpenGraph features",
-            license: "MIT OR Apache-2.0",
-            tags: &["web", "api", "async", "json", "http"],
-            authors: AUTHORS,
-            lines_of_code: Some(5500),
-            crate_size: 128000,
-            releases: 15,
-        }
     }
 
     fn create_minimal_test_data() -> OgImageData<'static> {
@@ -428,12 +388,6 @@ mod tests {
             .is_err()
     }
 
-    fn generate_template(data: OgImageData<'_>, avatar_map: HashMap<&str, String>) -> String {
-        OgImageGenerator::default()
-            .generate_template(&data, &avatar_map)
-            .expect("Failed to generate template")
-    }
-
     async fn generate_image(data: OgImageData<'_>) -> Option<Vec<u8>> {
         if skip_if_typst_unavailable() {
             return None;
@@ -447,33 +401,6 @@ mod tests {
             .expect("Failed to generate image");
 
         Some(std::fs::read(temp_file.path()).expect("Failed to read generated image"))
-    }
-
-    #[test]
-    fn test_generate_template_snapshot() {
-        let data = create_standard_test_data();
-        let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
-
-        let template_content = generate_template(data, avatar_map);
-        insta::assert_snapshot!("generated_template.typ", template_content);
-    }
-
-    #[test]
-    fn test_generate_template_minimal_snapshot() {
-        let data = create_minimal_test_data();
-        let avatar_map = HashMap::new();
-
-        let template_content = generate_template(data, avatar_map);
-        insta::assert_snapshot!("generated_template_minimal.typ", template_content);
-    }
-
-    #[test]
-    fn test_generate_template_escaping_snapshot() {
-        let data = create_escaping_test_data();
-        let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
-
-        let template_content = generate_template(data, avatar_map);
-        insta::assert_snapshot!("generated_template_escaping.typ", template_content);
     }
 
     #[tokio::test]

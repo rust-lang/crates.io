@@ -3,6 +3,8 @@
 //! This module contains utility functions for formatting numbers in various ways,
 //! such as human-readable byte sizes.
 
+use serde::Serializer;
+
 /// Formats a byte size value into a human-readable string.
 ///
 /// The function follows these rules:
@@ -50,6 +52,10 @@ pub fn format_bytes(bytes: u32) -> String {
     }
 }
 
+pub fn serialize_bytes<S: Serializer>(bytes: &u32, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&format_bytes(*bytes))
+}
+
 /// Formats a number with "k" and "M" suffixes for thousands and millions.
 ///
 /// The function follows these rules:
@@ -92,6 +98,20 @@ pub fn format_number(number: u32) -> String {
         format!("{value:.1}{unit}")
     } else {
         format!("{value:.0}{unit}")
+    }
+}
+
+pub fn serialize_number<S: Serializer>(number: &u32, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&format_number(*number))
+}
+
+pub fn serialize_optional_number<S: Serializer>(
+    opt_number: &Option<u32>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    match opt_number {
+        Some(number) => serializer.serialize_str(&format_number(*number)),
+        None => serializer.serialize_none(),
     }
 }
 
