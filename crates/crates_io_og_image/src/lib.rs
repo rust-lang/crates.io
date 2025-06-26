@@ -1,6 +1,7 @@
 //! OpenGraph image generation for crates.io
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
+use bytes::Bytes;
 use crates_io_env_vars::var;
 use minijinja::{Environment, context};
 use serde::Serialize;
@@ -126,11 +127,11 @@ impl OgImageGenerator {
     /// This method handles both asset-based avatars (which are copied from the bundled assets)
     /// and URL-based avatars (which are downloaded from the internet).
     /// Returns a mapping from avatar source to the local filename.
-    async fn process_avatars(
+    async fn process_avatars<'a>(
         &self,
-        data: &OgImageData<'_>,
+        data: &'a OgImageData<'_>,
         assets_dir: &std::path::Path,
-    ) -> anyhow::Result<HashMap<String, String>> {
+    ) -> anyhow::Result<HashMap<&'a str, String>> {
         let mut avatar_map = HashMap::new();
 
         let client = reqwest::Client::new();
@@ -139,22 +140,27 @@ impl OgImageGenerator {
                 let filename = format!("avatar_{index}.png");
                 let avatar_path = assets_dir.join(&filename);
 
-                if *avatar == "test-avatar" {
+                // Get the bytes either from the included asset or download from URL
+                let bytes = if *avatar == "test-avatar" {
                     // Copy directly from included bytes
-                    let test_avatar_png = include_bytes!("../assets/test-avatar.png");
-                    fs::write(&avatar_path, test_avatar_png).await?;
-
-                    // Store the mapping from the test avatar to the numbered filename
-                    avatar_map.insert("test-avatar".to_string(), filename);
+                    Bytes::from_static(include_bytes!("../assets/test-avatar.png"))
                 } else {
                     // Download the avatar from the URL
-                    let response = client.get(*avatar).send().await?;
-                    let bytes = response.bytes().await?;
-                    fs::write(&avatar_path, bytes).await?;
+                    let response = client.get(*avatar).send().await;
+                    let response = response
+                        .with_context(|| format!("Failed to download avatar from URL: {avatar}"))?;
 
-                    // Store the mapping from the URL to the numbered filename
-                    avatar_map.insert((*avatar).to_string(), filename);
-                }
+                    response.bytes().await.with_context(|| {
+                        format!("Failed to read avatar bytes from URL: {avatar}")
+                    })?
+                };
+
+                // Write the bytes to the avatar file
+                let result = fs::write(&avatar_path, bytes).await;
+                result.with_context(|| format!("Failed to write avatar to {avatar_path:?}"))?;
+
+                // Store the mapping from the avatar source to the numbered filename
+                avatar_map.insert(*avatar, filename);
             }
         }
 
@@ -167,8 +173,8 @@ impl OgImageGenerator {
     /// and returns the resulting Typst markup as a string.
     fn generate_template(
         &self,
-        data: OgImageData<'_>,
-        avatar_map: &HashMap<String, String>,
+        data: &OgImageData<'_>,
+        avatar_map: &HashMap<&str, String>,
     ) -> anyhow::Result<String> {
         let template = TEMPLATE_ENV.get_template("og-image.typ")?;
         let rendered = template.render(context! { data, avatar_map })?;
@@ -233,7 +239,7 @@ impl OgImageGenerator {
         let avatar_map = self.process_avatars(&data, &assets_dir).await?;
 
         // Create og-image.typ file using minijinja template
-        let rendered = self.generate_template(data, &avatar_map)?;
+        let rendered = self.generate_template(&data, &avatar_map)?;
         let typ_file_path = temp_dir.path().join("og-image.typ");
         fs::write(&typ_file_path, rendered).await?;
 
@@ -400,10 +406,10 @@ mod tests {
     fn test_generate_template_snapshot() {
         let generator = OgImageGenerator::default();
         let data = create_standard_test_data();
-        let avatar_map = HashMap::from([("test-avatar".to_string(), "avatar_0.png".to_string())]);
+        let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
 
         let template_content = generator
-            .generate_template(data, &avatar_map)
+            .generate_template(&data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template.typ", template_content);
@@ -416,7 +422,7 @@ mod tests {
         let avatar_map = HashMap::new();
 
         let template_content = generator
-            .generate_template(data, &avatar_map)
+            .generate_template(&data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template_minimal.typ", template_content);
@@ -426,10 +432,10 @@ mod tests {
     fn test_generate_template_escaping_snapshot() {
         let generator = OgImageGenerator::default();
         let data = create_escaping_test_data();
-        let avatar_map = HashMap::from([("test-avatar".to_string(), "avatar_0.png".to_string())]);
+        let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
 
         let template_content = generator
-            .generate_template(data, &avatar_map)
+            .generate_template(&data, &avatar_map)
             .expect("Failed to generate template");
 
         insta::assert_snapshot!("generated_template_escaping.typ", template_content);
