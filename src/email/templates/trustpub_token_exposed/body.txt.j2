@@ -1,0 +1,19 @@
+{{ reporter }} has notified us that one of your crates.io Trusted Publishing tokens has been exposed publicly. We have revoked this token as a precaution.
+
+{% if crate_names | length == 1 -%}
+This token was only authorized to publish the "{{ crate_names[0] }}" crate.
+{%- else -%}
+This token was authorized to publish the following crates: "{{ crate_names | join('", "') }}".
+{%- endif %}
+
+Please review your account at https://{{ domain }} and your GitHub repository settings to confirm that no unexpected changes have been made to your crates or trusted publishing configurations.
+
+Source type: {{ source }}
+
+{% if url -%}
+URL where the token was found: {{ url }}
+{%- else -%}
+We were not informed of the URL where the token was found.
+{%- endif %}
+
+Trusted Publishing tokens are temporary and used for automated publishing from GitHub Actions. If this exposure was unexpected, please review your repository's workflow files and secrets.

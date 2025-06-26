@@ -1,11 +1,12 @@
-use crate::email::Email;
+use crate::email::EmailMessage;
 use crate::schema::{emails, users};
 use crate::worker::Environment;
+use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use minijinja::context;
 use std::collections::HashSet;
-use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 /// See <https://github.com/rust-lang/team/pull/1197>.
@@ -138,23 +139,18 @@ impl BackgroundJob for SyncAdmins {
 
         let added_admins = format_repo_admins(&added_admin_ids);
         let removed_admins = format_database_admins(&removed_admin_ids);
-
-        let email = AdminAccountEmail::new(added_admins, removed_admins);
+        let context = context! { added_admins, removed_admins };
 
         for database_admin in &database_admins {
-            let (_, _, email_address) = database_admin;
+            let (github_id, login, email_address) = database_admin;
             if let Some(email_address) = email_address {
-                if let Err(error) = ctx.emails.send(email_address, email.clone()).await {
+                if let Err(error) = send_email(&ctx, email_address, &context).await {
                     warn!(
-                        "Failed to send email to admin {} ({}, github_id: {}): {}",
-                        database_admin.1, email_address, database_admin.0, error
+                        "Failed to send email to admin {login} ({email_address}, github_id: {github_id}): {error:?}",
                     );
                 }
             } else {
-                warn!(
-                    "No email address found for admin {} (github_id: {})",
-                    database_admin.1, database_admin.0
-                );
+                warn!("No email address found for admin {login} (github_id: {github_id})",);
             }
         }
 
@@ -162,48 +158,13 @@ impl BackgroundJob for SyncAdmins {
     }
 }
 
-#[derive(Debug, Clone)]
-struct AdminAccountEmail {
-    added_admins: Vec<String>,
-    removed_admins: Vec<String>,
-}
-
-impl AdminAccountEmail {
-    fn new(added_admins: Vec<String>, removed_admins: Vec<String>) -> Self {
-        Self {
-            added_admins,
-            removed_admins,
-        }
-    }
-}
-
-impl Email for AdminAccountEmail {
-    fn subject(&self) -> String {
-        "crates.io: Admin account changes".into()
-    }
-
-    fn body(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl Display for AdminAccountEmail {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if !self.added_admins.is_empty() {
-            writeln!(f, "Granted admin access:\n")?;
-            for new_admin in &self.added_admins {
-                writeln!(f, "- {}", new_admin)?;
-            }
-            writeln!(f)?;
-        }
-
-        if !self.removed_admins.is_empty() {
-            writeln!(f, "Revoked admin access:")?;
-            for obsolete_admin in &self.removed_admins {
-                writeln!(f, "- {}", obsolete_admin)?;
-            }
-        }
-
-        Ok(())
-    }
+async fn send_email(
+    ctx: &Environment,
+    address: &str,
+    context: &minijinja::Value,
+) -> anyhow::Result<()> {
+    let email = EmailMessage::from_template("admin_account", context);
+    let email = email.context("Failed to render email template")?;
+    let result = ctx.emails.send(address, email).await;
+    result.context("Failed to send email")
 }

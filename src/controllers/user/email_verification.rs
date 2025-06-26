@@ -1,7 +1,7 @@
-use super::update::UserConfirmEmail;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
+use crate::email::EmailMessage;
 use crate::models::Email;
 use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
@@ -12,6 +12,8 @@ use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
+use minijinja::context;
+use secrecy::ExposeSecret;
 
 /// Marks the email belonging to the given token as verified.
 #[utoipa::path(
@@ -77,15 +79,19 @@ pub async fn resend_email_verification(
                 .optional()?
                 .ok_or_else(|| bad_request("Email could not be found"))?;
 
-            let email1 = UserConfirmEmail {
-                user_name: &auth.user().gh_login,
-                domain: &state.emails.domain,
-                token: email.token,
-            };
+            let email_message = EmailMessage::from_template(
+                "user_confirm",
+                context! {
+                    user_name => auth.user().gh_login,
+                    domain => state.emails.domain,
+                    token => email.token.expose_secret()
+                },
+            )
+            .map_err(|_| bad_request("Failed to render email template"))?;
 
             state
                 .emails
-                .send(&email.email, email1)
+                .send(&email.email, email_message)
                 .await
                 .map_err(BoxedAppError::from)
         }

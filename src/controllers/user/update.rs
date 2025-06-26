@@ -1,6 +1,7 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
+use crate::email::EmailMessage;
 use crate::models::NewEmail;
 use crate::schema::users;
 use crate::util::errors::{AppResult, bad_request, server_error};
@@ -10,7 +11,8 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use lettre::Address;
-use secrecy::{ExposeSecret, SecretString};
+use minijinja::context;
+use secrecy::ExposeSecret;
 
 #[derive(Deserialize)]
 pub struct UserUpdate {
@@ -68,15 +70,23 @@ pub async fn update_user(
                 let email_address = user.verified_email(&mut conn).await?;
 
                 if let Some(email_address) = email_address {
-                    let email = PublishNotificationsUnsubscribeEmail {
-                        user_name: &user.gh_login,
-                        domain: &state.emails.domain,
-                    };
+                    let email = EmailMessage::from_template(
+                        "unsubscribe_notifications",
+                        context! {
+                            user_name => user.gh_login,
+                            domain => state.emails.domain
+                        },
+                    );
 
-                    if let Err(error) = state.emails.send(&email_address, email).await {
-                        warn!(
-                            "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
-                        );
+                    match email {
+                        Ok(email) => {
+                            if let Err(error) = state.emails.send(&email_address, email).await {
+                                warn!(
+                                    "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
+                                );
+                            }
+                        }
+                        Err(error) => warn!("Failed to render unsubscribe email template: {error}"),
                     }
                 }
             }
@@ -106,63 +116,24 @@ pub async fn update_user(
         // an invalid email set in their GitHub profile, and we should let them sign in even though
         // we're trying to silently use their invalid address during signup and can't send them an
         // email. They'll then have to provide a valid email address.
-        let email = UserConfirmEmail {
-            user_name: &user.gh_login,
-            domain: &state.emails.domain,
-            token,
-        };
+        let email = EmailMessage::from_template(
+            "user_confirm",
+            context! {
+                user_name => user.gh_login,
+                domain => state.emails.domain,
+                token => token.expose_secret()
+            },
+        );
 
-        let _ = state.emails.send(user_email, email).await;
+        match email {
+            Ok(email) => {
+                let _ = state.emails.send(user_email, email).await;
+            }
+            Err(error) => {
+                warn!("Failed to render user confirmation email template: {error}");
+            }
+        };
     }
 
     Ok(OkResponse::new())
-}
-
-pub struct UserConfirmEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-    pub token: SecretString,
-}
-
-impl crate::email::Email for UserConfirmEmail<'_> {
-    fn subject(&self) -> String {
-        "crates.io: Please confirm your email address".into()
-    }
-
-    fn body(&self) -> String {
-        // Create a URL with token string as path to send to user
-        // If user clicks on path, look email/user up in database,
-        // make sure tokens match
-
-        format!(
-            "Hello {user_name}! Welcome to crates.io. Please click the
-link below to verify your email address. Thank you!\n
-https://{domain}/confirm/{token}",
-            user_name = self.user_name,
-            domain = self.domain,
-            token = self.token.expose_secret(),
-        )
-    }
-}
-
-pub struct PublishNotificationsUnsubscribeEmail<'a> {
-    pub user_name: &'a str,
-    pub domain: &'a str,
-}
-
-impl crate::email::Email for PublishNotificationsUnsubscribeEmail<'_> {
-    fn subject(&self) -> String {
-        "crates.io: Unsubscribed from publish notifications".into()
-    }
-
-    fn body(&self) -> String {
-        let Self { user_name, domain } = self;
-        format!(
-            "Hello {user_name}!
-
-You have been unsubscribed from publish notifications.
-
-If you would like to resubscribe, please visit https://{domain}/settings/profile",
-        )
-    }
 }

@@ -1,0 +1,11 @@
+{{ reporter }} has notified us that your crates.io API token {{ token_name }} has been exposed publicly. We have revoked this token as a precaution.
+
+Please review your account at https://{{ domain }} to confirm that no unexpected changes have been made to your settings or crates.
+
+Source type: {{ source }}
+
+{% if url -%}
+URL where the token was found: {{ url }}
+{%- else -%}
+We were not informed of the URL where the token was found.
+{%- endif %}

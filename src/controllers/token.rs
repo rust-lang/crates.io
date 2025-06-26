@@ -1,6 +1,8 @@
+use crate::email::EmailMessage;
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
 use crate::views::EncodableApiTokenWithToken;
+use anyhow::Context;
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
@@ -20,7 +22,9 @@ use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http::request::Parts;
+use minijinja::context;
 use secrecy::ExposeSecret;
+use serde::Serialize;
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -171,17 +175,16 @@ pub async fn create_api_token(
         .build();
 
     if let Some(recipient) = recipient {
-        let email = NewTokenEmail {
-            token_name: &new.api_token.name,
-            user_name: &user.gh_login,
-            domain: &app.emails.domain,
+        let context = context! {
+            token_name => &new.api_token.name,
+            user_name => &user.gh_login,
+            domain => app.emails.domain,
         };
 
         // At this point the token has been created so failing to send the
         // email should not cause an error response to be returned to the
         // caller.
-        let email_ret = app.emails.send(&recipient, email).await;
-        if let Err(e) = email_ret {
+        if let Err(e) = send_creation_email(&app.emails, &recipient, context).await {
             error!("Failed to send token creation email: {e}")
         }
     }
@@ -286,28 +289,13 @@ pub async fn revoke_current_api_token(app: AppState, req: Parts) -> AppResult<Re
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
-struct NewTokenEmail<'a> {
-    token_name: &'a str,
-    user_name: &'a str,
-    domain: &'a str,
-}
-
-impl crate::email::Email for NewTokenEmail<'_> {
-    fn subject(&self) -> String {
-        format!("crates.io: New API token \"{}\" created", self.token_name)
-    }
-
-    fn body(&self) -> String {
-        format!(
-            "\
-Hello {user_name}!
-
-A new API token with the name \"{token_name}\" was recently added to your {domain} account.
-
-If this wasn't you, you should revoke the token immediately: https://{domain}/settings/tokens",
-            token_name = self.token_name,
-            user_name = self.user_name,
-            domain = self.domain,
-        )
-    }
+async fn send_creation_email(
+    emails: &crate::Emails,
+    recipient: &str,
+    context: impl Serialize,
+) -> anyhow::Result<()> {
+    let email = EmailMessage::from_template("new_token", context);
+    let email = email.context("Failed to render email template")?;
+    let result = emails.send(recipient, email).await;
+    result.context("Failed to send email")
 }

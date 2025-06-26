@@ -4,10 +4,12 @@ use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
+use minijinja::context;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
+use secrecy::ExposeSecret;
 
 use crate::app::AppState;
-use crate::controllers::user::update::UserConfirmEmail;
+use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
 use crate::models::{NewEmail, NewUser, User};
@@ -170,13 +172,24 @@ async fn create_or_update_user(
                     .build();
 
                 if let Some(token) = new_email.insert_if_missing(conn).await? {
-                    // Swallows any error. Some users might insert an invalid email address here.
-                    let email = UserConfirmEmail {
-                        user_name: &user.gh_login,
-                        domain: &emails.domain,
-                        token,
+                    let email = EmailMessage::from_template(
+                        "user_confirm",
+                        context! {
+                            user_name => user.gh_login,
+                            domain => emails.domain,
+                            token => token.expose_secret()
+                        },
+                    );
+
+                    match email {
+                        Ok(email) => {
+                            // Swallows any error. Some users might insert an invalid email address here.
+                            let _ = emails.send(user_email, email).await;
+                        }
+                        Err(error) => {
+                            warn!("Failed to render user confirmation email template: {error}");
+                        }
                     };
-                    let _ = emails.send(user_email, email).await;
                 }
             }
 

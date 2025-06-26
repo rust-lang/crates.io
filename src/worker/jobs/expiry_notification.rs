@@ -1,12 +1,13 @@
 use crate::models::ApiToken;
 use crate::schema::api_tokens;
-use crate::{Emails, email::Email, models::User, worker::Environment};
+use crate::{Emails, email::EmailMessage, models::User, worker::Environment};
 use chrono::SecondsFormat;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::now;
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use minijinja::context;
 use std::sync::Arc;
 
 /// The threshold for the expiry notification.
@@ -83,12 +84,15 @@ async fn handle_expiring_token(
     let recipient = user.email(conn).await?;
     if let Some(recipient) = recipient {
         debug!("Sending expiry notification to {}…", recipient);
-        let email = ExpiryNotificationEmail {
-            name: &user.gh_login,
-            token_id: token.id,
-            token_name: &token.name,
-            expiry_date: token.expired_at.unwrap(),
-        };
+        let email = EmailMessage::from_template(
+            "expiry_notification",
+            context! {
+                name => user.gh_login,
+                token_id => token.id,
+                token_name => token.name,
+                expiry_date => token.expired_at.unwrap().to_rfc3339_opts(SecondsFormat::Secs, true)
+            },
+        )?;
         emails.send(&recipient, email).await?;
     } else {
         info!(
@@ -132,40 +136,6 @@ pub async fn find_expiring_tokens(
         .limit(MAX_ROWS)
         .get_results(conn)
         .await
-}
-
-#[derive(Debug, Clone)]
-struct ExpiryNotificationEmail<'a> {
-    name: &'a str,
-    token_id: i32,
-    token_name: &'a str,
-    expiry_date: chrono::DateTime<chrono::Utc>,
-}
-
-impl Email for ExpiryNotificationEmail<'_> {
-    fn subject(&self) -> String {
-        format!(
-            "crates.io: Your API token \"{}\" is about to expire",
-            self.token_name
-        )
-    }
-
-    fn body(&self) -> String {
-        format!(
-            r#"Hi {},
-
-We noticed your token "{}" will expire on {}.
-
-If this token is still needed, visit https://crates.io/settings/tokens/new?from={} to generate a new one.
-
-Thanks,
-The crates.io team"#,
-            self.name,
-            self.token_name,
-            self.expiry_date.to_rfc3339_opts(SecondsFormat::Secs, true),
-            self.token_id
-        )
-    }
 }
 
 #[cfg(test)]

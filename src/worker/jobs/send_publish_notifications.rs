@@ -1,4 +1,4 @@
-use crate::email::Email;
+use crate::email::EmailMessage;
 use crate::models::OwnerKind;
 use crate::schema::{crate_owners, crates, emails, users, versions};
 use crate::worker::Environment;
@@ -7,7 +7,9 @@ use chrono::{DateTime, SecondsFormat, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use minijinja::context;
 use std::sync::Arc;
+use tracing::warn;
 
 /// Background job that sends email notifications to all crate owners when a
 /// new crate version is published.
@@ -83,18 +85,29 @@ impl BackgroundJob for SendPublishNotificationsJob {
                 None => "",
             };
 
-            let email = PublishNotificationEmail {
-                recipient,
-                krate,
-                version,
-                publish_time: &publish_time,
-                publisher_info,
-            };
+            let email = EmailMessage::from_template(
+                "publish_notification",
+                context! {
+                    recipient => recipient,
+                    krate => krate,
+                    version => version,
+                    publish_time => publish_time,
+                    publisher_info => publisher_info
+                },
+            );
 
             debug!("Sending publish notification for {krate}@{version} to {email_address}…");
-            let result = ctx.emails.send(&email_address, email).await.inspect_err(|err| {
-                warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
-            });
+            let result = match email {
+                Ok(email_msg) => {
+                    ctx.emails.send(&email_address, email_msg).await.inspect_err(|err| {
+                        warn!("Failed to send publish notification for {krate}@{version} to {email_address}: {err}")
+                    }).map_err(|_| ())
+                }
+                Err(err) => {
+                    warn!("Failed to render publish notification email template for {krate}@{version} to {email_address}: {err}");
+                    Err(())
+                }
+            };
 
             results.push(result);
         }
@@ -151,41 +164,5 @@ impl PublishDetails {
             .select(PublishDetails::as_select())
             .first(conn)
             .await
-    }
-}
-
-/// Email template for notifying crate owners about a new crate version
-/// being published.
-#[derive(Debug, Clone)]
-struct PublishNotificationEmail<'a> {
-    recipient: &'a str,
-    krate: &'a str,
-    version: &'a str,
-    publish_time: &'a str,
-    publisher_info: &'a str,
-}
-
-impl Email for PublishNotificationEmail<'_> {
-    fn subject(&self) -> String {
-        let Self { krate, version, .. } = self;
-        format!("crates.io: Successfully published {krate}@{version}")
-    }
-
-    fn body(&self) -> String {
-        let Self {
-            recipient,
-            krate,
-            version,
-            publish_time,
-            publisher_info,
-        } = self;
-
-        format!(
-            "Hello {recipient}!
-
-A new version of the package {krate} ({version}) was published{publisher_info} at {publish_time}.
-
-If you have questions or security concerns, you can contact us at help@crates.io. If you would like to stop receiving these security notifications, you can disable them in your account settings."
-        )
     }
 }
