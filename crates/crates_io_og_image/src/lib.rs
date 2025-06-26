@@ -1,4 +1,4 @@
-//! OpenGraph image generation for crates.io
+#![doc = include_str!("../README.md")]
 
 mod formatting;
 
