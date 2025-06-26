@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tempfile::NamedTempFile;
+use tokio::fs;
 use tokio::process::Command;
 
 static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
@@ -141,7 +142,7 @@ impl OgImageGenerator {
                 if *avatar == "test-avatar" {
                     // Copy directly from included bytes
                     let test_avatar_png = include_bytes!("../assets/test-avatar.png");
-                    std::fs::write(&avatar_path, test_avatar_png)?;
+                    fs::write(&avatar_path, test_avatar_png).await?;
 
                     // Store the mapping from the test avatar to the numbered filename
                     avatar_map.insert("test-avatar".to_string(), filename);
@@ -149,7 +150,7 @@ impl OgImageGenerator {
                     // Download the avatar from the URL
                     let response = client.get(*avatar).send().await?;
                     let bytes = response.bytes().await?;
-                    std::fs::write(&avatar_path, bytes)?;
+                    fs::write(&avatar_path, bytes).await?;
 
                     // Store the mapping from the URL to the numbered filename
                     avatar_map.insert((*avatar).to_string(), filename);
@@ -210,23 +211,23 @@ impl OgImageGenerator {
 
         // Create assets directory and copy logo and icons
         let assets_dir = temp_dir.path().join("assets");
-        std::fs::create_dir(&assets_dir)?;
+        fs::create_dir(&assets_dir).await?;
         let cargo_logo = include_bytes!("../assets/cargo.png");
-        std::fs::write(assets_dir.join("cargo.png"), cargo_logo)?;
+        fs::write(assets_dir.join("cargo.png"), cargo_logo).await?;
         let rust_logo_svg = include_bytes!("../assets/rust-logo.svg");
-        std::fs::write(assets_dir.join("rust-logo.svg"), rust_logo_svg)?;
+        fs::write(assets_dir.join("rust-logo.svg"), rust_logo_svg).await?;
 
         // Copy SVG icons
         let code_branch_svg = include_bytes!("../assets/code-branch.svg");
-        std::fs::write(assets_dir.join("code-branch.svg"), code_branch_svg)?;
+        fs::write(assets_dir.join("code-branch.svg"), code_branch_svg).await?;
         let code_svg = include_bytes!("../assets/code.svg");
-        std::fs::write(assets_dir.join("code.svg"), code_svg)?;
+        fs::write(assets_dir.join("code.svg"), code_svg).await?;
         let scale_balanced_svg = include_bytes!("../assets/scale-balanced.svg");
-        std::fs::write(assets_dir.join("scale-balanced.svg"), scale_balanced_svg)?;
+        fs::write(assets_dir.join("scale-balanced.svg"), scale_balanced_svg).await?;
         let tag_svg = include_bytes!("../assets/tag.svg");
-        std::fs::write(assets_dir.join("tag.svg"), tag_svg)?;
+        fs::write(assets_dir.join("tag.svg"), tag_svg).await?;
         let weight_hanging_svg = include_bytes!("../assets/weight-hanging.svg");
-        std::fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg)?;
+        fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg).await?;
 
         // Process avatars - download URLs and copy assets
         let avatar_map = self.process_avatars(&data, &assets_dir).await?;
@@ -234,7 +235,7 @@ impl OgImageGenerator {
         // Create og-image.typ file using minijinja template
         let rendered = self.generate_template(data, &avatar_map)?;
         let typ_file_path = temp_dir.path().join("og-image.typ");
-        std::fs::write(&typ_file_path, rendered)?;
+        fs::write(&typ_file_path, rendered).await?;
 
         // Create a named temp file for the output PNG
         let output_file = NamedTempFile::new()?;
