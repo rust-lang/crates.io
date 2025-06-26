@@ -32,7 +32,7 @@ async fn test_recently_deleted_crate_with_same_name() -> anyhow::Result<()> {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"A crate with the name `actix_web` was recently deleted. Reuse of this name will be available after 2099-12-25T12:34:56Z."}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 
     Ok(())
 }

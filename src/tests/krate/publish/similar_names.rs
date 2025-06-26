@@ -17,7 +17,7 @@ async fn new_crate_similar_name() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate was previously named `Foo_similar`"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -34,7 +34,7 @@ async fn new_crate_similar_name_hyphen() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate was previously named `foo_bar_hyphen`"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -51,5 +51,5 @@ async fn new_crate_similar_name_underscore() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate was previously named `foo-bar-underscore`"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }

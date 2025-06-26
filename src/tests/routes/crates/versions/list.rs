@@ -464,7 +464,7 @@ async fn page_with_seek<U: RequestHelper>(anon: &U, url: &str) -> (Vec<VersionLi
             url = Some(format!("{url_without_query}{}", new_url));
             assert_ne!(resp.meta.total, 0)
         } else {
-            assert_that!(resp.versions, empty());
+            assert_that!(resp.versions, is_empty());
             assert_eq!(resp.meta.total, 0)
         }
         results.push(resp);

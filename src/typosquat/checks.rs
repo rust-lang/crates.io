@@ -118,7 +118,7 @@ mod tests {
         {
             let name = package.name.clone();
             let squats = harness.check_package(&name, Box::new(package))?;
-            assert_that!(squats, empty());
+            assert_that!(squats, is_empty());
         }
 
         // Now try some packages that should be.
@@ -133,7 +133,7 @@ mod tests {
         {
             let name = package.name.clone();
             let squats = harness.check_package(&name, Box::new(package))?;
-            assert_that!(squats, not(empty()));
+            assert_that!(squats, not(is_empty()));
         }
 
         Ok(())

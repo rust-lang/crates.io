@@ -158,7 +158,7 @@ async fn new_krate_duplicate_version() {
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crate version `1.0.0` is already uploaded"}]}"#);
 
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]

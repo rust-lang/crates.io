@@ -72,7 +72,7 @@ async fn invalid_feature_name1() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `~` in feature `~foo`, the first character must be a Unicode XID start character or digit (most letters or `_` or `0` to `9`)"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -83,7 +83,7 @@ async fn invalid_feature_name2() {
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"invalid character `!` in feature `!bar`, the first character must be a Unicode XID start character or digit (most letters or `_` or `0` to `9`)"}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -114,7 +114,7 @@ async fn too_many_features() {
     let response = token.publish_crate(publish_builder).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io only allows a maximum number of 3 features, but your crate is declaring 5 features.\n\nTake a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html to understand why this restriction was introduced.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -142,7 +142,7 @@ async fn too_many_features_with_custom_limit() {
     let response = token.publish_crate(publish_builder).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io only allows a maximum number of 4 features, but your crate is declaring 5 features.\n\nTake a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html to understand why this restriction was introduced.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 
     let publish_builder = PublishBuilder::new("foo", "1.0.0")
         .feature("one", &[])
@@ -174,7 +174,7 @@ async fn too_many_enabled_features() {
     let response = token.publish_crate(publish_builder).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io only allows a maximum number of 3 features or dependencies that another feature can enable, but the \"default\" feature of your crate is enabling 5 features or dependencies.\n\nTake a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html to understand why this restriction was introduced.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -198,7 +198,7 @@ async fn too_many_enabled_features_with_custom_limit() {
     let response = token.publish_crate(publish_builder).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"crates.io only allows a maximum number of 4 features or dependencies that another feature can enable, but the \"default\" feature of your crate is enabling 5 features or dependencies.\n\nTake a look at https://blog.rust-lang.org/2023/10/26/broken-badges-and-23k-keywords.html to understand why this restriction was introduced.\n\nIf you have a use case that requires an increase of this limit, please send us an email to help@crates.io to discuss the details."}]}"#);
-    assert_that!(app.stored_files().await, empty());
+    assert_that!(app.stored_files().await, is_empty());
 
     let publish_builder =
         PublishBuilder::new("foo", "1.0.0").feature("default", &["one", "two", "three", "four"]);
