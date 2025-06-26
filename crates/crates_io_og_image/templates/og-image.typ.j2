@@ -274,11 +274,11 @@
 
         place(bottom + left, float: true,
             stack(dir: ltr, {
-                render-metadata("Releases", "{{ data.releases }}", "tag")
+                render-metadata("Releases", "{{ data.releases | format_number }}", "tag")
                 render-metadata("Latest", truncate_to_width("{{ data.version | typst_escape }}", maxWidth: 80pt), "code-branch")
                 render-metadata("License", truncate_to_width("{{ data.license | typst_escape }}", maxWidth: 100pt), "scale-balanced")
                 {%- if data.lines_of_code %}
-                render-metadata("SLoC", "{{ data.lines_of_code }}", "code")
+                render-metadata("SLoC", "{{ data.lines_of_code | format_number }}", "code")
                 {%- endif %}
                 render-metadata("Size", "{{ data.crate_size | format_bytes }}", "weight-hanging")
             })

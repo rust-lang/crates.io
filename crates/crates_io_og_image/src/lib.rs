@@ -2,7 +2,7 @@
 
 mod formatting;
 
-use crate::formatting::format_bytes;
+use crate::formatting::{format_bytes, format_number};
 use anyhow::{Context, anyhow};
 use bytes::Bytes;
 use crates_io_env_vars::var;
@@ -28,6 +28,9 @@ static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
 
     // Add custom filter for formatting byte sizes
     env.add_filter("format_bytes", format_bytes);
+
+    // Add custom filter for formatting numbers with k/M suffixes
+    env.add_filter("format_number", format_number);
 
     let template_str = include_str!("../templates/og-image.typ.j2");
     env.add_template("og-image.typ", template_str).unwrap();

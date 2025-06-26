@@ -279,7 +279,7 @@ expression: template_content
                 render-metadata("Releases", "15", "tag")
                 render-metadata("Latest", truncate_to_width("v2.1.0", maxWidth: 80pt), "code-branch")
                 render-metadata("License", truncate_to_width("MIT OR Apache-2.0", maxWidth: 100pt), "scale-balanced")
-                render-metadata("SLoC", "5500", "code")
+                render-metadata("SLoC", "5.5k", "code")
                 render-metadata("Size", "125 kB", "weight-hanging")
             })
         )
