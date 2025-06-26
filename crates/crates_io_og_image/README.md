@@ -25,10 +25,10 @@ The generated images include:
 ### Basic Example
 
 ```rust
-use crates_io_og_image::{OgImageData, OgImageGenerator, OgImageAuthorData};
+use crates_io_og_image::{OgImageData, OgImageGenerator, OgImageAuthorData, OgImageError};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), OgImageError> {
     // Create a generator instance
     let generator = OgImageGenerator::default();
 

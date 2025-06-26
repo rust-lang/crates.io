@@ -1,9 +1,11 @@
 #![doc = include_str!("../README.md")]
 
+mod error;
 mod formatting;
 
+pub use error::OgImageError;
+
 use crate::formatting::{format_bytes, format_number};
-use anyhow::{Context, anyhow};
 use bytes::Bytes;
 use crates_io_env_vars::var;
 use minijinja::{Environment, context};
@@ -121,10 +123,10 @@ impl OgImageGenerator {
     /// use crates_io_og_image::OgImageGenerator;
     ///
     /// let generator = OgImageGenerator::from_environment()?;
-    /// # Ok::<(), anyhow::Error>(())
+    /// # Ok::<(), crates_io_og_image::OgImageError>(())
     /// ```
-    pub fn from_environment() -> anyhow::Result<Self> {
-        if let Some(path) = var("TYPST_PATH")? {
+    pub fn from_environment() -> Result<Self, OgImageError> {
+        if let Some(path) = var("TYPST_PATH").map_err(OgImageError::EnvVarError)? {
             Ok(Self::new(PathBuf::from(path)))
         } else {
             Ok(Self::default())
@@ -140,7 +142,7 @@ impl OgImageGenerator {
         &self,
         data: &'a OgImageData<'_>,
         assets_dir: &std::path::Path,
-    ) -> anyhow::Result<HashMap<&'a str, String>> {
+    ) -> Result<HashMap<&'a str, String>, OgImageError> {
         let mut avatar_map = HashMap::new();
 
         let client = reqwest::Client::new();
@@ -155,18 +157,27 @@ impl OgImageGenerator {
                     Bytes::from_static(include_bytes!("../assets/test-avatar.png"))
                 } else {
                     // Download the avatar from the URL
-                    let response = client.get(*avatar).send().await;
-                    let response = response
-                        .with_context(|| format!("Failed to download avatar from URL: {avatar}"))?;
+                    let response = client.get(*avatar).send().await.map_err(|err| {
+                        OgImageError::AvatarDownloadError {
+                            url: (*avatar).to_string(),
+                            source: err,
+                        }
+                    })?;
 
-                    response.bytes().await.with_context(|| {
-                        format!("Failed to read avatar bytes from URL: {avatar}")
+                    let bytes = response.bytes().await;
+                    bytes.map_err(|err| OgImageError::AvatarDownloadError {
+                        url: (*avatar).to_string(),
+                        source: err,
                     })?
                 };
 
                 // Write the bytes to the avatar file
-                let result = fs::write(&avatar_path, bytes).await;
-                result.with_context(|| format!("Failed to write avatar to {avatar_path:?}"))?;
+                fs::write(&avatar_path, bytes).await.map_err(|err| {
+                    OgImageError::AvatarWriteError {
+                        path: avatar_path.clone(),
+                        source: err,
+                    }
+                })?;
 
                 // Store the mapping from the avatar source to the numbered filename
                 avatar_map.insert(*avatar, filename);
@@ -184,7 +195,7 @@ impl OgImageGenerator {
         &self,
         data: &OgImageData<'_>,
         avatar_map: &HashMap<&str, String>,
-    ) -> anyhow::Result<String> {
+    ) -> Result<String, OgImageError> {
         let template = TEMPLATE_ENV.get_template("og-image.typ")?;
         let rendered = template.render(context! { data, avatar_map })?;
         Ok(rendered)
@@ -199,10 +210,10 @@ impl OgImageGenerator {
     /// # Examples
     ///
     /// ```no_run
-    /// use crates_io_og_image::{OgImageGenerator, OgImageData, OgImageAuthorData};
+    /// use crates_io_og_image::{OgImageGenerator, OgImageData, OgImageAuthorData, OgImageError};
     ///
     /// # #[tokio::main]
-    /// # async fn main() -> anyhow::Result<()> {
+    /// # async fn main() -> Result<(), OgImageError> {
     /// let generator = OgImageGenerator::default();
     /// let data = OgImageData {
     ///     name: "my-crate",
@@ -220,9 +231,9 @@ impl OgImageGenerator {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn generate(&self, data: OgImageData<'_>) -> anyhow::Result<NamedTempFile> {
+    pub async fn generate(&self, data: OgImageData<'_>) -> Result<NamedTempFile, OgImageError> {
         // Create a temporary folder
-        let temp_dir = tempfile::tempdir()?;
+        let temp_dir = tempfile::tempdir().map_err(OgImageError::TempDirError)?;
 
         // Create assets directory and copy logo and icons
         let assets_dir = temp_dir.path().join("assets");
@@ -253,7 +264,7 @@ impl OgImageGenerator {
         fs::write(&typ_file_path, rendered).await?;
 
         // Create a named temp file for the output PNG
-        let output_file = NamedTempFile::new()?;
+        let output_file = NamedTempFile::new().map_err(OgImageError::TempFileError)?;
 
         // Run typst compile command
         let output = Command::new(&self.typst_binary_path)
@@ -263,11 +274,17 @@ impl OgImageGenerator {
             .arg(&typ_file_path)
             .arg(output_file.path())
             .output()
-            .await?;
+            .await
+            .map_err(OgImageError::TypstNotFound)?;
 
         if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!("typst compile failed: {stderr}"));
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            return Err(OgImageError::TypstCompilationError {
+                stderr,
+                stdout,
+                exit_code: output.status.code(),
+            });
         }
 
         Ok(output_file)
