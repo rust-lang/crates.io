@@ -411,6 +411,12 @@ mod tests {
             .is_err()
     }
 
+    fn generate_template(data: OgImageData<'_>, avatar_map: HashMap<&str, String>) -> String {
+        OgImageGenerator::default()
+            .generate_template(&data, &avatar_map)
+            .expect("Failed to generate template")
+    }
+
     async fn generate_image(data: OgImageData<'_>) -> Option<Vec<u8>> {
         if skip_if_typst_unavailable() {
             return None;
@@ -428,40 +434,28 @@ mod tests {
 
     #[test]
     fn test_generate_template_snapshot() {
-        let generator = OgImageGenerator::default();
         let data = create_standard_test_data();
         let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
 
-        let template_content = generator
-            .generate_template(&data, &avatar_map)
-            .expect("Failed to generate template");
-
+        let template_content = generate_template(data, avatar_map);
         insta::assert_snapshot!("generated_template.typ", template_content);
     }
 
     #[test]
     fn test_generate_template_minimal_snapshot() {
-        let generator = OgImageGenerator::default();
         let data = create_minimal_test_data();
         let avatar_map = HashMap::new();
 
-        let template_content = generator
-            .generate_template(&data, &avatar_map)
-            .expect("Failed to generate template");
-
+        let template_content = generate_template(data, avatar_map);
         insta::assert_snapshot!("generated_template_minimal.typ", template_content);
     }
 
     #[test]
     fn test_generate_template_escaping_snapshot() {
-        let generator = OgImageGenerator::default();
         let data = create_escaping_test_data();
         let avatar_map = HashMap::from([("test-avatar", "avatar_0.png".to_string())]);
 
-        let template_content = generator
-            .generate_template(&data, &avatar_map)
-            .expect("Failed to generate template");
-
+        let template_content = generate_template(data, avatar_map);
         insta::assert_snapshot!("generated_template_escaping.typ", template_content);
     }
 
