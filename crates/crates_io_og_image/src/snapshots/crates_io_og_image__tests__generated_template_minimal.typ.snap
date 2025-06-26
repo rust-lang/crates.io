@@ -268,7 +268,7 @@ expression: template_content
                 render-metadata("Releases", "1", "tag")
                 render-metadata("Latest", truncate_to_width("v1.0.0", maxWidth: 80pt), "code-branch")
                 render-metadata("License", truncate_to_width("MIT", maxWidth: 100pt), "scale-balanced")
-                render-metadata("Size", "10 kB", "weight-hanging")
+                render-metadata("Size", "9.77 kB", "weight-hanging")
             })
         )
     })

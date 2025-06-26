@@ -280,7 +280,7 @@
                 {%- if data.lines_of_code %}
                 render-metadata("SLoC", "{{ data.lines_of_code }}", "code")
                 {%- endif %}
-                render-metadata("Size", "{{ data.crate_size }} kB", "weight-hanging")
+                render-metadata("Size", "{{ data.crate_size | format_bytes }}", "weight-hanging")
             })
         )
     })

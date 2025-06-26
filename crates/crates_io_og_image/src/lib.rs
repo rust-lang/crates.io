@@ -1,5 +1,8 @@
 //! OpenGraph image generation for crates.io
 
+mod formatting;
+
+use crate::formatting::format_bytes;
 use anyhow::{Context, anyhow};
 use bytes::Bytes;
 use crates_io_env_vars::var;
@@ -22,6 +25,9 @@ static TEMPLATE_ENV: LazyLock<Environment<'_>> = LazyLock::new(|| {
             .replace('"', "\\\"") // Escape double quotes
         // Note: No need to escape # characters when inside double-quoted strings
     });
+
+    // Add custom filter for formatting byte sizes
+    env.add_filter("format_bytes", format_bytes);
 
     let template_str = include_str!("../templates/og-image.typ.j2");
     env.add_template("og-image.typ", template_str).unwrap();
@@ -298,7 +304,7 @@ mod tests {
             tags: &["web", "api", "async", "json", "http"],
             authors: AUTHORS,
             lines_of_code: Some(5500),
-            crate_size: 128,
+            crate_size: 128000,
             releases: 15,
         }
     }
@@ -314,7 +320,7 @@ mod tests {
             tags: &[],
             authors: AUTHORS,
             lines_of_code: None,
-            crate_size: 10,
+            crate_size: 10000,
             releases: 1,
         }
     }
@@ -338,7 +344,7 @@ mod tests {
             ],
             authors: AUTHORS,
             lines_of_code: Some(42),
-            crate_size: 256,
+            crate_size: 256256,
             releases: 5,
         }
     }
@@ -371,7 +377,7 @@ mod tests {
             ],
             authors: AUTHORS,
             lines_of_code: Some(147000),
-            crate_size: 2847,
+            crate_size: 2847123,
             releases: 1432,
         }
     }
@@ -387,7 +393,7 @@ mod tests {
             tags: &["testing", "og-image"],
             authors: AUTHORS,
             lines_of_code: Some(1000),
-            crate_size: 42,
+            crate_size: 42012,
             releases: 1,
         }
     }
