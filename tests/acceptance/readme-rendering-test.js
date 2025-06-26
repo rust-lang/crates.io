@@ -30,6 +30,18 @@ const README_HTML = `
 <p>Advises about risks or negative outcomes of certain actions.</p>
 </div>
 
+<div class="markdown-alert markdown-alert-note">
+<p class="markdown-alert-title">Note</p>
+<div class="markdown-alert markdown-alert-important">
+<p class="markdown-alert-title">Important</p>
+<div class="markdown-alert markdown-alert-caution">
+<p class="markdown-alert-title">Caution</p>
+<p>Rick roll</p>
+<p>Never gonna give you up</p>
+</div>
+</div>
+</div>
+
 <p><strong>Serde is a framework for <em>ser</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
 <hr>
 <p>You may be looking for:</p>
