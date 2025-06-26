@@ -30,9 +30,9 @@ pub enum OgImageError {
         source: std::io::Error,
     },
 
-    /// Template rendering error.
-    #[error("Template rendering error: {0}")]
-    TemplateError(#[from] minijinja::Error),
+    /// JSON serialization error.
+    #[error("JSON serialization error: {0}")]
+    JsonSerializationError(#[source] serde_json::Error),
 
     /// Typst compilation failed.
     #[error("Typst compilation failed: {stderr}")]
