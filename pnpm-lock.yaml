@@ -197,8 +197,8 @@ importers:
         specifier: 9.0.1
         version: 9.0.1(@babel/core@7.27.4)(@ember/test-helpers@5.2.2(@babel/core@7.27.4))
       ember-link:
-        specifier: 3.3.0
-        version: 3.3.0(@ember/test-helpers@5.2.2(@babel/core@7.27.4))(@glimmer/tracking@1.1.2)
+        specifier: 3.4.0
+        version: 3.4.0(@babel/core@7.27.4)(@ember/test-helpers@5.2.2(@babel/core@7.27.4))
       ember-load-initializers:
         specifier: 3.0.1
         version: 3.0.1(ember-source@6.5.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
@@ -4336,12 +4336,11 @@ packages:
       '@ember/test-helpers':
         optional: true
 
-  ember-link@3.3.0:
-    resolution: {integrity: sha512-QwKlpR05YvBS2c+UV++U115lTg7VanZ3vnrplbORYl8M6BDgtlC1P4KZo31mmGsDqNqiy0J84zWgfuhSEzz53Q==}
-    engines: {node: '>= 20.*'}
+  ember-link@3.4.0:
+    resolution: {integrity: sha512-7OWU173pPnWMSRuPy28w4m7OczLflza0bXfqisCaX0J533okH5G9yJJoHZv5Y3lw951LOtbc2VtWsXwOq1vZeQ==}
+    engines: {node: ^20.11.0 || >=22}
     peerDependencies:
-      '@ember/test-helpers': ^2.9.3 || ^3.0.0
-      '@glimmer/tracking': ^1.1.2
+      '@ember/test-helpers': ^2.9.3 || ^3.0.0 || ^4.0.0 || ^5.0.0
 
   ember-load-initializers@3.0.1:
     resolution: {integrity: sha512-qV3vxJKw5+7TVDdtdLPy8PhVsh58MlK8jwzqh5xeOwJPNP7o0+BlhvwoIlLYTPzGaHdfjEIFCgVSyMRGd74E1g==}
@@ -13699,14 +13698,14 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-link@3.3.0(@ember/test-helpers@5.2.2(@babel/core@7.27.4))(@glimmer/tracking@1.1.2):
+  ember-link@3.4.0(@babel/core@7.27.4)(@ember/test-helpers@5.2.2(@babel/core@7.27.4)):
     dependencies:
       '@ember/test-helpers': 5.2.2(@babel/core@7.27.4)
       '@embroider/addon-shim': 1.10.0
       '@embroider/macros': 1.18.0
-      '@glimmer/env': 0.1.7
-      '@glimmer/tracking': 1.1.2
+      decorator-transforms: 2.3.0(@babel/core@7.27.4)
     transitivePeerDependencies:
+      - '@babel/core'
       - '@glint/template'
       - supports-color
 
