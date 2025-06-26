@@ -13,7 +13,7 @@ chrono = { version = "=0.4.41", default-features = false, features = ["serde"] }
 crates_io_diesel_helpers = { path = "../crates_io_diesel_helpers" }
 crates_io_index = { path = "../crates_io_index" }
 diesel = { version = "=2.2.11", features = ["serde_json", "chrono", "numeric"] }
-diesel-async = "=0.5.2"
+diesel-async = { version = "=0.5.2", features = ["postgres"] }
 diesel_full_text_search = "=2.2.0"
 futures-util = "=0.3.31"
 rand = "=0.9.1"
@@ -30,7 +30,6 @@ utoipa = { version = "=5.4.0", features = ["chrono"] }
 [dev-dependencies]
 claims = "=0.8.0"
 crates_io_test_db = { path = "../crates_io_test_db" }
-diesel-async = { version = "=0.5.2", features = ["postgres"] }
 googletest = "=0.14.2"
 insta = "=1.43.1"
 tokio = { version = "=1.45.1", features = ["macros", "rt"] }
