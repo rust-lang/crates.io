@@ -239,19 +239,20 @@ impl OgImageGenerator {
         let json_avatar_map = json_avatar_map.map_err(OgImageError::JsonSerializationError)?;
 
         // Run typst compile command with input data
-        let output = Command::new(&self.typst_binary_path)
-            .arg("compile")
-            .arg("--format")
-            .arg("png")
-            .arg("--input")
-            .arg(format!("data={json_data}"))
-            .arg("--input")
-            .arg(format!("avatar_map={json_avatar_map}"))
-            .arg(&typ_file_path)
-            .arg(output_file.path())
-            .output()
-            .await
-            .map_err(OgImageError::TypstNotFound)?;
+        let mut command = Command::new(&self.typst_binary_path);
+        command.arg("compile").arg("--format").arg("png");
+
+        // Pass in the data and avatar map as JSON inputs
+        let input = format!("data={json_data}");
+        command.arg("--input").arg(input);
+        let input = format!("avatar_map={json_avatar_map}");
+        command.arg("--input").arg(input);
+
+        // Pass input and output file paths
+        command.arg(&typ_file_path).arg(output_file.path());
+
+        let output = command.output().await;
+        let output = output.map_err(OgImageError::TypstNotFound)?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
