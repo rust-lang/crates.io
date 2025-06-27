@@ -182,17 +182,10 @@ jobs:
           rm -rf "typst-x86_64-unknown-linux-musl" "typst-x86_64-unknown-linux-musl.tar.xz"
           typst --version
 
-      - name: Install Fira Sans font
+      - name: Download Fira Sans font
         run: |
-          # Download and install Fira Sans
           wget -q "https://github.com/mozilla/Fira/archive/4.202.zip"
           unzip -q "4.202.zip"
-          sudo mkdir -p /usr/local/share/fonts/fira-sans
-          sudo cp Fira-4.202/otf/FiraSans-*.otf /usr/local/share/fonts/fira-sans/
-          sudo fc-cache -f -v
-          rm -rf "4.202.zip" "Fira-4.202"
-          # Verify font is available
-          fc-list | grep -i "fira sans" || echo "Fira Sans not found"
 
       - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
         with:
@@ -205,6 +198,10 @@ jobs:
 
       - run: cargo build --tests --workspace
       - run: cargo test --workspace
+        env:
+          # Set the path to the Fira Sans font for Typst.
+          # The path is relative to the `crates_io_og_image` crate root.
+          TYPST_FONT_PATH: ../../Fira-4.202/otf
 
   frontend-lint:
     name: Frontend / Lint
