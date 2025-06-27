@@ -51,6 +51,7 @@ expression: response.json()
       "id": 3,
       "lib_links": null,
       "license": null,
+      "linecounts": null,
       "links": {
         "authors": "/api/v1/crates/c3/3.0.0/authors",
         "dependencies": "/api/v1/crates/c3/3.0.0/dependencies",
@@ -90,6 +91,7 @@ expression: response.json()
       "id": 2,
       "lib_links": null,
       "license": null,
+      "linecounts": null,
       "links": {
         "authors": "/api/v1/crates/c2/2.0.0/authors",
         "dependencies": "/api/v1/crates/c2/2.0.0/dependencies",

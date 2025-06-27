@@ -21,6 +21,7 @@ expression: json
     "id": "[id]",
     "lib_links": null,
     "license": null,
+    "linecounts": null,
     "links": {
       "authors": "/api/v1/crates/foo_vers_show/2.0.0/authors",
       "dependencies": "/api/v1/crates/foo_vers_show/2.0.0/dependencies",
