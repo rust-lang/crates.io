@@ -74,6 +74,7 @@ impl<'a> OgImageAuthorData<'a> {
 /// generating PNG images from a Typst template.
 pub struct OgImageGenerator {
     typst_binary_path: PathBuf,
+    typst_font_path: Option<PathBuf>,
 }
 
 impl OgImageGenerator {
@@ -88,7 +89,10 @@ impl OgImageGenerator {
     /// let generator = OgImageGenerator::new(PathBuf::from("/usr/local/bin/typst"));
     /// ```
     pub fn new(typst_binary_path: PathBuf) -> Self {
-        Self { typst_binary_path }
+        Self {
+            typst_binary_path,
+            typst_font_path: None,
+        }
     }
 
     /// Creates a new `OgImageGenerator` using the `TYPST_PATH` environment variable.
@@ -105,11 +109,43 @@ impl OgImageGenerator {
     /// # Ok::<(), crates_io_og_image::OgImageError>(())
     /// ```
     pub fn from_environment() -> Result<Self, OgImageError> {
-        if let Some(path) = var("TYPST_PATH").map_err(OgImageError::EnvVarError)? {
-            Ok(Self::new(PathBuf::from(path)))
+        let typst_path = var("TYPST_PATH").map_err(OgImageError::EnvVarError)?;
+        let font_path = var("TYPST_FONT_PATH").map_err(OgImageError::EnvVarError)?;
+
+        let mut generator = if let Some(path) = typst_path {
+            Self::new(PathBuf::from(path))
         } else {
-            Ok(Self::default())
+            Self::default()
+        };
+
+        if let Some(font_path) = font_path {
+            let current_dir = std::env::current_dir()?;
+            let font_path = current_dir.join(font_path).canonicalize()?;
+            generator = generator.with_font_path(font_path);
         }
+
+        Ok(generator)
+    }
+
+    /// Sets the font path for the Typst compiler.
+    ///
+    /// This allows specifying a custom directory where Typst will look for fonts
+    /// during compilation. Setting a custom font directory implies using the
+    /// `--ignore-system-fonts` flag of the Typst CLI. If not set, Typst will
+    /// use its default font discovery.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::PathBuf;
+    /// use crates_io_og_image::OgImageGenerator;
+    ///
+    /// let generator = OgImageGenerator::default()
+    ///     .with_font_path(PathBuf::from("/usr/share/fonts"));
+    /// ```
+    pub fn with_font_path(mut self, font_path: PathBuf) -> Self {
+        self.typst_font_path = Some(font_path);
+        self
     }
 
     /// Processes avatars by downloading URLs and copying assets to the assets directory.
@@ -247,6 +283,12 @@ impl OgImageGenerator {
         command.arg("--input").arg(input);
         let input = format!("avatar_map={json_avatar_map}");
         command.arg("--input").arg(input);
+
+        // Pass in the font path if specified
+        if let Some(font_path) = &self.typst_font_path {
+            command.arg("--font-path").arg(font_path);
+            command.arg("--ignore-system-fonts");
+        }
 
         // Pass input and output file paths
         command.arg(&typ_file_path).arg(output_file.path());
