@@ -134,7 +134,7 @@
     "normalize.css": "8.0.1",
     "nyc": "17.1.0",
     "playwright-msw": "3.0.1",
-    "postcss-preset-env": "10.2.3",
+    "postcss-preset-env": "10.2.4",
     "prettier": "3.6.2",
     "qunit": "2.24.1",
     "qunit-console-grouper": "0.3.0",
