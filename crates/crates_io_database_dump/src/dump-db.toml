@@ -288,6 +288,8 @@ categories = "public"
 keywords = "public"
 # The following column is private for now, until we can guarantee a stable data schema.
 trustpub_data = "private"
+# The following column is private for now, until we can guarantee a stable data schema.
+linecounts = "private"
 
 [versions_published_by.columns]
 version_id = "private"
