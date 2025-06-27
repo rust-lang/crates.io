@@ -210,6 +210,18 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-license]')).toHaveText('MIT OR Apache-2.0');
   });
 
+  test('sidebar shows correct information', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate, num: '0.5.0' });
+    msw.db.version.create({ crate, num: '1.0.0' });
+
+    await page.goto('/crates/foo');
+    await expect(page.locator('[data-test-linecounts]')).toHaveText('1,119 SLoC');
+
+    await page.goto('/crates/foo/0.5.0');
+    await expect(page.locator('[data-test-linecounts]')).toHaveText('520 SLoC');
+  });
+
   test.skip('crates can be yanked by owner', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
