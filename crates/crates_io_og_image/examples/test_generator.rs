@@ -29,14 +29,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(temp_file) => {
             let output_path = "test_og_image.png";
             std::fs::copy(temp_file.path(), output_path)?;
-            println!("Successfully generated image at: {}", output_path);
+            println!("Successfully generated image at: {output_path}");
             println!(
                 "Image file size: {} bytes",
                 std::fs::metadata(output_path)?.len()
             );
         }
         Err(e) => {
-            println!("Failed to generate image: {}", e);
+            println!("Failed to generate image: {e}");
             println!("Make sure typst is installed and available in PATH");
         }
     }

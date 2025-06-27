@@ -37,18 +37,18 @@ pub fn format_bytes(bytes: u32) -> String {
 
     // Special case for bytes - no decimal places
     if unit_index == 0 {
-        return format!("{} {}", bytes, unit);
+        return format!("{bytes} {unit}");
     }
 
     // For kB and MB, format with appropriate decimal places
 
     // Determine number of decimal places to keep number under 4 chars
     if value < 10.0 {
-        format!("{:.2} {}", value, unit) // e.g., 1.50 kB, 9.99 MB
+        format!("{value:.2} {unit}") // e.g., 1.50 kB, 9.99 MB
     } else if value < 100.0 {
-        format!("{:.1} {}", value, unit) // e.g., 10.5 kB, 99.9 MB
+        format!("{value:.1} {unit}") // e.g., 10.5 kB, 99.9 MB
     } else {
-        format!("{:.0} {}", value, unit) // e.g., 100 kB, 999 MB
+        format!("{value:.0} {unit}") // e.g., 100 kB, 999 MB
     }
 }
 
@@ -88,16 +88,16 @@ pub fn format_number(number: u32) -> String {
 
     // Special case for numbers without suffix - no decimal places
     if unit_index == 0 {
-        return format!("{}", number);
+        return format!("{number}");
     }
 
     // For k and M, format with appropriate decimal places
 
     // Determine number of decimal places to keep number under 4 chars
     if value < 10.0 {
-        format!("{:.1}{}", value, unit)
+        format!("{value:.1}{unit}")
     } else {
-        format!("{:.0}{}", value, unit)
+        format!("{value:.0}{unit}")
     }
 }
 

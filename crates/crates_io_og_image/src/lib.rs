@@ -127,7 +127,7 @@ impl OgImageGenerator {
         let client = reqwest::Client::new();
         for (index, author) in data.authors.iter().enumerate() {
             if let Some(avatar) = &author.avatar {
-                let filename = format!("avatar_{}.png", index);
+                let filename = format!("avatar_{index}.png");
                 let avatar_path = assets_dir.join(&filename);
 
                 // Get the bytes either from the included asset or download from URL
@@ -244,9 +244,9 @@ impl OgImageGenerator {
             .arg("--format")
             .arg("png")
             .arg("--input")
-            .arg(format!("data={}", json_data))
+            .arg(format!("data={json_data}"))
             .arg("--input")
-            .arg(format!("avatar_map={}", json_avatar_map))
+            .arg(format!("avatar_map={json_avatar_map}"))
             .arg(&typ_file_path)
             .arg(output_file.path())
             .output()
