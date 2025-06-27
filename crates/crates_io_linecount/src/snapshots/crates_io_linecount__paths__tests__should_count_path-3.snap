@@ -1,0 +1,13 @@
+---
+source: crates/crates_io_linecount/src/paths.rs
+expression: "PathDetails::from_path(Path::new(\"examples/basic.rs\"))"
+---
+PathDetails {
+    is_benchmark: false,
+    is_example: true,
+    is_hidden: false,
+    is_test: false,
+    language_type: Some(
+        Rust,
+    ),
+}
