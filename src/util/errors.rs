@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn http_error_responses() {
-        use crate::serde::de::Error;
+        use serde::de::Error;
 
         // Types for handling common error status codes
         assert_eq!(bad_request("").response().status(), StatusCode::BAD_REQUEST);

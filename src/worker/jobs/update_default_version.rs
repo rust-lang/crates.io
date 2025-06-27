@@ -1,6 +1,7 @@
 use crate::models::update_default_version;
 use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]

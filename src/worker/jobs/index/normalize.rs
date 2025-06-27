@@ -2,6 +2,7 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_index::Crate;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::process::Command;

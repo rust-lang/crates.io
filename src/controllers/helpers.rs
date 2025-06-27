@@ -1,5 +1,6 @@
 use axum::Json;
 use axum::response::{IntoResponse, Response};
+use serde::Serialize;
 
 pub mod authorization;
 pub(crate) mod pagination;

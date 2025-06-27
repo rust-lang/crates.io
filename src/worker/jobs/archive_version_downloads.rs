@@ -10,6 +10,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use object_store::ObjectStore;
 use secrecy::{ExposeSecret, SecretString};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::path::Path;

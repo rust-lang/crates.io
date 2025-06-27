@@ -4,6 +4,7 @@ use crate::util::{RequestUtils, redirect};
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use http::request::Parts;
+use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct UrlResponse {

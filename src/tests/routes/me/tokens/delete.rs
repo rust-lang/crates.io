@@ -4,6 +4,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use claims::assert_ok;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct RevokedResponse {}

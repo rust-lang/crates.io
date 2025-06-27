@@ -1,11 +1,5 @@
-use crate::auth::AuthCheck;
-use axum::Json;
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
-use futures_util::FutureExt;
-use http::request::Parts;
-
 use crate::app::AppState;
+use crate::auth::AuthCheck;
 use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
@@ -13,6 +7,12 @@ use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAc
 use crate::schema::{crate_owners, crates, emails, follows, users, versions};
 use crate::util::errors::AppResult;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
+use axum::Json;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
+use futures_util::FutureExt;
+use http::request::Parts;
+use serde::Serialize;
 
 /// Get the currently authenticated user.
 #[utoipa::path(

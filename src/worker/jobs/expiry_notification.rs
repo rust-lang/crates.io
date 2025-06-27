@@ -8,6 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// The threshold for the expiry notification.

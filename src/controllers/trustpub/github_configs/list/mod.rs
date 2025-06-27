@@ -12,6 +12,7 @@ use diesel::dsl::{exists, select};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use serde::Deserialize;
 
 #[cfg(test)]
 mod tests;

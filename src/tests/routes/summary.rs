@@ -8,6 +8,7 @@ use crates_io_database::schema::categories;
 use diesel::{ExpressionMethods, insert_into, update};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct SummaryResponse {

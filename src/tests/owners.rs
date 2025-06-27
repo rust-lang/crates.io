@@ -14,6 +14,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use insta::assert_snapshot;
+use serde::Deserialize;
 use serde_json::json;
 
 #[derive(Deserialize)]

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 
 use crate::worker::Environment;
 

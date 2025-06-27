@@ -3,6 +3,7 @@ use crate::worker::Environment;
 use chrono::Utc;
 use crates_io_env_vars::var_parsed;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::sync::Arc;
 use url::Url;

@@ -9,6 +9,7 @@ use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// A background job that processes messages from the CDN log queue.

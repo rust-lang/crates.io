@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use insta::{assert_json_snapshot, assert_snapshot};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Downloads {

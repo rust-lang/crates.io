@@ -8,6 +8,7 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::warn;
 

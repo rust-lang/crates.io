@@ -19,6 +19,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use futures_util::future::BoxFuture;
+use serde::{Deserialize, Serialize};
 use std::cmp;
 use std::str::FromStr;
 

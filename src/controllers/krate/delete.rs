@@ -19,6 +19,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
+use serde::Deserialize;
 use tracing::error;
 
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;

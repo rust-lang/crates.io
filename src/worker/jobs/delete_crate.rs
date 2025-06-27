@@ -3,6 +3,7 @@ use crate::worker::Environment;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::try_join;
 

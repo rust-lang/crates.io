@@ -12,6 +12,7 @@ use diesel::sql_types::Bool;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel_full_text_search::{configuration::TsConfigurationByName, *};
 use http::request::Parts;
+use serde::{Deserialize, Serialize};
 use tracing::Instrument;
 use utoipa::IntoParams;
 

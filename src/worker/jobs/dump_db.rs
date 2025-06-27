@@ -3,6 +3,7 @@ use crate::worker::Environment;
 use crates_io_database_dump::{DumpDirectory, create_archives};
 use crates_io_worker::BackgroundJob;
 use secrecy::ExposeSecret;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
 

@@ -6,6 +6,7 @@ use diesel::{prelude::*, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use insta::{assert_json_snapshot, assert_snapshot};
+use serde::Deserialize;
 use serde_json::json;
 
 #[tokio::test(flavor = "multi_thread")]

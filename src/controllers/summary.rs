@@ -9,6 +9,7 @@ use axum::Json;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
+use serde::Serialize;
 use std::future::Future;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]

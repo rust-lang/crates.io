@@ -13,6 +13,7 @@ use http::request::Parts;
 use lettre::Address;
 use minijinja::context;
 use secrecy::ExposeSecret;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct UserUpdate {

@@ -1,11 +1,11 @@
-use chrono::{DateTime, Utc};
-
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
     ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
     TopVersions, User, Version, VersionDownload, VersionOwnerAction,
 };
+use chrono::{DateTime, Utc};
 use crates_io_github as github;
+use serde::{Deserialize, Serialize};
 
 pub mod krate_publish;
 pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};

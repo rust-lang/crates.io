@@ -5,6 +5,7 @@ use crate::tests::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
+use serde::Serialize;
 use serde_json::json;
 
 #[derive(Serialize)]

@@ -20,6 +20,7 @@ use minijinja::context;
 use p256::PublicKey;
 use p256::ecdsa::VerifyingKey;
 use p256::ecdsa::signature::Verifier;
+use serde::{Deserialize, Serialize};
 use serde_json as json;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::str::FromStr;

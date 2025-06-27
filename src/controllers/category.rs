@@ -10,6 +10,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use futures_util::FutureExt;
 use http::request::Parts;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]

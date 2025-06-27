@@ -1,13 +1,3 @@
-use axum::Json;
-use axum::extract::{FromRequestParts, Query};
-use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-use http::request::Parts;
-use minijinja::context;
-use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use secrecy::ExposeSecret;
-
 use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
@@ -17,8 +7,18 @@ use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::views::EncodableMe;
+use axum::Json;
+use axum::extract::{FromRequestParts, Query};
 use crates_io_github::GitHubUser;
 use crates_io_session::SessionExtension;
+use diesel::prelude::*;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use http::request::Parts;
+use minijinja::context;
+use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
+use secrecy::ExposeSecret;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {

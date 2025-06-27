@@ -10,6 +10,7 @@ use crate::typosquat::{Cache, Crate};
 use crate::worker::Environment;
 use anyhow::Context;
 use minijinja::context;
+use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
 /// A job to check the name of a newly published crate against the most popular crates to see if

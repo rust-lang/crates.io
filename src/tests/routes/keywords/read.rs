@@ -3,6 +3,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableKeyword;
 use insta::assert_snapshot;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct GoodKeyword {

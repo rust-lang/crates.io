@@ -23,6 +23,7 @@ use http::request::Parts;
 use minijinja::context;
 use oauth2::AccessToken;
 use secrecy::ExposeSecret;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::warn;
 

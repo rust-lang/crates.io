@@ -3,6 +3,7 @@ use crates_io_database::schema::trustpub_used_jtis;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// A background job that deletes expired JSON Web Token IDs (JTIs)

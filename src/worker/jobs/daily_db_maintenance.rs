@@ -2,6 +2,7 @@ use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]

@@ -6,6 +6,7 @@ use axum::Json;
 use axum::extract::Path;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct GetResponse {

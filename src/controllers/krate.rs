@@ -4,6 +4,7 @@ use axum::extract::{FromRequestParts, Path};
 use crates_io_database::schema::crates;
 use diesel::{OptionalExtension, QueryDsl};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::Deserialize;
 use utoipa::IntoParams;
 
 pub mod delete;
