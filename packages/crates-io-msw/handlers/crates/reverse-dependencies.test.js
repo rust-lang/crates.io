@@ -76,6 +76,27 @@ test('returns a paginated list of crate versions depending to the specified crat
         downloads: 7404,
         features: {},
         license: 'Apache-2.0',
+        linecounts: {
+          languages: {
+            CSS: {
+              code_lines: 503,
+              comment_lines: 42,
+              files: 2,
+            },
+            Python: {
+              code_lines: 284,
+              comment_lines: 91,
+              files: 3,
+            },
+            TypeScript: {
+              code_lines: 332,
+              comment_lines: 83,
+              files: 7,
+            },
+          },
+          total_code_lines: 1119,
+          total_comment_lines: 216,
+        },
         links: {
           dependencies: '/api/v1/crates/baz/1.0.1/dependencies',
           version_downloads: '/api/v1/crates/baz/1.0.1/downloads',
@@ -98,6 +119,22 @@ test('returns a paginated list of crate versions depending to the specified crat
         downloads: 3702,
         features: {},
         license: 'MIT',
+        linecounts: {
+          languages: {
+            JavaScript: {
+              code_lines: 325,
+              comment_lines: 80,
+              files: 8,
+            },
+            TypeScript: {
+              code_lines: 195,
+              comment_lines: 10,
+              files: 2,
+            },
+          },
+          total_code_lines: 520,
+          total_comment_lines: 90,
+        },
         links: {
           dependencies: '/api/v1/crates/bar/1.0.0/dependencies',
           version_downloads: '/api/v1/crates/bar/1.0.0/downloads',
