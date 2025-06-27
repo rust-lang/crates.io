@@ -19,6 +19,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use http::StatusCode;
 use http::request::Parts;
 use minijinja::context;
+use serde::Deserialize;
 use tracing::error;
 
 const DOWNLOADS_PER_MONTH_LIMIT: u64 = 500;
@@ -205,6 +206,7 @@ mod tests {
     use crate::tests::builders::{DependencyBuilder, PublishBuilder};
     use crate::tests::util::{RequestHelper, Response, TestApp};
     use axum::RequestPartsExt;
+    use claims::{assert_none, assert_some};
     use crates_io_database::schema::crate_owners;
     use diesel_async::AsyncPgConnection;
     use http::{Request, StatusCode};

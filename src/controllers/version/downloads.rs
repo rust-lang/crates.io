@@ -17,6 +17,7 @@ use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct UrlResponse {

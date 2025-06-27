@@ -3,8 +3,10 @@ use crate::worker::Environment;
 use crate::worker::jobs::InvalidateCdns;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::try_join;
+use tracing::info;
 
 /// A background job that deletes all files associated with a crate from the storage backend.
 #[derive(Serialize, Deserialize)]

@@ -69,6 +69,7 @@ mod tests {
     use super::{OriginalPath, normalize_path_inner};
     use axum::body::Body;
     use axum::extract::Request;
+    use claims::assert_some;
 
     #[test]
     fn path_normalization() {

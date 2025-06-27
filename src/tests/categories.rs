@@ -1,4 +1,5 @@
 use crate::schema::categories;
+use claims::assert_ok;
 use crates_io_test_db::TestDatabase;
 use diesel::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};

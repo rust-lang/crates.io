@@ -2,6 +2,7 @@ use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::{EncodablePrivateUser, OwnedCrate};
 use insta::{assert_json_snapshot, assert_snapshot};
+use serde::Deserialize;
 
 impl crate::tests::util::MockCookieUser {
     pub async fn show_me(&self) -> UserShowPrivateResponse {

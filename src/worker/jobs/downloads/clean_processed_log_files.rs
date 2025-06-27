@@ -3,6 +3,7 @@ use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// This job is responsible for cleaning up old entries in the

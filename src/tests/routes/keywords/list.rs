@@ -1,6 +1,7 @@
 use crate::models::Keyword;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableKeyword;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct KeywordList {

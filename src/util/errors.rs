@@ -19,13 +19,13 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
 
+use crate::middleware::log_request::ErrorField;
 use axum::Extension;
 use chrono::{DateTime, Utc};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use http::StatusCode;
 use tokio::task::JoinError;
-
-use crate::middleware::log_request::ErrorField;
+use tracing::error;
 
 mod json;
 
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn http_error_responses() {
-        use crate::serde::de::Error;
+        use serde::de::Error;
 
         // Types for handling common error status codes
         assert_eq!(bad_request("").response().status(), StatusCode::BAD_REQUEST);

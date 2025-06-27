@@ -4,10 +4,12 @@ use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_index::Repository;
 use crates_io_worker::BackgroundJob;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Write};
 use std::sync::Arc;
+use tracing::{debug, info, instrument};
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {

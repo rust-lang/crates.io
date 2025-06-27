@@ -2,7 +2,9 @@ use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::info;
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyDbMaintenance;

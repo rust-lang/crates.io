@@ -2,6 +2,7 @@ use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableDependency;
 use insta::assert_snapshot;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Deps {

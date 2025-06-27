@@ -5,7 +5,9 @@ use chrono::{Duration, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, warn};
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncUpdatesFeed;
@@ -168,6 +170,7 @@ impl VersionUpdate {
 mod tests {
     use super::*;
     use chrono::{DateTime, Utc};
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use futures_util::future::join_all;
     use insta::assert_debug_snapshot;

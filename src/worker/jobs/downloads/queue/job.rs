@@ -9,7 +9,9 @@ use aws_sdk_sqs::types::Message;
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{debug, info, instrument, warn};
 
 /// A background job that processes messages from the CDN log queue.
 ///
@@ -225,6 +227,7 @@ mod tests {
     use aws_sdk_sqs::operation::receive_message::builders::ReceiveMessageOutputBuilder;
     use aws_sdk_sqs::types::Message;
     use aws_sdk_sqs::types::builders::MessageBuilder;
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use crates_io_worker::schema::background_jobs;
     use diesel::prelude::*;

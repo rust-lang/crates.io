@@ -4,6 +4,7 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use http::{Method, StatusCode, header};
 use std::str::FromStr;
+use tracing::error;
 
 #[derive(Clone, Copy, Debug)]
 pub enum StatusCodeConfig {

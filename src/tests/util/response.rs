@@ -1,5 +1,6 @@
 use crate::tests::util::matchers::is_success;
 use bytes::Bytes;
+use claims::{assert_ok, assert_some, assert_some_eq};
 use googletest::prelude::*;
 use serde_json::Value;
 use std::marker::PhantomData;

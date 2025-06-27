@@ -3,6 +3,7 @@ use http::header::{AUTHORIZATION, COOKIE};
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
+use tracing::warn;
 
 /// Initializes the Sentry SDK from the environment variables.
 ///
@@ -88,6 +89,7 @@ fn options(config: SentryConfig) -> ClientOptions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::{assert_none, assert_some};
 
     use sentry::{
         capture_error,

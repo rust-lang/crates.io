@@ -16,9 +16,11 @@ use object_store::local::LocalFileSystem;
 use object_store::memory::InMemory;
 use object_store::path::Path;
 use semver::Version;
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::io::BufReader;
+use tracing::{debug, info, instrument, warn};
 
 /// A background job that loads a CDN log file from an object store (aka. S3),
 /// counts the number of downloads for each crate and version, and then inserts
@@ -412,6 +414,7 @@ async fn save_as_processed(
 mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_debug_snapshot;

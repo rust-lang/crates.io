@@ -21,6 +21,7 @@ use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::deadpool::Pool as DeadpoolPool;
 use oauth2::basic::BasicClient;
 use oauth2::{EndpointNotSet, EndpointSet};
+use tracing::{instrument, warn};
 
 type DeadpoolResult = Result<
     diesel_async::pooled_connection::deadpool::Object<AsyncPgConnection>,

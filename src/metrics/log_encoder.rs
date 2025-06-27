@@ -9,6 +9,7 @@ use std::cell::Cell;
 use std::collections::HashMap;
 use std::io::Write;
 use std::rc::Rc;
+use tracing::{info, warn};
 
 const CHUNKS_MAX_SIZE_BYTES: usize = 5000;
 

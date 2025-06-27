@@ -15,6 +15,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use tracing::{instrument, warn};
 
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";

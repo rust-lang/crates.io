@@ -1,7 +1,6 @@
 use crates_io_env_vars::var;
 use sentry::integrations::tracing::EventFilter;
-use tracing::Level;
-use tracing::Metadata;
+use tracing::{Level, Metadata, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{EnvFilter, Layer, prelude::*};
 

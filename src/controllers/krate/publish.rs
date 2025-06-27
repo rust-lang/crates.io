@@ -26,6 +26,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio_util::io::StreamReader;
+use tracing::{error, instrument};
 use url::Url;
 
 use crate::models::{
@@ -1024,6 +1025,7 @@ impl From<TarballError> for BoxedAppError {
 #[cfg(test)]
 mod tests {
     use super::{missing_metadata_error_message, validate_url};
+    use claims::assert_err;
 
     #[test]
     fn deny_relative_urls() {

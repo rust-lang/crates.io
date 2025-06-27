@@ -4,16 +4,6 @@
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
-#[cfg(test)]
-#[macro_use]
-extern crate claims;
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate serde;
-#[macro_use]
-extern crate tracing;
-
 pub use crate::{app::App, email::Emails};
 pub use crates_io_database::{models, schema};
 use std::sync::Arc;

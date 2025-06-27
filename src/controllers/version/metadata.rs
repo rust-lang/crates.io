@@ -4,12 +4,12 @@
 //! index or cached metadata which was extracted (client side) from the
 //! `Cargo.toml` file.
 
-use axum::Json;
-
 use crate::app::AppState;
 use crate::models::VersionOwnerAction;
 use crate::util::errors::AppResult;
 use crate::views::EncodableVersion;
+use axum::Json;
+use serde::Serialize;
 
 use super::CrateVersionPath;
 

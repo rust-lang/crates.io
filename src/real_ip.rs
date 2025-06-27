@@ -4,6 +4,7 @@ use std::iter::Iterator;
 use std::net::IpAddr;
 use std::str::from_utf8;
 use std::sync::LazyLock;
+use tracing::warn;
 
 const X_FORWARDED_FOR: &str = "X-Forwarded-For";
 

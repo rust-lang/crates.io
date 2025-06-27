@@ -21,6 +21,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::{TryStreamExt, future};
 use http::request::Parts;
 use indexmap::{IndexMap, IndexSet};
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]

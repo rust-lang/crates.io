@@ -3,11 +3,13 @@ use crate::tests::OkBool;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableVersion;
+use claims::assert_none;
 use diesel::prelude::*;
 use diesel::update;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
 use insta::assert_snapshot;
+use serde::Deserialize;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn api_token_cannot_get_user_updates() {

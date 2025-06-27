@@ -1,6 +1,7 @@
 use axum::Json;
 use axum::extract::FromRequest;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct GitHubConfig {

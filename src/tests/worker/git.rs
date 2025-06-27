@@ -2,6 +2,7 @@ use crate::models::Crate;
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::worker::jobs;
+use claims::{assert_ok, assert_ok_eq};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

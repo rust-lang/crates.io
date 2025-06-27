@@ -5,6 +5,7 @@ use crate::tests::builders::PublishBuilder;
 use crate::tests::routes::crates::versions::yank_unyank::YankRequestHelper;
 use crate::tests::util::{RequestHelper, TestApp};
 use chrono::Utc;
+use claims::assert_some_eq;
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

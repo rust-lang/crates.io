@@ -8,8 +8,9 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::warn;
+use tracing::{debug, info, warn};
 
 /// Background job that sends email notifications to all crate owners when a
 /// new crate version is published.

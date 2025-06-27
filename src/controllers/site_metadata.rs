@@ -1,6 +1,7 @@
 use crate::app::AppState;
 use axum::Json;
 use axum::response::IntoResponse;
+use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct MetadataResponse<'a> {

@@ -9,6 +9,7 @@ use crates_io_database::schema::{crates, users, versions};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct RevDepsResponse {

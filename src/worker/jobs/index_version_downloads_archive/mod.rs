@@ -1,11 +1,12 @@
 use std::{collections::BTreeSet, sync::Arc};
 
+use crate::worker::Environment;
 use anyhow::Context;
 use crates_io_worker::BackgroundJob;
 use futures_util::TryStreamExt;
 use object_store::{ObjectMeta, ObjectStore};
-
-use crate::worker::Environment;
+use serde::{Deserialize, Serialize};
+use tracing::{info, warn};
 
 const INDEX_PATH: &str = "archive/version-downloads/index.html";
 const INDEX_JSON_PATH: &str = "archive/version-downloads/index.json";

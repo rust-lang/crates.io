@@ -10,12 +10,14 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
 use object_store::ObjectStore;
 use secrecy::{ExposeSecret, SecretString};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 use tempfile::tempdir;
+use tracing::{debug, error, info, warn};
 
 const FILE_NAME: &str = "version_downloads.csv";
 
@@ -250,6 +252,7 @@ async fn delete(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::
 mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
+    use claims::assert_err;
     use crates_io_test_db::TestDatabase;
     use insta::assert_snapshot;
 

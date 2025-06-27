@@ -11,6 +11,7 @@ use axum::Json;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use http::request::Parts;
+use serde::Serialize;
 
 async fn follow_target(
     crate_name: &str,

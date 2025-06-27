@@ -1,6 +1,7 @@
 use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::tests::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
+use claims::assert_ok;
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]

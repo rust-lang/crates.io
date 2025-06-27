@@ -6,6 +6,7 @@ use crate::util::token::HashedToken;
 use crate::{models::ApiToken, schema::api_tokens};
 use base64::{Engine as _, engine::general_purpose};
 use chrono::{TimeDelta, Utc};
+use claims::assert_ok;
 use crates_io_database::models::CrateOwner;
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_database::schema::trustpub_tokens;

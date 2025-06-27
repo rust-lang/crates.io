@@ -329,6 +329,7 @@ impl FromStr for AllowedOrigins {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::{assert_err, assert_none, assert_ok_eq};
 
     #[test]
     fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {

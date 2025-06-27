@@ -11,6 +11,7 @@ use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
+use claims::assert_some;
 use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;

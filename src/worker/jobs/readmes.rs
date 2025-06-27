@@ -7,7 +7,9 @@ use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncConnection;
 use diesel_async::scoped_futures::ScopedFutureExt;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, instrument};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {

@@ -8,6 +8,7 @@ use axum::Json;
 use axum::extract::{FromRequestParts, Path, Query};
 use diesel::prelude::*;
 use http::request::Parts;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]

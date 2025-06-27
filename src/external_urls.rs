@@ -49,6 +49,7 @@ fn domain_is_subdomain(potential_subdomain: &str, root: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::assert_some_eq;
 
     #[test]
     fn domain_blocked_no_url_provided() {

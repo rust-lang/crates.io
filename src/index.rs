@@ -9,6 +9,7 @@ use crates_io_index::features::split_features;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use sentry::Level;
+use tracing::{debug, instrument};
 
 #[instrument(skip_all, fields(krate.name = ?name))]
 pub async fn get_index_data(

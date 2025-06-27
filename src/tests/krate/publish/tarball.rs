@@ -1,6 +1,7 @@
 use crate::tests::builders::PublishBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use bytes::{BufMut, BytesMut};
+use claims::assert_ok;
 use crates_io_tarball::TarballBuilder;
 use googletest::prelude::*;
 use insta::assert_snapshot;

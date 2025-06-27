@@ -449,13 +449,13 @@ macro_rules! seek {
         $($(#[$field_meta:meta])? $field:ident: $ty:ty),* $(,)?
     }) => {
         paste::item! {
-            #[derive(Debug, Default, Deserialize, PartialEq)]
+            #[derive(Debug, Default, serde::Deserialize, PartialEq)]
             #[serde(from = $variant "Helper")]
             $vis struct $variant {
                 $($(#[$field_meta])? pub(super) $field: $ty),*
             }
 
-            #[derive(Debug, Default, Deserialize, Serialize, PartialEq)]
+            #[derive(Debug, Default, serde::Deserialize, serde::Serialize, PartialEq)]
             struct [<$variant Helper>]($($(#[$field_meta])? pub(super) $ty),*);
 
             impl From<[<$variant Helper>]> for $variant {
@@ -487,7 +487,7 @@ macro_rules! seek {
             seek!(@variant_struct $vis $variant $fields);
         )*
         paste::item! {
-            #[derive(Debug, Deserialize, Serialize, PartialEq)]
+            #[derive(Debug, serde::Deserialize, serde::Serialize, PartialEq)]
             #[serde(untagged)]
             $vis enum [<$name Payload>] {
                 $(
@@ -544,6 +544,7 @@ pub(crate) use seek;
 mod tests {
     use super::*;
     use chrono::Utc;
+    use claims::assert_ok_eq;
     use http::{Method, Request, StatusCode};
     use insta::assert_snapshot;
 

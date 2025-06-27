@@ -5,7 +5,9 @@ use chrono::{Duration, Utc};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, warn};
 
 /// Items younger than this will always be included in the feed.
 const ALWAYS_INCLUDE_AGE: Duration = Duration::hours(24);
@@ -178,6 +180,7 @@ impl VersionUpdate {
 mod tests {
     use super::*;
     use chrono::DateTime;
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use futures_util::future::join_all;
     use insta::assert_debug_snapshot;

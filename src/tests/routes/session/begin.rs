@@ -1,4 +1,5 @@
 use crate::tests::util::{RequestHelper, TestApp};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct AuthResponse {

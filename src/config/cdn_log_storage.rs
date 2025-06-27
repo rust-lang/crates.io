@@ -2,6 +2,7 @@ use anyhow::Context;
 use crates_io_env_vars::{required_var, var};
 use secrecy::SecretString;
 use std::path::PathBuf;
+use tracing::{info, warn};
 
 #[derive(Debug, Clone)]
 pub enum CdnLogStorageConfig {

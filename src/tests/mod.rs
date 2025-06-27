@@ -8,6 +8,7 @@ use crate::views::{
 use crate::tests::util::github::next_gh_id;
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
+use serde::{Deserialize, Serialize};
 
 mod account_lock;
 mod authentication;

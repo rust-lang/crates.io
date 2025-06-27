@@ -20,13 +20,14 @@ use minijinja::context;
 use p256::PublicKey;
 use p256::ecdsa::VerifyingKey;
 use p256::ecdsa::signature::Verifier;
+use serde::{Deserialize, Serialize};
 use serde_json as json;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::str::FromStr;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use tracing::warn;
+use tracing::{debug, warn};
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
 const PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours

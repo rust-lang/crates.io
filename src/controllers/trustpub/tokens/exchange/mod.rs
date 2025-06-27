@@ -14,6 +14,7 @@ use diesel::result::Error::DatabaseError;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use secrecy::ExposeSecret;
+use tracing::warn;
 
 #[cfg(test)]
 mod tests;

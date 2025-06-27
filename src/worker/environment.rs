@@ -16,6 +16,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::OnceCell;
+use tracing::{info, instrument};
 
 #[derive(Builder)]
 pub struct Environment {

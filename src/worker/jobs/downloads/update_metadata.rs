@@ -4,8 +4,10 @@ use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel::sql_types::BigInt;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tracing::{info, instrument};
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateDownloads;

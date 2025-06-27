@@ -7,6 +7,7 @@ use axum::Json;
 use crates_io_database::schema::{crates, dependencies};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct Response {

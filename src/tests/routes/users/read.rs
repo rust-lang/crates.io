@@ -2,7 +2,9 @@ use crate::models::NewUser;
 use crate::schema::users;
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodablePublicUser;
+use claims::assert_ok;
 use diesel_async::RunQueryDsl;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct UserShowPublicResponse {
