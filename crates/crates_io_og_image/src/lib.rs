@@ -251,6 +251,17 @@ impl OgImageGenerator {
         // Pass input and output file paths
         command.arg(&typ_file_path).arg(output_file.path());
 
+        // Clear environment variables to avoid leaking sensitive data
+        command.env_clear();
+
+        // Preserve environment variables needed for font discovery
+        if let Ok(path) = std::env::var("PATH") {
+            command.env("PATH", path);
+        }
+        if let Ok(home) = std::env::var("HOME") {
+            command.env("HOME", home);
+        }
+
         let output = command.output().await;
         let output = output.map_err(OgImageError::TypstNotFound)?;
 
