@@ -8,6 +8,7 @@ Subject: crates.io: Trusted Publishing configuration removed from foo
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
+
 Hello foo!
 
 crates.io user foo removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("foo").
@@ -20,3 +21,6 @@ Trusted Publishing configuration:
 - Environment: (not set)
 
 If you did not make this change and you think it was made maliciously, you can email help@crates.io for assistance.
+
+--
+The crates.io Team

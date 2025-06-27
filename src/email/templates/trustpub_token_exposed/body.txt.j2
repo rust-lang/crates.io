@@ -1,3 +1,6 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 {{ reporter }} has notified us that one of your crates.io Trusted Publishing tokens has been exposed publicly. We have revoked this token as a precaution.
 
 {% if crate_names | length == 1 -%}
@@ -17,3 +20,4 @@ We were not provided with the URL where the token was found.
 {%- endif %}
 
 Trusted Publishing tokens are temporary and used for automated publishing from GitHub Actions. If this exposure was unexpected, please review your repository's workflow files and secrets.
+{% endblock %}

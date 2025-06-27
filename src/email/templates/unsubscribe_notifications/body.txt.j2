@@ -1,5 +1,9 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 Hello {{ user_name }}!
 
 You have been unsubscribed from publish notifications.
 
 If you would like to resubscribe, please visit https://{{ domain }}/settings/profile.
+{% endblock %}

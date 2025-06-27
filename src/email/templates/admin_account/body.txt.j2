@@ -1,3 +1,6 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 {% if added_admins -%}
 Granted admin access:
 
@@ -11,3 +14,4 @@ Revoked admin access:
 - {{ admin }}
 {% endfor -%}
 {% endif %}
+{% endblock %}

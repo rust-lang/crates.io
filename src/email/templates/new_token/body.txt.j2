@@ -1,5 +1,9 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 Hello {{ user_name }}!
 
 A new API token with the name "{{ token_name }}" was recently added to your {{ domain }} account.
 
 If you did not create this token, you should revoke it immediately: https://{{ domain }}/settings/tokens.
+{% endblock %}

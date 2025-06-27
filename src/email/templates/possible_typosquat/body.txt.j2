@@ -1,3 +1,6 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 New crate {{ crate_name }} may be typosquatting one or more other crates.
 
 Visit https://{{ domain }}/crates/{{ crate_name }} to see the offending crate.
@@ -7,3 +10,4 @@ Specific squat checks that triggered:
 {% for squat in squats -%}
 - {{ squat.display }} (https://{{ domain }}/crates/{{ squat.package }})
 {% endfor %}
+{% endblock %}

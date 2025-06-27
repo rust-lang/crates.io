@@ -1,3 +1,6 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 Hello {{ recipient }}!
 
 crates.io user {{ user }} removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("{{ krate }}").
@@ -10,3 +13,4 @@ Trusted Publishing configuration:
 - Environment: {{ environment or "(not set)" }}
 
 If you did not make this change and you think it was made maliciously, you can email help@crates.io for assistance.
+{% endblock %}
