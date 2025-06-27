@@ -1,26 +1,83 @@
 ---
 source: crates/crates_io_tarball/src/lib.rs
-expression: lib
+expression: tarball_info
 ---
-Product {
-    path: Some(
-        "src/lib.rs",
-    ),
-    name: Some(
-        "foo",
-    ),
-    test: true,
-    doctest: true,
-    bench: true,
-    doc: true,
-    plugin: false,
-    proc_macro: false,
-    harness: true,
-    edition: None,
-    required_features: [],
-    crate_type: Some(
-        [
-            "lib",
-        ],
-    ),
+TarballInfo {
+    manifest: Manifest {
+        package: Some(
+            Package {
+                name: "foo",
+                edition: None,
+                version: Some(
+                    Local(
+                        "0.0.1",
+                    ),
+                ),
+                build: None,
+                workspace: None,
+                authors: None,
+                links: None,
+                description: None,
+                homepage: None,
+                documentation: None,
+                readme: None,
+                keywords: None,
+                categories: None,
+                license: None,
+                license_file: None,
+                repository: None,
+                metadata: None,
+                rust_version: None,
+                exclude: None,
+                include: None,
+                default_run: None,
+                autolib: None,
+                autobins: None,
+                autoexamples: None,
+                autotests: None,
+                autobenches: None,
+                publish: None,
+                resolver: None,
+            },
+        ),
+        cargo_features: None,
+        workspace: None,
+        dependencies: None,
+        dev_dependencies: None,
+        build_dependencies: None,
+        target: None,
+        features: None,
+        bin: [],
+        bench: [],
+        test: [],
+        example: [],
+        patch: None,
+        lib: Some(
+            Product {
+                path: Some(
+                    "src/lib.rs",
+                ),
+                name: Some(
+                    "foo",
+                ),
+                test: true,
+                doctest: true,
+                bench: true,
+                doc: true,
+                plugin: false,
+                proc_macro: false,
+                harness: true,
+                edition: None,
+                required_features: [],
+                crate_type: Some(
+                    [
+                        "lib",
+                    ],
+                ),
+            },
+        ),
+        profile: None,
+        badges: None,
+    },
+    vcs_info: None,
 }
