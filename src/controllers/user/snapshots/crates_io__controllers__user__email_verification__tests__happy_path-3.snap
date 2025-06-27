@@ -6,9 +6,12 @@ To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Please confirm your email address
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-Hello foo! Welcome to crates.io. Please click the
-link below to verify your email address. Thank you!
+Hello foo!
+
+Welcome to crates.io. Please click the link below to verify your email address:
 
 https://crates.io/confirm/[confirm-token]
+
+Thank you!

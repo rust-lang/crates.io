@@ -12,4 +12,4 @@ Hello foo!
 
 A new API token with the name "bar" was recently added to your crates.io account.
 
-If this wasn't you, you should revoke the token immediately: https://crates.io/settings/tokens
+If you did not create this token, you should revoke it immediately: https://crates.io/settings/tokens.
