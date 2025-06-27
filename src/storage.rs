@@ -1,5 +1,6 @@
 use anyhow::Context;
 use crates_io_env_vars::required_var;
+use futures_util::stream::BoxStream;
 use futures_util::{StreamExt, TryStreamExt};
 use hyper::body::Bytes;
 use object_store::aws::{AmazonS3, AmazonS3Builder};
@@ -273,6 +274,17 @@ impl Storage {
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
         Ok(())
+    }
+
+    #[instrument(skip(self))]
+    pub async fn download_crate_file(
+        &self,
+        name: &str,
+        version: &str,
+    ) -> Result<BoxStream<'_, Result<Bytes>>> {
+        let path = crate_file_path(name, version);
+        let result = self.store.get(&path).await?;
+        Ok(result.into_stream())
     }
 
     #[instrument(skip(self, bytes))]
