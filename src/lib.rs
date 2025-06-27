@@ -5,8 +5,6 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
 #[macro_use]
-extern crate diesel;
-#[macro_use]
 extern crate serde;
 #[macro_use]
 extern crate tracing;
