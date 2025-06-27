@@ -9,6 +9,7 @@ use minijinja::context;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
+use tracing::{debug, info, warn};
 
 /// See <https://github.com/rust-lang/team/pull/1197>.
 const PERMISSION_NAME: &str = "crates_io_admin";

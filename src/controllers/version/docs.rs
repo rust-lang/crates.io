@@ -9,6 +9,7 @@ use crate::worker::jobs;
 use crates_io_worker::BackgroundJob as _;
 use http::StatusCode;
 use http::request::Parts;
+use tracing::error;
 
 /// Trigger a rebuild for the crate documentation on docs.rs.
 #[utoipa::path(

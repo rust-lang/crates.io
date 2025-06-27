@@ -2,6 +2,7 @@ use anyhow::{Context, anyhow};
 use reqwest::Client;
 use reqwest::header::{HeaderMap, HeaderValue};
 use secrecy::{ExposeSecret, SecretString};
+use tracing::{debug, instrument, trace};
 
 #[derive(Debug)]
 pub struct Fastly {

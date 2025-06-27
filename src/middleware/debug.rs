@@ -3,6 +3,7 @@
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
+use tracing::debug;
 
 pub async fn debug_requests(req: Request, next: Next) -> impl IntoResponse {
     debug!("  version: {:?}", req.version());

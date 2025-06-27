@@ -15,6 +15,7 @@ use diesel_async::AsyncPgConnection;
 use http::request::Parts;
 use http::{StatusCode, header};
 use secrecy::{ExposeSecret, SecretString};
+use tracing::instrument;
 
 pub struct AuthHeader(SecretString);
 

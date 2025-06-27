@@ -1,5 +1,6 @@
 use crates_io_env_vars::{required_var, var};
 use secrecy::SecretString;
+use tracing::warn;
 
 #[derive(Debug, Clone)]
 pub enum CdnLogQueueConfig {

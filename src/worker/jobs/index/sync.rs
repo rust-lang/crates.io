@@ -9,6 +9,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Write};
 use std::sync::Arc;
+use tracing::{debug, info, instrument};
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {

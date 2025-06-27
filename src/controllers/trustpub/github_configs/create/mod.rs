@@ -19,6 +19,7 @@ use http::request::Parts;
 use minijinja::context;
 use oauth2::AccessToken;
 use secrecy::ExposeSecret;
+use tracing::warn;
 
 #[cfg(test)]
 mod tests;

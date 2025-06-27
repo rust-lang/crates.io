@@ -27,7 +27,7 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use tracing::warn;
+use tracing::{debug, warn};
 
 // Minimum number of seconds to wait before refreshing cache of GitHub's public keys
 const PUBLIC_KEY_CACHE_LIFETIME: Duration = Duration::from_secs(60 * 60 * 24); // 24 hours

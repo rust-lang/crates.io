@@ -11,6 +11,7 @@ use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{debug, info, instrument, warn};
 
 /// A background job that processes messages from the CDN log queue.
 ///

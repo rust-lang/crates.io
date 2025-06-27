@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, warn};
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncUpdatesFeed;

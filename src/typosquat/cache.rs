@@ -1,6 +1,7 @@
 use diesel_async::AsyncPgConnection;
 use std::sync::Arc;
 use thiserror::Error;
+use tracing::{instrument, warn};
 use typomania::Harness;
 use typomania::checks::{Bitflips, Omitted, SwappedWords, Typos};
 

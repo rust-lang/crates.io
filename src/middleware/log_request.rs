@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::Level;
+use tracing::{Level, event};
 
 #[derive(Clone, Debug)]
 pub struct ErrorField(pub String);

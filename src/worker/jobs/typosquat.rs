@@ -11,7 +11,7 @@ use crate::worker::Environment;
 use anyhow::Context;
 use minijinja::context;
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::{error, info, instrument};
 
 /// A job to check the name of a newly published crate against the most popular crates to see if
 /// the new crate might be typosquatting an existing, popular crate.

@@ -10,6 +10,7 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use minijinja::context;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{debug, error, info, instrument, warn};
 
 /// The threshold for the expiry notification.
 const EXPIRY_THRESHOLD: chrono::TimeDelta = chrono::TimeDelta::days(3);

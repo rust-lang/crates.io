@@ -19,6 +19,7 @@ use minijinja::context;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {

@@ -9,6 +9,7 @@ use diesel_async::AsyncConnection;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, instrument};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {

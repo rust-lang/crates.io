@@ -26,6 +26,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio_util::io::StreamReader;
+use tracing::{error, instrument};
 use url::Url;
 
 use crate::models::{

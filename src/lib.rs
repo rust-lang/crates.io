@@ -4,9 +4,6 @@
 //! implemented in the [category](category/index.html), [keyword](keyword/index.html),
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
-#[macro_use]
-extern crate tracing;
-
 pub use crate::{app::App, email::Emails};
 pub use crates_io_database::{models, schema};
 use std::sync::Arc;

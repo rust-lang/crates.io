@@ -4,6 +4,7 @@ use crates_io_docs_rs::DocsRsError;
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{error, warn};
 
 /// A background job that queues a docs rebuild for a specific release
 #[derive(Serialize, Deserialize)]

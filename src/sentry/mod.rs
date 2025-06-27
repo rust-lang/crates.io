@@ -3,6 +3,7 @@ use http::header::{AUTHORIZATION, COOKIE};
 use sentry::protocol::Event;
 use sentry::{ClientInitGuard, ClientOptions, TransactionContext};
 use std::sync::Arc;
+use tracing::warn;
 
 /// Initializes the Sentry SDK from the environment variables.
 ///

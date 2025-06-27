@@ -25,6 +25,7 @@ use http::request::Parts;
 use minijinja::context;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Deserialize)]
 pub struct GetParams {

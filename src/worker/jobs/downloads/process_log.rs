@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::io::BufReader;
+use tracing::{debug, info, instrument, warn};
 
 /// A background job that loads a CDN log file from an object store (aka. S3),
 /// counts the number of downloads for each crate and version, and then inserts

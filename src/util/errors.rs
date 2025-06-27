@@ -19,13 +19,13 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
 
+use crate::middleware::log_request::ErrorField;
 use axum::Extension;
 use chrono::{DateTime, Utc};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use http::StatusCode;
 use tokio::task::JoinError;
-
-use crate::middleware::log_request::ErrorField;
+use tracing::error;
 
 mod json;
 

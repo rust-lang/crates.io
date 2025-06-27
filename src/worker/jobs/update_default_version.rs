@@ -3,6 +3,7 @@ use crate::worker::Environment;
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::info;
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateDefaultVersion {

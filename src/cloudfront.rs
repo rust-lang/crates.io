@@ -3,6 +3,7 @@ use aws_sdk_cloudfront::config::retry::RetryConfig;
 use aws_sdk_cloudfront::config::{BehaviorVersion, Region};
 use aws_sdk_cloudfront::types::{InvalidationBatch, Paths};
 use aws_sdk_cloudfront::{Client, Config};
+use tracing::{debug, instrument, warn};
 
 pub struct CloudFront {
     client: Client,

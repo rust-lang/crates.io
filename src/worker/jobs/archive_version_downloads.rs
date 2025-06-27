@@ -17,6 +17,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 use tempfile::tempdir;
+use tracing::{debug, error, info, warn};
 
 const FILE_NAME: &str = "version_downloads.csv";
 

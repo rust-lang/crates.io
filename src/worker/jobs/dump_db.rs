@@ -6,6 +6,7 @@ use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
+use tracing::{info, warn};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DumpDb;

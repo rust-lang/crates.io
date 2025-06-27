@@ -7,6 +7,7 @@ use std::fs;
 use std::io::{BufRead, BufReader};
 use std::process::Command;
 use std::sync::Arc;
+use tracing::info;
 
 #[derive(Serialize, Deserialize)]
 pub struct NormalizeIndex {

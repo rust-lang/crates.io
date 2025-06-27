@@ -6,6 +6,7 @@ use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::sync::Arc;
+use tracing::{info, instrument};
 use url::Url;
 
 #[derive(Serialize, Deserialize)]

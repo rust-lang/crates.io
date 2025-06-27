@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tracing::{info, warn};
 
 /// Items younger than this will always be included in the feed.
 const ALWAYS_INCLUDE_AGE: Duration = Duration::hours(24);
