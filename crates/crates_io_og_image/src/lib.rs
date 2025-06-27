@@ -391,7 +391,8 @@ mod tests {
             return None;
         }
 
-        let generator = OgImageGenerator::default();
+        let generator =
+            OgImageGenerator::from_environment().expect("Failed to create OgImageGenerator");
 
         let temp_file = generator
             .generate(data)
