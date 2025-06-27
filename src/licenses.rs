@@ -14,6 +14,7 @@ pub fn parse_license_expr(s: &str) -> Result<Expression, ParseError> {
 #[cfg(test)]
 mod tests {
     use super::parse_license_expr;
+    use claims::{assert_err, assert_ok};
 
     #[test]
     fn licenses() {

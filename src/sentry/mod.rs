@@ -88,6 +88,7 @@ fn options(config: SentryConfig) -> ClientOptions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::{assert_none, assert_some};
 
     use sentry::{
         capture_error,

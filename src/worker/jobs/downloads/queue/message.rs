@@ -40,6 +40,7 @@ impl FromStr for Message {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::assert_ok;
     use insta::assert_debug_snapshot;
 
     #[test]

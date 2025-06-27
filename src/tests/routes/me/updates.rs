@@ -3,6 +3,7 @@ use crate::tests::OkBool;
 use crate::tests::builders::{CrateBuilder, VersionBuilder};
 use crate::tests::util::{RequestHelper, TestApp};
 use crate::views::EncodableVersion;
+use claims::assert_none;
 use diesel::prelude::*;
 use diesel::update;
 use diesel_async::RunQueryDsl;

@@ -152,6 +152,7 @@ impl NewCrate {
 mod tests {
     use super::*;
     use chrono::DateTime;
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use diesel_async::AsyncPgConnection;
     use futures_util::future::join_all;

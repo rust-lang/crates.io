@@ -1,6 +1,6 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::{RequestHelper, TestApp};
-
+use claims::assert_ok_eq;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};

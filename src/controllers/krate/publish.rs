@@ -1024,6 +1024,7 @@ impl From<TarballError> for BoxedAppError {
 #[cfg(test)]
 mod tests {
     use super::{missing_metadata_error_message, validate_url};
+    use claims::assert_err;
 
     #[test]
     fn deny_relative_urls() {

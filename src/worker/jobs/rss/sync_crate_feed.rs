@@ -178,6 +178,7 @@ impl VersionUpdate {
 mod tests {
     use super::*;
     use chrono::DateTime;
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use futures_util::future::join_all;
     use insta::assert_debug_snapshot;

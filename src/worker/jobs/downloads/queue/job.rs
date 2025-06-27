@@ -225,6 +225,7 @@ mod tests {
     use aws_sdk_sqs::operation::receive_message::builders::ReceiveMessageOutputBuilder;
     use aws_sdk_sqs::types::Message;
     use aws_sdk_sqs::types::builders::MessageBuilder;
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use crates_io_worker::schema::background_jobs;
     use diesel::prelude::*;

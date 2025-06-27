@@ -233,6 +233,7 @@ pub struct StoredEmail {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use claims::{assert_err, assert_ok};
 
     #[tokio::test]
     async fn sending_to_invalid_email_fails() {

@@ -250,6 +250,7 @@ async fn delete(conn: &mut AsyncPgConnection, dates: Vec<NaiveDate>) -> anyhow::
 mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
+    use claims::assert_err;
     use crates_io_test_db::TestDatabase;
     use insta::assert_snapshot;
 

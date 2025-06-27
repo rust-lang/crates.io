@@ -412,6 +412,7 @@ async fn save_as_processed(
 mod tests {
     use super::*;
     use crate::schema::{crates, version_downloads, versions};
+    use claims::assert_ok;
     use crates_io_test_db::TestDatabase;
     use diesel_async::pooled_connection::AsyncDieselConnectionManager;
     use insta::assert_debug_snapshot;

@@ -1,4 +1,5 @@
 pub use ::insta::*;
+use claims::assert_some;
 use googletest::prelude::*;
 
 pub fn id_redaction(expected_id: i32) -> insta::internals::Redaction {

@@ -5,6 +5,7 @@ use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
 use crate::util::token::HashedToken;
 use chrono::{DateTime, Utc};
+use claims::assert_ok;
 use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

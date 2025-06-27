@@ -544,6 +544,7 @@ pub(crate) use seek;
 mod tests {
     use super::*;
     use chrono::Utc;
+    use claims::assert_ok_eq;
     use http::{Method, Request, StatusCode};
     use insta::assert_snapshot;
 

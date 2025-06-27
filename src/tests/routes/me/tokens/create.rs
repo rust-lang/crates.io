@@ -2,6 +2,7 @@ use crate::models::ApiToken;
 use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
 use crate::tests::util::insta::{self, assert_json_snapshot};
 use crate::tests::util::{RequestHelper, TestApp};
+use claims::assert_ok;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

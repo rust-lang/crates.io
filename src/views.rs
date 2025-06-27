@@ -1026,6 +1026,7 @@ pub struct PublishWarnings {
 mod tests {
     use super::*;
     use chrono::NaiveDate;
+    use claims::assert_some;
 
     #[test]
     fn category_dates_serializes_to_rfc3339() {
