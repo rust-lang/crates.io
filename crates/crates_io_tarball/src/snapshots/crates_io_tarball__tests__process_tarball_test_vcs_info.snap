@@ -61,4 +61,9 @@ TarballInfo {
             path_in_vcs: "path/in/vcs",
         },
     ),
+    linecount_stats: LinecountStats {
+        languages: {},
+        total_code_lines: 0,
+        total_comment_lines: 0,
+    },
 }

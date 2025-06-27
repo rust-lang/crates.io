@@ -71,4 +71,9 @@ TarballInfo {
         badges: None,
     },
     vcs_info: None,
+    linecount_stats: LinecountStats {
+        languages: {},
+        total_code_lines: 0,
+        total_comment_lines: 0,
+    },
 }
