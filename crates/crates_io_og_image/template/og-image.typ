@@ -262,13 +262,14 @@
 
         // Tags
         if data.at("tags", default: ()).len() > 0 {
-            for (i, tag) in data.tags.enumerate() {
-                if i > 0 {
-                    h(3pt)
+            block(
+                for (i, tag) in data.tags.enumerate() {
+                    if i > 0 {
+                        h(3pt)
+                    }
+                    render-tag(text(size: 8pt, weight: "medium", "#" + tag))
                 }
-                render-tag(text(size: 8pt, weight: "medium", "#" + tag))
-            }
-            linebreak()
+            )
         }
 
         // Description
@@ -284,7 +285,7 @@
                 }
                 (name: author.name, avatar: avatar)
             })
-            render-authors-list(authors-with-avatars)
+            block(render-authors-list(authors-with-avatars))
         }
 
         place(bottom + left, float: true,
