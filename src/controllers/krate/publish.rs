@@ -283,12 +283,12 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         return Err(bad_request(&message));
     }
 
-    if let Some(description) = &description {
-        if description.len() > MAX_DESCRIPTION_LENGTH {
-            return Err(bad_request(format!(
-                "The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed."
-            )));
-        }
+    if let Some(description) = &description
+        && description.len() > MAX_DESCRIPTION_LENGTH
+    {
+        return Err(bad_request(format!(
+            "The `description` is too long. A maximum of {MAX_DESCRIPTION_LENGTH} characters are currently allowed."
+        )));
     }
 
     if let Some(ref license) = license {

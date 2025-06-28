@@ -37,13 +37,13 @@ impl Check for Affixes {
                 // If the package being examined starts with this prefix and separator combo, then
                 // we should see if it exists without that prefix in the popular crate corpus.
                 let combo = format!("{affix}{separator}");
-                if let Some(stem) = name.strip_prefix(&combo) {
-                    if corpus.possible_squat(stem, name, package)? {
-                        squats.push(Squat::Custom {
-                            message: format!("adds the {combo} prefix"),
-                            package: stem.to_string(),
-                        })
-                    }
+                if let Some(stem) = name.strip_prefix(&combo)
+                    && corpus.possible_squat(stem, name, package)?
+                {
+                    squats.push(Squat::Custom {
+                        message: format!("adds the {combo} prefix"),
+                        package: stem.to_string(),
+                    })
                 }
 
                 // Alternatively, let's see if adding the prefix and separator combo to the package
@@ -59,13 +59,13 @@ impl Check for Affixes {
                 // If the package being examined ends in this separator and suffix combo, then we
                 // should see if it exists without that suffix in the popular crate corpus.
                 let combo = format!("{separator}{affix}");
-                if let Some(stem) = name.strip_suffix(&combo) {
-                    if corpus.possible_squat(stem, name, package)? {
-                        squats.push(Squat::Custom {
-                            message: format!("adds the {combo} suffix"),
-                            package: stem.to_string(),
-                        })
-                    }
+                if let Some(stem) = name.strip_suffix(&combo)
+                    && corpus.possible_squat(stem, name, package)?
+                {
+                    squats.push(Squat::Custom {
+                        message: format!("adds the {combo} suffix"),
+                        package: stem.to_string(),
+                    })
                 }
 
                 // Alternatively, let's see if adding the separator and suffix combo to the package
