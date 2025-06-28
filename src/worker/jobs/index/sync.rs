@@ -13,13 +13,22 @@ use tracing::{debug, info, instrument};
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToGitIndex {
+    crate_id: Option<i32>,
     krate: String,
 }
 
 impl SyncToGitIndex {
-    pub fn new(krate: impl Into<String>) -> Self {
+    pub fn new(crate_id: i32, krate: impl Into<String>) -> Self {
         let krate = krate.into();
-        Self { krate }
+        Self {
+            crate_id: Some(crate_id),
+            krate,
+        }
+    }
+
+    pub fn new_maybe_deleted(crate_id: Option<i32>, krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { crate_id, krate }
     }
 }
 
@@ -81,13 +90,22 @@ impl BackgroundJob for SyncToGitIndex {
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncToSparseIndex {
+    crate_id: Option<i32>,
     krate: String,
 }
 
 impl SyncToSparseIndex {
-    pub fn new(krate: impl Into<String>) -> Self {
+    pub fn new(crate_id: i32, krate: impl Into<String>) -> Self {
         let krate = krate.into();
-        Self { krate }
+        Self {
+            crate_id: Some(crate_id),
+            krate,
+        }
+    }
+
+    pub fn new_maybe_deleted(crate_id: Option<i32>, krate: impl Into<String>) -> Self {
+        let krate = krate.into();
+        Self { crate_id, krate }
     }
 }
 

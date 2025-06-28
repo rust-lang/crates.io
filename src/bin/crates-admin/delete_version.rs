@@ -95,8 +95,8 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let crate_name = &opts.crate_name;
 
     info!(%crate_name, "Enqueuing index sync jobs");
-    let git_index_job = jobs::SyncToGitIndex::new(crate_name);
-    let sparse_index_job = jobs::SyncToSparseIndex::new(crate_name);
+    let git_index_job = jobs::SyncToGitIndex::new(crate_id, crate_name);
+    let sparse_index_job = jobs::SyncToSparseIndex::new(crate_id, crate_name);
 
     if let Err(error) = tokio::try_join!(
         git_index_job.enqueue(&mut conn),

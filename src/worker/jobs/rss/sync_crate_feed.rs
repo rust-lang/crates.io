@@ -22,12 +22,16 @@ const NUM_ITEMS: i64 = 10;
 
 #[derive(Serialize, Deserialize)]
 pub struct SyncCrateFeed {
+    crate_id: Option<i32>,
     name: String,
 }
 
 impl SyncCrateFeed {
-    pub fn new(name: String) -> Self {
-        Self { name }
+    pub fn new(crate_id: i32, name: String) -> Self {
+        Self {
+            crate_id: Some(crate_id),
+            name,
+        }
     }
 }
 
