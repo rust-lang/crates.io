@@ -194,8 +194,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0(@babel/core@7.27.7)
       ember-keyboard:
-        specifier: 9.0.1
-        version: 9.0.1(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
+        specifier: 9.0.2
+        version: 9.0.2(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
       ember-link:
         specifier: 3.4.0
         version: 3.4.0(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
@@ -4341,8 +4341,8 @@ packages:
   ember-inflector@6.0.0:
     resolution: {integrity: sha512-g6trqBhQHRwlq9bBmoyxhAl0tD0/CaTKK0xWPUgi3BfxFOgGG1bbiwAx+tjyiAkLzDqU+ihyjtT+sd41y6K1hA==}
 
-  ember-keyboard@9.0.1:
-    resolution: {integrity: sha512-zCIrs8ktI8nxDTBLodASYrWtg5I5ZTZ7hdfFr+upfyRKzbLub5Pnvlj60zpvSAVDyNJBlQJ7eSn3sZlwEA01wQ==}
+  ember-keyboard@9.0.2:
+    resolution: {integrity: sha512-+CT3k3Wj1rd/eluijOWxDZdHxrjZa08+jtNop60jclGcxIaMlZahesVRBk3XU3yX/Z+VyoyQ6/7N1P5GWGvLug==}
     peerDependencies:
       '@ember/test-helpers': ^2.6.0 || ^3.0.0 || >= 4.0.0
     peerDependenciesMeta:
@@ -13720,7 +13720,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-keyboard@9.0.1(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7)):
+  ember-keyboard@9.0.2(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7)):
     dependencies:
       '@embroider/addon-shim': 1.10.0
       ember-destroyable-polyfill: 2.0.3(@babel/core@7.27.7)
