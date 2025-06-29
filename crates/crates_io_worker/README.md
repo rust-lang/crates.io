@@ -81,9 +81,9 @@ impl BackgroundJob for SendEmailJob {
     const PRIORITY: i16 = 10;
     const DEDUPLICATED: bool = false;
     const QUEUE: &'static str = "emails";
-    
+
     type Context = AppContext;
-    
+
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         // Job implementation
         ctx.email_service.send(&self.to, &self.subject, &self.body).await?;

@@ -24,10 +24,10 @@ use crates_io_test_db::TestDatabase;
 async fn test_database_operations() {
     // Create a new test database with all migrations applied
     let test_db = TestDatabase::new();
-    
+
     // Get an async connection
     let mut conn = test_db.async_connect().await;
-    
+
     // Perform your database operations...
     // Database is automatically cleaned up when test_db is dropped
 }
@@ -45,7 +45,7 @@ fn test_with_empty_database() {
     // Create an empty database without migrations
     let test_db = TestDatabase::empty();
     let mut conn = test_db.connect();
-    
+
     // Database starts completely empty
 }
 ```
@@ -59,7 +59,7 @@ use crates_io_test_db::TestDatabase;
 fn test_with_database_url() {
     let test_db = TestDatabase::new();
     let url = test_db.url();
-    
+
     // Use the URL with your preferred database client
 }
 ```
@@ -83,6 +83,7 @@ export TEST_DATABASE_URL="postgres://postgres:postgres@localhost/crates_io_test"
 ```
 
 The crate will automatically create:
+
 - A template database: `crates_io_test_template` (with all migrations applied)
 - Individual test databases: `crates_io_test_<random_suffix>` (created from template)
 
