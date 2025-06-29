@@ -118,43 +118,42 @@ pub async fn list_crates(
         .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .select(selection);
 
-    if let Some(q_string) = &filter_params.q_string {
-        if !q_string.is_empty() {
-            let q_string = q_string.as_str();
+    if let Some(q_string) = &filter_params.q_string
+        && !q_string.is_empty()
+    {
+        let q_string = q_string.as_str();
 
-            let sort = sort.unwrap_or("relevance");
+        let sort = sort.unwrap_or("relevance");
 
-            query = query.order(Crate::with_name(q_string).desc());
+        query = query.order(Crate::with_name(q_string).desc());
 
-            if sort == "relevance" {
-                let q =
-                    plainto_tsquery_with_search_config(TsConfigurationByName("english"), q_string);
-                let rank = ts_rank_cd(crates::textsearchable_index_col, q);
-                query = query.select((
-                    ALL_COLUMNS,
-                    Crate::with_name(q_string),
-                    crate_downloads::downloads,
-                    recent_crate_downloads::downloads.nullable(),
-                    rank,
-                    versions::num.nullable(),
-                    versions::yanked.nullable(),
-                    default_versions::num_versions.nullable(),
-                ));
-                seek = Some(Seek::Relevance);
-                query = query.then_order_by(rank.desc())
-            } else {
-                query = query.select((
-                    ALL_COLUMNS,
-                    Crate::with_name(q_string),
-                    crate_downloads::downloads,
-                    recent_crate_downloads::downloads.nullable(),
-                    0_f32.into_sql::<Float>(),
-                    versions::num.nullable(),
-                    versions::yanked.nullable(),
-                    default_versions::num_versions.nullable(),
-                ));
-                seek = Some(Seek::Query);
-            }
+        if sort == "relevance" {
+            let q = plainto_tsquery_with_search_config(TsConfigurationByName("english"), q_string);
+            let rank = ts_rank_cd(crates::textsearchable_index_col, q);
+            query = query.select((
+                ALL_COLUMNS,
+                Crate::with_name(q_string),
+                crate_downloads::downloads,
+                recent_crate_downloads::downloads.nullable(),
+                rank,
+                versions::num.nullable(),
+                versions::yanked.nullable(),
+                default_versions::num_versions.nullable(),
+            ));
+            seek = Some(Seek::Relevance);
+            query = query.then_order_by(rank.desc())
+        } else {
+            query = query.select((
+                ALL_COLUMNS,
+                Crate::with_name(q_string),
+                crate_downloads::downloads,
+                recent_crate_downloads::downloads.nullable(),
+                0_f32.into_sql::<Float>(),
+                versions::num.nullable(),
+                versions::yanked.nullable(),
+                default_versions::num_versions.nullable(),
+            ));
+            seek = Some(Seek::Query);
         }
     }
 
@@ -384,17 +383,17 @@ impl FilterParams {
     fn make_query(&self) -> crates::BoxedQuery<'_, diesel::pg::Pg> {
         let mut query = crates::table.into_boxed();
 
-        if let Some(q_string) = &self.q_string {
-            if !q_string.is_empty() {
-                let q = plainto_tsquery_with_search_config(
-                    TsConfigurationByName("english"),
-                    q_string.as_str(),
-                );
-                query = query.filter(
-                    q.matches(crates::textsearchable_index_col)
-                        .or(Crate::loosly_matches_name(q_string.as_str())),
-                );
-            }
+        if let Some(q_string) = &self.q_string
+            && !q_string.is_empty()
+        {
+            let q = plainto_tsquery_with_search_config(
+                TsConfigurationByName("english"),
+                q_string.as_str(),
+            );
+            query = query.filter(
+                q.matches(crates::textsearchable_index_col)
+                    .or(Crate::loosly_matches_name(q_string.as_str())),
+            );
         }
 
         if let Some(cat) = &self.category {
