@@ -83,32 +83,37 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let available_at = now + chrono::TimeDelta::hours(opts.availability_delay);
 
     for name in &crate_names {
-        if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
-            let id = crate_info.id;
+        let crate_id =
+            if let Some(crate_info) = existing_crates.iter().find(|info| info.name == *name) {
+                let id = crate_info.id;
 
-            let deleted_crate = NewDeletedCrate::builder(name)
-                .created_at(&crate_info.created_at)
-                .deleted_at(&now)
-                .deleted_by(deleted_by.id)
-                .maybe_message(opts.message.as_deref())
-                .available_at(&available_at)
-                .build();
+                let deleted_crate = NewDeletedCrate::builder(name)
+                    .created_at(&crate_info.created_at)
+                    .deleted_at(&now)
+                    .deleted_by(deleted_by.id)
+                    .maybe_message(opts.message.as_deref())
+                    .available_at(&available_at)
+                    .build();
 
-            info!("{name}: Deleting crate from the database…");
-            let result = conn
-                .transaction(|conn| delete_from_database(conn, id, deleted_crate).scope_boxed())
-                .await;
+                info!("{name}: Deleting crate from the database…");
+                let result = conn
+                    .transaction(|conn| delete_from_database(conn, id, deleted_crate).scope_boxed())
+                    .await;
 
-            if let Err(error) = result {
-                warn!(%id, "{name}: Failed to delete crate from the database: {error}");
+                if let Err(error) = result {
+                    warn!(%id, "{name}: Failed to delete crate from the database: {error}");
+                };
+
+                Some(id)
+            } else {
+                info!("{name}: Skipped missing crate");
+
+                None
             };
-        } else {
-            info!("{name}: Skipped missing crate");
-        };
 
         info!("{name}: Enqueuing background jobs…");
-        let git_index_job = jobs::SyncToGitIndex::new(name);
-        let sparse_index_job = jobs::SyncToSparseIndex::new(name);
+        let git_index_job = jobs::SyncToGitIndex::new_maybe_deleted(crate_id, name);
+        let sparse_index_job = jobs::SyncToSparseIndex::new_maybe_deleted(crate_id, name);
         let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(name.into());
 
         if let Err(error) = tokio::try_join!(

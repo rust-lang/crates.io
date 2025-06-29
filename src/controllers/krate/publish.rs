@@ -611,10 +611,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .await
             .map_err(|e| internal(format!("failed to upload crate: {e}")))?;
 
-        let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
-        let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
+        let git_index_job = jobs::SyncToGitIndex::new(krate.id, &krate.name);
+        let sparse_index_job = jobs::SyncToSparseIndex::new(krate.id, &krate.name);
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
-        let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
+        let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.id, krate.name.clone());
         let updates_feed_job = jobs::rss::SyncUpdatesFeed;
 
         tokio::try_join!(
