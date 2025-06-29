@@ -1,6 +1,8 @@
 import { module, test } from 'qunit';
 
 import { calculateReleaseTracks } from '@crates-io/msw/utils/release-tracks';
+import window from 'ember-window-mock';
+import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import { setupTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
@@ -8,6 +10,7 @@ import setupMsw from 'crates-io/tests/helpers/setup-msw';
 module('Model | Version', function (hooks) {
   setupTest(hooks);
   setupMsw(hooks);
+  setupWindowMock(hooks);
 
   hooks.beforeEach(function () {
     this.store = this.owner.lookup('service:store');
@@ -344,5 +347,37 @@ module('Model | Version', function (hooks) {
     let version = versions[0];
     assert.ok(version.published_by);
     assert.strictEqual(version.published_by.name, 'JD');
+  });
+
+  module('purl', function () {
+    test('generates PURL for crates.io version', async function (assert) {
+      let { db, store } = this;
+
+      window.location = 'https://crates.io';
+
+      let crate = db.crate.create({ name: 'serde' });
+      db.version.create({ crate, num: '1.0.136' });
+
+      let crateRecord = await store.findRecord('crate', crate.name);
+      let versions = (await crateRecord.versions).slice();
+      let version = versions[0];
+
+      assert.strictEqual(version.purl, 'pkg:cargo/serde@1.0.136');
+    });
+
+    test('generates PURL with registry URL for non-crates.io hosts', async function (assert) {
+      let { db, store } = this;
+
+      window.location = 'https://staging.crates.io';
+
+      let crate = db.crate.create({ name: 'test-crate' });
+      db.version.create({ crate, num: '2.5.0' });
+
+      let crateRecord = await store.findRecord('crate', crate.name);
+      let versions = (await crateRecord.versions).slice();
+      let version = versions[0];
+
+      assert.strictEqual(version.purl, 'pkg:cargo/test-crate@2.5.0?repository_url=https%3A%2F%2Fstaging.crates.io%2F');
+    });
   });
 });

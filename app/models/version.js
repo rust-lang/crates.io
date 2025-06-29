@@ -9,6 +9,7 @@ import { alias } from 'macro-decorators';
 import semverParse from 'semver/functions/parse';
 
 import ajax from '../utils/ajax';
+import { addRegistryUrl } from '../utils/purl';
 
 const EIGHT_DAYS = 8 * 24 * 60 * 60 * 1000;
 
@@ -50,6 +51,15 @@ export default class Version extends Model {
 
   get crateName() {
     return this.belongsTo('crate').id();
+  }
+
+  /**
+   * Returns the Package URL (PURL) for this version.
+   * @type {string}
+   */
+  get purl() {
+    let basePurl = `pkg:cargo/${this.crateName}@${this.num}`;
+    return addRegistryUrl(basePurl);
   }
 
   get editionMsrv() {

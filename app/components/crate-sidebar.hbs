@@ -6,6 +6,28 @@
   <div local-class="metadata">
     <h2 local-class="heading">Metadata</h2>
 
+    <div local-class="purl" data-test-purl>
+      {{svg-jar "link"}}
+      <CopyButton
+        @copyText={{@version.purl}}
+        class="button-reset"
+        local-class="purl-copy-button"
+      >
+        <span local-class="purl-text">{{@version.purl}}</span>
+        <Tooltip local-class="purl-tooltip"><strong>Package URL:</strong> {{@version.purl}} <small>(click to copy)</small></Tooltip>
+      </CopyButton>
+      <a
+        href="https://github.com/package-url/purl-spec"
+        target="_blank"
+        rel="noopener noreferrer"
+        local-class="purl-help-link"
+        aria-label="Learn more"
+      >
+        {{svg-jar "circle-question"}}
+        <Tooltip @text="Learn more about Package URLs" />
+      </a>
+    </div>
+
     <time
       datetime={{date-format-iso @version.created_at}}
       local-class="date"
