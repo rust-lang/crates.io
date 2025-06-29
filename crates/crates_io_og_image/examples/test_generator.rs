@@ -1,7 +1,19 @@
 use crates_io_og_image::{OgImageAuthorData, OgImageData, OgImageGenerator};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::{EnvFilter, fmt};
+
+fn init_tracing() {
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::DEBUG.into())
+        .from_env_lossy();
+
+    fmt().compact().with_env_filter(env_filter).init();
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    init_tracing();
+
     println!("Testing OgImageGenerator...");
 
     let generator = OgImageGenerator::from_environment()?;
