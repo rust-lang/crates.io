@@ -14,6 +14,7 @@ use std::path::PathBuf;
 use tempfile::NamedTempFile;
 use tokio::fs;
 use tokio::process::Command;
+use tracing::{debug, error, info, instrument, warn};
 
 /// Data structure containing information needed to generate an OpenGraph image
 /// for a crates.io crate.
@@ -108,20 +109,27 @@ impl OgImageGenerator {
     /// let generator = OgImageGenerator::from_environment()?;
     /// # Ok::<(), crates_io_og_image::OgImageError>(())
     /// ```
+    #[instrument]
     pub fn from_environment() -> Result<Self, OgImageError> {
         let typst_path = var("TYPST_PATH").map_err(OgImageError::EnvVarError)?;
         let font_path = var("TYPST_FONT_PATH").map_err(OgImageError::EnvVarError)?;
 
-        let mut generator = if let Some(path) = typst_path {
+        let mut generator = if let Some(ref path) = typst_path {
+            debug!(typst_path = %path, "Using custom Typst binary path from environment");
             Self::new(PathBuf::from(path))
         } else {
+            debug!("Using default Typst binary path (assumes 'typst' in PATH)");
             Self::default()
         };
 
-        if let Some(font_path) = font_path {
+        if let Some(ref font_path) = font_path {
+            debug!(font_path = %font_path, "Setting custom font path from environment");
             let current_dir = std::env::current_dir()?;
             let font_path = current_dir.join(font_path).canonicalize()?;
+            debug!(resolved_font_path = %font_path.display(), "Resolved font path");
             generator = generator.with_font_path(font_path);
+        } else {
+            debug!("No custom font path specified, using Typst default font discovery");
         }
 
         Ok(generator)
@@ -153,6 +161,7 @@ impl OgImageGenerator {
     /// This method handles both asset-based avatars (which are copied from the bundled assets)
     /// and URL-based avatars (which are downloaded from the internet).
     /// Returns a mapping from avatar source to the local filename.
+    #[instrument(skip(self, data), fields(crate.name = %data.name))]
     async fn process_avatars<'a>(
         &self,
         data: &'a OgImageData<'_>,
@@ -166,33 +175,70 @@ impl OgImageGenerator {
                 let filename = format!("avatar_{index}.png");
                 let avatar_path = assets_dir.join(&filename);
 
+                debug!(
+                    author_name = %author.name,
+                    avatar_url = %avatar,
+                    avatar_path = %avatar_path.display(),
+                    "Processing avatar for author {}", author.name
+                );
+
                 // Get the bytes either from the included asset or download from URL
                 let bytes = if *avatar == "test-avatar" {
+                    debug!("Using bundled test avatar");
                     // Copy directly from included bytes
                     Bytes::from_static(include_bytes!("../template/assets/test-avatar.png"))
                 } else {
+                    debug!(url = %avatar, "Downloading avatar from URL: {avatar}");
                     // Download the avatar from the URL
-                    let response = client.get(*avatar).send().await.map_err(|err| {
+                    let response = client
+                        .get(*avatar)
+                        .send()
+                        .await
+                        .map_err(|err| OgImageError::AvatarDownloadError {
+                            url: avatar.to_string(),
+                            source: err,
+                        })?
+                        .error_for_status()
+                        .map_err(|err| OgImageError::AvatarDownloadError {
+                            url: avatar.to_string(),
+                            source: err,
+                        })?;
+
+                    let content_length = response.content_length();
+                    debug!(
+                        url = %avatar,
+                        content_length = ?content_length,
+                        status = %response.status(),
+                        "Avatar download response received"
+                    );
+
+                    let bytes = response.bytes().await;
+                    let bytes = bytes.map_err(|err| {
+                        error!(url = %avatar, error = %err, "Failed to read avatar response bytes");
                         OgImageError::AvatarDownloadError {
                             url: (*avatar).to_string(),
                             source: err,
                         }
                     })?;
 
-                    let bytes = response.bytes().await;
-                    bytes.map_err(|err| OgImageError::AvatarDownloadError {
-                        url: (*avatar).to_string(),
-                        source: err,
-                    })?
+                    debug!(url = %avatar, size_bytes = bytes.len(), "Avatar downloaded successfully");
+                    bytes
                 };
 
                 // Write the bytes to the avatar file
-                fs::write(&avatar_path, bytes).await.map_err(|err| {
+                fs::write(&avatar_path, &bytes).await.map_err(|err| {
                     OgImageError::AvatarWriteError {
                         path: avatar_path.clone(),
                         source: err,
                     }
                 })?;
+
+                debug!(
+                    author_name = %author.name,
+                    path = %avatar_path.display(),
+                    size_bytes = bytes.len(),
+                    "Avatar processed and written successfully"
+                );
 
                 // Store the mapping from the avatar source to the numbered filename
                 avatar_map.insert(*avatar, filename);
@@ -232,19 +278,32 @@ impl OgImageGenerator {
     /// # Ok(())
     /// # }
     /// ```
+    #[instrument(skip(self, data), fields(
+        crate.name = %data.name,
+        crate.version = %data.version,
+        author_count = data.authors.len(),
+    ))]
     pub async fn generate(&self, data: OgImageData<'_>) -> Result<NamedTempFile, OgImageError> {
+        let start_time = std::time::Instant::now();
+        info!("Starting OpenGraph image generation");
+
         // Create a temporary folder
         let temp_dir = tempfile::tempdir().map_err(OgImageError::TempDirError)?;
+        debug!(temp_dir = %temp_dir.path().display(), "Created temporary directory");
 
         // Create assets directory and copy logo and icons
         let assets_dir = temp_dir.path().join("assets");
+        debug!(assets_dir = %assets_dir.display(), "Creating assets directory");
         fs::create_dir(&assets_dir).await?;
+
+        debug!("Copying bundled assets to temporary directory");
         let cargo_logo = include_bytes!("../template/assets/cargo.png");
         fs::write(assets_dir.join("cargo.png"), cargo_logo).await?;
         let rust_logo_svg = include_bytes!("../template/assets/rust-logo.svg");
         fs::write(assets_dir.join("rust-logo.svg"), rust_logo_svg).await?;
 
         // Copy SVG icons
+        debug!("Copying SVG icon assets");
         let code_branch_svg = include_bytes!("../template/assets/code-branch.svg");
         fs::write(assets_dir.join("code-branch.svg"), code_branch_svg).await?;
         let code_svg = include_bytes!("../template/assets/code.svg");
@@ -257,24 +316,36 @@ impl OgImageGenerator {
         fs::write(assets_dir.join("weight-hanging.svg"), weight_hanging_svg).await?;
 
         // Process avatars - download URLs and copy assets
+        let avatar_start_time = std::time::Instant::now();
+        info!("Processing avatars");
         let avatar_map = self.process_avatars(&data, &assets_dir).await?;
+        let avatar_duration = avatar_start_time.elapsed();
+        info!(
+            avatar_count = avatar_map.len(),
+            duration_ms = avatar_duration.as_millis(),
+            "Avatar processing completed"
+        );
 
         // Copy the static Typst template file
         let template_content = include_str!("../template/og-image.typ");
         let typ_file_path = temp_dir.path().join("og-image.typ");
+        debug!(template_path = %typ_file_path.display(), "Copying Typst template");
         fs::write(&typ_file_path, template_content).await?;
 
         // Create a named temp file for the output PNG
         let output_file = NamedTempFile::new().map_err(OgImageError::TempFileError)?;
+        debug!(output_path = %output_file.path().display(), "Created output file");
 
         // Serialize data and avatar_map to JSON
-        let json_data = serde_json::to_string(&data);
-        let json_data = json_data.map_err(OgImageError::JsonSerializationError)?;
+        debug!("Serializing data and avatar map to JSON");
+        let json_data =
+            serde_json::to_string(&data).map_err(OgImageError::JsonSerializationError)?;
 
-        let json_avatar_map = serde_json::to_string(&avatar_map);
-        let json_avatar_map = json_avatar_map.map_err(OgImageError::JsonSerializationError)?;
+        let json_avatar_map =
+            serde_json::to_string(&avatar_map).map_err(OgImageError::JsonSerializationError)?;
 
         // Run typst compile command with input data
+        info!("Running Typst compilation command");
         let mut command = Command::new(&self.typst_binary_path);
         command.arg("compile").arg("--format").arg("png");
 
@@ -286,8 +357,11 @@ impl OgImageGenerator {
 
         // Pass in the font path if specified
         if let Some(font_path) = &self.typst_font_path {
+            debug!(font_path = %font_path.display(), "Using custom font path");
             command.arg("--font-path").arg(font_path);
             command.arg("--ignore-system-fonts");
+        } else {
+            debug!("Using system font discovery");
         }
 
         // Pass input and output file paths
@@ -304,12 +378,21 @@ impl OgImageGenerator {
             command.env("HOME", home);
         }
 
+        let compilation_start_time = std::time::Instant::now();
         let output = command.output().await;
         let output = output.map_err(OgImageError::TypstNotFound)?;
+        let compilation_duration = compilation_start_time.elapsed();
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            error!(
+                exit_code = ?output.status.code(),
+                stderr = %stderr,
+                stdout = %stdout,
+                duration_ms = compilation_duration.as_millis(),
+                "Typst compilation failed"
+            );
             return Err(OgImageError::TypstCompilationError {
                 stderr,
                 stdout,
@@ -317,6 +400,19 @@ impl OgImageGenerator {
             });
         }
 
+        let output_size_bytes = fs::metadata(output_file.path()).await;
+        let output_size_bytes = output_size_bytes.map(|m| m.len()).unwrap_or(0);
+
+        debug!(
+            duration_ms = compilation_duration.as_millis(),
+            output_size_bytes, "Typst compilation completed successfully"
+        );
+
+        let duration = start_time.elapsed();
+        info!(
+            duration_ms = duration.as_millis(),
+            output_size_bytes, "OpenGraph image generation completed successfully"
+        );
         Ok(output_file)
     }
 }
@@ -332,6 +428,19 @@ impl Default for OgImageGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tracing::dispatcher::DefaultGuard;
+    use tracing::{Level, subscriber};
+    use tracing_subscriber::fmt;
+
+    fn init_tracing() -> DefaultGuard {
+        let subscriber = fmt()
+            .compact()
+            .with_max_level(Level::DEBUG)
+            .with_test_writer()
+            .finish();
+
+        subscriber::set_default(subscriber)
+    }
 
     const fn author(name: &str) -> OgImageAuthorData<'_> {
         OgImageAuthorData::new(name, None)
@@ -464,6 +573,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_snapshot() {
+        let _guard = init_tracing();
         let data = create_simple_test_data();
 
         if let Some(image_data) = generate_image(data).await {
@@ -473,6 +583,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_overflow_snapshot() {
+        let _guard = init_tracing();
         let data = create_overflow_test_data();
 
         if let Some(image_data) = generate_image(data).await {
@@ -482,6 +593,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_minimal_snapshot() {
+        let _guard = init_tracing();
         let data = create_minimal_test_data();
 
         if let Some(image_data) = generate_image(data).await {
@@ -491,6 +603,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_og_image_escaping_snapshot() {
+        let _guard = init_tracing();
         let data = create_escaping_test_data();
 
         if let Some(image_data) = generate_image(data).await {
