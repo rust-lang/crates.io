@@ -26,7 +26,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio_util::io::StreamReader;
-use tracing::{error, instrument};
+use tracing::{error, instrument, warn};
 use url::Url;
 
 use crate::models::{
@@ -482,6 +482,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         // Read tarball from request
         let hex_cksum: String = Sha256::digest(&tarball_bytes).encode_hex();
 
+        let linecounts = serde_json::to_value(tarball_info.linecount_stats)
+            .inspect_err(|err| warn!("Failed to convert linecounts to serde_json::Value: {err}"))
+            .ok();
+
         // Persist the new version of this crate
         let new_version = NewVersion::builder(krate.id, &version_string)
             .features(serde_json::to_value(&features)?)
@@ -502,6 +506,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .maybe_repository(repository.as_deref())
             .categories(&categories)
             .keywords(&keywords)
+            .maybe_linecounts(linecounts)
             .build();
 
         let version = new_version.save(conn).await.map_err(|error| {

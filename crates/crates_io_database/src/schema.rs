@@ -1077,6 +1077,8 @@ diesel::table! {
         keywords -> Array<Nullable<Text>>,
         /// JSONB representation of the version number for sorting purposes.
         semver_ord -> Nullable<Jsonb>,
+        /// Source Lines of Code statistics for this version, stored as JSON with language breakdown and totals.
+        linecounts -> Nullable<Jsonb>,
     }
 }
 
