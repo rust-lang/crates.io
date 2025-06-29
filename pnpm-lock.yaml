@@ -197,8 +197,8 @@ importers:
         specifier: 9.0.2
         version: 9.0.2(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
       ember-link:
-        specifier: 3.4.0
-        version: 3.4.0(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
+        specifier: 3.4.1
+        version: 3.4.1(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7))
       ember-load-initializers:
         specifier: 3.0.1
         version: 3.0.1(ember-source@6.5.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
@@ -4349,8 +4349,8 @@ packages:
       '@ember/test-helpers':
         optional: true
 
-  ember-link@3.4.0:
-    resolution: {integrity: sha512-7OWU173pPnWMSRuPy28w4m7OczLflza0bXfqisCaX0J533okH5G9yJJoHZv5Y3lw951LOtbc2VtWsXwOq1vZeQ==}
+  ember-link@3.4.1:
+    resolution: {integrity: sha512-13x5Y9ME2OEB6yAKypQVzNqgFycoRtVjKZB8EfSbx2ECxzxOwHEJdj15aYXm7QEhkgEZWUTkHtuch5A/ltFx9A==}
     engines: {node: ^20.11.0 || >=22}
     peerDependencies:
       '@ember/test-helpers': ^2.9.3 || ^3.0.0 || ^4.0.0 || ^5.0.0
@@ -13732,7 +13732,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-link@3.4.0(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7)):
+  ember-link@3.4.1(@babel/core@7.27.7)(@ember/test-helpers@5.2.2(@babel/core@7.27.7)):
     dependencies:
       '@ember/test-helpers': 5.2.2(@babel/core@7.27.7)
       '@embroider/addon-shim': 1.10.0
