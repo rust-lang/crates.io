@@ -49,7 +49,7 @@
 
   <ol>
     <li>Go to your crate's Settings → Trusted Publishing</li>
-    <li>Click "Add Trusted Publisher" and fill in:
+    <li>Click the "Add" button and fill in:
       <ul>
         <li><strong>Repository owner:</strong> Your GitHub username or organization</li>
         <li><strong>Repository name:</strong> The name of your repository</li>
@@ -76,7 +76,6 @@ jobs:
     environment: release  # Optional: for enhanced security
     permissions:
       id-token: write     # Required for OIDC token exchange
-      contents: read      # Required to checkout repository
     steps:
     - uses: actions/checkout@v4
     - uses: rust-lang/crates-io-auth-action@v1
