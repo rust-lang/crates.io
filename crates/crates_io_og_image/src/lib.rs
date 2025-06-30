@@ -80,22 +80,22 @@ pub struct OgImageGenerator {
 }
 
 impl OgImageGenerator {
-    /// Creates a new `OgImageGenerator` with the specified path to the Typst binary.
+    /// Creates a new `OgImageGenerator` with default binary paths.
+    ///
+    /// Uses "typst" and "oxipng" as default binary paths, assuming they are
+    /// available in PATH. Use [`with_typst_path()`](Self::with_typst_path) and
+    /// [`with_oxipng_path()`](Self::with_oxipng_path) to customize the
+    /// binary paths.
     ///
     /// # Examples
     ///
     /// ```
-    /// use std::path::PathBuf;
     /// use crates_io_og_image::OgImageGenerator;
     ///
-    /// let generator = OgImageGenerator::new(PathBuf::from("/usr/local/bin/typst"));
+    /// let generator = OgImageGenerator::new();
     /// ```
-    pub fn new(typst_binary_path: PathBuf) -> Self {
-        Self {
-            typst_binary_path,
-            typst_font_path: None,
-            oxipng_binary_path: PathBuf::from("oxipng"),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Creates a new `OgImageGenerator` using the `TYPST_PATH` environment variable.
@@ -117,34 +117,49 @@ impl OgImageGenerator {
         let font_path = var("TYPST_FONT_PATH").map_err(OgImageError::EnvVarError)?;
         let oxipng_path = var("OXIPNG_PATH").map_err(OgImageError::EnvVarError)?;
 
-        let mut generator = if let Some(ref path) = typst_path {
+        let mut generator = OgImageGenerator::default();
+
+        if let Some(ref path) = typst_path {
             debug!(typst_path = %path, "Using custom Typst binary path from environment");
-            Self::new(PathBuf::from(path))
+            generator.typst_binary_path = PathBuf::from(path);
         } else {
             debug!("Using default Typst binary path (assumes 'typst' in PATH)");
-            Self::default()
         };
 
         if let Some(ref font_path) = font_path {
             debug!(font_path = %font_path, "Setting custom font path from environment");
-            let current_dir = std::env::current_dir()?;
-            let font_path = current_dir.join(font_path).canonicalize()?;
-            debug!(resolved_font_path = %font_path.display(), "Resolved font path");
-            generator = generator.with_font_path(font_path);
+            generator.typst_font_path = Some(PathBuf::from(font_path));
         } else {
             debug!("No custom font path specified, using Typst default font discovery");
         }
 
-        let oxipng_binary_path = if let Some(ref path) = oxipng_path {
+        if let Some(ref path) = oxipng_path {
             debug!(oxipng_path = %path, "Using custom oxipng binary path from environment");
-            PathBuf::from(path)
+            generator.oxipng_binary_path = PathBuf::from(path);
         } else {
             debug!("OXIPNG_PATH not set, defaulting to 'oxipng' in PATH");
-            PathBuf::from("oxipng")
         };
-        generator.oxipng_binary_path = oxipng_binary_path;
 
         Ok(generator)
+    }
+
+    /// Sets the Typst binary path for the generator.
+    ///
+    /// This allows specifying a custom path to the Typst binary.
+    /// If not set, defaults to "typst" which assumes the binary is available in PATH.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::PathBuf;
+    /// use crates_io_og_image::OgImageGenerator;
+    ///
+    /// let generator = OgImageGenerator::default()
+    ///     .with_typst_path(PathBuf::from("/usr/local/bin/typst"));
+    /// ```
+    pub fn with_typst_path(mut self, typst_path: PathBuf) -> Self {
+        self.typst_binary_path = typst_path;
+        self
     }
 
     /// Sets the font path for the Typst compiler.
@@ -518,8 +533,9 @@ impl OgImageGenerator {
 }
 
 impl Default for OgImageGenerator {
-    /// Creates a default `OgImageGenerator` that assumes the Typst binary is available
-    /// as "typst" in the system PATH.
+    /// Creates a default `OgImageGenerator` with default binary paths.
+    ///
+    /// Uses "typst" and "oxipng" as default binary paths, assuming they are available in PATH.
     fn default() -> Self {
         Self {
             typst_binary_path: PathBuf::from("typst"),
