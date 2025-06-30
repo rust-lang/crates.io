@@ -111,7 +111,7 @@ paste = "=1.0.15"
 postgres-native-tls = "=0.5.1"
 prometheus = { version = "=0.14.0", default-features = false }
 rand = "=0.9.1"
-reqwest = { version = "=0.12.20", features = ["gzip", "json"] }
+reqwest = { version = "=0.12.21", features = ["gzip", "json"] }
 rss = { version = "=2.0.12", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.26", features = ["serde"] }
