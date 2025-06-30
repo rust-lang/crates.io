@@ -10,7 +10,7 @@ use bytes::Bytes;
 use crates_io_env_vars::var;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 use tokio::fs;
 use tokio::process::Command;
@@ -76,6 +76,7 @@ impl<'a> OgImageAuthorData<'a> {
 pub struct OgImageGenerator {
     typst_binary_path: PathBuf,
     typst_font_path: Option<PathBuf>,
+    oxipng_binary_path: PathBuf,
 }
 
 impl OgImageGenerator {
@@ -93,6 +94,7 @@ impl OgImageGenerator {
         Self {
             typst_binary_path,
             typst_font_path: None,
+            oxipng_binary_path: PathBuf::from("oxipng"),
         }
     }
 
@@ -113,6 +115,7 @@ impl OgImageGenerator {
     pub fn from_environment() -> Result<Self, OgImageError> {
         let typst_path = var("TYPST_PATH").map_err(OgImageError::EnvVarError)?;
         let font_path = var("TYPST_FONT_PATH").map_err(OgImageError::EnvVarError)?;
+        let oxipng_path = var("OXIPNG_PATH").map_err(OgImageError::EnvVarError)?;
 
         let mut generator = if let Some(ref path) = typst_path {
             debug!(typst_path = %path, "Using custom Typst binary path from environment");
@@ -131,6 +134,15 @@ impl OgImageGenerator {
         } else {
             debug!("No custom font path specified, using Typst default font discovery");
         }
+
+        let oxipng_binary_path = if let Some(ref path) = oxipng_path {
+            debug!(oxipng_path = %path, "Using custom oxipng binary path from environment");
+            PathBuf::from(path)
+        } else {
+            debug!("OXIPNG_PATH not set, defaulting to 'oxipng' in PATH");
+            PathBuf::from("oxipng")
+        };
+        generator.oxipng_binary_path = oxipng_binary_path;
 
         Ok(generator)
     }
@@ -156,6 +168,25 @@ impl OgImageGenerator {
         self
     }
 
+    /// Sets the oxipng binary path for PNG optimization.
+    ///
+    /// This allows specifying a custom path to the oxipng binary for PNG optimization.
+    /// If not set, defaults to "oxipng" which assumes the binary is available in PATH.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::PathBuf;
+    /// use crates_io_og_image::OgImageGenerator;
+    ///
+    /// let generator = OgImageGenerator::default()
+    ///     .with_oxipng_path(PathBuf::from("/usr/local/bin/oxipng"));
+    /// ```
+    pub fn with_oxipng_path(mut self, oxipng_path: PathBuf) -> Self {
+        self.oxipng_binary_path = oxipng_path;
+        self
+    }
+
     /// Processes avatars by downloading URLs and copying assets to the assets directory.
     ///
     /// This method handles both asset-based avatars (which are copied from the bundled assets)
@@ -165,7 +196,7 @@ impl OgImageGenerator {
     async fn process_avatars<'a>(
         &self,
         data: &'a OgImageData<'_>,
-        assets_dir: &std::path::Path,
+        assets_dir: &Path,
     ) -> Result<HashMap<&'a str, String>, OgImageError> {
         let mut avatar_map = HashMap::new();
 
@@ -408,6 +439,9 @@ impl OgImageGenerator {
             output_size_bytes, "Typst compilation completed successfully"
         );
 
+        // After successful Typst compilation, optimize the PNG
+        self.optimize_png(output_file.path()).await;
+
         let duration = start_time.elapsed();
         info!(
             duration_ms = duration.as_millis(),
@@ -415,13 +449,83 @@ impl OgImageGenerator {
         );
         Ok(output_file)
     }
+
+    /// Optimizes a PNG file using oxipng.
+    ///
+    /// This method attempts to reduce the file size of a PNG using lossless compression.
+    /// All errors are handled internally and logged as warnings. The method never fails
+    /// to ensure PNG optimization is truly optional.
+    async fn optimize_png(&self, png_file: &Path) {
+        debug!(
+            input_file = %png_file.display(),
+            oxipng_path = %self.oxipng_binary_path.display(),
+            "Starting PNG optimization"
+        );
+
+        let start_time = std::time::Instant::now();
+
+        let mut command = Command::new(&self.oxipng_binary_path);
+
+        // Default optimization level for speed/compression balance
+        command.arg("--opt").arg("2");
+
+        // Remove safe-to-remove metadata
+        command.arg("--strip").arg("safe");
+
+        // Overwrite the input PNG file
+        command.arg(png_file);
+
+        // Clear environment variables to avoid leaking sensitive data
+        command.env_clear();
+
+        // Preserve environment variables needed for running oxipng
+        if let Ok(path) = std::env::var("PATH") {
+            command.env("PATH", path);
+        }
+
+        let output = command.output().await;
+        let duration = start_time.elapsed();
+
+        match output {
+            Ok(output) if output.status.success() => {
+                debug!(
+                    duration_ms = duration.as_millis(),
+                    "PNG optimization completed successfully"
+                );
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                warn!(
+                    exit_code = ?output.status.code(),
+                    stderr = %stderr,
+                    stdout = %stdout,
+                    duration_ms = duration.as_millis(),
+                    input_file = %png_file.display(),
+                    "PNG optimization failed, continuing with unoptimized image"
+                );
+            }
+            Err(err) => {
+                warn!(
+                    error = %err,
+                    input_file = %png_file.display(),
+                    oxipng_path = %self.oxipng_binary_path.display(),
+                    "Failed to execute oxipng, continuing with unoptimized image"
+                );
+            }
+        }
+    }
 }
 
 impl Default for OgImageGenerator {
     /// Creates a default `OgImageGenerator` that assumes the Typst binary is available
     /// as "typst" in the system PATH.
     fn default() -> Self {
-        Self::new(PathBuf::from("typst"))
+        Self {
+            typst_binary_path: PathBuf::from("typst"),
+            typst_font_path: None,
+            oxipng_binary_path: PathBuf::from("oxipng"),
+        }
     }
 }
 
