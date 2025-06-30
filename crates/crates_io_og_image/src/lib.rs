@@ -22,12 +22,12 @@ use tracing::{debug, error, info, instrument, warn};
 pub struct OgImageData<'a> {
     /// The crate name
     pub name: &'a str,
-    /// Latest version string (e.g., "v1.0.210")
+    /// Latest version string (e.g., "1.0.210")
     pub version: &'a str,
     /// Crate description text
-    pub description: &'a str,
+    pub description: Option<&'a str>,
     /// License information (e.g., "MIT/Apache-2.0")
-    pub license: &'a str,
+    pub license: Option<&'a str>,
     /// Keywords/categories for the crate
     pub tags: &'a [&'a str],
     /// Author information
@@ -310,9 +310,9 @@ impl OgImageGenerator {
     /// let generator = OgImageGenerator::default();
     /// let data = OgImageData {
     ///     name: "my-crate",
-    ///     version: "v1.0.0",
-    ///     description: "A sample crate",
-    ///     license: "MIT",
+    ///     version: "1.0.0",
+    ///     description: Some("A sample crate"),
+    ///     license: Some("MIT"),
     ///     tags: &["web", "api"],
     ///     authors: &[OgImageAuthorData { name: "user", avatar: None }],
     ///     lines_of_code: Some(5000),
@@ -575,9 +575,9 @@ mod tests {
 
         OgImageData {
             name: "minimal-crate",
-            version: "v1.0.0",
-            description: "A minimal crate",
-            license: "MIT",
+            version: "1.0.0",
+            description: None,
+            license: None,
             tags: &[],
             authors: AUTHORS,
             lines_of_code: None,
@@ -595,9 +595,11 @@ mod tests {
 
         OgImageData {
             name: "crate-with-\"quotes\"",
-            version: "v1.0.0-\"beta\"",
-            description: "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
-            license: "MIT OR \"Apache-2.0\"",
+            version: "1.0.0-\"beta\"",
+            description: Some(
+                "A crate with \"quotes\", \\ backslashes, and other special chars: #[]{}()",
+            ),
+            license: Some("MIT OR \"Apache-2.0\""),
             tags: &[
                 "tag-with-\"quotes\"",
                 "tag\\with\\backslashes",
@@ -626,9 +628,11 @@ mod tests {
 
         OgImageData {
             name: "super-long-crate-name-for-testing-overflow-behavior",
-            version: "v2.1.0-beta.1+build.12345",
-            description: "This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design. This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design.",
-            license: "MIT/Apache-2.0/ISC/BSD-3-Clause",
+            version: "2.1.0-beta.1+build.12345",
+            description: Some(
+                "This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design. This is an extremely long description that tests how the layout handles descriptions that might wrap to multiple lines or overflow the available space in the OpenGraph image template design.",
+            ),
+            license: Some("MIT/Apache-2.0/ISC/BSD-3-Clause"),
             tags: &[
                 "web-framework",
                 "async-runtime",
@@ -648,9 +652,9 @@ mod tests {
 
         OgImageData {
             name: "test-crate",
-            version: "v1.0.0",
-            description: "A test crate for OpenGraph image generation",
-            license: "MIT/Apache-2.0",
+            version: "1.0.0",
+            description: Some("A test crate for OpenGraph image generation"),
+            license: Some("MIT/Apache-2.0"),
             tags: &["testing", "og-image"],
             authors: AUTHORS,
             lines_of_code: Some(1000),

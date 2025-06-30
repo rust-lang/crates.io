@@ -273,7 +273,9 @@
         }
 
         // Description
-        block(text(size: 14pt, weight: "regular", truncate_to_height(data.at("description", default: ""), maxHeight: 60pt)))
+        if data.at("description", default: none) != none {
+            block(text(size: 14pt, weight: "regular", truncate_to_height(data.description, maxHeight: 60pt)))
+        }
 
         // Authors
         if data.at("authors", default: ()).len() > 0 {
@@ -293,7 +295,7 @@
                 if data.at("releases", default: none) != none {
                     render-metadata("Releases", data.releases, "tag")
                 }
-                render-metadata("Latest", truncate_to_width(data.version, maxWidth: 80pt), "code-branch")
+                render-metadata("Latest", truncate_to_width("v" + data.version, maxWidth: 80pt), "code-branch")
                 if data.at("license", default: none) != none {
                     render-metadata("License", truncate_to_width(data.license, maxWidth: 100pt), "scale-balanced")
                 }

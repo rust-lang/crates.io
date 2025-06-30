@@ -22,9 +22,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test generating an image
     let data = OgImageData {
         name: "example-crate",
-        version: "v1.2.3",
-        description: "An example crate for testing OpenGraph image generation",
-        license: "MIT/Apache-2.0",
+        version: "1.2.3",
+        description: Some("An example crate for testing OpenGraph image generation"),
+        license: Some("MIT/Apache-2.0"),
         tags: &["example", "testing", "og-image"],
         authors: &[
             OgImageAuthorData::new("example-user", None),
