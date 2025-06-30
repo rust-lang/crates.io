@@ -26,6 +26,7 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::DeleteCrateFromStorage>()
             .register_job_type::<jobs::DocsRsQueueRebuild>()
             .register_job_type::<jobs::DumpDb>()
+            .register_job_type::<jobs::GenerateOgImage>()
             .register_job_type::<jobs::IndexVersionDownloadsArchive>()
             .register_job_type::<jobs::InvalidateCdns>()
             .register_job_type::<jobs::NormalizeIndex>()

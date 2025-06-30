@@ -5,6 +5,7 @@ mod docs_rs_queue_rebuild;
 mod downloads;
 pub mod dump_db;
 mod expiry_notification;
+mod generate_og_image;
 mod index;
 mod index_version_downloads_archive;
 mod invalidate_cdns;
@@ -25,6 +26,7 @@ pub use self::downloads::{
 };
 pub use self::dump_db::DumpDb;
 pub use self::expiry_notification::SendTokenExpiryNotifications;
+pub use self::generate_og_image::GenerateOgImage;
 pub use self::index::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;
 pub use self::invalidate_cdns::InvalidateCdns;
