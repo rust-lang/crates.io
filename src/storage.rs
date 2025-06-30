@@ -19,15 +19,18 @@ use tracing::{instrument, warn};
 
 const PREFIX_CRATES: &str = "crates";
 const PREFIX_READMES: &str = "readmes";
+const PREFIX_OG_IMAGES: &str = "og-images";
 const DEFAULT_REGION: &str = "us-west-1";
 const CONTENT_TYPE_CRATE: &str = "application/gzip";
 const CONTENT_TYPE_GZIP: &str = "application/gzip";
 const CONTENT_TYPE_ZIP: &str = "application/zip";
 const CONTENT_TYPE_INDEX: &str = "text/plain";
 const CONTENT_TYPE_README: &str = "text/html";
+const CONTENT_TYPE_OG_IMAGE: &str = "image/png";
 const CACHE_CONTROL_IMMUTABLE: &str = "public,max-age=31536000,immutable";
 const CACHE_CONTROL_INDEX: &str = "public,max-age=600";
 const CACHE_CONTROL_README: &str = "public,max-age=604800";
+const CACHE_CONTROL_OG_IMAGE: &str = "public,max-age=86400";
 
 type StdPath = std::path::Path;
 
@@ -209,6 +212,13 @@ impl Storage {
         apply_cdn_prefix(&self.cdn_prefix, &readme_path(name, version)).replace('+', "%2B")
     }
 
+    /// Returns the URL of an uploaded crate's Open Graph image.
+    ///
+    /// The function doesn't check for the existence of the file.
+    pub fn og_image_location(&self, name: &str) -> String {
+        apply_cdn_prefix(&self.cdn_prefix, &og_image_path(name))
+    }
+
     /// Returns the URL of an uploaded RSS feed.
     pub fn feed_url(&self, feed_id: &FeedId<'_>) -> String {
         apply_cdn_prefix(&self.cdn_prefix, &feed_id.into()).replace('+', "%2B")
@@ -240,6 +250,13 @@ impl Storage {
         self.store.delete(&path).await
     }
 
+    /// Deletes the Open Graph image for the given crate.
+    #[instrument(skip(self))]
+    pub async fn delete_og_image(&self, name: &str) -> Result<()> {
+        let path = og_image_path(name);
+        self.store.delete(&path).await
+    }
+
     #[instrument(skip(self))]
     pub async fn delete_feed(&self, feed_id: &FeedId<'_>) -> Result<()> {
         let path = feed_id.into();
@@ -264,6 +281,19 @@ impl Storage {
         let attributes = self.attrs([
             (Attribute::ContentType, CONTENT_TYPE_README),
             (Attribute::CacheControl, CACHE_CONTROL_README),
+        ]);
+        let opts = attributes.into();
+        self.store.put_opts(&path, bytes.into(), opts).await?;
+        Ok(())
+    }
+
+    /// Uploads an Open Graph image for the given crate.
+    #[instrument(skip(self, bytes))]
+    pub async fn upload_og_image(&self, name: &str, bytes: Bytes) -> Result<()> {
+        let path = og_image_path(name);
+        let attributes = self.attrs([
+            (Attribute::ContentType, CONTENT_TYPE_OG_IMAGE),
+            (Attribute::CacheControl, CACHE_CONTROL_OG_IMAGE),
         ]);
         let opts = attributes.into();
         self.store.put_opts(&path, bytes.into(), opts).await?;
@@ -385,6 +415,10 @@ fn readme_path(name: &str, version: &str) -> Path {
     format!("{PREFIX_READMES}/{name}/{name}-{version}.html").into()
 }
 
+fn og_image_path(name: &str) -> Path {
+    format!("{PREFIX_OG_IMAGES}/{name}.png").into()
+}
+
 fn apply_cdn_prefix(cdn_prefix: &Option<String>, path: &Path) -> String {
     match cdn_prefix {
         Some(cdn_prefix) if !cdn_prefix.starts_with("https://") => {
@@ -483,6 +517,17 @@ mod tests {
         ];
         for (name, version, expected) in readme_tests {
             assert_eq!(storage.readme_location(name, version), expected);
+        }
+
+        let og_image_tests = vec![
+            ("foo", "https://static.crates.io/og-images/foo.png"),
+            (
+                "some-long-crate-name",
+                "https://static.crates.io/og-images/some-long-crate-name.png",
+            ),
+        ];
+        for (name, expected) in og_image_tests {
+            assert_eq!(storage.og_image_location(name), expected);
         }
     }
 
@@ -659,6 +704,41 @@ mod tests {
         s.upload_db_dump(target, file.path()).await.unwrap();
 
         let expected_files = vec![target];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn upload_og_image() {
+        let s = Storage::from_config(&StorageConfig::in_memory());
+
+        let bytes = Bytes::from_static(b"fake png data");
+        s.upload_og_image("foo", bytes.clone()).await.unwrap();
+
+        let expected_files = vec!["og-images/foo.png"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.upload_og_image("some-long-crate-name", bytes)
+            .await
+            .unwrap();
+
+        let expected_files = vec!["og-images/foo.png", "og-images/some-long-crate-name.png"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+    }
+
+    #[tokio::test]
+    async fn delete_og_image() {
+        let s = Storage::from_config(&StorageConfig::in_memory());
+
+        let bytes = Bytes::from_static(b"fake png data");
+        s.upload_og_image("foo", bytes.clone()).await.unwrap();
+        s.upload_og_image("bar", bytes).await.unwrap();
+
+        let expected_files = vec!["og-images/bar.png", "og-images/foo.png"];
+        assert_eq!(stored_files(&s.store).await, expected_files);
+
+        s.delete_og_image("foo").await.unwrap();
+
+        let expected_files = vec!["og-images/bar.png"];
         assert_eq!(stored_files(&s.store).await, expected_files);
     }
 }
