@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - binstall
 
   pull_request:
 
@@ -16,6 +17,8 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # renovate: datasource=github-releases depName=cargo-bins/cargo-binstall
+  BINSTALL_VERSION: 1.14.1
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.18.3
   # renovate: datasource=crate depName=cargo-machete versioning=semver
@@ -141,10 +144,12 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - run: cargo install cargo-deny --vers ${CARGO_DENY_VERSION}
+      - run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/v${BINSTALL_VERSION}/install-from-binstall-release.sh | bash
+
+      - run: cargo binstall cargo-deny@${CARGO_DENY_VERSION}
       - run: cargo deny check
 
-      - run: cargo install cargo-machete --vers ${CARGO_MACHETE_VERSION}
+      - run: cargo binstall cargo-machete@${CARGO_MACHETE_VERSION}
       - run: cargo machete
 
   backend-test:
