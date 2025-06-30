@@ -34,6 +34,12 @@ pub enum Command {
         #[arg()]
         name: String,
     },
+    /// Generate OpenGraph images for the specified crates
+    GenerateOgImage {
+        /// Crate names to generate OpenGraph images for
+        #[arg(required = true)]
+        names: Vec<String>,
+    },
     ProcessCdnLogQueue(jobs::ProcessCdnLogQueue),
     SyncAdmins {
         /// Force a sync even if one is already in progress
@@ -142,6 +148,11 @@ pub async fn run(command: Command) -> Result<()> {
             }
 
             jobs::CheckTyposquat::new(&name).enqueue(&mut conn).await?;
+        }
+        Command::GenerateOgImage { names } => {
+            for name in names {
+                jobs::GenerateOgImage::new(name).enqueue(&mut conn).await?;
+            }
         }
         Command::SendTokenExpiryNotifications => {
             jobs::SendTokenExpiryNotifications
