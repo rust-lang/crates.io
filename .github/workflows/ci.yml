@@ -28,7 +28,7 @@ env:
   # renovate: datasource=docker depName=postgres
   POSTGRES_VERSION: 16
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.10.0
+  ZIZMOR_VERSION: 1.11.0
 
 jobs:
   changed-files:
