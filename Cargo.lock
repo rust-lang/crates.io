@@ -1608,6 +1608,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "crates_io_og_image"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "crates_io_env_vars",
+ "insta",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.12",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "crates_io_pagerduty"
 version = "0.0.0"
 dependencies = [
