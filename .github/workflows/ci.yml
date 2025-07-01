@@ -27,8 +27,6 @@ env:
   OXIPNG_VERSION: 9.1.5
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 10.12.4
-  # renovate: datasource=docker depName=postgres
-  POSTGRES_VERSION: 16
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
   TYPST_VERSION: 0.13.1
   # renovate: datasource=pypi depName=zizmor
@@ -201,8 +199,6 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # Update `pg_dump` to the same version as the running PostgreSQL server
-      - run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -v ${POSTGRES_VERSION} -i -p
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
