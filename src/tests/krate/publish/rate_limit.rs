@@ -6,7 +6,6 @@ use chrono::{DateTime, Utc};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
-use std::thread;
 use std::time::Duration;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -238,7 +237,7 @@ async fn publish_new_crate_rate_limit_doesnt_affect_existing_crates() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_existing_crate_rate_limited() {
-    const RATE_LIMIT: Duration = Duration::from_millis(1000);
+    const RATE_LIMIT: Duration = Duration::from_secs(60);
 
     let (app, anon, _, token) = TestApp::full()
         .with_rate_limit(LimitedAction::PublishUpdate, RATE_LIMIT, 1)
@@ -293,8 +292,17 @@ async fn publish_existing_crate_rate_limited() {
     rss/updates.xml
     ");
 
-    // Wait for the limit to be up
-    thread::sleep(RATE_LIMIT);
+    // Reset the rate limit by updating the database timestamp
+    let mut conn = app.db_conn().await;
+    let past_time = Utc::now().naive_utc() - RATE_LIMIT - Duration::from_secs(10);
+
+    diesel::update(publish_limit_buckets::table)
+        .filter(publish_limit_buckets::user_id.eq(token.as_model().user_id))
+        .filter(publish_limit_buckets::action.eq(LimitedAction::PublishUpdate))
+        .set(publish_limit_buckets::last_refill.eq(past_time))
+        .execute(&mut conn)
+        .await
+        .expect("Failed to reset rate limit");
 
     let crate_to_publish = PublishBuilder::new("rate_limited1", "1.0.2");
     token.publish_crate(crate_to_publish).await.good();
