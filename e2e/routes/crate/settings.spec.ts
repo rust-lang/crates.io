@@ -83,8 +83,6 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await page.goto('/crates/foo/settings');
       await expect(page).toHaveURL('/crates/foo/settings');
 
-      await percy.snapshot();
-
       await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
       await expect(page.locator('[data-test-add-trusted-publisher-button]')).toBeVisible();
       await expect(page.locator('[data-test-github-config]')).toHaveCount(2);
@@ -101,6 +99,8 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       await expect(details).toContainText('Environment: release');
       await expect(page.locator('[data-test-github-config="2"] [data-test-remove-config-button]')).toBeVisible();
       await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
+
+      await percy.snapshot();
 
       // Click the remove button
       await page.click('[data-test-github-config="2"] [data-test-remove-config-button]');
