@@ -16,24 +16,40 @@ use std::sync::LazyLock;
 static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
     let mut env = Environment::new();
 
-    // Load templates from each email directory
+    // Load templates from the templates directory
     let entries = std::fs::read_dir("src/email/templates");
     let entries = entries.expect("Failed to read email templates directory");
 
     for entry in entries {
         let entry = entry.expect("Failed to read directory entry");
 
+        let path = entry.path();
         let file_type = entry.file_type().expect("Failed to get file type");
+
+        // Handle base template files
+        if file_type.is_file() && path.extension().and_then(|s| s.to_str()) == Some("j2") {
+            let template_name = entry.file_name();
+            let template_name = template_name.to_str();
+            let template_name = template_name.expect("Invalid UTF-8 in template filename");
+
+            let template_contents = std::fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("Failed to read template {template_name}: {error}"));
+
+            env.add_template_owned(template_name.to_string(), template_contents)
+                .expect("Failed to add template");
+        }
+
         if !file_type.is_dir() {
             continue;
         }
 
+        // Handle email template directories
         let dir_name = entry.file_name();
         let email_name = dir_name.to_str();
         let email_name = email_name.expect("Invalid UTF-8 in email template directory name");
 
         // Load subject.txt.j2 file
-        let subject_path = entry.path().join("subject.txt.j2");
+        let subject_path = path.join("subject.txt.j2");
         let subject_contents = std::fs::read_to_string(&subject_path).unwrap_or_else(|error| {
             panic!("Failed to read subject template for {email_name}: {error}")
         });
@@ -42,7 +58,7 @@ static EMAIL_ENV: LazyLock<Environment<'static>> = LazyLock::new(|| {
             .expect("Failed to add subject template");
 
         // Load body.txt.j2 file
-        let body_path = entry.path().join("body.txt.j2");
+        let body_path = path.join("body.txt.j2");
         let body_contents = std::fs::read_to_string(&body_path).unwrap_or_else(|error| {
             panic!("Failed to read body template for {email_name}: {error}")
         });
@@ -234,6 +250,35 @@ pub struct StoredEmail {
 mod tests {
     use super::*;
     use claims::{assert_err, assert_ok};
+    use minijinja::context;
+
+    #[test]
+    fn test_user_confirm_template_inheritance() {
+        // Test that the `user_confirm` template inherits properly from the base template
+        let result = render_template(
+            "user_confirm/body.txt.j2",
+            context! {
+                domain => "crates.io",
+                user_name => "testuser",
+                token => "abc123"
+            },
+        );
+        assert_ok!(&result);
+
+        let content = result.unwrap();
+        insta::assert_snapshot!(content, @r"
+        Hello testuser!
+
+        Welcome to crates.io. Please click the link below to verify your email address:
+
+        https://crates.io/confirm/abc123
+
+        Thank you!
+
+        --
+        The crates.io Team
+        ");
+    }
 
     #[tokio::test]
     async fn sending_to_invalid_email_fails() {

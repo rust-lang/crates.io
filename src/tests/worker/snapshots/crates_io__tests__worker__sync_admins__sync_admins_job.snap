@@ -8,6 +8,7 @@ Subject: crates.io: Admin account changes
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
+
 Granted admin access:
 
 - new-admin (github_id: 3)
@@ -15,6 +16,9 @@ Granted admin access:
 Revoked admin access:
 - obsolete-admin (github_id: 2)
 
+
+--
+The crates.io Team
 ----------------------------------------
 
 To: obsolete-admin@crates.io
@@ -23,9 +27,14 @@ Subject: crates.io: Admin account changes
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
+
 Granted admin access:
 
 - new-admin (github_id: 3)
 
 Revoked admin access:
 - obsolete-admin (github_id: 2)
+
+
+--
+The crates.io Team

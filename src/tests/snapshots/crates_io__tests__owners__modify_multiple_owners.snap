@@ -8,10 +8,15 @@ Subject: crates.io: Ownership invitation for "owners_multiple"
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
+
 foo has invited you to become an owner of the crate owners_multiple!
 
-Visit https://crates.io/accept-invite/[invite-token] to accept this invitation,
-or go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.
+Visit https://crates.io/accept-invite/[invite-token] to accept this invitation.
+
+You can also go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.
+
+--
+The crates.io Team
 ----------------------------------------
 
 To: user3@example.com
@@ -20,7 +25,12 @@ Subject: crates.io: Ownership invitation for "owners_multiple"
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
+
 foo has invited you to become an owner of the crate owners_multiple!
 
-Visit https://crates.io/accept-invite/[invite-token] to accept this invitation,
-or go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.
+Visit https://crates.io/accept-invite/[invite-token] to accept this invitation.
+
+You can also go to https://crates.io/me/pending-invites to manage all of your crate ownership invitations.
+
+--
+The crates.io Team

@@ -1,5 +1,9 @@
+{% extends "base.txt.j2" %}
+
+{% block content %}
 Hi {{ user }},
 
 Your "{{ krate }}" crate has been deleted, per your request.
 
 If you did not initiate this deletion, your account may have been compromised. Please contact us at help@crates.io.
+{% endblock %}
