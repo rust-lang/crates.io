@@ -182,4 +182,67 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
     // Check that we're redirected back to the crate settings page
     await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
   });
+
+  test.describe('prefill', () => {
+    const testCases = [
+      {
+        name: 'simple https',
+        url: 'https://github.com/rust-lang/crates.io',
+        owner: 'rust-lang',
+        repo: 'crates.io',
+      },
+      {
+        name: 'with .git suffix',
+        url: 'https://github.com/rust-lang/crates.io.git',
+        owner: 'rust-lang',
+        repo: 'crates.io',
+      },
+      {
+        name: 'with extra path segments',
+        url: 'https://github.com/Byron/google-apis-rs/tree/main/gen/privateca1',
+        owner: 'Byron',
+        repo: 'google-apis-rs',
+      },
+      {
+        name: 'non-github url',
+        url: 'https://gitlab.com/rust-lang/crates.io',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'not a url',
+        url: 'not a url',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'empty string',
+        url: '',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'null',
+        url: null,
+        owner: '',
+        repo: '',
+      },
+    ];
+
+    for (const { name, url, owner, repo } of testCases) {
+      test(name, async ({ msw, page }) => {
+        let { crate } = await prepare(msw);
+
+        msw.db.crate.update({
+          where: { id: { equals: crate.id } },
+          data: { repository: url },
+        });
+
+        await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+        await expect(page.locator('[data-test-repository-owner]')).toHaveValue(owner);
+        await expect(page.locator('[data-test-repository-name]')).toHaveValue(repo);
+      });
+    }
+  });
 });
