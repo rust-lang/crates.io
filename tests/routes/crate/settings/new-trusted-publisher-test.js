@@ -190,4 +190,66 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
     // Check that we're redirected back to the crate settings page
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
   });
+
+  module('prefill', function () {
+    let testCases = [
+      {
+        name: 'simple https',
+        url: 'https://github.com/rust-lang/crates.io',
+        owner: 'rust-lang',
+        repo: 'crates.io',
+      },
+      {
+        name: 'with .git suffix',
+        url: 'https://github.com/rust-lang/crates.io.git',
+        owner: 'rust-lang',
+        repo: 'crates.io',
+      },
+      {
+        name: 'with extra path segments',
+        url: 'https://github.com/Byron/google-apis-rs/tree/main/gen/privateca1',
+        owner: 'Byron',
+        repo: 'google-apis-rs',
+      },
+      {
+        name: 'non-github url',
+        url: 'https://gitlab.com/rust-lang/crates.io',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'not a url',
+        url: 'not a url',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'empty string',
+        url: '',
+        owner: '',
+        repo: '',
+      },
+      {
+        name: 'null',
+        url: null,
+        owner: '',
+        repo: '',
+      },
+    ];
+
+    for (let { name, url, owner, repo } of testCases) {
+      test(name, async function (assert) {
+        let { crate } = prepare(this);
+        this.db.crate.update({
+          where: { id: { equals: crate.id } },
+          data: { repository: url },
+        });
+
+        await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+        assert.dom('[data-test-repository-owner]').hasValue(owner);
+        assert.dom('[data-test-repository-name]').hasValue(repo);
+      });
+    }
+  });
 });
