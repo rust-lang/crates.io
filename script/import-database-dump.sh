@@ -58,11 +58,16 @@ psql -a "$DATABASE_NAME" < schema.sql
 echo "Importing data"
 psql -a "$DATABASE_NAME" < import.sql
 
+cd "$ORIG_WD"
+
 # Importing the database doesn't cause materialised views to be refreshed, so
 # let's do that.
 psql --command="REFRESH MATERIALIZED VIEW recent_crate_downloads" "$DATABASE_NAME"
 
+# Reset all ID sequence values to match the imported data
+echo "Resetting sequence values"
+psql -a "$DATABASE_NAME" < "$(dirname "$0")/reset-sequences.sql"
+
 # Importing the database also doesn't insert Diesel migration metadata, but we
 # can infer that from the dump metadata and an up to date crates.io repo.
-cd "$ORIG_WD"
 python3 "$(dirname "$0")/infer-database-dump-version.py" -m "$DUMP_PATH/metadata.json" | psql -a "$DATABASE_NAME"
