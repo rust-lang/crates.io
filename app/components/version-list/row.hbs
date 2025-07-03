@@ -129,16 +129,15 @@
           <YankButton @version={{@version}} class="button-reset" local-class="menu-button" />
         </menu.Item>
         <menu.Item>
-          <button
+          <LinkTo
+            @route="crate.rebuild-docs"
+            @model={{@version.num}}
             class="button-reset"
             local-class="menu-button"
-            type="button"
-            disabled={{@version.rebuildDocsTask.isRunning}}
             data-test-id="btn-rebuild-docs"
-            {{on 'click' (perform this.rebuildDocsTask)}}
           >
             Rebuild Docs
-          </button>
+          </LinkTo>
         </menu.Item>
       </dd.Menu>
     </Dropdown>
