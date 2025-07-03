@@ -13,6 +13,7 @@ pub struct DeleteExpiredJtis;
 
 impl BackgroundJob for DeleteExpiredJtis {
     const JOB_NAME: &'static str = "trustpub::delete_expired_jtis";
+    const DEDUPLICATED: bool = true;
 
     type Context = Arc<Environment>;
 
