@@ -8,6 +8,7 @@ pub use error::OgImageError;
 use crate::formatting::{serialize_bytes, serialize_number, serialize_optional_number};
 use bytes::Bytes;
 use crates_io_env_vars::var;
+use reqwest::StatusCode;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -252,19 +253,25 @@ impl OgImageGenerator {
                 } else {
                     debug!(url = %avatar, "Downloading avatar from URL: {avatar}");
                     // Download the avatar from the URL
-                    let response = client
-                        .get(*avatar)
-                        .send()
-                        .await
-                        .map_err(|err| OgImageError::AvatarDownloadError {
+                    let response = client.get(*avatar).send().await.map_err(|err| {
+                        OgImageError::AvatarDownloadError {
                             url: avatar.to_string(),
                             source: err,
-                        })?
-                        .error_for_status()
-                        .map_err(|err| OgImageError::AvatarDownloadError {
+                        }
+                    })?;
+
+                    let status = response.status();
+                    if status == StatusCode::NOT_FOUND {
+                        warn!(url = %avatar, "Avatar URL returned 404 Not Found");
+                        continue; // Skip this avatar if not found
+                    }
+
+                    if let Err(err) = response.error_for_status_ref() {
+                        return Err(OgImageError::AvatarDownloadError {
                             url: avatar.to_string(),
                             source: err,
-                        })?;
+                        });
+                    }
 
                     let content_length = response.content_length();
                     debug!(
