@@ -6,10 +6,10 @@ mod formatting;
 pub use error::OgImageError;
 
 use crate::formatting::{serialize_bytes, serialize_number, serialize_optional_number};
-use bytes::Bytes;
 use crates_io_env_vars::var;
 use reqwest::StatusCode;
 use serde::Serialize;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
@@ -49,24 +49,19 @@ pub struct OgImageData<'a> {
 pub struct OgImageAuthorData<'a> {
     /// Author username/name
     pub name: &'a str,
-    /// Optional avatar - either "test-avatar" for the test avatar or a URL
-    pub avatar: Option<&'a str>,
+    /// Optional avatar URL
+    pub avatar: Option<Cow<'a, str>>,
 }
 
 impl<'a> OgImageAuthorData<'a> {
     /// Creates a new `OgImageAuthorData` with the specified name and optional avatar.
-    pub const fn new(name: &'a str, avatar: Option<&'a str>) -> Self {
+    pub const fn new(name: &'a str, avatar: Option<Cow<'a, str>>) -> Self {
         Self { name, avatar }
     }
 
     /// Creates a new `OgImageAuthorData` with a URL-based avatar.
-    pub fn with_url(name: &'a str, url: &'a str) -> Self {
-        Self::new(name, Some(url))
-    }
-
-    /// Creates a new `OgImageAuthorData` with the test avatar.
-    pub fn with_test_avatar(name: &'a str) -> Self {
-        Self::with_url(name, "test-avatar")
+    pub fn with_url(name: &'a str, url: impl Into<Cow<'a, str>>) -> Self {
+        Self::new(name, Some(url.into()))
     }
 }
 
@@ -245,54 +240,46 @@ impl OgImageGenerator {
                     "Processing avatar for author {}", author.name
                 );
 
-                // Get the bytes either from the included asset or download from URL
-                let bytes = if *avatar == "test-avatar" {
-                    debug!("Using bundled test avatar");
-                    // Copy directly from included bytes
-                    Bytes::from_static(include_bytes!("../template/assets/test-avatar.png"))
-                } else {
-                    debug!(url = %avatar, "Downloading avatar from URL: {avatar}");
-                    // Download the avatar from the URL
-                    let response = client.get(*avatar).send().await.map_err(|err| {
-                        OgImageError::AvatarDownloadError {
-                            url: avatar.to_string(),
-                            source: err,
-                        }
-                    })?;
-
-                    let status = response.status();
-                    if status == StatusCode::NOT_FOUND {
-                        warn!(url = %avatar, "Avatar URL returned 404 Not Found");
-                        continue; // Skip this avatar if not found
+                // Download the avatar from the URL
+                debug!(url = %avatar, "Downloading avatar from URL: {avatar}");
+                let response = client.get(avatar.as_ref()).send().await.map_err(|err| {
+                    OgImageError::AvatarDownloadError {
+                        url: avatar.to_string(),
+                        source: err,
                     }
+                })?;
 
-                    if let Err(err) = response.error_for_status_ref() {
-                        return Err(OgImageError::AvatarDownloadError {
-                            url: avatar.to_string(),
-                            source: err,
-                        });
+                let status = response.status();
+                if status == StatusCode::NOT_FOUND {
+                    warn!(url = %avatar, "Avatar URL returned 404 Not Found");
+                    continue; // Skip this avatar if not found
+                }
+
+                if let Err(err) = response.error_for_status_ref() {
+                    return Err(OgImageError::AvatarDownloadError {
+                        url: avatar.to_string(),
+                        source: err,
+                    });
+                }
+
+                let content_length = response.content_length();
+                debug!(
+                    url = %avatar,
+                    content_length = ?content_length,
+                    status = %response.status(),
+                    "Avatar download response received"
+                );
+
+                let bytes = response.bytes().await;
+                let bytes = bytes.map_err(|err| {
+                    error!(url = %avatar, error = %err, "Failed to read avatar response bytes");
+                    OgImageError::AvatarDownloadError {
+                        url: (*avatar).to_string(),
+                        source: err,
                     }
+                })?;
 
-                    let content_length = response.content_length();
-                    debug!(
-                        url = %avatar,
-                        content_length = ?content_length,
-                        status = %response.status(),
-                        "Avatar download response received"
-                    );
-
-                    let bytes = response.bytes().await;
-                    let bytes = bytes.map_err(|err| {
-                        error!(url = %avatar, error = %err, "Failed to read avatar response bytes");
-                        OgImageError::AvatarDownloadError {
-                            url: (*avatar).to_string(),
-                            source: err,
-                        }
-                    })?;
-
-                    debug!(url = %avatar, size_bytes = bytes.len(), "Avatar downloaded successfully");
-                    bytes
-                };
+                debug!(url = %avatar, size_bytes = bytes.len(), "Avatar downloaded successfully");
 
                 // Detect the image format and determine the appropriate file extension
                 let Some(extension) = Self::detect_image_format(&bytes) else {
@@ -336,7 +323,7 @@ impl OgImageGenerator {
                 );
 
                 // Store the mapping from the avatar source to the numbered filename
-                avatar_map.insert(*avatar, filename);
+                avatar_map.insert(avatar.as_ref(), filename);
             }
         }
 
@@ -597,6 +584,7 @@ impl Default for OgImageGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockito::{Server, ServerGuard};
     use tracing::dispatcher::DefaultGuard;
     use tracing::{Level, subscriber};
     use tracing_subscriber::fmt;
@@ -611,12 +599,34 @@ mod tests {
         subscriber::set_default(subscriber)
     }
 
+    async fn create_mock_avatar_server() -> ServerGuard {
+        let mut server = Server::new_async().await;
+
+        // Mock for successful avatar download
+        server
+            .mock("GET", "/test-avatar.png")
+            .with_status(200)
+            .with_header("content-type", "image/png")
+            .with_body(include_bytes!("../template/assets/test-avatar.png"))
+            .create();
+
+        // Mock for 404 avatar download
+        server
+            .mock("GET", "/missing-avatar.png")
+            .with_status(404)
+            .with_header("content-type", "text/plain")
+            .with_body("Not Found")
+            .create();
+
+        server
+    }
+
     const fn author(name: &str) -> OgImageAuthorData<'_> {
         OgImageAuthorData::new(name, None)
     }
 
-    const fn author_with_avatar(name: &str) -> OgImageAuthorData<'_> {
-        OgImageAuthorData::new(name, Some("test-avatar"))
+    fn author_with_avatar(name: &str, url: String) -> OgImageAuthorData<'_> {
+        OgImageAuthorData::with_url(name, url)
     }
 
     fn create_minimal_test_data() -> OgImageData<'static> {
@@ -635,13 +645,18 @@ mod tests {
         }
     }
 
-    fn create_escaping_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] = &[
-            author_with_avatar("author \"with quotes\""),
+    fn create_escaping_authors(server_url: &str) -> Vec<OgImageAuthorData<'_>> {
+        vec![
+            author_with_avatar(
+                "author \"with quotes\"",
+                format!("{server_url}/test-avatar.png"),
+            ),
             author("author\\with\\backslashes"),
             author("author#with#hashes"),
-        ];
+        ]
+    }
 
+    fn create_escaping_test_data<'a>(authors: &'a [OgImageAuthorData<'a>]) -> OgImageData<'a> {
         OgImageData {
             name: "crate-with-\"quotes\"",
             version: "1.0.0-\"beta\"",
@@ -654,27 +669,30 @@ mod tests {
                 "tag\\with\\backslashes",
                 "tag#with#symbols",
             ],
-            authors: AUTHORS,
+            authors,
             lines_of_code: Some(42),
             crate_size: 256256,
             releases: 5,
         }
     }
 
-    fn create_overflow_test_data() -> OgImageData<'static> {
-        static AUTHORS: &[OgImageAuthorData<'_>] = &[
-            author_with_avatar("alice-wonderland"),
+    fn create_overflow_authors(server_url: &str) -> Vec<OgImageAuthorData<'_>> {
+        let avatar_url = format!("{server_url}/test-avatar.png");
+        vec![
+            author_with_avatar("alice-wonderland", avatar_url.clone()),
             author("bob-the-builder"),
-            author_with_avatar("charlie-brown"),
+            author_with_avatar("charlie-brown", avatar_url.clone()),
             author("diana-prince"),
-            author_with_avatar("edward-scissorhands"),
+            author_with_avatar("edward-scissorhands", avatar_url.clone()),
             author("fiona-apple"),
             author("george-washington"),
-            author_with_avatar("helen-keller"),
+            author_with_avatar("helen-keller", avatar_url.clone()),
             author("isaac-newton"),
             author("jane-doe"),
-        ];
+        ]
+    }
 
+    fn create_overflow_test_data<'a>(authors: &'a [OgImageAuthorData<'a>]) -> OgImageData<'a> {
         OgImageData {
             name: "super-long-crate-name-for-testing-overflow-behavior",
             version: "2.1.0-beta.1+build.12345",
@@ -689,7 +707,7 @@ mod tests {
                 "serialization",
                 "networking",
             ],
-            authors: AUTHORS,
+            authors,
             lines_of_code: Some(147000),
             crate_size: 2847123,
             releases: 1432,
@@ -757,7 +775,12 @@ mod tests {
     #[tokio::test]
     async fn test_generate_og_image_overflow_snapshot() {
         let _guard = init_tracing();
-        let data = create_overflow_test_data();
+
+        let server = create_mock_avatar_server().await;
+        let server_url = server.url();
+
+        let authors = create_overflow_authors(&server_url);
+        let data = create_overflow_test_data(&authors);
 
         if let Some(image_data) = generate_image(data).await {
             insta::assert_binary_snapshot!("generated_og_image_overflow.png", image_data);
@@ -777,10 +800,44 @@ mod tests {
     #[tokio::test]
     async fn test_generate_og_image_escaping_snapshot() {
         let _guard = init_tracing();
-        let data = create_escaping_test_data();
+
+        let server = create_mock_avatar_server().await;
+        let server_url = server.url();
+
+        let authors = create_escaping_authors(&server_url);
+        let data = create_escaping_test_data(&authors);
 
         if let Some(image_data) = generate_image(data).await {
             insta::assert_binary_snapshot!("generated_og_image_escaping.png", image_data);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_generate_og_image_with_404_avatar() {
+        let _guard = init_tracing();
+
+        let server = create_mock_avatar_server().await;
+        let server_url = server.url();
+
+        // Create test data with a 404 avatar URL - should skip the avatar gracefully
+        let authors = vec![author_with_avatar(
+            "test-user",
+            format!("{server_url}/missing-avatar.png"),
+        )];
+        let data = OgImageData {
+            name: "test-crate-404",
+            version: "1.0.0",
+            description: Some("A test crate with 404 avatar"),
+            license: Some("MIT"),
+            tags: &["testing"],
+            authors: &authors,
+            lines_of_code: Some(1000),
+            crate_size: 42012,
+            releases: 1,
+        };
+
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("404-avatar.png", image_data);
         }
     }
 }

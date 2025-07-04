@@ -1612,9 +1612,9 @@ name = "crates_io_og_image"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "bytes",
  "crates_io_env_vars",
  "insta",
+ "mockito",
  "reqwest",
  "serde",
  "serde_json",
