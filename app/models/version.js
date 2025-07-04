@@ -43,6 +43,30 @@ export default class Version extends Model {
   /** @type {string[] | null} */
   @attr bin_names;
 
+  /**
+   * Information about the trusted publisher that published this version, if any.
+   * @type {Object | null}
+   */
+  @attr trustpub_data;
+
+  /**
+   * The name of the trusted publisher that published this version, if any.
+   * @type {string | null}
+   */
+  get trustpubPublisher() {
+    return this.trustpub_data?.provider === 'github' ? 'GitHub' : null;
+  }
+
+  /**
+   * The URL to the trusted publisher that published this version, if any.
+   * @type {string | null}
+   */
+  get trustpubUrl() {
+    return this.trustpub_data?.provider === 'github'
+      ? `https://github.com/${this.trustpub_data.repository}/actions/runs/${this.trustpub_data.run_id}`
+      : null;
+  }
+
   @belongsTo('crate', { async: false, inverse: 'versions' }) crate;
 
   @belongsTo('user', { async: false, inverse: null }) published_by;
