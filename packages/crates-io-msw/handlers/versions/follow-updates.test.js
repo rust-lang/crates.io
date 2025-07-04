@@ -41,6 +41,7 @@ test('returns latest versions of followed crates', async function () {
         published_by: null,
         readme_path: '/api/v1/crates/foo/1.2.3/readme',
         rust_version: null,
+        trustpub_data: null,
         updated_at: '2017-02-24T12:34:56Z',
         yanked: false,
         yank_message: null,
