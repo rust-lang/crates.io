@@ -602,12 +602,28 @@ mod tests {
     async fn create_mock_avatar_server() -> ServerGuard {
         let mut server = Server::new_async().await;
 
-        // Mock for successful avatar download
+        // Mock for successful PNG avatar download
         server
             .mock("GET", "/test-avatar.png")
             .with_status(200)
             .with_header("content-type", "image/png")
             .with_body(include_bytes!("../template/assets/test-avatar.png"))
+            .create();
+
+        // Mock for JPEG avatar download
+        server
+            .mock("GET", "/test-avatar.jpg")
+            .with_status(200)
+            .with_header("content-type", "image/jpeg")
+            .with_body(include_bytes!("../template/assets/test-avatar.jpg"))
+            .create();
+
+        // Mock for unsupported file type (WebP)
+        server
+            .mock("GET", "/test-avatar.webp")
+            .with_status(200)
+            .with_header("content-type", "image/webp")
+            .with_body(include_bytes!("../template/assets/test-avatar.webp"))
             .create();
 
         // Mock for 404 avatar download
@@ -677,16 +693,21 @@ mod tests {
     }
 
     fn create_overflow_authors(server_url: &str) -> Vec<OgImageAuthorData<'_>> {
-        let avatar_url = format!("{server_url}/test-avatar.png");
         vec![
-            author_with_avatar("alice-wonderland", avatar_url.clone()),
+            author_with_avatar("alice-wonderland", format!("{server_url}/test-avatar.png")),
             author("bob-the-builder"),
-            author_with_avatar("charlie-brown", avatar_url.clone()),
+            author_with_avatar("charlie-brown", format!("{server_url}/test-avatar.jpg")),
             author("diana-prince"),
-            author_with_avatar("edward-scissorhands", avatar_url.clone()),
+            author_with_avatar(
+                "edward-scissorhands",
+                format!("{server_url}/test-avatar.png"),
+            ),
             author("fiona-apple"),
-            author("george-washington"),
-            author_with_avatar("helen-keller", avatar_url.clone()),
+            author_with_avatar(
+                "george-washington",
+                format!("{server_url}/test-avatar.webp"),
+            ),
+            author_with_avatar("helen-keller", format!("{server_url}/test-avatar.jpg")),
             author("isaac-newton"),
             author("jane-doe"),
         ]
