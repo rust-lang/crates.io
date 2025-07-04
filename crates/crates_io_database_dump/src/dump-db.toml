@@ -206,6 +206,7 @@ created_at = "private"
 expires_at = "private"
 hashed_token = "private"
 crate_ids = "private"
+trustpub_data = "private"
 
 [trustpub_used_jtis.columns]
 id = "private"
@@ -280,6 +281,8 @@ documentation = "public"
 repository = "public"
 categories = "public"
 keywords = "public"
+# The following column is private for now, until we can guarantee a stable data schema.
+trustpub_data = "private"
 
 [versions_published_by.columns]
 version_id = "private"

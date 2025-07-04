@@ -134,6 +134,7 @@ pub async fn exchange_trustpub_token(
                 expires_at: chrono::Utc::now() + chrono::Duration::minutes(30),
                 hashed_token: &new_token.sha256(),
                 crate_ids: &crate_ids,
+                trustpub_data: None,
             };
 
             new_token_model.insert(conn).await?;

@@ -25,6 +25,7 @@ async fn new_token(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<S
         expires_at: Utc::now() + TimeDelta::minutes(30),
         hashed_token: hashed_token.as_slice(),
         crate_ids: &[crate_id],
+        trustpub_data: None,
     };
 
     new_token.insert(conn).await?;

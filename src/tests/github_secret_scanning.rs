@@ -84,6 +84,7 @@ async fn insert_trustpub_token(
         expires_at: Utc::now() + TimeDelta::minutes(30),
         hashed_token: &hashed_token,
         crate_ids,
+        trustpub_data: None,
     };
 
     new_token.insert(conn).await?;
