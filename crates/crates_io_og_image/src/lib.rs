@@ -98,6 +98,26 @@ impl OgImageGenerator {
         Self::default()
     }
 
+    /// Detects the image format from the first few bytes using magic numbers.
+    ///
+    /// Returns the appropriate file extension for supported formats:
+    /// - PNG: returns "png"
+    /// - JPEG: returns "jpg"
+    /// - Unsupported formats: returns None
+    fn detect_image_format(bytes: &[u8]) -> Option<&'static str> {
+        // PNG magic number: 89 50 4E 47 0D 0A 1A 0A
+        if bytes.starts_with(&[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) {
+            return Some("png");
+        }
+
+        // JPEG magic number: FF D8 FF
+        if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
+            return Some("jpg");
+        }
+
+        None
+    }
+
     /// Creates a new `OgImageGenerator` using the `TYPST_PATH` environment variable.
     ///
     /// If the `TYPST_PATH` environment variable is set, uses that path.
@@ -218,13 +238,9 @@ impl OgImageGenerator {
         let client = reqwest::Client::new();
         for (index, author) in data.authors.iter().enumerate() {
             if let Some(avatar) = &author.avatar {
-                let filename = format!("avatar_{index}.png");
-                let avatar_path = assets_dir.join(&filename);
-
                 debug!(
                     author_name = %author.name,
                     avatar_url = %avatar,
-                    avatar_path = %avatar_path.display(),
                     "Processing avatar for author {}", author.name
                 );
 
@@ -270,6 +286,32 @@ impl OgImageGenerator {
                     debug!(url = %avatar, size_bytes = bytes.len(), "Avatar downloaded successfully");
                     bytes
                 };
+
+                // Detect the image format and determine the appropriate file extension
+                let Some(extension) = Self::detect_image_format(&bytes) else {
+                    // Format not supported, log warning with first 20 bytes for debugging
+                    let debug_bytes = &bytes[..bytes.len().min(20)];
+                    let hex_bytes = debug_bytes
+                        .iter()
+                        .map(|b| format!("{b:02x}"))
+                        .collect::<Vec<_>>()
+                        .join(" ");
+
+                    warn!("Unsupported avatar format at {avatar}, first 20 bytes: {hex_bytes}");
+
+                    // Skip this avatar and continue with the next one
+                    continue;
+                };
+
+                let filename = format!("avatar_{index}.{extension}");
+                let avatar_path = assets_dir.join(&filename);
+
+                debug!(
+                    author_name = %author.name,
+                    avatar_url = %avatar,
+                    avatar_path = %avatar_path.display(),
+                    "Writing avatar file with detected format"
+                );
 
                 // Write the bytes to the avatar file
                 fs::write(&avatar_path, &bytes).await.map_err(|err| {

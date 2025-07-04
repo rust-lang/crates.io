@@ -32,6 +32,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Turbo87",
                 "https://avatars.githubusercontent.com/u/141300",
             ),
+            OgImageAuthorData::with_url(
+                "carols10cents",
+                "https://avatars.githubusercontent.com/u/193874",
+            ),
         ],
         lines_of_code: Some(2000),
         crate_size: 75,
