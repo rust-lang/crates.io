@@ -1148,6 +1148,13 @@ expression: response.json()
               "null"
             ]
           },
+          "trustpub_data": {
+            "description": "Information about the trusted publisher that published this version, if any.\n\nStatus: **Unstable**\n\nThis field is filled if the version was published via trusted publishing\n(e.g., GitHub Actions) rather than a regular API token.\n\nThe exact structure of this field depends on the `provider` field\ninside it.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "updated_at": {
             "description": "The date and time this version was last updated (i.e. yanked or unyanked).",
             "example": "2019-12-13T13:46:41Z",

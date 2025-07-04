@@ -2,7 +2,7 @@ use super::json;
 use crate::app::AppState;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
-use crates_io_database::models::trustpub::{NewToken, NewUsedJti};
+use crates_io_database::models::trustpub::{NewToken, NewUsedJti, TrustpubData};
 use crates_io_database::schema::trustpub_configs_github;
 use crates_io_diesel_helpers::lower;
 use crates_io_trustpub::access_token::AccessToken;
@@ -130,10 +130,17 @@ pub async fn exchange_trustpub_token(
 
             let new_token = AccessToken::generate();
 
+            let trustpub_data = TrustpubData::GitHub {
+                repository: signed_claims.repository,
+                run_id: signed_claims.run_id,
+                sha: signed_claims.sha,
+            };
+
             let new_token_model = NewToken {
                 expires_at: chrono::Utc::now() + chrono::Duration::minutes(30),
                 hashed_token: &new_token.sha256(),
                 crate_ids: &crate_ids,
+                trustpub_data: Some(&trustpub_data),
             };
 
             new_token_model.insert(conn).await?;

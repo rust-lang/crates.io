@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Deserialize;
 
-use crate::models::{Crate, User};
+use crate::models::{Crate, TrustpubData, User};
 use crate::schema::{readme_renderings, users, versions};
 
 // Queryable has a custom implementation below
@@ -36,6 +36,7 @@ pub struct Version {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub repository: Option<String>,
+    pub trustpub_data: Option<TrustpubData>,
 }
 
 impl Version {
@@ -103,6 +104,7 @@ pub struct NewVersion<'a> {
     repository: Option<&'a str>,
     categories: Option<&'a [&'a str]>,
     keywords: Option<&'a [&'a str]>,
+    trustpub_data: Option<&'a TrustpubData>,
 }
 
 impl NewVersion<'_> {

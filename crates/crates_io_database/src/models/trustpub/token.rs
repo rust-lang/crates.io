@@ -1,3 +1,4 @@
+use crate::models::TrustpubData;
 use crate::schema::trustpub_tokens;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
@@ -9,6 +10,7 @@ pub struct NewToken<'a> {
     pub expires_at: DateTime<Utc>,
     pub hashed_token: &'a [u8],
     pub crate_ids: &'a [i32],
+    pub trustpub_data: Option<&'a TrustpubData>,
 }
 
 impl NewToken<'_> {

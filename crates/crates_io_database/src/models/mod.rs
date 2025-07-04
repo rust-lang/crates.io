@@ -14,6 +14,7 @@ pub use self::krate::{Crate, CrateName, NewCrate, RecentCrateDownloads};
 pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;
+pub use self::trustpub::TrustpubData;
 pub use self::user::{NewUser, User};
 pub use self::version::{NewVersion, TopVersions, Version};
 

@@ -37,6 +37,7 @@ expression: json
     "readme_path": "/api/v1/crates/foo_vers_show/2.0.0/readme",
     "repository": null,
     "rust_version": "1.64",
+    "trustpub_data": null,
     "updated_at": "[datetime]",
     "yank_message": null,
     "yanked": false

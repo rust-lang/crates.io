@@ -18,6 +18,7 @@ export default {
   crate_size: Number,
   readme: nullable(String),
   rust_version: nullable(String),
+  trustpub_data: nullable(Object),
 
   crate: oneOf('crate'),
   publishedBy: nullable(oneOf('user')),
@@ -34,6 +35,7 @@ export default {
     applyDefault(attrs, 'crate_size', () => (((attrs.id + 13) * 42) % 13) * 54_321);
     applyDefault(attrs, 'readme', () => null);
     applyDefault(attrs, 'rust_version', () => null);
+    applyDefault(attrs, 'trustpub_data', () => null);
 
     if (!attrs.crate) {
       throw new Error(`Missing \`crate\` relationship on \`version:${attrs.num}\``);

@@ -41,6 +41,7 @@ test('happy path', ({ expect }) => {
       "publishedBy": null,
       "readme": null,
       "rust_version": null,
+      "trustpub_data": null,
       "updated_at": "2017-02-24T12:34:56Z",
       "yank_message": null,
       "yanked": false,
