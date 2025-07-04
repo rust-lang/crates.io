@@ -1,7 +1,7 @@
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
     ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
-    TopVersions, User, Version, VersionDownload, VersionOwnerAction,
+    TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
 };
 use chrono::{DateTime, Utc};
 use crates_io_github as github;
@@ -912,6 +912,18 @@ pub struct EncodableVersion {
     /// The URL to the crate's repository, if set.
     #[schema(example = "https://github.com/serde-rs/serde")]
     pub repository: Option<String>,
+
+    /// Information about the trusted publisher that published this version, if any.
+    ///
+    /// Status: **Unstable**
+    ///
+    /// This field is filled if the version was published via trusted publishing
+    /// (e.g., GitHub Actions) rather than a regular API token.
+    ///
+    /// The exact structure of this field depends on the `provider` field
+    /// inside it.
+    #[schema(value_type = Option<Object>)]
+    pub trustpub_data: Option<TrustpubData>,
 }
 
 impl EncodableVersion {
@@ -942,6 +954,7 @@ impl EncodableVersion {
             homepage,
             documentation,
             repository,
+            trustpub_data,
             ..
         } = version;
 
@@ -976,6 +989,7 @@ impl EncodableVersion {
             homepage,
             documentation,
             repository,
+            trustpub_data,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -1119,6 +1133,7 @@ mod tests {
                     .unwrap()
                     .and_utc(),
             }],
+            trustpub_data: None,
         };
         let json = serde_json::to_string(&ver).unwrap();
         assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));

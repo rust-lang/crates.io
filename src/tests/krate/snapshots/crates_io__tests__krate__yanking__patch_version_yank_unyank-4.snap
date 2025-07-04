@@ -73,6 +73,7 @@ expression: json
     "description": "description",
     "homepage": null,
     "documentation": null,
-    "repository": null
+    "repository": null,
+    "trustpub_data": null
   }
 }
