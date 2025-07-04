@@ -1,5 +1,5 @@
 use crate::email::EmailMessage;
-use crate::models::OwnerKind;
+use crate::models::{OwnerKind, TrustpubData};
 use crate::schema::{crate_owners, crates, emails, users, versions};
 use crate::worker::Environment;
 use anyhow::anyhow;
@@ -74,16 +74,25 @@ impl BackgroundJob for SendPublishNotificationsJob {
             let krate = &publish_details.krate;
             let version = &publish_details.version;
 
-            let publisher_info = match &publish_details.publisher {
-                Some(publisher) if publisher == recipient => &format!(
+            let publisher_info = match (&publish_details.publisher, &publish_details.trustpub_data)
+            {
+                (Some(publisher), _) if publisher == recipient => &format!(
                     " by your account (https://{domain}/users/{publisher})",
                     domain = ctx.config.domain_name
                 ),
-                Some(publisher) => &format!(
+                (Some(publisher), _) => &format!(
                     " by {publisher} (https://{domain}/users/{publisher})",
                     domain = ctx.config.domain_name
                 ),
-                None => "",
+                (
+                    _,
+                    Some(TrustpubData::GitHub {
+                        repository, run_id, ..
+                    }),
+                ) => &format!(
+                    " by GitHub Actions (https://github.com/{repository}/actions/runs/{run_id})",
+                ),
+                _ => "",
             };
 
             let email = EmailMessage::from_template(
@@ -154,6 +163,8 @@ struct PublishDetails {
     publish_time: DateTime<Utc>,
     #[diesel(select_expression = users::columns::gh_login.nullable())]
     publisher: Option<String>,
+    #[diesel(select_expression = versions::columns::trustpub_data.nullable())]
+    trustpub_data: Option<TrustpubData>,
 }
 
 impl PublishDetails {
