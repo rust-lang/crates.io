@@ -1,26 +1,26 @@
 <div
-  local-class="
+  data-test-dependency={{@dependency.crate_id}}
+  ...attributes
+  class="
     row
     {{if @dependency.optional "optional"}}
     {{if this.focused "focused"}}
   "
-  data-test-dependency={{@dependency.crate_id}}
-  ...attributes
 >
-  <span local-class="range-lg" data-test-range>
+  <span class="range-lg" data-test-range>
     {{format-req @dependency.req}}
   </span>
 
-  <div local-class="right">
-    <div local-class="name-and-metadata">
-      <span local-class="range-sm">
+  <div class="right">
+    <div class="name-and-metadata">
+      <span class="range-sm">
         {{format-req @dependency.req}}
       </span>
 
       <LinkTo
         @route="crate.range"
         @models={{array @dependency.crate_id @dependency.req}}
-        local-class="link"
+        class="link"
         {{on "focusin" (fn this.setFocused true)}}
         {{on "focusout" (fn this.setFocused false)}}
         data-test-crate-name
@@ -29,17 +29,17 @@
       </LinkTo>
 
       {{#if @dependency.optional}}
-        <span local-class="optional-label" data-test-optional>
+        <span class="optional-label" data-test-optional>
           optional
         </span>
       {{/if}}
 
       {{#if this.featuresDescription}}
-        <span local-class="features-label" data-test-features>
+        <span class="features-label" data-test-features>
           {{this.featuresDescription}}
 
-          <Tooltip local-class="tooltip">
-            <ul local-class="feature-list">
+          <Tooltip class="tooltip">
+            <ul class="feature-list">
               <li>
                 {{svg-jar (if @dependency.default_features "checkbox" "checkbox-empty")}} default features
               </li>
@@ -55,9 +55,9 @@
     </div>
 
     {{#if (or this.description this.loadCrateTask.isRunning)}}
-      <div local-class="description" data-test-description>
+      <div class="description" data-test-description>
         {{#if this.loadCrateTask.isRunning}}
-          <Placeholder local-class="description-placeholder" data-test-placeholder />
+          <Placeholder class="description-placeholder" data-test-placeholder />
         {{else}}
           {{this.description}}
         {{/if}}

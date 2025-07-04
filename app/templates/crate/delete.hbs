@@ -1,15 +1,15 @@
-<div local-class="wrapper">
-  <form local-class="content" {{on "submit" (prevent-default (perform this.deleteTask))}}>
-    <h1 local-class="title" data-test-title>Delete the {{@model.name}} crate?</h1>
+<div class="wrapper">
+  <form class="content" {{on "submit" (prevent-default (perform this.deleteTask))}}>
+    <h1 class="title" data-test-title>Delete the {{@model.name}} crate?</h1>
 
     <p>Are you sure you want to delete the crate "{{@model.name}}"?</p>
 
-    <div local-class="warning">
+    <div class="warning">
       {{svg-jar "triangle-exclamation"}}
       <p><strong>Important:</strong> This action will permanently delete the crate and its associated versions. Deleting a crate cannot be reversed!</p>
     </div>
 
-    <div local-class="impact">
+    <div class="impact">
       <h3>Potential Impact:</h3>
       <ul>
         <li>Users will no longer be able to download this crate.</li>
@@ -18,17 +18,17 @@
       </ul>
     </div>
 
-    <div local-class="requirements">
+    <div class="requirements">
       <h3>Requirements:</h3>
       <p>
         A crate can only be deleted if it is not depended upon by any other crate on crates.io.
       </p>
       <p>Additionally, a crate can only be deleted if either:</p>
-      <ol local-class='first'>
+      <ol class='first'>
         <li>the crate has been published for less than 72 hours</li>
       </ol>
-      <div local-class='or'>or</div>
-      <ol start="2" local-class='second'>
+      <div class='or'>or</div>
+      <ol start="2" class='second'>
         <li>
           <ol>
             <li>the crate only has a single owner, <em>and</em></li>
@@ -38,7 +38,7 @@
       </ol>
     </div>
 
-    <div local-class="reason">
+    <div class="reason">
       <h3>Reason:</h3>
         <label>
           <p>Please tell us why you are deleting this crate:</p>
@@ -46,14 +46,13 @@
             @type="text"
             @value={{this.reason}}
             required={{true}}
-            local-class="reason-input"
-            class="base-input"
+            class="reason-input base-input"
             data-test-reason
           />
         </label>
     </div>
 
-    <label local-class="confirmation">
+    <label class="confirmation">
       <Input
         @type="checkbox"
         @checked={{this.isConfirmed}}
@@ -64,7 +63,7 @@
       I understand that deleting this crate is permanent and cannot be undone.
     </label>
 
-    <div local-class="actions">
+    <div class="actions">
       <button
         type="submit"
         disabled={{or (not this.isConfirmed) this.deleteTask.isRunning}}
@@ -74,8 +73,8 @@
         Delete this crate
       </button>
       {{#if this.deleteTask.isRunning}}
-        <div local-class="spinner-wrapper">
-          <LoadingSpinner local-class="spinner" data-test-spinner />
+        <div class="spinner-wrapper">
+          <LoadingSpinner class="spinner" data-test-spinner />
         </div>
       {{/if}}
     </div>

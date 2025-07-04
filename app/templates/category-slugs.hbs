@@ -2,7 +2,7 @@
 
 <PageHeader @title="All Valid Category Slugs"/>
 
-<dl local-class="list">
+<dl class="list">
   {{#each this.model as |category|}}
     <dt data-test-category-slug={{category.slug}}>{{category.slug}}</dt>
     <dd data-test-category-description={{category.slug}}>{{category.description}}</dd>

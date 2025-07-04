@@ -2,7 +2,7 @@
 
 <PageHeader @title="All Crates" @suffix={{if this.letter (concat "starting with '" this.letter "'")}}/>
 
-<div local-class="results-meta">
+<div class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
     @end={{this.pagination.currentPageEnd}}
@@ -22,6 +22,6 @@
   </div>
 </div>
 
-<CrateList @crates={{this.model}} local-class="list" />
+<CrateList @crates={{this.model}} class="list" />
 
 <Pagination @pagination={{this.pagination}} />
