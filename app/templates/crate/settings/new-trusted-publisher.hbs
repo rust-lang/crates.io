@@ -1,6 +1,6 @@
-<h2>Add a new Trusted Publisher</h2>
+<form local-class="form" {{on "submit" (prevent-default (perform this.saveConfigTask))}}>
+  <h2>Add a new Trusted Publisher</h2>
 
-<form {{on "submit" (prevent-default (perform this.saveConfigTask))}}>
   <div local-class="form-group">
     {{#let (unique-id) as |id|}}
       <label for={{id}} class="form-group-name">Publisher</label>
@@ -106,7 +106,7 @@
           </div>
         {{else}}
           <div local-class="note">
-            The filename of the publishing workflow. This file should be present in the <code>.github/workflows/</code> directory of the repository configured above.
+            The filename of the publishing workflow. This file should be present in the <code>.github/workflows/</code> directory of the repository configured above. For example: <code>release.yml</code> or <code>publish.yml</code>.
           </div>
         {{/if}}
       {{/let}}

@@ -1,9 +1,14 @@
+.form {
+    max-width: 600px;
+    margin: var(--space-m) auto;
+}
+
 .form-group, .buttons {
     margin: var(--space-m) 0;
 }
 
 .publisher-select {
-    max-width: 440px;
+    max-width: 600px;
     width: 100%;
     padding-right: var(--space-m);
     background-image: url("/assets/dropdown.svg");
@@ -19,7 +24,7 @@
 }
 
 .input {
-    max-width: 440px;
+    max-width: 600px;
     width: 100%;
 }
 
