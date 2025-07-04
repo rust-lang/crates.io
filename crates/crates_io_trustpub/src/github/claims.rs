@@ -25,6 +25,8 @@ pub struct GitHubClaims {
     pub repository: String,
     pub workflow_ref: String,
     pub environment: Option<String>,
+    pub run_id: String,
+    pub sha: String,
 }
 
 impl GitHubClaims {
@@ -116,7 +118,9 @@ mod tests {
           "repository_owner_id": "65",
           "repository": "octo-org/octo-repo",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
-          "environment": "prod"
+          "environment": "prod",
+          "run_id": "example-run-id",
+          "sha": "example-sha"
         }
         "#);
 
@@ -132,6 +136,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -148,7 +154,9 @@ mod tests {
           "repository_owner_id": "65",
           "repository": "octo-org/octo-repo",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
-          "environment": null
+          "environment": null,
+          "run_id": "example-run-id",
+          "sha": "example-sha"
         }
         "#);
 
@@ -163,6 +171,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -170,7 +180,7 @@ mod tests {
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `jti`", line: 1, column: 251)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `jti`", line: 1, column: 297)))"#);
 
         Ok(())
     }
@@ -184,6 +194,8 @@ mod tests {
           "aud": "somebody-else",
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -205,6 +217,8 @@ mod tests {
           "aud": [AUDIENCE, "somebody-else"],
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -224,6 +238,8 @@ mod tests {
           "jti": "example-id",
           "aud": AUDIENCE,
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -231,7 +247,7 @@ mod tests {
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `repository`", line: 1, column: 236)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `repository`", line: 1, column: 282)))"#);
 
         Ok(())
     }
@@ -243,6 +259,8 @@ mod tests {
           "jti": "example-id",
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
@@ -250,7 +268,7 @@ mod tests {
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `repository_owner_id`", line: 1, column: 243)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `repository_owner_id`", line: 1, column: 289)))"#);
 
         Ok(())
     }
@@ -263,13 +281,15 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
           "iat": now,
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `workflow_ref`", line: 1, column: 185)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `workflow_ref`", line: 1, column: 231)))"#);
 
         Ok(())
     }
@@ -283,6 +303,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "exp": now + 30,
           "iat": now,
@@ -303,6 +325,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://gitlab.com",
           "exp": now + 30,
@@ -324,13 +348,15 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "iat": now,
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `exp`", line: 1, column: 253)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `exp`", line: 1, column: 299)))"#);
 
         Ok(())
     }
@@ -344,6 +370,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now - 3000,
@@ -365,13 +393,15 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 30,
         }))?;
 
         let error = GitHubClaims::decode(&jwt, AUDIENCE, &DECODING_KEY).unwrap_err();
-        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `iat`", line: 1, column: 253)))"#);
+        assert_compact_debug_snapshot!(error, @r#"Error(Json(Error("missing field `iat`", line: 1, column: 299)))"#);
 
         Ok(())
     }
@@ -385,6 +415,8 @@ mod tests {
           "aud": AUDIENCE,
           "repository": "octo-org/octo-repo",
           "repository_owner_id": "65",
+          "run_id": "example-run-id",
+          "sha": "example-sha",
           "workflow_ref": "octo-org/octo-automation/.github/workflows/oidc.yml@refs/heads/main",
           "iss": "https://token.actions.githubusercontent.com",
           "exp": now + 300,
