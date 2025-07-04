@@ -45,6 +45,23 @@
             {{or @version.published_by.name @version.published_by.login}}
           </LinkTo>
         </span>
+      {{else if @version.trustpubPublisher}}
+        <span local-class="publisher trustpub">
+          via
+          {{#if @version.trustpubUrl}}
+            <a href={{@version.trustpubUrl}} target="_blank" rel="nofollow noopener noreferrer">
+              {{#if (eq @version.trustpub_data.provider "github")}}
+                {{svg-jar "github"}}
+              {{/if}}
+              {{@version.trustpubPublisher}}
+            </a>
+          {{else}}
+            {{#if (eq @version.trustpub_data.provider "github")}}
+              {{svg-jar "github"}}
+            {{/if}}
+            {{@version.trustpubPublisher}}
+          {{/if}}
+        </span>
       {{/if}}
 
       <time

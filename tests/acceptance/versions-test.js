@@ -9,11 +9,18 @@ module('Acceptance | crate versions page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('show versions sorted by date', async function (assert) {
+    let trustpubData = {
+      provider: 'github',
+      repository: 'octo-org/octo-repo',
+      run_id: '1234567890',
+      sha: 'abcdef1234567890',
+    };
+
     let crate = this.db.crate.create({ name: 'nanomsg' });
     this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
     this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
     this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01', trustpub_data: trustpubData });
 
     await visit('/crates/nanomsg/versions');
     assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
