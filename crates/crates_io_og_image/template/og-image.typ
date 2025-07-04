@@ -283,7 +283,10 @@
             let authors-with-avatars = data.authors.map(author => {
                 let avatar = none
                 if author.avatar != none {
-                    avatar = "assets/" + avatar_map.at(author.avatar)
+                    let avatar_path = avatar_map.at(author.avatar, default: none)
+                    if avatar_path != none {
+                        avatar = "assets/" + avatar_path
+                    }
                 }
                 (name: author.name, avatar: avatar)
             })
