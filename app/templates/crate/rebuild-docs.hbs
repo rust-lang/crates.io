@@ -1,19 +1,19 @@
 {{page-title 'Rebuild Documentation'}}
 
-<div local-class="content">
+<div class="content">
   <h1 data-test-title>Rebuild Documentation</h1>
 
-  <div local-class="crate-info">
+  <div class="crate-info">
     <h2>Crate Information</h2>
-    <div local-class="info-row">
+    <div class="info-row">
       <strong>Crate:</strong> <span data-test-crate-name>{{@model.crate.name}}</span>
     </div>
-    <div local-class="info-row">
+    <div class="info-row">
       <strong>Version:</strong> <span data-test-version-num>{{@model.version.num}}</span>
     </div>
   </div>
 
-  <div local-class="description">
+  <div class="description">
     <p>
       This will trigger a rebuild of the documentation for
       <a href="https://docs.rs/{{@model.crate.name}}/{{@model.version.num}}" target="_blank" rel="noopener noreferrer">
@@ -26,7 +26,7 @@
     </p>
   </div>
 
-  <div local-class="actions">
+  <div class="actions">
     <button
       type="button"
       class="button button--yellow"

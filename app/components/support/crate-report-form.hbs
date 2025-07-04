@@ -1,12 +1,12 @@
 <form
-  local-class="report-form"
   data-testid="crate-report-form"
   ...attributes
+  class="report-form"
   {{on "submit" (prevent-default this.submit)}}
 >
   <h2>Report A Crate</h2>
 
-  <fieldset local-class="form-group" data-test-id="fieldset-crate">
+  <fieldset class="form-group" data-test-id="fieldset-crate">
     {{#let (unique-id) as |id|}}
       <label for={{id}} class="form-group-name">
         Crate
@@ -18,8 +18,7 @@
         autocomplete="off"
         aria-required="true"
         aria-invalid={{if this.crateInvalid "true" "false"}}
-        local-class="crate-input"
-        class="base-input"
+        class="crate-input base-input"
         data-test-id="crate-input"
         {{auto-focus}}
         {{on "input" this.resetCrateValidation}}
@@ -32,9 +31,9 @@
     {{/let}}
   </fieldset>
 
-  <fieldset local-class="form-group" data-test-id="fieldset-reasons">
+  <fieldset class="form-group" data-test-id="fieldset-reasons">
     <div class="form-group-name">Reasons</div>
-    <ul role="list" local-class="reasons-list" class="scopes-list {{if this.reasonsInvalid "invalid"}}">
+    <ul role="list" class="reasons-list scopes-list {{if this.reasonsInvalid "invalid"}}">
       {{#each this.reasons as |option|}}
         <li>
           <label>
@@ -57,13 +56,13 @@
     {{/if}}
   </fieldset>
 
-  <fieldset local-class="form-group" data-test-id="fieldset-detail">
+  <fieldset class="form-group" data-test-id="fieldset-detail">
     {{#let (unique-id) as |id|}}
       <label for={{id}} class="form-group-name">Detail</label>
       <Textarea
         id={{id}}
         @value={{this.detail}}
-        local-class="detail {{if this.detailInvalid "invalid"}}"
+        class="detail {{if this.detailInvalid "invalid"}}"
         aria-required={{if this.detailInvalid "true" "false" }}
         aria-invalid={{if this.detailInvalid "true" "false"}}
         rows="5"
@@ -78,11 +77,10 @@
     {{/let}}
   </fieldset>
 
-  <div local-class="buttons">
+  <div class="buttons">
     <button
       type="submit"
-      local-class="report-button"
-      class="button button--small"
+      class="report-button button button--small"
       data-test-id="report-button"
     >
       Report to <strong>help@crates.io</strong>

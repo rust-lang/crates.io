@@ -9,8 +9,8 @@
     <LinkTo @route="crate" @model={{@invite.crate_name}}>{{@invite.crate_name}}</LinkTo>.
   </p>
 {{else}}
-  <div local-class="row" ...attributes>
-    <div local-class="crate-column">
+  <div ...attributes class="row">
+    <div class="crate-column">
       <h3>
         <LinkTo @route="crate" @model={{@invite.crate_name}} data-test-crate-link>
           {{@invite.crate_name}}

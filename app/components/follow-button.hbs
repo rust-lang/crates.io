@@ -5,10 +5,9 @@
     this.followStateTask.last.error
     this.toggleFollowTask.isRunning
   }}
-  local-class="button"
-  class="button button--tan"
   data-test-follow-button
   ...attributes
+  class="follow-button button button--tan"
   {{on "click" (perform this.toggleFollowTask)}}
 >
   {{#if (or this.followStateTask.isRunning this.toggleFollowTask.isRunning)}}

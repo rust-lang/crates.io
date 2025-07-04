@@ -1,12 +1,12 @@
 {{!-- template-lint-disable no-at-ember-render-modifiers --}}
 <div
-  local-class="wrapper"
   data-test-download-graph
   ...attributes
+  class="wrapper"
   {{did-insert this.loadChartJs}}
 >
   {{#if this.chartjs.loadTask.isRunning}}
-    <LoadingSpinner local-class="spinner" data-test-spinner />
+    <LoadingSpinner class="spinner" data-test-spinner />
   {{else if this.chartjs.loadTask.lastSuccessful.value}}
     <canvas
       {{did-insert this.createChart}}
@@ -16,7 +16,7 @@
       {{will-destroy this.destroyChart}}
     />
   {{else}}
-    <div local-class="error" data-test-error>
+    <div class="error" data-test-error>
       <p>Sorry, there was a problem loading the graphing code.</p>
       <button
         type="button"
