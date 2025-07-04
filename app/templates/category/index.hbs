@@ -1,6 +1,6 @@
 {{page-title this.category.category ' - Categories'}}
 
-<PageHeader local-class="header">
+<PageHeader class="header">
   <h1>
     {{#each this.category.parent_categories as |parent|}}<LinkTo @route="category" @model={{parent.slug}}>{{parent.category}}</LinkTo>::{{/each}}
     {{~ this.category.category }}
@@ -14,16 +14,16 @@
 {{#if this.category.subcategories }}
   <div>
     <h2>Subcategories</h2>
-    <div local-class="subcategories">
+    <div class="subcategories">
       {{#each this.category.subcategories as |subcategory| }}
-        <div local-class="subcategory">
+        <div class="subcategory">
           <div>
             <LinkTo @route="category" @model={{subcategory.slug}}>{{subcategory.category}}</LinkTo>
             <span class="text--small">
               {{format-num subcategory.crates_cnt}} {{if (eq subcategory.crates_cnt 1) "crate" "crates"}}
             </span>
           </div>
-          <div local-class="category-description" class="text--small">
+          <div class="category-description text--small">
             {{ subcategory.description }}
           </div>
         </div>
@@ -33,7 +33,7 @@
 {{/if}}
 
 <h2>Crates</h2>
-<div local-class="results-meta">
+<div class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
     @end={{this.pagination.currentPageEnd}}
@@ -53,6 +53,6 @@
   </div>
 </div>
 
-<CrateList @crates={{this.model}} local-class="list" />
+<CrateList @crates={{this.model}} class="list" />
 
 <Pagination @pagination={{this.pagination}} />

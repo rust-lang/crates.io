@@ -1,5 +1,4 @@
 <form
-  local-class="form {{if (eq @size "big") "size-big"}}"
   action="/search"
   role="search"
   autocapitalize="off"
@@ -8,6 +7,7 @@
   spellcheck="false"
   data-test-search-form
   ...attributes
+  class="form {{if (eq @size "big") "size-big"}}"
   {{on "submit" (prevent-default this.search)}}
 >
   {{! template-lint-disable require-input-label}}
@@ -20,7 +20,7 @@
   <input
     type="text"
     inputmode="search"
-    local-class="input-lg"
+    class="input-lg"
     name="q"
     id="cargo-desktop-search"
     placeholder="Type 'S' or '/' to search"
@@ -36,7 +36,7 @@
   <input
     type="text"
     inputmode="search"
-    local-class="input-sm"
+    class="input-sm"
     name="q"
     placeholder="Search"
     value={{this.header.searchValue}}
@@ -45,9 +45,9 @@
     aria-label="Search"
   >
 
-  <button type="submit" local-class="submit-button" class="button-reset">
+  <button type="submit" class="submit-button button-reset">
     <span class="sr-only">Submit</span>
-    {{svg-jar "search" local-class="submit-icon"}}
+    {{svg-jar "search" class=(scoped-class "submit-icon")}}
   </button>
 
   {{on-key 's' (focus '#cargo-desktop-search')}}

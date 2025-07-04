@@ -1,58 +1,58 @@
 {{page-title 'Dashboard'}}
 
-<PageHeader local-class="header">
+<PageHeader class="header">
   <h1>My Dashboard</h1>
-  <div local-class="stats">
-    <div local-class='downloads'>
-      {{svg-jar "download" local-class="header-icon"}}
-      <span local-class='num'>{{format-num this.myStats.total_downloads}}</span>
-      <span local-class="stats-label" class="text--small">Total Downloads</span>
+  <div class="stats">
+    <div class='downloads'>
+      {{svg-jar "download" class=(scoped-class "header-icon")}}
+      <span class='num'>{{format-num this.myStats.total_downloads}}</span>
+      <span class="stats-label text--small">Total Downloads</span>
     </div>
   </div>
 </PageHeader>
 
-<div local-class="my-info">
-  <div local-class="my-crate-lists">
-    <div local-class="header">
+<div class="my-info">
+  <div class="my-crate-lists">
+    <div class="header">
       <h2>
         {{svg-jar "my-packages"}}
         My Crates
       </h2>
 
       {{#if this.hasMoreCrates}}
-        <LinkTo @route="me.crates" local-class="my-crates-link">Show all</LinkTo>
+        <LinkTo @route="me.crates" class="my-crates-link">Show all</LinkTo>
       {{/if}}
     </div>
     <CrateDownloadsList @crates={{this.visibleCrates}} />
 
-    <div local-class='header'>
+    <div class='header'>
       <h2>
         {{svg-jar "following"}}
         Following
       </h2>
 
       {{#if this.hasMoreFollowing}}
-        <LinkTo @route="me.following" local-class="followed-crates-link">Show all</LinkTo>
+        <LinkTo @route="me.following" class="followed-crates-link">Show all</LinkTo>
       {{/if}}
     </div>
     <CrateDownloadsList @crates={{this.visibleFollowing}} />
   </div>
 
-  <div local-class="my-feed">
+  <div class="my-feed">
     <h2>
       {{svg-jar "latest-updates"}}
       Latest Updates
     </h2>
 
-    <div local-class="feed">
-      <ul local-class="feed-list" data-test-feed-list>
+    <div class="feed">
+      <ul class="feed-list" data-test-feed-list>
         {{#each this.myFeed as |version|}}
-          <li local-class="feed-row">
+          <li class="feed-row">
             <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
               {{ version.crateName }}
               <span class="text--small">{{ version.num }}</span>
             </LinkTo>
-            <span local-class="feed-date" class="text--small">
+            <span class="feed-date text--small">
               {{date-format-distance-to-now version.created_at addSuffix=true}}
             </span>
           </li>
@@ -60,7 +60,7 @@
       </ul>
 
       {{#if this.hasMore}}
-        <div local-class="load-more">
+        <div class="load-more">
           <button type="button" class="load-more-button" disabled={{this.loadMoreTask.isRunning}} {{on "click" (perform this.loadMoreTask)}}>
             Load More
             {{#if this.loadMoreTask.isRunning}}

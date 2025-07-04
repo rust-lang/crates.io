@@ -6,6 +6,8 @@ import Resolver from 'ember-resolver';
 import config from './config/environment';
 import * as Sentry from './sentry';
 
+import './app.css';
+
 // eslint-disable-next-line unicorn/prefer-add-event-listener
 window.onerror = undefined;
 Sentry.init();

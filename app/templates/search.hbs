@@ -8,7 +8,7 @@
 />
 
 {{#if this.hasMultiCategoryFilter}}
-  <div local-class="warning">
+  <div class="warning">
     Support for using multiple <code>category:</code> filters is not yet implemented.
   </div>
 {{/if}}
@@ -25,15 +25,14 @@
   <button
     type="button"
     disabled={{this.dataTask.isRunning}}
-    local-class="try-again-button"
-    class="button"
+    class="try-again-button button"
     data-test-try-again-button
     {{on "click" this.fetchData}}
   >
     Try Again
   </button>
 {{else if this.hasItems}}
-  <div local-class="results-meta">
+  <div class="results-meta">
     <ResultsCount
       @start={{this.pagination.currentPageStart}}
       @end={{this.pagination.currentPageEnd}}
@@ -53,7 +52,7 @@
     </div>
   </div>
 
-  <CrateList @crates={{this.model}} local-class="list" />
+  <CrateList @crates={{this.model}} class="list" />
 
   <Pagination @pagination={{this.pagination}} />
 {{else}}
