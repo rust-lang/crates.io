@@ -1,0 +1,35 @@
+.content {
+    max-width: 600px;
+    margin: var(--space-xl) auto;
+
+    h1 {
+        margin-top: 0;
+    }
+}
+
+.crate-info {
+    background-color: var(--orange-50);
+    border-radius: 8px;
+    padding: var(--space-m);
+    margin: var(--space-m) 0;
+    border: 1px solid var(--orange-200);
+
+    h2 {
+        margin: 0 0 var(--space-s);
+    }
+}
+
+.info-row {
+    margin-top: var(--space-xs);
+}
+
+.description {
+    margin: var(--space-m) 0;
+}
+
+.actions {
+    margin-top: var(--space-m);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+}

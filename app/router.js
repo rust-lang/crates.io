@@ -14,6 +14,7 @@ Router.map(function () {
     this.route('dependencies');
     this.route('version', { path: '/:version_num' });
     this.route('version-dependencies', { path: '/:version_num/dependencies' });
+    this.route('rebuild-docs', { path: '/:version_num/rebuild-docs' });
     this.route('range', { path: '/range/:range' });
 
     this.route('reverse-dependencies', { path: 'reverse_dependencies' });
