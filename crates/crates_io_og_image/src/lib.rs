@@ -223,7 +223,7 @@ impl OgImageGenerator {
     /// This method handles both asset-based avatars (which are copied from the bundled assets)
     /// and URL-based avatars (which are downloaded from the internet).
     /// Returns a mapping from avatar source to the local filename.
-    #[instrument(skip(self, data), fields(crate.name = %data.name))]
+    #[instrument(skip(self, data), fields(krate.name = %data.name))]
     async fn process_avatars<'a>(
         &self,
         data: &'a OgImageData<'_>,

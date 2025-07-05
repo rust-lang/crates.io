@@ -39,7 +39,7 @@ impl BackgroundJob for GenerateOgImage {
 
     type Context = Arc<Environment>;
 
-    #[instrument(skip_all, fields(crate.name = %self.crate_name))]
+    #[instrument(skip_all, fields(krate.name = %self.crate_name))]
     async fn run(&self, ctx: Self::Context) -> anyhow::Result<()> {
         let crate_name = &self.crate_name;
 
