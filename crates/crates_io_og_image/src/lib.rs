@@ -861,4 +861,32 @@ mod tests {
             insta::assert_binary_snapshot!("404-avatar.png", image_data);
         }
     }
+
+    #[tokio::test]
+    async fn test_generate_og_image_unicode_truncation() {
+        let _guard = init_tracing();
+
+        // Test case that reproduces the Unicode truncation bug from issue #11524
+        // Uses the exact description from "adder-codec-rs" crate which contains
+        // multibyte Unicode characters (Δ) that cause string slicing to fail
+        static AUTHORS: &[OgImageAuthorData<'_>] = &[author("adder-codec-rs-author")];
+
+        let data = OgImageData {
+            name: "adder-codec-rs",
+            version: "1.0.0",
+            description: Some(
+                "Encoder/transcoder/decoder for raw and compressed ADΔER (Address, Decimation, Δt Event Representation) streams. Includes a transcoder for casting either framed or event video into an ADΔER representation in a manner which preserves the temporal resolution of the source. This is a very long description that should trigger text truncation to test the Unicode character boundary issue when the text is too long to fit in the available space. Adding even more text with Unicode characters like ADΔER and Δt to ensure we hit the problematic slice operation at character boundaries.",
+            ),
+            license: Some("MIT"),
+            tags: &["codec", "adder", "event-representation"],
+            authors: AUTHORS,
+            lines_of_code: Some(5000),
+            crate_size: 128000,
+            releases: 3,
+        };
+
+        if let Some(image_data) = generate_image(data).await {
+            insta::assert_binary_snapshot!("unicode-truncation.png", image_data);
+        }
+    }
 }
