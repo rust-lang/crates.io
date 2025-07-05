@@ -50,7 +50,12 @@
             return text
         } else {
             while measure(width: size.width, text + "…").height > maxHeight {
-                text = text.slice(0, text.len() - 1).trim()
+                // Use character-based slicing instead of byte-based to handle Unicode correctly
+                let chars = text.clusters()
+                if chars.len() == 0 {
+                    break
+                }
+                text = chars.slice(0, chars.len() - 1).join().trim()
             }
             return text + "…"
         }
@@ -74,7 +79,12 @@
             return text
         } else {
             while measure(text + "…").width > maxWidth {
-                text = text.slice(0, text.len() - 1).trim()
+                // Use character-based slicing instead of byte-based to handle Unicode correctly
+                let chars = text.clusters()
+                if chars.len() == 0 {
+                    break
+                }
+                text = chars.slice(0, chars.len() - 1).join().trim()
             }
             return text + "…"
         }
