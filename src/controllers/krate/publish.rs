@@ -3,7 +3,7 @@
 use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
-    self, CheckTyposquat, SendPublishNotificationsJob, UpdateDefaultVersion,
+    self, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob, UpdateDefaultVersion,
 };
 use axum::Json;
 use axum::body::{Body, Bytes};
@@ -549,14 +549,14 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         // Compared to only using a background job, this prevents us from getting into a
         // situation where a crate exists in the `crates` table but doesn't have a default
         // version in the `default_versions` table.
-        if let Some((existing_default_version, _)) = existing_default_version {
+        if let Some((existing_default_version, _)) = &existing_default_version {
             let published_default_version = DefaultVersion {
                 id: version.id,
                 num: semver,
                 yanked: false,
             };
 
-            if existing_default_version < published_default_version {
+            if existing_default_version < &published_default_version {
                 diesel::update(default_versions::table)
                     .filter(default_versions::crate_id.eq(krate.id))
                     .set(default_versions::version_id.eq(version.id))
@@ -630,6 +630,14 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
                 Ok::<_, EnqueueError>(None)
             }),
         )?;
+
+        // Enqueue OG image generation job if not handled by UpdateDefaultVersion
+        if existing_default_version.is_none() {
+            let og_image_job = GenerateOgImage::new(krate.name.clone());
+            if let Err(error) = og_image_job.enqueue(conn).await {
+                error!("Failed to enqueue `GenerateOgImage` job: {error}");
+            }
+        };
 
         // Experiment: check new crates for potential typosquatting.
         if existing_crate.is_none() {

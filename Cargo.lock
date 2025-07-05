@@ -1376,6 +1376,7 @@ dependencies = [
  "crates_io_github",
  "crates_io_index",
  "crates_io_markdown",
+ "crates_io_og_image",
  "crates_io_pagerduty",
  "crates_io_session",
  "crates_io_tarball",

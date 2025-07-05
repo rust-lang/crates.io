@@ -24,6 +24,7 @@ use crates_io::{Emails, config};
 use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::var;
 use crates_io_index::RepositoryConfig;
+use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepoImpl;
 use crates_io_worker::Runner;
 use object_store::prefix::PrefixStore;
@@ -102,6 +103,7 @@ fn main() -> anyhow::Result<()> {
         .emails(emails)
         .maybe_docs_rs(docs_rs)
         .team_repo(Box::new(team_repo))
+        .og_image_generator(OgImageGenerator::from_environment()?)
         .build();
 
     let environment = Arc::new(environment);

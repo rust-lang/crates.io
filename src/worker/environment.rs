@@ -7,6 +7,7 @@ use anyhow::Context;
 use bon::Builder;
 use crates_io_docs_rs::DocsRsClient;
 use crates_io_index::{Repository, RepositoryConfig};
+use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
@@ -33,6 +34,7 @@ pub struct Environment {
     pub emails: Emails,
     pub team_repo: Box<dyn TeamRepo + Send + Sync>,
     pub docs_rs: Option<Box<dyn DocsRsClient>>,
+    pub og_image_generator: Option<OgImageGenerator>,
 
     /// A lazily initialised cache of the most popular crates ready to use in typosquatting checks.
     #[builder(skip)]

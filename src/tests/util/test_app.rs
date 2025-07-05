@@ -16,6 +16,7 @@ use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
 use crates_io_index::{Credentials, RepositoryConfig};
+use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::MockTeamRepo;
 use crates_io_test_db::TestDatabase;
 use crates_io_trustpub::github::test_helpers::AUDIENCE;
@@ -107,6 +108,7 @@ impl TestApp {
             github: None,
             docs_rs: None,
             oidc_key_stores: Default::default(),
+            og_image_generator: None,
         }
     }
 
@@ -255,6 +257,7 @@ pub struct TestAppBuilder {
     github: Option<MockGitHubClient>,
     docs_rs: Option<MockDocsRsClient>,
     oidc_key_stores: HashMap<String, Box<dyn OidcKeyStore>>,
+    og_image_generator: Option<OgImageGenerator>,
 }
 
 impl TestAppBuilder {
@@ -314,6 +317,7 @@ impl TestAppBuilder {
                 .emails(app.emails.clone())
                 .maybe_docs_rs(self.docs_rs.map(|cl| Box::new(cl) as _))
                 .team_repo(Box::new(self.team_repo))
+                .maybe_og_image_generator(self.og_image_generator)
                 .build();
 
             let runner = Runner::new(app.primary_database.clone(), Arc::new(environment))
@@ -420,6 +424,13 @@ impl TestAppBuilder {
 
     pub fn with_team_repo(mut self, team_repo: MockTeamRepo) -> Self {
         self.team_repo = team_repo;
+        self
+    }
+
+    pub fn with_og_image_generator(mut self) -> Self {
+        let og_generator = OgImageGenerator::from_environment()
+            .expect("Failed to create OG image generator for tests");
+        self.og_image_generator = Some(og_generator);
         self
     }
 
