@@ -76,4 +76,15 @@ TarballInfo {
         badges: None,
     },
     vcs_info: None,
+    linecount_stats: LinecountStats {
+        languages: {
+            Rust: LanguageStats {
+                code_lines: 1,
+                comment_lines: 0,
+                files: 1,
+            },
+        },
+        total_code_lines: 1,
+        total_comment_lines: 0,
+    },
 }

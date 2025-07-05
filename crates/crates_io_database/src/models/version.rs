@@ -36,6 +36,7 @@ pub struct Version {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub repository: Option<String>,
+    pub linecounts: Option<serde_json::Value>,
 }
 
 impl Version {
@@ -103,6 +104,7 @@ pub struct NewVersion<'a> {
     repository: Option<&'a str>,
     categories: Option<&'a [&'a str]>,
     keywords: Option<&'a [&'a str]>,
+    linecounts: Option<serde_json::Value>,
 }
 
 impl NewVersion<'_> {
