@@ -1,15 +1,15 @@
 <div ...attributes>
-  <h2 local-class="title" data-test-title>{{@title}}</h2>
-  <div local-class="content">
+  <h2 class="title" data-test-title>{{@title}}</h2>
+  <div class="content">
     {{#if this.isDocsRs}}
-      {{svg-jar "docs-rs" local-class="icon" data-test-icon="docs-rs"}}
+      {{svg-jar "docs-rs" class=(scoped-class "icon") data-test-icon="docs-rs"}}
     {{else if this.isGitHub}}
-      {{svg-jar "github" local-class="icon" data-test-icon="github"}}
+      {{svg-jar "github" class=(scoped-class "icon") data-test-icon="github"}}
     {{else}}
-      {{svg-jar "link" local-class="icon" data-test-icon="link"}}
+      {{svg-jar "link" class=(scoped-class "icon") data-test-icon="link"}}
     {{/if}}
 
-    <a href={{@url}} local-class="link" data-test-link>
+    <a href={{@url}} class="link" data-test-link>
       {{this.text}}
     </a>
   </div>

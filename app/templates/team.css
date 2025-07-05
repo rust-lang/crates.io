@@ -1,0 +1,47 @@
+.header {
+    display: flex;
+    align-items: center;
+
+    h1, h2 {
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        margin-top: var(--space-2xs);
+        color: var(--main-color-light);
+    }
+}
+
+.avatar {
+    margin-right: var(--space-m);
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+}
+
+.github-link {
+    margin-left: var(--space-s);
+
+    &, &:hover {
+        color: var(--main-color);
+    }
+
+    :global(svg) {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+.results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-s);
+}
+
+.list {
+    margin-bottom: var(--space-s);
+}
