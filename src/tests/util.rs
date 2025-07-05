@@ -21,8 +21,8 @@
 
 use crate::models::{ApiToken, User};
 use crate::tests::{
-    CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
-    OwnersResponse, VersionResponse,
+    AdminListResponse, CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate,
+    OwnerResp, OwnersResponse, VersionResponse,
 };
 use std::future::Future;
 
@@ -184,6 +184,12 @@ pub trait RequestHelper {
     /// Search for crates matching a query string
     async fn search(&self, query: &str) -> CrateList {
         self.get_with_query("/api/v1/crates", query).await.good()
+    }
+
+    /// Request the JSON used for the admin list page
+    async fn admin_list(&self, owner: &str) -> Response<AdminListResponse> {
+        let url = format!("/api/private/admin_list/{owner}");
+        self.get(&url).await
     }
 
     /// Publish the crate and run background jobs to completion

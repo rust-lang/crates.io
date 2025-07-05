@@ -1,6 +1,7 @@
 pub mod helpers;
 pub mod util;
 
+pub mod admin;
 pub mod category;
 pub mod crate_owner_invitation;
 pub mod git;

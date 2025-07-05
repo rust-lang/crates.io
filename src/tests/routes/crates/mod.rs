@@ -1,3 +1,4 @@
+mod admin;
 pub mod downloads;
 mod following;
 mod list;

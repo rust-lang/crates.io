@@ -84,7 +84,17 @@ pub struct OkBool {
     #[allow(dead_code)]
     ok: bool,
 }
-
+#[derive(Deserialize)]
+pub struct AdminListResponse {
+    user_email: Option<String>,
+    crates: Vec<AdminCrateInfo>,
+}
+#[derive(Deserialize)]
+pub struct AdminCrateInfo {
+    name: String,
+    num_versions: usize,
+    num_rev_deps: i64,
+}
 #[derive(Deserialize, Debug)]
 pub struct OwnerResp {
     // server must include `ok: true` to support old cargo clients
