@@ -132,8 +132,8 @@ pub async fn delete_crate(
                 .execute(conn)
                 .await?;
 
-            let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
-            let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
+            let git_index_job = jobs::SyncToGitIndex::new(krate.id, &krate.name);
+            let sparse_index_job = jobs::SyncToSparseIndex::new(krate.id, &krate.name);
             let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name);
 
             tokio::try_join!(

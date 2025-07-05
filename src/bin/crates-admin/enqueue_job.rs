@@ -6,7 +6,7 @@ use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::dsl::exists;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 #[derive(clap::Parser, Debug)]
 #[command(
@@ -163,10 +163,12 @@ pub async fn run(command: Command) -> Result<()> {
             jobs::rss::SyncCratesFeed.enqueue(&mut conn).await?;
         }
         Command::SyncToGitIndex { name } => {
-            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+            jobs::SyncToGitIndex::new_maybe_deleted(crate_id(&name, &mut conn).await?, name)
+                .enqueue(&mut conn)
+                .await?;
         }
         Command::SyncToSparseIndex { name } => {
-            jobs::SyncToSparseIndex::new(name)
+            jobs::SyncToSparseIndex::new_maybe_deleted(crate_id(&name, &mut conn).await?, name)
                 .enqueue(&mut conn)
                 .await?;
         }
@@ -183,4 +185,13 @@ pub async fn run(command: Command) -> Result<()> {
     };
 
     Ok(())
+}
+
+async fn crate_id(name: &str, conn: &mut AsyncPgConnection) -> QueryResult<Option<i32>> {
+    crates::table
+        .filter(crates::name.eq(name))
+        .select(crates::id)
+        .first::<i32>(conn)
+        .await
+        .optional()
 }
