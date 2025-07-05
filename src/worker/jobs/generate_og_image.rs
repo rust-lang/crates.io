@@ -14,11 +14,22 @@ use tracing::{error, info, instrument, warn};
 #[derive(Serialize, Deserialize)]
 pub struct GenerateOgImage {
     crate_name: String,
+    invalidate_cdns: bool,
 }
 
 impl GenerateOgImage {
     pub fn new(crate_name: String) -> Self {
-        Self { crate_name }
+        Self {
+            crate_name,
+            invalidate_cdns: true,
+        }
+    }
+
+    pub fn without_cdn_invalidation(crate_name: String) -> Self {
+        Self {
+            crate_name,
+            invalidate_cdns: false,
+        }
     }
 }
 
@@ -83,6 +94,13 @@ impl BackgroundJob for GenerateOgImage {
             .upload_og_image(crate_name, image_bytes.into())
             .await?;
 
+        info!("Successfully generated and uploaded OG image for crate {crate_name}");
+
+        if !self.invalidate_cdns {
+            info!("Skipping CDN invalidation for crate {crate_name}");
+            return Ok(());
+        }
+
         // Invalidate CDN cache for the OG image
         let og_image_path = format!("og-images/{crate_name}.png");
 
@@ -100,7 +118,7 @@ impl BackgroundJob for GenerateOgImage {
             }
         }
 
-        info!("Successfully generated and uploaded OG image for crate {crate_name}");
+        info!("CDN invalidation completed for crate {crate_name}");
 
         Ok(())
     }

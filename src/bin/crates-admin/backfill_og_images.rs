@@ -79,7 +79,7 @@ pub async fn run(opts: Opts) -> Result<()> {
         // Create batch of jobs
         let jobs = crate_names
             .into_iter()
-            .map(GenerateOgImage::new)
+            .map(GenerateOgImage::without_cdn_invalidation)
             .map(|job| {
                 Ok((
                     background_jobs::job_type.eq(GenerateOgImage::JOB_NAME),
