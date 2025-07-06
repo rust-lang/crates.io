@@ -9,6 +9,7 @@
 
 #let colors = (
     bg: oklch(97%, 0.0147, 98deg),
+    rust-overlay: oklch(36%, 0.07, 144deg, 20%),
     header-bg: oklch(36%, 0.07, 144deg),
     header-text: oklch(100%, 0, 0deg),
     primary: oklch(36%, 0.07, 144deg),
@@ -89,6 +90,21 @@
             return text + "…"
         }
     })
+}
+
+// =============================================================================
+// IMAGE UTILITIES
+// =============================================================================
+// Functions for loading and processing images
+
+// Loads an SVG icon and replaces currentColor with the specified color
+// @param icon-name: The name of the SVG file (without .svg extension)
+// @param color: The color to replace currentColor with
+// @param width: The width of the image (default: auto)
+// @param height: The height of the image (default: auto)
+#let colored-image(path, color, width: auto, height: auto) = {
+    let svg = read(path).replace("currentColor", color.to-hex())
+    image(bytes(svg), width: width, height: height)
 }
 
 // =============================================================================
@@ -225,9 +241,11 @@
 
 // Renders a metadata item with icon, title, and content
 #let render-metadata(title, content, icon-name) = {
+    let icon-path = "assets/" + icon-name + ".svg"
+
     box(inset: (right: 20pt),
         grid(columns: (auto, auto), rows: (auto, auto), column-gutter: .75em, row-gutter: .5em,
-            grid.cell(rowspan: 2, align: horizon, image("assets/" + icon-name + ".svg", height: 1.2em)),
+            grid.cell(rowspan: 2, align: horizon, colored-image(icon-path, colors.primary, height: 1.2em)),
             text(size: 8pt, fill: colors.text-light, upper(title)),
             text(size: 12pt, fill: colors.primary, content)
         )
@@ -259,7 +277,7 @@
 
 // Rust logo overlay (20% opacity watermark)
 #place(bottom + right, dx: 200pt, dy: 100pt,
-    image("assets/rust-logo.svg", width: 300pt)
+    colored-image("assets/rust-logo.svg", colors.rust-overlay, width: 300pt)
 )
 
 // Main content area
