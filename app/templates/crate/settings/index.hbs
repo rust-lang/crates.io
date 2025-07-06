@@ -54,51 +54,48 @@
   {{/each}}
 </div>
 
-{{! The "Trusted Publishing" section is hidden for now until we make this feature publicly available. }}
-{{#if this.githubConfigs}}
-  <div local-class="header">
-    <h2>Trusted Publishing</h2>
-    <div>
-      <LinkTo @route="docs.trusted-publishing" class="button button--tan button--small" data-test-trusted-publishing-docs-button>
-        Learn more
-      </LinkTo>
-      <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
-        Add
-      </LinkTo>
-    </div>
+<div local-class="header">
+  <h2>Trusted Publishing</h2>
+  <div>
+    <LinkTo @route="docs.trusted-publishing" class="button button--tan button--small" data-test-trusted-publishing-docs-button>
+      Learn more
+    </LinkTo>
+    <LinkTo @route="crate.settings.new-trusted-publisher" class="button button--small" data-test-add-trusted-publisher-button>
+      Add
+    </LinkTo>
   </div>
+</div>
 
-  <table local-class="trustpub" data-test-trusted-publishing>
-    <thead>
-    <tr>
-      <th>Publisher</th>
-      <th>Details</th>
-      <th></th>
+<table local-class="trustpub" data-test-trusted-publishing>
+  <thead>
+  <tr>
+    <th>Publisher</th>
+    <th>Details</th>
+    <th><span class="sr-only">Actions</span></th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each this.githubConfigs as |config|}}
+    <tr data-test-github-config={{config.id}}>
+      <td>GitHub</td>
+      <td local-class="details">
+        <strong>Repository:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}" target="_blank" rel="noopener noreferrer">{{config.repository_owner}}/{{config.repository_name}}</a><br>
+        <strong>Workflow:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}" target="_blank" rel="noopener noreferrer">{{config.workflow_filename}}</a><br>
+        {{#if config.environment}}
+          <strong>Environment:</strong> {{config.environment}}
+        {{/if}}
+      </td>
+      <td local-class="actions">
+        <button type="button" class="button button--small" data-test-remove-config-button {{on "click" (perform this.removeConfigTask config)}}>Remove</button>
+      </td>
     </tr>
-    </thead>
-    <tbody>
-    {{#each this.githubConfigs as |config|}}
-      <tr data-test-github-config={{config.id}}>
-        <td>GitHub</td>
-        <td local-class="details">
-          <strong>Repository:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}" target="_blank" rel="noopener noreferrer">{{config.repository_owner}}/{{config.repository_name}}</a><br>
-          <strong>Workflow:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}" target="_blank" rel="noopener noreferrer">{{config.workflow_filename}}</a><br>
-          {{#if config.environment}}
-            <strong>Environment:</strong> {{config.environment}}
-          {{/if}}
-        </td>
-        <td local-class="actions">
-          <button type="button" class="button button--small" data-test-remove-config-button {{on "click" (perform this.removeConfigTask config)}}>Remove</button>
-        </td>
-      </tr>
-    {{else}}
-      <tr data-test-no-config>
-        <td colspan="3">No trusted publishers configured for this crate.</td>
-      </tr>
-    {{/each}}
-    </tbody>
-  </table>
-{{/if}}
+  {{else}}
+    <tr data-test-no-config>
+      <td colspan="3">No trusted publishers configured for this crate.</td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
 
 <h2 local-class="header">Danger Zone</h2>
 
