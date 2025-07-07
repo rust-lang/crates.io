@@ -30,7 +30,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
         let name = &self.name;
         let feed_id = FeedId::Crate { name };
 
-        let (crate_file_paths, readme_paths, _) = try_join!(
+        let (crate_file_paths, readme_paths, _, _) = try_join!(
             async {
                 info!("{name}: Deleting crate files from S3…");
                 let result = ctx.storage.delete_all_crate_files(name).await;
@@ -45,6 +45,11 @@ impl BackgroundJob for DeleteCrateFromStorage {
                 info!("{name}: Deleting RSS feed from S3…");
                 let result = ctx.storage.delete_feed(&feed_id).await;
                 result.context("Failed to delete RSS feed from S3")
+            },
+            async {
+                info!("{name}: Deleting OG image from S3…");
+                let result = ctx.storage.delete_og_image(name).await;
+                result.context("Failed to delete OG image from S3")
             }
         )?;
 
@@ -57,6 +62,7 @@ impl BackgroundJob for DeleteCrateFromStorage {
             crate_file_paths
                 .into_iter()
                 .chain(readme_paths.into_iter())
+                .chain(std::iter::once(format!("og-images/{name}.png").into()))
                 .chain(std::iter::once(object_store::path::Path::from(&feed_id))),
         )
         .enqueue(&mut conn)
