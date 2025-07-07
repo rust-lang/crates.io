@@ -27,6 +27,12 @@ export default class NewTrustedPublisherController extends Controller {
     return ['GitHub'];
   }
 
+  get repository() {
+    if (this.repositoryOwner && this.repositoryName) {
+      return `${this.repositoryOwner}/${this.repositoryName}`;
+    }
+  }
+
   saveConfigTask = task(async () => {
     if (!this.validate()) return;
 

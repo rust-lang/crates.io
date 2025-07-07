@@ -81,8 +81,8 @@
       <tr data-test-github-config={{config.id}}>
         <td>GitHub</td>
         <td local-class="details">
-          <strong>Repository:</strong> {{config.repository_owner}}/{{config.repository_name}}<br>
-          <strong>Workflow:</strong> {{config.workflow_filename}}<br>
+          <strong>Repository:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}" target="_blank" rel="noopener noreferrer">{{config.repository_owner}}/{{config.repository_name}}</a><br>
+          <strong>Workflow:</strong> <a href="https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}" target="_blank" rel="noopener noreferrer">{{config.workflow_filename}}</a><br>
           {{#if config.environment}}
             <strong>Environment:</strong> {{config.environment}}
           {{/if}}
