@@ -73,7 +73,7 @@ pub fn serialize_bytes<S: Serializer>(bytes: &u32, serializer: S) -> Result<S::O
 /// A formatted string representing the number with appropriate suffixes
 pub fn format_number(number: u32) -> String {
     const THRESHOLD: f64 = 1500.;
-    const UNITS: &[&str] = &["", "k", "M"];
+    const UNITS: &[&str] = &["", "K", "M"];
 
     let mut value = number as f64;
     let mut unit_index = 0;
@@ -156,14 +156,14 @@ mod tests {
         assert_eq!(format_number(1499), "1499");
 
         // Test numbers with k suffix (1500 to 1500 * 1000)
-        assert_eq!(format_number(1500), "1.5k");
-        assert_eq!(format_number(2000), "2.0k");
-        assert_eq!(format_number(5000), "5.0k");
-        assert_eq!(format_number(10000), "10k");
-        assert_eq!(format_number(50000), "50k");
-        assert_eq!(format_number(100000), "100k");
-        assert_eq!(format_number(500000), "500k");
-        assert_eq!(format_number(999999), "1000k");
+        assert_eq!(format_number(1500), "1.5K");
+        assert_eq!(format_number(2000), "2.0K");
+        assert_eq!(format_number(5000), "5.0K");
+        assert_eq!(format_number(10000), "10K");
+        assert_eq!(format_number(50000), "50K");
+        assert_eq!(format_number(100000), "100K");
+        assert_eq!(format_number(500000), "500K");
+        assert_eq!(format_number(999999), "1000K");
 
         // Test numbers with M suffix (above 1500 * 1000)
         assert_eq!(format_number(1500000), "1.5M");
