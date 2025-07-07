@@ -49,6 +49,7 @@ pub async fn list(
         DateTime<Utc>,
         Option<i64>,
         Option<i64>,
+        i32,
         i64,
     )> = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -56,6 +57,7 @@ pub async fn list(
         .left_join(
             recent_crate_downloads::table.on(crates::id.eq(recent_crate_downloads::crate_id)),
         )
+        .inner_join(default_versions::table.on(crates::id.eq(default_versions::crate_id)))
         .filter(crate_owners::owner_id.eq(user.id))
         .select((
             crates::id,
@@ -64,6 +66,7 @@ pub async fn list(
             crates::updated_at,
             crate_downloads::downloads.nullable(),
             recent_crate_downloads::downloads.nullable(),
+            default_versions::version_id,
             rev_deps_subquery(),
         ))
         .order(crates::name.asc())
@@ -94,10 +97,12 @@ pub async fn list(
                 updated_at,
                 downloads,
                 recent_crate_downloads,
+                default_version,
                 num_rev_deps,
             )| {
                 let versions = versions_by_crate_id.get(&crate_id);
-                let last_version = versions.and_then(|v| v.last());
+                let default_version =
+                    versions.and_then(|versions| versions.iter().find(|v| v.id == default_version));
                 AdminCrateInfo {
                     name,
                     description,
@@ -106,8 +111,9 @@ pub async fn list(
                         + recent_crate_downloads.unwrap_or_default(),
                     num_rev_deps,
                     num_versions: versions.map(|v| v.len()).unwrap_or(0),
-                    crate_size: last_version.map(|v| v.crate_size).unwrap_or(0),
-                    bin_names: last_version
+                    default_version_num: default_version.map(|v| v.num.clone()).unwrap_or_default(),
+                    crate_size: default_version.map(|v| v.crate_size).unwrap_or(0),
+                    bin_names: default_version
                         .map(|v| v.bin_names.clone())
                         .unwrap_or_default(),
                 }
@@ -134,6 +140,7 @@ pub struct AdminCrateInfo {
     pub downloads: i64,
     pub num_rev_deps: i64,
     pub num_versions: usize,
+    pub default_version_num: String,
     pub crate_size: i32,
     pub bin_names: Option<Vec<Option<String>>>,
 }

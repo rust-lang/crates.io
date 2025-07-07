@@ -48,7 +48,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
         .recent_downloads(36)
         .version(VersionBuilder::new("0.1.0").yanked(true))
         .version(VersionBuilder::new("1.0.0"))
-        .version(VersionBuilder::new("2.0.0"))
+        .version(VersionBuilder::new("2.0.0").yanked(true))
         .expect_build(&mut conn)
         .await;
 
@@ -75,6 +75,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
     assert!(json_crate_0.description.is_none());
     assert_eq!(json_crate_0.downloads, 0);
     assert_eq!(json_crate_0.num_versions, 2);
+    assert_eq!(json_crate_0.default_version_num, "2.0.0");
     assert_eq!(json_crate_0.num_rev_deps, 0);
 
     let json_crate_1 = &json.crates[1];
@@ -82,6 +83,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
     assert_eq!(json_crate_1.description.as_ref().unwrap(), "My Fun Crate");
     assert_eq!(json_crate_1.downloads, 536);
     assert_eq!(json_crate_1.num_versions, 3);
+    assert_eq!(json_crate_1.default_version_num, "1.0.0");
     assert_eq!(json_crate_1.num_rev_deps, 1);
 
     Ok(())

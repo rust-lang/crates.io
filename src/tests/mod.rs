@@ -95,6 +95,7 @@ pub struct AdminCrateInfo {
     description: Option<String>,
     downloads: i64,
     num_versions: usize,
+    default_version_num: String,
     num_rev_deps: i64,
 }
 #[derive(Deserialize, Debug)]
