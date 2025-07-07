@@ -72,6 +72,37 @@
     .actions {
         text-align: right;
     }
+
+    @media only screen and (max-width: 550px) {
+        thead {
+            display: none;
+        }
+
+        tbody > tr > td:first-child {
+            padding-bottom: 0;
+        }
+
+        tbody > tr:not(:first-child) > td:first-child {
+            border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #232321);
+        }
+
+        tbody > tr > td {
+            border: none;
+        }
+
+        td {
+            display: block;
+            width: 100%;
+        }
+
+        .details {
+            padding-bottom: 0;
+        }
+
+        .actions {
+            text-align: left;
+        }
+    }
 }
 
 .email-column {
