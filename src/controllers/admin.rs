@@ -19,7 +19,7 @@ pub async fn list(
     Path(username): Path<String>,
     req: Parts,
 ) -> AppResult<Json<AdminListResponse>> {
-    let mut conn = state.db_write().await?;
+    let mut conn = state.db_read().await?;
 
     let auth = AuthCheck::default().check(&req, &mut conn).await?;
     let logged_in_user = auth.user();
