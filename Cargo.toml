@@ -71,7 +71,7 @@ crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_github = { path = "crates/crates_io_github" }
 crates_io_index = { path = "crates/crates_io_index" }
 crates_io_markdown = { path = "crates/crates_io_markdown" }
-crates_io_og_image = { path = "crates/crates_io_og_image" }
+crates_io_og_image = "=0.1.1"
 crates_io_pagerduty = { path = "crates/crates_io_pagerduty" }
 crates_io_session = { path = "crates/crates_io_session" }
 crates_io_tarball = { path = "crates/crates_io_tarball" }

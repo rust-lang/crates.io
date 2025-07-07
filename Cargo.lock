@@ -1610,12 +1610,10 @@ dependencies = [
 
 [[package]]
 name = "crates_io_og_image"
-version = "0.0.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0c70f3c2fa620cc0b1478c31c1ccfb7e5de2134c6d0377f4f2ffe23c7533813"
 dependencies = [
- "anyhow",
- "crates_io_env_vars",
- "insta",
- "mockito",
  "reqwest",
  "serde",
  "serde_json",
@@ -1623,7 +1621,6 @@ dependencies = [
  "thiserror 2.0.12",
  "tokio",
  "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
