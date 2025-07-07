@@ -43,6 +43,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
         .unwrap();
 
     let crate_1 = CrateBuilder::new("unyanked", user.id)
+        .description("My Fun Crate")
         .version(VersionBuilder::new("0.1.0").yanked(true))
         .version(VersionBuilder::new("1.0.0"))
         .version(VersionBuilder::new("2.0.0"))
@@ -67,13 +68,17 @@ async fn index_include_yanked() -> anyhow::Result<()> {
     assert_eq!(json.user_email.unwrap(), "foo@example.com");
     assert_eq!(json.crates.len(), 2);
 
-    assert_eq!(json.crates[0].name, "all_yanked");
-    assert_eq!(json.crates[0].num_versions, 2);
-    assert_eq!(json.crates[0].num_rev_deps, 0);
+    let json_crate_0 = &json.crates[0];
+    assert_eq!(json_crate_0.name, "all_yanked");
+    assert!(json_crate_0.description.is_none());
+    assert_eq!(json_crate_0.num_versions, 2);
+    assert_eq!(json_crate_0.num_rev_deps, 0);
 
-    assert_eq!(json.crates[1].name, "unyanked");
-    assert_eq!(json.crates[1].num_versions, 3);
-    assert_eq!(json.crates[1].num_rev_deps, 1);
+    let json_crate_1 = &json.crates[1];
+    assert_eq!(json_crate_1.name, "unyanked");
+    assert_eq!(json_crate_1.description.as_ref().unwrap(), "My Fun Crate");
+    assert_eq!(json_crate_1.num_versions, 3);
+    assert_eq!(json_crate_1.num_rev_deps, 1);
 
     Ok(())
 }

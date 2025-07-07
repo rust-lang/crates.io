@@ -42,18 +42,20 @@ pub async fn list(
         .first::<(User, Option<bool>, Option<String>)>(&mut conn)
         .await?;
 
-    let crates: Vec<(i32, String, DateTime<Utc>, i64)> = CrateOwner::by_owner_kind(OwnerKind::User)
-        .inner_join(crates::table)
-        .filter(crate_owners::owner_id.eq(user.id))
-        .select((
-            crates::id,
-            crates::name,
-            crates::updated_at,
-            rev_deps_subquery(),
-        ))
-        .order(crates::name.asc())
-        .load(&mut conn)
-        .await?;
+    let crates: Vec<(i32, String, Option<String>, DateTime<Utc>, i64)> =
+        CrateOwner::by_owner_kind(OwnerKind::User)
+            .inner_join(crates::table)
+            .filter(crate_owners::owner_id.eq(user.id))
+            .select((
+                crates::id,
+                crates::name,
+                crates::description,
+                crates::updated_at,
+                rev_deps_subquery(),
+            ))
+            .order(crates::name.asc())
+            .load(&mut conn)
+            .await?;
 
     let crate_ids: Vec<_> = crates.iter().map(|(id, ..)| id).collect();
 
@@ -71,11 +73,12 @@ pub async fn list(
     let verified = verified.unwrap_or(false);
     let crates = crates
         .into_iter()
-        .map(|(crate_id, name, updated_at, num_rev_deps)| {
+        .map(|(crate_id, name, description, updated_at, num_rev_deps)| {
             let versions = versions_by_crate_id.get(&crate_id);
             let last_version = versions.and_then(|v| v.last());
             AdminCrateInfo {
                 name,
+                description,
                 updated_at,
                 num_rev_deps,
                 num_versions: versions.map(|v| v.len()).unwrap_or(0),
@@ -101,6 +104,7 @@ pub struct AdminListResponse {
 #[derive(Debug, Serialize)]
 pub struct AdminCrateInfo {
     pub name: String,
+    pub description: Option<String>,
     pub updated_at: DateTime<Utc>,
     pub num_rev_deps: i64,
     pub num_versions: usize,

@@ -92,6 +92,7 @@ pub struct AdminListResponse {
 #[derive(Deserialize)]
 pub struct AdminCrateInfo {
     name: String,
+    description: Option<String>,
     num_versions: usize,
     num_rev_deps: i64,
 }
