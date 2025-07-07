@@ -1,6 +1,0 @@
----
-source: crates/crates_io_og_image/src/lib.rs
-expression: image_data
-extension: png
-snapshot_kind: binary
----
