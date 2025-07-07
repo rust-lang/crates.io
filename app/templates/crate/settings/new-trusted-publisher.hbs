@@ -106,7 +106,18 @@
           </div>
         {{else}}
           <div local-class="note">
-            The filename of the publishing workflow. This file should be present in the <code>.github/workflows/</code> directory of the repository configured above. For example: <code>release.yml</code> or <code>publish.yml</code>.
+            The filename of the publishing workflow. This file should be present in the
+            <code>
+              {{#if this.repository}}
+                <a href="https://github.com/{{this.repository}}/blob/HEAD/.github/workflows/" target="_blank" rel="noopener noreferrer">.github/workflows/</a>
+              {{else}}
+                .github/workflows/
+              {{/if}}
+            </code>
+            directory of the
+            {{#if this.repository}}<a href="https://github.com/{{this.repository}}/" target="_blank" rel="noopener noreferrer">{{this.repository}}</a> {{/if}}
+            repository{{unless this.repository " configured above"}}.
+            For example: <code>release.yml</code> or <code>publish.yml</code>.
           </div>
         {{/if}}
       {{/let}}
