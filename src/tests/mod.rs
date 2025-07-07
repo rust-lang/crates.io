@@ -84,15 +84,16 @@ pub struct OkBool {
     #[allow(dead_code)]
     ok: bool,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AdminListResponse {
     user_email: Option<String>,
     crates: Vec<AdminCrateInfo>,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AdminCrateInfo {
     name: String,
     description: Option<String>,
+    downloads: i64,
     num_versions: usize,
     num_rev_deps: i64,
 }

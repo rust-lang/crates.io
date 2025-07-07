@@ -42,20 +42,33 @@ pub async fn list(
         .first::<(User, Option<bool>, Option<String>)>(&mut conn)
         .await?;
 
-    let crates: Vec<(i32, String, Option<String>, DateTime<Utc>, i64)> =
-        CrateOwner::by_owner_kind(OwnerKind::User)
-            .inner_join(crates::table)
-            .filter(crate_owners::owner_id.eq(user.id))
-            .select((
-                crates::id,
-                crates::name,
-                crates::description,
-                crates::updated_at,
-                rev_deps_subquery(),
-            ))
-            .order(crates::name.asc())
-            .load(&mut conn)
-            .await?;
+    let crates: Vec<(
+        i32,
+        String,
+        Option<String>,
+        DateTime<Utc>,
+        Option<i64>,
+        Option<i64>,
+        i64,
+    )> = CrateOwner::by_owner_kind(OwnerKind::User)
+        .inner_join(crates::table)
+        .left_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
+        .left_join(
+            recent_crate_downloads::table.on(crates::id.eq(recent_crate_downloads::crate_id)),
+        )
+        .filter(crate_owners::owner_id.eq(user.id))
+        .select((
+            crates::id,
+            crates::name,
+            crates::description,
+            crates::updated_at,
+            crate_downloads::downloads.nullable(),
+            recent_crate_downloads::downloads.nullable(),
+            rev_deps_subquery(),
+        ))
+        .order(crates::name.asc())
+        .load(&mut conn)
+        .await?;
 
     let crate_ids: Vec<_> = crates.iter().map(|(id, ..)| id).collect();
 
@@ -73,21 +86,33 @@ pub async fn list(
     let verified = verified.unwrap_or(false);
     let crates = crates
         .into_iter()
-        .map(|(crate_id, name, description, updated_at, num_rev_deps)| {
-            let versions = versions_by_crate_id.get(&crate_id);
-            let last_version = versions.and_then(|v| v.last());
-            AdminCrateInfo {
+        .map(
+            |(
+                crate_id,
                 name,
                 description,
                 updated_at,
+                downloads,
+                recent_crate_downloads,
                 num_rev_deps,
-                num_versions: versions.map(|v| v.len()).unwrap_or(0),
-                crate_size: last_version.map(|v| v.crate_size).unwrap_or(0),
-                bin_names: last_version
-                    .map(|v| v.bin_names.clone())
-                    .unwrap_or_default(),
-            }
-        })
+            )| {
+                let versions = versions_by_crate_id.get(&crate_id);
+                let last_version = versions.and_then(|v| v.last());
+                AdminCrateInfo {
+                    name,
+                    description,
+                    updated_at,
+                    downloads: downloads.unwrap_or_default()
+                        + recent_crate_downloads.unwrap_or_default(),
+                    num_rev_deps,
+                    num_versions: versions.map(|v| v.len()).unwrap_or(0),
+                    crate_size: last_version.map(|v| v.crate_size).unwrap_or(0),
+                    bin_names: last_version
+                        .map(|v| v.bin_names.clone())
+                        .unwrap_or_default(),
+                }
+            },
+        )
         .collect();
     Ok(Json(AdminListResponse {
         user_email: verified.then_some(email).flatten(),
@@ -106,6 +131,7 @@ pub struct AdminCrateInfo {
     pub name: String,
     pub description: Option<String>,
     pub updated_at: DateTime<Utc>,
+    pub downloads: i64,
     pub num_rev_deps: i64,
     pub num_versions: usize,
     pub crate_size: i32,
