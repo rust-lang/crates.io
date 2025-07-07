@@ -38,8 +38,8 @@ importers:
         specifier: 0.1.2
         version: 0.1.2
       mermaid:
-        specifier: 11.8.0
-        version: 11.8.0
+        specifier: 11.8.1
+        version: 11.8.1
       pretty-bytes:
         specifier: 7.0.0
         version: 7.0.0
@@ -1765,8 +1765,8 @@ packages:
     resolution: {integrity: sha512-Xij9uypPMelG45DsaxqANecj0FYNN4tiUHcbstsVLkSNkvYPUOuZcYrBhnMQUyvQUCbIsWBl+wBjs9hbDAVOXQ==}
     engines: {node: 14.* || 16.* || >= 18}
 
-  '@mermaid-js/parser@0.6.0':
-    resolution: {integrity: sha512-7DNESgpyZ5WG1SIkrYafVBhWmImtmQuoxOO1lawI3gQYWxBX3v1FW3IyuuRfKJAO06XrZR71W0Kif5VEGGd4VA==}
+  '@mermaid-js/parser@0.6.1':
+    resolution: {integrity: sha512-lCQNpV8R4lgsGcjX5667UiuDLk2micCtjtxR1YKbBXvN5w2v+FeLYoHrTSSrjwXdMcDYvE4ZBPvKT31dfeSmmA==}
 
   '@mrmlnc/readdir-enhanced@2.2.1':
     resolution: {integrity: sha512-bPHp6Ji8b41szTOcaP63VlnbbO5Ny6dwAATtY6JTjh5N2OLrb5Qk/Th5cRkRQhkWCt+EJsYrNB0MiL+Gpn6e3g==}
@@ -6080,8 +6080,8 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
-  mermaid@11.8.0:
-    resolution: {integrity: sha512-uAZUwnBiqREZcUrFw3G5iQ5Pj3hTYUP95EZc3ec/nGBzHddJZydzYGE09tGZDBS1VoSoDn0symZ85FmypSTo5g==}
+  mermaid@11.8.1:
+    resolution: {integrity: sha512-VSXJLqP1Sqw5sGr273mhvpPRhXwE6NlmMSqBZQw+yZJoAJkOIPPn/uT3teeCBx60Fkt5zEI3FrH2eVT0jXRDzw==}
 
   methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}
@@ -10346,7 +10346,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mermaid-js/parser@0.6.0':
+  '@mermaid-js/parser@0.6.1':
     dependencies:
       langium: 3.3.1
 
@@ -15942,11 +15942,11 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  mermaid@11.8.0:
+  mermaid@11.8.1:
     dependencies:
       '@braintree/sanitize-url': 7.1.1
       '@iconify/utils': 2.3.0
-      '@mermaid-js/parser': 0.6.0
+      '@mermaid-js/parser': 0.6.1
       '@types/d3': 7.4.3
       cytoscape: 3.32.0
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.32.0)
