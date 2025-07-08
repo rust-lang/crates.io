@@ -12,6 +12,43 @@ use diesel_async::RunQueryDsl;
 use http::{StatusCode, request::Parts};
 use serde::Serialize;
 
+#[derive(Debug, Queryable, Selectable)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct DatabaseCrateInfo {
+    #[diesel(select_expression = crates::columns::name)]
+    name: String,
+
+    #[diesel(select_expression = crates::columns::description)]
+    description: Option<String>,
+
+    #[diesel(select_expression = crates::columns::updated_at)]
+    updated_at: DateTime<Utc>,
+
+    #[diesel(select_expression = crate_downloads::columns::downloads.nullable())]
+    downloads: Option<i64>,
+
+    #[diesel(select_expression = recent_crate_downloads::columns::downloads.nullable())]
+    recent_crate_downloads: Option<i64>,
+
+    #[diesel(select_expression = default_versions::columns::num_versions)]
+    num_versions: Option<i32>,
+
+    #[diesel(select_expression = versions::columns::yanked)]
+    yanked: bool,
+
+    #[diesel(select_expression = versions::columns::num)]
+    default_version_num: String,
+
+    #[diesel(select_expression = versions::columns::crate_size)]
+    crate_size: i32,
+
+    #[diesel(select_expression = versions::columns::bin_names)]
+    bin_names: Option<Vec<Option<String>>>,
+
+    #[diesel(select_expression = rev_deps_subquery())]
+    num_rev_deps: i64,
+}
+
 /// Handles the `GET /api/private/admin_list/{username}` endpoint.
 pub async fn list(
     state: AppState,
@@ -41,19 +78,7 @@ pub async fn list(
         .first::<(User, Option<bool>, Option<String>)>(&mut conn)
         .await?;
 
-    let crates: Vec<(
-        String,
-        Option<String>,
-        DateTime<Utc>,
-        Option<i64>,
-        Option<i64>,
-        Option<i32>,
-        bool,
-        String,
-        i32,
-        Option<Vec<Option<String>>>,
-        i64,
-    )> = CrateOwner::by_owner_kind(OwnerKind::User)
+    let crates: Vec<DatabaseCrateInfo> = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
         .left_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
         .left_join(
@@ -62,27 +87,15 @@ pub async fn list(
         .inner_join(default_versions::table.on(crates::id.eq(default_versions::crate_id)))
         .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crate_owners::owner_id.eq(user.id))
-        .select((
-            crates::name,
-            crates::description,
-            crates::updated_at,
-            crate_downloads::downloads.nullable(),
-            recent_crate_downloads::downloads.nullable(),
-            default_versions::num_versions,
-            versions::yanked,
-            versions::num,
-            versions::crate_size,
-            versions::bin_names,
-            rev_deps_subquery(),
-        ))
+        .select(DatabaseCrateInfo::as_select())
         .order(crates::name.asc())
         .load(&mut conn)
         .await?;
 
     let crates = crates
         .into_iter()
-        .map(
-            |(
+        .map(|database_crate_info| {
+            let DatabaseCrateInfo {
                 name,
                 description,
                 updated_at,
@@ -94,22 +107,22 @@ pub async fn list(
                 crate_size,
                 bin_names,
                 num_rev_deps,
-            )| {
-                AdminCrateInfo {
-                    name,
-                    description,
-                    updated_at,
-                    downloads: downloads.unwrap_or_default()
-                        + recent_crate_downloads.unwrap_or_default(),
-                    num_rev_deps,
-                    num_versions: num_versions.unwrap_or_default() as usize,
-                    yanked,
-                    default_version_num,
-                    crate_size,
-                    bin_names,
-                }
-            },
-        )
+            } = database_crate_info;
+
+            AdminCrateInfo {
+                name,
+                description,
+                updated_at,
+                downloads: downloads.unwrap_or_default()
+                    + recent_crate_downloads.unwrap_or_default(),
+                num_rev_deps,
+                num_versions: num_versions.unwrap_or_default() as usize,
+                yanked,
+                default_version_num,
+                crate_size,
+                bin_names,
+            }
+        })
         .collect();
     Ok(Json(AdminListResponse {
         user_email,
