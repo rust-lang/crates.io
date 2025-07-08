@@ -50,6 +50,7 @@ pub async fn list(
         Option<i64>,
         Option<i64>,
         i32,
+        Option<i32>,
         i64,
     )> = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -67,6 +68,7 @@ pub async fn list(
             crate_downloads::downloads.nullable(),
             recent_crate_downloads::downloads.nullable(),
             default_versions::version_id,
+            default_versions::num_versions,
             rev_deps_subquery(),
         ))
         .order(crates::name.asc())
@@ -98,6 +100,7 @@ pub async fn list(
                 downloads,
                 recent_crate_downloads,
                 default_version,
+                num_versions,
                 num_rev_deps,
             )| {
                 let versions = versions_by_crate_id.get(&crate_id);
@@ -110,7 +113,7 @@ pub async fn list(
                     downloads: downloads.unwrap_or_default()
                         + recent_crate_downloads.unwrap_or_default(),
                     num_rev_deps,
-                    num_versions: versions.map(|v| v.len()).unwrap_or(0),
+                    num_versions: num_versions.unwrap_or_default() as usize,
                     default_version_num: default_version.map(|v| v.num.clone()).unwrap_or_default(),
                     crate_size: default_version.map(|v| v.crate_size).unwrap_or(0),
                     bin_names: default_version
