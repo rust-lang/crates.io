@@ -68,6 +68,7 @@ async fn index_include_yanked() -> anyhow::Result<()> {
     let json = admin.admin_list(username).await.good();
 
     assert_eq!(json.user_email.unwrap(), "foo@example.com");
+    assert!(json.user_email_verified);
     assert_eq!(json.crates.len(), 2);
 
     let json_crate_0 = &json.crates[0];

@@ -87,6 +87,7 @@ pub struct OkBool {
 #[derive(Deserialize, Debug)]
 pub struct AdminListResponse {
     user_email: Option<String>,
+    user_email_verified: bool,
     crates: Vec<AdminCrateInfo>,
 }
 #[derive(Deserialize, Debug)]

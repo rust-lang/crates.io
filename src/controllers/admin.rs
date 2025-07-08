@@ -30,7 +30,7 @@ pub async fn list(
         ));
     }
 
-    let (user, verified, email) = users::table
+    let (user, verified, user_email) = users::table
         .left_join(emails::table)
         .filter(users::gh_login.eq(username))
         .select((
@@ -79,7 +79,6 @@ pub async fn list(
         .load(&mut conn)
         .await?;
 
-    let verified = verified.unwrap_or(false);
     let crates = crates
         .into_iter()
         .map(
@@ -113,7 +112,8 @@ pub async fn list(
         )
         .collect();
     Ok(Json(AdminListResponse {
-        user_email: verified.then_some(email).flatten(),
+        user_email,
+        user_email_verified: verified.unwrap_or_default(),
         crates,
     }))
 }
@@ -121,6 +121,7 @@ pub async fn list(
 #[derive(Debug, Serialize)]
 pub struct AdminListResponse {
     user_email: Option<String>,
+    user_email_verified: bool,
     crates: Vec<AdminCrateInfo>,
 }
 
