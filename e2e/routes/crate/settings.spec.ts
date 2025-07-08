@@ -51,11 +51,9 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
     await expect(page.locator(`[data-test-owner-user="${user.login}"]`)).toBeVisible();
     await expect(page.locator('[data-test-remove-owner-button]')).toBeVisible();
 
-    // Disabled for now, until we make this feature publicly available
-    // await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
-    // await expect(page.locator('[data-test-no-config]')).toBeVisible();
-    // await expect(page.locator('[data-test-github-config]')).not.toBeVisible();
-    await expect(page.locator('[data-test-trusted-publishing]')).not.toBeVisible();
+    await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
+    await expect(page.locator('[data-test-no-config]')).toBeVisible();
+    await expect(page.locator('[data-test-github-config]')).not.toBeVisible();
 
     await expect(page.locator('[data-test-delete-button]')).toBeVisible();
   });

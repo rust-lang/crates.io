@@ -55,11 +55,9 @@ module('Route | crate.settings', hooks => {
     assert.dom(`[data-test-owner-user="${user.login}"]`).exists();
     assert.dom('[data-test-remove-owner-button]').exists();
 
-    // Disabled for now, until we make this feature publicly available
-    // assert.dom('[data-test-trusted-publishing]').exists();
-    // assert.dom('[data-test-no-config]').exists();
-    // assert.dom('[data-test-github-config]').doesNotExist();
-    assert.dom('[data-test-trusted-publishing]').doesNotExist();
+    assert.dom('[data-test-trusted-publishing]').exists();
+    assert.dom('[data-test-no-config]').exists();
+    assert.dom('[data-test-github-config]').doesNotExist();
 
     assert.dom('[data-test-delete-button]').exists();
   });
