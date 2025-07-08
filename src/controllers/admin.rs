@@ -1,7 +1,7 @@
 use crate::{
     app::AppState,
     auth::AuthCheck,
-    models::{CrateOwner, OwnerKind, User, Version},
+    models::{CrateOwner, OwnerKind, User},
     schema::*,
     util::errors::{AppResult, custom},
 };
@@ -11,7 +11,6 @@ use diesel::{dsl::count_star, prelude::*};
 use diesel_async::RunQueryDsl;
 use http::{StatusCode, request::Parts};
 use serde::Serialize;
-use std::collections::HashMap;
 
 /// Handles the `GET /api/private/admin_list/{username}` endpoint.
 pub async fn list(
@@ -43,14 +42,15 @@ pub async fn list(
         .await?;
 
     let crates: Vec<(
-        i32,
         String,
         Option<String>,
         DateTime<Utc>,
         Option<i64>,
         Option<i64>,
-        i32,
         Option<i32>,
+        String,
+        i32,
+        Option<Vec<Option<String>>>,
         i64,
     )> = CrateOwner::by_owner_kind(OwnerKind::User)
         .inner_join(crates::table)
@@ -59,53 +59,40 @@ pub async fn list(
             recent_crate_downloads::table.on(crates::id.eq(recent_crate_downloads::crate_id)),
         )
         .inner_join(default_versions::table.on(crates::id.eq(default_versions::crate_id)))
+        .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
         .filter(crate_owners::owner_id.eq(user.id))
         .select((
-            crates::id,
             crates::name,
             crates::description,
             crates::updated_at,
             crate_downloads::downloads.nullable(),
             recent_crate_downloads::downloads.nullable(),
-            default_versions::version_id,
             default_versions::num_versions,
+            versions::num,
+            versions::crate_size,
+            versions::bin_names,
             rev_deps_subquery(),
         ))
         .order(crates::name.asc())
         .load(&mut conn)
         .await?;
 
-    let crate_ids: Vec<_> = crates.iter().map(|(id, ..)| id).collect();
-
-    let versions: Vec<Version> = versions::table
-        .filter(versions::crate_id.eq_any(crate_ids))
-        .select(Version::as_select())
-        .load(&mut conn)
-        .await?;
-    let mut versions_by_crate_id: HashMap<i32, Vec<Version>> = HashMap::new();
-    for version in versions {
-        let crate_versions = versions_by_crate_id.entry(version.crate_id).or_default();
-        crate_versions.push(version);
-    }
-
     let verified = verified.unwrap_or(false);
     let crates = crates
         .into_iter()
         .map(
             |(
-                crate_id,
                 name,
                 description,
                 updated_at,
                 downloads,
                 recent_crate_downloads,
-                default_version,
                 num_versions,
+                default_version_num,
+                crate_size,
+                bin_names,
                 num_rev_deps,
             )| {
-                let versions = versions_by_crate_id.get(&crate_id);
-                let default_version =
-                    versions.and_then(|versions| versions.iter().find(|v| v.id == default_version));
                 AdminCrateInfo {
                     name,
                     description,
@@ -114,11 +101,9 @@ pub async fn list(
                         + recent_crate_downloads.unwrap_or_default(),
                     num_rev_deps,
                     num_versions: num_versions.unwrap_or_default() as usize,
-                    default_version_num: default_version.map(|v| v.num.clone()).unwrap_or_default(),
-                    crate_size: default_version.map(|v| v.crate_size).unwrap_or(0),
-                    bin_names: default_version
-                        .map(|v| v.bin_names.clone())
-                        .unwrap_or_default(),
+                    default_version_num,
+                    crate_size,
+                    bin_names,
                 }
             },
         )
