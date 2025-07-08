@@ -42,6 +42,7 @@ test('returns a version object for known version', async function () {
       published_by: null,
       readme_path: '/api/v1/crates/rand/1.0.0-beta.1/readme',
       rust_version: null,
+      trustpub_data: null,
       updated_at: '2017-02-24T12:34:56Z',
       yank_message: null,
       yanked: false,

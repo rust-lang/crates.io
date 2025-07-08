@@ -67,6 +67,7 @@ expression: response.json()
       "readme_path": "/api/v1/crates/c3/3.0.0/readme",
       "repository": null,
       "rust_version": null,
+      "trustpub_data": null,
       "updated_at": "[datetime]",
       "yank_message": null,
       "yanked": false
@@ -99,6 +100,7 @@ expression: response.json()
       "readme_path": "/api/v1/crates/c2/2.0.0/readme",
       "repository": null,
       "rust_version": null,
+      "trustpub_data": null,
       "updated_at": "[datetime]",
       "yank_message": null,
       "yanked": false

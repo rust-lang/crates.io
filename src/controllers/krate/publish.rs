@@ -44,7 +44,7 @@ use crate::util::errors::{AppResult, BoxedAppError, bad_request, custom, forbidd
 use crate::views::{
     EncodableCrate, EncodableCrateDependency, GoodCrate, PublishMetadata, PublishWarnings,
 };
-use crates_io_database::models::{User, versions_published_by};
+use crates_io_database::models::{TrustpubData, User, versions_published_by};
 use crates_io_diesel_helpers::canon_crate_name;
 use crates_io_trustpub::access_token::AccessToken;
 
@@ -57,19 +57,26 @@ const MAX_DESCRIPTION_LENGTH: usize = 1000;
 
 enum AuthType {
     Regular(Box<Authentication>),
-    TrustPub,
+    TrustPub(Option<TrustpubData>),
 }
 
 impl AuthType {
     fn user(&self) -> Option<&User> {
         match self {
             AuthType::Regular(auth) => Some(auth.user()),
-            AuthType::TrustPub => None,
+            AuthType::TrustPub(_) => None,
         }
     }
 
     fn user_id(&self) -> Option<i32> {
         self.user().map(|u| u.id)
+    }
+
+    fn trustpub_data(&self) -> Option<&TrustpubData> {
+        match self {
+            AuthType::Regular(_) => None,
+            AuthType::TrustPub(data) => data.as_ref(),
+        }
     }
 }
 
@@ -173,14 +180,15 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let hashed_token = trustpub_token.sha256();
 
-        let crate_ids: Vec<Option<i32>> = trustpub_tokens::table
-            .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
-            .filter(trustpub_tokens::expires_at.gt(now))
-            .select(trustpub_tokens::crate_ids)
-            .get_result(&mut conn)
-            .await
-            .optional()?
-            .ok_or_else(|| forbidden("Invalid authentication token"))?;
+        let (crate_ids, trustpub_data): (Vec<Option<i32>>, Option<TrustpubData>) =
+            trustpub_tokens::table
+                .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
+                .filter(trustpub_tokens::expires_at.gt(now))
+                .select((trustpub_tokens::crate_ids, trustpub_tokens::trustpub_data))
+                .get_result(&mut conn)
+                .await
+                .optional()?
+                .ok_or_else(|| forbidden("Invalid authentication token"))?;
 
         if !crate_ids.contains(&Some(existing_crate.id)) {
             let name = &existing_crate.name;
@@ -188,7 +196,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             return Err(forbidden(error));
         }
 
-        AuthType::TrustPub
+        AuthType::TrustPub(trustpub_data)
     } else {
         let endpoint_scope = match existing_crate {
             Some(_) => EndpointScope::PublishUpdate,
@@ -502,6 +510,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             .maybe_repository(repository.as_deref())
             .categories(&categories)
             .keywords(&keywords)
+            .maybe_trustpub_data(auth.trustpub_data())
             .build();
 
         let version = new_version.save(conn).await.map_err(|error| {

@@ -31,6 +31,12 @@ expression: response.json()
     "readme_path": "/api/v1/crates/foo/1.1.0/readme",
     "repository": null,
     "rust_version": null,
+    "trustpub_data": {
+      "provider": "github",
+      "repository": "rust-lang/foo-rs",
+      "run_id": "example-run-id",
+      "sha": "example-sha"
+    },
     "updated_at": "[datetime]",
     "yank_message": null,
     "yanked": false

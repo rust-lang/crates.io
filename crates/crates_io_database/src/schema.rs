@@ -800,6 +800,8 @@ diesel::table! {
         hashed_token -> Bytea,
         /// Unique identifiers of the crates that can be published using this token
         crate_ids -> Array<Nullable<Int4>>,
+        /// JSONB data containing JWT claims from the trusted publisher (e.g., GitHub Actions context like repository, run_id, sha)
+        trustpub_data -> Nullable<Jsonb>,
     }
 }
 
@@ -1077,6 +1079,8 @@ diesel::table! {
         keywords -> Array<Nullable<Text>>,
         /// JSONB representation of the version number for sorting purposes.
         semver_ord -> Nullable<Jsonb>,
+        /// JSONB data containing JWT claims from the trusted publisher (e.g., GitHub Actions context like repository, run_id, sha)
+        trustpub_data -> Nullable<Jsonb>,
     }
 }
 

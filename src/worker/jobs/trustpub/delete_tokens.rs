@@ -45,6 +45,7 @@ mod tests {
             expires_at: Utc::now() + TimeDelta::minutes(30),
             hashed_token: &[0xC0, 0xFF, 0xEE],
             crate_ids: &[1],
+            trustpub_data: None,
         };
         token.insert(&mut conn).await?;
 
@@ -52,6 +53,7 @@ mod tests {
             expires_at: Utc::now() - TimeDelta::minutes(5),
             hashed_token: &[0xBA, 0xAD, 0xF0, 0x0D],
             crate_ids: &[2],
+            trustpub_data: None,
         };
         token.insert(&mut conn).await?;
 
