@@ -134,7 +134,7 @@ pub async fn delete_crate(
 
             let git_index_job = jobs::SyncToGitIndex::new(&krate.name);
             let sparse_index_job = jobs::SyncToSparseIndex::new(&krate.name);
-            let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name);
+            let delete_from_storage_job = jobs::DeleteCrateFromStorage::new(path.name, krate.id);
 
             tokio::try_join!(
                 git_index_job.enqueue(conn),
