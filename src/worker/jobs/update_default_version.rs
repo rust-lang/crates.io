@@ -40,11 +40,14 @@ impl BackgroundJob for UpdateDefaultVersion {
                 .first::<String>(&mut conn)
                 .await,
         );
-        if let Err(diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::ForeignKeyViolation,
-            ..,
-        )) = crate_name
-        {
+
+        if matches!(
+            crate_name,
+            Err(diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::ForeignKeyViolation,
+                ..,
+            )) | Err(diesel::result::Error::NotFound)
+        ) {
             warn!("Skipping update default version for crate for {crate_id}: no crate found");
             return Ok(());
         }
