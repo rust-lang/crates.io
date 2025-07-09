@@ -1,0 +1,35 @@
+---
+source: src/tests/routes/crates/admin.rs
+expression: response.json()
+snapshot_kind: text
+---
+{
+  "crates": [
+    {
+      "bin_names": null,
+      "crate_size": 0,
+      "default_version_num": "2.0.0",
+      "description": null,
+      "downloads": 0,
+      "name": "all_yanked",
+      "num_rev_deps": 0,
+      "num_versions": 2,
+      "updated_at": "[datetime]",
+      "yanked": true
+    },
+    {
+      "bin_names": null,
+      "crate_size": 0,
+      "default_version_num": "1.0.0",
+      "description": "My Fun Crate",
+      "downloads": 536,
+      "name": "unyanked",
+      "num_rev_deps": 1,
+      "num_versions": 3,
+      "updated_at": "[datetime]",
+      "yanked": false
+    }
+  ],
+  "user_email": "foo@example.com",
+  "user_email_verified": true
+}

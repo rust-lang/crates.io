@@ -21,8 +21,8 @@
 
 use crate::models::{ApiToken, User};
 use crate::tests::{
-    AdminListResponse, CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate,
-    OwnerResp, OwnersResponse, VersionResponse,
+    CategoryListResponse, CategoryResponse, CrateList, CrateResponse, GoodCrate, OwnerResp,
+    OwnersResponse, VersionResponse,
 };
 use std::future::Future;
 
@@ -187,7 +187,7 @@ pub trait RequestHelper {
     }
 
     /// Request the JSON used for the admin list page
-    async fn admin_list(&self, owner: &str) -> Response<AdminListResponse> {
+    async fn admin_list<T>(&self, owner: &str) -> Response<T> {
         let url = format!("/api/private/admin_list/{owner}");
         self.get(&url).await
     }

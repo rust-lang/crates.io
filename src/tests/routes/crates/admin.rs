@@ -7,20 +7,20 @@ use crate::{
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use insta::assert_snapshot;
+use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn admin_list_by_a_non_admin_fails() {
     let (_app, anon, user) = TestApp::init().with_user().await;
 
-    let response = anon.admin_list("anything").await;
+    let response = anon.admin_list::<()>("anything").await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(
         response.text(),
         @r#"{"errors":[{"detail":"this action requires authentication"}]}"#
     );
 
-    let response = user.admin_list("anything").await;
+    let response = user.admin_list::<()>("anything").await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(
         response.text(),
@@ -65,29 +65,11 @@ async fn index_include_yanked() -> anyhow::Result<()> {
 
     // Include fully yanked (all versions were yanked) crates
     let username = &user.gh_login;
-    let json = admin.admin_list(username).await.good();
+    let response = admin.admin_list::<()>(username).await;
 
-    assert_eq!(json.user_email.unwrap(), "foo@example.com");
-    assert!(json.user_email_verified);
-    assert_eq!(json.crates.len(), 2);
-
-    let json_crate_0 = &json.crates[0];
-    assert_eq!(json_crate_0.name, "all_yanked");
-    assert!(json_crate_0.description.is_none());
-    assert_eq!(json_crate_0.downloads, 0);
-    assert_eq!(json_crate_0.num_versions, 2);
-    assert!(json_crate_0.yanked);
-    assert_eq!(json_crate_0.default_version_num, "2.0.0");
-    assert_eq!(json_crate_0.num_rev_deps, 0);
-
-    let json_crate_1 = &json.crates[1];
-    assert_eq!(json_crate_1.name, "unyanked");
-    assert_eq!(json_crate_1.description.as_ref().unwrap(), "My Fun Crate");
-    assert_eq!(json_crate_1.downloads, 536);
-    assert_eq!(json_crate_1.num_versions, 3);
-    assert!(!json_crate_1.yanked);
-    assert_eq!(json_crate_1.default_version_num, "1.0.0");
-    assert_eq!(json_crate_1.num_rev_deps, 1);
+    assert_json_snapshot!(response.json(), {
+        ".crates[].updated_at" => "[datetime]",
+    });
 
     Ok(())
 }
