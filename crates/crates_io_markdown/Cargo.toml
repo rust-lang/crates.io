@@ -13,7 +13,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-ammonia = "=4.1.0"
+ammonia = "=4.1.1"
 comrak = { version = "=0.39.1", default-features = false, features = ["bon"] }
 htmlescape = "=0.3.1"
 url = "=2.5.4"
