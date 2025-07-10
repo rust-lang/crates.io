@@ -186,6 +186,12 @@ pub trait RequestHelper {
         self.get_with_query("/api/v1/crates", query).await.good()
     }
 
+    /// Request the JSON used for the admin list page
+    async fn admin_list<T>(&self, owner: &str) -> Response<T> {
+        let url = format!("/api/private/admin_list/{owner}");
+        self.get(&url).await
+    }
+
     /// Publish the crate and run background jobs to completion
     ///
     /// Background jobs will publish to the git index and sync to the HTTP index.

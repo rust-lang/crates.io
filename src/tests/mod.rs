@@ -84,7 +84,6 @@ pub struct OkBool {
     #[allow(dead_code)]
     ok: bool,
 }
-
 #[derive(Deserialize, Debug)]
 pub struct OwnerResp {
     // server must include `ok: true` to support old cargo clients
