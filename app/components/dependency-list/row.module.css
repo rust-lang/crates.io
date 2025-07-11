@@ -1,8 +1,8 @@
 .row {
     --bg-color: var(--grey200);
     --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
-    --range-color: light-dark(var(--grey900), #d1cfc7);
-    --crate-color: light-dark(var(--grey700), #d1cfc7);
+    --range-color: light-dark(var(--grey900), var(--grey400));
+    --crate-color: light-dark(var(--grey900), var(--grey400));
     --placeholder-opacity: 0.35;
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
 
@@ -90,7 +90,7 @@
 }
 
 .optional-label, .features-label {
-    color: light-dark(var(--grey600), var(--grey400));
+    color: var(--range-color);
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
