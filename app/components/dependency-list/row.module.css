@@ -26,8 +26,8 @@
     }
 
     &.optional {
-        --range-color: light-dark(var(--grey600), var(--grey600));
-        --crate-color: light-dark(var(--grey600), var(--grey600));
+        --range-color: light-dark(var(--grey800), var(--grey600));
+        --crate-color: light-dark(var(--grey800), var(--grey600));
         --placeholder-opacity: 0.15;
     }
 
@@ -90,7 +90,7 @@
 }
 
 .optional-label, .features-label {
-    color: var(--grey600);
+    color: light-dark(var(--grey600), var(--grey400));
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
