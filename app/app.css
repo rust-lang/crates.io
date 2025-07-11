@@ -56,8 +56,8 @@
         --main-bg: light-dark(#f9f7ec, hsl(0, 1%, 19%));
         --main-bg-dark: light-dark(#edebdd, #141413);
         --gray-border: light-dark(#d5d3cb, #666561);
-        --link-color: rgb(0, 172, 91);
-        --link-hover-color: #007940;
+        --link-color: light-dark(#00ac5b, #04da75);
+        --link-hover-color: light-dark(#007940, #00f27f);
 
         --placeholder-bg: hsl(212, 7%, 57%);
         --placeholder-bg2: hsl(213, 16%, 75%);
