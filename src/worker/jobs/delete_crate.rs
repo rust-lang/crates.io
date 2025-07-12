@@ -12,11 +12,15 @@ use tracing::info;
 #[derive(Serialize, Deserialize)]
 pub struct DeleteCrateFromStorage {
     name: String,
+    crate_id: Option<i32>,
 }
 
 impl DeleteCrateFromStorage {
-    pub fn new(name: String) -> Self {
-        Self { name }
+    pub fn new(name: String, crate_id: i32) -> Self {
+        Self {
+            name,
+            crate_id: Some(crate_id),
+        }
     }
 }
 
