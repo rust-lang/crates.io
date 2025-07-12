@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 crates_io_env_vars = { path = "../crates_io_env_vars" }
-diesel = { version = "=2.2.11", features = ["postgres", "r2d2"] }
+diesel = { version = "=2.2.12", features = ["postgres", "r2d2"] }
 diesel-async = { version = "=0.6.1", features = ["postgres"] }
 diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
 rand = "=0.9.1"
