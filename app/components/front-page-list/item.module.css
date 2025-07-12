@@ -48,7 +48,7 @@
 .subtitle {
     margin-top: var(--space-3xs);
     font-size: 13px;
-    color: light-dark(rgb(118, 131, 138), #cccac2);
+    color: var(--main-color-light);
 }
 
 .right {
@@ -56,5 +56,5 @@
     height: var(--space-s);
     width: auto;
     margin-left: var(--space-xs);
-    color: light-dark(rgb(118, 131, 138), #cccac2);
+    color: var(--main-color-light);
 }
