@@ -39,7 +39,12 @@ impl BackgroundJob for SendPublishNotificationsJob {
         let mut conn = ctx.deadpool.get().await?;
 
         // Get crate name, version and other publish details
-        let publish_details = PublishDetails::for_version(version_id, &mut conn).await?;
+        let Some(publish_details) = PublishDetails::for_version(version_id, &mut conn).await?
+        else {
+            warn!("Skipping publish notifications for {version_id}: no version found");
+
+            return Ok(());
+        };
 
         let publish_time = publish_details
             .publish_time
@@ -168,7 +173,10 @@ struct PublishDetails {
 }
 
 impl PublishDetails {
-    async fn for_version(version_id: i32, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
+    async fn for_version(
+        version_id: i32,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Option<Self>> {
         versions::table
             .find(version_id)
             .inner_join(crates::table)
@@ -176,5 +184,6 @@ impl PublishDetails {
             .select(PublishDetails::as_select())
             .first(conn)
             .await
+            .optional()
     }
 }

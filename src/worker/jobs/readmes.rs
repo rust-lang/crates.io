@@ -5,11 +5,13 @@ use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
 use crates_io_markdown::text_to_html;
 use crates_io_worker::BackgroundJob;
+use diesel::result::DatabaseErrorKind;
+use diesel::result::Error::DatabaseError;
 use diesel_async::AsyncConnection;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{info, instrument};
+use tracing::{info, instrument, warn};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RenderAndUploadReadme {
@@ -70,13 +72,39 @@ impl BackgroundJob for RenderAndUploadReadme {
         let mut conn = env.deadpool.get().await?;
         conn.transaction(|conn| {
             async move {
-                Version::record_readme_rendering(job.version_id, conn).await?;
-                let (crate_name, vers): (String, String) = versions::table
+                match Version::record_readme_rendering(job.version_id, conn).await {
+                    Ok(_) => {}
+                    Err(DatabaseError(DatabaseErrorKind::ForeignKeyViolation, ..)) => {
+                        warn!(
+                            "Skipping README rendering recording for version {}: version not found",
+                            job.version_id
+                        );
+                        return Ok(());
+                    }
+                    Err(err) => {
+                        warn!(
+                            "Failed to record README rendering for version {}: {err}",
+                            job.version_id,
+                        );
+                        return Err(err.into());
+                    }
+                }
+
+                let result = versions::table
                     .find(job.version_id)
                     .inner_join(crates::table)
                     .select((crates::name, versions::num))
-                    .first(conn)
-                    .await?;
+                    .first::<(String, String)>(conn)
+                    .await
+                    .optional()?;
+
+                let Some((crate_name, vers)) = result else {
+                    warn!(
+                        "Skipping README rendering for version {}: version not found",
+                        job.version_id
+                    );
+                    return Ok(());
+                };
 
                 tracing::Span::current().record("krate.name", tracing::field::display(&crate_name));
 
