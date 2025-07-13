@@ -157,7 +157,7 @@ async fn test_unsupported_issuer() -> anyhow::Result<()> {
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unsupported JWT issuer"}]}"#);
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Unsupported JWT issuer: https://token.actions.githubusercontent.com"}]}"#);
 
     Ok(())
 }

@@ -38,7 +38,8 @@ pub async fn exchange_trustpub_token(
 
     let unverified_issuer = unverified_token_data.claims.iss;
     let Some(keystore) = state.oidc_key_stores.get(&unverified_issuer) else {
-        return Err(bad_request("Unsupported JWT issuer"));
+        let error = format!("Unsupported JWT issuer: {unverified_issuer}");
+        return Err(bad_request(error));
     };
 
     let Some(unverified_key_id) = unverified_token_data.header.kid else {
@@ -60,7 +61,8 @@ pub async fn exchange_trustpub_token(
     // The following code is only supporting GitHub Actions for now, so let's
     // drop out if the issuer is not GitHub.
     if unverified_issuer != GITHUB_ISSUER_URL {
-        return Err(bad_request("Unsupported JWT issuer"));
+        let error = format!("Unsupported JWT issuer: {unverified_issuer}");
+        return Err(bad_request(error));
     }
 
     let audience = &state.config.trustpub_audience;
