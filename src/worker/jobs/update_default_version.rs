@@ -32,30 +32,37 @@ impl BackgroundJob for UpdateDefaultVersion {
 
         info!("Updating default version for crate {crate_id}");
         let mut conn = ctx.deadpool.get().await?;
-        let crate_name = update_default_version(crate_id, &mut conn).await.and(
-            // Get the crate name for OG image generation
-            crates::table
-                .filter(crates::id.eq(crate_id))
-                .select(crates::name)
-                .first::<String>(&mut conn)
-                .await,
-        );
 
-        if matches!(
-            crate_name,
-            Err(diesel::result::Error::DatabaseError(
-                diesel::result::DatabaseErrorKind::ForeignKeyViolation,
-                ..,
-            )) | Err(diesel::result::Error::NotFound)
-        ) {
-            warn!("Skipping update default version for crate for {crate_id}: no crate found");
-            return Ok(());
+        match update_default_version(crate_id, &mut conn).await {
+            Ok(_) => {
+                info!("Successfully updated default version for crate {crate_id}");
+            }
+            Err(diesel::result::Error::NotFound) => {
+                warn!("Skipping default version update for crate {crate_id}: crate not found");
+                return Ok(());
+            }
+            Err(err) => {
+                warn!("Failed to update default version for crate {crate_id}: {err}");
+                return Err(err.into());
+            }
         }
 
-        // Generate OG image after updating default version
-        let crate_name = crate_name?;
-        info!("Enqueueing OG image generation for crate {crate_name}");
-        GenerateOgImage::new(crate_name).enqueue(&mut conn).await?;
+        // Get the crate name for OG image generation
+        let crate_name = crates::table
+            .filter(crates::id.eq(crate_id))
+            .select(crates::name)
+            .first::<String>(&mut conn)
+            .await
+            .optional()?;
+
+        if let Some(crate_name) = crate_name {
+            // Generate OG image after updating default version
+            info!("Enqueueing OG image generation for crate {crate_name}");
+            GenerateOgImage::new(crate_name).enqueue(&mut conn).await?;
+        } else {
+            warn!("No crate found for ID {crate_id}, skipping OG image generation");
+            return Ok(());
+        }
 
         Ok(())
     }
