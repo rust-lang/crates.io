@@ -323,7 +323,7 @@ async fn test_missing_config() -> anyhow::Result<()> {
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No Trusted Publishing config found for repository `rust-lang/foo-rs`."}]}"#);
 
     Ok(())
 }
@@ -335,7 +335,7 @@ async fn test_missing_environment() -> anyhow::Result<()> {
     let body = default_claims().as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` requires an environment, but the JWT does not specify one. Expected environments: `prod`"}]}"#);
 
     Ok(())
 }
@@ -350,7 +350,7 @@ async fn test_wrong_environment() -> anyhow::Result<()> {
     let body = claims.as_exchange_body()?;
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"No matching Trusted Publishing config found"}]}"#);
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the environment `not-prod` in the JWT. Expected environments: `prod`"}]}"#);
 
     Ok(())
 }

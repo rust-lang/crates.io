@@ -2,7 +2,7 @@ use super::json;
 use crate::app::AppState;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
-use crates_io_database::models::trustpub::{NewToken, NewUsedJti, TrustpubData};
+use crates_io_database::models::trustpub::{GitHubConfig, NewToken, NewUsedJti, TrustpubData};
 use crates_io_database::schema::trustpub_configs_github;
 use crates_io_diesel_helpers::lower;
 use crates_io_trustpub::access_token::AccessToken;
@@ -107,28 +107,64 @@ pub async fn exchange_trustpub_token(
                 return Err(bad_request(message));
             };
 
-            let crate_ids = trustpub_configs_github::table
-                .select(trustpub_configs_github::crate_id)
-                .filter(trustpub_configs_github::repository_owner_id.eq(&repository_owner_id))
+            let mut repo_configs = trustpub_configs_github::table
+                .select(GitHubConfig::as_select())
                 .filter(
                     lower(trustpub_configs_github::repository_owner).eq(lower(&repository_owner)),
                 )
                 .filter(lower(trustpub_configs_github::repository_name).eq(lower(&repository_name)))
-                .filter(trustpub_configs_github::workflow_filename.eq(&workflow_filename))
-                .filter(
-                    trustpub_configs_github::environment
-                        .is_null()
-                        .or(lower(trustpub_configs_github::environment)
-                            .eq(lower(&signed_claims.environment))),
-                )
-                .load::<i32>(conn)
+                .load(conn)
                 .await?;
 
-            if crate_ids.is_empty() {
-                warn!("No matching Trusted Publishing config found");
-                let message = "No matching Trusted Publishing config found";
+            if repo_configs.is_empty() {
+                let message = format!("No Trusted Publishing config found for repository `{repo}`.");
                 return Err(bad_request(message));
             }
+
+            let mismatched_owner_ids: Vec<String> = repo_configs
+                .extract_if(.., |config| config.repository_owner_id != repository_owner_id)
+                .map(|config| config.repository_owner_id.to_string())
+                .collect();
+
+            if repo_configs.is_empty() {
+                let message = format!("The Trusted Publishing config for repository `{repo}` does not match the repository owner ID ({repository_owner_id}) in the JWT. Expected owner IDs: {}. Please recreate the Trusted Publishing config to update the repository owner ID.", mismatched_owner_ids.join(", "));
+                return Err(bad_request(message));
+            }
+
+            let mismatched_workflows: Vec<String> = repo_configs
+                .extract_if(.., |config| config.workflow_filename != workflow_filename)
+                .map(|config| format!("`{}`", config.workflow_filename))
+                .collect();
+
+            if repo_configs.is_empty() {
+                let message = format!("The Trusted Publishing config for repository `{repo}` does not match the workflow filename `{workflow_filename}` in the JWT. Expected workflow filenames: {}", mismatched_workflows.join(", "));
+                return Err(bad_request(message));
+            }
+
+            let mismatched_environments: Vec<String> = repo_configs
+                .extract_if(.., |config| {
+                    match (&config.environment, &signed_claims.environment) {
+                        // Keep configs with no environment requirement
+                        (None, _) => false,
+                        // Remove configs requiring environment when JWT has none
+                        (Some(_), None) => true,
+                        // Remove non-matching environments
+                        (Some(config_env), Some(signed_env)) => config_env.to_lowercase() != signed_env.to_lowercase(),
+                    }
+                })
+                .filter_map(|config| config.environment.map(|env| format!("`{env}`")))
+                .collect();
+
+            if repo_configs.is_empty() {
+                let message = if let Some(signed_environment) = &signed_claims.environment {
+                    format!("The Trusted Publishing config for repository `{repo}` does not match the environment `{signed_environment}` in the JWT. Expected environments: {}", mismatched_environments.join(", "))
+                } else {
+                    format!("The Trusted Publishing config for repository `{repo}` requires an environment, but the JWT does not specify one. Expected environments: {}", mismatched_environments.join(", "))
+                };
+                return Err(bad_request(message));
+            }
+
+            let crate_ids = repo_configs.iter().map(|config| config.crate_id).collect::<Vec<_>>();
 
             let new_token = AccessToken::generate();
 
