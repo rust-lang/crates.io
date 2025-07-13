@@ -8,11 +8,11 @@
 }
 
 .crate-info {
-    background-color: var(--orange-50);
+    background-color: light-dark(var(--orange-50), var(--orange-900));
     border-radius: 8px;
     padding: var(--space-m);
     margin: var(--space-m) 0;
-    border: 1px solid var(--orange-200);
+    border: 1px solid light-dark(var(--orange-200), var(--orange-600));
 
     h2 {
         margin: 0 0 var(--space-s);
