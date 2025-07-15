@@ -6,16 +6,18 @@ use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
+use serde::Serialize;
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
 use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
+#[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
 pub struct User {
     pub id: i32,
     #[diesel(deserialize_as = String)]
+    #[serde(skip)]
     pub gh_access_token: SecretString,
     pub gh_login: String,
     pub name: Option<String>,

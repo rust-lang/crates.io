@@ -28,7 +28,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-crates.io user foo added a new "Trusted Publishing" configuration for GitHub Actions to a crate that you manage ("foo"). Trusted publishers act as trusted users and can publish new versions of the crate automatically.
+You added a new "Trusted Publishing" configuration for GitHub Actions to your crate "foo". Trusted publishers act as trusted users and can publish new versions of the crate automatically.
 
 Trusted Publishing configuration:
 

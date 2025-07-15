@@ -108,15 +108,7 @@ pub async fn create_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let context = context! {
-            recipient => recipient,
-            user => auth_user.gh_login,
-            krate => krate.name,
-            repository_owner => saved_config.repository_owner,
-            repository_name => saved_config.repository_name,
-            workflow_filename => saved_config.workflow_filename,
-            environment => saved_config.environment
-        };
+        let context = context! { recipient, auth_user, krate, saved_config };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");

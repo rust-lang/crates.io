@@ -12,6 +12,7 @@ use diesel::sql_types::{Bool, Integer, Text};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
+use serde::Serialize;
 use thiserror::Error;
 use tracing::instrument;
 
@@ -35,7 +36,9 @@ pub struct CrateName {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName, Selectable)]
+#[derive(
+    Debug, Clone, Queryable, Identifiable, AsChangeset, QueryableByName, Selectable, Serialize,
+)]
 #[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 pub struct Crate {
     pub id: i32,
