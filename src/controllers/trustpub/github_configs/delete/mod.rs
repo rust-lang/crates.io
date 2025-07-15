@@ -4,8 +4,8 @@ use crate::email::EmailMessage;
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
-use crates_io_database::models::OwnerKind;
 use crates_io_database::models::trustpub::GitHubConfig;
+use crates_io_database::models::{Crate, OwnerKind};
 use crates_io_database::schema::{crate_owners, crates, emails, trustpub_configs_github, users};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -39,12 +39,12 @@ pub async fn delete_trustpub_github_config(
     let auth_user = auth.user();
 
     // Check that a trusted publishing config with the given ID exists,
-    // and fetch the corresponding crate ID and name.
-    let (config, crate_name) = trustpub_configs_github::table
+    // and fetch the corresponding crate.
+    let (config, krate) = trustpub_configs_github::table
         .inner_join(crates::table)
         .filter(trustpub_configs_github::id.eq(id))
-        .select((GitHubConfig::as_select(), crates::name))
-        .first::<(GitHubConfig, String)>(&mut conn)
+        .select((GitHubConfig::as_select(), Crate::as_select()))
+        .first::<(GitHubConfig, Crate)>(&mut conn)
         .await
         .optional()?
         .ok_or_else(not_found)?;
@@ -79,15 +79,7 @@ pub async fn delete_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let context = context! {
-            recipient => recipient,
-            user => auth_user.gh_login,
-            krate => crate_name,
-            repository_owner => config.repository_owner,
-            repository_name => config.repository_name,
-            workflow_filename => config.workflow_filename,
-            environment => config.environment
-        };
+        let context = context! { recipient, auth_user, krate, config };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
