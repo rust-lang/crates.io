@@ -2,8 +2,9 @@ use crate::schema::trustpub_configs_github;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use serde::Serialize;
 
-#[derive(Debug, Identifiable, Queryable, Selectable)]
+#[derive(Debug, Identifiable, Queryable, Selectable, Serialize)]
 #[diesel(table_name = trustpub_configs_github, check_for_backend(diesel::pg::Pg))]
 pub struct GitHubConfig {
     pub id: i32,
