@@ -3,7 +3,11 @@
 {% block content %}
 Hello {{ recipient }}!
 
+{% if recipient == auth_user.gh_login -%}
+You removed a "Trusted Publishing" configuration for GitHub Actions from your crate "{{ krate.name }}".
+{%- else -%}
 crates.io user {{ auth_user.gh_login }} removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("{{ krate.name }}").
+{%- endif %}
 
 Trusted Publishing configuration:
 

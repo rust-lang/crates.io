@@ -11,7 +11,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-crates.io user foo removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("foo").
+You removed a "Trusted Publishing" configuration for GitHub Actions from your crate "foo".
 
 Trusted Publishing configuration:
 
