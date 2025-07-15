@@ -236,7 +236,7 @@ async fn send_notification_email(
             reporter => "GitHub",
             source => alert.source,
             token_name => token.name,
-            url => if alert.url.is_empty() { "" } else { &alert.url }
+            url => &alert.url,
         },
     )?;
 
