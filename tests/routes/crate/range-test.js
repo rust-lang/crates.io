@@ -84,7 +84,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('foo: Crate not found');
+    assert.dom('[data-test-title]').hasText(`'foo': Crate not found`);
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
@@ -96,7 +96,7 @@ module('Route | crate.range', function (hooks) {
     await visit('/crates/foo/range/^3');
     assert.strictEqual(currentURL(), '/crates/foo/range/%5E3');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('foo: Failed to load crate data');
+    assert.dom('[data-test-title]').hasText(`'foo': Failed to load crate data`);
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });

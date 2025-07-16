@@ -87,7 +87,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('nanomsg: Crate not found');
+    assert.dom('[data-test-title]').hasText(`'nanomsg': Crate not found`);
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
@@ -98,7 +98,7 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('nanomsg: Failed to load crate data');
+    assert.dom('[data-test-title]').hasText(`'nanomsg': Failed to load crate data`);
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });

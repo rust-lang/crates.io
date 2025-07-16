@@ -81,7 +81,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Crate not found');
+    await expect(page.locator('[data-test-title]')).toHaveText(`'nanomsg': Crate not found`);
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
@@ -92,7 +92,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Failed to load crate data');
+    await expect(page.locator('[data-test-title]')).toHaveText(`'nanomsg': Failed to load crate data`);
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
