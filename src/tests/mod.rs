@@ -96,6 +96,7 @@ fn new_user(login: &str) -> NewUser<'_> {
         .gh_id(next_gh_id())
         .gh_login(login)
         .gh_access_token("some random token")
+        .gh_encrypted_token(&[])
         .build()
 }
 
