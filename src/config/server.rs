@@ -5,6 +5,7 @@ use url::Url;
 
 use crate::Env;
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -42,6 +43,7 @@ pub struct Server {
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
+    pub gh_token_encryption: GitHubTokenEncryption,
     pub max_upload_size: u32,
     pub max_unpack_size: u64,
     pub max_dependencies: usize,
@@ -106,6 +108,7 @@ impl Server {
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
+    /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///   traffic. See the `block_traffic` module for more documentation.
     /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
@@ -205,6 +208,7 @@ impl Server {
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
             gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
+            gh_token_encryption: GitHubTokenEncryption::from_environment()?,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             max_dependencies: DEFAULT_MAX_DEPENDENCIES,
