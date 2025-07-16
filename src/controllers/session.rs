@@ -19,7 +19,7 @@ use minijinja::context;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
-use tracing::warn;
+use tracing::{error, warn};
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct BeginResponse {
@@ -114,11 +114,25 @@ pub async fn authorize_session(
 
     let token = token.access_token();
 
+    // Encrypt the GitHub access token
+    let encryption = &app.config.gh_token_encryption;
+    let encrypted_token = encryption.encrypt(token.secret()).map_err(|error| {
+        error!("Failed to encrypt GitHub token: {error}");
+        server_error("Internal server error")
+    })?;
+
     // Fetch the user info from GitHub using the access token we just got and create a user record
     let ghuser = app.github.current_user(token).await?;
 
     let mut conn = app.db_write().await?;
-    let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &mut conn).await?;
+    let user = save_user_to_database(
+        &ghuser,
+        token.secret(),
+        &encrypted_token,
+        &app.emails,
+        &mut conn,
+    )
+    .await?;
 
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
@@ -129,6 +143,7 @@ pub async fn authorize_session(
 pub async fn save_user_to_database(
     user: &GitHubUser,
     access_token: &str,
+    encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<User> {
@@ -138,6 +153,7 @@ pub async fn save_user_to_database(
         .maybe_name(user.name.as_deref())
         .maybe_gh_avatar(user.avatar_url.as_deref())
         .gh_access_token(access_token)
+        .gh_encrypted_token(encrypted_token)
         .build();
 
     match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
@@ -242,7 +258,9 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, &mut conn).await;
+
+        let result =
+            save_user_to_database(&gh_user, "arbitrary_token", &[], &emails, &mut conn).await;
 
         assert!(
             result.is_ok(),

@@ -38,7 +38,7 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
         email: None,
         avatar_url: None,
     };
-    assert_ok!(session::save_user_to_database(&gh_user, "bar_token", emails, &mut conn).await);
+    assert_ok!(session::save_user_to_database(&gh_user, "bar_token", &[], emails, &mut conn).await);
 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token));
@@ -79,8 +79,8 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u =
-        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
+        .await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -103,8 +103,8 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u =
-        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
+        .await?;
 
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -145,8 +145,8 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u =
-        session::save_user_to_database(&gh_user, "some random token", &emails, &mut conn).await?;
+    let u = session::save_user_to_database(&gh_user, "some random token", &[], &emails, &mut conn)
+        .await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
@@ -202,8 +202,8 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u =
-        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
+        .await?;
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -248,8 +248,8 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u =
-        session::save_user_to_database(&gh_user, "some random token", emails, &mut conn).await?;
+    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
+        .await?;
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
