@@ -107,6 +107,7 @@ mod tests {
             .gh_id(111)
             .gh_login("other_user")
             .gh_access_token("token")
+            .gh_encrypted_token(&[])
             .build()
             .insert(&mut conn)
             .await?;

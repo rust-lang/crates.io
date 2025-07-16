@@ -235,6 +235,7 @@ publish_notifications = "private"
 gh_encrypted_token = "private"
 [users.column_defaults]
 gh_access_token = "''"
+gh_encrypted_token = "''"
 
 [version_downloads]
 dependencies = ["versions"]

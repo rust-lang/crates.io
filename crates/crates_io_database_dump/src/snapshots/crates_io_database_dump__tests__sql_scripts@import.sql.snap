@@ -24,6 +24,7 @@ BEGIN;
     -- Set defaults for non-nullable columns not included in the dump.
 
     ALTER TABLE "users" ALTER COLUMN "gh_access_token" SET DEFAULT '';
+    ALTER TABLE "users" ALTER COLUMN "gh_encrypted_token" SET DEFAULT '';
 
     -- Truncate all tables.
 
@@ -67,6 +68,7 @@ BEGIN;
     -- Drop the defaults again.
 
     ALTER TABLE "users" ALTER COLUMN "gh_access_token" DROP DEFAULT;
+    ALTER TABLE "users" ALTER COLUMN "gh_encrypted_token" DROP DEFAULT;
 
     -- Reenable triggers on each table.
 

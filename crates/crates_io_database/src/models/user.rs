@@ -24,7 +24,7 @@ pub struct User {
     #[serde(skip)]
     pub gh_access_token: SecretString,
     #[serde(skip)]
-    pub gh_encrypted_token: Option<Vec<u8>>,
+    pub gh_encrypted_token: Vec<u8>,
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
@@ -96,7 +96,7 @@ pub struct NewUser<'a> {
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: &'a str,
-    pub gh_encrypted_token: Option<&'a [u8]>,
+    pub gh_encrypted_token: &'a [u8],
 }
 
 impl NewUser<'_> {
