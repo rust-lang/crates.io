@@ -3,6 +3,7 @@ use crate::models::{ApiToken, Email, User};
 use crate::tests::TestApp;
 use crate::tests::util::github::next_gh_id;
 use crate::tests::util::{MockCookieUser, RequestHelper};
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crate::util::token::HashedToken;
 use chrono::{DateTime, Utc};
 use claims::assert_ok;
@@ -10,7 +11,6 @@ use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
-use secrecy::ExposeSecret;
 use serde_json::json;
 
 impl crate::tests::util::MockCookieUser {
@@ -30,6 +30,8 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let gh_id = user.as_model().gh_id;
     let token = token.plaintext();
 
+    let encryption = GitHubTokenEncryption::for_testing();
+
     // Reuse gh_id but use new gh_login and gh_access_token
     let gh_user = GitHubUser {
         id: gh_id,
@@ -38,7 +40,8 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
         email: None,
         avatar_url: None,
     };
-    assert_ok!(session::save_user_to_database(&gh_user, "bar_token", &[], emails, &mut conn).await);
+    let encrypted_token = encryption.encrypt("bar_token")?;
+    assert_ok!(session::save_user_to_database(&gh_user, &encrypted_token, emails, &mut conn).await);
 
     // Use the original API token to find the now updated user
     let hashed_token = assert_ok!(HashedToken::parse(token));
@@ -46,7 +49,8 @@ async fn updating_existing_user_doesnt_change_api_token() -> anyhow::Result<()> 
     let user = assert_ok!(User::find(&mut conn, api_token.user_id).await);
 
     assert_eq!(user.gh_login, "bar");
-    assert_eq!(user.gh_access_token.expose_secret(), "bar_token");
+    let decrypted_token = encryption.decrypt(&user.gh_encrypted_token)?;
+    assert_eq!(decrypted_token.secret(), "bar_token");
 
     Ok(())
 }
@@ -79,8 +83,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
-        .await?;
+    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
 
     let user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -103,8 +106,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
-        .await?;
+    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
 
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
@@ -145,8 +147,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, "some random token", &[], &emails, &mut conn)
-        .await?;
+    let u = session::save_user_to_database(&gh_user, &[], &emails, &mut conn).await?;
 
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
@@ -202,8 +203,7 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
-        .await?;
+    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
 
     let user = MockCookieUser::new(&app, u);
     let user_model = user.as_model();
@@ -248,8 +248,7 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
         avatar_url: None,
     };
 
-    let u = session::save_user_to_database(&gh_user, "some random token", &[], emails, &mut conn)
-        .await?;
+    let u = session::save_user_to_database(&gh_user, &[], emails, &mut conn).await?;
 
     update(Email::belonging_to(&u))
         // Users created before we added verification will have
