@@ -6,6 +6,7 @@ mod default_versions;
 mod delete_crate;
 mod delete_version;
 mod dialoguer;
+mod encrypt_github_tokens;
 mod enqueue_job;
 mod migrate;
 mod populate;
@@ -21,6 +22,7 @@ enum Command {
     BackfillOgImages(backfill_og_images::Opts),
     DeleteCrate(delete_crate::Opts),
     DeleteVersion(delete_version::Opts),
+    EncryptGithubTokens(encrypt_github_tokens::Opts),
     Populate(populate::Opts),
     RenderReadmes(render_readmes::Opts),
     TransferCrates(transfer_crates::Opts),
@@ -51,6 +53,7 @@ async fn main() -> anyhow::Result<()> {
         Command::BackfillOgImages(opts) => backfill_og_images::run(opts).await,
         Command::DeleteCrate(opts) => delete_crate::run(opts).await,
         Command::DeleteVersion(opts) => delete_version::run(opts).await,
+        Command::EncryptGithubTokens(opts) => encrypt_github_tokens::run(opts).await,
         Command::Populate(opts) => populate::run(opts).await,
         Command::RenderReadmes(opts) => render_readmes::run(opts).await,
         Command::TransferCrates(opts) => transfer_crates::run(opts).await,
