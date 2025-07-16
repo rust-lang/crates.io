@@ -1348,6 +1348,7 @@ dependencies = [
 name = "crates_io"
 version = "0.0.0"
 dependencies = [
+ "aes-gcm",
  "anyhow",
  "astral-tokio-tar",
  "async-compression",
