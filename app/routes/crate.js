@@ -10,6 +10,11 @@ export default class CrateRoute extends Route {
 
   async model(params, transition) {
     let crateName = params.crate_id;
+    if (crateName.trim() != crateName) {
+      // If the crate name has leading/trailing whitespace, redirect to the trimmed version.
+      this.router.transitionTo('crate', crateName.trim());
+      return;
+    }
 
     try {
       // We would like the peeked crate to include information (such as keywords) for further
