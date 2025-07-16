@@ -48,6 +48,10 @@
     --link-color: light-dark(#006133, #04da75);
     --link-hover-color: light-dark(#01391f, #00f27f);
 
+    --row-bg: light-dark(white, black);
+    --row-hover-bg: light-dark(var(--grey200), var(--grey900));
+    --row-content: var(--main-color);
+
     --placeholder-bg: hsl(212, 7%, 57%);
     --placeholder-bg2: hsl(213, 16%, 75%);
 
@@ -183,6 +187,27 @@ noscript {
     @media only screen and (max-width: 960px) {
         width: 100%;
     }
+}
+
+:global(.row) {
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+    padding: var(--space-s) var(--space-m);
+    background-color: var(--row-bg);
+    border-radius: var(--space-3xs);
+    box-shadow: var(--shadow);
+    transition: all var(--transition-slow);
+
+    position: relative;
+    font-size: 1.1rem;
+}
+
+:global(.row:hover), :global(.row.focused) {
+    background-color: var(--row-hover-bg);
+    transition: all var(--transition-instant);
+}
+
+:global(.row.focused) {
+    box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
 }
 
 .main {
