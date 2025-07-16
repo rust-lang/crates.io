@@ -880,6 +880,8 @@ diesel::table! {
         is_admin -> Bool,
         /// Whether or not the user wants to receive notifications when a package they own is published
         publish_notifications -> Bool,
+        /// Encrypted GitHub access token
+        gh_encrypted_token -> Nullable<Bytea>,
     }
 }
 
