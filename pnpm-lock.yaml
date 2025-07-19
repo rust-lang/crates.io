@@ -117,8 +117,8 @@ importers:
         specifier: 14.0.0
         version: 14.0.0
       '@types/node':
-        specifier: 22.16.4
-        version: 22.16.4
+        specifier: 22.16.5
+        version: 22.16.5
       '@types/sinonjs__fake-timers':
         specifier: 8.1.5
         version: 8.1.5
@@ -280,7 +280,7 @@ importers:
         version: 2.0.1(@babel/core@7.28.0)
       msw:
         specifier: 2.10.4
-        version: 2.10.4(@types/node@22.16.4)(typescript@5.8.3)
+        version: 2.10.4(@types/node@22.16.5)(typescript@5.8.3)
       normalize.css:
         specifier: 8.0.1
         version: 8.0.1
@@ -289,7 +289,7 @@ importers:
         version: 17.1.0
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.54.1)(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3))
+        version: 3.0.1(@playwright/test@1.54.1)(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3))
       postcss-preset-env:
         specifier: 10.2.4
         version: 10.2.4(postcss@8.5.6)
@@ -319,10 +319,10 @@ importers:
     dependencies:
       '@mswjs/data':
         specifier: 0.16.2
-        version: 0.16.2(@types/node@22.16.4)(typescript@5.8.3)
+        version: 0.16.2(@types/node@22.16.5)(typescript@5.8.3)
       msw:
         specifier: 2.10.4
-        version: 2.10.4(@types/node@22.16.4)(typescript@5.8.3)
+        version: 2.10.4(@types/node@22.16.5)(typescript@5.8.3)
       semver:
         specifier: 7.7.2
         version: 7.7.2
@@ -332,7 +332,7 @@ importers:
         version: 18.0.1
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/node@22.16.4)(happy-dom@18.0.1)(jsdom@25.0.1)(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3))(terser@5.43.1)(yaml@2.8.0)
+        version: 3.2.4(@types/node@22.16.5)(happy-dom@18.0.1)(jsdom@25.0.1)(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3))(terser@5.43.1)(yaml@2.8.0)
 
 packages:
 
@@ -2255,8 +2255,8 @@ packages:
   '@types/node@20.19.7':
     resolution: {integrity: sha512-1GM9z6BJOv86qkPvzh2i6VW5+VVrXxCLknfmTkWEqz+6DqosiY28XUWCTmBcJ0ACzKqx/iwdIREfo1fwExIlkA==}
 
-  '@types/node@22.16.4':
-    resolution: {integrity: sha512-PYRhNtZdm2wH/NT2k/oAJ6/f2VD2N2Dag0lGlx2vWgMSJXGNmlce5MiTQzoWAiIJtso30mjnfQCOKVH+kAQC/g==}
+  '@types/node@22.16.5':
+    resolution: {integrity: sha512-bJFoMATwIGaxxx8VJPeM8TonI8t579oRvgAuT8zFugJsJZgzqv0Fu8Mhp68iecjzG7cnN3mO2dJQ5uUM2EFrgQ==}
 
   '@types/pluralize@0.0.29':
     resolution: {integrity: sha512-BYOID+l2Aco2nBik+iYS4SZX0Lf20KPILP5RGmM1IgzdwNdTs0eebiFriOPcej1sX9mLnSoiNte5zcFxssgpGA==}
@@ -10269,17 +10269,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@inquirer/confirm@5.1.13(@types/node@22.16.4)':
+  '@inquirer/confirm@5.1.13(@types/node@22.16.5)':
     dependencies:
-      '@inquirer/core': 10.1.14(@types/node@22.16.4)
-      '@inquirer/type': 3.0.7(@types/node@22.16.4)
+      '@inquirer/core': 10.1.14(@types/node@22.16.5)
+      '@inquirer/type': 3.0.7(@types/node@22.16.5)
     optionalDependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
-  '@inquirer/core@10.1.14(@types/node@22.16.4)':
+  '@inquirer/core@10.1.14(@types/node@22.16.5)':
     dependencies:
       '@inquirer/figures': 1.0.12
-      '@inquirer/type': 3.0.7(@types/node@22.16.4)
+      '@inquirer/type': 3.0.7(@types/node@22.16.5)
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
       mute-stream: 2.0.0
@@ -10287,13 +10287,13 @@ snapshots:
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.2
     optionalDependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@inquirer/figures@1.0.12': {}
 
-  '@inquirer/type@3.0.7(@types/node@22.16.4)':
+  '@inquirer/type@3.0.7(@types/node@22.16.5)':
     optionalDependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -10364,7 +10364,7 @@ snapshots:
 
   '@mswjs/cookies@1.1.1': {}
 
-  '@mswjs/data@0.16.2(@types/node@22.16.4)(typescript@5.8.3)':
+  '@mswjs/data@0.16.2(@types/node@22.16.5)(typescript@5.8.3)':
     dependencies:
       '@types/lodash': 4.17.20
       '@types/md5': 2.3.5
@@ -10380,7 +10380,7 @@ snapshots:
       strict-event-emitter: 0.5.1
       uuid: 8.3.2
     optionalDependencies:
-      msw: 2.10.4(@types/node@22.16.4)(typescript@5.8.3)
+      msw: 2.10.4(@types/node@22.16.5)(typescript@5.8.3)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -10752,7 +10752,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/chai-as-promised@7.1.8':
     dependencies:
@@ -10766,13 +10766,13 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/cookie@0.6.0': {}
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/d3-array@3.2.1': {}
 
@@ -10912,7 +10912,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.5
@@ -10926,15 +10926,15 @@ snapshots:
 
   '@types/fs-extra@5.1.0':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/geojson@7946.0.16': {}
 
@@ -10958,7 +10958,7 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@22.16.4':
+  '@types/node@22.16.5':
     dependencies:
       undici-types: 6.21.0
 
@@ -10973,17 +10973,17 @@ snapshots:
   '@types/rimraf@2.0.5':
     dependencies:
       '@types/glob': 9.0.0
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/send@0.17.5':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
 
   '@types/serve-static@1.15.8':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       '@types/send': 0.17.5
 
   '@types/sinonjs__fake-timers@8.1.5': {}
@@ -11011,7 +11011,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
     optional: true
 
   '@vitest/expect@3.2.4':
@@ -11022,14 +11022,14 @@ snapshots:
       chai: 5.2.1
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3))(vite@7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0))':
+  '@vitest/mocker@3.2.4(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3))(vite@7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      msw: 2.10.4(@types/node@22.16.4)(typescript@5.8.3)
-      vite: 7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0)
+      msw: 2.10.4(@types/node@22.16.5)(typescript@5.8.3)
+      vite: 7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -13854,7 +13854,7 @@ snapshots:
   engine.io@6.6.4:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -15533,7 +15533,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -16095,12 +16095,12 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3):
+  msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
       '@bundled-es-modules/tough-cookie': 0.1.6
-      '@inquirer/confirm': 5.1.13(@types/node@22.16.4)
+      '@inquirer/confirm': 5.1.13(@types/node@22.16.5)
       '@mswjs/interceptors': 0.39.2
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/until': 2.1.0
@@ -16604,11 +16604,11 @@ snapshots:
 
   playwright-core@1.54.1: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.54.1)(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3)):
+  playwright-msw@3.0.1(@playwright/test@1.54.1)(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
       '@playwright/test': 1.54.1
-      msw: 2.10.4(@types/node@22.16.4)(typescript@5.8.3)
+      msw: 2.10.4(@types/node@22.16.5)(typescript@5.8.3)
       strict-event-emitter: 0.5.1
 
   playwright@1.54.1:
@@ -18263,13 +18263,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@3.2.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0):
+  vite-node@3.2.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0)
+      vite: 7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -18284,7 +18284,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0):
+  vite@7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0):
     dependencies:
       esbuild: 0.25.6
       fdir: 6.4.6(picomatch@4.0.2)
@@ -18293,16 +18293,16 @@ snapshots:
       rollup: 4.45.0
       tinyglobby: 0.2.14
     optionalDependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       fsevents: 2.3.3
       terser: 5.43.1
       yaml: 2.8.0
 
-  vitest@3.2.4(@types/node@22.16.4)(happy-dom@18.0.1)(jsdom@25.0.1)(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3))(terser@5.43.1)(yaml@2.8.0):
+  vitest@3.2.4(@types/node@22.16.5)(happy-dom@18.0.1)(jsdom@25.0.1)(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3))(terser@5.43.1)(yaml@2.8.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(msw@2.10.4(@types/node@22.16.4)(typescript@5.8.3))(vite@7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0))
+      '@vitest/mocker': 3.2.4(msw@2.10.4(@types/node@22.16.5)(typescript@5.8.3))(vite@7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -18320,11 +18320,11 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.0.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0)
-      vite-node: 3.2.4(@types/node@22.16.4)(terser@5.43.1)(yaml@2.8.0)
+      vite: 7.0.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0)
+      vite-node: 3.2.4(@types/node@22.16.5)(terser@5.43.1)(yaml@2.8.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.16.4
+      '@types/node': 22.16.5
       happy-dom: 18.0.1
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
