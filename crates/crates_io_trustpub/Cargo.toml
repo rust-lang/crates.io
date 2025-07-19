@@ -13,7 +13,7 @@ test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 [dependencies]
 anyhow = "=1.0.98"
 async-trait = "=0.1.88"
-bon = { version = "=3.6.4", optional = true }
+bon = { version = "=3.6.5", optional = true }
 chrono = { version = "=0.4.41", features = ["serde"] }
 jsonwebtoken = "=9.3.1"
 mockall = { version = "=0.13.1", optional = true }
@@ -29,7 +29,7 @@ tokio = { version = "=1.46.1", features = ["sync"] }
 tracing = "=0.1.41"
 
 [dev-dependencies]
-bon = "=3.6.4"
+bon = "=3.6.5"
 claims = "=0.8.0"
 insta = { version = "=1.43.1", features = ["json", "redactions"] }
 mockito = "=1.7.0"
