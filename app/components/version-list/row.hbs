@@ -4,8 +4,8 @@
     {{if @version.isHighestOfReleaseTrack "latest"}}
     {{if @version.yanked "yanked"}}
     {{if @version.isPrerelease "prerelease"}}
-    {{if this.focused "focused"}}
   "
+  class="{{ if this.focused "focused" }}"
   ...attributes
 >
   <div local-class="version">

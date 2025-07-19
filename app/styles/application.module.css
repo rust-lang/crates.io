@@ -1,8 +1,10 @@
 :root, [data-theme="classic"] {
     --violet800: hsl(252, 44%, 24%);
     --grey900: hsl(200, 15%, 19%);
+    --grey800: hsl(200, 11%, 30%);
     --grey700: hsl(200, 11%, 43%);
     --grey600: hsl(200, 13%, 60%);
+    --grey400: hsl(200, 14%, 75%);
     --grey200: hsl(200, 17%, 96%);
     --green800: hsl(115, 31%, 31%);
     --green900: hsl(115, 31%, 21%);
@@ -38,13 +40,17 @@
         "Courier New", monospace;
 
     --main-color: light-dark(#383838, #f9f7ec);
-    --main-color-light: light-dark(#858585, #a6a6a6);
+    --main-color-light: light-dark(#585858, #a6a6a6);
     --main-shadow-color: light-dark(var(--green900), hsl(111, 10%, 8%));
     --main-bg: light-dark(#f9f7ec, hsl(0, 1%, 19%));
     --main-bg-dark: light-dark(#edebdd, #141413);
     --gray-border: light-dark(#d5d3cb, #666561);
-    --link-color: rgb(0, 172, 91);
-    --link-hover-color: #007940;
+    --link-color: light-dark(#006133, #04da75);
+    --link-hover-color: light-dark(#01391f, #00f27f);
+
+    --row-bg: light-dark(white, black);
+    --row-hover-bg: light-dark(var(--grey200), var(--grey900));
+    --row-content: var(--main-color);
 
     --placeholder-bg: hsl(212, 7%, 57%);
     --placeholder-bg2: hsl(213, 16%, 75%);
@@ -181,6 +187,27 @@ noscript {
     @media only screen and (max-width: 960px) {
         width: 100%;
     }
+}
+
+:global(.row) {
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+    padding: var(--space-s) var(--space-m);
+    background-color: var(--row-bg);
+    border-radius: var(--space-3xs);
+    box-shadow: var(--shadow);
+    transition: all var(--transition-slow);
+
+    position: relative;
+    font-size: 1.1rem;
+}
+
+:global(.row:hover), :global(.row.focused) {
+    background-color: var(--row-hover-bg);
+    transition: all var(--transition-instant);
+}
+
+:global(.row.focused) {
+    box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
 }
 
 .main {

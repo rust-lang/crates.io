@@ -1,33 +1,14 @@
 .row {
-    --bg-color: var(--grey200);
-    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
-    --range-color: light-dark(var(--grey900), #d1cfc7);
-    --crate-color: light-dark(var(--grey700), #d1cfc7);
     --placeholder-opacity: 0.35;
-    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+
+    composes: row from global;
 
     display: flex;
     align-items: center;
-    position: relative;
-    font-size: 18px;
-    padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: var(--shadow);
-    transition: all var(--transition-slow);
-
-    &:hover, &.focused {
-        background-color: var(--hover-bg-color);
-        transition: all var(--transition-instant);
-    }
-
-    &.focused {
-        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
-    }
 
     &.optional {
-        --range-color: light-dark(var(--grey600), var(--grey600));
-        --crate-color: light-dark(var(--grey600), var(--grey600));
+        --row-bg: light-dark(#f6f6f6, #292726);
+        --row-content: light-dark(var(--grey800), var(--grey400));
         --placeholder-opacity: 0.15;
     }
 
@@ -49,7 +30,7 @@
 .range-lg, .range-sm {
     margin-right: var(--space-s);
     min-width: 100px;
-    color: var(--range-color);
+    color: var(--row-content);
     font-variant: tabular-nums;
 }
 
@@ -70,13 +51,13 @@
 }
 
 .link {
-    color: var(--crate-color);
+    color: var(--row-content);
     font-weight: 500;
     margin-right: var(--space-s);
     outline: none;
 
     &:hover {
-        color: var(--crate-color);
+        color: var(--row-content);
     }
 
     &::after {
@@ -90,7 +71,7 @@
 }
 
 .optional-label, .features-label {
-    color: var(--grey600);
+    color: light-dark(var(--grey700), var(--grey400));
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;
@@ -138,7 +119,7 @@
 
 .description {
     margin-top: var(--space-xs);
-    color: var(--crate-color);
+    color: var(--row-content);
     font-size: 90%;
     line-height: 1.5;
 }

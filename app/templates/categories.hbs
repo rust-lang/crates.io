@@ -19,23 +19,25 @@
   </div>
 </div>
 
-<div local-class="list">
+<ul local-class="list">
   {{#each this.model as |category|}}
-    <div local-class='row' data-test-category={{category.slug}}>
-      <div>
-        <LinkTo @route="category" @model={{category.slug}} local-class="category-link">
-          {{~category.category~}}
-        </LinkTo>
-        <span class="text--small" data-test-crate-count>
-          {{format-num category.crates_cnt}} {{if (eq category.crates_cnt 1) "crate" "crates"}}
-        </span>
-      </div>
-      <div local-class="description" class="text--small">
-        {{ category.description }}
-      </div>
-    </div>
+    <li local-class="row">
+      <LinkTo @route="category" @model={{category.slug}} data-test-category={{category.slug}}>
+        <div>
+          <span>
+            {{~category.category~}}
+          </span>
+          <span class="text--small" data-test-crate-count>
+            {{format-num category.crates_cnt}} {{if (eq category.crates_cnt 1) "crate" "crates"}}
+          </span>
+        </div>
+        <div local-class="description" class="text--small">
+          {{ category.description }}
+        </div>
+      </LinkTo>
+    </li>
   {{/each}}
-</div>
+</ul>
 
 <Pagination @pagination={{this.pagination}} />
 
