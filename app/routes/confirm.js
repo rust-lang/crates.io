@@ -18,7 +18,7 @@ export default class ConfirmRoute extends Route {
       await this.session.loadUserTask.last;
 
       if (this.session.currentUser) {
-        this.store.pushPayload({ user: { id: this.session.currentUser.id, email_verified: true } });
+        this.store.pushPayload({ user: { id: this.session.currentUser.id } });
       }
 
       this.notifications.success('Thank you for confirming your email! :)');

@@ -20,6 +20,7 @@ type Result<T> = std::result::Result<T, GitHubError>;
 #[async_trait]
 pub trait GitHubClient: Send + Sync {
     async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser>;
+    async fn current_user_emails(&self, auth: &AccessToken) -> Result<Vec<GitHubEmail>>;
     async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser>;
     async fn org_by_name(&self, org_name: &str, auth: &AccessToken) -> Result<GitHubOrganization>;
     async fn team_by_name(
@@ -101,6 +102,10 @@ impl RealGitHubClient {
 impl GitHubClient for RealGitHubClient {
     async fn current_user(&self, auth: &AccessToken) -> Result<GitHubUser> {
         self.request("/user", auth).await
+    }
+
+    async fn current_user_emails(&self, auth: &AccessToken) -> Result<Vec<GitHubEmail>> {
+        self.request("/user/emails", auth).await
     }
 
     async fn get_user(&self, name: &str, auth: &AccessToken) -> Result<GitHubUser> {
@@ -195,6 +200,13 @@ pub struct GitHubUser {
     pub id: i32,
     pub login: String,
     pub name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubEmail {
+    pub email: String,
+    pub primary: bool,
+    pub verified: bool,
 }
 
 #[derive(Debug, Deserialize)]

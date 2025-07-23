@@ -7,9 +7,7 @@ import { apiAction } from '@mainmatter/ember-api-actions';
 export default class User extends Model {
   @service store;
 
-  @attr email;
-  @attr email_verified;
-  @attr email_verification_sent;
+  @attr emails;
   @attr name;
   @attr is_admin;
   @attr login;
@@ -22,15 +20,45 @@ export default class User extends Model {
     return await waitForPromise(apiAction(this, { method: 'GET', path: 'stats' }));
   }
 
-  async changeEmail(email) {
-    await waitForPromise(apiAction(this, { method: 'PUT', data: { user: { email } } }));
+  async addEmail(emailAddress) {
+    let email = await waitForPromise(
+      apiAction(this, {
+        method: 'POST',
+        path: 'emails',
+        data: { email: emailAddress },
+      }),
+    );
 
     this.store.pushPayload({
       user: {
         id: this.id,
-        email,
-        email_verified: false,
-        email_verification_sent: true,
+        emails: [...this.emails, email],
+      },
+    });
+  }
+
+  async resendVerificationEmail(emailId) {
+    return await waitForPromise(apiAction(this, { method: 'PUT', path: `emails/${emailId}/resend` }));
+  }
+
+  async deleteEmail(emailId) {
+    await waitForPromise(apiAction(this, { method: 'DELETE', path: `emails/${emailId}` }));
+
+    this.store.pushPayload({
+      user: {
+        id: this.id,
+        emails: this.emails.filter(email => email.id !== emailId),
+      },
+    });
+  }
+
+  async updateNotificationEmail(emailId) {
+    await waitForPromise(apiAction(this, { method: 'PUT', path: `emails/${emailId}/notifications` }));
+
+    this.store.pushPayload({
+      user: {
+        id: this.id,
+        emails: this.emails.map(email => ({ ...email, send_notifications: email.id === emailId })),
       },
     });
   }
@@ -44,9 +72,5 @@ export default class User extends Model {
         publish_notifications: enabled,
       },
     });
-  }
-
-  async resendVerificationEmail() {
-    return await waitForPromise(apiAction(this, { method: 'PUT', path: 'resend' }));
   }
 }

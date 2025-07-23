@@ -1,3 +1,5 @@
+//! This file tests the legacy email update functionality.
+
 use crate::tests::util::{RequestHelper, Response, TestApp};
 use http::StatusCode;
 use insta::assert_snapshot;

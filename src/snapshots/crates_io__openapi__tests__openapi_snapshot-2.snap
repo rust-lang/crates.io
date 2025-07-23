@@ -88,7 +88,8 @@ expression: response.json()
             ]
           },
           "email": {
-            "description": "The user's email address, if set.",
+            "deprecated": true,
+            "description": "The user's email address for sending notifications, if set.",
             "example": "kate@morgan.dev",
             "type": [
               "string",
@@ -96,14 +97,31 @@ expression: response.json()
             ]
           },
           "email_verification_sent": {
-            "description": "Whether the user's email address verification email has been sent.",
+            "deprecated": true,
+            "description": "Whether the user's has been sent a verification email to their notification email address, if set.",
             "example": true,
             "type": "boolean"
           },
           "email_verified": {
-            "description": "Whether the user's email address has been verified.",
+            "deprecated": true,
+            "description": "Whether the user's notification email address, if set, has been verified.",
             "example": true,
             "type": "boolean"
+          },
+          "emails": {
+            "description": "The user's email addresses.",
+            "example": [
+              {
+                "email": "user@example.com",
+                "id": 42,
+                "send_notifications": true,
+                "verified": true
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Email"
+            },
+            "type": "array"
           },
           "id": {
             "description": "An opaque identifier for the user.",
@@ -146,6 +164,7 @@ expression: response.json()
         "required": [
           "id",
           "login",
+          "emails",
           "email_verified",
           "email_verification_sent",
           "is_admin",
@@ -494,6 +513,44 @@ expression: response.json()
           "crate_name",
           "created_at",
           "expires_at"
+        ],
+        "type": "object"
+      },
+      "Email": {
+        "properties": {
+          "email": {
+            "description": "The email address.",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "id": {
+            "description": "An opaque identifier for the email.",
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "send_notifications": {
+            "description": "Whether notifications should be sent to this email address.",
+            "example": true,
+            "type": "boolean"
+          },
+          "verification_email_sent": {
+            "description": "Whether the verification email has been sent.",
+            "example": true,
+            "type": "boolean"
+          },
+          "verified": {
+            "description": "Whether the email address has been verified.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "verified",
+          "verification_email_sent",
+          "send_notifications"
         ],
         "type": "object"
       },
@@ -961,6 +1018,24 @@ expression: response.json()
           "login",
           "url"
         ],
+        "type": "object"
+      },
+      "UserUpdateParameters": {
+        "properties": {
+          "email": {
+            "deprecated": true,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publish_notifications": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "Version": {
@@ -4381,9 +4456,189 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/users/{id}/emails": {
+      "post": {
+        "operationId": "create_email",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Email"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Add a new email address to a user profile.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/emails/{email_id}": {
+      "delete": {
+        "operationId": "delete_email",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID of the email to delete",
+            "in": "path",
+            "name": "email_id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Delete an email address from a user profile.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/emails/{email_id}/notifications": {
+      "put": {
+        "operationId": "enable_notifications",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID of the email to enable notifications for",
+            "in": "path",
+            "name": "email_id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Enable notifications for a specific email address. This will disable notifications for all other emails of the user.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users/{id}/resend": {
       "put": {
-        "operationId": "resend_email_verification",
+        "deprecated": true,
+        "operationId": "resend_email_verification_all",
         "parameters": [
           {
             "description": "ID of the user",
@@ -4425,7 +4680,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Regenerate and send an email verification token.",
+        "summary": "Regenerate and send an email verification token for any unverified email of the current user.\nDeprecated endpoint, use `PUT /api/v1/user/{user_id}/emails/{id}/resend` instead.",
         "tags": [
           "users"
         ]
@@ -4477,6 +4732,66 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/users/{user_id}/emails/{id}/resend": {
+      "put": {
+        "operationId": "resend_email_verification",
+        "parameters": [
+          {
+            "description": "ID of the user",
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID of the email",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "ok": {
+                      "example": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Regenerate and send an email verification token for the given email.",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users/{user}": {
       "get": {
         "operationId": "find_user",
@@ -4517,7 +4832,7 @@ expression: response.json()
         ]
       },
       "put": {
-        "description": "This endpoint allows users to update their email address and publish notifications settings.\n\nThe `id` parameter needs to match the ID of the currently authenticated user.",
+        "description": "This endpoint allows users to manage publish notifications settings.\n\nYou may provide an `email` parameter to add a new email address to the user's profile, but\nthis is for legacy support only and will be removed in the future.\n\nFor managing email addresses, please use the `/api/v1/users/{id}/emails` endpoints instead.\n\nThe `id` parameter needs to match the ID of the currently authenticated user.",
         "operationId": "update_user",
         "parameters": [
           {
@@ -4531,6 +4846,24 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "user": {
+                    "$ref": "#/components/schemas/UserUpdateParameters"
+                  }
+                },
+                "required": [
+                  "user"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

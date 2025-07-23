@@ -1,7 +1,8 @@
 use crate::external_urls::remove_blocked_urls;
 use crate::models::{
-    ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
-    TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
+    ApiToken, Category, Crate, Dependency, DependencyKind, Email, Keyword, Owner,
+    ReverseDependency, Team, TopVersions, TrustpubData, User, Version, VersionDownload,
+    VersionOwnerAction,
 };
 use chrono::{DateTime, Utc};
 use crates_io_github as github;
@@ -676,21 +677,37 @@ pub struct EncodablePrivateUser {
     #[schema(example = "ghost")]
     pub login: String,
 
-    /// Whether the user's email address has been verified.
-    #[schema(example = true)]
-    pub email_verified: bool,
-
-    /// Whether the user's email address verification email has been sent.
-    #[schema(example = true)]
-    pub email_verification_sent: bool,
+    /// The user's email addresses.
+    #[schema(example = json!([
+        {
+            "id": 42,
+            "email": "user@example.com",
+            "verified": true,
+            "send_notifications": true
+        }]))]
+    pub emails: Vec<EncodableEmail>,
 
     /// The user's display name, if set.
     #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
 
-    /// The user's email address, if set.
+    /// Whether the user's notification email address, if set, has been verified.
+    #[schema(example = true)]
+    #[serde(rename = "email_verified")]
+    #[deprecated(note = "Use `emails` array instead, check that `verified` property is true.")]
+    pub notification_email_verified: bool,
+
+    /// Whether the user's has been sent a verification email to their notification email address, if set.
+    #[schema(example = true)]
+    #[serde(rename = "email_verification_sent")]
+    #[deprecated(note = "Use `emails` array instead, check that `token_generated_at` property is not null.")]
+    pub notification_email_verification_sent: bool,
+
+    /// The user's email address for sending notifications, if set.
     #[schema(example = "kate@morgan.dev")]
-    pub email: Option<String>,
+    #[serde(rename = "email")]
+    #[deprecated(note = "Use `emails` array instead, maximum of one entry will have `send_notifications` property set to true.")]
+    pub notification_email: Option<String>,
 
     /// The user's avatar URL, if set.
     #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
@@ -711,12 +728,7 @@ pub struct EncodablePrivateUser {
 
 impl EncodablePrivateUser {
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
-    pub fn from(
-        user: User,
-        email: Option<String>,
-        email_verified: bool,
-        email_verification_sent: bool,
-    ) -> Self {
+    pub fn from(user: User, emails: Vec<Email>) -> Self {
         let User {
             id,
             name,
@@ -728,17 +740,62 @@ impl EncodablePrivateUser {
         } = user;
         let url = format!("https://github.com/{gh_login}");
 
+        let notification_email = emails.iter().find(|e| e.send_notifications);
+        let notification_email_verified = notification_email.map(|e| e.verified).unwrap_or(false);
+        let notification_email_verification_sent = notification_email
+            .and_then(|e| e.token_generated_at)
+            .is_some();
+        let notification_email = notification_email.map(|e| e.email.clone());
+
+        #[allow(deprecated)]
         EncodablePrivateUser {
             id,
-            email,
-            email_verified,
-            email_verification_sent,
+            emails: emails.into_iter().map(EncodableEmail::from).collect(),
+            notification_email_verified,
+            notification_email_verification_sent,
+            notification_email,
             avatar: gh_avatar,
             login: gh_login,
             name,
             url: Some(url),
             is_admin,
             publish_notifications,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, utoipa::ToSchema)]
+#[schema(as = Email)]
+pub struct EncodableEmail {
+    /// An opaque identifier for the email.
+    #[schema(example = 42)]
+    pub id: i32,
+
+    /// The email address.
+    #[schema(example = "user@example.com")]
+    pub email: String,
+
+    /// Whether the email address has been verified.
+    #[schema(example = true)]
+    pub verified: bool,
+
+    /// Whether the verification email has been sent.
+    #[schema(example = true)]
+    pub verification_email_sent: bool,
+
+    /// Whether notifications should be sent to this email address.
+    #[schema(example = true)]
+    pub send_notifications: bool,
+}
+
+impl From<Email> for EncodableEmail {
+    fn from(email: Email) -> Self {
+        Self {
+            id: email.id,
+            email: email.email,
+            verified: email.verified,
+            verification_email_sent: email.token_generated_at.is_some(),
+            send_notifications: email.send_notifications,
         }
     }
 }

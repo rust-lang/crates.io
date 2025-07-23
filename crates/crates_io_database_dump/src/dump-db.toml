@@ -141,6 +141,7 @@ id = "private"
 user_id = "private"
 email = "private"
 verified = "private"
+send_notifications = "private"
 token = "private"
 token_generated_at = "private"
 

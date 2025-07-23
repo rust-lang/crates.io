@@ -1,0 +1,32 @@
+---
+source: src/tests/user.rs
+expression: json.user
+---
+{
+  "id": 1,
+  "login": "arbitrary_username",
+  "emails": [
+    {
+      "id": 1,
+      "email": "foo@example.com",
+      "verified": true,
+      "verification_email_sent": true,
+      "send_notifications": true
+    },
+    {
+      "id": 2,
+      "email": "bar@example.com",
+      "verified": false,
+      "verification_email_sent": true,
+      "send_notifications": false
+    }
+  ],
+  "name": null,
+  "email_verified": true,
+  "email_verification_sent": true,
+  "email": "foo@example.com",
+  "avatar": null,
+  "url": "https://github.com/arbitrary_username",
+  "is_admin": false,
+  "publish_notifications": true
+}

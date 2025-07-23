@@ -9,6 +9,15 @@ expression: response.json()
     "email": "foo@example.com",
     "email_verification_sent": true,
     "email_verified": true,
+    "emails": [
+      {
+        "email": "foo@example.com",
+        "id": 1,
+        "send_notifications": true,
+        "verification_email_sent": true,
+        "verified": true
+      }
+    ],
     "id": 1,
     "is_admin": false,
     "login": "foo",

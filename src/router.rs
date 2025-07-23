@@ -81,8 +81,14 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             user::email_notifications::update_email_notifications
         ))
         .routes(routes!(summary::get_summary))
+        .routes(routes!(user::emails::create_email))
+        .routes(routes!(user::emails::delete_email))
+        .routes(routes!(user::emails::enable_notifications))
         .routes(routes!(user::email_verification::confirm_user_email))
         .routes(routes!(user::email_verification::resend_email_verification))
+        .routes(routes!(
+            user::email_verification::resend_email_verification_all
+        ))
         .routes(routes!(site_metadata::get_site_metadata))
         // Session management
         .routes(routes!(session::begin_session))

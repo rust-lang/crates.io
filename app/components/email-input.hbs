@@ -1,101 +1,64 @@
 <div ...attributes>
-  {{#unless @user.email}}
-    <div local-class="friendly-message" data-test-no-email>
-      <p>
-        Please add your email address. We will only use
-        it to contact you about your account. We promise we'll never share it!
-      </p>
-    </div>
-  {{/unless}}
+  {{#unless this.email.id }}
+  <div local-class="row">
+    <form local-class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
+      <Input @type="email" @value={{this.value}} id="email-input" placeholder="Email" local-class="input"
+        data-test-input {{did-insert this.focus}} oninput={{this.validate}} />
 
-  {{#if this.isEditing }}
-    <div local-class="row">
-      <div local-class="label">
-        <label for="email-input">Email</label>
-      </div>
-      <form local-class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
-        <Input
-          @type="email"
-          @value={{this.value}}
-          id="email-input"
-          placeholder="Email"
-          local-class="input"
-          data-test-input
-        />
-
-        <div local-class="actions">
-          <button
-            type='submit'
-            local-class="save-button"
-            class="button button--small"
-            disabled={{not this.value}}
-            data-test-save-button
-          >
-            Save
-          </button>
-
-          <button
-            type="button"
-            class="button button--small"
-            data-test-cancel-button
-            {{on "click" (fn (mut this.isEditing) false)}}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  {{else}}
-    <div local-class="row">
-      <div local-class="label">
-        <dt>Email</dt>
-      </div>
-      <div local-class="email-column" data-test-email-address>
-        <dd>
-          {{ @user.email }}
-          {{#if @user.email_verified}}
-            <span local-class="verified" data-test-verified>Verified!</span>
-          {{/if}}
-        </dd>
-      </div>
       <div local-class="actions">
-        <button
-          type="button"
-          class="button button--small"
-          data-test-edit-button
-          {{on "click" this.editEmail}}
-        >
-          Edit
+        <button type='submit' local-class="save-button" class="button button--small" disabled={{not this.isValid}}
+          data-test-save-button>
+          Verify
         </button>
       </div>
-    </div>
-    {{#if (and @user.email (not @user.email_verified))}}
-      <div local-class="row">
-        <div local-class="label">
-          {{#if @user.email_verification_sent}}
-            <p data-test-verification-sent>We have sent a verification email to your address.</p>
+    </form>
+  </div>
+  {{else}}
+  <div local-class="row">
+    <div local-class="email-column" data-test-email-address>
+      <dd>
+        {{ this.email.email }}
+        <span class="badges">
+          {{#if this.email.verified}}
+          <span local-class="badge verified" data-test-verified>Verified</span>
+          {{#if this.email.send_notifications }}
+            <span local-class="badge">Notifications are sent here</span>
           {{/if}}
-          <p data-test-not-verified>Your email has not yet been verified.</p>
-        </div>
-        <div local-class="actions">
-          <button
-            type="button"
-            class="button button--small"
-            disabled={{this.disableResend}}
-            data-test-resend-button
-            {{on "click" (perform this.resendEmailTask)}}
-          >
-            {{#if this.disableResend}}
-              Sent!
-            {{else if @user.email_verification_sent}}
-              Resend
+          {{else}}
+            {{#if this.email.verification_email_sent}}
+            <span local-class="badge pending-verification" data-test-verification-sent>Unverified - email sent</span>
             {{else}}
-              Send verification email
+            <span local-class="badge unverified" data-test-verification-not-sent>Unverified</span>
             {{/if}}
-          </button>
-        </div>
-      </div>
-    {{/if}}
-  {{/if}}
+          {{/if}}
+        </span>
+      </dd>
+    </div>
+    <div local-class="actions">
+      {{#unless this.email.verified}}
+      <button type="button" class="button button--small" disabled={{this.disableResend}} data-test-resend-button
+        {{on "click" (perform this.resendEmailTask)}}>
+        {{#if this.disableResend}}
+        Sent!
+        {{else if this.email.verification_email_sent}}
+        Resend
+        {{else}}
+        Verify
+        {{/if}}
+      </button>
+      {{/unless}}
+      {{#if (and (not this.email.send_notifications) this.email.verified)}}
+      <button type="button" class="button button--small" data-test-edit-button {{on "click" (prevent-default (perform this.enableNotificationsTask))}}>
+        Enable notifications
+      </button>
+      {{/if}}
+      {{#if @canDelete}}
+      <button disabled={{this.email.send_notifications}} title={{if this.email.send_notifications "Cannot delete notifications email"}} type="button" class="button button--small button--red" data-test-edit-button {{on "click" (prevent-default (perform this.deleteEmailTask))}}>
+        Remove
+      </button>
+      {{/if}}
+    </div>
+  </div>
+  {{/unless}}
 
 </div>

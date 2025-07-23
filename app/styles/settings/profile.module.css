@@ -53,6 +53,26 @@
     column-gap: var(--space-xs);
 }
 
+.friendly-message {
+    margin: 0;
+    margin-bottom: var(--space-s);
+}
+
+.email-selector {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-s);
+}
+
+.select-label {
+    margin-bottom: var(--space-3xs);
+}
+
+.add-email {
+    margin-top: var(--space-xs);
+    display: flex;
+}
+
 .label {
     grid-area: label;
     font-weight: bold;

@@ -1,0 +1,40 @@
+---
+source: src/tests/routes/users/email_verification.rs
+expression: app.emails_snapshot().await
+---
+To: user@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Please confirm your email address
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+Hello foo!
+
+Welcome to crates.io. Please click the link below to verify your email address:
+
+https://crates.io/confirm/[confirm-token]
+
+Thank you!
+
+--
+The crates.io Team
+----------------------------------------
+
+To: user@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Please confirm your email address
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+Hello foo!
+
+Welcome to crates.io. Please click the link below to verify your email address:
+
+https://crates.io/confirm/[confirm-token]
+
+Thank you!
+
+--
+The crates.io Team

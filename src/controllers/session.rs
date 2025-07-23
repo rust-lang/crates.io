@@ -2,14 +2,14 @@ use crate::app::AppState;
 use crate::email::EmailMessage;
 use crate::email::Emails;
 use crate::middleware::log_request::RequestLogExt;
-use crate::models::{NewEmail, NewUser, User};
+use crate::models::{Email, NewEmail, NewUser, User};
 use crate::schema::users;
 use crate::util::diesel::is_read_only_error;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use crate::views::EncodableMe;
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
-use crates_io_github::GitHubUser;
+use crates_io_github::{GitHubEmail, GitHubUser};
 use crates_io_session::SessionExtension;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
@@ -49,6 +49,7 @@ pub async fn begin_session(app: AppState, session: SessionExtension) -> Json<Beg
         .github_oauth
         .authorize_url(oauth2::CsrfToken::new_random)
         .add_scope(Scope::new("read:org".to_string()))
+        .add_scope(Scope::new("user:email".to_string()))
         .url();
 
     let state = state.secret().to_string();
@@ -115,10 +116,41 @@ pub async fn authorize_session(
     let token = token.access_token();
 
     // Fetch the user info from GitHub using the access token we just got and create a user record
-    let ghuser = app.github.current_user(token).await?;
+    let (ghuser, ghemails) = tokio::join!(
+        app.github.current_user(token),
+        app.github.current_user_emails(token)
+    );
+
+    let ghuser = ghuser?;
+
+    // Fetch an exhaustive list of the user's email addresses from GitHub
+    let mut ghemails = match ghemails {
+        Ok(emails) => emails,
+        Err(err) => {
+            warn!("Failed to fetch user emails from GitHub: {err}");
+            // Continue anyway, user may have denied the user:email scope on purpose
+            // but we could have their public email from the user info.
+            if let Some(gh_email) = &ghuser.email {
+                vec![GitHubEmail {
+                    email: gh_email.to_string(),
+                    primary: true,
+                    verified: false,
+                }]
+            } else {
+                vec![]
+            }
+        }
+    };
 
     let mut conn = app.db_write().await?;
-    let user = save_user_to_database(&ghuser, token.secret(), &app.emails, &mut conn).await?;
+    let user = save_user_to_database(
+        &ghuser,
+        &mut ghemails,
+        token.secret(),
+        &app.emails,
+        &mut conn,
+    )
+    .await?;
 
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
@@ -128,6 +160,7 @@ pub async fn authorize_session(
 
 pub async fn save_user_to_database(
     user: &GitHubUser,
+    user_emails: &mut [GitHubEmail],
     access_token: &str,
     emails: &Emails,
     conn: &mut AsyncPgConnection,
@@ -140,7 +173,7 @@ pub async fn save_user_to_database(
         .gh_access_token(access_token)
         .build();
 
-    match create_or_update_user(&new_user, user.email.as_deref(), emails, conn).await {
+    match create_or_update_user(&new_user, user_emails, emails, conn).await {
         Ok(user) => Ok(user),
         Err(error) if is_read_only_error(&error) => {
             // If we're in read only mode, we can't update their details
@@ -157,7 +190,7 @@ pub async fn save_user_to_database(
 /// and sends a confirmation email to the user.
 async fn create_or_update_user(
     new_user: &NewUser<'_>,
-    email: Option<&str>,
+    user_emails: &mut [GitHubEmail],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<User> {
@@ -165,27 +198,49 @@ async fn create_or_update_user(
         async move {
             let user = new_user.insert_or_update(conn).await?;
 
+            // Count the number of existing emails to determine if we need to
+            // enable notifications for the first email address.
+            let mut email_count: i64 = Email::belonging_to(&user).count().get_result(conn).await?;
+
+            // Sort the GitHub emails by primary status so that the primary email is inserted
+            // first, and therefore will have notifications enabled.
+            user_emails.sort_by(|a, b| {
+                if a.primary && !b.primary {
+                    std::cmp::Ordering::Less
+                } else if !a.primary && b.primary {
+                    std::cmp::Ordering::Greater
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            });
+
             // To send the user an account verification email
-            if let Some(user_email) = email {
+            for user_email in user_emails {
+                email_count += 1; // Increment the count so that we don't enable notifications for subsequent emails
+
                 let new_email = NewEmail::builder()
                     .user_id(user.id)
-                    .email(user_email)
+                    .email(&user_email.email)
+                    .verified(user_email.verified) // we can trust GitHub's verification
+                    .send_notifications(email_count == 1) // Enable notifications if this is the user's first email
                     .build();
 
-                if let Some(token) = new_email.insert_if_missing(conn).await? {
+                if let Some(saved_email) = new_email.insert_if_missing(conn).await?
+                    && !new_email.verified
+                {
                     let email = EmailMessage::from_template(
                         "user_confirm",
                         context! {
                             user_name => user.gh_login,
                             domain => emails.domain,
-                            token => token.expose_secret()
+                            token => saved_email.token.expose_secret()
                         },
                     );
 
                     match email {
                         Ok(email) => {
                             // Swallows any error. Some users might insert an invalid email address here.
-                            let _ = emails.send(user_email, email).await;
+                            let _ = emails.send(&saved_email.email, email).await;
                         }
                         Err(error) => {
                             warn!("Failed to render user confirmation email template: {error}");
@@ -242,7 +297,19 @@ mod tests {
             id: -1,
             avatar_url: None,
         };
-        let result = save_user_to_database(&gh_user, "arbitrary_token", &emails, &mut conn).await;
+        let mut gh_emails = vec![GitHubEmail {
+            email: gh_user.email.clone().unwrap(),
+            primary: true,
+            verified: false,
+        }];
+        let result = save_user_to_database(
+            &gh_user,
+            &mut gh_emails,
+            "arbitrary_token",
+            &emails,
+            &mut conn,
+        )
+        .await;
 
         assert!(
             result.is_ok(),

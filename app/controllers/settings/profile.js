@@ -8,14 +8,22 @@ import { task } from 'ember-concurrency';
 export default class extends Controller {
   @service notifications;
 
+  @tracked isAddingEmail = false;
+
   @tracked publishNotifications;
+  @tracked notificationEmailId;
 
   @action handleNotificationsChange(event) {
     this.publishNotifications = event.target.checked;
   }
 
+  @action handleNotificationEmailChange(event) {
+    this.notificationEmailId = event.target.value;
+  }
+
   updateNotificationSettings = task(async () => {
     try {
+      await this.model.user.updateNotificationEmail(this.notificationEmailId);
       await this.model.user.updatePublishNotifications(this.publishNotifications);
     } catch {
       this.notifications.error(

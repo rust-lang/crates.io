@@ -8,13 +8,22 @@ import { task } from 'ember-concurrency';
 export default class EmailInput extends Component {
   @service notifications;
 
+  @tracked email = this.args.email || { email: '', id: null };
+  @tracked isValid = false;
   @tracked value;
-  @tracked isEditing = false;
   @tracked disableResend = false;
+
+  @action focus(element) {
+    element.focus();
+  }
+
+  @action validate(event) {
+    this.isValid = event.target.checkValidity();
+  }
 
   resendEmailTask = task(async () => {
     try {
-      await this.args.user.resendVerificationEmail();
+      await this.args.user.resendVerificationEmail(this.email.id);
       this.disableResend = true;
     } catch (error) {
       let detail = error.errors?.[0]?.detail;
@@ -26,30 +35,47 @@ export default class EmailInput extends Component {
     }
   });
 
-  @action
-  editEmail() {
-    this.value = this.args.user.email;
-    this.isEditing = true;
-  }
+  deleteEmailTask = task(async () => {
+    try {
+      await this.args.user.deleteEmail(this.email.id);
+    } catch (error) {
+      console.error('Error deleting email:', error);
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in deleting email: ${detail}`);
+      } else {
+        this.notifications.error('Unknown error in deleting email');
+      }
+    }
+  });
 
   saveEmailTask = task(async () => {
-    let userEmail = this.value;
-    let user = this.args.user;
-
     try {
-      await user.changeEmail(userEmail);
-
-      this.isEditing = false;
-      this.disableResend = false;
+      this.email = await this.args.user.addEmail(this.value);
+      this.disableResend = true;
+      await this.args.onAddEmail?.();
     } catch (error) {
       let detail = error.errors?.[0]?.detail;
 
-      let msg =
-        detail && !detail.startsWith('{')
-          ? `An error occurred while saving this email, ${detail}`
-          : 'An unknown error occurred while saving this email.';
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in saving email: ${detail}`);
+      } else {
+        console.error('Error saving email:', error);
+        this.notifications.error('Unknown error in saving email');
+      }
+    }
+  });
 
-      this.notifications.error(`Error in saving email: ${msg}`);
+  enableNotificationsTask = task(async () => {
+    try {
+      await this.args.user.updateNotificationEmail(this.email.id);
+    } catch (error) {
+      let detail = error.errors?.[0]?.detail;
+      if (detail && !detail.startsWith('{')) {
+        this.notifications.error(`Error in enabling notifications: ${detail}`);
+      } else {
+        this.notifications.error('Unknown error in enabling notifications');
+      }
     }
   });
 }

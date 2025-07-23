@@ -25,13 +25,38 @@
   </div>
 
   <div local-class="me-email">
-    <h2>User Email</h2>
-    <EmailInput
-      @user={{this.model.user}}
-      data-test-email-input
-    />
+    <h2>User Emails</h2>
+    {{#if (eq this.model.user.emails.length 0)}}
+      <p local-class="friendly-message" data-test-no-email>
+        Please add your email address. We will only use
+        it to contact you about your account. We promise we'll never share it!
+      </p>
+    {{/if}}
+    {{#each this.model.user.emails as |email|}}
+      <EmailInput
+        @email={{email}}
+        @user={{this.model.user}}
+        @canDelete={{gt this.model.user.emails.length 1}}
+        data-test-email-input
+      />
+    {{/each}}
+    {{#if this.isAddingEmail}}
+      <EmailInput
+        @user={{this.model.user}}
+        @canDelete={{gt this.model.user.emails.length 1}}
+        @onAddEmail={{fn (mut this.isAddingEmail) false}}
+        data-test-add-email-input
+      />
+    {{else}}
+      <div local-class="add-email">
+        <button type="button" class="button button--small" data-test-add-email-button {{on "click" (fn (mut this.isAddingEmail) true)}}>
+          Add new email
+        </button>
+      </div>
+    {{/if}}
   </div>
 
+  {{#unless (lt this.model.user.emails.length 1)}}
   <div local-class="notifications" data-test-notifications>
     <h2>Notification Settings</h2>
 
@@ -44,7 +69,7 @@
       />
       <span local-class="label">Publish Notifications</span>
       <span local-class="note">
-        Publish notifications are sent to your email address whenever new
+        Publish notifications are sent to your selected notification address whenever new
         versions of a crate that you own are published. These can be useful to
         quickly detect compromised accounts or API tokens.
       </span>
@@ -64,4 +89,5 @@
       {{/if}}
     </div>
   </div>
+  {{/unless}}
 </SettingsPage>

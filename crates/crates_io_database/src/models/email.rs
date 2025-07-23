@@ -1,5 +1,7 @@
 use bon::Builder;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use diesel::upsert::on_constraint;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
 
@@ -13,8 +15,20 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
+    pub send_notifications: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
+    pub token_generated_at: Option<DateTime<Utc>>,
+}
+
+impl Email {
+    pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<Self> {
+        emails::table
+            .find(id)
+            .select(Email::as_select())
+            .first(conn)
+            .await
+    }
 }
 
 #[derive(Debug, Insertable, AsChangeset, Builder)]
@@ -24,46 +38,32 @@ pub struct NewEmail<'a> {
     pub email: &'a str,
     #[builder(default = false)]
     pub verified: bool,
+    #[builder(default = false)]
+    pub send_notifications: bool,
 }
 
 impl NewEmail<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<Email> {
         diesel::insert_into(emails::table)
             .values(self)
-            .execute(conn)
-            .await?;
-
-        Ok(())
+            .returning(Email::as_returning())
+            .get_result(conn)
+            .await
     }
 
-    /// Inserts the email into the database and returns the confirmation token,
+    /// Inserts the email into the database and returns the email record,
     /// or does nothing if it already exists and returns `None`.
     pub async fn insert_if_missing(
         &self,
         conn: &mut AsyncPgConnection,
-    ) -> QueryResult<Option<SecretString>> {
+    ) -> QueryResult<Option<Email>> {
         diesel::insert_into(emails::table)
             .values(self)
-            .on_conflict_do_nothing()
-            .returning(emails::token)
-            .get_result::<String>(conn)
+            .on_conflict(on_constraint("unique_user_email"))
+            .do_nothing()
+            .returning(Email::as_returning())
+            .get_result(conn)
             .await
-            .map(Into::into)
             .optional()
-    }
-
-    pub async fn insert_or_update(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<SecretString> {
-        diesel::insert_into(emails::table)
-            .values(self)
-            .on_conflict(emails::user_id)
-            .do_update()
-            .set(self)
-            .returning(emails::token)
-            .get_result::<String>(conn)
-            .await
-            .map(Into::into)
     }
 }

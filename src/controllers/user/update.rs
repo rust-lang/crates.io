@@ -2,7 +2,7 @@ use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
-use crate::models::NewEmail;
+use crate::models::{Email, NewEmail};
 use crate::schema::users;
 use crate::util::errors::{AppResult, bad_request, server_error};
 use axum::Json;
@@ -16,20 +16,27 @@ use secrecy::ExposeSecret;
 use serde::Deserialize;
 use tracing::warn;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct UserUpdate {
     user: User,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
+#[schema(as = UserUpdateParameters)]
 pub struct User {
+    #[deprecated(note = "Use `/api/v1/users/{id}/emails` instead.")]
     email: Option<String>,
     publish_notifications: Option<bool>,
 }
 
 /// Update user settings.
 ///
-/// This endpoint allows users to update their email address and publish notifications settings.
+/// This endpoint allows users to manage publish notifications settings.
+///
+/// You may provide an `email` parameter to add a new email address to the user's profile, but
+/// this is for legacy support only and will be removed in the future.
+///
+/// For managing email addresses, please use the `/api/v1/users/{id}/emails` endpoints instead.
 ///
 /// The `id` parameter needs to match the ID of the currently authenticated user.
 #[utoipa::path(
@@ -38,6 +45,7 @@ pub struct User {
     params(
         ("user" = i32, Path, description = "ID of the user"),
     ),
+    request_body = inline(UserUpdate),
     security(
         ("api_token" = []),
         ("cookie" = []),
@@ -95,6 +103,7 @@ pub async fn update_user(
         }
     }
 
+    #[allow(deprecated)]
     if let Some(user_email) = &user_update.user.email {
         let user_email = user_email.trim();
 
@@ -106,35 +115,45 @@ pub async fn update_user(
             .parse::<Address>()
             .map_err(|_| bad_request("invalid email address"))?;
 
-        let new_email = NewEmail::builder()
+        // Check if this is the first email for the user, because if so, we need to enable notifications
+        let existing_email_count: i64 = Email::belonging_to(&user)
+            .count()
+            .get_result(&mut conn)
+            .await
+            .map_err(|_| server_error("Error fetching existing emails"))?;
+
+        let saved_email = NewEmail::builder()
             .user_id(user.id)
             .email(user_email)
-            .build();
+            .send_notifications(existing_email_count < 1) // Enable notifications if this is the first email
+            .build()
+            .insert_if_missing(&mut conn)
+            .await
+            .map_err(|_| server_error("Error saving email"))?;
 
-        let token = new_email.insert_or_update(&mut conn).await;
-        let token = token.map_err(|_| server_error("Error in creating token"))?;
+        if let Some(saved_email) = saved_email {
+            // This swallows any errors that occur while attempting to send the email. Some users have
+            // an invalid email set in their GitHub profile, and we should let them sign in even though
+            // we're trying to silently use their invalid address during signup and can't send them an
+            // email. They'll then have to provide a valid email address.
+            let email = EmailMessage::from_template(
+                "user_confirm",
+                context! {
+                    user_name => user.gh_login,
+                    domain => state.emails.domain,
+                    token => saved_email.token.expose_secret()
+                },
+            );
 
-        // This swallows any errors that occur while attempting to send the email. Some users have
-        // an invalid email set in their GitHub profile, and we should let them sign in even though
-        // we're trying to silently use their invalid address during signup and can't send them an
-        // email. They'll then have to provide a valid email address.
-        let email = EmailMessage::from_template(
-            "user_confirm",
-            context! {
-                user_name => user.gh_login,
-                domain => state.emails.domain,
-                token => token.expose_secret()
-            },
-        );
-
-        match email {
-            Ok(email) => {
-                let _ = state.emails.send(user_email, email).await;
+            match email {
+                Ok(email) => {
+                    let _ = state.emails.send(user_email, email).await;
+                }
+                Err(error) => {
+                    warn!("Failed to render user confirmation email template: {error}");
+                }
             }
-            Err(error) => {
-                warn!("Failed to render user confirmation email template: {error}");
-            }
-        };
+        }
     }
 
     Ok(OkResponse::new())

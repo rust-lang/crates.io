@@ -1,7 +1,3 @@
-.friendly-message {
-    margin-top: 0;
-}
-
 .row {
     width: 100%;
     border: 1px solid var(--gray-border);
@@ -9,6 +5,7 @@
     padding: var(--space-2xs) var(--space-s);
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
     &:last-child {
         border-bottom-width: 1px;
@@ -22,12 +19,41 @@
 }
 
 .email-column {
+    padding: var(--space-xs) 0;
+}
+
+.email-column dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3xs);
     flex: 20;
 }
 
+.email-column .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3xs);
+}
+
+.badge {
+    padding: var(--space-4xs) var(--space-2xs);
+    background-color: var(--main-bg-dark);
+    font-size: 0.8rem;
+    border-radius: 100px;
+}
+
 .verified {
-    color: green;
-    font-weight: bold;
+    background-color: var(--green800);
+    color: var(--grey200);
+}
+
+.pending-verification {
+    background-color: light-dark(var(--orange-200), var(--orange-500));
+}
+
+.unverified {
+    background-color: light-dark(var(--orange-300), var(--orange-600));
 }
 
 .email-form {
@@ -38,13 +64,22 @@
 }
 
 .input {
-    width: 400px;
+    background-color: var(--main-bg);
+    border: 0;
+    flex: 1;
+    margin: calc(var(--space-3xs) * -1) calc(var(--space-2xs) * -1);
+    padding: var(--space-3xs) var(--space-2xs);
     margin-right: var(--space-xs);
+}
+
+.input:focus {
+    outline: none;
 }
 
 .actions {
     display: flex;
     align-items: center;
+    gap: var(--space-3xs);
 }
 
 .save-button {

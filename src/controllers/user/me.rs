@@ -4,10 +4,12 @@ use crate::controllers::helpers::Paginate;
 use crate::controllers::helpers::pagination::{Paginated, PaginationOptions};
 use crate::models::krate::CrateName;
 use crate::models::{CrateOwner, Follow, OwnerKind, User, Version, VersionOwnerAction};
-use crate::schema::{crate_owners, crates, emails, follows, users, versions};
+use crate::schema::{crate_owners, crates, follows, users, versions};
 use crate::util::errors::AppResult;
 use crate::views::{EncodableMe, EncodablePrivateUser, EncodableVersion, OwnedCrate};
 use axum::Json;
+use crates_io_database::models::Email;
+use crates_io_database::schema::emails;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use futures_util::FutureExt;
@@ -24,31 +26,24 @@ use serde::Serialize;
 )]
 pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json<EncodableMe>> {
     let mut conn = app.db_read_prefer_primary().await?;
-    let user_id = AuthCheck::only_cookie()
-        .check(&req, &mut conn)
-        .await?
-        .user_id();
+    let user = AuthCheck::only_cookie().check(&req, &mut conn).await?;
 
-    let ((user, verified, email, verification_sent), owned_crates) = tokio::try_join!(
-        users::table
-            .find(user_id)
-            .left_join(emails::table)
-            .select((
-                User::as_select(),
-                emails::verified.nullable(),
-                emails::email.nullable(),
-                emails::token_generated_at.nullable().is_not_null(),
-            ))
-            .first::<(User, Option<bool>, Option<String>, bool)>(&mut conn)
-            .boxed(),
-        CrateOwner::by_owner_kind(OwnerKind::User)
-            .inner_join(crates::table)
-            .filter(crate_owners::owner_id.eq(user_id))
-            .select((crates::id, crates::name, crate_owners::email_notifications))
-            .order(crates::name.asc())
-            .load(&mut conn)
-            .boxed()
-    )?;
+    let emails_query = Email::belonging_to(user.user())
+        .select(Email::as_select())
+        .order(emails::id.asc())
+        .load(&mut conn)
+        .boxed();
+
+    let owned_crates_query = CrateOwner::by_owner_kind(OwnerKind::User)
+        .inner_join(crates::table)
+        .filter(crate_owners::owner_id.eq(user.user_id()))
+        .select((crates::id, crates::name, crate_owners::email_notifications))
+        .order(crates::name.asc())
+        .load(&mut conn)
+        .boxed();
+
+    let (emails, owned_crates): (Vec<Email>, Vec<(i32, String, bool)>) =
+        tokio::try_join!(emails_query, owned_crates_query)?;
 
     let owned_crates = owned_crates
         .into_iter()
@@ -59,10 +54,8 @@ pub async fn get_authenticated_user(app: AppState, req: Parts) -> AppResult<Json
         })
         .collect();
 
-    let verified = verified.unwrap_or(false);
-    let verification_sent = verified || verification_sent;
     Ok(Json(EncodableMe {
-        user: EncodablePrivateUser::from(user, email, verified, verification_sent),
+        user: EncodablePrivateUser::from(user.user().clone(), emails),
         owned_crates,
     }))
 }

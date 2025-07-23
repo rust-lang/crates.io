@@ -316,6 +316,18 @@ impl MockCookieUser {
         &self.user
     }
 
+    /// Creates an email for the user, directly inserting it into the database
+    pub async fn db_new_email(&self, email: &str, verified: bool, send_notifications: bool) -> crate::models::Email {
+        let mut conn = self.app.db_conn().await;
+        let new_email = crate::models::NewEmail::builder()
+            .user_id(self.user.id)
+            .email(email)
+            .verified(verified)
+            .send_notifications(send_notifications)
+            .build();
+        new_email.insert(&mut conn).await.unwrap()
+    }
+
     /// Creates a token and wraps it in a helper struct
     ///
     /// This method updates the database directly

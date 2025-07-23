@@ -47,7 +47,11 @@
         {{/if}}
       </LinkTo>
       <div local-class="email-column">
-        {{user.email}}
+        {{#each user.emails as |email|}}
+          {{#if email.send_notifications}}
+            {{email.email}}
+          {{/if}}
+        {{/each}}
       </div>
       <button type="button" class="button button--small" data-test-remove-owner-button {{on "click" (perform this.removeOwnerTask user)}}>Remove</button>
     </div>
