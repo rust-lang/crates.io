@@ -136,7 +136,7 @@ pub async fn find_crate(
         ),
         load_keywords(&mut conn, &krate, include.keywords),
         load_categories(&mut conn, &krate, include.categories),
-        load_recent_downloads(&mut conn, &krate, include.downloads),
+        load_recent_downloads(&mut conn, krate.id, include.downloads),
     )?;
 
     let ids = versions_and_publishers
@@ -285,17 +285,17 @@ fn load_categories<'a>(
     async move { Ok(Some(fut.await?)) }.boxed()
 }
 
-fn load_recent_downloads<'a>(
+fn load_recent_downloads(
     conn: &mut AsyncPgConnection,
-    krate: &'a Crate,
+    crate_id: i32,
     includes: bool,
-) -> BoxFuture<'a, AppResult<Option<i64>>> {
+) -> BoxFuture<'_, AppResult<Option<i64>>> {
     if !includes {
         return always_ready(|| Ok(None)).boxed();
     }
 
     let fut = recent_crate_downloads::table
-        .filter(recent_crate_downloads::crate_id.eq(krate.id))
+        .filter(recent_crate_downloads::crate_id.eq(crate_id))
         .select(recent_crate_downloads::downloads)
         .get_result(conn);
     async move { Ok(fut.await.optional()?) }.boxed()
