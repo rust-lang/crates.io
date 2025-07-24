@@ -34,7 +34,7 @@ impl From<VersionAction> for String {
     }
 }
 
-#[derive(Debug, Clone, Copy, Queryable, Identifiable, Associations)]
+#[derive(Debug, Clone, Copy, Queryable, Identifiable, Selectable, Associations)]
 #[diesel(
     table_name = version_owner_actions,
     check_for_backend(diesel::pg::Pg),
