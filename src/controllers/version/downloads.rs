@@ -93,6 +93,7 @@ pub async fn get_version_downloads(
 
     let version_downloads = VersionDownload::belonging_to(&version)
         .filter(version_downloads::date.between(cutoff_start_date, cutoff_end_date))
+        .select(VersionDownload::as_select())
         .order(version_downloads::date)
         .load(&mut conn)
         .await?

@@ -111,6 +111,7 @@ pub async fn get_crate_downloads(
     let (downloads, extra_downloads, versions_and_publishers, actions) = tokio::try_join!(
         VersionDownload::belonging_to(latest_five)
             .filter(version_downloads::date.gt(date(now - 90.days())))
+            .select(VersionDownload::as_select())
             .order((
                 version_downloads::date.asc(),
                 version_downloads::version_id.desc(),
