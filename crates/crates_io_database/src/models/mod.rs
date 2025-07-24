@@ -10,7 +10,7 @@ pub use self::download::VersionDownload;
 pub use self::email::{Email, NewEmail};
 pub use self::follow::Follow;
 pub use self::keyword::{CrateKeyword, Keyword};
-pub use self::krate::{Crate, CrateName, NewCrate, RecentCrateDownloads};
+pub use self::krate::{Crate, CrateName, NewCrate};
 pub use self::owner::{CrateOwner, Owner, OwnerKind};
 pub use self::team::{NewTeam, Team};
 pub use self::token::ApiToken;

@@ -7,8 +7,8 @@
 use crate::app::AppState;
 use crate::controllers::krate::CratePath;
 use crate::models::{
-    Category, Crate, CrateCategory, CrateKeyword, Keyword, RecentCrateDownloads, TopVersions, User,
-    Version, VersionOwnerAction,
+    Category, Crate, CrateCategory, CrateKeyword, Keyword, TopVersions, User, Version,
+    VersionOwnerAction,
 };
 use crate::schema::*;
 use crate::util::errors::{
@@ -294,7 +294,8 @@ fn load_recent_downloads<'a>(
         return always_ready(|| Ok(None)).boxed();
     }
 
-    let fut = RecentCrateDownloads::belonging_to(&krate)
+    let fut = recent_crate_downloads::table
+        .filter(recent_crate_downloads::crate_id.eq(krate.id))
         .select(recent_crate_downloads::downloads)
         .get_result(conn);
     async move { Ok(fut.await.optional()?) }.boxed()
