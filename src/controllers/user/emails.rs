@@ -75,7 +75,7 @@ pub async fn create_email(
         .build()
         .insert_if_missing(&mut conn)
         .await
-        .map_err(|e| server_error(format!("{}", e)))?;
+        .map_err(|e| server_error(format!("{e}")))?;
 
     let saved_email = match saved_email {
         Some(email) => email,
