@@ -18,18 +18,6 @@ use tracing::instrument;
 
 use super::Team;
 
-#[derive(Debug, Queryable, Identifiable, Associations, Clone, Copy)]
-#[diesel(
-    table_name = recent_crate_downloads,
-    check_for_backend(diesel::pg::Pg),
-    primary_key(crate_id),
-    belongs_to(Crate),
-)]
-pub struct RecentCrateDownloads {
-    pub crate_id: i32,
-    pub downloads: i32,
-}
-
 #[derive(Debug, Clone, Queryable, Selectable)]
 #[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
 pub struct CrateName {
