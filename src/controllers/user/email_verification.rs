@@ -74,6 +74,7 @@ pub async fn resend_email_verification(
         async move {
             let email: Email = diesel::update(Email::belonging_to(auth.user()))
                 .set(emails::token.eq(sql("DEFAULT")))
+                .returning(Email::as_returning())
                 .get_result(conn)
                 .await
                 .optional()?

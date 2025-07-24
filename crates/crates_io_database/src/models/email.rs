@@ -1,5 +1,4 @@
 use bon::Builder;
-use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use secrecy::SecretString;
@@ -7,7 +6,7 @@ use secrecy::SecretString;
 use crate::models::User;
 use crate::schema::emails;
 
-#[derive(Debug, Queryable, Identifiable, Associations)]
+#[derive(Debug, Queryable, Identifiable, Selectable, Associations)]
 #[diesel(belongs_to(User))]
 pub struct Email {
     pub id: i32,
@@ -16,7 +15,6 @@ pub struct Email {
     pub verified: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
-    pub token_generated_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Insertable, AsChangeset, Builder)]
