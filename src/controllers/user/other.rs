@@ -37,6 +37,7 @@ pub async fn find_user(
     let name = lower(&user_name);
     let user: User = users
         .filter(lower(gh_login).eq(name))
+        .select(User::as_select())
         .order(id.desc())
         .first(&mut conn)
         .await?;

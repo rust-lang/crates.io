@@ -43,6 +43,7 @@ impl NewCrateOwnerInvitation {
             // already exists. This does not cause problems with expired invitation as those are
             // deleted before doing this INSERT.
             .on_conflict_do_nothing()
+            .returning(CrateOwnerInvitation::as_returning())
             .get_result(conn)
             .await
             .optional()?;
@@ -57,7 +58,7 @@ impl NewCrateOwnerInvitation {
 }
 
 /// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Debug, Identifiable, Queryable)]
+#[derive(Clone, Debug, Identifiable, Queryable, Selectable)]
 #[diesel(primary_key(invited_user_id, crate_id))]
 pub struct CrateOwnerInvitation {
     pub invited_user_id: i32,
@@ -77,6 +78,7 @@ impl CrateOwnerInvitation {
     ) -> QueryResult<Self> {
         crate_owner_invitations::table
             .find((user_id, crate_id))
+            .select(CrateOwnerInvitation::as_select())
             .first::<Self>(conn)
             .await
     }
@@ -84,6 +86,7 @@ impl CrateOwnerInvitation {
     pub async fn find_by_token(token: &str, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
         crate_owner_invitations::table
             .filter(crate_owner_invitations::token.eq(token))
+            .select(CrateOwnerInvitation::as_select())
             .first::<Self>(conn)
             .await
     }
@@ -103,7 +106,11 @@ impl CrateOwnerInvitation {
         }
 
         // Get the user and check if they have a verified email
-        let user: User = users::table.find(self.invited_user_id).first(conn).await?;
+        let user: User = users::table
+            .find(self.invited_user_id)
+            .select(User::as_select())
+            .first(conn)
+            .await?;
 
         let verified_email = user.verified_email(conn).await?;
         if verified_email.is_none() {

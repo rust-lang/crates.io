@@ -10,7 +10,6 @@ use serde::Deserialize;
 use crate::models::{Crate, TrustpubData, User};
 use crate::schema::{readme_renderings, users, versions};
 
-// Queryable has a custom implementation below
 #[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
 #[diesel(belongs_to(Crate), belongs_to(crate::models::download::Version, foreign_key=id))]
 pub struct Version {
@@ -59,7 +58,12 @@ impl Version {
     /// Not for use when you have a group of versions you need the publishers for.
     pub async fn published_by(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<User>> {
         match self.published_by {
-            Some(pb) => users::table.find(pb).first(conn).await.optional(),
+            Some(pb) => users::table
+                .find(pb)
+                .select(User::as_select())
+                .first(conn)
+                .await
+                .optional(),
             None => Ok(None),
         }
     }
