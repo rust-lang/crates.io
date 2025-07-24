@@ -31,13 +31,18 @@ pub struct User {
 
 impl User {
     pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
-        users::table.find(id).first(conn).await
+        users::table
+            .find(id)
+            .select(User::as_select())
+            .first(conn)
+            .await
     }
 
     pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
         users::table
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
+            .select(User::as_select())
             .order(users::gh_id.desc())
             .first(conn)
             .await
@@ -96,6 +101,7 @@ impl NewUser<'_> {
     pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<User> {
         diesel::insert_into(users::table)
             .values(self)
+            .returning(User::as_returning())
             .get_result(conn)
             .await
     }
@@ -120,6 +126,7 @@ impl NewUser<'_> {
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_access_token.eq(excluded(users::gh_access_token)),
             ))
+            .returning(User::as_returning())
             .get_result(conn)
             .await
     }

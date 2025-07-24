@@ -204,6 +204,7 @@ async fn create_or_update_user(
 async fn find_user_by_gh_id(conn: &mut AsyncPgConnection, gh_id: i32) -> QueryResult<Option<User>> {
     users::table
         .filter(users::gh_id.eq(gh_id))
+        .select(User::as_select())
         .first(conn)
         .await
         .optional()

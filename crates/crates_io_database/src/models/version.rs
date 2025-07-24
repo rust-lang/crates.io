@@ -59,7 +59,12 @@ impl Version {
     /// Not for use when you have a group of versions you need the publishers for.
     pub async fn published_by(&self, conn: &mut AsyncPgConnection) -> QueryResult<Option<User>> {
         match self.published_by {
-            Some(pb) => users::table.find(pb).first(conn).await.optional(),
+            Some(pb) => users::table
+                .find(pb)
+                .select(User::as_select())
+                .first(conn)
+                .await
+                .optional(),
             None => Ok(None),
         }
     }

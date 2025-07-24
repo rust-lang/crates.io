@@ -66,6 +66,7 @@ impl VersionOwnerAction {
         version_owner_actions::table
             .filter(version_id.eq(version.id))
             .inner_join(users::table)
+            .select((VersionOwnerAction::as_select(), User::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(conn)
             .boxed()
@@ -77,6 +78,7 @@ impl VersionOwnerAction {
     ) -> QueryResult<Vec<Vec<(Self, User)>>> {
         Ok(Self::belonging_to(versions)
             .inner_join(users::table)
+            .select((VersionOwnerAction::as_select(), User::as_select()))
             .order(version_owner_actions::dsl::id)
             .load(conn)
             .await?

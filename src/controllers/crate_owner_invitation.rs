@@ -266,6 +266,7 @@ async fn prepare_list(
     if !missing_users.is_empty() {
         let new_users: Vec<User> = users::table
             .filter(users::id.eq_any(missing_users))
+            .select(User::as_select())
             .load(conn)
             .await?;
         for user in new_users.into_iter() {

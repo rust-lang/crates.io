@@ -187,6 +187,7 @@ fn load_actions<'a>(
     }
     VersionOwnerAction::belonging_to(versions)
         .inner_join(users::table)
+        .select((VersionOwnerAction::as_select(), User::as_select()))
         .order(version_owner_actions::id)
         .load(conn)
         .boxed()

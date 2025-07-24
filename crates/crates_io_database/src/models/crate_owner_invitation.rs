@@ -103,7 +103,11 @@ impl CrateOwnerInvitation {
         }
 
         // Get the user and check if they have a verified email
-        let user: User = users::table.find(self.invited_user_id).first(conn).await?;
+        let user: User = users::table
+            .find(self.invited_user_id)
+            .select(User::as_select())
+            .first(conn)
+            .await?;
 
         let verified_email = user.verified_email(conn).await?;
         if verified_email.is_none() {
