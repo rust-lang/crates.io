@@ -46,6 +46,7 @@
     "@sentry/ember": "9.40.0",
     "chart.js": "4.5.0",
     "date-fns": "4.1.0",
+    "ember-autofocus-modifier": "^7.0.1",
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
     "mermaid": "11.9.0",

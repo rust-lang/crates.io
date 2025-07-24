@@ -13,10 +13,6 @@ export default class EmailInput extends Component {
   @tracked value;
   @tracked disableResend = false;
 
-  @action focus(element) {
-    element.focus();
-  }
-
   @action validate(event) {
     this.isValid = event.target.checkValidity();
   }
