@@ -14,11 +14,7 @@ pub trait MockEmailHelper: RequestHelper {
         self.delete(&url).await
     }
 
-    async fn enable_notifications(
-        &self,
-        user_id: i32,
-        email_id: i32,
-    ) -> Response<()> {
+    async fn enable_notifications(&self, user_id: i32, email_id: i32) -> Response<()> {
         let url = format!("/api/v1/users/{user_id}/emails/{email_id}/notifications");
         self.put(&url, "").await
     }
@@ -214,15 +210,11 @@ async fn test_other_users_cannot_enable_my_notifications() {
     let another_user = app.db_new_user("not_me").await;
     let another_user_model = another_user.as_model();
 
-    let response = user
-        .enable_notifications(another_user_model.id, 1)
-        .await;
+    let response = user.enable_notifications(another_user_model.id, 1).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
-    let response = anon
-        .enable_notifications(another_user_model.id, 1)
-        .await;
+    let response = anon.enable_notifications(another_user_model.id, 1).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }

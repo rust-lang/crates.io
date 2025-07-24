@@ -3,7 +3,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::helpers::OkResponse;
 use crate::email::EmailMessage;
 use crate::models::{Email, NewEmail};
-use crate::util::errors::{bad_request, not_found, server_error, AppResult};
+use crate::util::errors::{AppResult, bad_request, not_found, server_error};
 use crate::views::EncodableEmail;
 use axum::Json;
 use axum::extract::{FromRequest, Path};

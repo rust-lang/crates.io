@@ -700,13 +700,17 @@ pub struct EncodablePrivateUser {
     /// Whether the user's has been sent a verification email to their notification email address, if set.
     #[schema(example = true)]
     #[serde(rename = "email_verification_sent")]
-    #[deprecated(note = "Use `emails` array instead, check that `token_generated_at` property is not null.")]
+    #[deprecated(
+        note = "Use `emails` array instead, check that `token_generated_at` property is not null."
+    )]
     pub notification_email_verification_sent: bool,
 
     /// The user's email address for sending notifications, if set.
     #[schema(example = "kate@morgan.dev")]
     #[serde(rename = "email")]
-    #[deprecated(note = "Use `emails` array instead, maximum of one entry will have `send_notifications` property set to true.")]
+    #[deprecated(
+        note = "Use `emails` array instead, maximum of one entry will have `send_notifications` property set to true."
+    )]
     pub notification_email: Option<String>,
 
     /// The user's avatar URL, if set.

@@ -74,13 +74,6 @@ pub async fn resend_email_verification(
     // Generate a new token for the email, if it exists and is unverified
     conn.transaction(|conn| {
         async move {
-            let email: Email = diesel::update(Email::belonging_to(auth.user()))
-                .set(emails::token.eq(sql("DEFAULT")))
-                .returning(Email::as_returning())
-                .get_result(conn)
-                .await
-                .optional()?
-                .ok_or_else(|| bad_request("Email could not be found"))?;
             let email: Email = diesel::update(
                 emails::table
                     .filter(emails::id.eq(email_id))
