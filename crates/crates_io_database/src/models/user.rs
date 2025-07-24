@@ -16,13 +16,13 @@ use crates_io_diesel_helpers::lower;
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
 pub struct User {
     pub id: i32,
+    pub name: Option<String>,
+    pub gh_id: i32,
+    pub gh_login: String,
+    pub gh_avatar: Option<String>,
     #[diesel(deserialize_as = String)]
     #[serde(skip)]
     pub gh_access_token: SecretString,
-    pub gh_login: String,
-    pub name: Option<String>,
-    pub gh_avatar: Option<String>,
-    pub gh_id: i32,
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
