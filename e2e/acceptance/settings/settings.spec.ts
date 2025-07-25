@@ -4,7 +4,7 @@ test.describe('Acceptance | Settings', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ msw }) => {
     let user1 = msw.db.user.create({
       name: 'blabaere',
-      emails: [msw.db.create({ email: 'blabaere@crates.io', primary: true })],
+      emails: [msw.db.email.create({ email: 'blabaere@crates.io', primary: true })],
     });
     let user2 = msw.db.user.create({ name: 'thehydroimpulse' });
     let team1 = msw.db.team.create({ org: 'org', name: 'blabaere' });
