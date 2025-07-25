@@ -1,5 +1,5 @@
--- Remove the function for marking an email as primary
-DROP FUNCTION mark_email_as_primary;
+-- Remove the function for promoting an email to primary
+DROP FUNCTION promote_email_to_primary;
 
 -- Remove the function that enforces the maximum number of emails per user
 DROP TRIGGER trigger_enforce_max_emails_per_user ON emails;
@@ -11,17 +11,13 @@ ALTER TABLE emails DROP CONSTRAINT unique_user_email;
 -- Remove the constraint that allows only one primary email per user
 ALTER TABLE emails DROP CONSTRAINT unique_primary_email_per_user;
 
--- Remove the trigger that enforces at least one primary email per user
-DROP TRIGGER trigger_ensure_at_least_one_primary_email ON emails;
-DROP FUNCTION ensure_at_least_one_primary_email();
-
 -- Remove the trigger that prevents deletion of primary emails
 DROP TRIGGER trigger_prevent_primary_email_deletion ON emails;
 DROP FUNCTION prevent_primary_email_deletion();
 
--- Remove the trigger that prevents the first email without primary flag
-DROP TRIGGER trigger_prevent_first_email_without_primary ON emails;
-DROP FUNCTION prevent_first_email_without_primary();
+-- Remove the trigger that ensures exactly one primary email per user
+DROP TRIGGER trigger_verify_exactly_one_primary_email ON emails;
+DROP FUNCTION verify_exactly_one_primary_email();
 
 -- Remove the primary column from emails table
 ALTER TABLE emails DROP COLUMN is_primary;

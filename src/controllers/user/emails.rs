@@ -188,7 +188,7 @@ pub async fn set_primary_email(
         return Err(bad_request("email is already primary"));
     }
 
-    diesel::sql_query("SELECT mark_email_as_primary($1)")
+    diesel::sql_query("SELECT promote_email_to_primary($1)")
         .bind::<diesel::sql_types::Integer, _>(email_id)
         .execute(&mut conn)
         .await

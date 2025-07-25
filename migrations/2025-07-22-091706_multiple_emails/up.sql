@@ -58,60 +58,34 @@ BEFORE DELETE ON emails
 FOR EACH ROW
 EXECUTE FUNCTION prevent_primary_email_deletion();
 
--- Prevent creation of first email for a user if it is not marked as primary
-CREATE FUNCTION prevent_first_email_without_primary()
+-- Ensure exactly one primary email per user after any insert or update
+CREATE FUNCTION verify_exactly_one_primary_email()
 RETURNS TRIGGER AS $$
+DECLARE
+  primary_count integer;
 BEGIN
-  -- Count the current emails for this user_id
-  IF NOT EXISTS (
-    SELECT 1 FROM emails WHERE user_id = NEW.user_id
-  ) AND NEW.is_primary IS NOT TRUE THEN
-    RAISE EXCEPTION 'The first email for a user must have is_primary = true';
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+  -- Count primary emails for the affected user
+  SELECT COUNT(*) INTO primary_count
+  FROM emails
+  WHERE user_id = COALESCE(NEW.user_id, OLD.user_id)
+  AND is_primary = true;
 
-CREATE TRIGGER trigger_prevent_first_email_without_primary
-BEFORE INSERT ON emails
-FOR EACH ROW
-EXECUTE FUNCTION prevent_first_email_without_primary();
-
--- Ensure that at least one email for the user has primary = true, unless the user has no emails
--- Using a trigger-based approach since exclusion constraints cannot use subqueries
-CREATE FUNCTION ensure_at_least_one_primary_email()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Check if this operation would leave the user without a primary email
-  IF (TG_OP = 'UPDATE' AND OLD.is_primary = true AND NEW.is_primary = false) OR
-     (TG_OP = 'DELETE' AND OLD.is_primary = true) THEN
-    -- Skip check if user has no emails left
-    IF NOT EXISTS (SELECT 1 FROM emails WHERE user_id = OLD.user_id AND id != OLD.id) THEN
-      RETURN COALESCE(NEW, OLD);
-    END IF;
-
-    IF NOT EXISTS (
-      SELECT 1 FROM emails
-      WHERE user_id = OLD.user_id
-      AND is_primary = true
-      AND id != OLD.id
-    ) THEN
-      RAISE EXCEPTION 'Each user must have at least one email with is_is_primaryprimary = true';
-    END IF;
+  IF primary_count != 1 THEN
+    RAISE EXCEPTION 'User must have one primary email, found %', primary_count;
   END IF;
 
   RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_ensure_at_least_one_primary_email
-AFTER UPDATE OR DELETE ON emails
+CREATE TRIGGER trigger_verify_exactly_one_primary_email
+AFTER INSERT OR UPDATE ON emails
 FOR EACH ROW
-EXECUTE FUNCTION ensure_at_least_one_primary_email();
+EXECUTE FUNCTION verify_exactly_one_primary_email();
 
 -- Function to set the primary flag to true for an existing email
 -- This will set the flag to false for all other emails of the same user
-CREATE FUNCTION mark_email_as_primary(target_email_id integer)
+CREATE FUNCTION promote_email_to_primary(target_email_id integer)
 RETURNS void AS $$
 DECLARE
   target_user_id integer;
