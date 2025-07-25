@@ -166,7 +166,7 @@ mod tests {
         NewEmail::builder()
             .user_id(user.id)
             .email("testuser@test.com")
-            .send_notifications(true)
+            .primary(true)
             .build()
             .insert(&mut conn)
             .await?;

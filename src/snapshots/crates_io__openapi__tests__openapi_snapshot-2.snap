@@ -89,7 +89,7 @@ expression: response.json()
           },
           "email": {
             "deprecated": true,
-            "description": "The user's email address for sending notifications, if set.",
+            "description": "The user's primary email address, if set.",
             "example": "kate@morgan.dev",
             "type": [
               "string",
@@ -98,13 +98,13 @@ expression: response.json()
           },
           "email_verification_sent": {
             "deprecated": true,
-            "description": "Whether the user's has been sent a verification email to their notification email address, if set.",
+            "description": "Whether the user's has been sent a verification email to their primary email address, if set.",
             "example": true,
             "type": "boolean"
           },
           "email_verified": {
             "deprecated": true,
-            "description": "Whether the user's notification email address, if set, has been verified.",
+            "description": "Whether the user's primary email address, if set, has been verified.",
             "example": true,
             "type": "boolean"
           },
@@ -114,7 +114,8 @@ expression: response.json()
               {
                 "email": "user@example.com",
                 "id": 42,
-                "send_notifications": true,
+                "primary": true,
+                "verification_email_sent": true,
                 "verified": true
               }
             ],
@@ -529,8 +530,8 @@ expression: response.json()
             "format": "int32",
             "type": "integer"
           },
-          "send_notifications": {
-            "description": "Whether notifications should be sent to this email address.",
+          "primary": {
+            "description": "Whether this is the user's primary email address, meaning notifications will be sent here.",
             "example": true,
             "type": "boolean"
           },
@@ -550,7 +551,7 @@ expression: response.json()
           "email",
           "verified",
           "verification_email_sent",
-          "send_notifications"
+          "primary"
         ],
         "type": "object"
       },
@@ -1769,13 +1770,17 @@ expression: response.json()
               "application/json": {
                 "schema": {
                   "properties": {
+                    "email": {
+                      "$ref": "#/components/schemas/Email"
+                    },
                     "ok": {
                       "example": true,
                       "type": "boolean"
                     }
                   },
                   "required": [
-                    "ok"
+                    "ok",
+                    "email"
                   ],
                   "type": "object"
                 }
@@ -4575,9 +4580,9 @@ expression: response.json()
         ]
       }
     },
-    "/api/v1/users/{id}/emails/{email_id}/notifications": {
+    "/api/v1/users/{id}/emails/{email_id}/set_primary": {
       "put": {
-        "operationId": "enable_notifications",
+        "operationId": "set_primary_email",
         "parameters": [
           {
             "description": "ID of the user",
@@ -4590,7 +4595,7 @@ expression: response.json()
             }
           },
           {
-            "description": "ID of the email to enable notifications for",
+            "description": "ID of the email to set as primary",
             "in": "path",
             "name": "email_id",
             "required": true,
@@ -4629,7 +4634,7 @@ expression: response.json()
             "cookie": []
           }
         ],
-        "summary": "Enable notifications for a specific email address. This will disable notifications for all other emails of the user.",
+        "summary": "Mark a specific email address as the primary email. This will cause notifications to be sent to this email address.",
         "tags": [
           "users"
         ]

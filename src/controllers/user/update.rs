@@ -115,7 +115,7 @@ pub async fn update_user(
             .parse::<Address>()
             .map_err(|_| bad_request("invalid email address"))?;
 
-        // Check if this is the first email for the user, because if so, we need to enable notifications
+        // Check if this is the first email for the user, because if so, we need to mark it as the primary
         let existing_email_count: i64 = Email::belonging_to(&user)
             .count()
             .get_result(&mut conn)
@@ -125,7 +125,7 @@ pub async fn update_user(
         let saved_email = NewEmail::builder()
             .user_id(user.id)
             .email(user_email)
-            .send_notifications(existing_email_count < 1) // Enable notifications if this is the first email
+            .primary(existing_email_count < 1) // Mark as primary if this is the first email
             .build()
             .insert_if_missing(&mut conn)
             .await

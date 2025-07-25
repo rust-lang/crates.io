@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { db } from '../../index.js';
 import { getSession } from '../../utils/session.js';
 
-export default http.put('/api/v1/users/:user_id/emails/:email_id/notifications', async ({ params }) => {
+export default http.put('/api/v1/users/:user_id/emails/:email_id/set_primary', async ({ params }) => {
   let { user_id, email_id } = params;
 
   let { user } = getSession();
@@ -19,15 +19,15 @@ export default http.put('/api/v1/users/:user_id/emails/:email_id/notifications',
     return HttpResponse.json({ errors: [{ detail: 'Email not found.' }] }, { status: 404 });
   }
 
-  // Update email to enable notifications
+  // Update email to set as primary
   db.email.update({
     where: { id: { equals: parseInt(email_id) } },
-    data: { send_notifications: true },
+    data: { primary: true },
   });
-  // Update all other emails to disable notifications
+  // Update all other emails to remove primary status
   db.email.updateMany({
     where: { user_id: { equals: user.id }, id: { notEquals: parseInt(email_id) } },
-    data: { send_notifications: false },
+    data: { primary: false },
   });
 
   let updatedEmail = db.email.findFirst({ where: { id: { equals: parseInt(email_id) } } });

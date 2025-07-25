@@ -59,7 +59,7 @@ impl BackgroundJob for SendPublishNotificationsJob {
             .filter(users::publish_notifications.eq(true))
             .inner_join(emails::table.on(users::id.eq(emails::user_id)))
             .filter(emails::verified.eq(true))
-            .filter(emails::send_notifications.eq(true))
+            .filter(emails::primary.eq(true))
             .select((users::gh_login, emails::email))
             .load::<(String, String)>(&mut conn)
             .await?;

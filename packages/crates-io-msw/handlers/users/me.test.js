@@ -7,7 +7,7 @@ test('returns the `user` resource including the private fields', async function 
     emails: [
       db.email.create({
         email: 'user-1@crates.io',
-        send_notifications: true,
+        primary: true,
         verification_email_sent: true,
         verified: true,
       }),
@@ -27,7 +27,7 @@ test('returns the `user` resource including the private fields', async function 
           email: 'user-1@crates.io',
           verified: true,
           verification_email_sent: true,
-          send_notifications: true,
+          primary: true,
         },
       ],
       is_admin: false,

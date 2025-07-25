@@ -19,10 +19,10 @@ export default http.delete('/api/v1/users/:user_id/emails/:email_id', ({ params 
     return HttpResponse.json({ errors: [{ detail: 'Email not found.' }] }, { status: 404 });
   }
 
-  // Prevent deletion if the email has notifications enabled
-  if (email.send_notifications) {
+  // Prevent deletion if this is primary email
+  if (email.primary) {
     return HttpResponse.json(
-      { errors: [{ detail: 'Cannot delete an email that has notifications enabled.' }] },
+      { errors: [{ detail: 'cannot delete primary email, please set another email as primary first' }] },
       { status: 400 },
     );
   }

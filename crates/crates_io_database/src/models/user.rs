@@ -62,8 +62,8 @@ impl User {
     }
 
     /// Queries the database for a verified email address belonging to the user.
-    /// It will ideally return the email address that has `send_notifications` set to true,
-    /// but if none exists, it will return any verified email address.
+    /// It will ideally return the primary email address if it exists and is
+    /// verified, otherwise, it will return any verified email address.
     pub async fn verified_email(
         &self,
         conn: &mut AsyncPgConnection,
@@ -71,7 +71,7 @@ impl User {
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
-            .order(emails::send_notifications.desc())
+            .order(emails::primary.desc())
             .first(conn)
             .await
             .optional()

@@ -124,23 +124,21 @@ module('Acceptance | Email Management', function (hooks) {
       assert.strictEqual(user.emails.length, 1);
     });
 
-    test('cannot remove notifications email', async function (assert) {
+    test('cannot remove primary email', async function (assert) {
       let user = this.db.user.create({
         emails: [
-          this.db.email.create({ email: 'notifications@doe.com', send_notifications: true }),
+          this.db.email.create({ email: 'primary@doe.com', primary: true }),
           this.db.email.create({ email: 'john@doe.com' }),
         ],
       });
       this.authenticateAs(user);
       await visit('/settings/profile');
       assert.strictEqual(currentURL(), '/settings/profile');
-      assert
-        .dom('[data-test-email-input]:nth-of-type(1) [data-test-email-address]')
-        .includesText('notifications@doe.com');
+      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-email-address]').includesText('primary@doe.com');
       assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-remove-button]').isDisabled();
       assert
         .dom('[data-test-email-input]:nth-of-type(1) [data-test-remove-button]')
-        .hasAttribute('title', 'Cannot delete notifications email');
+        .hasAttribute('title', 'Cannot delete primary email');
     });
 
     test('no delete button when only one email', async function (assert) {
@@ -219,12 +217,12 @@ module('Acceptance | Email Management', function (hooks) {
     });
   });
 
-  module('Switch notification email', function () {
+  module('Switch primary email', function () {
     test('happy path', async function (assert) {
       let user = this.db.user.create({
         emails: [
-          this.db.email.create({ email: 'john@doe.com', verified: true, send_notifications: true }),
-          this.db.email.create({ email: 'jane@doe.com', verified: true, send_notifications: false }),
+          this.db.email.create({ email: 'john@doe.com', verified: true, primary: true }),
+          this.db.email.create({ email: 'jane@doe.com', verified: true, primary: false }),
         ],
       });
       this.authenticateAs(user);
@@ -234,17 +232,17 @@ module('Acceptance | Email Management', function (hooks) {
       assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-email-address]').includesText('john@doe.com');
       assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-email-address]').includesText('jane@doe.com');
 
-      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-notification-target]').isVisible();
-      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-notification-target]').doesNotExist();
-      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-notification-button]').doesNotExist();
-      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-notification-button]').isEnabled();
+      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-primary]').isVisible();
+      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-primary]').doesNotExist();
+      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-primary-button]').doesNotExist();
+      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-primary-button]').isEnabled();
 
-      await click('[data-test-email-input]:nth-of-type(2) [data-test-notification-button]');
+      await click('[data-test-email-input]:nth-of-type(2) [data-test-primary-button]');
 
-      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-notification-target]').doesNotExist();
-      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-notification-target]').isVisible();
-      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-notification-button]').doesNotExist();
-      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-notification-button]').isEnabled();
+      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-primary]').doesNotExist();
+      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-primary]').isVisible();
+      assert.dom('[data-test-email-input]:nth-of-type(2) [data-test-primary-button]').doesNotExist();
+      assert.dom('[data-test-email-input]:nth-of-type(1) [data-test-primary-button]').isEnabled();
     });
   });
 });

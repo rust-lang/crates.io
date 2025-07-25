@@ -86,7 +86,7 @@ module('Model | User', function (hooks) {
     });
   });
 
-  module('updateNotificationEmail()', function () {
+  module('updatePrimaryEmail()', function () {
     test('happy path', async function (assert) {
       let email = this.db.email.create({ email: 'old@email.com' });
       let user = this.db.user.create({ emails: [email] });
@@ -94,8 +94,8 @@ module('Model | User', function (hooks) {
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
-      await currentUser.updateNotificationEmail(email.id, 'new@email.com');
-      assert.strictEqual(currentUser.emails.find(e => e.send_notifications).id, email.id);
+      await currentUser.updatePrimaryEmail(email.id, 'new@email.com');
+      assert.strictEqual(currentUser.emails.find(e => e.primary).id, email.id);
     });
     test('error handling', async function (assert) {
       let email = this.db.email.create({ email: 'old@email.com' });
@@ -103,10 +103,10 @@ module('Model | User', function (hooks) {
       this.authenticateAs(user);
 
       let error = HttpResponse.json({}, { status: 500 });
-      this.worker.use(http.put('/api/v1/users/:user_id/emails/:email_id/notifications', () => error));
+      this.worker.use(http.put('/api/v1/users/:user_id/emails/:email_id/set_primary', () => error));
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
-      await assert.rejects(currentUser.updateNotificationEmail(email.id, 'new@email.com'), function (error) {
+      await assert.rejects(currentUser.updatePrimaryEmail(email.id, 'new@email.com'), function (error) {
         assert.deepEqual(error.errors, [
           {
             detail: '{}',

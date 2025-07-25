@@ -52,13 +52,13 @@ export default class User extends Model {
     });
   }
 
-  async updateNotificationEmail(emailId) {
-    await waitForPromise(apiAction(this, { method: 'PUT', path: `emails/${emailId}/notifications` }));
+  async updatePrimaryEmail(emailId) {
+    await waitForPromise(apiAction(this, { method: 'PUT', path: `emails/${emailId}/set_primary` }));
 
     this.store.pushPayload({
       user: {
         id: this.id,
-        emails: this.emails.map(email => ({ ...email, send_notifications: email.id === emailId })),
+        emails: this.emails.map(email => ({ ...email, primary: email.id === emailId })),
       },
     });
   }

@@ -8,7 +8,7 @@ test('default are applied', ({ expect }) => {
     {
       "email": "foo@crates.io",
       "id": 1,
-      "send_notifications": false,
+      "primary": false,
       "token": null,
       "verification_email_sent": false,
       "verified": false,

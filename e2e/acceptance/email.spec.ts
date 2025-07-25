@@ -153,10 +153,10 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(user.emails[0].email).toBe('john@doe.com');
     });
 
-    test('cannot remove notifications email', async ({ page, msw }) => {
+    test('cannot remove primary email', async ({ page, msw }) => {
       let user = msw.db.user.create({
         emails: [
-          msw.db.email.create({ email: 'notifications@doe.com', send_notifications: true }),
+          msw.db.email.create({ email: 'primary@doe.com', primary: true }),
           msw.db.email.create({ email: 'john@doe.com' }),
         ],
       });
@@ -167,16 +167,16 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
 
       const emailInputs = page.locator('[data-test-email-input]');
       await expect(emailInputs).toHaveCount(2);
-      const notificationsEmailInput = emailInputs.nth(0);
+      const primaryEmailInput = emailInputs.nth(0);
       const johnEmailInput = emailInputs.nth(1);
 
-      await expect(notificationsEmailInput.locator('[data-test-email-address]')).toContainText('notifications@doe.com');
+      await expect(primaryEmailInput.locator('[data-test-email-address]')).toContainText('primary@doe.com');
       await expect(johnEmailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
 
-      await expect(notificationsEmailInput.locator('[data-test-remove-button]')).toBeDisabled();
-      await expect(notificationsEmailInput.locator('[data-test-remove-button]')).toHaveAttribute(
+      await expect(primaryEmailInput.locator('[data-test-remove-button]')).toBeDisabled();
+      await expect(primaryEmailInput.locator('[data-test-remove-button]')).toHaveAttribute(
         'title',
-        'Cannot delete notifications email',
+        'Cannot delete primary email',
       );
       await expect(johnEmailInput.locator('[data-test-remove-button]')).toBeVisible();
     });
@@ -273,12 +273,12 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
     });
   });
 
-  test.describe('Switch notification email', () => {
+  test.describe('Switch primary email', () => {
     test('happy path', async ({ page, msw }) => {
       let user = msw.db.user.create({
         emails: [
-          msw.db.email.create({ email: 'john@doe.com', verified: true, send_notifications: true }),
-          msw.db.email.create({ email: 'jane@doe.com', verified: true, send_notifications: false }),
+          msw.db.email.create({ email: 'john@doe.com', verified: true, primary: true }),
+          msw.db.email.create({ email: 'jane@doe.com', verified: true, primary: false }),
         ],
       });
       await msw.authenticateAs(user);
@@ -294,19 +294,19 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(johnEmailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
       await expect(janeEmailInput.locator('[data-test-email-address]')).toContainText('jane@doe.com');
 
-      const johnEnableNotificationsButton = johnEmailInput.locator('[data-test-notification-button]');
-      const janeEnableNotificationsButton = janeEmailInput.locator('[data-test-notification-button]');
+      const johnMarkPrimaryButton = johnEmailInput.locator('[data-test-primary-button]');
+      const janeMarkPrimaryButton = janeEmailInput.locator('[data-test-primary-button]');
 
-      await expect(johnEmailInput.locator('[data-test-notification-target]')).toBeVisible();
-      await expect(janeEmailInput.locator('[data-test-notification-target]')).toHaveCount(0);
-      await expect(johnEnableNotificationsButton).toHaveCount(0);
-      await expect(janeEnableNotificationsButton).toBeEnabled();
+      await expect(johnEmailInput.locator('[data-test-primary]')).toBeVisible();
+      await expect(janeEmailInput.locator('[data-test-primary]')).toHaveCount(0);
+      await expect(johnMarkPrimaryButton).toHaveCount(0);
+      await expect(janeMarkPrimaryButton).toBeEnabled();
 
-      await janeEnableNotificationsButton.click();
-      await expect(johnEmailInput.locator('[data-test-notification-target]')).toHaveCount(0);
-      await expect(janeEmailInput.locator('[data-test-notification-target]')).toBeVisible();
-      await expect(johnEnableNotificationsButton).toBeEnabled();
-      await expect(janeEnableNotificationsButton).toHaveCount(0);
+      await janeMarkPrimaryButton.click();
+      await expect(johnEmailInput.locator('[data-test-primary]')).toHaveCount(0);
+      await expect(janeEmailInput.locator('[data-test-primary]')).toBeVisible();
+      await expect(johnMarkPrimaryButton).toBeEnabled();
+      await expect(janeMarkPrimaryButton).toHaveCount(0);
     });
   });
 });

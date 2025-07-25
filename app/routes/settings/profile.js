@@ -12,6 +12,6 @@ export default class ProfileSettingsRoute extends AuthenticatedRoute {
   setupController(controller, model) {
     super.setupController(...arguments);
     controller.publishNotifications = model.user.publish_notifications;
-    controller.notificationEmailId = model.user.emails.find(email => email.send_notifications)?.id;
+    controller.primaryEmailId = model.user.emails.find(email => email.primary)?.id;
   }
 }

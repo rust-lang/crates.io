@@ -199,11 +199,11 @@ async fn create_or_update_user(
             let user = new_user.insert_or_update(conn).await?;
 
             // Count the number of existing emails to determine if we need to
-            // enable notifications for the first email address.
+            // mark the first email address as primary.
             let mut email_count: i64 = Email::belonging_to(&user).count().get_result(conn).await?;
 
             // Sort the GitHub emails by primary status so that the primary email is inserted
-            // first, and therefore will have notifications enabled.
+            // first, and therefore will be marked as primary in our database.
             user_emails.sort_by(|a, b| {
                 if a.primary && !b.primary {
                     std::cmp::Ordering::Less
@@ -216,13 +216,13 @@ async fn create_or_update_user(
 
             // To send the user an account verification email
             for user_email in user_emails {
-                email_count += 1; // Increment the count so that we don't enable notifications for subsequent emails
+                email_count += 1; // Increment the count so that we don't mark subsequent emails as primary
 
                 let new_email = NewEmail::builder()
                     .user_id(user.id)
                     .email(&user_email.email)
                     .verified(user_email.verified) // we can trust GitHub's verification
-                    .send_notifications(email_count == 1) // Enable notifications if this is the user's first email
+                    .primary(email_count == 1) // Mark as primary if this is the user's first email
                     .build();
 
                 if let Some(saved_email) = new_email.insert_if_missing(conn).await?

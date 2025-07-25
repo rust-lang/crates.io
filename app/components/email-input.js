@@ -62,15 +62,15 @@ export default class EmailInput extends Component {
     }
   });
 
-  enableNotificationsTask = task(async () => {
+  markAsPrimaryTask = task(async () => {
     try {
-      await this.args.user.updateNotificationEmail(this.email.id);
+      await this.args.user.updatePrimaryEmail(this.email.id);
     } catch (error) {
       let detail = error.errors?.[0]?.detail;
       if (detail && !detail.startsWith('{')) {
-        this.notifications.error(`Error in enabling notifications: ${detail}`);
+        this.notifications.error(`Error in marking email as primary: ${detail}`);
       } else {
-        this.notifications.error('Unknown error in enabling notifications');
+        this.notifications.error('Unknown error in marking email as primary');
       }
     }
   });

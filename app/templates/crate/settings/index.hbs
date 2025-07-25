@@ -48,7 +48,7 @@
       </LinkTo>
       <div local-class="email-column">
         {{#each user.emails as |email|}}
-          {{#if email.send_notifications}}
+          {{#if email.primary}}
             {{email.email}}
           {{/if}}
         {{/each}}

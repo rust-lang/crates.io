@@ -14,8 +14,8 @@ pub trait MockEmailHelper: RequestHelper {
         self.delete(&url).await
     }
 
-    async fn enable_notifications(&self, user_id: i32, email_id: i32) -> Response<()> {
-        let url = format!("/api/v1/users/{user_id}/emails/{email_id}/notifications");
+    async fn update_primary_email(&self, user_id: i32, email_id: i32) -> Response<()> {
+        let url = format!("/api/v1/users/{user_id}/emails/{email_id}/set_primary");
         self.put(&url, "").await
     }
 }
@@ -37,7 +37,7 @@ async fn test_email_add() -> anyhow::Result<()> {
     let response = user.add_email(json.user.id, "bar@example.com").await;
     let json = user.show_me().await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"id":2,"email":"bar@example.com","verified":false,"verification_email_sent":true,"send_notifications":false}"#);
+    assert_snapshot!(response.text(), @r#"{"id":2,"email":"bar@example.com","verified":false,"verification_email_sent":true,"primary":false}"#);
     assert_eq!(json.user.emails.len(), 2);
     assert!(
         json.user
@@ -51,7 +51,7 @@ async fn test_email_add() -> anyhow::Result<()> {
             .iter()
             .find(|e| e.email == "foo@example.com")
             .unwrap()
-            .send_notifications
+            .primary
     );
 
     Ok(())
@@ -169,14 +169,14 @@ async fn test_other_users_cannot_delete_my_email() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_cannot_delete_my_notification_email() {
+async fn test_cannot_delete_my_primary_email() {
     let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
-    // Attempt to delete the email address that is used for notifications
+    // Attempt to delete the primary email address
     let response = user.delete_email(model.id, 1).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot delete email that receives notifications"}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"cannot delete primary email, please set another email as primary first"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -187,7 +187,7 @@ async fn test_can_delete_an_alternative_email() {
     // Add an alternative email address
     let response = user.add_email(model.id, "potato3@example.com").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"id":2,"email":"potato3@example.com","verified":false,"verification_email_sent":true,"send_notifications":false}"#);
+    assert_snapshot!(response.text(), @r#"{"id":2,"email":"potato3@example.com","verified":false,"verification_email_sent":true,"primary":false}"#);
 
     // Attempt to delete the alternative email address
     let response = user.delete_email(model.id, 2).await;
@@ -195,26 +195,26 @@ async fn test_can_delete_an_alternative_email() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_enable_notifications_invalid_id() {
+async fn test_set_primary_invalid_id() {
     let (_app, _anon, user) = TestApp::init().with_user().await;
     let model = user.as_model();
 
-    let response = user.enable_notifications(model.id, 0).await;
+    let response = user.update_primary_email(model.id, 0).await;
     assert_snapshot!(response.status(), @"404 Not Found");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Not Found"}]}"#);
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_other_users_cannot_enable_my_notifications() {
+async fn test_other_users_cannot_set_my_primary_email() {
     let (app, anon, user) = TestApp::init().with_user().await;
     let another_user = app.db_new_user("not_me").await;
     let another_user_model = another_user.as_model();
 
-    let response = user.enable_notifications(another_user_model.id, 1).await;
+    let response = user.update_primary_email(another_user_model.id, 1).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"current user does not match requested user"}]}"#);
 
-    let response = anon.enable_notifications(another_user_model.id, 1).await;
+    let response = anon.update_primary_email(another_user_model.id, 1).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action requires authentication"}]}"#);
 }

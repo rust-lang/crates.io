@@ -11,14 +11,9 @@ export default class extends Controller {
   @tracked isAddingEmail = false;
 
   @tracked publishNotifications;
-  @tracked notificationEmailId;
 
   @action handleNotificationsChange(event) {
     this.publishNotifications = event.target.checked;
-  }
-
-  @action handleNotificationEmailChange(event) {
-    this.notificationEmailId = event.target.value;
   }
 
   updateNotificationSettings = task(async () => {

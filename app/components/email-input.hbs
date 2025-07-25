@@ -7,8 +7,8 @@
         <span class="badges">
           {{#if this.email.verified}}
           <span local-class="badge verified" data-test-verified>Verified</span>
-          {{#if this.email.send_notifications }}
-            <span local-class="badge" data-test-notification-target>Notifications are sent here</span>
+          {{#if this.email.primary }}
+            <span local-class="badge" data-test-primary>Primary email</span>
           {{/if}}
           {{else}}
             {{#if this.email.verification_email_sent}}
@@ -33,13 +33,13 @@
         {{/if}}
       </button>
       {{/unless}}
-      {{#if (and (not this.email.send_notifications) this.email.verified)}}
-      <button type="button" class="button button--small" data-test-notification-button {{on "click" (prevent-default (perform this.enableNotificationsTask))}}>
-        Enable notifications
+      {{#if (and (not this.email.primary) this.email.verified)}}
+      <button type="button" class="button button--small" data-test-primary-button {{on "click" (prevent-default (perform this.markAsPrimaryTask))}}>
+        Mark as primary
       </button>
       {{/if}}
       {{#if @canDelete}}
-      <button disabled={{this.email.send_notifications}} title={{if this.email.send_notifications "Cannot delete notifications email"}} type="button" class="button button--small button--red" data-test-remove-button {{on "click" (prevent-default (perform this.deleteEmailTask))}}>
+      <button disabled={{this.email.primary}} title={{if this.email.primary "Cannot delete primary email"}} type="button" class="button button--small button--red" data-test-remove-button {{on "click" (prevent-default (perform this.deleteEmailTask))}}>
         Remove
       </button>
       {{/if}}

@@ -35,5 +35,5 @@ test('returns email for valid, authenticated request', async function () {
   assert.strictEqual(email.email, 'test@example.com');
   assert.strictEqual(email.verified, false);
   assert.strictEqual(email.verification_email_sent, true);
-  assert.strictEqual(email.send_notifications, false);
+  assert.strictEqual(email.primary, false);
 });

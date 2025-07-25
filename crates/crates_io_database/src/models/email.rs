@@ -15,7 +15,7 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
-    pub send_notifications: bool,
+    pub primary: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
     pub token_generated_at: Option<DateTime<Utc>>,
@@ -39,7 +39,7 @@ pub struct NewEmail<'a> {
     #[builder(default = false)]
     pub verified: bool,
     #[builder(default = false)]
-    pub send_notifications: bool,
+    pub primary: bool,
 }
 
 impl NewEmail<'_> {

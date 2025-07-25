@@ -11,14 +11,13 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};
 use secrecy::ExposeSecret;
-use serde_json::json;
 
 impl crate::tests::util::MockCookieUser {
     async fn confirm_email(&self, email_token: &str) {
         let url = format!("/api/v1/confirm/{email_token}");
         let response = self.put::<()>(&url, &[] as &[u8]).await;
         assert_snapshot!(response.status(), @"200 OK");
-        assert_eq!(response.json(), json!({ "ok": true }));
+        assert_json_snapshot!(response.json());
     }
 }
 
@@ -160,7 +159,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
     let json = again_user_without_github_email.show_me().await;
     assert_eq!(json.user.emails[0].email, "apricot@apricots.apricot");
     assert_eq!(
-        json.user.notification_email.unwrap(),
+        json.user.primary_email.unwrap(),
         "apricot@apricots.apricot"
     );
 
@@ -169,7 +168,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
 /// Given a new user, test that if they sign in with one email, change their email on GitHub, then
 /// sign in again, that both emails will be present on their crates.io account, with the original
-/// remaining as the notification email.
+/// remaining as the primary email.
 #[tokio::test(flavor = "multi_thread")]
 #[allow(deprecated)]
 async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
@@ -224,9 +223,9 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
             .iter()
             .find(|e| e.email == original_email)
             .unwrap()
-            .send_notifications
+            .primary
     );
-    assert_eq!(json.user.notification_email, Some(original_email));
+    assert_eq!(json.user.primary_email, Some(original_email));
 
     Ok(())
 }
@@ -241,7 +240,7 @@ async fn test_email_legacy_get_and_put() -> anyhow::Result<()> {
     let (_app, _anon, user) = TestApp::init().with_user().await;
 
     let json = user.show_me().await;
-    assert_eq!(json.user.notification_email.unwrap(), "foo@example.com");
+    assert_eq!(json.user.primary_email.unwrap(), "foo@example.com");
 
     user.update_email("mango@mangos.mango").await;
 
@@ -308,12 +307,12 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
     assert_eq!(json.user.emails.len(), 1);
     assert_eq!(json.user.emails[0].email, "potato2@example.com");
     assert!(json.user.emails[0].verified);
-    assert!(json.user.emails[0].send_notifications);
+    assert!(json.user.emails[0].primary);
 
     // Check legacy fields
-    assert_eq!(json.user.notification_email.unwrap(), "potato2@example.com");
-    assert!(json.user.notification_email_verified);
-    assert!(json.user.notification_email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "potato2@example.com");
+    assert!(json.user.primary_email_verified);
+    assert!(json.user.primary_email_verification_sent);
 
     Ok(())
 }
@@ -357,12 +356,12 @@ async fn test_unverified_email_not_marked_verified() -> anyhow::Result<()> {
     assert_eq!(json.user.emails.len(), 1);
     assert_eq!(json.user.emails[0].email, "potato3@example.com");
     assert!(!json.user.emails[0].verified);
-    assert!(json.user.emails[0].send_notifications);
+    assert!(json.user.emails[0].primary);
 
     // Check legacy fields
-    assert_eq!(json.user.notification_email.unwrap(), "potato3@example.com");
-    assert!(!json.user.notification_email_verified);
-    assert!(json.user.notification_email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "potato3@example.com");
+    assert!(!json.user.primary_email_verified);
+    assert!(json.user.primary_email_verification_sent);
 
     Ok(())
 }
@@ -416,9 +415,9 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     let user = MockCookieUser::new(&app, u);
 
     let json = user.show_me().await;
-    assert_eq!(json.user.notification_email.unwrap(), "potahto@example.com");
-    assert!(!json.user.notification_email_verified);
-    assert!(!json.user.notification_email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "potahto@example.com");
+    assert!(!json.user.primary_email_verified);
+    assert!(!json.user.primary_email_verification_sent);
 
     Ok(())
 }

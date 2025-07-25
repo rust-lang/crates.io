@@ -23,7 +23,7 @@ export default http.post('/api/v1/users/:user_id/emails', async ({ params, reque
     email: (await request.json()).email,
     verified: false,
     verification_email_sent: true,
-    send_notifications: false,
+    primary: false,
   });
   db.user.update({
     where: { id: { equals: user.id } },

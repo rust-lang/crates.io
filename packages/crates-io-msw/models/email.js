@@ -8,7 +8,7 @@ export default {
   email: String,
   verified: Boolean,
   verification_email_sent: Boolean,
-  send_notifications: Boolean,
+  primary: Boolean,
   token: nullable(String),
 
   preCreate(attrs, counter) {
@@ -16,7 +16,7 @@ export default {
     applyDefault(attrs, 'email', () => `foo@crates.io`);
     applyDefault(attrs, 'verified', () => false);
     applyDefault(attrs, 'verification_email_sent', () => false);
-    applyDefault(attrs, 'send_notifications', () => false);
+    applyDefault(attrs, 'primary', () => false);
     applyDefault(attrs, 'token', () => null);
   },
 };

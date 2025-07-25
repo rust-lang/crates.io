@@ -1,0 +1,14 @@
+---
+source: src/tests/user.rs
+expression: response.json()
+---
+{
+  "email": {
+    "email": "potato2@example.com",
+    "id": 1,
+    "primary": true,
+    "verification_email_sent": true,
+    "verified": true
+  },
+  "ok": true
+}

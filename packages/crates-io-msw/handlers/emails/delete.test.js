@@ -32,16 +32,16 @@ test('returns an error for non-existent email', async function () {
   });
 });
 
-test('prevents deletion of notification email', async function () {
+test('prevents deletion of primary email', async function () {
   let user = db.user.create();
   db.mswSession.create({ user });
 
-  let email = db.email.create({ user_id: user.id, email: 'test@example.com', send_notifications: true });
+  let email = db.email.create({ user_id: user.id, email: 'test@example.com', primary: true });
 
   let response = await fetch(`/api/v1/users/${user.id}/emails/${email.id}`, { method: 'DELETE' });
   assert.strictEqual(response.status, 400);
   assert.deepEqual(await response.json(), {
-    errors: [{ detail: 'Cannot delete an email that has notifications enabled.' }],
+    errors: [{ detail: 'cannot delete primary email, please set another email as primary first' }],
   });
 });
 
@@ -49,7 +49,7 @@ test('successfully deletes alternate email', async function () {
   let user = db.user.create();
   db.mswSession.create({ user });
 
-  let email1 = db.email.create({ user_id: user.id, email: 'test1@example.com', send_notifications: true });
+  let email1 = db.email.create({ user_id: user.id, email: 'test1@example.com', primary: true });
   let email2 = db.email.create({ user_id: user.id, email: 'test2@example.com' });
 
   let response = await fetch(`/api/v1/users/${user.id}/emails/${email2.id}`, { method: 'DELETE' });

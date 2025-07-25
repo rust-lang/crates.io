@@ -40,7 +40,7 @@ async fn test_happy_path() {
     // Add an email to the user
     let response = user.add_email(user.as_model().id, "user@example.com").await;
     assert_snapshot!(response.status(), @"200 OK");
-    assert_snapshot!(response.text(), @r#"{"id":2,"email":"user@example.com","verified":false,"verification_email_sent":true,"send_notifications":false}"#);
+    assert_snapshot!(response.text(), @r#"{"id":2,"email":"user@example.com","verified":false,"verification_email_sent":true,"primary":false}"#);
 
     let response = user
         .resend_confirmation(

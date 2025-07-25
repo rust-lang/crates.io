@@ -11,14 +11,14 @@ expression: json.user
       "email": "foo@example.com",
       "verified": true,
       "verification_email_sent": true,
-      "send_notifications": true
+      "primary": true
     },
     {
       "id": 2,
       "email": "mango@mangos.mango",
       "verified": false,
       "verification_email_sent": true,
-      "send_notifications": false
+      "primary": false
     }
   ],
   "name": null,

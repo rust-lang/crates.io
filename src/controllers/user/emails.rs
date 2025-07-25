@@ -61,7 +61,7 @@ pub async fn create_email(
         .parse::<Address>()
         .map_err(|_| bad_request("invalid email address"))?;
 
-    // fetch count of user's current emails to determine if we need to enable notifications
+    // fetch count of user's current emails to determine if we need to mark the new email as primary
     let email_count: i64 = Email::belonging_to(&auth.user())
         .count()
         .get_result(&mut conn)
@@ -71,7 +71,7 @@ pub async fn create_email(
     let saved_email = NewEmail::builder()
         .user_id(auth.user().id)
         .email(user_email)
-        .send_notifications(email_count == 0) // Enable notifications if this is the first email
+        .primary(email_count == 0) // Mark as primary if this is the first email
         .build()
         .insert_if_missing(&mut conn)
         .await
@@ -135,9 +135,9 @@ pub async fn delete_email(
         .await
         .map_err(|_| not_found())?;
 
-    if email.send_notifications {
+    if email.primary {
         return Err(bad_request(
-            "cannot delete email that receives notifications",
+            "cannot delete primary email, please set another email as primary first",
         ));
     }
 
@@ -149,13 +149,13 @@ pub async fn delete_email(
     Ok(OkResponse::new())
 }
 
-/// Enable notifications for a specific email address. This will disable notifications for all other emails of the user.
+/// Mark a specific email address as the primary email. This will cause notifications to be sent to this email address.
 #[utoipa::path(
     put,
-    path = "/api/v1/users/{id}/emails/{email_id}/notifications",
+    path = "/api/v1/users/{id}/emails/{email_id}/set_primary",
     params(
         ("id" = i32, Path, description = "ID of the user"),
-        ("email_id" = i32, Path, description = "ID of the email to enable notifications for"),
+        ("email_id" = i32, Path, description = "ID of the email to set as primary"),
     ),
     security(
         ("api_token" = []),
@@ -164,7 +164,7 @@ pub async fn delete_email(
     tag = "users",
     responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
 )]
-pub async fn enable_notifications(
+pub async fn set_primary_email(
     state: AppState,
     Path((param_user_id, email_id)): Path<(i32, i32)>,
     req: Parts,
@@ -184,15 +184,15 @@ pub async fn enable_notifications(
         .await
         .map_err(|_| not_found())?;
 
-    if email.send_notifications {
-        return Err(bad_request("email already receives notifications"));
+    if email.primary {
+        return Err(bad_request("email is already primary"));
     }
 
-    diesel::sql_query("SELECT enable_notifications_for_email($1)")
+    diesel::sql_query("SELECT mark_email_as_primary($1)")
         .bind::<diesel::sql_types::Integer, _>(email_id)
         .execute(&mut conn)
         .await
-        .map_err(|_| server_error("Error in enabling email notifications"))?;
+        .map_err(|_| server_error("Error in marking email as primary"))?;
 
     Ok(OkResponse::new())
 }

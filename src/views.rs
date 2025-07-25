@@ -683,7 +683,7 @@ pub struct EncodablePrivateUser {
             "id": 42,
             "email": "user@example.com",
             "verified": true,
-            "send_notifications": true,
+            "primary": true,
             "verification_email_sent": true
         }]))]
     pub emails: Vec<EncodableEmail>,
@@ -692,27 +692,27 @@ pub struct EncodablePrivateUser {
     #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
 
-    /// Whether the user's notification email address, if set, has been verified.
+    /// Whether the user's primary email address, if set, has been verified.
     #[schema(example = true)]
     #[serde(rename = "email_verified")]
     #[deprecated(note = "Use `emails` array instead, check that `verified` property is true.")]
-    pub notification_email_verified: bool,
+    pub primary_email_verified: bool,
 
-    /// Whether the user's has been sent a verification email to their notification email address, if set.
+    /// Whether the user's has been sent a verification email to their primary email address, if set.
     #[schema(example = true)]
     #[serde(rename = "email_verification_sent")]
     #[deprecated(
         note = "Use `emails` array instead, check that `token_generated_at` property is not null."
     )]
-    pub notification_email_verification_sent: bool,
+    pub primary_email_verification_sent: bool,
 
-    /// The user's email address for sending notifications, if set.
+    /// The user's primary email address, if set.
     #[schema(example = "kate@morgan.dev")]
     #[serde(rename = "email")]
     #[deprecated(
-        note = "Use `emails` array instead, maximum of one entry will have `send_notifications` property set to true."
+        note = "Use `emails` array instead, maximum of one entry will have `primary` property set to true."
     )]
-    pub notification_email: Option<String>,
+    pub primary_email: Option<String>,
 
     /// The user's avatar URL, if set.
     #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
@@ -745,20 +745,20 @@ impl EncodablePrivateUser {
         } = user;
         let url = format!("https://github.com/{gh_login}");
 
-        let notification_email = emails.iter().find(|e| e.send_notifications);
-        let notification_email_verified = notification_email.map(|e| e.verified).unwrap_or(false);
-        let notification_email_verification_sent = notification_email
+        let primary_email = emails.iter().find(|e| e.primary);
+        let primary_email_verified = primary_email.map(|e| e.verified).unwrap_or(false);
+        let primary_email_verification_sent = primary_email
             .and_then(|e| e.token_generated_at)
             .is_some();
-        let notification_email = notification_email.map(|e| e.email.clone());
+        let primary_email = primary_email.map(|e| e.email.clone());
 
         #[allow(deprecated)]
         EncodablePrivateUser {
             id,
             emails: emails.into_iter().map(EncodableEmail::from).collect(),
-            notification_email_verified,
-            notification_email_verification_sent,
-            notification_email,
+            primary_email_verified,
+            primary_email_verification_sent,
+            primary_email,
             avatar: gh_avatar,
             login: gh_login,
             name,
@@ -788,9 +788,9 @@ pub struct EncodableEmail {
     #[schema(example = true)]
     pub verification_email_sent: bool,
 
-    /// Whether notifications should be sent to this email address.
+    /// Whether this is the user's primary email address, meaning notifications will be sent here.
     #[schema(example = true)]
-    pub send_notifications: bool,
+    pub primary: bool,
 }
 
 impl From<Email> for EncodableEmail {
@@ -800,7 +800,7 @@ impl From<Email> for EncodableEmail {
             email: email.email,
             verified: email.verified,
             verification_email_sent: email.token_generated_at.is_some(),
-            send_notifications: email.send_notifications,
+            primary: email.primary,
         }
     }
 }
