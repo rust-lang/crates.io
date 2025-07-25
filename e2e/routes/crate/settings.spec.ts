@@ -4,7 +4,9 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.settings', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = msw.db.user.create();
+    let user = msw.db.user.create({
+      emails: [msw.db.email.create({ email: 'user-1@crates.io', primary: true, verified: true })],
+    });
 
     let crate = msw.db.crate.create({ name: 'foo' });
     msw.db.version.create({ crate });

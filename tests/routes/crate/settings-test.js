@@ -12,7 +12,9 @@ module('Route | crate.settings', hooks => {
   setupApplicationTest(hooks);
 
   function prepare(context) {
-    const user = context.db.user.create();
+    const user = context.db.user.create({
+      emails: [context.db.email.create({ email: 'user-1@crates.io', primary: true, verified: true })],
+    });
 
     const crate = context.db.crate.create({ name: 'foo' });
     context.db.version.create({ crate });
