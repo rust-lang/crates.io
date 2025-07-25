@@ -108,8 +108,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       '@percy/playwright':
-        specifier: 1.0.8
-        version: 1.0.8(playwright-core@1.54.1)
+        specifier: 1.0.9
+        version: 1.0.9(playwright-core@1.54.1)
       '@playwright/test':
         specifier: 1.54.1
         version: 1.54.1
@@ -1878,8 +1878,8 @@ packages:
     resolution: {integrity: sha512-myysetAc2Kz0LsLy1JGHHB7DCsiodeW1u/b71M7kiwWYBWw840hiBEgoUDvJkgJ2Tig3oLoyI4aTqyvTExNu+A==}
     engines: {node: '>=14'}
 
-  '@percy/playwright@1.0.8':
-    resolution: {integrity: sha512-v70IKPVy15mDxis5+of2S62AJHdeG99BlA08oj/XpK68CVyNUSE6I8I54EUm3PbEeKxdZLWTdhX+8I69UkxPjA==}
+  '@percy/playwright@1.0.9':
+    resolution: {integrity: sha512-t74a0hZcAR+ssNpbcL6vnYU5mwEGcdRByLYFb12yFQUq4n250YUAX76jI4OHzH440Tikp84hml4JnbXrvgEmFQ==}
     engines: {node: '>=14'}
     peerDependencies:
       playwright-core: '>=1'
@@ -10578,7 +10578,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@percy/playwright@1.0.8(playwright-core@1.54.1)':
+  '@percy/playwright@1.0.9(playwright-core@1.54.1)':
     dependencies:
       playwright-core: 1.54.1
 
