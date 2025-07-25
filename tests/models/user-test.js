@@ -13,34 +13,100 @@ module('Model | User', function (hooks) {
     this.store = this.owner.lookup('service:store');
   });
 
-  module('changeEmail()', function () {
+  module('addEmail()', function () {
     test('happy path', async function (assert) {
-      let user = this.db.user.create({ email: 'old@email.com' });
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
 
       this.authenticateAs(user);
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
-      assert.strictEqual(currentUser.email, 'old@email.com');
-      assert.true(currentUser.email_verified);
-      assert.true(currentUser.email_verification_sent);
+      assert.strictEqual(currentUser.emails[0].email, 'old@email.com');
 
-      await currentUser.changeEmail('new@email.com');
-      assert.strictEqual(currentUser.email, 'new@email.com');
-      assert.false(currentUser.email_verified);
-      assert.true(currentUser.email_verification_sent);
+      await currentUser.addEmail('new@email.com');
+      assert.strictEqual(currentUser.emails[1].email, 'new@email.com');
     });
 
     test('error handling', async function (assert) {
-      let user = this.db.user.create({ email: 'old@email.com' });
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
 
       this.authenticateAs(user);
 
       let error = HttpResponse.json({}, { status: 500 });
-      this.worker.use(http.put('/api/v1/users/:user_id', () => error));
+      this.worker.use(http.post('/api/v1/users/:user_id/emails', () => error));
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
-      await assert.rejects(currentUser.changeEmail('new@email.com'), function (error) {
+      await assert.rejects(currentUser.addEmail('new@email.com'), function (error) {
+        assert.deepEqual(error.errors, [
+          {
+            detail: '{}',
+            status: '500',
+            title: 'The backend responded with an error',
+          },
+        ]);
+        return true;
+      });
+    });
+  });
+
+  module('deleteEmail()', function () {
+    test('happy path', async function (assert) {
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
+      this.authenticateAs(user);
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+
+      await currentUser.deleteEmail(email.id);
+      assert.false(currentUser.emails.some(e => e.id === email.id));
+    });
+
+    test('error handling', async function (assert) {
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
+      this.authenticateAs(user);
+
+      let error = HttpResponse.json({}, { status: 500 });
+      this.worker.use(http.delete('/api/v1/users/:user_id/emails/:email_id', () => error));
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+
+      await assert.rejects(currentUser.deleteEmail(email.id), function (error) {
+        assert.deepEqual(error.errors, [
+          {
+            detail: '{}',
+            status: '500',
+            title: 'The backend responded with an error',
+          },
+        ]);
+        return true;
+      });
+    });
+  });
+
+  module('updateNotificationEmail()', function () {
+    test('happy path', async function (assert) {
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
+      this.authenticateAs(user);
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+
+      await currentUser.updateNotificationEmail(email.id, 'new@email.com');
+      assert.strictEqual(currentUser.emails.find(e => e.send_notifications).id, email.id);
+    });
+    test('error handling', async function (assert) {
+      let email = this.db.email.create({ email: 'old@email.com' });
+      let user = this.db.user.create({ emails: [email] });
+      this.authenticateAs(user);
+
+      let error = HttpResponse.json({}, { status: 500 });
+      this.worker.use(http.put('/api/v1/users/:user_id/emails/:email_id/notifications', () => error));
+
+      let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
+      await assert.rejects(currentUser.updateNotificationEmail(email.id, 'new@email.com'), function (error) {
         assert.deepEqual(error.errors, [
           {
             detail: '{}',
@@ -57,24 +123,26 @@ module('Model | User', function (hooks) {
     test('happy path', async function (assert) {
       assert.expect(0);
 
-      let user = this.db.user.create({ emailVerificationToken: 'secret123' });
+      let email = this.db.email.create({ token: 'secret123' });
+      let user = this.db.user.create({ emails: [email] });
       this.authenticateAs(user);
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
-      await currentUser.resendVerificationEmail();
+      await currentUser.resendVerificationEmail(email.id);
     });
 
     test('error handling', async function (assert) {
-      let user = this.db.user.create({ emailVerificationToken: 'secret123' });
+      let email = this.db.email.create({ token: 'secret123' });
+      let user = this.db.user.create({ emails: [email] });
       this.authenticateAs(user);
 
       let error = HttpResponse.json({}, { status: 500 });
-      this.worker.use(http.put('/api/v1/users/:user_id/resend', () => error));
+      this.worker.use(http.put('/api/v1/users/:user_id/emails/:email_id/resend', () => error));
 
       let { currentUser } = await this.owner.lookup('service:session').loadUserTask.perform();
 
-      await assert.rejects(currentUser.resendVerificationEmail(), function (error) {
+      await assert.rejects(currentUser.resendVerificationEmail(email.id), function (error) {
         assert.deepEqual(error.errors, [
           {
             detail: '{}',

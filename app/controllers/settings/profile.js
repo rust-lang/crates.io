@@ -23,7 +23,6 @@ export default class extends Controller {
 
   updateNotificationSettings = task(async () => {
     try {
-      await this.model.user.updateNotificationEmail(this.notificationEmailId);
       await this.model.user.updatePublishNotifications(this.publishNotifications);
     } catch {
       this.notifications.error(

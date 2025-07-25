@@ -56,9 +56,7 @@ test('happy path', ({ expect }) => {
       "id": 1,
       "invitee": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
-        "email": "user-2@crates.io",
-        "emailVerificationToken": null,
-        "emailVerified": true,
+        "emails": [],
         "followedCrates": [],
         "id": 2,
         "isAdmin": false,
@@ -71,9 +69,7 @@ test('happy path', ({ expect }) => {
       },
       "inviter": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
-        "email": "user-1@crates.io",
-        "emailVerificationToken": null,
-        "emailVerified": true,
+        "emails": [],
         "followedCrates": [],
         "id": 1,
         "isAdmin": false,

@@ -1,31 +1,34 @@
 import { assert, test } from 'vitest';
 
 import { db } from '../../index.js';
+import { serializeEmail } from '../../serializers/email.js';
 
 test('returns `ok: true` for a known token (unauthenticated)', async function () {
-  let user = db.user.create({ emailVerificationToken: 'foo' });
-  assert.strictEqual(user.emailVerified, false);
+  let email = db.email.create({ token: 'foo' });
+  let user = db.user.create({ emails: [email] });
+  assert.strictEqual(email.verified, false);
 
   let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
   assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true });
+  assert.deepEqual(await response.json(), { ok: true, email: serializeEmail({ ...email, verified: true }) });
 
-  user = db.user.findFirst({ where: { id: user.id } });
-  assert.strictEqual(user.emailVerified, true);
+  email = db.email.findFirst({ where: { id: user.emails[0].id } });
+  assert.strictEqual(email.verified, true);
 });
 
 test('returns `ok: true` for a known token (authenticated)', async function () {
-  let user = db.user.create({ emailVerificationToken: 'foo' });
-  assert.strictEqual(user.emailVerified, false);
+  let email = db.email.create({ token: 'foo' });
+  let user = db.user.create({ emails: [email] });
+  assert.strictEqual(email.verified, false);
 
   db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
   assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true });
+  assert.deepEqual(await response.json(), { ok: true, email: serializeEmail({ ...email, verified: true }) });
 
-  user = db.user.findFirst({ where: { id: user.id } });
-  assert.strictEqual(user.emailVerified, true);
+  email = db.email.findFirst({ where: { id: user.emails[0].id } });
+  assert.strictEqual(email.verified, true);
 });
 
 test('returns an error for unknown tokens', async function () {

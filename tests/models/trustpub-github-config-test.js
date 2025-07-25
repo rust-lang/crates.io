@@ -64,7 +64,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('createRecord()', function () {
     test('creates a new GitHub config', async function (assert) {
-      let user = this.db.user.create({ emailVerified: true });
+      let user = this.db.user.create({ emails: [this.db.email.create({ verified: true })] });
       this.authenticateAs(user);
 
       let crate = this.db.crate.create();
@@ -103,7 +103,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user = this.db.user.create({ emailVerified: true });
+      let user = this.db.user.create({ emails: [this.db.email.create({ verified: true })] });
       this.authenticateAs(user);
 
       let crate = this.db.crate.create();
@@ -123,7 +123,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user does not have a verified email', async function (assert) {
-      let user = this.db.user.create({ emailVerified: false });
+      let user = this.db.user.create({ emails: [this.db.email.create({ verified: false })] });
       this.authenticateAs(user);
 
       let crate = this.db.crate.create();

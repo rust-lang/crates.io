@@ -14,7 +14,7 @@ export default class EmailInput extends Component {
   @tracked disableResend = false;
 
   @action validate(event) {
-    this.isValid = event.target.checkValidity();
+    this.isValid = event.target.value.trim().length !== 0 && event.target.checkValidity();
   }
 
   resendEmailTask = task(async () => {

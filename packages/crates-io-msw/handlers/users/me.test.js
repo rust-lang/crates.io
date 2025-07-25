@@ -3,7 +3,16 @@ import { assert, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns the `user` resource including the private fields', async function () {
-  let user = db.user.create();
+  let user = db.user.create({
+    emails: [
+      db.email.create({
+        email: 'user-1@crates.io',
+        send_notifications: true,
+        verification_email_sent: true,
+        verified: true,
+      }),
+    ],
+  });
   db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me');
@@ -12,9 +21,15 @@ test('returns the `user` resource including the private fields', async function 
     user: {
       id: 1,
       avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
-      email: 'user-1@crates.io',
-      email_verification_sent: true,
-      email_verified: true,
+      emails: [
+        {
+          id: 1,
+          email: 'user-1@crates.io',
+          verified: true,
+          verification_email_sent: true,
+          send_notifications: true,
+        },
+      ],
       is_admin: false,
       login: 'user-1',
       name: 'User 1',

@@ -1,14 +1,14 @@
 <div ...attributes>
   {{#if this.email.id }}
   <div local-class="row">
-    <div local-class="email-column" data-test-email-address>
+    <div local-class="email-column">
       <dd>
-        {{ this.email.email }}
+        <span data-test-email-address>{{ this.email.email }}</span>
         <span class="badges">
           {{#if this.email.verified}}
           <span local-class="badge verified" data-test-verified>Verified</span>
           {{#if this.email.send_notifications }}
-            <span local-class="badge">Notifications are sent here</span>
+            <span local-class="badge" data-test-notification-target>Notifications are sent here</span>
           {{/if}}
           {{else}}
             {{#if this.email.verification_email_sent}}
@@ -34,12 +34,12 @@
       </button>
       {{/unless}}
       {{#if (and (not this.email.send_notifications) this.email.verified)}}
-      <button type="button" class="button button--small" data-test-edit-button {{on "click" (prevent-default (perform this.enableNotificationsTask))}}>
+      <button type="button" class="button button--small" data-test-notification-button {{on "click" (prevent-default (perform this.enableNotificationsTask))}}>
         Enable notifications
       </button>
       {{/if}}
       {{#if @canDelete}}
-      <button disabled={{this.email.send_notifications}} title={{if this.email.send_notifications "Cannot delete notifications email"}} type="button" class="button button--small button--red" data-test-edit-button {{on "click" (prevent-default (perform this.deleteEmailTask))}}>
+      <button disabled={{this.email.send_notifications}} title={{if this.email.send_notifications "Cannot delete notifications email"}} type="button" class="button button--small button--red" data-test-remove-button {{on "click" (prevent-default (perform this.deleteEmailTask))}}>
         Remove
       </button>
       {{/if}}

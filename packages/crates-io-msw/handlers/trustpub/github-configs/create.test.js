@@ -16,7 +16,7 @@ test('happy path', async function () {
   let crate = db.crate.create({ name: 'test-crate' });
   db.version.create({ crate });
 
-  let user = db.user.create({ emailVerified: true });
+  let user = db.user.create({ emails: [db.email.create({ verified: true })] });
   db.mswSession.create({ user });
 
   // Create crate ownership
@@ -58,7 +58,7 @@ test('happy path with environment', async function () {
   let crate = db.crate.create({ name: 'test-crate-env' });
   db.version.create({ crate });
 
-  let user = db.user.create({ emailVerified: true });
+  let user = db.user.create({ emails: [db.email.create({ verified: true })] });
   db.mswSession.create({ user });
 
   // Create crate ownership
@@ -199,7 +199,7 @@ test('returns 403 if user email is not verified', async function () {
   let crate = db.crate.create({ name: 'test-crate-unverified' });
   db.version.create({ crate });
 
-  let user = db.user.create({ emailVerified: false });
+  let user = db.user.create({ emails: [db.email.create({ verified: false })] });
   db.mswSession.create({ user });
 
   // Create crate ownership

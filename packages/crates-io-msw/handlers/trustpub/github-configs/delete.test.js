@@ -6,7 +6,7 @@ test('happy path', async function () {
   let crate = db.crate.create({ name: 'test-crate' });
   db.version.create({ crate });
 
-  let user = db.user.create({ email_verified: true });
+  let user = db.user.create({ emails: [db.email.create({ verified: true })] });
   db.mswSession.create({ user });
 
   // Create crate ownership

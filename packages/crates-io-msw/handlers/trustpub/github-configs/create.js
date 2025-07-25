@@ -38,7 +38,7 @@ export default http.post('/api/v1/trusted_publishing/github_configs', async ({ r
   }
 
   // Check if the user has a verified email
-  let hasVerifiedEmail = user.emailVerified;
+  let hasVerifiedEmail = user.emails.some(email => email.verified);
   if (!hasVerifiedEmail) {
     let detail = 'You must verify your email address to create a Trusted Publishing config';
     return HttpResponse.json({ errors: [{ detail }] }, { status: 403 });

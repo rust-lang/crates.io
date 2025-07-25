@@ -5,15 +5,26 @@ use crate::email::EmailMessage;
 use crate::models::Email;
 use crate::util::errors::AppResult;
 use crate::util::errors::{BoxedAppError, bad_request};
+use crate::views::EncodableEmail;
+use axum::Json;
 use axum::extract::Path;
 use crates_io_database::schema::emails;
 use diesel::dsl::sql;
 use diesel::prelude::*;
+use diesel::result::OptionalExtension;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use http::request::Parts;
 use minijinja::context;
 use secrecy::ExposeSecret;
+use serde::Serialize;
+
+#[derive(Serialize, utoipa::ToSchema)]
+pub struct EmailConfirmResponse {
+    #[schema(example = true)]
+    ok: bool,
+    email: EncodableEmail,
+}
 
 /// Marks the email belonging to the given token as verified.
 #[utoipa::path(
@@ -23,24 +34,29 @@ use secrecy::ExposeSecret;
         ("email_token" = String, Path, description = "Secret verification token sent to the user's email address"),
     ),
     tag = "users",
-    responses((status = 200, description = "Successful Response", body = inline(OkResponse))),
+    responses((status = 200, description = "Successful Response", body = inline(EmailConfirmResponse))),
 )]
 pub async fn confirm_user_email(
     state: AppState,
     Path(token): Path<String>,
-) -> AppResult<OkResponse> {
+) -> AppResult<Json<EmailConfirmResponse>> {
     let mut conn = state.db_write().await?;
 
-    let updated_rows = diesel::update(emails::table.filter(emails::token.eq(&token)))
+    let confirmed_email = diesel::update(emails::table.filter(emails::token.eq(&token)))
         .set(emails::verified.eq(true))
-        .execute(&mut conn)
-        .await?;
+        .returning(Email::as_returning())
+        .get_result(&mut conn)
+        .await
+        .optional()?;
 
-    if updated_rows == 0 {
-        return Err(bad_request("Email belonging to token not found."));
+    if let Some(confirmed_email) = confirmed_email {
+        Ok(Json(EmailConfirmResponse {
+            ok: true,
+            email: confirmed_email.into(),
+        }))
+    } else {
+        Err(bad_request("Email belonging to token not found."))
     }
-
-    Ok(OkResponse::new())
 }
 
 /// Regenerate and send an email verification token for the given email.

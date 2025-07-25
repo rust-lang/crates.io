@@ -25,20 +25,5 @@ export default http.put('/api/v1/users/:user_id', async ({ params, request }) =>
     });
   }
 
-  if (json.user.email !== undefined) {
-    if (!json.user.email) {
-      return HttpResponse.json({ errors: [{ detail: 'empty email rejected' }] }, { status: 400 });
-    }
-
-    db.user.update({
-      where: { id: { equals: user.id } },
-      data: {
-        email: json.user.email,
-        emailVerified: false,
-        emailVerificationToken: 'secret123',
-      },
-    });
-  }
-
   return HttpResponse.json({ ok: true });
 });

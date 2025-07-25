@@ -683,7 +683,8 @@ pub struct EncodablePrivateUser {
             "id": 42,
             "email": "user@example.com",
             "verified": true,
-            "send_notifications": true
+            "send_notifications": true,
+            "verification_email_sent": true
         }]))]
     pub emails: Vec<EncodableEmail>,
 

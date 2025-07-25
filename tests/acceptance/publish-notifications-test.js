@@ -11,7 +11,7 @@ module('Acceptance | publish notifications', function (hooks) {
   setupApplicationTest(hooks);
 
   test('unsubscribe and resubscribe', async function (assert) {
-    let user = this.db.user.create();
+    let user = this.db.user.create({ emails: [this.db.email.create({ verified: true })] });
 
     this.authenticateAs(user);
     assert.true(user.publishNotifications);
@@ -36,7 +36,7 @@ module('Acceptance | publish notifications', function (hooks) {
   });
 
   test('loading and error state', async function (assert) {
-    let user = this.db.user.create();
+    let user = this.db.user.create({ emails: [this.db.email.create({ verified: true })] });
 
     let deferred = defer();
     this.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));

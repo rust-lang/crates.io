@@ -24,9 +24,7 @@ test('happy path', ({ expect }) => {
       "token": "6270739405881613",
       "user": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
-        "email": "user-1@crates.io",
-        "emailVerificationToken": null,
-        "emailVerified": true,
+        "emails": [],
         "followedCrates": [],
         "id": 1,
         "isAdmin": false,
