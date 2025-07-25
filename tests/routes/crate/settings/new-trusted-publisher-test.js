@@ -14,7 +14,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
   setupApplicationTest(hooks);
 
   function prepare(context) {
-    let user = context.db.user.create({ emails: [context.db.email.create({ verified: true })] });
+    let user = context.db.user.create({
+      emails: [context.db.email.create({ email: 'user-1@crates.io', verified: true, primary: true })],
+    });
 
     let crate = context.db.crate.create({ name: 'foo' });
     context.db.version.create({ crate });

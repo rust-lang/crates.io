@@ -14,7 +14,10 @@ module('Acceptance | Settings', function (hooks) {
   function prepare(context) {
     let { db } = context;
 
-    let user1 = db.user.create({ name: 'blabaere' });
+    let user1 = db.user.create({
+      name: 'blabaere',
+      emails: [db.emails.create({ email: 'blabaere@crates.io', primary: true })],
+    });
     let user2 = db.user.create({ name: 'thehydroimpulse' });
     let team1 = db.team.create({ org: 'org', name: 'blabaere' });
     let team2 = db.team.create({ org: 'org', name: 'thehydroimpulse' });

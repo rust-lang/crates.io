@@ -4,7 +4,7 @@ import { defer } from '@/e2e/deferred';
 
 test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = msw.db.user.create({ emails: [msw.db.email.create({ verified: true })] });
+    let user = msw.db.user.create({ emails: [msw.db.email.create({ email: 'user-1@crates.io', primary: true, verified: true })] });
 
     let crate = msw.db.crate.create({ name: 'foo' });
     msw.db.version.create({ crate });
