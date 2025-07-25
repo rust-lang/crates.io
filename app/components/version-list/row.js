@@ -4,7 +4,7 @@ import { htmlSafe } from '@ember/template';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
-import styles from './row.module.css';
+import styles from './row.css';
 
 export default class VersionRow extends Component {
   @service session;

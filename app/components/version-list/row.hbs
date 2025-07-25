@@ -1,15 +1,15 @@
 <div
-  local-class="
+  ...attributes
+  class="
     row
     {{if @version.isHighestOfReleaseTrack "latest"}}
     {{if @version.yanked "yanked"}}
     {{if @version.isPrerelease "prerelease"}}
     {{if this.focused "focused"}}
   "
-  ...attributes
 >
-  <div local-class="version">
-    <div local-class="release-track" data-test-release-track>
+  <div class="version">
+    <div class="release-track" data-test-release-track>
       {{#if @version.yanked}}
         {{svg-jar "trash"}}
       {{else if @version.invalidSemver}}
@@ -18,7 +18,7 @@
         {{@version.releaseTrack}}
       {{/if}}
 
-      <Tooltip @side="right" local-class="rt-tooltip" data-test-release-track-title>
+      <Tooltip @side="right" class="rt-tooltip" data-test-release-track-title>
         {{this.releaseTrackTitle}}
       </Tooltip>
     </div>
@@ -26,7 +26,7 @@
     <LinkTo
       @route="crate.version"
       @model={{@version.num}}
-      local-class="num-link"
+      class="num-link"
       {{on "focusin" (fn this.setFocused true)}}
       {{on "focusout" (fn this.setFocused false)}}
       data-test-release-track-link
@@ -35,13 +35,13 @@
     </LinkTo>
   </div>
 
-  <div local-class="metadata">
-    <div local-class="metadata-row">
+  <div class="metadata">
+    <div class="metadata-row">
       {{#if @version.published_by}}
-        <span local-class="publisher">
+        <span class="publisher">
           by
           <LinkTo @route="user" @model={{@version.published_by.login}}>
-            <UserAvatar @user={{@version.published_by}} local-class="avatar" />
+            <UserAvatar @user={{@version.published_by}} class="avatar" />
             {{or @version.published_by.name @version.published_by.login}}
           </LinkTo>
         </span>
@@ -66,55 +66,55 @@
 
       <time
         datetime={{date-format-iso @version.created_at}}
-        local-class="date {{if @version.isNew "new"}}"
+        class="date {{if @version.isNew "new"}}"
       >
         {{svg-jar "calendar"}}
         {{date-format-distance-to-now @version.created_at addSuffix=true}}
 
-        <Tooltip local-class="tooltip">
+        <Tooltip class="tooltip">
           {{date-format @version.created_at 'PPP'}}
           {{#if @version.isNew}}
-            (<span local-class="new">new</span>)
+            (<span class="new">new</span>)
           {{/if}}
         </Tooltip>
       </time>
     </div>
 
     {{#if (or @version.crate_size @version.license @version.featureList)}}
-      <div local-class="metadata-row">
+      <div class="metadata-row">
         {{#if @version.rust_version}}
-          <span local-class="msrv">
+          <span class="msrv">
             {{svg-jar "rust"}}
             <Msrv @version={{@version}} />
           </span>
         {{else if @version.edition}}
-          <span local-class="edition">
+          <span class="edition">
             {{svg-jar "rust"}}
             <Edition @version={{@version}} />
           </span>
         {{/if}}
 
         {{#if @version.crate_size}}
-          <span local-class="bytes">
+          <span class="bytes">
             {{svg-jar "weight"}}
             {{pretty-bytes @version.crate_size}}
           </span>
         {{/if}}
 
         {{#if @version.license}}
-          <span local-class="license">
+          <span class="license">
             {{svg-jar "license"}}
             <LicenseExpression @license={{@version.license}} />
           </span>
         {{/if}}
 
         {{#if @version.featureList}}
-          <span local-class="num-features" data-test-feature-list>
+          <span class="num-features" data-test-feature-list>
             {{svg-jar "checkbox"}}
             {{@version.featureList.length}} {{if (eq @version.featureList.length 1) "Feature" "Features"}}
 
-            <Tooltip local-class="tooltip">
-              <ul local-class="feature-list">
+            <Tooltip class="tooltip">
+              <ul class="feature-list">
                 {{#each this.features.list as |feature|}}
                   <li>
                     {{svg-jar (if feature.isDefault "checkbox" "checkbox-empty")}}
@@ -122,7 +122,7 @@
                   </li>
                 {{/each}}
                 {{#if this.features.more}}
-                  <li local-class="other-features">
+                  <li class="other-features">
                     and {{this.features.more}} other features
                   </li>
                 {{/if}}
@@ -134,23 +134,22 @@
     {{/if}}
   </div>
 
-  <PrivilegedAction @userAuthorised={{this.isOwner}} local-class="actions">
-    <Dropdown local-class="dropdown" data-test-actions-menu as |dd|>
-      <dd.Trigger @hideArrow={{true}} local-class="trigger" data-test-actions-toggle>
-        {{svg-jar "ellipsis-circle" local-class="icon"}}
+  <PrivilegedAction @userAuthorised={{this.isOwner}} class="actions">
+    <Dropdown class="dropdown" data-test-actions-menu as |dd|>
+      <dd.Trigger @hideArrow={{true}} class="trigger" data-test-actions-toggle>
+        {{svg-jar "ellipsis-circle" class=(scoped-class "icon")}}
         <span class="sr-only">Actions</span>
       </dd.Trigger>
 
-      <dd.Menu local-class="menu" as |menu|>
+      <dd.Menu class="menu" as |menu|>
         <menu.Item>
-          <YankButton @version={{@version}} class="button-reset" local-class="menu-button" />
+          <YankButton @version={{@version}} class="button-reset menu-button" />
         </menu.Item>
         <menu.Item>
           <LinkTo
             @route="crate.rebuild-docs"
             @model={{@version.num}}
-            class="button-reset"
-            local-class="menu-button"
+            class="button-reset menu-button"
             data-test-id="btn-rebuild-docs"
           >
             Rebuild Docs

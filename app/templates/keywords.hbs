@@ -2,7 +2,7 @@
 
 <PageHeader @title="All Keywords"/>
 
-<div local-class="results-meta">
+<div class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
     @end={{this.pagination.currentPageEnd}}
@@ -19,9 +19,9 @@
   </div>
 </div>
 
-<div local-class="list">
+<div class="list">
   {{#each this.model as |keyword|}}
-    <div local-class="row" data-test-keyword={{keyword.id}}>
+    <div class="row" data-test-keyword={{keyword.id}}>
       <LinkTo @route="keyword" @model={{keyword.id}}>{{keyword.id}}</LinkTo>
       <span class="text--small" data-test-count>
         {{format-num keyword.crates_cnt}} {{if (eq keyword.crates_cnt 1) "crate" "crates"}}

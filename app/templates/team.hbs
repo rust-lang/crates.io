@@ -1,11 +1,11 @@
-<PageHeader local-class="header" data-test-heading>
-  <UserAvatar @user={{this.model.team}} @size="medium" local-class="avatar" data-test-avatar />
+<PageHeader class="header" data-test-heading>
+  <UserAvatar @user={{this.model.team}} @size="medium" class="avatar" data-test-avatar />
   <div>
-    <div local-class="header-row">
+    <div class="header-row">
       <h1 data-test-org-name>
         {{ this.model.team.org_name }}
       </h1>
-      <UserLink @user={{this.model.team}} local-class="github-link" data-test-github-link>
+      <UserLink @user={{this.model.team}} class="github-link" data-test-github-link>
         {{svg-jar "github" alt="GitHub profile"}}
       </UserLink>
     </div>
@@ -15,7 +15,7 @@
   </div>
 </PageHeader>
 
-<div local-class="results-meta">
+<div class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
     @end={{this.pagination.currentPageEnd}}
@@ -34,6 +34,6 @@
   </div>
 </div>
 
-<CrateList @crates={{this.model.crates}} local-class="list" />
+<CrateList @crates={{this.model.crates}} class="list" />
 
 <Pagination @pagination={{this.pagination}} />

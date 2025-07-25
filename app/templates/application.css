@@ -1,0 +1,18 @@
+.main {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    background-color: var(--main-bg);
+    color: var(--main-color);
+    box-shadow: 0 0 6px 0 var(--main-shadow-color);
+}
+
+.inner-main {
+    --main-layout-padding: var(--space-s);
+
+    display: flex;
+    flex-direction: column;
+    padding: var(--main-layout-padding);
+}

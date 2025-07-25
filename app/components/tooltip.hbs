@@ -1,8 +1,8 @@
-<span local-class="anchor" {{this.onInsertAnchor this}} />
+<span class="anchor" {{this.onInsertAnchor this}} />
 
 {{#if this.visible}}
   {{#in-element this.containerElement}}
-    <div ...attributes local-class="tooltip" {{this.attachTooltip this side=@side}}>
+    <div class="tooltip" ...attributes {{this.attachTooltip this side=@side}}>
       {{#if (has-block)}}
         {{yield}}
       {{else}}

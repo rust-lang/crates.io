@@ -1,26 +1,25 @@
 <section
-  local-class='sidebar'
   aria-label="Crate metadata"
   ...attributes
+  class='sidebar'
 >
-  <div local-class="metadata">
-    <h2 local-class="heading">Metadata</h2>
+  <div class="metadata">
+    <h2 class="heading">Metadata</h2>
 
-    <div local-class="purl" data-test-purl>
+    <div class="purl" data-test-purl>
       {{svg-jar "link"}}
       <CopyButton
         @copyText={{@version.purl}}
-        class="button-reset"
-        local-class="purl-copy-button"
+        class="button-reset purl-copy-button"
       >
-        <span local-class="purl-text">{{@version.purl}}</span>
-        <Tooltip local-class="purl-tooltip"><strong>Package URL:</strong> {{@version.purl}} <small>(click to copy)</small></Tooltip>
+        <span class="purl-text">{{@version.purl}}</span>
+        <Tooltip class="purl-tooltip"><strong>Package URL:</strong> {{@version.purl}} <small>(click to copy)</small></Tooltip>
       </CopyButton>
       <a
         href="https://github.com/package-url/purl-spec"
         target="_blank"
         rel="noopener noreferrer"
-        local-class="purl-help-link"
+        class="purl-help-link"
         aria-label="Learn more"
       >
         {{svg-jar "circle-question"}}
@@ -30,7 +29,7 @@
 
     <time
       datetime={{date-format-iso @version.created_at}}
-      local-class="date"
+      class="date"
     >
       {{svg-jar "calendar"}}
       <span>
@@ -40,19 +39,19 @@
     </time>
 
     {{#if @version.rust_version}}
-      <div local-class="msrv" data-test-msrv>
+      <div class="msrv" data-test-msrv>
         {{svg-jar "rust"}}
         <Msrv @version={{@version}} />
       </div>
     {{else if @version.edition}}
-      <div local-class="edition" data-test-edition>
+      <div class="edition" data-test-edition>
         {{svg-jar "rust"}}
         <Edition @version={{@version}} />
       </div>
     {{/if}}
 
     {{#if @version.license}}
-      <div local-class="license" data-test-license>
+      <div class="license" data-test-license>
         {{svg-jar "license"}}
         <span>
           <LicenseExpression @license={{@version.license}} />
@@ -61,7 +60,7 @@
     {{/if}}
 
     {{#if @version.crate_size}}
-      <div local-class="bytes">
+      <div class="bytes">
         {{svg-jar "weight"}}
         {{pretty-bytes @version.crate_size}}
       </div>
@@ -70,7 +69,7 @@
 
   {{#unless @version.yanked}}
     <div data-test-install>
-      <h2 local-class="heading">Install</h2>
+      <h2 class="heading">Install</h2>
 
       <CrateSidebar::InstallInstructions
         @crate={{@crate.name}}
@@ -83,7 +82,7 @@
   {{/unless}}
 
   {{#if (or this.showHomepage @version.documentationLink @crate.repository)}}
-    <div local-class="links">
+    <div class="links">
       {{#if this.showHomepage}}
         <CrateSidebar::Link
           @title="Homepage"
@@ -111,15 +110,15 @@
   {{/if}}
 
   <div>
-    <h2 local-class="heading">Owners</h2>
+    <h2 class="heading">Owners</h2>
     <OwnersList @owners={{@crate.owners}} />
   </div>
 
   {{#unless @crate.categories.isPending}}
     {{#if @crate.categories.length}}
       <div>
-        <h2 local-class="heading">Categories</h2>
-        <ul local-class="categories">
+        <h2 class="heading">Categories</h2>
+        <ul class="categories">
           {{#each @crate.categories as |category|}}
             <li>
               <LinkTo @route="category" @model={{category.slug}}>{{category.category}}</LinkTo>
@@ -136,8 +135,7 @@
         href={{this.playgroundLink}}
         target="_blank"
         rel="noopener noreferrer"
-        local-class="playground-button"
-        class="button button--small"
+        class="playground-button button button--small"
         data-test-playground-button
       >
         Try on Rust Playground
@@ -148,7 +146,7 @@
         {{/if}}
       </a>
       {{#unless this.canHover}}
-        <p local-class="playground-help" class="text--small" data-test-playground-help>
+        <p class="playground-help text--small" data-test-playground-help>
           The top 100 crates are available on the Rust Playground for you to
           try out directly in your browser.
         </p>
@@ -159,8 +157,7 @@
       @route="support"
       @query={{hash inquire="crate-violation" crate=@crate.name}}
       data-test-id="link-crate-report"
-      local-class="report-button"
-      class="button button--red button--small"
+      class="report-button button button--red button--small"
     >
       Report crate
     </LinkTo>

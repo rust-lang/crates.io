@@ -2,7 +2,7 @@
 
 <PageHeader @title="All Crates" @suffix="for keyword '{{@model.keyword}}'"/>
 
-<div local-class="results-meta">
+<div class="results-meta">
   <ResultsCount
     @start={{this.pagination.currentPageStart}}
     @end={{this.pagination.currentPageEnd}}
@@ -22,6 +22,6 @@
   </div>
 </div>
 
-<CrateList @crates={{@model.crates}} local-class="list" />
+<CrateList @crates={{@model.crates}} class="list" />
 
 <Pagination @pagination={{this.pagination}} />

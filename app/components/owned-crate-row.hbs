@@ -1,13 +1,13 @@
 <label
-  local-class="label {{if @ownedCrate.email_notifications "checked"}}"
   data-test-owned-crate={{@ownedCrate.name}}
   ...attributes
+  class="label {{if @ownedCrate.email_notifications "checked"}}"
 >
-  <span local-class="name">
+  <span class="name">
     {{@ownedCrate.name}}
   </span>
 
-  <div aria-hidden="true" local-class="checkbox">
+  <div aria-hidden="true" class="checkbox">
     {{#if @ownedCrate.email_notifications}}
       {{svg-jar "check-mark"}}
     {{/if}}
