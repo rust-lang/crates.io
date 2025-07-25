@@ -158,10 +158,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let json = again_user_without_github_email.show_me().await;
     assert_eq!(json.user.emails[0].email, "apricot@apricots.apricot");
-    assert_eq!(
-        json.user.primary_email.unwrap(),
-        "apricot@apricots.apricot"
-    );
+    assert_eq!(json.user.primary_email.unwrap(), "apricot@apricots.apricot");
 
     Ok(())
 }

@@ -747,9 +747,8 @@ impl EncodablePrivateUser {
 
         let primary_email = emails.iter().find(|e| e.primary);
         let primary_email_verified = primary_email.map(|e| e.verified).unwrap_or(false);
-        let primary_email_verification_sent = primary_email
-            .and_then(|e| e.token_generated_at)
-            .is_some();
+        let primary_email_verification_sent =
+            primary_email.and_then(|e| e.token_generated_at).is_some();
         let primary_email = primary_email.map(|e| e.email.clone());
 
         #[allow(deprecated)]
