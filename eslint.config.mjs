@@ -113,6 +113,8 @@ export default [
       'unicorn/no-anonymous-default-export': 'off',
       // disabled because of false positives related to `EmberArray`
       'unicorn/no-array-for-each': 'off',
+      // disabled because `toReversed` is not "widely supported" yet
+      'unicorn/no-array-reverse': 'off',
       // disabled because it is annoying in some cases...
       'unicorn/no-await-expression-member': 'off',
       // disabled because we need `null` since JSON has no `undefined`
