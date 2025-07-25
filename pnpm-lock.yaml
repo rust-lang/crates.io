@@ -31,9 +31,6 @@ importers:
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
-      ember-autofocus-modifier:
-        specifier: ^7.0.1
-        version: 7.0.1(@babel/core@7.28.0)(ember-source@6.6.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
       highlight.js:
         specifier: 11.11.1
         version: 11.11.1
@@ -4082,11 +4079,6 @@ packages:
   ember-auto-import@2.10.0:
     resolution: {integrity: sha512-bcBFDYVTFHyqyq8BNvsj6UO3pE6Uqou/cNmee0WaqBgZ+1nQqFz0UE26usrtnFAT+YaFZSkqF2H36QW84k0/cg==}
     engines: {node: 12.* || 14.* || >= 16}
-
-  ember-autofocus-modifier@7.0.1:
-    resolution: {integrity: sha512-tiZc8raQrEES1pChhtnfHuz/2UnvHxKBnNjKwrH7xHs/gqtWPut95BlgVhz8OEXdaeTB0oc04UYClJ8WF4uhUQ==}
-    peerDependencies:
-      ember-source: ^3.28.0 || ^4.0.0 || ^5.0.0
 
   ember-cli-babel-plugin-helpers@1.1.1:
     resolution: {integrity: sha512-sKvOiPNHr5F/60NLd7SFzMpYPte/nnGkq/tMIfXejfKHIhaiIkYFqX8Z9UFTKWLLn+V7NOaby6niNPZUdvKCRw==}
@@ -13071,15 +13063,6 @@ snapshots:
       - '@glint/template'
       - supports-color
       - webpack
-
-  ember-autofocus-modifier@7.0.1(@babel/core@7.28.0)(ember-source@6.6.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
-    dependencies:
-      '@embroider/addon-shim': 1.10.0
-      ember-modifier: 4.2.2(@babel/core@7.28.0)
-      ember-source: 6.6.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - supports-color
 
   ember-cli-babel-plugin-helpers@1.1.1: {}
 

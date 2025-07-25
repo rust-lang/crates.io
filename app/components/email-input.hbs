@@ -49,7 +49,7 @@
   <div local-class="row">
     <form local-class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
       <Input @type="email" @value={{this.value}} id="email-input" placeholder="Email" local-class="input"
-        data-test-input {{autofocus}} oninput={{this.validate}} />
+        data-test-input {{auto-focus}} oninput={{this.validate}} />
 
       <div local-class="actions">
         <button type='submit' local-class="save-button" class="button button--small" disabled={{not this.isValid}}
