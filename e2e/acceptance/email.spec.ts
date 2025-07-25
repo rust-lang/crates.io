@@ -33,7 +33,7 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(addEmailForm.locator('[data-test-verified]')).toHaveCount(0);
       await expect(addEmailForm.locator('[data-test-verification-sent]')).toHaveCount(0);
       await expect(addEmailForm.locator('[data-test-resend-button]')).toHaveCount(0);
-      await expect(inputField).toContainText('')
+      await expect(inputField).toContainText('');
       await expect(submitButton).toBeDisabled();
 
       await inputField.fill('');
@@ -155,7 +155,10 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
 
     test('cannot remove notifications email', async ({ page, msw }) => {
       let user = msw.db.user.create({
-        emails: [msw.db.email.create({ email: 'notifications@doe.com', send_notifications: true }), msw.db.email.create({ email: 'john@doe.com' })],
+        emails: [
+          msw.db.email.create({ email: 'notifications@doe.com', send_notifications: true }),
+          msw.db.email.create({ email: 'john@doe.com' }),
+        ],
       });
       await msw.authenticateAs(user);
 
@@ -171,15 +174,20 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(johnEmailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
 
       await expect(notificationsEmailInput.locator('[data-test-remove-button]')).toBeDisabled();
-      await expect(notificationsEmailInput.locator('[data-test-remove-button]')).toHaveAttribute('title', 'Cannot delete notifications email');
+      await expect(notificationsEmailInput.locator('[data-test-remove-button]')).toHaveAttribute(
+        'title',
+        'Cannot delete notifications email',
+      );
       await expect(johnEmailInput.locator('[data-test-remove-button]')).toBeVisible();
     });
 
     test('no delete button when only one email', async ({ page, msw }) => {
       let user = msw.db.user.create({
-        emails: [msw.db.email.create({
-          email: 'john@doe.com'
-        })]
+        emails: [
+          msw.db.email.create({
+            email: 'john@doe.com',
+          }),
+        ],
       });
       await msw.authenticateAs(user);
 
@@ -192,7 +200,9 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
     });
 
     test('server error', async ({ page, msw }) => {
-      let user = msw.db.user.create({ emails: [msw.db.email.create({ email: 'john@doe.com' }), msw.db.email.create({ email: 'jane@doe.com' })] });
+      let user = msw.db.user.create({
+        emails: [msw.db.email.create({ email: 'john@doe.com' }), msw.db.email.create({ email: 'jane@doe.com' })],
+      });
       await msw.authenticateAs(user);
 
       let error = HttpResponse.json({}, { status: 500 });
@@ -206,7 +216,9 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(johnEmailInput.locator('[data-test-email-address]')).toContainText('john@doe.com');
       await expect(johnEmailInput.locator('[data-test-remove-button]')).toBeEnabled();
       await johnEmailInput.locator('[data-test-remove-button]').click();
-      await expect(page.locator('[data-test-notification-message="error"]')).toHaveText('Unknown error in deleting email');
+      await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
+        'Unknown error in deleting email',
+      );
       await expect(johnEmailInput.locator('[data-test-remove-button]')).toBeEnabled();
     });
   });
@@ -254,7 +266,9 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       await expect(resendButton).toBeEnabled();
 
       await resendButton.click();
-      await expect(page.locator('[data-test-notification-message="error"]')).toHaveText('Unknown error in resending message');
+      await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
+        'Unknown error in resending message',
+      );
       await expect(resendButton).toBeEnabled();
     });
   });
@@ -264,8 +278,8 @@ test.describe('Acceptance | Email Management', { tag: '@acceptance' }, () => {
       let user = msw.db.user.create({
         emails: [
           msw.db.email.create({ email: 'john@doe.com', verified: true, send_notifications: true }),
-          msw.db.email.create({ email: 'jane@doe.com', verified: true, send_notifications: false })
-        ]
+          msw.db.email.create({ email: 'jane@doe.com', verified: true, send_notifications: false }),
+        ],
       });
       await msw.authenticateAs(user);
 
