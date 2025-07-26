@@ -29,6 +29,7 @@ src/schema.rs.orig
 
 # insta
 *.pending-snap
+*.snap.new
 
 # playwright
 /test-results/

@@ -84,7 +84,7 @@ async fn create_primary_email() {
 
     let result = insert_static_primary_email(&mut conn, user_id)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     assert_debug_snapshot!(result);
 }
@@ -130,11 +130,11 @@ async fn create_secondary_email() {
 
     let primary = insert_static_primary_email(&mut conn, user_id)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     let secondary = insert_static_secondary_email(&mut conn, user_id)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     assert_debug_snapshot!((primary, secondary));
 }
@@ -195,7 +195,7 @@ async fn create_secondary_email_with_same_email_as_primary() {
 
     let primary = insert_static_primary_email(&mut conn, user_id)
         .await
-        .map(|email| EmailSnapshot::from(email))
+        .map(EmailSnapshot::from)
         .expect("failed to insert primary email");
 
     let secondary = NewEmail::builder()
@@ -205,7 +205,7 @@ async fn create_secondary_email_with_same_email_as_primary() {
         .build()
         .insert(&mut conn)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     assert_debug_snapshot!((primary, secondary));
 }
@@ -222,12 +222,12 @@ async fn create_too_many_emails() {
     for i in 0..MAX_EMAIL_COUNT + 2 {
         let result = NewEmail::builder()
             .user_id(user_id)
-            .email(&format!("me+{}@example.com", i))
+            .email(&format!("me+{i}@example.com"))
             .primary(i == 0)
             .build()
             .insert(&mut conn)
             .await
-            .map(|email| EmailSnapshot::from(email));
+            .map(EmailSnapshot::from);
 
         if let Err(err) = result {
             errors.push(err);
@@ -248,11 +248,11 @@ async fn create_same_email_for_different_users() {
 
     let first = insert_static_primary_email(&mut conn, user_id_1)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     let second = insert_static_primary_email(&mut conn, user_id_2)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     assert_debug_snapshot!((first, second));
 }
@@ -318,7 +318,7 @@ async fn create_primary_email_when_one_exists() {
 
     let first = insert_static_primary_email(&mut conn, user_id)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     let second = NewEmail::builder()
         .user_id(user_id)
@@ -327,7 +327,7 @@ async fn create_primary_email_when_one_exists() {
         .build()
         .insert(&mut conn)
         .await
-        .map(|email| EmailSnapshot::from(email));
+        .map(EmailSnapshot::from);
 
     assert_debug_snapshot!((first, second));
 }
