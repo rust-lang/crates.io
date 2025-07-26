@@ -9,6 +9,7 @@ use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
 use crate::storage::StorageConfig;
 use crate::tests::util::chaosproxy::ChaosProxy;
 use crate::tests::util::github::MOCK_GITHUB_DATA;
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crate::worker::{Environment, RunnerExt};
 use crate::{App, Emails, Env};
 use claims::assert_some;
@@ -489,6 +490,7 @@ fn simple_config() -> config::Server {
         session_key: cookie::Key::derive_from("test this has to be over 32 bytes long".as_bytes()),
         gh_client_id: ClientId::new(dotenvy::var("GH_CLIENT_ID").unwrap_or_default()),
         gh_client_secret: ClientSecret::new(dotenvy::var("GH_CLIENT_SECRET").unwrap_or_default()),
+        gh_token_encryption: GitHubTokenEncryption::for_testing(),
         max_upload_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_unpack_size: 128 * 1024, // 128 kB should be enough for most testing purposes
         max_features: 10,
