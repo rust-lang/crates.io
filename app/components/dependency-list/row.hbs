@@ -2,8 +2,8 @@
   local-class="
     row
     {{if @dependency.optional "optional"}}
-    {{if this.focused "focused"}}
   "
+  class="{{ if this.focused "focused" }}"
   data-test-dependency={{@dependency.crate_id}}
   ...attributes
 >
