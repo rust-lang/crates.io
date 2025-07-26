@@ -140,6 +140,7 @@ impl TestApp {
             .user_id(user.id)
             .email(&email)
             .verified(true)
+            .primary(true)
             .build();
 
         new_email.insert(&mut conn).await.unwrap();
