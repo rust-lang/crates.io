@@ -170,15 +170,16 @@ async fn create_or_update_user(
                 let new_email = NewEmail::builder()
                     .user_id(user.id)
                     .email(user_email)
+                    .primary(true)
                     .build();
 
-                if let Some(token) = new_email.insert_if_missing(conn).await? {
+                if let Some(saved_email) = new_email.insert_primary_if_missing(conn).await? {
                     let email = EmailMessage::from_template(
                         "user_confirm",
                         context! {
                             user_name => user.gh_login,
                             domain => emails.domain,
-                            token => token.expose_secret()
+                            token => saved_email.token.expose_secret()
                         },
                     );
 

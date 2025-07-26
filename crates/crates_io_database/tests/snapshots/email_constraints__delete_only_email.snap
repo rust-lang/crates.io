@@ -1,0 +1,7 @@
+---
+source: crates/crates_io_database/tests/email_constraints.rs
+expression: result
+---
+Ok(
+    1,
+)

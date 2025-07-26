@@ -676,21 +676,24 @@ pub struct EncodablePrivateUser {
     #[schema(example = "ghost")]
     pub login: String,
 
-    /// Whether the user's email address has been verified.
-    #[schema(example = true)]
-    pub email_verified: bool,
-
-    /// Whether the user's email address verification email has been sent.
-    #[schema(example = true)]
-    pub email_verification_sent: bool,
-
     /// The user's display name, if set.
     #[schema(example = "Kate Morgan")]
     pub name: Option<String>,
 
-    /// The user's email address, if set.
+    /// Whether the user's primary email address, if set, has been verified.
+    #[schema(example = true)]
+    #[serde(rename = "email_verified")]
+    pub primary_email_verified: bool,
+
+    /// Whether the user's has been sent a verification email to their primary email address, if set.
+    #[schema(example = true)]
+    #[serde(rename = "email_verification_sent")]
+    pub primary_email_verification_sent: bool,
+
+    /// The user's primary email address, if set.
     #[schema(example = "kate@morgan.dev")]
-    pub email: Option<String>,
+    #[serde(rename = "email")]
+    pub primary_email: Option<String>,
 
     /// The user's avatar URL, if set.
     #[schema(example = "https://avatars2.githubusercontent.com/u/1234567?v=4")]
@@ -713,9 +716,9 @@ impl EncodablePrivateUser {
     /// Converts this `User` model into an `EncodablePrivateUser` for JSON serialization.
     pub fn from(
         user: User,
-        email: Option<String>,
-        email_verified: bool,
-        email_verification_sent: bool,
+        primary_email: Option<String>,
+        primary_email_verified: bool,
+        primary_email_verification_sent: bool,
     ) -> Self {
         let User {
             id,
@@ -730,9 +733,9 @@ impl EncodablePrivateUser {
 
         EncodablePrivateUser {
             id,
-            email,
-            email_verified,
-            email_verification_sent,
+            primary_email,
+            primary_email_verified,
+            primary_email_verification_sent,
             avatar: gh_avatar,
             login: gh_login,
             name,
