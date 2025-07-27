@@ -36,7 +36,7 @@ a documentation comment on it, it'd be great if you could add one to it too.
 
 When you submit a pull request, it will be automatically tested on GitHub Actions. In
 addition to running both the frontend and the backend tests described below,
-GitHub Actions runs [jslint], [clippy], and [rustfmt] on each PR.
+GitHub Actions runs [ESLint], [clippy], and [rustfmt] on each PR.
 
 If you don't want to run these tools locally, please watch the GitHub Actions results
 and submit additional commits to your pull request to fix any issues they find!
@@ -47,7 +47,7 @@ instructions and the [.github/workflows/ci.yml] file in this repository for the 
 installation and running instructions. The logs for recent builds in GitHub Actions
 may also be helpful to see which versions of these tools we're currently using.
 
-[jslint]: http://jslint.com/
+[ESLint]: https://eslint.org/
 [clippy]: https://github.com/rust-lang-nursery/rust-clippy
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 [.github/workflows/ci.yml]: /.github/workflows/ci.yml
