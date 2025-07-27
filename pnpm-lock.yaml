@@ -255,8 +255,8 @@ importers:
         specifier: 5.5.3
         version: 5.5.3(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.32.0))(eslint@9.32.0)(prettier@3.6.2)
       eslint-plugin-qunit:
-        specifier: 8.2.4
-        version: 8.2.4(eslint@9.32.0)
+        specifier: 8.2.5
+        version: 8.2.5(eslint@9.32.0)
       eslint-plugin-qunit-dom:
         specifier: 0.2.0
         version: 0.2.0(eslint@9.32.0)
@@ -4521,8 +4521,8 @@ packages:
     peerDependencies:
       eslint: ^7.11.0
 
-  eslint-plugin-qunit@8.2.4:
-    resolution: {integrity: sha512-rKlLQ/AIKFBNd9Ga8Cg058+iS0xqx2SE5rByyhAga2/ORDAHArfvc3tatAxUvaHzqUsDL0gIez3l2zcFQ9x7Vg==}
+  eslint-plugin-qunit@8.2.5:
+    resolution: {integrity: sha512-qr7RJCYImKQjB+39q4q46i1l7p1V3joHzBE5CAYfxn5tfVFjrnjn/tw7q/kDyweU9kAIcLul0Dx/KWVUCb3BgA==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
 
   eslint-plugin-unicorn@60.0.0:
@@ -14063,7 +14063,7 @@ snapshots:
     dependencies:
       eslint: 9.32.0
 
-  eslint-plugin-qunit@8.2.4(eslint@9.32.0):
+  eslint-plugin-qunit@8.2.5(eslint@9.32.0):
     dependencies:
       eslint-utils: 3.0.0(eslint@9.32.0)
       requireindex: 1.2.0
