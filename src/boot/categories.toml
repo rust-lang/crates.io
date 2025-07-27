@@ -101,6 +101,12 @@ description = """
 Crates to help with the process of confirming identities.\
 """
 
+[automotive]
+name = "Automotive"
+description = """
+Crates related to the automotive industry, including vehicle control and diagnostics.
+"""
+
 [caching]
 name = "Caching"
 description = """
