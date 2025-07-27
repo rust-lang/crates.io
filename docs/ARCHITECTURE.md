@@ -18,8 +18,8 @@ Documentation about the codebase appears in these locations:
 
 The backend of crates.io is written in Rust. Most of that code lives in the _src_ directory. It
 serves a JSON API over HTTP, and the HTTP server interface is provided by the [axum][] crate and
-related crates. More information about the backend is in
-[`docs/BACKEND.md`](https://github.com/rust-lang/crates.io/blob/master/docs/BACKEND.md).
+related crates. More information about backend development is in
+[`docs/CONTRIBUTING.md`](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md).
 
 [axum]: https://crates.io/crates/axum
 
@@ -37,8 +37,7 @@ The backend stores information in a Postgres database.
 
 ## Frontend - Ember.js
 
-The frontend of crates.io is written in JavaScript using [Ember.js][]. More information about the
-frontend is in [`docs/FRONTEND.md`](https://github.com/rust-lang/crates.io/blob/master/docs/FRONTEND.md).
+The frontend of crates.io is written in JavaScript using [Ember.js][]. More information about frontend development is in [`docs/CONTRIBUTING.md`](https://github.com/rust-lang/crates.io/blob/master/docs/CONTRIBUTING.md).
 
 [Ember.js]: https://emberjs.com/
 
