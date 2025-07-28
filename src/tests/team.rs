@@ -124,6 +124,61 @@ async fn add_renamed_team() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Test adding a team that has the same name as an existing team, but a different ID
+/// This would happen if a team was deleted in GitHub and then recreated with the same name.
+#[tokio::test(flavor = "multi_thread")]
+async fn add_team_with_same_name_different_id() -> anyhow::Result<()> {
+    let (app, anon) = TestApp::init().empty().await;
+    let mut conn = app.db_conn().await;
+    let user = app.db_new_user("user-all-teams").await;
+    let token = user.db_new_token("arbitrary token name").await;
+    let owner_id = user.as_model().id;
+
+    CrateBuilder::new("foo_same_name_different_id", owner_id)
+        .expect_build(&mut conn)
+        .await;
+
+    let original_team = NewTeam::builder()
+        .login("github:test-org:core")
+        .org_id(1000)
+        .github_id(2001)
+        .build()
+        .create_or_update(&mut conn)
+        .await?;
+
+    let new_team = NewTeam::builder()
+        // same team name
+        .login(&original_team.login)
+        // same org ID
+        .org_id(original_team.org_id)
+        // different team ID
+        .github_id(original_team.github_id + 1)
+        .build()
+        .create_or_update(&mut conn)
+        .await?;
+
+    assert_eq!(
+        crate::schema::teams::table
+            .count()
+            .get_result::<i64>(&mut conn)
+            .await?,
+        1
+    );
+    token
+        .add_named_owner("foo_same_name_different_id", "github:test-org:core")
+        .await
+        .good();
+    let json = anon
+        .crate_owner_teams("foo_same_name_different_id")
+        .await
+        .good();
+
+    assert_eq!(json.teams.len(), 1);
+    assert_eq!(json.teams[0].login, "github:test-org:core");
+    assert_eq!(json.teams[0].id, new_team.id);
+    Ok(())
+}
+
 /// Test adding team names with mixed case, when on the team
 #[tokio::test(flavor = "multi_thread")]
 async fn add_team_mixed_case() -> anyhow::Result<()> {
