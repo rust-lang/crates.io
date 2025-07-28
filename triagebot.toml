@@ -1,3 +1,35 @@
+# This file's format is documented at
+# https://forge.rust-lang.org/triagebot/index.html
+
 # Enable issue transfers within the org
 # Documentation at: https://forge.rust-lang.org/triagebot/transfer.html
 [transfer]
+
+# Allow some labels to be applied by anyone
+[relabel]
+allow-unauthenticated = [
+    "A-*",
+    "C-*",
+    "E-*",
+]
+
+# Automatically label pull requests touching defined areas
+[autolabel."A-frontend"]
+trigger_files = [
+    "app/",
+    "e2e/",
+    "tests/",
+    "packages/",
+    "public/",
+    "package.json",
+    "pnpm-lock.yaml",
+]
+
+[autolabel."A-backend"]
+trigger_files = [
+    "src/",
+    "crates/",
+    "migrations/",
+    "Cargo.toml",
+    "Cargo.lock",
+]
