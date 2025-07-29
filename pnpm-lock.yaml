@@ -105,8 +105,8 @@ importers:
         specifier: 1.31.0
         version: 1.31.0(typescript@5.8.3)
       '@percy/ember':
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 5.0.0
+        version: 5.0.0(@babel/core@7.28.0)(webpack@5.100.2)
       '@percy/playwright':
         specifier: 1.0.9
         version: 1.0.9(playwright-core@1.54.1)
@@ -1858,9 +1858,9 @@ packages:
   '@percy/dom@1.31.0':
     resolution: {integrity: sha512-eEzzYQGVTZoq0ENrDX9Ih1G3JSYaqLpci++bb1J9kgulkSLXVi0JE8cKftcajo/8QrTrSs9OQCJa2+M1X2te8Q==}
 
-  '@percy/ember@4.2.0':
-    resolution: {integrity: sha512-D/WckDD2tQetdn8uq46nQA1rOVgov8jsZG4uN7snAq6SrOpxNxacONg37QPwczmICBc7o/NlipCAUteukmtKzg==}
-    engines: {node: '>= 14'}
+  '@percy/ember@5.0.0':
+    resolution: {integrity: sha512-Nod2k3zMUQKnAK29dO9Xp4tdIMUiLrEffntLXjHtQroEq2wqCTeS6gfLLEjV++TgPE0q2ehex/fd2QXzgKFKEA==}
+    engines: {node: '>= 16'}
 
   '@percy/env@1.31.0':
     resolution: {integrity: sha512-KRKYhDLlMwyLvKQNw1bx8XeXArLig6WyuCTIdwQkLwh4fZllEmSqPDnCUSk0Cu5rpcq0ItVOcZ4vy0R3KcmLBA==}
@@ -10551,12 +10551,16 @@ snapshots:
 
   '@percy/dom@1.31.0': {}
 
-  '@percy/ember@4.2.0':
+  '@percy/ember@5.0.0(@babel/core@7.28.0)(webpack@5.100.2)':
     dependencies:
       '@percy/sdk-utils': 1.31.0
-      ember-cli-babel: 7.26.11
+      ember-auto-import: 2.10.0(webpack@5.100.2)
+      ember-cli-babel: 8.2.0(@babel/core@7.28.0)
     transitivePeerDependencies:
+      - '@babel/core'
+      - '@glint/template'
       - supports-color
+      - webpack
 
   '@percy/env@1.31.0':
     dependencies:
