@@ -99,7 +99,7 @@ indexmap = { version = "=2.10.0", features = ["serde"] }
 indicatif = "=0.18.0"
 ipnetwork = "=0.21.1"
 json-subscriber = "=0.2.6"
-lettre = { version = "=0.11.17", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
+lettre = { version = "=0.11.18", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
 minijinja = { version = "=2.11.0", features = ["loader"] }
 mockall = "=0.13.1"
 moka = { version = "=0.12.10", default-features = false, features = ["future"] }
