@@ -1,6 +1,6 @@
 <div ...attributes>
   {{#unless @user.email}}
-    <div local-class="friendly-message" data-test-no-email>
+    <div class="friendly-message" data-test-no-email>
       <p>
         Please add your email address. We will only use
         it to contact you about your account. We promise we'll never share it!
@@ -9,25 +9,24 @@
   {{/unless}}
 
   {{#if this.isEditing }}
-    <div local-class="row">
-      <div local-class="label">
+    <div class="row">
+      <div class="label">
         <label for="email-input">Email</label>
       </div>
-      <form local-class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
+      <form class="email-form" {{on "submit" (prevent-default (perform this.saveEmailTask))}}>
         <Input
           @type="email"
           @value={{this.value}}
           id="email-input"
           placeholder="Email"
-          local-class="input"
+          class="input"
           data-test-input
         />
 
-        <div local-class="actions">
+        <div class="actions">
           <button
             type='submit'
-            local-class="save-button"
-            class="button button--small"
+            class="save-button button button--small"
             disabled={{not this.value}}
             data-test-save-button
           >
@@ -46,19 +45,19 @@
       </form>
     </div>
   {{else}}
-    <div local-class="row">
-      <div local-class="label">
+    <div class="row">
+      <div class="label">
         <dt>Email</dt>
       </div>
-      <div local-class="email-column" data-test-email-address>
+      <div class="email-column" data-test-email-address>
         <dd>
           {{ @user.email }}
           {{#if @user.email_verified}}
-            <span local-class="verified" data-test-verified>Verified!</span>
+            <span class="verified" data-test-verified>Verified!</span>
           {{/if}}
         </dd>
       </div>
-      <div local-class="actions">
+      <div class="actions">
         <button
           type="button"
           class="button button--small"
@@ -70,14 +69,14 @@
       </div>
     </div>
     {{#if (and @user.email (not @user.email_verified))}}
-      <div local-class="row">
-        <div local-class="label">
+      <div class="row">
+        <div class="label">
           {{#if @user.email_verification_sent}}
             <p data-test-verification-sent>We have sent a verification email to your address.</p>
           {{/if}}
           <p data-test-not-verified>Your email has not yet been verified.</p>
         </div>
-        <div local-class="actions">
+        <div class="actions">
           <button
             type="button"
             class="button button--small"

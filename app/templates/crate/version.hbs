@@ -6,33 +6,32 @@
   @versionNum={{this.requestedVersion}}
 />
 
-<div local-class='crate-info'>
-  <div local-class="docs" data-test-docs>
+<div class='crate-info'>
+  <div class="docs" data-test-docs>
     {{#if this.loadReadmeTask.isRunning}}
-      <div local-class="readme-spinner">
-        <Placeholder local-class="placeholder-title" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-subtitle" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
-        <Placeholder local-class="placeholder-text" />
+      <div class="readme-spinner">
+        <Placeholder class="placeholder-title" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-subtitle" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
+        <Placeholder class="placeholder-text" />
       </div>
     {{else if this.readme}}
       <article aria-label="Readme" data-test-readme>
-        <RenderedHtml @html={{this.readme}} local-class="readme" />
+        <RenderedHtml @html={{this.readme}} class="readme" />
       </article>
     {{else if this.loadReadmeTask.last.error}}
-      <div local-class="readme-error" data-test-readme-error>
+      <div class="readme-error" data-test-readme-error>
         Failed to load <code>README</code> file for {{this.crate.name}} v{{this.currentVersion.num}}
 
         <button
           type="button"
-          local-class="retry-button"
-          class="button"
+          class="retry-button button"
           data-test-retry-button
           {{on "click" (perform this.loadReadmeTask)}}
         >
@@ -40,7 +39,7 @@
         </button>
       </div>
     {{else}}
-      <div local-class="no-readme" data-test-no-readme>
+      <div class="no-readme" data-test-no-readme>
         {{this.crate.name}} v{{this.currentVersion.num}} appears to have no <code>README.md</code> file
       </div>
     {{/if}}
@@ -50,12 +49,12 @@
     @crate={{this.crate}}
     @version={{this.currentVersion}}
     @requestedVersion={{this.requestedVersion}}
-    local-class="sidebar"
+    class="sidebar"
   />
 </div>
 
-<div local-class='crate-downloads'>
-  <div local-class='stats'>
+<div class='crate-downloads'>
+  <div class='stats'>
     {{#if this.downloadsContext.num}}
       <h3 data-test-crate-stats-label>
         Stats Overview for {{this.downloadsContext.num}}
@@ -65,28 +64,28 @@
     {{else}}
       <h3 data-test-crate-stats-label>Stats Overview</h3>
     {{/if}}
-    <div local-class='stat'>
-      <span local-class='num'>
+    <div class='stat'>
+      <span class='num'>
         {{svg-jar "download"}}
-        <span local-class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
+        <span class="num__align">{{ format-num this.downloadsContext.downloads }}</span>
       </span>
       <span class="text--small">Downloads all time</span>
     </div>
-    <div local-class='stat'>
-      <span local-class="num">
+    <div class='stat'>
+      <span class="num">
         {{svg-jar "crate"}}
-        <span local-class="num__align">{{ this.crate.num_versions }}</span>
+        <span class="num__align">{{ this.crate.num_versions }}</span>
       </span>
       <span class="text--small">Versions published</span>
     </div>
   </div>
-  <div local-class='graph'>
+  <div class='graph'>
     <h4>Downloads over the last 90 days</h4>
-    <div local-class="toggle-stacked">
-      <span local-class="toggle-stacked-label">Display as </span>
+    <div class="toggle-stacked">
+      <span class="toggle-stacked-label">Display as </span>
       <Dropdown as |dd|>
-        <dd.Trigger local-class="trigger">
-          <span local-class="trigger-label">
+        <dd.Trigger class="trigger">
+          <span class="trigger-label">
             {{#if this.stackedGraph}}
               Stacked
             {{else}}
@@ -98,7 +97,7 @@
           <menu.Item>
             <button
               type="button"
-              local-class="dropdown-button"
+              class="dropdown-button"
               {{on "click" this.setStackedGraph}}
             >
               Stacked
@@ -107,7 +106,7 @@
           <menu.Item>
             <button
               type="button"
-              local-class="dropdown-button"
+              class="dropdown-button"
               {{on "click" this.setUnstackedGraph}}
             >
               Unstacked
@@ -116,6 +115,6 @@
         </dd.Menu>
       </Dropdown>
     </div>
-    <DownloadGraph @data={{this.downloads}} @stacked={{this.stackedGraph}} local-class="graph-data" />
+    <DownloadGraph @data={{this.downloads}} @stacked={{this.stackedGraph}} class="graph-data" />
   </div>
 </div>

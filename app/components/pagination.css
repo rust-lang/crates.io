@@ -1,0 +1,48 @@
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 90%;
+    margin-bottom: var(--space-xs);
+
+    :global(ol) {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    :global(ol), :global(li) { display: inline-block; }
+
+    :global(a) {
+        color: var(--main-color-light);
+        text-decoration: none;
+        padding: var(--space-3xs) var(--space-2xs);
+        border-radius: var(--space-3xs);
+    }
+    :global(a):hover { background-color: var(--main-bg-dark); }
+    :global(a.active) { background-color: var(--main-bg-dark); }
+
+    :global(img), :global(svg) { vertical-align: middle; }
+
+    .prev, .next {
+        :global(circle) {
+            fill: none;
+        }
+
+        :global(path) {
+            fill: currentColor;
+        }
+
+        &:hover {
+            :global(circle) {
+                fill: var(--main-bg-dark);
+            }
+        }
+    }
+
+    .next:global(.active),
+    .prev:global(.active),
+    .next:hover,
+    .prev:hover {
+        background: none;
+    }
+}

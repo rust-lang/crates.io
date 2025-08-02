@@ -1,11 +1,11 @@
-<PageHeader local-class="header" data-test-heading>
-  <h1 local-class="heading">
+<PageHeader class="header" data-test-heading>
+  <h1 class="heading">
     <span data-test-crate-name>{{@crate.name}}</span>
     {{#if @version}}
       <small data-test-crate-version>v{{@version.num}}</small>
 
       {{#if @version.yanked}}
-        <span local-class="yanked-badge" data-test-yanked>
+        <span class="yanked-badge" data-test-yanked>
           {{svg-jar "trash"}}
           Yanked
 
@@ -19,17 +19,17 @@
   </h1>
 
   {{#if @crate.description}}
-    <div local-class="description">
+    <div class="description">
       {{@crate.description}}
     </div>
   {{/if}}
 
   {{#if this.keywords}}
-    <ul local-class="keywords">
+    <ul class="keywords">
       {{#each this.keywords as |keyword|}}
         <li>
           <LinkTo @route="keyword" @model={{keyword.id}} data-test-keyword={{keyword.id}}>
-            <span local-class="hash">#</span>{{keyword.id}}
+            <span class="hash">#</span>{{keyword.id}}
           </LinkTo>
         </li>
       {{/each}}
@@ -37,11 +37,11 @@
   {{/if}}
 
   {{#if this.session.currentUser}}
-    <FollowButton @crate={{@crate}} local-class="follow-button"/>
+    <FollowButton @crate={{@crate}} class="follow-button"/>
   {{/if}}
 </PageHeader>
 
-<NavTabs aria-label="{{@crate.name}} crate subpages" local-class="nav" as |nav|>
+<NavTabs aria-label="{{@crate.name}} crate subpages" class="nav" as |nav|>
   <nav.Tab
     @link={{if
       @versionNum

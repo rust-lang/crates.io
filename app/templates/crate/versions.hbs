@@ -1,8 +1,7 @@
 <CrateHeader @crate={{this.crate}} />
 
-<div local-class="results-meta">
-  <span local-class="page-description"
-    class="text--small {{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
+<div class="results-meta">
+  <span class="page-description text--small {{if (and this.loadMoreTask.isRunning (not this.sortedVersions)) 'is-empty'}}"
     data-test-page-description
   >
     <strong>{{ this.sortedVersions.length }}</strong> of <strong>{{ this.crate.num_versions }}</strong>
@@ -11,7 +10,7 @@
   </span>
 
   <div data-test-search-sort>
-    <span local-class="sort-by-label">Sort by </span>
+    <span class="sort-by-label">Sort by </span>
     <SortDropdown @current={{this.currentSortBy}} as |sd|>
       <sd.Option @query={{hash sort="date"}} data-test-date-sort>Date</sd.Option>
       <sd.Option @query={{hash sort="semver"}} data-test-semver-sort>SemVer</sd.Option>
@@ -20,16 +19,16 @@
 </div>
 
 {{#if this.sortedVersions}}
-  <ul local-class="list">
+  <ul class="list">
     {{#each this.sortedVersions as |version|}}
       <li>
-        <VersionList::Row @version={{version}} local-class="row" data-test-version={{version.num}} />
+        <VersionList::Row @version={{version}} class="row" data-test-version={{version.num}} />
       </li>
     {{/each}}
   </ul>
 
   {{#if (or this.loadMoreTask.isRunning this.next_page)}}
-    <div local-class="load-more">
+    <div class="load-more">
       <button
         type="button"
         class="load-more-button"
@@ -38,7 +37,7 @@
         {{on "click" (perform this.loadMoreTask)}}
       >
         {{#if this.loadMoreTask.isRunning}}
-          Loading...<LoadingSpinner local-class="loading-spinner" />
+          Loading...<LoadingSpinner class="loading-spinner" />
         {{else}}
           Load More
         {{/if}}
@@ -46,7 +45,7 @@
     </div>
   {{/if}}
 {{else if this.loadMoreTask.isRunning}}
-  <div local-class="loading">
-    <LoadingSpinner local-class="loading-spinner" />
+  <div class="loading">
+    <LoadingSpinner class="loading-spinner" />
   </div>
 {{/if}}

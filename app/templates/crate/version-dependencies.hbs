@@ -6,22 +6,22 @@
   @versionNum={{this.version.num}}
 />
 
-<h2 local-class="heading">Dependencies</h2>
+<h2 class="heading">Dependencies</h2>
 {{#if this.version.normalDependencies}}
-  <ul local-class="list" data-test-dependencies>
+  <ul class="list" data-test-dependencies>
     {{#each this.version.normalDependencies as |dependency|}}
       <li><DependencyList::Row @dependency={{dependency}} /></li>
     {{/each}}
   </ul>
 {{else}}
-  <div local-class="no-deps" data-test-no-dependencies>
+  <div class="no-deps" data-test-no-dependencies>
     This version of the "{{this.crate.name}}" crate has no dependencies
   </div>
 {{/if}}
 
 {{#if this.version.buildDependencies}}
-  <h2 local-class="heading">Build-Dependencies</h2>
-  <ul local-class="list" data-test-build-dependencies>
+  <h2 class="heading">Build-Dependencies</h2>
+  <ul class="list" data-test-build-dependencies>
     {{#each this.version.buildDependencies as |dependency|}}
       <li><DependencyList::Row @dependency={{dependency}} /></li>
     {{/each}}
@@ -29,8 +29,8 @@
 {{/if}}
 
 {{#if this.version.devDependencies}}
-  <h2 local-class="heading">Dev-Dependencies</h2>
-  <ul local-class="list" data-test-dev-dependencies>
+  <h2 class="heading">Dev-Dependencies</h2>
+  <ul class="list" data-test-dev-dependencies>
     {{#each this.version.devDependencies as |dependency|}}
       <li><DependencyList::Row @dependency={{dependency}} /></li>
     {{/each}}

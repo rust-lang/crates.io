@@ -3,7 +3,7 @@
 <PageHeader @title="Account Settings" />
 
 <SettingsPage>
-  <form local-class="me-email-notifications" {{on "submit" (prevent-default this.saveEmailNotifications)}} >
+  <form class="me-email-notifications" {{on "submit" (prevent-default this.saveEmailNotifications)}} >
     <h2>Email Notification Preferences</h2>
 
     {{#if this.hasEmailNotificationFeature}}
@@ -13,12 +13,12 @@
         emails off for any of your crates listed below.
       </p>
 
-      <div local-class="notifications-row">
+      <div class="notifications-row">
         <button type='button' class="button button--small" {{on "click" this.emailNotificationsSelectAll}}>Select All</button>
         <button type='button' class="button button--small" {{on "click" this.emailNotificationsSelectNone}}>Deselect All</button>
       </div>
 
-      <ul local-class="notifications-list">
+      <ul class="notifications-list">
         {{#each this.ownedCrates as |ownedCrate|}}
           <li>
             <OwnedCrateRow @ownedCrate={{ownedCrate}} />
@@ -26,18 +26,18 @@
         {{/each}}
       </ul>
 
-      <div local-class="notifications-row">
+      <div class="notifications-row">
         {{#if this.emailNotificationsError}}
-          <div local-class="notifications-error">
+          <div class="notifications-error">
             An error occurred while saving your email preferences.
           </div>
         {{/if}}
         {{#if this.emailNotificationsSuccess}}
-          <div local-class="notifications-success">
+          <div class="notifications-success">
             Your email notification preferences have been updated!
           </div>
         {{/if}}
-        <div local-class="right">
+        <div class="right">
           <button type='submit' class="button">Update</button>
         </div>
       </div>

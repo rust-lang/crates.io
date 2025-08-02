@@ -1,31 +1,30 @@
-<div local-class="crate-row" data-test-crate-row ...attributes>
-  <div local-class="description-box">
-    <div local-class="crate-spec">
+<div data-test-crate-row ...attributes class="crate-row">
+  <div class="description-box">
+    <div class="crate-spec">
       {{#let (link "crate" @crate.id) as |l|}}
-        <a href={{l.url}} local-class="name" data-test-crate-link {{on "click" l.transitionTo}}>
+        <a href={{l.url}} class="name" data-test-crate-link {{on "click" l.transitionTo}}>
           {{@crate.name}}
         </a>
       {{/let}}
       {{#if (and @crate.default_version (not @crate.yanked))}}
-        <span local-class="version" data-test-version>v{{@crate.default_version}}</span>
+        <span class="version" data-test-version>v{{@crate.default_version}}</span>
         <CopyButton
           @copyText='{{@crate.name}} = "{{@crate.default_version}}"'
           title="Copy Cargo.toml snippet to clipboard"
-          local-class="copy-button"
-          class="button-reset"
+          class="copy-button button-reset"
           data-test-copy-toml-button
         >
           {{svg-jar "copy" alt="Copy Cargo.toml snippet to clipboard"}}
         </CopyButton>
       {{/if}}
     </div>
-    <div local-class="description" class="text--small" data-test-description>
+    <div class="description text--small" data-test-description>
       {{ truncate-text @crate.description }}
     </div>
   </div>
-  <div local-class='stats'>
-    <div local-class='downloads' data-test-downloads>
-      {{svg-jar "download" local-class="download-icon"}}
+  <div class='stats'>
+    <div class='downloads' data-test-downloads>
+      {{svg-jar "download" class=(scoped-class "download-icon")}}
       <span>
         <span>
           All-Time:
@@ -34,8 +33,8 @@
         {{ format-num @crate.downloads }}
       </span>
     </div>
-    <div local-class="recent-downloads" data-test-recent-downloads>
-      {{svg-jar "download" local-class="download-icon"}}
+    <div class="recent-downloads" data-test-recent-downloads>
+      {{svg-jar "download" class=(scoped-class "download-icon")}}
       <span>
         <span>
           Recent:
@@ -44,7 +43,7 @@
         {{ format-num @crate.recent_downloads }}
       </span>
     </div>
-    <div local-class="updated-at">
+    <div class="updated-at">
       {{svg-jar "latest-updates" height="32" width="32"}}
       <span>
         <span>
@@ -58,7 +57,7 @@
       </span>
     </div>
   </div>
-  <ul local-class="quick-links">
+  <ul class="quick-links">
     {{#if @crate.homepage}}
       <li><a href="{{@crate.homepage}}">Homepage</a></li>
     {{/if}}

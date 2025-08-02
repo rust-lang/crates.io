@@ -1,7 +1,7 @@
 <CrateHeader @crate={{this.crate}} />
 
 {{#if this.model}}
-  <div local-class="results-meta">
+  <div class="results-meta">
     <ResultsCount
       @start={{this.pagination.currentPageStart}}
       @end={{this.pagination.currentPageEnd}}
@@ -10,9 +10,9 @@
     />
   </div>
 
-  <ul local-class="list" data-test-list>
+  <ul class="list" data-test-list>
     {{#each this.model as |dependency index|}}
-      <li local-class="row">
+      <li class="row">
         <RevDepRow @dependency={{dependency}} data-test-row={{index}} />
       </li>
     {{/each}}
@@ -20,7 +20,7 @@
 
   <Pagination @pagination={{this.pagination}} />
 {{else}}
-  <div local-class="no-results">
+  <div class="no-results">
     This crate is not used as a dependency in any other crate on crates.io.
   </div>
 {{/if}}
