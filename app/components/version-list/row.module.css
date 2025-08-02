@@ -1,27 +1,13 @@
 .row {
-    --bg-color: light-dark(var(--grey200), #242422);
-    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
-    --fg-color: light-dark(var(--grey700), #ccc);
+    --fg-color: var(--row-content);
     --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+
+    composes: row from global;
 
     display: flex;
     align-items: center;
-    position: relative;
-    font-size: 18px;
-    padding: var(--space-s) var(--space-m);
-    background-color: light-dark(white, #141413);
-    border-radius: var(--space-3xs);
-    box-shadow: var(--shadow);
-    transition: all var(--transition-slow);
 
-    &:hover, &.focused {
-        background-color: var(--hover-bg-color);
-        transition: all var(--transition-instant);
-    }
-
-    &.focused {
-        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
-    }
+    --bg-color: light-dark(var(--grey200), var(--grey800));
 
     &.latest {
         --bg-color: light-dark(hsl(109, 75%, 87%), hsl(136, 67%, 11%));
@@ -135,7 +121,7 @@
 .metadata {
     flex-grow: 1;
     margin-left: var(--space-m);
-    color: light-dark(var(--grey600), #d1cfc7);
+    color: light-dark(var(--grey800), #d1cfc7);
     text-transform: uppercase;
     letter-spacing: .7px;
     font-size: 13px;

@@ -89,6 +89,10 @@
     flex-grow: 7;
     display: flex;
     flex-wrap: wrap;
+
+    & a {
+        text-decoration: underline;
+    }
 }
 
 .stat {
