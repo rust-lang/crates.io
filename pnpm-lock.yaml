@@ -216,8 +216,8 @@ importers:
         specifier: 0.23.4
         version: 0.23.4(@babel/core@7.28.0)(ember-template-lint@7.9.1)(webpack@5.100.2)
       ember-scoped-css-compat:
-        specifier: 10.2.2
-        version: 10.2.2(@babel/core@7.28.0)(ember-scoped-css@0.23.4(@babel/core@7.28.0)(ember-template-lint@7.9.1)(webpack@5.100.2))
+        specifier: 10.2.3
+        version: 10.2.3(@babel/core@7.28.0)(ember-scoped-css@0.23.4(@babel/core@7.28.0)(ember-template-lint@7.9.1)(webpack@5.100.2))
       ember-source:
         specifier: 6.6.0
         version: 6.6.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
@@ -4330,8 +4330,8 @@ packages:
     resolution: {integrity: sha512-89oVHVJwmLDvGvAUWgS87KpBoRhy3aZ6U0Ql6HOmU4TrPkyaa8pM0W81wj9cIwjYprcQtN9EwzZMHnq46+oUyw==}
     engines: {node: 8.* || 10.* || >= 12}
 
-  ember-scoped-css-compat@10.2.2:
-    resolution: {integrity: sha512-ffHNqbS2KldR2/cWvHORcMu74B71/4wPjhCrdUPIAkjonpKE73ylY5D734P0SexRDm2w7/N0AgUuXNdeaCTiAw==}
+  ember-scoped-css-compat@10.2.3:
+    resolution: {integrity: sha512-7zKxufSUTnyPnvuQ4d1R/w0rDT0mezHnKIYCwLwv6Qkq6XqDKKaxhwmqxpFBct2rNT+9NFJQlTH7SM4K9/oA5w==}
     engines: {node: 14.* || 16.* || >= 18}
     peerDependencies:
       ember-scoped-css: '>=0.18.0'
@@ -13746,7 +13746,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-scoped-css-compat@10.2.2(@babel/core@7.28.0)(ember-scoped-css@0.23.4(@babel/core@7.28.0)(ember-template-lint@7.9.1)(webpack@5.100.2)):
+  ember-scoped-css-compat@10.2.3(@babel/core@7.28.0)(ember-scoped-css@0.23.4(@babel/core@7.28.0)(ember-template-lint@7.9.1)(webpack@5.100.2)):
     dependencies:
       ember-cli-babel: 8.2.0(@babel/core@7.28.0)
       ember-cli-htmlbars: 6.3.0
