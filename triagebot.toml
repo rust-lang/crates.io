@@ -32,4 +32,5 @@ trigger_files = [
     "migrations/",
     "Cargo.toml",
     "Cargo.lock",
+    "rust-toolchain.toml",
 ]
