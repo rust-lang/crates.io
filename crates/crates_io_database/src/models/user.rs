@@ -23,6 +23,8 @@ pub struct User {
     #[diesel(deserialize_as = String)]
     #[serde(skip)]
     pub gh_access_token: SecretString,
+    #[serde(skip)]
+    pub gh_encrypted_token: Option<Vec<u8>>,
     pub account_lock_reason: Option<String>,
     pub account_lock_until: Option<DateTime<Utc>>,
     pub is_admin: bool,
@@ -94,6 +96,7 @@ pub struct NewUser<'a> {
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
     pub gh_access_token: &'a str,
+    pub gh_encrypted_token: Option<&'a [u8]>,
 }
 
 impl NewUser<'_> {
@@ -125,6 +128,7 @@ impl NewUser<'_> {
                 users::name.eq(excluded(users::name)),
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
                 users::gh_access_token.eq(excluded(users::gh_access_token)),
+                users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
             .returning(User::as_returning())
             .get_result(conn)

@@ -47,6 +47,7 @@ name = "crates_io"
 doctest = true
 
 [dependencies]
+aes-gcm = { version = "=0.10.3", features = ["std"] }
 anyhow = "=1.0.98"
 astral-tokio-tar = "=0.5.2"
 async-compression = { version = "=0.4.27", default-features = false, features = ["gzip", "tokio"] }
