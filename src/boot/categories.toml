@@ -635,3 +635,11 @@ name = "WebSocket"
 description = """
 Crates to communicate over the WebSocket protocol.\
 """
+
+[web-programming.categories.proxy-server]
+name = "Proxy server"
+description = """
+Crates for building and managing proxies,\
+including HTTP, HTTPS, SOCKS5, transparent, reverse, and forward proxies.\
+Useful for traffic inspection, anonymization, load balancing, and network routing in web applications.\
+"""
