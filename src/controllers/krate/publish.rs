@@ -601,18 +601,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
-        if let Some(readme) = metadata.readme {
-            if !readme.is_empty() {
-                jobs::RenderAndUploadReadme::new(
-                    version.id,
-                    readme,
-                    metadata
-                        .readme_file
-                        .unwrap_or_else(|| String::from("README.md")),
-                    repository,
-                    pkg_path_in_vcs,
-                ).enqueue(conn).await?;
-            }
+        if let Some(readme) = metadata.readme && !readme.is_empty() {
+            jobs::RenderAndUploadReadme::new(
+                version.id,
+                readme,
+                metadata
+                    .readme_file
+                    .unwrap_or_else(|| String::from("README.md")),
+                repository,
+                pkg_path_in_vcs,
+            ).enqueue(conn).await?;
         }
 
         // Upload crate tarball
@@ -912,13 +910,13 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
         Crate::validate_feature(feature).map_err(bad_request)?;
     }
 
-    if let Some(registry) = &dep.registry {
-        if !registry.is_empty() {
-            return Err(bad_request(format_args!(
-                "Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.",
-                dep.name
-            )));
-        }
+    if let Some(registry) = &dep.registry
+        && !registry.is_empty()
+    {
+        return Err(bad_request(format_args!(
+            "Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.",
+            dep.name
+        )));
     }
 
     match semver::VersionReq::parse(&dep.version_req) {

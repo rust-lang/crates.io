@@ -61,35 +61,35 @@ pub async fn update_user(
         return Err(bad_request("current user does not match requested user"));
     }
 
-    if let Some(publish_notifications) = &user_update.user.publish_notifications {
-        if user.publish_notifications != *publish_notifications {
-            diesel::update(user)
-                .set(users::publish_notifications.eq(*publish_notifications))
-                .execute(&mut conn)
-                .await?;
+    if let Some(publish_notifications) = &user_update.user.publish_notifications
+        && user.publish_notifications != *publish_notifications
+    {
+        diesel::update(user)
+            .set(users::publish_notifications.eq(*publish_notifications))
+            .execute(&mut conn)
+            .await?;
 
-            if !publish_notifications {
-                let email_address = user.verified_email(&mut conn).await?;
+        if !publish_notifications {
+            let email_address = user.verified_email(&mut conn).await?;
 
-                if let Some(email_address) = email_address {
-                    let email = EmailMessage::from_template(
-                        "unsubscribe_notifications",
-                        context! {
-                            user_name => user.gh_login,
-                            domain => state.emails.domain
-                        },
-                    );
+            if let Some(email_address) = email_address {
+                let email = EmailMessage::from_template(
+                    "unsubscribe_notifications",
+                    context! {
+                        user_name => user.gh_login,
+                        domain => state.emails.domain
+                    },
+                );
 
-                    match email {
-                        Ok(email) => {
-                            if let Err(error) = state.emails.send(&email_address, email).await {
-                                warn!(
-                                    "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
-                                );
-                            }
+                match email {
+                    Ok(email) => {
+                        if let Err(error) = state.emails.send(&email_address, email).await {
+                            warn!(
+                                "Failed to send publish notifications unsubscribe email to {email_address}: {error}"
+                            );
                         }
-                        Err(error) => warn!("Failed to render unsubscribe email template: {error}"),
                     }
+                    Err(error) => warn!("Failed to render unsubscribe email template: {error}"),
                 }
             }
         }
