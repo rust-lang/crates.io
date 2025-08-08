@@ -109,10 +109,13 @@ pub async fn update_user(
         let new_email = NewEmail::builder()
             .user_id(user.id)
             .email(user_email)
+            .primary(true)
             .build();
 
-        let token = new_email.insert_or_update(&mut conn).await;
-        let token = token.map_err(|_| server_error("Error in creating token"))?;
+        let saved_email = new_email
+            .insert_or_update_primary(&mut conn)
+            .await
+            .map_err(|_| server_error("Error in saving email"))?;
 
         // This swallows any errors that occur while attempting to send the email. Some users have
         // an invalid email set in their GitHub profile, and we should let them sign in even though
@@ -123,7 +126,7 @@ pub async fn update_user(
             context! {
                 user_name => user.gh_login,
                 domain => state.emails.domain,
-                token => token.expose_secret()
+                token => saved_email.token.expose_secret()
             },
         );
 
