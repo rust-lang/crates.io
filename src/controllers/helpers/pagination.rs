@@ -347,14 +347,13 @@ fn is_useragent_or_ip_blocked(config: &Server, req: &Parts) -> bool {
     }
 
     // check if client ip is blocked, needs to be an IPv4 address
-    if let Some(client_ip) = client_ip {
-        if config
+    if let Some(client_ip) = client_ip
+        && config
             .page_offset_cidr_blocklist
             .iter()
             .any(|blocked| blocked.contains(**client_ip))
-        {
-            return true;
-        }
+    {
+        return true;
     }
 
     false

@@ -294,10 +294,10 @@ impl Crate {
             return Err(InvalidFeature::Empty);
         }
         let mut chars = name.chars();
-        if let Some(ch) = chars.next() {
-            if !(unicode_xid::UnicodeXID::is_xid_start(ch) || ch == '_' || ch.is_ascii_digit()) {
-                return Err(InvalidFeature::Start(ch, name.into()));
-            }
+        if let Some(ch) = chars.next()
+            && !(unicode_xid::UnicodeXID::is_xid_start(ch) || ch == '_' || ch.is_ascii_digit())
+        {
+            return Err(InvalidFeature::Start(ch, name.into()));
         }
         for ch in chars {
             if !(unicode_xid::UnicodeXID::is_xid_continue(ch)
@@ -320,7 +320,7 @@ impl Crate {
             Crate::validate_feature_name(dep_feat)
         } else if let Some((_, dep)) = name.split_once("dep:") {
             Crate::validate_dependency_name(dep)?;
-            return Ok(());
+            Ok(())
         } else {
             Crate::validate_feature_name(name)
         }

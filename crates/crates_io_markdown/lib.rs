@@ -243,11 +243,9 @@ impl UrlRelativeEvaluate<'_> for SanitizeUrl {
                 new_url.push('/');
             }
             new_url += url;
-            if add_sanitize_query {
-                if let Ok(mut parsed_url) = Url::parse(&new_url) {
-                    parsed_url.query_pairs_mut().append_pair("sanitize", "true");
-                    new_url = parsed_url.into();
-                }
+            if add_sanitize_query && let Ok(mut parsed_url) = Url::parse(&new_url) {
+                parsed_url.query_pairs_mut().append_pair("sanitize", "true");
+                new_url = parsed_url.into();
             }
             Cow::Owned(new_url)
         })
@@ -303,10 +301,10 @@ pub fn text_to_html<P: AsRef<Path>>(
         return markdown_to_html(text, base_url, base_dir);
     }
 
-    if let Some(ext) = path_in_vcs.extension().and_then(|ext| ext.to_str()) {
-        if MARKDOWN_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
-            return markdown_to_html(text, base_url, base_dir);
-        }
+    if let Some(ext) = path_in_vcs.extension().and_then(|ext| ext.to_str())
+        && MARKDOWN_EXTENSIONS.contains(&ext.to_lowercase().as_str())
+    {
+        return markdown_to_html(text, base_url, base_dir);
     }
 
     encode_minimal(text).replace('\n', "<br>\n")

@@ -105,17 +105,17 @@ impl BackgroundJob for GenerateOgImage {
         let og_image_path = format!("og-images/{crate_name}.png");
 
         // Invalidate CloudFront CDN
-        if let Some(cloudfront) = ctx.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(&og_image_path).await {
-                warn!("Failed to invalidate CloudFront CDN for {crate_name}: {error}");
-            }
+        if let Some(cloudfront) = ctx.cloudfront()
+            && let Err(error) = cloudfront.invalidate(&og_image_path).await
+        {
+            warn!("Failed to invalidate CloudFront CDN for {crate_name}: {error}");
         }
 
         // Invalidate Fastly CDN
-        if let Some(fastly) = ctx.fastly() {
-            if let Err(error) = fastly.invalidate(&og_image_path).await {
-                warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
-            }
+        if let Some(fastly) = ctx.fastly()
+            && let Err(error) = fastly.invalidate(&og_image_path).await
+        {
+            warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
         }
 
         info!("CDN invalidation completed for crate {crate_name}");
