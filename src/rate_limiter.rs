@@ -707,6 +707,7 @@ mod tests {
             .gh_id(0)
             .gh_login(gh_login)
             .gh_access_token("some random token")
+            .gh_encrypted_token(&[])
             .build()
             .insert(conn)
             .await

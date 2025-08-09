@@ -36,7 +36,8 @@ pub async fn rebuild_version_docs(
     // Check that the user is an owner of the crate, or a team member (= publish rights)
     let user = auth.user();
     let owners = krate.owners(&mut conn).await?;
-    if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
+    let encryption = &app.config.gh_token_encryption;
+    if Rights::get(user, &*app.github, &owners, encryption).await? < Rights::Publish {
         return Err(custom(
             StatusCode::FORBIDDEN,
             "user doesn't have permission to trigger a docs rebuild",
@@ -107,6 +108,7 @@ mod tests {
             .gh_id(111)
             .gh_login("other_user")
             .gh_access_token("token")
+            .gh_encrypted_token(&[])
             .build()
             .insert(&mut conn)
             .await?;

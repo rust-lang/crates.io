@@ -1,7 +1,6 @@
 use crate::models::{Owner, User};
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crates_io_github::{GitHubClient, GitHubError};
-use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 
 /// Access rights to the crate (publishing and ownership management)
 /// NOTE: The order of these variants matters!
@@ -25,8 +24,11 @@ impl Rights {
         user: &User,
         gh_client: &dyn GitHubClient,
         owners: &[Owner],
+        encryption: &GitHubTokenEncryption,
     ) -> Result<Self, GitHubError> {
-        let token = AccessToken::new(user.gh_access_token.expose_secret().to_string());
+        let token = encryption
+            .decrypt(&user.gh_encrypted_token)
+            .map_err(GitHubError::Other)?;
 
         let mut best = Self::None;
         for owner in owners {
