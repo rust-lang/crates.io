@@ -76,7 +76,7 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('foo: Crate not found');
+    await expect(page.locator('[data-test-title]')).toHaveText(`'foo': Crate not found`);
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
@@ -87,7 +87,7 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('foo: Failed to load crate data');
+    await expect(page.locator('[data-test-title]')).toHaveText(`'foo': Failed to load crate data`);
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
