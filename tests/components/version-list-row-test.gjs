@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import Row from 'crates-io/components/version-list/row';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -22,11 +21,11 @@ module('Component | VersionList::Row', function (hooks) {
     this.firstVersion = versions.find(it => it.num === '0.4.0-alpha.01');
     this.secondVersion = versions.find(it => it.num === '0.3.0-alpha.01');
 
-    await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
+    await render(<template><Row @version={{this.firstVersion}} /></template>);
     assert.dom('[data-test-release-track]').hasText('0.4');
     assert.dom('[data-test-release-track-link]').hasText('0.4.0-alpha.01');
 
-    await render(hbs`<VersionList::Row @version={{this.secondVersion}} />`);
+    await render(<template><Row @version={{this.secondVersion}} /></template>);
     assert.dom('[data-test-release-track]').hasText('0.3');
     assert.dom('[data-test-release-track-link]').hasText('0.3.0-alpha.01');
   });
@@ -41,7 +40,7 @@ module('Component | VersionList::Row', function (hooks) {
     this.version = (await crateRecord.loadVersionsTask.perform()).slice()[0];
     await crateRecord.loadOwnerUserTask.perform();
 
-    await render(hbs`<VersionList::Row @version={{this.version}} />`);
+    await render(<template><Row @version={{this.version}} /></template>);
     assert.dom('[data-test-release-track]').hasText('?');
     assert.dom('[data-test-release-track-link]').hasText(version);
   });
@@ -78,13 +77,13 @@ module('Component | VersionList::Row', function (hooks) {
     this.secondVersion = versions.find(it => it.num === '0.2.0');
     this.thirdVersion = versions.find(it => it.num === '0.3.0');
 
-    await render(hbs`<VersionList::Row @version={{this.firstVersion}} />`);
+    await render(<template><Row @version={{this.firstVersion}} /></template>);
     assert.dom('[data-test-feature-list]').doesNotExist();
 
-    await render(hbs`<VersionList::Row @version={{this.secondVersion}} />`);
+    await render(<template><Row @version={{this.secondVersion}} /></template>);
     assert.dom('[data-test-feature-list]').hasText('1 Feature');
 
-    await render(hbs`<VersionList::Row @version={{this.thirdVersion}} />`);
+    await render(<template><Row @version={{this.thirdVersion}} /></template>);
     assert.dom('[data-test-feature-list]').hasText('2 Features');
   });
 });

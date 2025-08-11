@@ -1,8 +1,32 @@
+import { fn, hash } from '@ember/helper';
 import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
+import onClickOutside from 'ember-click-outside/modifiers/on-click-outside';
+import onKey from 'ember-keyboard/modifiers/on-key';
+
+import DropdownContent from 'crates-io/components/dropdown/content';
+import DropdownMenu from 'crates-io/components/dropdown/menu';
+import DropdownTrigger from 'crates-io/components/dropdown/trigger';
+
 export default class Dropdown extends Component {
+  <template>
+    <div
+      ...attributes
+      class='container'
+      {{onClickOutside (fn (mut this.dropdownExpanded) false)}}
+      {{onKey 'Escape' (fn (mut this.dropdownExpanded) false)}}
+    >
+      {{yield
+        (hash
+          Trigger=(component DropdownTrigger toggle=this.toggleDropdown)
+          Content=(component DropdownContent isExpanded=this.dropdownExpanded)
+          Menu=(component DropdownMenu Content=(component DropdownContent isExpanded=this.dropdownExpanded))
+        )
+      }}
+    </div>
+  </template>
   @tracked dropdownExpanded = false;
 
   @action
@@ -10,16 +34,3 @@ export default class Dropdown extends Component {
     this.dropdownExpanded = !this.dropdownExpanded;
   }
 }
-
-<div
-  ...attributes
-  class="container"
-  {{on-click-outside (fn (mut this.dropdownExpanded) false)}}
-  {{on-key 'Escape' (fn (mut this.dropdownExpanded) false)}}
->
-  {{yield (hash
-    Trigger=(component "dropdown/trigger" toggle=this.toggleDropdown)
-    Content=(component "dropdown/content" isExpanded=this.dropdownExpanded)
-    Menu=(component "dropdown/menu" Content=(component "dropdown/content" isExpanded=this.dropdownExpanded))
-  )}}
-</div>

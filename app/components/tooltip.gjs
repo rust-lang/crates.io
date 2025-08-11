@@ -6,6 +6,21 @@ import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/d
 import { modifier } from 'ember-modifier';
 
 export default class Tooltip extends Component {
+  <template>
+    <span class='anchor' {{this.onInsertAnchor this}} />
+
+    {{#if this.visible}}
+      {{#in-element this.containerElement}}
+        <div class='tooltip' ...attributes {{this.attachTooltip this side=@side}}>
+          {{#if (has-block)}}
+            {{yield}}
+          {{else}}
+            {{@text}}
+          {{/if}}
+        </div>
+      {{/in-element}}
+    {{/if}}
+  </template>
   @tracked anchorElement = null;
   @tracked visible = false;
 
@@ -64,17 +79,3 @@ export default class Tooltip extends Component {
     return () => cleanup();
   });
 }
-
-<span class="anchor" {{this.onInsertAnchor this}} />
-
-{{#if this.visible}}
-  {{#in-element this.containerElement}}
-    <div class="tooltip" ...attributes {{this.attachTooltip this side=@side}}>
-      {{#if (has-block)}}
-        {{yield}}
-      {{else}}
-        {{@text}}
-      {{/if}}
-    </div>
-  {{/in-element}}
-{{/if}}

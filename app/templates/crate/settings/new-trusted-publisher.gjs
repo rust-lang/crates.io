@@ -1,164 +1,192 @@
-<form class="form" {{on "submit" (prevent-default (perform this.saveConfigTask))}}>
-  <h2>Add a new Trusted Publisher</h2>
+import { Input } from '@ember/component';
+import { uniqueId } from '@ember/helper';
+import { on } from '@ember/modifier';
+import { LinkTo } from '@ember/routing';
 
-  <div class="form-group">
-    {{#let (unique-id) as |id|}}
-      <label for={{id}} class="form-group-name">Publisher</label>
+import autoFocus from '@zestia/ember-auto-focus/modifiers/auto-focus';
+import perform from 'ember-concurrency/helpers/perform';
+import preventDefault from 'ember-event-helpers/helpers/prevent-default';
+import eq from 'ember-truth-helpers/helpers/eq';
 
-      <select
-        id={{id}}
-        disabled={{this.saveConfigTask.isRunning}}
-        class="publisher-select base-input"
-        data-test-publisher
-      >
-        {{#each this.publishers as |publisher|}}
-          <option value={{publisher}} selected={{eq this.publisher publisher}}>{{publisher}}</option>
-        {{/each}}
-      </select>
-    {{/let}}
+import LoadingSpinner from 'crates-io/components/loading-spinner';
 
-    <div class="note">
-      crates.io currently only supports GitHub, but we are planning to support other platforms in the future.
-    </div>
-  </div>
+<template>
+  <form class='form' {{on 'submit' (preventDefault (perform @controller.saveConfigTask))}}>
+    <h2>Add a new Trusted Publisher</h2>
 
-  {{#if (eq this.publisher "GitHub")}}
-    <div class="form-group" data-test-repository-owner-group>
-      {{#let (unique-id) as |id|}}
-        <label for={{id}} class="form-group-name">Repository owner</label>
+    <div class='form-group'>
+      {{#let (uniqueId) as |id|}}
+        <label for={{id}} class='form-group-name'>Publisher</label>
 
-        <Input
+        <select
           id={{id}}
-          @type="text"
-          @value={{this.repositoryOwner}}
-          disabled={{this.saveConfigTask.isRunning}}
-          aria-required="true"
-          aria-invalid={{if this.repositoryOwnerInvalid "true" "false"}}
-          class="input base-input"
-          data-test-repository-owner
-          {{auto-focus}}
-          {{on "input" this.resetRepositoryOwnerValidation}}
-        />
-
-        {{#if this.repositoryOwnerInvalid}}
-          <div class="form-group-error" data-test-error>
-            Please enter a repository owner.
-          </div>
-        {{else}}
-          <div class="note">
-            The GitHub organization name or GitHub username that owns the repository.
-          </div>
-        {{/if}}
+          disabled={{@controller.saveConfigTask.isRunning}}
+          class='publisher-select base-input'
+          data-test-publisher
+        >
+          {{#each @controller.publishers as |publisher|}}
+            <option value={{publisher}} selected={{eq @controller.publisher publisher}}>{{publisher}}</option>
+          {{/each}}
+        </select>
       {{/let}}
+
+      <div class='note'>
+        crates.io currently only supports GitHub, but we are planning to support other platforms in the future.
+      </div>
     </div>
 
-    <div class="form-group" data-test-repository-name-group>
-      {{#let (unique-id) as |id|}}
-        <label for={{id}} class="form-group-name">Repository name</label>
+    {{#if (eq @controller.publisher 'GitHub')}}
+      <div class='form-group' data-test-repository-owner-group>
+        {{#let (uniqueId) as |id|}}
+          <label for={{id}} class='form-group-name'>Repository owner</label>
 
-        <Input
-          id={{id}}
-          @type="text"
-          @value={{this.repositoryName}}
-          disabled={{this.saveConfigTask.isRunning}}
-          aria-required="true"
-          aria-invalid={{if this.repositoryNameInvalid "true" "false"}}
-          class="input base-input"
-          data-test-repository-name
-          {{on "input" this.resetRepositoryNameValidation}}
-        />
+          <Input
+            id={{id}}
+            @type='text'
+            @value={{@controller.repositoryOwner}}
+            disabled={{@controller.saveConfigTask.isRunning}}
+            aria-required='true'
+            aria-invalid={{if @controller.repositoryOwnerInvalid 'true' 'false'}}
+            class='input base-input'
+            data-test-repository-owner
+            {{autoFocus}}
+            {{on 'input' @controller.resetRepositoryOwnerValidation}}
+          />
 
-        {{#if this.repositoryNameInvalid}}
-          <div class="form-group-error" data-test-error>
-            Please enter a repository name.
-          </div>
-        {{else}}
-          <div class="note">
-            The name of the GitHub repository that contains the publishing workflow.
-          </div>
-        {{/if}}
-      {{/let}}
-    </div>
+          {{#if @controller.repositoryOwnerInvalid}}
+            <div class='form-group-error' data-test-error>
+              Please enter a repository owner.
+            </div>
+          {{else}}
+            <div class='note'>
+              The GitHub organization name or GitHub username that owns the repository.
+            </div>
+          {{/if}}
+        {{/let}}
+      </div>
 
-    <div class="form-group" data-test-workflow-filename-group>
-      {{#let (unique-id) as |id|}}
-        <label for={{id}} class="form-group-name">Workflow filename</label>
+      <div class='form-group' data-test-repository-name-group>
+        {{#let (uniqueId) as |id|}}
+          <label for={{id}} class='form-group-name'>Repository name</label>
 
-        <Input
-          id={{id}}
-          @type="text"
-          @value={{this.workflowFilename}}
-          disabled={{this.saveConfigTask.isRunning}}
-          aria-required="true"
-          aria-invalid={{if this.workflowFilenameInvalid "true" "false"}}
-          class="input base-input"
-          data-test-workflow-filename
-          {{on "input" this.resetWorkflowFilenameValidation}}
-        />
+          <Input
+            id={{id}}
+            @type='text'
+            @value={{@controller.repositoryName}}
+            disabled={{@controller.saveConfigTask.isRunning}}
+            aria-required='true'
+            aria-invalid={{if @controller.repositoryNameInvalid 'true' 'false'}}
+            class='input base-input'
+            data-test-repository-name
+            {{on 'input' @controller.resetRepositoryNameValidation}}
+          />
 
-        {{#if this.workflowFilenameInvalid}}
-          <div class="form-group-error" data-test-error>
-            Please enter a workflow filename.
-          </div>
-        {{else}}
-          <div class="note">
-            The filename of the publishing workflow. This file should be present in the
-            <code>
-              {{#if this.repository}}
-                <a href="https://github.com/{{this.repository}}/blob/HEAD/.github/workflows/" target="_blank" rel="noopener noreferrer">.github/workflows/</a>
-              {{else}}
-                .github/workflows/
+          {{#if @controller.repositoryNameInvalid}}
+            <div class='form-group-error' data-test-error>
+              Please enter a repository name.
+            </div>
+          {{else}}
+            <div class='note'>
+              The name of the GitHub repository that contains the publishing workflow.
+            </div>
+          {{/if}}
+        {{/let}}
+      </div>
+
+      <div class='form-group' data-test-workflow-filename-group>
+        {{#let (uniqueId) as |id|}}
+          <label for={{id}} class='form-group-name'>Workflow filename</label>
+
+          <Input
+            id={{id}}
+            @type='text'
+            @value={{@controller.workflowFilename}}
+            disabled={{@controller.saveConfigTask.isRunning}}
+            aria-required='true'
+            aria-invalid={{if @controller.workflowFilenameInvalid 'true' 'false'}}
+            class='input base-input'
+            data-test-workflow-filename
+            {{on 'input' @controller.resetWorkflowFilenameValidation}}
+          />
+
+          {{#if @controller.workflowFilenameInvalid}}
+            <div class='form-group-error' data-test-error>
+              Please enter a workflow filename.
+            </div>
+          {{else}}
+            <div class='note'>
+              The filename of the publishing workflow. This file should be present in the
+              <code>
+                {{#if @controller.repository}}
+                  <a
+                    href='https://github.com/{{@controller.repository}}/blob/HEAD/.github/workflows/'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >.github/workflows/</a>
+                {{else}}
+                  .github/workflows/
+                {{/if}}
+              </code>
+              directory of the
+              {{#if @controller.repository}}<a
+                  href='https://github.com/{{@controller.repository}}/'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >{{@controller.repository}}</a>
               {{/if}}
-            </code>
-            directory of the
-            {{#if this.repository}}<a href="https://github.com/{{this.repository}}/" target="_blank" rel="noopener noreferrer">{{this.repository}}</a> {{/if}}
-            repository{{unless this.repository " configured above"}}.
-            For example: <code>release.yml</code> or <code>publish.yml</code>.
+              repository{{unless @controller.repository ' configured above'}}. For example:
+              <code>release.yml</code>
+              or
+              <code>publish.yml</code>.
+            </div>
+          {{/if}}
+        {{/let}}
+      </div>
+
+      <div class='form-group' data-test-environment-group>
+        {{#let (uniqueId) as |id|}}
+          <label for={{id}} class='form-group-name'>Environment name (optional)</label>
+
+          <Input
+            id={{id}}
+            @type='text'
+            @value={{@controller.environment}}
+            disabled={{@controller.saveConfigTask.isRunning}}
+            class='input base-input'
+            data-test-environment
+          />
+
+          <div class='note'>
+            The name of the
+            <a
+              href='https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment'
+            >GitHub Actions environment</a>
+            that the above workflow uses for publishing. This should be configured in the repository settings. A
+            dedicated publishing environment is not required, but is
+            <strong>strongly recommended</strong>, especially if your repository has maintainers with commit access who
+            should not have crates.io publishing access.
           </div>
+        {{/let}}
+      </div>
+    {{/if}}
+
+    <div class='buttons'>
+      <button
+        type='submit'
+        class='add-button button button--small'
+        disabled={{@controller.saveConfigTask.isRunning}}
+        data-test-add
+      >
+        Add
+
+        {{#if @controller.saveConfigTask.isRunning}}
+          <LoadingSpinner @theme='light' class='spinner' data-test-spinner />
         {{/if}}
-      {{/let}}
+      </button>
+
+      <LinkTo @route='crate.settings.index' class='cancel-button button button--tan button--small' data-test-cancel>
+        Cancel
+      </LinkTo>
     </div>
-
-    <div class="form-group" data-test-environment-group>
-      {{#let (unique-id) as |id|}}
-        <label for={{id}} class="form-group-name">Environment name (optional)</label>
-
-        <Input
-          id={{id}}
-          @type="text"
-          @value={{this.environment}}
-          disabled={{this.saveConfigTask.isRunning}}
-          class="input base-input"
-          data-test-environment
-        />
-
-        <div class="note">
-          The name of the <a href="https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment">GitHub Actions environment</a> that the above workflow uses for publishing. This should be configured in the repository settings. A dedicated publishing environment is not required, but is <strong>strongly recommended</strong>, especially if your repository has maintainers with commit access who should not have crates.io publishing access.
-        </div>
-      {{/let}}
-    </div>
-  {{/if}}
-
-  <div class="buttons">
-    <button
-      type="submit"
-      class="add-button button button--small"
-      disabled={{this.saveConfigTask.isRunning}}
-      data-test-add
-    >
-      Add
-
-      {{#if this.saveConfigTask.isRunning}}
-        <LoadingSpinner @theme="light" class="spinner" data-test-spinner />
-      {{/if}}
-    </button>
-
-    <LinkTo
-      @route="crate.settings.index"
-      class="cancel-button button button--tan button--small"
-      data-test-cancel
-    >
-      Cancel
-    </LinkTo>
-  </div>
-</form>
+  </form>
+</template>

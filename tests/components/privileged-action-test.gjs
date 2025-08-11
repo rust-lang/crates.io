@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import PrivilegedAction from 'crates-io/components/privileged-action';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -15,13 +14,15 @@ module('Component | PrivilegedAction', hooks => {
     // possible content blocks.
     this.renderComponent = async function (userAuthorised) {
       this.userAuthorised = userAuthorised;
-      await render(hbs`
-      <PrivilegedAction @userAuthorised={{this.userAuthorised}}>
-        <:default><div data-test-privileged>privileged</div></:default>
-        <:placeholder><div data-test-placeholder>placeholder</div></:placeholder>
-        <:unprivileged><div data-test-unprivileged>unprivileged</div></:unprivileged>
-      </PrivilegedAction>
-    `);
+      await render(
+        <template>
+          <PrivilegedAction @userAuthorised={{this.userAuthorised}}>
+            <:default><div data-test-privileged>privileged</div></:default>
+            <:placeholder><div data-test-placeholder>placeholder</div></:placeholder>
+            <:unprivileged><div data-test-unprivileged>unprivileged</div></:unprivileged>
+          </PrivilegedAction>
+        </template>,
+      );
     };
   });
 
@@ -109,16 +110,18 @@ module('Component | PrivilegedAction', hooks => {
 
     // We're trying to confirm that all the form controls are automatically
     // disabled.
-    await render(hbs`
-      <div data-test-content>
-        <PrivilegedAction @userAuthorised={{false}}>
-          <button data-test-control type="button">Click me maybe?</button>
-          <label for="input">Input: </label><input data-test-control type="text" id="input" />
-          <label for="select">Select: </label><select data-test-control id="select"><option>foo</option></select>
-          <label for="textarea">Textarea: </label><textarea data-test-control id="textarea" />
-        </PrivilegedAction>
-      </div>
-    `);
+    await render(
+      <template>
+        <div data-test-content>
+          <PrivilegedAction @userAuthorised={{false}}>
+            <button data-test-control type='button'>Click me maybe?</button>
+            <label for='input'>Input: </label><input data-test-control type='text' id='input' />
+            <label for='select'>Select: </label><select data-test-control id='select'><option>foo</option></select>
+            <label for='textarea'>Textarea: </label><textarea data-test-control id='textarea' />
+          </PrivilegedAction>
+        </div>
+      </template>,
+    );
     assert.dom('[data-test-content] fieldset').exists().isDisabled();
     assert.dom('[data-test-content] fieldset [data-test-control]').exists();
   });
@@ -126,13 +129,15 @@ module('Component | PrivilegedAction', hooks => {
   test('automatic unprivileged block', async function (assert) {
     // We're testing that the default block content isn't shown, and that the
     // automatically generated div has no content.
-    await render(hbs`
-      <div data-test-container>
-        <PrivilegedAction @userAuthorised={{false}}>
-          <div data-test-content>should not be shown</div>
-        </PrivilegedAction>
-      </div>
-    `);
+    await render(
+      <template>
+        <div data-test-container>
+          <PrivilegedAction @userAuthorised={{false}}>
+            <div data-test-content>should not be shown</div>
+          </PrivilegedAction>
+        </div>
+      </template>,
+    );
     assert.dom('[data-test-content]').doesNotExist();
     assert.dom('[data-test-container] > div').exists().hasNoText();
   });

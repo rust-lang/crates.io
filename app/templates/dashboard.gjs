@@ -1,74 +1,95 @@
-{{page-title 'Dashboard'}}
+import { array } from '@ember/helper';
+import { on } from '@ember/modifier';
+import { LinkTo } from '@ember/routing';
 
-<PageHeader class="header">
-  <h1>My Dashboard</h1>
-  <div class="stats">
-    <div class='downloads'>
-      {{svg-jar "download" class=(scoped-class "header-icon")}}
-      <span class='num'>{{format-num this.myStats.total_downloads}}</span>
-      <span class="stats-label text--small">Total Downloads</span>
+import perform from 'ember-concurrency/helpers/perform';
+import pageTitle from 'ember-page-title/helpers/page-title';
+import scopedClass from 'ember-scoped-css/helpers/scoped-class';
+import svgJar from 'ember-svg-jar/helpers/svg-jar';
+
+import CrateDownloadsList from 'crates-io/components/crate-downloads-list';
+import LoadingSpinner from 'crates-io/components/loading-spinner';
+import PageHeader from 'crates-io/components/page-header';
+import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-now';
+import formatNum from 'crates-io/helpers/format-num';
+<template>
+  {{pageTitle 'Dashboard'}}
+
+  <PageHeader class='header'>
+    <h1>My Dashboard</h1>
+    <div class='stats'>
+      <div class='downloads'>
+        {{svgJar 'download' class=(scopedClass 'header-icon')}}
+        <span class='num'>{{formatNum @controller.myStats.total_downloads}}</span>
+        <span class='stats-label text--small'>Total Downloads</span>
+      </div>
     </div>
-  </div>
-</PageHeader>
+  </PageHeader>
 
-<div class="my-info">
-  <div class="my-crate-lists">
-    <div class="header">
+  <div class='my-info'>
+    <div class='my-crate-lists'>
+      <div class='header'>
+        <h2>
+          {{svgJar 'my-packages'}}
+          My Crates
+        </h2>
+
+        {{#if @controller.hasMoreCrates}}
+          <LinkTo @route='me.crates' class='my-crates-link'>Show all</LinkTo>
+        {{/if}}
+      </div>
+      <CrateDownloadsList @crates={{@controller.visibleCrates}} />
+
+      <div class='header'>
+        <h2>
+          {{svgJar 'following'}}
+          Following
+        </h2>
+
+        {{#if @controller.hasMoreFollowing}}
+          <LinkTo @route='me.following' class='followed-crates-link'>Show all</LinkTo>
+        {{/if}}
+      </div>
+      <CrateDownloadsList @crates={{@controller.visibleFollowing}} />
+    </div>
+
+    <div class='my-feed'>
       <h2>
-        {{svg-jar "my-packages"}}
-        My Crates
+        {{svgJar 'latest-updates'}}
+        Latest Updates
       </h2>
 
-      {{#if this.hasMoreCrates}}
-        <LinkTo @route="me.crates" class="my-crates-link">Show all</LinkTo>
-      {{/if}}
-    </div>
-    <CrateDownloadsList @crates={{this.visibleCrates}} />
+      <div class='feed'>
+        <ul class='feed-list' data-test-feed-list>
+          {{#each @controller.myFeed as |version|}}
+            <li class='feed-row'>
+              <LinkTo @route='crate.version' @models={{array version.crateName version.num}}>
+                {{version.crateName}}
+                <span class='text--small'>{{version.num}}</span>
+              </LinkTo>
+              <span class='feed-date text--small'>
+                {{dateFormatDistanceToNow version.created_at addSuffix=true}}
+              </span>
+            </li>
+          {{/each}}
+        </ul>
 
-    <div class='header'>
-      <h2>
-        {{svg-jar "following"}}
-        Following
-      </h2>
-
-      {{#if this.hasMoreFollowing}}
-        <LinkTo @route="me.following" class="followed-crates-link">Show all</LinkTo>
-      {{/if}}
-    </div>
-    <CrateDownloadsList @crates={{this.visibleFollowing}} />
-  </div>
-
-  <div class="my-feed">
-    <h2>
-      {{svg-jar "latest-updates"}}
-      Latest Updates
-    </h2>
-
-    <div class="feed">
-      <ul class="feed-list" data-test-feed-list>
-        {{#each this.myFeed as |version|}}
-          <li class="feed-row">
-            <LinkTo @route="crate.version" @models={{array version.crateName version.num}}>
-              {{ version.crateName }}
-              <span class="text--small">{{ version.num }}</span>
-            </LinkTo>
-            <span class="feed-date text--small">
-              {{date-format-distance-to-now version.created_at addSuffix=true}}
-            </span>
-          </li>
-        {{/each}}
-      </ul>
-
-      {{#if this.hasMore}}
-        <div class="load-more">
-          <button type="button" class="load-more-button" disabled={{this.loadMoreTask.isRunning}} {{on "click" (perform this.loadMoreTask)}}>
-            Load More
-            {{#if this.loadMoreTask.isRunning}}
-              <LoadingSpinner />
-            {{/if}}
-          </button>
-        </div>
-      {{/if}}
+        {{#if @controller.hasMore}}
+          <div class='load-more'>
+            <button
+              type='button'
+              class='load-more-button'
+              disabled={{@controller.loadMoreTask.isRunning}}
+              {{on 'click' (perform @controller.loadMoreTask)}}
+            >
+              Load More
+              {{#if @controller.loadMoreTask.isRunning}}
+                <LoadingSpinner />
+              {{/if}}
+            </button>
+          </div>
+        {{/if}}
+      </div>
     </div>
   </div>
-</div>
+</template>

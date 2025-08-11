@@ -1,1 +1,3 @@
-<li class="item" ...attributes>{{yield}}</li>
+<template>
+  <li class='item' ...attributes>{{yield}}</li>
+</template>

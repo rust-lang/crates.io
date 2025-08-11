@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import CrateRow from 'crates-io/components/crate-row';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -20,7 +19,7 @@ module('Component | CrateRow', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
 
-    await render(hbs`<CrateRow @crate={{this.crate}} />`);
+    await render(<template><CrateRow @crate={{this.crate}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').hasText('v1.1.2');
     assert.dom('[data-test-copy-toml-button]').exists();
@@ -35,7 +34,7 @@ module('Component | CrateRow', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
 
-    await render(hbs`<CrateRow @crate={{this.crate}} />`);
+    await render(<template><CrateRow @crate={{this.crate}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').hasText('v1.0.0-beta.3');
     assert.dom('[data-test-copy-toml-button]').exists();
@@ -49,7 +48,7 @@ module('Component | CrateRow', function (hooks) {
     let store = this.owner.lookup('service:store');
     this.crate = await store.findRecord('crate', crate.name);
 
-    await render(hbs`<CrateRow @crate={{this.crate}} />`);
+    await render(<template><CrateRow @crate={{this.crate}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').doesNotExist();
     assert.dom('[data-test-copy-toml-button]').doesNotExist();

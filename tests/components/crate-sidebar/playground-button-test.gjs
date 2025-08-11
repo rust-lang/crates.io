@@ -3,9 +3,9 @@ import { module, test } from 'qunit';
 
 import { defer } from 'rsvp';
 
-import { hbs } from 'ember-cli-htmlbars';
 import { http, HttpResponse } from 'msw';
 
+import CrateSidebar from 'crates-io/components/crate-sidebar';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -37,7 +37,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[data-test-playground-button]').doesNotExist();
   });
 
@@ -53,7 +53,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     let expectedHref =
       'https://play.rust-lang.org/?edition=2021&code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[data-test-playground-button]').hasAttribute('href', expectedHref);
   });
 
@@ -69,7 +69,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     await waitFor('[data-test-owners]');
     assert.dom('[data-test-playground-button]').doesNotExist();
 
@@ -89,7 +89,7 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[data-test-playground-button]').doesNotExist();
   });
 });

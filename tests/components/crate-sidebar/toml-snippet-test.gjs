@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import CrateSidebar from 'crates-io/components/crate-sidebar';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -19,11 +18,13 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[title="Copy command to clipboard"]').exists().hasText('cargo add foo');
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0"');
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} @requestedVersion="1.0.0" />`);
+    await render(
+      <template><CrateSidebar @crate={{this.crate}} @version={{this.version}} @requestedVersion='1.0.0' /></template>,
+    );
     assert.dom('[title="Copy command to clipboard"]').exists().hasText('cargo add foo@=1.0.0');
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "=1.0.0"');
   });
@@ -37,7 +38,7 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0"');
   });
 
@@ -50,7 +51,7 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.version = (await this.crate.versions).slice()[0];
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<CrateSidebar @crate={{this.crate}} @version={{this.version}} />`);
+    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0-alpha"');
   });
 });

@@ -4,11 +4,11 @@ import { module, test } from 'qunit';
 import Service from '@ember/service';
 import { defer } from 'rsvp';
 
-import { hbs } from 'ember-cli-htmlbars';
 import { dropTask } from 'ember-concurrency';
 import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
+import DownloadGraph from 'crates-io/components/download-graph';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 
 import { toChartData } from '../../components/download-graph';
@@ -23,7 +23,7 @@ module('Component | DownloadGraph', function (hooks) {
   test('happy path', async function (assert) {
     this.data = exampleData();
 
-    await render(hbs`<DownloadGraph @data={{this.data}} />`);
+    await render(<template><DownloadGraph @data={{this.data}} /></template>);
     assert.dom('[data-test-download-graph]').exists();
     assert.dom('[data-test-download-graph] [data-test-spinner]').doesNotExist();
     assert.dom('[data-test-download-graph] canvas').exists();
@@ -44,7 +44,7 @@ module('Component | DownloadGraph', function (hooks) {
 
     this.owner.register('service:chartjs', MockService);
 
-    render(hbs`<DownloadGraph @data={{this.data}} />`);
+    render(<template><DownloadGraph @data={{this.data}} /></template>);
     await waitFor('[data-test-download-graph] [data-test-spinner]');
     assert.dom('[data-test-download-graph]').exists();
     assert.dom('[data-test-download-graph] [data-test-spinner]').exists();
@@ -68,7 +68,7 @@ module('Component | DownloadGraph', function (hooks) {
 
     this.owner.register('service:chartjs', MockService);
 
-    await render(hbs`<DownloadGraph @data={{this.data}} />`);
+    await render(<template><DownloadGraph @data={{this.data}} /></template>);
     assert.dom('[data-test-download-graph]').exists();
     assert.dom('[data-test-download-graph] [data-test-spinner]').doesNotExist();
     assert.dom('[data-test-download-graph] canvas').doesNotExist();

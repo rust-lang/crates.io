@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import formatNum from 'crates-io/helpers/format-num';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 
 module('Unit | Helper | format-num', function (hooks) {
@@ -11,19 +10,19 @@ module('Unit | Helper | format-num', function (hooks) {
   test('it works', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
-    await render(hbs`{{format-num 42}}`);
+    await render(<template>{{formatNum 42}}</template>);
     assert.dom().hasText('42');
 
-    await render(hbs`{{format-num 0}}`);
+    await render(<template>{{formatNum 0}}</template>);
     assert.dom().hasText('0');
 
-    await render(hbs`{{format-num 0.2}}`);
+    await render(<template>{{formatNum 0.2}}</template>);
     assert.dom().hasText('0.2');
 
-    await render(hbs`{{format-num 1000}}`);
+    await render(<template>{{formatNum 1000}}</template>);
     assert.dom().hasText('1,000');
 
-    await render(hbs`{{format-num 1000000}}`);
+    await render(<template>{{formatNum 1000000}}</template>);
     assert.dom().hasText('1,000,000');
   });
 });

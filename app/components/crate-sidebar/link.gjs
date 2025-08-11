@@ -1,6 +1,27 @@
 import Component from '@glimmer/component';
 
+import scopedClass from 'ember-scoped-css/helpers/scoped-class';
+import svgJar from 'ember-svg-jar/helpers/svg-jar';
+
 export default class CrateSidebarLink extends Component {
+  <template>
+    <div ...attributes>
+      <h2 class='title' data-test-title>{{@title}}</h2>
+      <div class='content'>
+        {{#if this.isDocsRs}}
+          {{svgJar 'docs-rs' class=(scopedClass 'icon') data-test-icon='docs-rs'}}
+        {{else if this.isGitHub}}
+          {{svgJar 'github' class=(scopedClass 'icon') data-test-icon='github'}}
+        {{else}}
+          {{svgJar 'link' class=(scopedClass 'icon') data-test-icon='link'}}
+        {{/if}}
+
+        <a href={{@url}} class='link' data-test-link>
+          {{this.text}}
+        </a>
+      </div>
+    </div>
+  </template>
   get text() {
     let { url } = this.args;
     return simplifyUrl(url);
@@ -31,20 +52,3 @@ export function simplifyUrl(url) {
 
   return url;
 }
-
-<div ...attributes>
-  <h2 class="title" data-test-title>{{@title}}</h2>
-  <div class="content">
-    {{#if this.isDocsRs}}
-      {{svg-jar "docs-rs" class=(scoped-class "icon") data-test-icon="docs-rs"}}
-    {{else if this.isGitHub}}
-      {{svg-jar "github" class=(scoped-class "icon") data-test-icon="github"}}
-    {{else}}
-      {{svg-jar "link" class=(scoped-class "icon") data-test-icon="link"}}
-    {{/if}}
-
-    <a href={{@url}} class="link" data-test-link>
-      {{this.text}}
-    </a>
-  </div>
-</div>

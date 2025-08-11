@@ -1,18 +1,29 @@
-<HeadLayout />
+import HeadLayout from 'ember-cli-head/components/head-layout';
+import NotificationContainer from 'ember-cli-notifications/components/notification-container';
+import pageTitle from 'ember-page-title/helpers/page-title';
+import rememberDocumentScroll from 'memory-scroll/modifiers/remember-document-scroll';
 
-{{page-title "crates.io: Rust Package Registry" separator=' - ' prepend=true}}
-{{set-color-scheme this.colorScheme.scheme}}
+import Footer from 'crates-io/components/footer';
+import Header from 'crates-io/components/header';
+import ProgressBar from 'crates-io/components/progress-bar';
+import setColorScheme from 'crates-io/helpers/set-color-scheme';
+<template>
+  <HeadLayout />
 
-<ProgressBar/>
-<NotificationContainer @position="top-right"/>
-<div id="tooltip-container"></div>
+  {{pageTitle 'crates.io: Rust Package Registry' separator=' - ' prepend=true}}
+  {{setColorScheme @controller.colorScheme.scheme}}
 
-<Header @hero={{this.isIndex}} />
+  <ProgressBar />
+  <NotificationContainer @position='top-right' />
+  <div id='tooltip-container'></div>
 
-<main class="main" {{remember-document-scroll key=this.router.currentURL}}>
-  <div class="inner-main width-limit">
-  {{outlet}}
-  </div>
-</main>
+  <Header @hero={{@controller.isIndex}} />
 
-<Footer/>
+  <main class='main' {{rememberDocumentScroll key=@controller.router.currentURL}}>
+    <div class='inner-main width-limit'>
+      {{outlet}}
+    </div>
+  </main>
+
+  <Footer />
+</template>

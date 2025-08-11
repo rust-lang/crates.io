@@ -1,7 +1,13 @@
-{{page-title 'Settings'}}
+import pageTitle from 'ember-page-title/helpers/page-title';
 
-<PageHeader @title="Account Settings" />
+import PageHeader from 'crates-io/components/page-header';
+import SettingsPage from 'crates-io/components/settings-page';
+<template>
+  {{pageTitle 'Settings'}}
 
-<SettingsPage>
-  {{outlet}}
-</SettingsPage>
+  <PageHeader @title='Account Settings' />
+
+  <SettingsPage>
+    {{outlet}}
+  </SettingsPage>
+</template>

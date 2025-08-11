@@ -1,8 +1,7 @@
 import { render } from '@ember/test-helpers';
 import { module, test } from 'qunit';
 
-import { hbs } from 'ember-cli-htmlbars';
-
+import OwnersList from 'crates-io/components/owners-list';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 import setupMsw from 'crates-io/tests/helpers/setup-msw';
 
@@ -21,7 +20,7 @@ module('Component | OwnersList', function (hooks) {
     this.crate = await store.findRecord('crate', crate.name);
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 1 });
     assert.dom('[data-test-owner-link]').exists({ count: 1 });
@@ -44,7 +43,7 @@ module('Component | OwnersList', function (hooks) {
     this.crate = await store.findRecord('crate', crate.name);
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 1 });
     assert.dom('[data-test-owner-link]').exists({ count: 1 });
@@ -69,7 +68,7 @@ module('Component | OwnersList', function (hooks) {
     this.crate = await store.findRecord('crate', crate.name);
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 5 });
     assert.dom('[data-test-owner-link]').exists({ count: 5 });
@@ -91,7 +90,7 @@ module('Component | OwnersList', function (hooks) {
     this.crate = await store.findRecord('crate', crate.name);
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
     assert.dom('[data-test-owners="basic"]').exists();
     assert.dom('ul > li').exists({ count: 6 });
     assert.dom('[data-test-owner-link]').exists({ count: 6 });
@@ -117,7 +116,7 @@ module('Component | OwnersList', function (hooks) {
     this.crate = await store.findRecord('crate', crate.name);
     await this.crate.loadOwnersTask.perform();
 
-    await render(hbs`<OwnersList @owners={{this.crate.owners}} />`);
+    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 5 });
     assert.dom('[data-test-owner-link]').exists({ count: 5 });

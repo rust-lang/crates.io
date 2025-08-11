@@ -1,4 +1,9 @@
+/* eslint-disable ember/no-at-ember-render-modifiers */
+import { on } from '@ember/modifier';
 import { action } from '@ember/object';
+import didInsert from '@ember/render-modifiers/modifiers/did-insert';
+import didUpdate from '@ember/render-modifiers/modifiers/did-update';
+import willDestroy from '@ember/render-modifiers/modifiers/will-destroy';
 import { service } from '@ember/service';
 import { waitForPromise } from '@ember/test-waiters';
 import Component from '@glimmer/component';
@@ -8,12 +13,37 @@ import window from 'ember-window-mock';
 import semverSort from 'semver/functions/sort';
 
 // Colors by http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=10
+import LoadingSpinner from 'crates-io/components/loading-spinner';
+
 const COLORS = ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#92c5de', '#4393c3', '#2166ac', '#053061'];
 const BG_COLORS = ['#d3b5bc', '#eabdc0', '#f3d0ca', '#fce4d9', '#deedf5', '#c9deed', '#2166ac', '#053061'];
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export default class DownloadGraph extends Component {
+  <template>
+    {{! template-lint-disable no-at-ember-render-modifiers }}
+    <div data-test-download-graph ...attributes class='wrapper' {{didInsert this.loadChartJs}}>
+      {{#if this.chartjs.loadTask.isRunning}}
+        <LoadingSpinner class='spinner' data-test-spinner />
+      {{else if this.chartjs.loadTask.lastSuccessful.value}}
+        <canvas
+          {{didInsert this.createChart}}
+          {{didUpdate this.updateChart @data}}
+          {{didUpdate this.updateColorScheme this.colorScheme.resolvedScheme}}
+          {{didUpdate this.updateStacked @stacked}}
+          {{willDestroy this.destroyChart}}
+        />
+      {{else}}
+        <div class='error' data-test-error>
+          <p>Sorry, there was a problem loading the graphing code.</p>
+          <button type='button' data-test-reload {{on 'click' this.reloadPage}}>
+            Try again
+          </button>
+        </div>
+      {{/if}}
+    </div>
+  </template>
   @service chartjs;
   @service colorScheme;
 
@@ -237,34 +267,3 @@ function subDays(date, amount) {
 
   return dstDiff >= 0 ? addMinutes(endDate, dstDiff) : subMinutes(endDate, Math.abs(dstDiff));
 }
-
-{{!-- template-lint-disable no-at-ember-render-modifiers --}}
-<div
-  data-test-download-graph
-  ...attributes
-  class="wrapper"
-  {{did-insert this.loadChartJs}}
->
-  {{#if this.chartjs.loadTask.isRunning}}
-    <LoadingSpinner class="spinner" data-test-spinner />
-  {{else if this.chartjs.loadTask.lastSuccessful.value}}
-    <canvas
-      {{did-insert this.createChart}}
-      {{did-update this.updateChart @data}}
-      {{did-update this.updateColorScheme this.colorScheme.resolvedScheme}}
-      {{did-update this.updateStacked @stacked}}
-      {{will-destroy this.destroyChart}}
-    />
-  {{else}}
-    <div class="error" data-test-error>
-      <p>Sorry, there was a problem loading the graphing code.</p>
-      <button
-        type="button"
-        data-test-reload
-        {{on "click" this.reloadPage}}
-      >
-        Try again
-      </button>
-    </div>
-  {{/if}}
-</div>

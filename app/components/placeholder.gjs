@@ -1,1 +1,3 @@
-<div ...attributes class="placeholder"></div>
+<template>
+  <div ...attributes class='placeholder'></div>
+</template>
