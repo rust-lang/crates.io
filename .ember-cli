@@ -5,5 +5,17 @@
 
     Setting `disableAnalytics` to true will prevent any data from being sent.
   */
-  "disableAnalytics": false
+  "disableAnalytics": false,
+
+  /**
+    Setting `componentAuthoringFormat` to "strict" will force the blueprint generators to generate GJS
+    or GTS files for the component and the component rendering test. "loose" is the default.
+  */
+  "componentAuthoringFormat": "strict",
+
+  /**
+    Setting `routeAuthoringFormat` to "strict" will force the blueprint generators to generate GJS
+    or GTS templates for routes. "loose" is the default
+  */
+  "routeAuthoringFormat": "strict"
 }
