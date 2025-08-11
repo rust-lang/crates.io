@@ -13,10 +13,9 @@ module('Component | PrivilegedAction', hooks => {
     // Adds a utility function that renders a PrivilegedAction with all the
     // possible content blocks.
     this.renderComponent = async function (userAuthorised) {
-      this.userAuthorised = userAuthorised;
       await render(
         <template>
-          <PrivilegedAction @userAuthorised={{this.userAuthorised}}>
+          <PrivilegedAction @userAuthorised={{userAuthorised}}>
             <:default><div data-test-privileged>privileged</div></:default>
             <:placeholder><div data-test-placeholder>placeholder</div></:placeholder>
             <:unprivileged><div data-test-unprivileged>unprivileged</div></:unprivileged>

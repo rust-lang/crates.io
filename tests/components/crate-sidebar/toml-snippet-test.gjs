@@ -14,16 +14,16 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[title="Copy command to clipboard"]').exists().hasText('cargo add foo');
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0"');
 
     await render(
-      <template><CrateSidebar @crate={{this.crate}} @version={{this.version}} @requestedVersion='1.0.0' /></template>,
+      <template><CrateSidebar @crate={{crateModel}} @version={{version}} @requestedVersion='1.0.0' /></template>,
     );
     assert.dom('[title="Copy command to clipboard"]').exists().hasText('cargo add foo@=1.0.0');
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "=1.0.0"');
@@ -34,11 +34,11 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0+abcdef' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0"');
   });
 
@@ -47,11 +47,11 @@ module('Component | CrateSidebar | toml snippet', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0-alpha+abcdef' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[title="Copy Cargo.toml snippet to clipboard"]').exists().hasText('foo = "1.0.0-alpha"');
   });
 });

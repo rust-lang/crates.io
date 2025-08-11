@@ -17,9 +17,9 @@ module('Component | CrateRow', function (hooks) {
     this.db.version.create({ crate, num: '1.1.2' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
+    let crateModel = await store.findRecord('crate', crate.name);
 
-    await render(<template><CrateRow @crate={{this.crate}} /></template>);
+    await render(<template><CrateRow @crate={{crateModel}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').hasText('v1.1.2');
     assert.dom('[data-test-copy-toml-button]').exists();
@@ -32,9 +32,9 @@ module('Component | CrateRow', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0-beta.2' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
+    let crateModel = await store.findRecord('crate', crate.name);
 
-    await render(<template><CrateRow @crate={{this.crate}} /></template>);
+    await render(<template><CrateRow @crate={{crateModel}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').hasText('v1.0.0-beta.3');
     assert.dom('[data-test-copy-toml-button]').exists();
@@ -46,9 +46,9 @@ module('Component | CrateRow', function (hooks) {
     this.db.version.create({ crate, num: '1.2.3', yanked: true });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
+    let crateModel = await store.findRecord('crate', crate.name);
 
-    await render(<template><CrateRow @crate={{this.crate}} /></template>);
+    await render(<template><CrateRow @crate={{crateModel}} /></template>);
     assert.dom('[data-test-crate-link]').hasText('foo');
     assert.dom('[data-test-version]').doesNotExist();
     assert.dom('[data-test-copy-toml-button]').doesNotExist();

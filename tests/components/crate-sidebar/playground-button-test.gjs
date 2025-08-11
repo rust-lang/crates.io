@@ -33,11 +33,11 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[data-test-playground-button]').doesNotExist();
   });
 
@@ -46,14 +46,14 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.db.version.create({ crate, num: '1.0.0' });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
     let expectedHref =
       'https://play.rust-lang.org/?edition=2021&code=use%20aho_corasick%3B%0A%0Afn%20main()%20%7B%0A%20%20%20%20%2F%2F%20try%20using%20the%20%60aho_corasick%60%20crate%20here%0A%7D';
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[data-test-playground-button]').hasAttribute('href', expectedHref);
   });
 
@@ -65,11 +65,11 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => deferred.promise));
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     await waitFor('[data-test-owners]');
     assert.dom('[data-test-playground-button]').doesNotExist();
 
@@ -85,11 +85,11 @@ module('Component | CrateSidebar | Playground Button', function (hooks) {
     this.worker.use(http.get('https://play.rust-lang.org/meta/crates', () => error));
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    this.version = (await this.crate.versions).slice()[0];
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    let version = (await crateModel.versions).slice()[0];
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><CrateSidebar @crate={{this.crate}} @version={{this.version}} /></template>);
+    await render(<template><CrateSidebar @crate={{crateModel}} @version={{version}} /></template>);
     assert.dom('[data-test-playground-button]').doesNotExist();
   });
 });

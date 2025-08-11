@@ -17,10 +17,10 @@ module('Component | OwnersList', function (hooks) {
     this.db.crateOwnership.create({ crate, user });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
+    await render(<template><OwnersList @owners={{crateModel.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 1 });
     assert.dom('[data-test-owner-link]').exists({ count: 1 });
@@ -40,10 +40,10 @@ module('Component | OwnersList', function (hooks) {
     this.db.crateOwnership.create({ crate, user });
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
+    await render(<template><OwnersList @owners={{crateModel.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 1 });
     assert.dom('[data-test-owner-link]').exists({ count: 1 });
@@ -65,10 +65,10 @@ module('Component | OwnersList', function (hooks) {
     }
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
+    await render(<template><OwnersList @owners={{crateModel.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 5 });
     assert.dom('[data-test-owner-link]').exists({ count: 5 });
@@ -87,10 +87,10 @@ module('Component | OwnersList', function (hooks) {
     }
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
+    await render(<template><OwnersList @owners={{crateModel.owners}} /></template>);
     assert.dom('[data-test-owners="basic"]').exists();
     assert.dom('ul > li').exists({ count: 6 });
     assert.dom('[data-test-owner-link]').exists({ count: 6 });
@@ -113,10 +113,10 @@ module('Component | OwnersList', function (hooks) {
     }
 
     let store = this.owner.lookup('service:store');
-    this.crate = await store.findRecord('crate', crate.name);
-    await this.crate.loadOwnersTask.perform();
+    let crateModel = await store.findRecord('crate', crate.name);
+    await crateModel.loadOwnersTask.perform();
 
-    await render(<template><OwnersList @owners={{this.crate.owners}} /></template>);
+    await render(<template><OwnersList @owners={{crateModel.owners}} /></template>);
     assert.dom('[data-test-owners="detailed"]').exists();
     assert.dom('ul > li').exists({ count: 5 });
     assert.dom('[data-test-owner-link]').exists({ count: 5 });

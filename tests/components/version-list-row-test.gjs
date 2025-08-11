@@ -18,14 +18,14 @@ module('Component | VersionList::Row', function (hooks) {
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.loadVersionsTask.perform()).slice();
     await crateRecord.loadOwnerUserTask.perform();
-    this.firstVersion = versions.find(it => it.num === '0.4.0-alpha.01');
-    this.secondVersion = versions.find(it => it.num === '0.3.0-alpha.01');
+    let firstVersion = versions.find(it => it.num === '0.4.0-alpha.01');
+    let secondVersion = versions.find(it => it.num === '0.3.0-alpha.01');
 
-    await render(<template><Row @version={{this.firstVersion}} /></template>);
+    await render(<template><Row @version={{firstVersion}} /></template>);
     assert.dom('[data-test-release-track]').hasText('0.4');
     assert.dom('[data-test-release-track-link]').hasText('0.4.0-alpha.01');
 
-    await render(<template><Row @version={{this.secondVersion}} /></template>);
+    await render(<template><Row @version={{secondVersion}} /></template>);
     assert.dom('[data-test-release-track]').hasText('0.3');
     assert.dom('[data-test-release-track-link]').hasText('0.3.0-alpha.01');
   });
@@ -37,10 +37,10 @@ module('Component | VersionList::Row', function (hooks) {
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
-    this.version = (await crateRecord.loadVersionsTask.perform()).slice()[0];
+    let versionModel = (await crateRecord.loadVersionsTask.perform()).slice()[0];
     await crateRecord.loadOwnerUserTask.perform();
 
-    await render(<template><Row @version={{this.version}} /></template>);
+    await render(<template><Row @version={{versionModel}} /></template>);
     assert.dom('[data-test-release-track]').hasText('?');
     assert.dom('[data-test-release-track-link]').hasText(version);
   });
@@ -73,17 +73,17 @@ module('Component | VersionList::Row', function (hooks) {
     let crateRecord = await store.findRecord('crate', crate.name);
     let versions = (await crateRecord.loadVersionsTask.perform()).slice();
     await crateRecord.loadOwnerUserTask.perform();
-    this.firstVersion = versions.find(it => it.num === '0.1.0');
-    this.secondVersion = versions.find(it => it.num === '0.2.0');
-    this.thirdVersion = versions.find(it => it.num === '0.3.0');
+    let firstVersion = versions.find(it => it.num === '0.1.0');
+    let secondVersion = versions.find(it => it.num === '0.2.0');
+    let thirdVersion = versions.find(it => it.num === '0.3.0');
 
-    await render(<template><Row @version={{this.firstVersion}} /></template>);
+    await render(<template><Row @version={{firstVersion}} /></template>);
     assert.dom('[data-test-feature-list]').doesNotExist();
 
-    await render(<template><Row @version={{this.secondVersion}} /></template>);
+    await render(<template><Row @version={{secondVersion}} /></template>);
     assert.dom('[data-test-feature-list]').hasText('1 Feature');
 
-    await render(<template><Row @version={{this.thirdVersion}} /></template>);
+    await render(<template><Row @version={{thirdVersion}} /></template>);
     assert.dom('[data-test-feature-list]').hasText('2 Features');
   });
 });
