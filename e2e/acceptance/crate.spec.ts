@@ -131,7 +131,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.click('[data-test-versions-tab] a');
 
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
   });
 
@@ -140,12 +140,12 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/nanomsg/versions?per_page=10');
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /10 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+10\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
 
     await page.getByTestId('load-more').click();
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
   });
 

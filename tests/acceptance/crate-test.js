@@ -137,7 +137,9 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
     await click('[data-test-versions-tab] a');
 
-    assert.dom('[data-test-page-description]').hasText(/13 of 13\s+nanomsg versions since\s+December \d+th, 2014/);
+    assert
+      .dom('[data-test-page-description]')
+      .hasText(/\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/);
   });
 
   test('navigating to the versions page with custom per_page', async function (assert) {
@@ -145,10 +147,14 @@ module('Acceptance | crate page', function (hooks) {
 
     await visit('/crates/nanomsg/versions?per_page=10');
 
-    assert.dom('[data-test-page-description]').hasText(/10 of 13\s+nanomsg versions since\s+December \d+th, 2014/);
+    assert
+      .dom('[data-test-page-description]')
+      .hasText(/\s+10\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/);
 
     await click('[data-test-id="load-more"]');
-    assert.dom('[data-test-page-description]').hasText(/13 of 13\s+nanomsg versions since\s+December \d+th, 2014/);
+    assert
+      .dom('[data-test-page-description]')
+      .hasText(/\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/);
   });
 
   test('navigating to the reverse dependencies page', async function (assert) {

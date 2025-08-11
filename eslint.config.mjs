@@ -1,6 +1,6 @@
-import babelParser from '@babel/eslint-parser';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import emberEslintParser from 'ember-eslint-parser';
 import ember from 'eslint-plugin-ember';
 import emberConcurrency from 'eslint-plugin-ember-concurrency';
 import importHelpers from 'eslint-plugin-import-helpers';
@@ -66,7 +66,7 @@ export default [
         ...globals.browser,
       },
 
-      parser: babelParser,
+      parser: emberEslintParser,
       ecmaVersion: 2018,
       sourceType: 'module',
 

@@ -24,7 +24,10 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
+      ['Report a crate that violates policies'].concat([
+        `For all other cases:
+              help@crates.io`,
+      ]),
     );
 
     await percySnapshot(assert);
@@ -41,7 +44,10 @@ module('Acceptance | support', function (hooks) {
     const listitem = findAll('[data-test-id="inquire-list"] li');
     assert.deepEqual(
       listitem.map(item => item.textContent.trim()),
-      ['Report a crate that violates policies'].concat(['For all other cases: help@crates.io']),
+      ['Report a crate that violates policies'].concat([
+        `For all other cases:
+              help@crates.io`,
+      ]),
     );
   });
 
