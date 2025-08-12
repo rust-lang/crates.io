@@ -11,7 +11,7 @@ workspace = true
 mock = ["dep:mockall"]
 
 [dependencies]
-anyhow = "=1.0.98"
+anyhow = "=1.0.99"
 async-trait = "=0.1.88"
 crates_io_env_vars = { path = "../crates_io_env_vars" }
 http = "=1.3.1"
