@@ -10,8 +10,10 @@ use std::sync::Arc;
 
 use crate::app::AppState;
 use crate::router::build_axum_router;
+#[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
 
+#[cfg(not(target_env = "msvc"))]
 #[global_allocator]
 static ALLOC: Jemalloc = Jemalloc;
 
