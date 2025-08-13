@@ -118,23 +118,38 @@ async fn shutdown_signal() {
 #[cfg(windows)]
 async fn shutdown_signal() {
     let ctrl_break = async {
-        ctrl_break().expect("failed to install signal handler").recv().await;
+        ctrl_break()
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
     };
 
     let ctrl_c = async {
-        ctrl_c().expect("failed to install signal handler").recv().await;
+        ctrl_c()
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
     };
 
     let ctrl_close = async {
-        ctrl_close().expect("failed to install signal handler").recv().await;
+        ctrl_close()
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
     };
 
     let ctrl_logoff = async {
-        ctrl_logoff().expect("failed to install signal handler").recv().await;
+        ctrl_logoff()
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
     };
 
     let ctrl_shutdown = async {
-        ctrl_shutdown().expect("failed to install signal handler").recv().await;
+        ctrl_shutdown()
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
     };
 
     tokio::select! {
