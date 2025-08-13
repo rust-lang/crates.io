@@ -13,7 +13,10 @@ use reqwest::Client;
 use std::io::Write;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
+#[cfg(unix)]
 use tokio::signal::unix::{SignalKind, signal};
+#[cfg(windows)]
+use tokio::signal::windows::{ctrl_break, ctrl_c, ctrl_close, ctrl_logoff, ctrl_shutdown};
 use tower::Layer;
 
 const CORE_THREADS: usize = 4;
@@ -90,6 +93,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(unix)]
 async fn shutdown_signal() {
     let interrupt = async {
         signal(SignalKind::interrupt())
@@ -108,6 +112,37 @@ async fn shutdown_signal() {
     tokio::select! {
         _ = interrupt => {},
         _ = terminate => {},
+    }
+}
+
+#[cfg(windows)]
+async fn shutdown_signal() {
+    let ctrl_break = async {
+        ctrl_break().expect("failed to install signal handler").recv().await;
+    };
+
+    let ctrl_c = async {
+        ctrl_c().expect("failed to install signal handler").recv().await;
+    };
+
+    let ctrl_close = async {
+        ctrl_close().expect("failed to install signal handler").recv().await;
+    };
+
+    let ctrl_logoff = async {
+        ctrl_logoff().expect("failed to install signal handler").recv().await;
+    };
+
+    let ctrl_shutdown = async {
+        ctrl_shutdown().expect("failed to install signal handler").recv().await;
+    };
+
+    tokio::select! {
+        _ = ctrl_break => {},
+        _ = ctrl_c => {},
+        _ = ctrl_close => {},
+        _ = ctrl_logoff => {},
+        _ = ctrl_shutdown => {},
     }
 }
 
