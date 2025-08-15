@@ -22,7 +22,7 @@ env:
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.18.3
   # renovate: datasource=crate depName=cargo-machete versioning=semver
-  CARGO_MACHETE_VERSION: 0.8.0
+  CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 9.1.5
   # renovate: datasource=npm depName=pnpm
