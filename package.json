@@ -48,7 +48,7 @@
     "date-fns": "4.1.0",
     "highlight.js": "11.11.1",
     "macro-decorators": "0.1.2",
-    "mermaid": "11.9.0",
+    "mermaid": "11.10.0",
     "pretty-bytes": "7.0.0",
     "semver": "7.7.2"
   },
