@@ -246,8 +246,8 @@ importers:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.33.0(jiti@1.21.7))
       eslint-plugin-ember:
-        specifier: 12.7.1
-        version: 12.7.1(@babel/core@7.28.0)(eslint@9.33.0(jiti@1.21.7))
+        specifier: 12.7.3
+        version: 12.7.3(@babel/core@7.28.0)(eslint@9.33.0(jiti@1.21.7))
       eslint-plugin-ember-concurrency:
         specifier: 0.5.1
         version: 0.5.1(eslint@9.33.0(jiti@1.21.7))
@@ -4534,8 +4534,8 @@ packages:
     peerDependencies:
       eslint: 6.* || 7.*
 
-  eslint-plugin-ember@12.7.1:
-    resolution: {integrity: sha512-Z83EqJ8emWRt2kFpOAZHAgrsAuhDMVF6G3Ws5o7iaIJPKsiwzUW1MwL/uvXf8SMPP0XRvrLJWNZyxYludkGkfg==}
+  eslint-plugin-ember@12.7.3:
+    resolution: {integrity: sha512-yZeq0g6XPFXPdz9eTmJ0LUj8xPLDTSYG9Ne2wT1z1aaDWtnREN1vyxGkcQ6veeH4hYIZxbm37OFth2aWFNX5lA==}
     engines: {node: 18.* || 20.* || >= 21}
     peerDependencies:
       '@typescript-eslint/parser': '*'
@@ -14140,7 +14140,7 @@ snapshots:
     dependencies:
       eslint: 9.33.0(jiti@1.21.7)
 
-  eslint-plugin-ember@12.7.1(@babel/core@7.28.0)(eslint@9.33.0(jiti@1.21.7)):
+  eslint-plugin-ember@12.7.3(@babel/core@7.28.0)(eslint@9.33.0(jiti@1.21.7)):
     dependencies:
       '@ember-data/rfc395-data': 0.0.4
       css-tree: 3.1.0
