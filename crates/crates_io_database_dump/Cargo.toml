@@ -8,7 +8,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.98"
+anyhow = "=1.0.99"
 chrono = { version = "=0.4.41", default-features = false, features = ["clock", "serde"] }
 flate2 = "=1.1.2"
 minijinja = "=2.11.0"
