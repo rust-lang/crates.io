@@ -3,7 +3,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::github_configs::json;
 use crate::email::EmailMessage;
-use crate::util::errors::{AppResult, bad_request, forbidden};
+use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
@@ -17,8 +17,6 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use minijinja::context;
-use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 use tracing::warn;
 
 #[cfg(test)]
@@ -77,8 +75,15 @@ pub async fn create_trustpub_github_config(
     // Lookup `repository_owner_id` via GitHub API
 
     let owner = &json_config.repository_owner;
-    let gh_auth = &auth_user.gh_access_token;
-    let gh_auth = AccessToken::new(gh_auth.expose_secret().to_string());
+
+    let encryption = &state.config.gh_token_encryption;
+    let gh_auth = &auth_user.gh_encrypted_token;
+    let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
+        let login = &auth_user.gh_login;
+        warn!("Failed to decrypt GitHub token for user {login}: {err}");
+        server_error("Internal server error")
+    })?;
+
     let github_user = match state.github.get_user(owner, &gh_auth).await {
         Ok(user) => user,
         Err(GitHubError::NotFound(_)) => Err(bad_request("Unknown GitHub user or organization"))?,
