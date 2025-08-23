@@ -11,7 +11,7 @@ workspace = true
 builder = ["dep:flate2", "dep:tar"]
 
 [dependencies]
-astral-tokio-tar = "=0.5.2"
+astral-tokio-tar = "=0.5.3"
 cargo-manifest = "=0.19.1"
 flate2 = { version = "=1.1.2", optional = true }
 serde = { version = "=1.0.219", features = ["derive"] }
