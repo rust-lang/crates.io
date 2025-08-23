@@ -159,4 +159,4 @@ quoted_printable = "=0.5.1"
 regex = "=1.11.1"
 sentry = { version = "=0.42.0", features = ["test"] }
 tokio = "=1.47.1"
-zip = { version = "=4.3.0", default-features = false, features = ["deflate"] }
+zip = { version = "=4.5.0", default-features = false, features = ["deflate"] }
