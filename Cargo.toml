@@ -124,7 +124,7 @@ sha2 = "=0.10.9"
 spdx = "=0.10.9"
 tar = "=0.4.44"
 tempfile = "=3.20.0"
-thiserror = "=2.0.12"
+thiserror = "=2.0.16"
 tokio = { version = "=1.47.1", features = ["net", "signal", "io-std", "io-util", "rt-multi-thread", "macros", "process"]}
 tokio-postgres = "=0.7.13"
 tokio-util = "=0.7.16"
