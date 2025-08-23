@@ -134,7 +134,7 @@ tower-http = { version = "=0.6.6", features = ["add-extension", "fs", "catch-pan
 tracing = "=0.1.41"
 tracing-subscriber = { version = "=0.3.19", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
-url = "=2.5.4"
+url = "=2.5.7"
 utoipa = { version = "=5.4.0", features = ["chrono"] }
 utoipa-axum = "=0.2.0"
 
