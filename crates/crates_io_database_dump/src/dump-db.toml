@@ -223,7 +223,6 @@ id in (
 )"""
 [users.columns]
 id = "public"
-gh_access_token = "private"
 gh_login = "public"
 name = "public"
 gh_avatar = "public"
@@ -234,7 +233,6 @@ is_admin = "private"
 publish_notifications = "private"
 gh_encrypted_token = "private"
 [users.column_defaults]
-gh_access_token = "''"
 gh_encrypted_token = "''"
 
 [version_downloads]
