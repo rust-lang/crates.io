@@ -7,7 +7,10 @@ export default class ScrollPositionModifier extends Modifier {
   @service notifications;
   @service mermaid;
 
-  modify(element) {
+  modify(element, [input]) {
+    // Consume the input argument to ensure the modifier reruns when it changes
+    void input;
+
     // If the `mermaid` library is loaded (which should have happened in the controller)
     let mermaid = this.mermaid.loadTask.lastSuccessful?.value;
     if (mermaid) {
