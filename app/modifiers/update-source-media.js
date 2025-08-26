@@ -6,7 +6,10 @@ import { modifier } from 'ember-modifier';
  *
  * The code was adapted from https://larsmagnus.co/blog/how-to-make-images-react-to-light-and-dark-mode.
  */
-export default modifier((element, [colorPreference]) => {
+export default modifier((element, [colorPreference, input]) => {
+  // Consume the input argument to ensure the modifier reruns when it changes
+  void input;
+
   let pictures = element.querySelectorAll('picture');
 
   pictures.forEach(picture => {

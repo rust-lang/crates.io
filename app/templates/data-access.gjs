@@ -85,9 +85,11 @@ import TextContent from 'crates-io/components/text-content';
 
     <p>
       crates.io provides an API that is a superset of the functionality required by the
-      <a href='https://doc.rust-lang.org/cargo/reference/registry-web-api.html'>Cargo Web API</a>. Should you be unable
-      to use one of the previous options, you are welcome to use the crates.io API provided you abide by the following
-      limits:
+      <a href='https://doc.rust-lang.org/cargo/reference/registry-web-api.html'>Cargo Web API</a>. An
+      <a href='https://blog.rust-lang.org/2025/02/05/crates-io-development-update/#openapi-description'>experimental</a>
+      OpenAPI description is available at
+      <a href='https://crates.io/api/openapi.json'>https://crates.io/api/openapi.json</a>. Should you be unable to use
+      one of the previous options, you are welcome to use the crates.io API provided you abide by the following limits:
     </p>
 
     <ol>

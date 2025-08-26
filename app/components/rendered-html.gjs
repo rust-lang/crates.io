@@ -15,9 +15,9 @@ export default class extends Component {
 }}
     <TextContent
       ...attributes
-      {{highlightSyntax selector='pre > code:not(.language-mermaid)'}}
-      {{updateSourceMedia this.colorScheme.resolvedScheme}}
-      {{renderMermaids}}
+      {{highlightSyntax @html selector='pre > code:not(.language-mermaid)'}}
+      {{updateSourceMedia @html this.colorScheme.resolvedScheme}}
+      {{renderMermaids @html}}
     >
       {{htmlSafe @html}}
     </TextContent>

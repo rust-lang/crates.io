@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - master
-      - binstall
 
   pull_request:
 
@@ -17,20 +16,18 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # renovate: datasource=github-releases depName=cargo-bins/cargo-binstall
-  BINSTALL_VERSION: 1.14.3
   # renovate: datasource=crate depName=cargo-deny versioning=semver
-  CARGO_DENY_VERSION: 0.18.3
+  CARGO_DENY_VERSION: 0.18.4
   # renovate: datasource=crate depName=cargo-machete versioning=semver
-  CARGO_MACHETE_VERSION: 0.8.0
+  CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 9.1.5
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 10.14.0
+  PNPM_VERSION: 10.15.0
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
   TYPST_VERSION: 0.13.1
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.11.0
+  ZIZMOR_VERSION: 1.12.1
 
 jobs:
   changed-files:
@@ -38,7 +35,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
           # This is needed to get the commit history for the changed-files action
@@ -116,7 +113,7 @@ jobs:
       RUSTDOCFLAGS: "-D warnings"
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -138,7 +135,7 @@ jobs:
     if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -146,12 +143,10 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/v${BINSTALL_VERSION}/install-from-binstall-release.sh | bash
-
-      - run: cargo binstall cargo-deny@${CARGO_DENY_VERSION}
+      - run: cargo install cargo-deny --vers ${CARGO_DENY_VERSION}
       - run: cargo deny check
 
-      - run: cargo binstall cargo-machete@${CARGO_MACHETE_VERSION}
+      - run: cargo install cargo-machete --vers ${CARGO_MACHETE_VERSION}
       - run: cargo machete
 
   backend-test:
@@ -167,7 +162,7 @@ jobs:
       MALLOC_CONF: "background_thread:true,abort_conf:true,abort:true,junk:true"
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -215,7 +210,7 @@ jobs:
     if: needs.changed-files.outputs.non-rust == 'true'
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -251,7 +246,7 @@ jobs:
       PERCY_PARALLEL_TOTAL: 2
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -279,7 +274,7 @@ jobs:
     if: needs.changed-files.outputs.non-rust == 'true'
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -313,7 +308,7 @@ jobs:
       PERCY_PARALLEL_TOTAL: 2
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
@@ -348,16 +343,16 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc # v6.4.3
+      - uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b # v6.6.0
       - run: uvx zizmor@${ZIZMOR_VERSION} --format=sarif . > results.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.7
+      - uses: github/codeql-action/upload-sarif@3c3833e0f8c1c83d449a7478aa59c036a9165498 # v3.29.11
         with:
           sarif_file: results.sarif
           category: zizmor

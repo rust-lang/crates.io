@@ -76,12 +76,25 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
       <code>v1.0.0</code>):
     </p>
 
-    {{! template-lint-disable no-whitespace-for-layout  }}
-    <pre><code class='language-yaml' {{highlightSyntax}}>name: Publish to crates.io on: push: tags: ['v*'] # Triggers
-        when pushing tags starting with 'v' jobs: publish: runs-on: ubuntu-latest environment: release # Optional: for
-        enhanced security permissions: id-token: write # Required for OIDC token exchange steps: - uses:
-        actions/checkout@v4 - uses: rust-lang/crates-io-auth-action@v1 id: auth - run: cargo publish env:
-        CARGO_REGISTRY_TOKEN: $\{\{ steps.auth.outputs.token \}\}</code></pre>
+    {{! template-lint-disable no-whitespace-for-layout }}
+    {{! prettier-ignore }}
+    <pre><code class='language-yaml' {{highlightSyntax}}>name: Publish to crates.io
+on:
+  push:
+    tags: ['v*']  # Triggers when pushing tags starting with 'v'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release  # Optional: for enhanced security
+    permissions:
+      id-token: write     # Required for OIDC token exchange
+    steps:
+    - uses: actions/checkout@v5
+    - uses: rust-lang/crates-io-auth-action@v1
+      id: auth
+    - run: cargo publish
+      env:
+        CARGO_REGISTRY_TOKEN: $\{{ steps.auth.outputs.token }}</code></pre>
 
     <p>
       <strong>Optional:</strong>

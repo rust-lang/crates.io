@@ -72,7 +72,7 @@ pub async fn delete_crate(
     // Check that the user is an owner of the crate (team owners are not allowed to delete crates)
     let user = auth.user();
     let owners = krate.owners(&mut conn).await?;
-    match Rights::get(user, &*app.github, &owners).await? {
+    match Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? {
         Rights::Full => {}
         Rights::Publish => {
             let msg = "team members don't have permission to delete crates";

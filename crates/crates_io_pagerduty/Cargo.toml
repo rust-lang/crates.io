@@ -8,11 +8,11 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-anyhow = "=1.0.98"
-reqwest = { version = "=0.12.22", features = ["gzip", "json"] }
+anyhow = "=1.0.99"
+reqwest = { version = "=0.12.23", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.219", features = ["derive"] }
 
 [dev-dependencies]
-clap = { version = "=4.5.43", features = ["derive", "env", "unicode", "wrap_help"] }
+clap = { version = "=4.5.45", features = ["derive", "env", "unicode", "wrap_help"] }
 tokio = { version = "=1.47.1", features = ["macros", "rt-multi-thread"] }
