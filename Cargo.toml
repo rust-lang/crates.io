@@ -55,7 +55,7 @@ async-trait = "=0.1.89"
 aws-credential-types = { version = "=1.2.5", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.1380.0"
 aws-sdk-cloudfront = "=1.92.0"
-aws-sdk-sqs = "=1.82.0"
+aws-sdk-sqs = "=1.82.1"
 axum = { version = "=0.8.4", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.11.0", features = ["erased-json", "query", "typed-header"] }
 base64 = "=0.22.1"
