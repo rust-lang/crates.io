@@ -42,7 +42,10 @@ hljs.registerAliases('markup', { languageName: 'xml' });
 // common aliases
 hljs.registerAliases('rs', { languageName: 'rust' });
 
-export default modifier((element, _, { selector }) => {
+export default modifier((element, [input], { selector }) => {
+  // Consume the input argument to ensure the modifier reruns when it changes
+  void input;
+
   let elements = selector ? element.querySelectorAll(selector) : [element];
 
   for (let element of elements) {
