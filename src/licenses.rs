@@ -1,10 +1,10 @@
 use spdx::{Expression, ParseError};
 
 const PARSE_MODE: spdx::ParseMode = spdx::ParseMode {
-    allow_lower_case_operators: false,
     allow_slash_as_or_operator: true,
     allow_imprecise_license_names: false,
     allow_postfix_plus_on_gpl: true,
+    allow_deprecated: true,
 };
 
 pub fn parse_license_expr(s: &str) -> Result<Expression, ParseError> {
