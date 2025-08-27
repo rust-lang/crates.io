@@ -5,6 +5,13 @@ import Component from '@glimmer/component';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
 
 export default class Footer extends Component {
+  @service pristineQuery;
+
+  get pristineSupportQuery() {
+    let params = this.pristineQuery.paramsFor('support');
+    return params;
+  }
+
   <template>
     <footer class='footer'>
       <div class='content width-limit'>
@@ -50,10 +57,4 @@ export default class Footer extends Component {
       </div>
     </footer>
   </template>
-  @service pristineQuery;
-
-  get pristineSupportQuery() {
-    let params = this.pristineQuery.paramsFor('support');
-    return params;
-  }
 }

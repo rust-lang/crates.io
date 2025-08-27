@@ -5,6 +5,11 @@ import Component from '@glimmer/component';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
 
 export default class OwnedCrateRow extends Component {
+  @action setEmailNotifications(event) {
+    let { checked } = event.target;
+    this.args.ownedCrate.set('email_notifications', checked);
+  }
+
   <template>
     <label
       data-test-owned-crate={{@ownedCrate.name}}
@@ -29,8 +34,4 @@ export default class OwnedCrateRow extends Component {
       />
     </label>
   </template>
-  @action setEmailNotifications(event) {
-    let { checked } = event.target;
-    this.args.ownedCrate.set('email_notifications', checked);
-  }
 }

@@ -11,6 +11,13 @@ import DropdownMenu from 'crates-io/components/dropdown/menu';
 import DropdownTrigger from 'crates-io/components/dropdown/trigger';
 
 export default class Dropdown extends Component {
+  @tracked dropdownExpanded = false;
+
+  @action
+  toggleDropdown() {
+    this.dropdownExpanded = !this.dropdownExpanded;
+  }
+
   <template>
     <div
       ...attributes
@@ -27,10 +34,4 @@ export default class Dropdown extends Component {
       }}
     </div>
   </template>
-  @tracked dropdownExpanded = false;
-
-  @action
-  toggleDropdown() {
-    this.dropdownExpanded = !this.dropdownExpanded;
-  }
 }

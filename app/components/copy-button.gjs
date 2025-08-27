@@ -6,11 +6,6 @@ import { restartableTask } from 'ember-concurrency';
 import perform from 'ember-concurrency/helpers/perform';
 
 export default class CrateTomlCopy extends Component {
-  <template>
-    <button type='button' ...attributes {{on 'click' (perform this.copyTask)}}>
-      {{yield}}
-    </button>
-  </template>
   @service notifications;
 
   copyTask = restartableTask(async () => {
@@ -22,4 +17,10 @@ export default class CrateTomlCopy extends Component {
       this.notifications.error('Copy to clipboard failed!');
     }
   });
+
+  <template>
+    <button type='button' ...attributes {{on 'click' (perform this.copyTask)}}>
+      {{yield}}
+    </button>
+  </template>
 }

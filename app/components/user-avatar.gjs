@@ -1,17 +1,6 @@
 import Component from '@glimmer/component';
 
 export default class UserAvatar extends Component {
-  <template>
-    <img
-      src={{this.src}}
-      width={{this.size}}
-      height={{this.size}}
-      alt={{this.alt}}
-      title={{this.title}}
-      decoding='async'
-      ...attributes
-    />
-  </template>
   get size() {
     if (this.args.size === 'medium') {
       return 85;
@@ -43,4 +32,16 @@ export default class UserAvatar extends Component {
   get src() {
     return `${this.args.user.avatar}&s=${this.size * 2}`;
   }
+
+  <template>
+    <img
+      src={{this.src}}
+      width={{this.size}}
+      height={{this.size}}
+      alt={{this.alt}}
+      title={{this.title}}
+      decoding='async'
+      ...attributes
+    />
+  </template>
 }

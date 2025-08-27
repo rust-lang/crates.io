@@ -14,6 +14,27 @@ import PageHeader from 'crates-io/components/page-header';
 import Tooltip from 'crates-io/components/tooltip';
 
 export default class CrateHeader extends Component {
+  @service session;
+
+  @alias('loadKeywordsTask.last.value') keywords;
+
+  constructor() {
+    super(...arguments);
+
+    this.loadKeywordsTask.perform().catch(() => {
+      // ignore all errors and just don't display keywords if the request fails
+    });
+  }
+
+  get isOwner() {
+    let userId = this.session.currentUser?.id;
+    return this.args.crate?.hasOwnerUser(userId) ?? false;
+  }
+
+  loadKeywordsTask = task(async () => {
+    return (await this.args.crate?.keywords) ?? [];
+  });
+
   <template>
     <PageHeader class='header' data-test-heading>
       <h1 class='heading'>
@@ -92,24 +113,4 @@ export default class CrateHeader extends Component {
       {{/if}}
     </NavTabs>
   </template>
-  @service session;
-
-  @alias('loadKeywordsTask.last.value') keywords;
-
-  constructor() {
-    super(...arguments);
-
-    this.loadKeywordsTask.perform().catch(() => {
-      // ignore all errors and just don't display keywords if the request fails
-    });
-  }
-
-  get isOwner() {
-    let userId = this.session.currentUser?.id;
-    return this.args.crate?.hasOwnerUser(userId) ?? false;
-  }
-
-  loadKeywordsTask = task(async () => {
-    return (await this.args.crate?.keywords) ?? [];
-  });
 }

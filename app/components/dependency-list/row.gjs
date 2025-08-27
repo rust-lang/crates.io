@@ -15,6 +15,44 @@ import Tooltip from 'crates-io/components/tooltip';
 import formatReq from 'crates-io/helpers/format-req';
 
 export default class VersionRow extends Component {
+  @service store;
+
+  @tracked focused = false;
+
+  @action setFocused(value) {
+    this.focused = value;
+  }
+
+  constructor() {
+    super(...arguments);
+
+    this.loadCrateTask.perform().catch(() => {
+      // ignore all errors and just don't display a description if the request fails
+    });
+  }
+
+  get description() {
+    return this.loadCrateTask.lastSuccessful?.value?.description;
+  }
+
+  get featuresDescription() {
+    let { default_features: defaultFeatures, features } = this.args.dependency;
+    let numFeatures = features.length;
+
+    if (numFeatures !== 0) {
+      return defaultFeatures
+        ? `${numFeatures} extra feature${numFeatures > 1 ? 's' : ''}`
+        : `only ${numFeatures} feature${numFeatures > 1 ? 's' : ''}`;
+    } else if (!defaultFeatures) {
+      return 'no default features';
+    }
+  }
+
+  loadCrateTask = task(async () => {
+    let { dependency } = this.args;
+    return await this.store.findRecord('crate', dependency.crate_id);
+  });
+
   <template>
     <div
       data-test-dependency={{@dependency.crate_id}}
@@ -82,41 +120,4 @@ export default class VersionRow extends Component {
       </div>
     </div>
   </template>
-  @service store;
-
-  @tracked focused = false;
-
-  @action setFocused(value) {
-    this.focused = value;
-  }
-
-  constructor() {
-    super(...arguments);
-
-    this.loadCrateTask.perform().catch(() => {
-      // ignore all errors and just don't display a description if the request fails
-    });
-  }
-
-  get description() {
-    return this.loadCrateTask.lastSuccessful?.value?.description;
-  }
-
-  get featuresDescription() {
-    let { default_features: defaultFeatures, features } = this.args.dependency;
-    let numFeatures = features.length;
-
-    if (numFeatures !== 0) {
-      return defaultFeatures
-        ? `${numFeatures} extra feature${numFeatures > 1 ? 's' : ''}`
-        : `only ${numFeatures} feature${numFeatures > 1 ? 's' : ''}`;
-    } else if (!defaultFeatures) {
-      return 'no default features';
-    }
-  }
-
-  loadCrateTask = task(async () => {
-    let { dependency } = this.args;
-    return await this.store.findRecord('crate', dependency.crate_id);
-  });
 }

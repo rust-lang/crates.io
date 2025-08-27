@@ -21,29 +21,6 @@ const BG_COLORS = ['#d3b5bc', '#eabdc0', '#f3d0ca', '#fce4d9', '#deedf5', '#c9de
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
 export default class DownloadGraph extends Component {
-  <template>
-    {{! template-lint-disable no-at-ember-render-modifiers }}
-    <div data-test-download-graph ...attributes class='wrapper' {{didInsert this.loadChartJs}}>
-      {{#if this.chartjs.loadTask.isRunning}}
-        <LoadingSpinner class='spinner' data-test-spinner />
-      {{else if this.chartjs.loadTask.lastSuccessful.value}}
-        <canvas
-          {{didInsert this.createChart}}
-          {{didUpdate this.updateChart @data}}
-          {{didUpdate this.updateColorScheme this.colorScheme.resolvedScheme}}
-          {{didUpdate this.updateStacked @stacked}}
-          {{willDestroy this.destroyChart}}
-        />
-      {{else}}
-        <div class='error' data-test-error>
-          <p>Sorry, there was a problem loading the graphing code.</p>
-          <button type='button' data-test-reload {{on 'click' this.reloadPage}}>
-            Try again
-          </button>
-        </div>
-      {{/if}}
-    </div>
-  </template>
   @service chartjs;
   @service colorScheme;
 
@@ -146,6 +123,30 @@ export default class DownloadGraph extends Component {
   get data() {
     return toChartData(this.args.data, this.args.versions);
   }
+
+  <template>
+    {{! template-lint-disable no-at-ember-render-modifiers }}
+    <div data-test-download-graph ...attributes class='wrapper' {{didInsert this.loadChartJs}}>
+      {{#if this.chartjs.loadTask.isRunning}}
+        <LoadingSpinner class='spinner' data-test-spinner />
+      {{else if this.chartjs.loadTask.lastSuccessful.value}}
+        <canvas
+          {{didInsert this.createChart}}
+          {{didUpdate this.updateChart @data}}
+          {{didUpdate this.updateColorScheme this.colorScheme.resolvedScheme}}
+          {{didUpdate this.updateStacked @stacked}}
+          {{willDestroy this.destroyChart}}
+        />
+      {{else}}
+        <div class='error' data-test-error>
+          <p>Sorry, there was a problem loading the graphing code.</p>
+          <button type='button' data-test-reload {{on 'click' this.reloadPage}}>
+            Try again
+          </button>
+        </div>
+      {{/if}}
+    </div>
+  </template>
 }
 
 export function toChartData(data) {

@@ -20,6 +20,19 @@ import dateFormat from 'crates-io/helpers/date-format';
 const SUDO_SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
 
 export default class Header extends Component {
+  /** @type {import("../services/session").default} */
+  @service session;
+
+  @action
+  enableSudo() {
+    this.session.setSudo(SUDO_SESSION_DURATION_MS);
+  }
+
+  @action
+  disableSudo() {
+    this.session.setSudo(0);
+  }
+
   <template>
     <header class='header {{if @hero "hero"}}'>
       <div class='header-inner width-limit'>
@@ -162,16 +175,4 @@ export default class Header extends Component {
       </div>
     </header>
   </template>
-  /** @type {import("../services/session").default} */
-  @service session;
-
-  @action
-  enableSudo() {
-    this.session.setSudo(SUDO_SESSION_DURATION_MS);
-  }
-
-  @action
-  disableSudo() {
-    this.session.setSudo(0);
-  }
 }

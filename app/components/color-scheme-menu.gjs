@@ -10,6 +10,19 @@ import eq from 'ember-truth-helpers/helpers/eq';
 import Dropdown from 'crates-io/components/dropdown';
 
 export default class Header extends Component {
+  /** @type {import("../services/dark-mode").default} */
+  @service colorScheme;
+
+  colorSchemes = [
+    { mode: 'light', svg: 'sun' },
+    { mode: 'dark', svg: 'moon' },
+    { mode: 'system', svg: 'color-mode' },
+  ];
+
+  get icon() {
+    return this.colorSchemes.find(({ mode }) => mode === this.colorScheme.scheme)?.svg;
+  }
+
   <template>
     <Dropdown data-test-dark-mode-menu ...attributes class='dropdown' as |dd|>
       <dd.Trigger @hideArrow={{true}} class='trigger' data-test-dark-mode-toggle>
@@ -33,16 +46,4 @@ export default class Header extends Component {
       </dd.Menu>
     </Dropdown>
   </template>
-  /** @type {import("../services/dark-mode").default} */
-  @service colorScheme;
-
-  colorSchemes = [
-    { mode: 'light', svg: 'sun' },
-    { mode: 'dark', svg: 'moon' },
-    { mode: 'system', svg: 'color-mode' },
-  ];
-
-  get icon() {
-    return this.colorSchemes.find(({ mode }) => mode === this.colorScheme.scheme)?.svg;
-  }
 }

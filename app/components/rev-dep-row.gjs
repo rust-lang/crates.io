@@ -15,6 +15,31 @@ import Placeholder from 'crates-io/components/placeholder';
 import formatNum from 'crates-io/helpers/format-num';
 
 export default class VersionRow extends Component {
+  @service store;
+
+  @tracked focused = false;
+
+  @action setFocused(value) {
+    this.focused = value;
+  }
+
+  constructor() {
+    super(...arguments);
+
+    this.loadCrateTask.perform().catch(() => {
+      // ignore all errors and just don't display a description if the request fails
+    });
+  }
+
+  get description() {
+    return this.loadCrateTask.lastSuccessful?.value?.description;
+  }
+
+  loadCrateTask = task(async () => {
+    let { dependency } = this.args;
+    return await this.store.findRecord('crate', dependency.version.crateName);
+  });
+
   <template>
     <div ...attributes class='row {{if this.focused "focused"}}'>
       <div class='top'>
@@ -51,28 +76,4 @@ export default class VersionRow extends Component {
       {{/if}}
     </div>
   </template>
-  @service store;
-
-  @tracked focused = false;
-
-  @action setFocused(value) {
-    this.focused = value;
-  }
-
-  constructor() {
-    super(...arguments);
-
-    this.loadCrateTask.perform().catch(() => {
-      // ignore all errors and just don't display a description if the request fails
-    });
-  }
-
-  get description() {
-    return this.loadCrateTask.lastSuccessful?.value?.description;
-  }
-
-  loadCrateTask = task(async () => {
-    let { dependency } = this.args;
-    return await this.store.findRecord('crate', dependency.version.crateName);
-  });
 }

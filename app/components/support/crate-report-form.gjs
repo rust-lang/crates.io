@@ -34,6 +34,80 @@ const REASONS = [
 ];
 
 export default class CrateReportForm extends Component {
+  @service store;
+
+  @tracked crate = '';
+  @tracked selectedReasons = [];
+  @tracked detail = '';
+  @tracked crateInvalid = false;
+  @tracked reasonsInvalid = false;
+  @tracked detailInvalid = false;
+
+  reasons = REASONS;
+
+  constructor() {
+    super(...arguments);
+    this.crate = this.args.crate;
+  }
+
+  validate() {
+    this.crateInvalid = !this.crate || !this.crate.trim();
+    this.reasonsInvalid = this.selectedReasons.length === 0;
+    this.detailInvalid = this.selectedReasons.includes('other') && !this.detail?.trim();
+    return !this.crateInvalid && !this.reasonsInvalid && !this.detailInvalid;
+  }
+
+  @action resetCrateValidation() {
+    this.crateInvalid = false;
+  }
+
+  @action resetDetailValidation() {
+    this.detailInvalid = false;
+  }
+
+  @action isReasonSelected(reason) {
+    return this.selectedReasons.includes(reason);
+  }
+
+  @action toggleReason(reason) {
+    this.selectedReasons = this.selectedReasons.includes(reason)
+      ? this.selectedReasons.filter(it => it !== reason)
+      : [...this.selectedReasons, reason];
+    this.reasonsInvalid = false;
+  }
+
+  @action
+  submit() {
+    if (!this.validate()) {
+      return;
+    }
+
+    let mailto = this.composeMail();
+    window.open(mailto, '_self');
+  }
+
+  composeMail() {
+    let crate = this.crate;
+    let reasons = this.reasons
+      .map(({ reason, description }) => {
+        let selected = this.isReasonSelected(reason);
+        return `${selected ? '- [x]' : '- [ ]'} ${description}`;
+      })
+      .join('\n');
+    let body = `I'm reporting the https://crates.io/crates/${crate} crate because:
+
+${reasons}
+
+Additional details:
+
+${this.detail}
+`;
+    let subject = `The "${crate}" crate`;
+    let address = 'help@crates.io';
+    let mailto = `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return mailto;
+  }
+
   <template>
     <form
       data-testid='crate-report-form'
@@ -122,77 +196,4 @@ export default class CrateReportForm extends Component {
       </div>
     </form>
   </template>
-  @service store;
-
-  @tracked crate = '';
-  @tracked selectedReasons = [];
-  @tracked detail = '';
-  @tracked crateInvalid = false;
-  @tracked reasonsInvalid = false;
-  @tracked detailInvalid = false;
-
-  reasons = REASONS;
-
-  constructor() {
-    super(...arguments);
-    this.crate = this.args.crate;
-  }
-
-  validate() {
-    this.crateInvalid = !this.crate || !this.crate.trim();
-    this.reasonsInvalid = this.selectedReasons.length === 0;
-    this.detailInvalid = this.selectedReasons.includes('other') && !this.detail?.trim();
-    return !this.crateInvalid && !this.reasonsInvalid && !this.detailInvalid;
-  }
-
-  @action resetCrateValidation() {
-    this.crateInvalid = false;
-  }
-
-  @action resetDetailValidation() {
-    this.detailInvalid = false;
-  }
-
-  @action isReasonSelected(reason) {
-    return this.selectedReasons.includes(reason);
-  }
-
-  @action toggleReason(reason) {
-    this.selectedReasons = this.selectedReasons.includes(reason)
-      ? this.selectedReasons.filter(it => it !== reason)
-      : [...this.selectedReasons, reason];
-    this.reasonsInvalid = false;
-  }
-
-  @action
-  submit() {
-    if (!this.validate()) {
-      return;
-    }
-
-    let mailto = this.composeMail();
-    window.open(mailto, '_self');
-  }
-
-  composeMail() {
-    let crate = this.crate;
-    let reasons = this.reasons
-      .map(({ reason, description }) => {
-        let selected = this.isReasonSelected(reason);
-        return `${selected ? '- [x]' : '- [ ]'} ${description}`;
-      })
-      .join('\n');
-    let body = `I'm reporting the https://crates.io/crates/${crate} crate because:
-
-${reasons}
-
-Additional details:
-
-${this.detail}
-`;
-    let subject = `The "${crate}" crate`;
-    let address = 'help@crates.io';
-    let mailto = `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    return mailto;
-  }
 }

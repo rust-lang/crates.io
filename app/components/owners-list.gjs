@@ -7,6 +7,10 @@ import or from 'ember-truth-helpers/helpers/or';
 import UserAvatar from 'crates-io/components/user-avatar';
 
 export default class VersionRow extends Component {
+  get showDetailedList() {
+    return this.args.owners.length <= 5;
+  }
+
   <template>
     <ul
       role='list'
@@ -27,7 +31,4 @@ export default class VersionRow extends Component {
       {{/each}}
     </ul>
   </template>
-  get showDetailedList() {
-    return this.args.owners.length <= 5;
-  }
 }

@@ -12,6 +12,23 @@ import eq from 'ember-truth-helpers/helpers/eq';
 import focus from 'crates-io/helpers/focus';
 
 export default class Header extends Component {
+  @service header;
+  @service router;
+
+  @action updateSearchValue(event) {
+    let { value } = event.target;
+    this.header.searchValue = value;
+  }
+
+  @action search() {
+    this.router.transitionTo('search', {
+      queryParams: {
+        q: this.header.searchValue,
+        page: 1,
+      },
+    });
+  }
+
   <template>
     <form
       action='/search'
@@ -71,20 +88,4 @@ export default class Header extends Component {
       {{onKey '/' (focus '#cargo-desktop-search')}}
     </form>
   </template>
-  @service header;
-  @service router;
-
-  @action updateSearchValue(event) {
-    let { value } = event.target;
-    this.header.searchValue = value;
-  }
-
-  @action search() {
-    this.router.transitionTo('search', {
-      queryParams: {
-        q: this.header.searchValue,
-        page: 1,
-      },
-    });
-  }
 }

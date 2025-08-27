@@ -31,6 +31,19 @@ import Component from '@glimmer/component';
  */
 import Tooltip from 'crates-io/components/tooltip';
 export default class PrivilegedAction extends Component {
+  /** @type {import("../services/session").default} */
+  @service session;
+
+  /** @return {boolean} */
+  get isPrivileged() {
+    return this.session.isSudoEnabled || this.args.userAuthorised;
+  }
+
+  /** @return {boolean} */
+  get canBePrivileged() {
+    return !this.args.userAuthorised && this.session.currentUser?.is_admin && !this.session.isSudoEnabled;
+  }
+
   <template>
     {{#if this.isPrivileged}}
       <div ...attributes>
@@ -59,16 +72,4 @@ export default class PrivilegedAction extends Component {
       </div>
     {{/if}}
   </template>
-  /** @type {import("../services/session").default} */
-  @service session;
-
-  /** @return {boolean} */
-  get isPrivileged() {
-    return this.session.isSudoEnabled || this.args.userAuthorised;
-  }
-
-  /** @return {boolean} */
-  get canBePrivileged() {
-    return !this.args.userAuthorised && this.session.currentUser?.is_admin && !this.session.isSudoEnabled;
-  }
 }

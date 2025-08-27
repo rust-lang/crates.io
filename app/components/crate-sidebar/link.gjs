@@ -4,6 +4,19 @@ import scopedClass from 'ember-scoped-css/helpers/scoped-class';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
 
 export default class CrateSidebarLink extends Component {
+  get text() {
+    let { url } = this.args;
+    return simplifyUrl(url);
+  }
+
+  get isDocsRs() {
+    return this.text.startsWith('docs.rs/');
+  }
+
+  get isGitHub() {
+    return this.text.startsWith('github.com/');
+  }
+
   <template>
     <div ...attributes>
       <h2 class='title' data-test-title>{{@title}}</h2>
@@ -22,18 +35,6 @@ export default class CrateSidebarLink extends Component {
       </div>
     </div>
   </template>
-  get text() {
-    let { url } = this.args;
-    return simplifyUrl(url);
-  }
-
-  get isDocsRs() {
-    return this.text.startsWith('docs.rs/');
-  }
-
-  get isGitHub() {
-    return this.text.startsWith('github.com/');
-  }
 }
 
 export function simplifyUrl(url) {
