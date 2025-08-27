@@ -8,6 +8,7 @@ import PageHeader from 'crates-io/components/page-header';
 import Pagination from 'crates-io/components/pagination';
 import ResultsCount from 'crates-io/components/results-count';
 import SortDropdown from 'crates-io/components/sort-dropdown';
+
 <template>
   {{pageTitle @controller.pageTitle}}
 

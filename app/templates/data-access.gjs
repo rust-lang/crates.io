@@ -1,5 +1,6 @@
 import PageHeader from 'crates-io/components/page-header';
 import TextContent from 'crates-io/components/text-content';
+
 <template>
   <PageHeader @title='Data Access Policy' />
 

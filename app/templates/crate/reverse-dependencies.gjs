@@ -2,6 +2,7 @@ import CrateHeader from 'crates-io/components/crate-header';
 import Pagination from 'crates-io/components/pagination';
 import ResultsCount from 'crates-io/components/results-count';
 import RevDepRow from 'crates-io/components/rev-dep-row';
+
 <template>
   <CrateHeader @crate={{@controller.crate}} />
 

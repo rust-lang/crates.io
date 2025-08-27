@@ -1,4 +1,5 @@
 import parseLicense from 'crates-io/helpers/parse-license';
+
 <template>
   {{#each (parseLicense @license) as |part|}}
     {{#if part.isKeyword}}

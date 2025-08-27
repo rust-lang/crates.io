@@ -1,6 +1,7 @@
 import PageHeader from 'crates-io/components/page-header';
 import TextContent from 'crates-io/components/text-content';
 import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
+
 <template>
   <PageHeader @title='Trusted Publishing' />
 

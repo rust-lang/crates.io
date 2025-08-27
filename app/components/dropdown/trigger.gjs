@@ -1,4 +1,5 @@
 import { on } from '@ember/modifier';
+
 <template>
   <button type='button' {{on 'click' @toggle}} ...attributes class='button'>
     {{yield}}

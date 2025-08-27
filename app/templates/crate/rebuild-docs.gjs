@@ -3,6 +3,7 @@ import { LinkTo } from '@ember/routing';
 
 import perform from 'ember-concurrency/helpers/perform';
 import pageTitle from 'ember-page-title/helpers/page-title';
+
 <template>
   {{pageTitle 'Rebuild Documentation'}}
 

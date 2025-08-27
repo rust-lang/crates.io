@@ -1,4 +1,5 @@
 import { LinkTo } from '@ember/routing';
+
 <template>
   {{#if @model.ok}}
     <h1>You've been added as a crate owner!</h1>

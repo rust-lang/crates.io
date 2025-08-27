@@ -12,6 +12,7 @@ import Dropdown from 'crates-io/components/dropdown';
 import Placeholder from 'crates-io/components/placeholder';
 import RenderedHtml from 'crates-io/components/rendered-html';
 import formatNum from 'crates-io/helpers/format-num';
+
 <template>
   {{pageTitle @controller.crate.name}}
 

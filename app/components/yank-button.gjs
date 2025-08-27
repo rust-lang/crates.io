@@ -1,6 +1,7 @@
 import { on } from '@ember/modifier';
 
 import perform from 'ember-concurrency/helpers/perform';
+
 <template>
   {{#if @version.yanked}}
     <button

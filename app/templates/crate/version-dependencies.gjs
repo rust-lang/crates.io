@@ -2,6 +2,7 @@ import pageTitle from 'ember-page-title/helpers/page-title';
 
 import CrateHeader from 'crates-io/components/crate-header';
 import Row from 'crates-io/components/dependency-list/row';
+
 <template>
   {{pageTitle @controller.crate.name}}
 

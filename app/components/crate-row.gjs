@@ -12,6 +12,7 @@ import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-n
 import dateFormatIso from 'crates-io/helpers/date-format-iso';
 import formatNum from 'crates-io/helpers/format-num';
 import truncateText from 'crates-io/helpers/truncate-text';
+
 <template>
   <div data-test-crate-row ...attributes class='crate-row'>
     <div class='description-box'>

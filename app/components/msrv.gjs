@@ -1,4 +1,5 @@
 import Tooltip from 'crates-io/components/tooltip';
+
 <template>
   <span>
     v{{@version.msrv}}

@@ -1,4 +1,5 @@
 import { on } from '@ember/modifier';
+
 <template>
   <li ...attributes>
     <a

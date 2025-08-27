@@ -1,4 +1,5 @@
 import LoadingSpinner from 'crates-io/components/loading-spinner';
+
 <template>
   <div data-test-page-header ...attributes class='header'>
     {{#if (has-block)}}

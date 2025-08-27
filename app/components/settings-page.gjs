@@ -1,6 +1,7 @@
 import link_ from 'ember-link/helpers/link';
 
 import SideMenu from 'crates-io/components/side-menu';
+
 <template>
   <div ...attributes class='page'>
     <SideMenu data-test-settings-menu as |menu|>

@@ -1,4 +1,5 @@
 import CrateRow from 'crates-io/components/crate-row';
+
 <template>
   <div ...attributes>
     {{! The extra div wrapper is needed for specificity issues with `margin` }}

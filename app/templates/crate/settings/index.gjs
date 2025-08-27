@@ -9,6 +9,7 @@ import not from 'ember-truth-helpers/helpers/not';
 
 import CrateHeader from 'crates-io/components/crate-header';
 import UserAvatar from 'crates-io/components/user-avatar';
+
 <template>
   {{pageTitle 'Manage Crate Settings'}}
 

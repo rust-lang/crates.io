@@ -2,6 +2,7 @@ import { concat, hash } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
 
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
+
 <template>
   <nav class='pagination' aria-label='Pagination navigation'>
     <LinkTo

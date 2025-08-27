@@ -12,6 +12,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
 import PageHeader from 'crates-io/components/page-header';
 import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-now';
 import formatNum from 'crates-io/helpers/format-num';
+
 <template>
   {{pageTitle 'Dashboard'}}
 

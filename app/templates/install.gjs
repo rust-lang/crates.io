@@ -1,4 +1,5 @@
 import PageHeader from 'crates-io/components/page-header';
+
 <template>
   <PageHeader @title='Install Cargo' />
 

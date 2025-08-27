@@ -7,6 +7,7 @@ import Footer from 'crates-io/components/footer';
 import Header from 'crates-io/components/header';
 import ProgressBar from 'crates-io/components/progress-bar';
 import setColorScheme from 'crates-io/helpers/set-color-scheme';
+
 <template>
   <HeadLayout />
 

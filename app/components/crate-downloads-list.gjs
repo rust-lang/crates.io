@@ -4,6 +4,7 @@ import scopedClass from 'ember-scoped-css/helpers/scoped-class';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
 
 import formatNum from 'crates-io/helpers/format-num';
+
 <template>
   <ul class='list'>
     {{#each @crates as |crate|}}

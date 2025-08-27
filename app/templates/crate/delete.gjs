@@ -8,6 +8,7 @@ import not from 'ember-truth-helpers/helpers/not';
 import or from 'ember-truth-helpers/helpers/or';
 
 import LoadingSpinner from 'crates-io/components/loading-spinner';
+
 <template>
   <div class='wrapper'>
     <form class='content' {{on 'submit' (preventDefault (perform @controller.deleteTask))}}>

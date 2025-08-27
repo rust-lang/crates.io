@@ -1,6 +1,7 @@
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import PageHeader from 'crates-io/components/page-header';
+
 <template>
   {{pageTitle 'Category Slugs'}}
 

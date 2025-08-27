@@ -5,6 +5,7 @@ import svgJar from 'ember-svg-jar/helpers/svg-jar';
 
 import Dropdown from 'crates-io/components/dropdown';
 import SortDropdownOption from 'crates-io/components/sort-dropdown/option';
+
 <template>
   <Dropdown as |dd|>
     <dd.Trigger class='trigger' data-test-current-order>
