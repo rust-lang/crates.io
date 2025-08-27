@@ -183,7 +183,7 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       ember-eslint-parser:
-        specifier: ^0.5.11
+        specifier: 0.5.11
         version: 0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2)
       ember-event-helpers:
         specifier: 0.1.1
@@ -228,7 +228,7 @@ importers:
         specifier: 2.6.3
         version: 2.6.3
       ember-template-imports:
-        specifier: ^4.3.0
+        specifier: 4.3.0
         version: 4.3.0
       ember-template-lint:
         specifier: 7.9.3
@@ -309,7 +309,7 @@ importers:
         specifier: 3.6.2
         version: 3.6.2
       prettier-plugin-ember-template-tag:
-        specifier: ^2.1.0
+        specifier: 2.1.0
         version: 2.1.0(prettier@3.6.2)
       qunit:
         specifier: 2.24.1
@@ -7079,6 +7079,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.13.0:
