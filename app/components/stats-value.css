@@ -14,7 +14,7 @@
 .label {
     grid-column: 1;
     grid-row: 2;
-    color: #76838a;
+    color: light-dark(#545454, #adc0cd);
     font-size: var(--space-s);
     font-weight: normal;
     line-height: 1.6;
@@ -27,5 +27,5 @@
     height: var(--space-l-xl);
     margin-left: var(--space-s);
     margin-top: var(--space-3xs);
-    color: #76838a;
+    color: light-dark(#545454, #adc0cd);
 }
