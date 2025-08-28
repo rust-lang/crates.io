@@ -46,7 +46,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('foo: Crate not found');
+    assert.dom('[data-test-title]').hasText(`Crate "foo" not found`);
     assert.dom('[data-test-go-back]').exists();
     assert.dom('[data-test-try-again]').doesNotExist();
   });
@@ -57,7 +57,7 @@ module('Acceptance | crate dependencies page', function (hooks) {
     await visit('/crates/foo/1.0.0/dependencies');
     assert.strictEqual(currentURL(), '/crates/foo/1.0.0/dependencies');
     assert.dom('[data-test-404-page]').exists();
-    assert.dom('[data-test-title]').hasText('foo: Failed to load crate data');
+    assert.dom('[data-test-title]').hasText(`Failed to load crate data`);
     assert.dom('[data-test-go-back]').doesNotExist();
     assert.dom('[data-test-try-again]').exists();
   });
