@@ -23,10 +23,10 @@ export default class CrateRoute extends Route {
       return crate;
     } catch (error) {
       if (error instanceof NotFoundError) {
-        let title = `'${crateName}': Crate not found`;
+        let title = `Crate "${crateName}" not found`;
         this.router.replaceWith('catch-all', { transition, error, title });
       } else {
-        let title = `'${crateName}': Failed to load crate data`;
+        let title = `Failed to load crate data`;
         this.router.replaceWith('catch-all', { transition, error, title, tryAgain: true });
       }
     }
