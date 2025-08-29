@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN gh_access_token VARCHAR NOT NULL DEFAULT '';

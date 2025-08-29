@@ -5,7 +5,6 @@ use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use secrecy::SecretString;
 use serde::Serialize;
 
 use crate::models::{Crate, CrateOwner, Email, Owner, OwnerKind};
@@ -20,9 +19,6 @@ pub struct User {
     pub gh_id: i32,
     pub gh_login: String,
     pub gh_avatar: Option<String>,
-    #[diesel(deserialize_as = String)]
-    #[serde(skip)]
-    pub gh_access_token: SecretString,
     #[serde(skip)]
     pub gh_encrypted_token: Vec<u8>,
     pub account_lock_reason: Option<String>,
@@ -95,7 +91,6 @@ pub struct NewUser<'a> {
     pub gh_login: &'a str,
     pub name: Option<&'a str>,
     pub gh_avatar: Option<&'a str>,
-    pub gh_access_token: &'a str,
     pub gh_encrypted_token: &'a [u8],
 }
 
@@ -127,7 +122,6 @@ impl NewUser<'_> {
                 users::gh_login.eq(excluded(users::gh_login)),
                 users::name.eq(excluded(users::name)),
                 users::gh_avatar.eq(excluded(users::gh_avatar)),
-                users::gh_access_token.eq(excluded(users::gh_access_token)),
                 users::gh_encrypted_token.eq(excluded(users::gh_encrypted_token)),
             ))
             .returning(User::as_returning())

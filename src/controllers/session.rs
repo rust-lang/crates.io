@@ -125,14 +125,7 @@ pub async fn authorize_session(
     let ghuser = app.github.current_user(token).await?;
 
     let mut conn = app.db_write().await?;
-    let user = save_user_to_database(
-        &ghuser,
-        token.secret(),
-        &encrypted_token,
-        &app.emails,
-        &mut conn,
-    )
-    .await?;
+    let user = save_user_to_database(&ghuser, &encrypted_token, &app.emails, &mut conn).await?;
 
     // Log in by setting a cookie and the middleware authentication
     session.insert("user_id".to_string(), user.id.to_string());
@@ -142,7 +135,6 @@ pub async fn authorize_session(
 
 pub async fn save_user_to_database(
     user: &GitHubUser,
-    access_token: &str,
     encrypted_token: &[u8],
     emails: &Emails,
     conn: &mut AsyncPgConnection,
@@ -152,7 +144,6 @@ pub async fn save_user_to_database(
         .gh_login(&user.login)
         .maybe_name(user.name.as_deref())
         .maybe_gh_avatar(user.avatar_url.as_deref())
-        .gh_access_token(access_token)
         .gh_encrypted_token(encrypted_token)
         .build();
 
@@ -259,8 +250,7 @@ mod tests {
             avatar_url: None,
         };
 
-        let result =
-            save_user_to_database(&gh_user, "arbitrary_token", &[], &emails, &mut conn).await;
+        let result = save_user_to_database(&gh_user, &[], &emails, &mut conn).await;
 
         assert!(
             result.is_ok(),

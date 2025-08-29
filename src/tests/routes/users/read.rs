@@ -41,7 +41,6 @@ async fn show_latest_user_case_insensitively() {
         .gh_id(1)
         .gh_login("foobar")
         .name("I was first then deleted my github account")
-        .gh_access_token("bar")
         .gh_encrypted_token(&[])
         .build();
 
@@ -49,7 +48,6 @@ async fn show_latest_user_case_insensitively() {
         .gh_id(2)
         .gh_login("FOOBAR")
         .name("I was second, I took the foobar username on github")
-        .gh_access_token("bar")
         .gh_encrypted_token(&[])
         .build();
 

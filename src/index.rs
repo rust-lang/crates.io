@@ -156,7 +156,6 @@ mod tests {
                 users::name.eq("user1"),
                 users::gh_login.eq("user1"),
                 users::gh_id.eq(42),
-                users::gh_access_token.eq("some random token"),
                 users::gh_encrypted_token.eq(&[]),
             ))
             .returning(users::id)
