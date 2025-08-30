@@ -7,16 +7,16 @@
 
     <title>crates.io: Rust Package Registry</title>
 
-    {{content-for 'head'}}
+    {{content-for "head"}}
 
     <link rel="stylesheet" href="/@embroider/virtual/vendor.css">
     <link rel="stylesheet" href="/@embroider/virtual/app.css">
     <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
 
-    <link rel="manifest" href="{{rootURL}}manifest.webmanifest">
-    <meta name="msapplication-config" content="{{rootURL}}browserconfig.xml">
+    <!-- <link rel="manifest" href="{{rootURL}}manifest.webmanifest">
+    <meta name="msapplication-config" content="{{rootURL}}browserconfig.xml"> -->
 
-    {{content-for 'head-footer'}}
+    {{content-for "head-footer"}}
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/assets/cargo.png" type="image/png">
     <link rel="search" href="/opensearch.xml" type="application/opensearchdescription+xml" title="crates.io">
@@ -37,7 +37,7 @@
       For full functionality of this site it is necessary to enable JavaScript.
     </noscript>
 
-    {{content-for 'body'}}
+    {{content-for "body"}}
 
     <!-- if you change the following inline script make sure to change the CSP settings of nginx! -->
     <script>window.onerror=function(){document.body.innerHTML='<p style="width: 70%;background: var(--main-bg);padding: 10px;">Sorry, it looks like we were not able to load the page. Please make sure your network connection works and you are using an up-to-date browser. If the issue persists, please visit our <a href="https://github.com/rust-lang/crates.io/issues/new/choose">issue tracker</a> to report the problem.</p>'}</script>
@@ -49,6 +49,6 @@
       Application.create(environment.APP);
     </script>
 
-    {{content-for 'body-footer'}}
+    {{content-for "body-footer"}}
   </body>
 </html>
