@@ -11,9 +11,9 @@
     {{content-for "head"}}
     {{content-for "test-head"}}
 
-    <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
-    <link rel="stylesheet" href="{{rootURL}}assets/crates-io.css">
-    <link rel="stylesheet" href="{{rootURL}}assets/test-support.css">
+    <link rel="stylesheet" href="/@embroider/virtual/vendor.css">
+    <link rel="stylesheet" href="/@embroider/virtual/app.css">
+    <link rel="stylesheet" href="/@embroider/virtual/test-support.css">
 
     {{content-for "head-footer"}}
     {{content-for "test-head-footer"}}
@@ -30,12 +30,17 @@
     </div>
 
     <script src="/testem.js" integrity=""></script>
-    <script src="{{rootURL}}assets/vendor.js"></script>
-    <script src="{{rootURL}}assets/test-support.js"></script>
-    <script src="{{rootURL}}assets/crates-io.js"></script>
-    <script src="{{rootURL}}assets/tests.js"></script>
+    <script src="/@embroider/virtual/vendor.js"></script>
+    <script src="/@embroider/virtual/test-support.js"></script>
+    
+    <script type="module">import "ember-testing";</script>
+    <script type="module">
+      import { start } from './test-helper';
+      import.meta.glob("./**/*.{js,ts,gjs,gts}", { eager: true });
+      start();
+    </script>
 
     {{content-for "body-footer"}}
-    {{content-for "test-body-footer"}}
+    
   </body>
 </html>
