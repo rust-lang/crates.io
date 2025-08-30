@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 
-import { processSearchQuery } from '../../utils/search';
+import { processSearchQuery } from 'crates-io/utils/search';
 
 module('processSearchQuery()', function () {
   const TESTS = [
