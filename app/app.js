@@ -8,6 +8,8 @@ import * as Sentry from './sentry';
 
 import './app.css';
 
+import compatModules from "@embroider/virtual/compat-modules";
+
 // eslint-disable-next-line unicorn/prefer-add-event-listener
 window.onerror = undefined;
 Sentry.init();
@@ -15,7 +17,7 @@ Sentry.init();
 export default class App extends Application {
   modulePrefix = config.modulePrefix;
   podModulePrefix = config.podModulePrefix;
-  Resolver = Resolver;
+  Resolver = Resolver.withModules(compatModules);
 
   customEvents = {
     // prevent non-passive listeners for touchstart/touchmove events
@@ -24,4 +26,4 @@ export default class App extends Application {
   };
 }
 
-loadInitializers(App, config.modulePrefix);
+loadInitializers(App, config.modulePrefix, compatModules);

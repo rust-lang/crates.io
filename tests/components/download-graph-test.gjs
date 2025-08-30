@@ -11,9 +11,9 @@ import { setupWindowMock } from 'ember-window-mock/test-support';
 import DownloadGraph from 'crates-io/components/download-graph';
 import { setupRenderingTest } from 'crates-io/tests/helpers';
 
-import { toChartData } from '../../components/download-graph';
-import ChartJsLoader from '../../services/chartjs';
-import { setupFakeTimers } from '../helpers/fake-timers';
+import { toChartData } from 'crates-io/components/download-graph';
+import ChartJsLoader from 'crates-io/services/chartjs';
+import { setupFakeTimers } from '../helpers/fake-timers.js';
 
 module('Component | DownloadGraph', function (hooks) {
   setupRenderingTest(hooks);

@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 
 import { setupApplicationTest } from 'crates-io/tests/helpers';
 
-import { AjaxError } from '../../utils/ajax';
+import { AjaxError } from 'crates-io/utils/ajax';
 
 module('Acceptance | Read-only Mode', function (hooks) {
   setupApplicationTest(hooks);

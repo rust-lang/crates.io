@@ -25,7 +25,8 @@ import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-n
 import dateFormatIso from 'crates-io/helpers/date-format-iso';
 import prettyBytes from 'crates-io/helpers/pretty-bytes';
 
-import styles from './row.css';
+// TODO fix this - throws a vite error
+// import styles from './row.css';
 
 export default class VersionRow extends Component {
   @service session;
