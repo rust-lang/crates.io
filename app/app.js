@@ -1,5 +1,6 @@
 import Application from '@ember/application';
 
+import compatModules from '@embroider/virtual/compat-modules';
 import loadInitializers from 'ember-load-initializers';
 import Resolver from 'ember-resolver';
 
@@ -15,7 +16,7 @@ Sentry.init();
 export default class App extends Application {
   modulePrefix = config.modulePrefix;
   podModulePrefix = config.podModulePrefix;
-  Resolver = Resolver;
+  Resolver = Resolver.withModules(compatModules);
 
   customEvents = {
     // prevent non-passive listeners for touchstart/touchmove events
@@ -24,4 +25,4 @@ export default class App extends Application {
   };
 }
 
-loadInitializers(App, config.modulePrefix);
+loadInitializers(App, config.modulePrefix, compatModules);

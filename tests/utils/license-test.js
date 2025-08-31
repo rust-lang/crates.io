@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 
-import { parseLicense } from '../../utils/license';
+import { parseLicense } from 'crates-io/utils/license';
 
 module('parseLicense()', function () {
   const TESTS = [
