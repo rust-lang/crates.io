@@ -29,7 +29,7 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
-    "test": "ember exam --split=2 --parallel",
+    "test": "vite build --mode development && ember exam --path dist --split=2 --parallel",
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report",
     "e2e": "playwright test",
     "test:ember": "vite build --mode test && ember test --path dist"
