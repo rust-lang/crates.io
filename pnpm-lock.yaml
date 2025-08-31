@@ -56,9 +56,6 @@ importers:
       '@babel/eslint-parser':
         specifier: 7.28.0
         version: 7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))
-      '@babel/plugin-proposal-decorators':
-        specifier: 7.28.0
-        version: 7.28.0(@babel/core@7.28.3)
       '@babel/plugin-transform-runtime':
         specifier: ^7.26.9
         version: 7.28.3(@babel/core@7.28.3)

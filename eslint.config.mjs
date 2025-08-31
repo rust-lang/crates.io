@@ -72,17 +72,6 @@ export default [
 
       parserOptions: {
         requireConfigFile: false,
-
-        babelOptions: {
-          plugins: [
-            [
-              '@babel/plugin-proposal-decorators',
-              {
-                decoratorsBeforeExport: true,
-              },
-            ],
-          ],
-        },
       },
     },
 
@@ -180,7 +169,8 @@ export default [
       'eslint.config.mjs',
       '**/.template-lintrc.js',
       '**/ember-cli-build.js',
-      '**/testem.js',
+      '**/testem.cjs',
+      '**/babel.config.cjs',
       'blueprints/*/index.js',
       'config/**/*.js',
       'lib/*/index.js',

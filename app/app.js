@@ -1,5 +1,6 @@
 import Application from '@ember/application';
 
+import compatModules from '@embroider/virtual/compat-modules';
 import loadInitializers from 'ember-load-initializers';
 import Resolver from 'ember-resolver';
 
@@ -7,8 +8,6 @@ import config from './config/environment';
 import * as Sentry from './sentry';
 
 import './app.css';
-
-import compatModules from "@embroider/virtual/compat-modules";
 
 // eslint-disable-next-line unicorn/prefer-add-event-listener
 window.onerror = undefined;

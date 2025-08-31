@@ -27,6 +27,7 @@ import prettyBytes from 'crates-io/helpers/pretty-bytes';
 
 // TODO fix this - throws a vite error
 // import styles from './row.css';
+const styles = {};
 
 export default class VersionRow extends Component {
   @service session;

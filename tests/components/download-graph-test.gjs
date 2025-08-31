@@ -9,10 +9,10 @@ import window from 'ember-window-mock';
 import { setupWindowMock } from 'ember-window-mock/test-support';
 
 import DownloadGraph from 'crates-io/components/download-graph';
-import { setupRenderingTest } from 'crates-io/tests/helpers';
-
 import { toChartData } from 'crates-io/components/download-graph';
 import ChartJsLoader from 'crates-io/services/chartjs';
+import { setupRenderingTest } from 'crates-io/tests/helpers';
+
 import { setupFakeTimers } from '../helpers/fake-timers.js';
 
 module('Component | DownloadGraph', function (hooks) {

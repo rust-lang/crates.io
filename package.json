@@ -60,7 +60,6 @@
     "@axe-core/playwright": "4.10.2",
     "@babel/core": "7.28.3",
     "@babel/eslint-parser": "7.28.0",
-    "@babel/plugin-proposal-decorators": "7.28.0",
     "@babel/plugin-transform-runtime": "^7.26.9",
     "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
@@ -201,7 +200,6 @@
     "./tests/*": "./tests/*",
     "./*": "./app/*"
   },
-  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
   "ember-addon": {
     "type": "app",
     "version": 2

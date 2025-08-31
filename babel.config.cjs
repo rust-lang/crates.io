@@ -1,8 +1,5 @@
-const {
-  babelCompatSupport,
-  templateCompatSupport,
-} = require('@embroider/compat/babel');
-const scopedCSS = require("ember-scoped-css/build");
+const { babelCompatSupport, templateCompatSupport } = require('@embroider/compat/babel');
+const scopedCSS = require('ember-scoped-css/build');
 
 module.exports = {
   plugins: [
