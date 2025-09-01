@@ -50,7 +50,7 @@ doctest = true
 aes-gcm = { version = "=0.10.3", features = ["std"] }
 anyhow = "=1.0.99"
 astral-tokio-tar = "=0.5.3"
-async-compression = { version = "=0.4.29", default-features = false, features = ["gzip", "tokio"] }
+async-compression = { version = "=0.4.30", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
 aws-credential-types = { version = "=1.2.5", features = ["hardcoded-credentials"] }
 aws-ip-ranges = "=0.1391.0"
