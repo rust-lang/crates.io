@@ -55,7 +55,7 @@ importers:
         version: 7.28.3(supports-color@8.1.1)
       '@babel/eslint-parser':
         specifier: 7.28.0
-        version: 7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))
+        version: 7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))
       '@babel/plugin-proposal-decorators':
         specifier: 7.28.0
         version: 7.28.0(@babel/core@7.28.3)
@@ -184,7 +184,7 @@ importers:
         version: 0.2.0
       ember-eslint-parser:
         specifier: 0.5.11
-        version: 0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2)
+        version: 0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
       ember-event-helpers:
         specifier: 0.1.1
         version: 0.1.1
@@ -247,31 +247,31 @@ importers:
         version: 1.0.2
       eslint:
         specifier: 9.34.0
-        version: 9.34.0(jiti@1.21.7)
+        version: 9.34.0(jiti@2.5.1)
       eslint-config-prettier:
         specifier: 10.1.8
-        version: 10.1.8(eslint@9.34.0(jiti@1.21.7))
+        version: 10.1.8(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-ember:
         specifier: 12.7.3
-        version: 12.7.3(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2)
+        version: 12.7.3(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
       eslint-plugin-ember-concurrency:
         specifier: 0.5.1
-        version: 0.5.1(eslint@9.34.0(jiti@1.21.7))
+        version: 0.5.1(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-import-helpers:
         specifier: 2.0.1
-        version: 2.0.1(eslint@9.34.0(jiti@1.21.7))
+        version: 2.0.1(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-prettier:
         specifier: 5.5.4
-        version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@1.21.7)))(eslint@9.34.0(jiti@1.21.7))(prettier@3.6.2)
+        version: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@2.5.1)))(eslint@9.34.0(jiti@2.5.1))(prettier@3.6.2)
       eslint-plugin-qunit:
         specifier: 8.2.5
-        version: 8.2.5(eslint@9.34.0(jiti@1.21.7))
+        version: 8.2.5(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-qunit-dom:
         specifier: 0.2.0
-        version: 0.2.0(eslint@9.34.0(jiti@1.21.7))
+        version: 0.2.0(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-unicorn:
         specifier: 60.0.0
-        version: 60.0.0(eslint@9.34.0(jiti@1.21.7))
+        version: 60.0.0(eslint@9.34.0(jiti@2.5.1))
       globals:
         specifier: 16.3.0
         version: 16.3.0
@@ -300,8 +300,8 @@ importers:
         specifier: 8.5.6
         version: 8.5.6
       postcss-loader:
-        specifier: 8.1.1
-        version: 8.1.1(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3)
+        specifier: 8.2.0
+        version: 8.2.0(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3)
       postcss-preset-env:
         specifier: 10.3.1
         version: 10.3.1(postcss@8.5.6)
@@ -347,7 +347,7 @@ importers:
         version: 18.0.1
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/node@22.18.0)(happy-dom@18.0.1)(jiti@1.21.7)(jsdom@25.0.1)(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(terser@5.43.1)(yaml@2.8.1)
+        version: 3.2.4(@types/node@22.18.0)(happy-dom@18.0.1)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(terser@5.43.1)(yaml@2.8.1)
 
 packages:
 
@@ -5782,8 +5782,8 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
 
-  jiti@1.21.7:
-    resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
+  jiti@2.5.1:
+    resolution: {integrity: sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w==}
     hasBin: true
 
   js-string-escape@1.0.1:
@@ -6882,8 +6882,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-loader@8.1.1:
-    resolution: {integrity: sha512-0IeqyAsG6tYiDRCYKQJLAmgQr47DX6N7sFSWvQxt6AcupX8DIdmykuk/o/tx0Lze3ErGHJEp5OSRxrelC6+NdQ==}
+  postcss-loader@8.2.0:
+    resolution: {integrity: sha512-tHX+RkpsXVcc7st4dSdDGliI+r4aAQDuv+v3vFYHixb6YgjreG5AG4SEB0kDK8u2s6htqEEpKlkhSBUTvWKYnA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || 1.x
@@ -8639,11 +8639,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/eslint-parser@7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))':
+  '@babel/eslint-parser@7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))':
     dependencies:
       '@babel/core': 7.28.3(supports-color@8.1.1)
       '@nicolo-ribaudo/eslint-scope-5-internals': 5.1.1-v1
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
       eslint-visitor-keys: 2.1.0
       semver: 6.3.1
 
@@ -10137,9 +10137,9 @@ snapshots:
   '@esbuild/win32-x64@0.25.9':
     optional: true
 
-  '@eslint-community/eslint-utils@4.7.0(eslint@9.34.0(jiti@1.21.7))':
+  '@eslint-community/eslint-utils@4.7.0(eslint@9.34.0(jiti@2.5.1))':
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.1': {}
@@ -11158,14 +11158,14 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(vite@7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1))':
+  '@vitest/mocker@3.2.4(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(vite@7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.18
     optionalDependencies:
       msw: 2.11.1(@types/node@22.18.0)(typescript@5.9.2)
-      vite: 7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1)
+      vite: 7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -13677,10 +13677,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-eslint-parser@0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2):
+  ember-eslint-parser@0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2):
     dependencies:
       '@babel/core': 7.28.3(supports-color@8.1.1)
-      '@babel/eslint-parser': 7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))
+      '@babel/eslint-parser': 7.28.0(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))
       '@glimmer/syntax': 0.95.0
       '@typescript-eslint/tsconfig-utils': 8.39.1(typescript@5.9.2)
       content-tag: 2.0.3
@@ -14192,22 +14192,22 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@1.21.7)):
+  eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
 
-  eslint-plugin-ember-concurrency@0.5.1(eslint@9.34.0(jiti@1.21.7)):
+  eslint-plugin-ember-concurrency@0.5.1(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
 
-  eslint-plugin-ember@12.7.3(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2):
+  eslint-plugin-ember@12.7.3(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2):
     dependencies:
       '@ember-data/rfc395-data': 0.0.4
       css-tree: 3.1.0
-      ember-eslint-parser: 0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@1.21.7))(typescript@5.9.2)
+      ember-eslint-parser: 0.5.11(@babel/core@7.28.3)(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
       ember-rfc176-data: 0.3.18
-      eslint: 9.34.0(jiti@1.21.7)
-      eslint-utils: 3.0.0(eslint@9.34.0(jiti@1.21.7))
+      eslint: 9.34.0(jiti@2.5.1)
+      eslint-utils: 3.0.0(eslint@9.34.0(jiti@2.5.1))
       estraverse: 5.3.0
       lodash.camelcase: 4.3.0
       lodash.kebabcase: 4.1.1
@@ -14217,41 +14217,41 @@ snapshots:
       - '@babel/core'
       - typescript
 
-  eslint-plugin-import-helpers@2.0.1(eslint@9.34.0(jiti@1.21.7)):
+  eslint-plugin-import-helpers@2.0.1(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
 
-  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@1.21.7)))(eslint@9.34.0(jiti@1.21.7))(prettier@3.6.2):
+  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.34.0(jiti@2.5.1)))(eslint@9.34.0(jiti@2.5.1))(prettier@3.6.2):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
       prettier: 3.6.2
       prettier-linter-helpers: 1.0.0
       synckit: 0.11.11
     optionalDependencies:
       '@types/eslint': 9.6.1
-      eslint-config-prettier: 10.1.8(eslint@9.34.0(jiti@1.21.7))
+      eslint-config-prettier: 10.1.8(eslint@9.34.0(jiti@2.5.1))
 
-  eslint-plugin-qunit-dom@0.2.0(eslint@9.34.0(jiti@1.21.7)):
+  eslint-plugin-qunit-dom@0.2.0(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
 
-  eslint-plugin-qunit@8.2.5(eslint@9.34.0(jiti@1.21.7)):
+  eslint-plugin-qunit@8.2.5(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint-utils: 3.0.0(eslint@9.34.0(jiti@1.21.7))
+      eslint-utils: 3.0.0(eslint@9.34.0(jiti@2.5.1))
       requireindex: 1.2.0
     transitivePeerDependencies:
       - eslint
 
-  eslint-plugin-unicorn@60.0.0(eslint@9.34.0(jiti@1.21.7)):
+  eslint-plugin-unicorn@60.0.0(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
       '@babel/helper-validator-identifier': 7.27.1
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.34.0(jiti@1.21.7))
+      '@eslint-community/eslint-utils': 4.7.0(eslint@9.34.0(jiti@2.5.1))
       '@eslint/plugin-kit': 0.3.5
       change-case: 5.4.4
       ci-info: 4.3.0
       clean-regexp: 1.0.0
       core-js-compat: 3.45.1
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
       esquery: 1.6.0
       find-up-simple: 1.0.1
       globals: 16.3.0
@@ -14279,9 +14279,9 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
-  eslint-utils@3.0.0(eslint@9.34.0(jiti@1.21.7)):
+  eslint-utils@3.0.0(eslint@9.34.0(jiti@2.5.1)):
     dependencies:
-      eslint: 9.34.0(jiti@1.21.7)
+      eslint: 9.34.0(jiti@2.5.1)
       eslint-visitor-keys: 2.1.0
 
   eslint-visitor-keys@2.1.0: {}
@@ -14290,9 +14290,9 @@ snapshots:
 
   eslint-visitor-keys@4.2.1: {}
 
-  eslint@9.34.0(jiti@1.21.7):
+  eslint@9.34.0(jiti@2.5.1):
     dependencies:
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.34.0(jiti@1.21.7))
+      '@eslint-community/eslint-utils': 4.7.0(eslint@9.34.0(jiti@2.5.1))
       '@eslint-community/regexpp': 4.12.1
       '@eslint/config-array': 0.21.0
       '@eslint/config-helpers': 0.3.1
@@ -14328,7 +14328,7 @@ snapshots:
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
-      jiti: 1.21.7
+      jiti: 2.5.1
     transitivePeerDependencies:
       - supports-color
 
@@ -15711,7 +15711,7 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jiti@1.21.7: {}
+  jiti@2.5.1: {}
 
   js-string-escape@1.0.1: {}
 
@@ -16910,10 +16910,10 @@ snapshots:
       '@csstools/utilities': 2.0.0(postcss@8.5.6)
       postcss: 8.5.6
 
-  postcss-loader@8.1.1(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3):
+  postcss-loader@8.2.0(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3):
     dependencies:
       cosmiconfig: 9.0.0(typescript@5.9.2)
-      jiti: 1.21.7
+      jiti: 2.5.1
       postcss: 8.5.6
       semver: 7.7.2
     optionalDependencies:
@@ -18488,13 +18488,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@3.2.4(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1):
+  vite-node@3.2.4(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1)
+      vite: 7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -18509,7 +18509,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1):
+  vite@7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
@@ -18520,15 +18520,15 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.18.0
       fsevents: 2.3.3
-      jiti: 1.21.7
+      jiti: 2.5.1
       terser: 5.43.1
       yaml: 2.8.1
 
-  vitest@3.2.4(@types/node@22.18.0)(happy-dom@18.0.1)(jiti@1.21.7)(jsdom@25.0.1)(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(terser@5.43.1)(yaml@2.8.1):
+  vitest@3.2.4(@types/node@22.18.0)(happy-dom@18.0.1)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(terser@5.43.1)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(vite@7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1))
+      '@vitest/mocker': 3.2.4(msw@2.11.1(@types/node@22.18.0)(typescript@5.9.2))(vite@7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -18546,8 +18546,8 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.1.3(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1)
-      vite-node: 3.2.4(@types/node@22.18.0)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.1)
+      vite: 7.1.3(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.18.0
