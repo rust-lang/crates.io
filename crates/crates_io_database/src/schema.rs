@@ -177,6 +177,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    /// Queue for batching CloudFront CDN invalidation requests
+    cloudfront_invalidation_queue (id) {
+        /// Unique identifier for each queued invalidation path
+        id -> Int8,
+        /// CloudFront path to invalidate (e.g. /crates/serde/serde-1.0.0.crate)
+        path -> Text,
+        /// Timestamp when the path was queued for invalidation
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     /// Number of downloads per crate. This was extracted from the `crates` table for performance reasons.
     crate_downloads (crate_id) {
         /// Reference to the crate that this row belongs to.
@@ -1141,6 +1153,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     api_tokens,
     background_jobs,
     categories,
+    cloudfront_invalidation_queue,
     crate_downloads,
     crate_owner_invitations,
     crate_owners,

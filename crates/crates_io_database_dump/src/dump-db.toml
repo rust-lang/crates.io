@@ -49,6 +49,11 @@ crates_cnt = "public"
 created_at = "public"
 path = "public"
 
+[cloudfront_invalidation_queue.columns]
+id = "private"
+path = "private"
+created_at = "private"
+
 [crate_downloads.columns]
 crate_id = "public"
 downloads = "public"
