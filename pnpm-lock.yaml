@@ -216,11 +216,11 @@ importers:
         specifier: 13.1.1
         version: 13.1.1
       ember-scoped-css:
-        specifier: 0.24.2
-        version: 0.24.2(ember-template-lint@7.9.3)(webpack@5.101.3)
+        specifier: 0.24.3
+        version: 0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)
       ember-scoped-css-compat:
         specifier: 10.2.3
-        version: 10.2.3(@babel/core@7.28.3)(ember-scoped-css@0.24.2(ember-template-lint@7.9.3)(webpack@5.101.3))
+        version: 10.2.3(@babel/core@7.28.3)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3))
       ember-source:
         specifier: 6.7.0
         version: 6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
@@ -4367,8 +4367,8 @@ packages:
     peerDependencies:
       ember-scoped-css: '>=0.18.0'
 
-  ember-scoped-css@0.24.2:
-    resolution: {integrity: sha512-Kn5+q1VCQjGjVnR0FXgKcGRWdqt4mG+Bk55M8tXbyv73wGZ0DzB1VWV2l1Sbceqtx92F0S3bNYuix8EBXG/pfw==}
+  ember-scoped-css@0.24.3:
+    resolution: {integrity: sha512-qUHNDt8H2nWbSWplv6lVFdNfRTj0ZMmP/eN6z37MBS+QgenZaj5mH6IF2J9HiXR0WcEOiLtF9IHVJmLE3GievA==}
     engines: {node: '>= 18'}
     peerDependencies:
       ember-template-lint: '>= 5.7.2'
@@ -13826,16 +13826,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-scoped-css-compat@10.2.3(@babel/core@7.28.3)(ember-scoped-css@0.24.2(ember-template-lint@7.9.3)(webpack@5.101.3)):
+  ember-scoped-css-compat@10.2.3(@babel/core@7.28.3)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)):
     dependencies:
       ember-cli-babel: 8.2.0(@babel/core@7.28.3)
       ember-cli-htmlbars: 6.3.0
-      ember-scoped-css: 0.24.2(ember-template-lint@7.9.3)(webpack@5.101.3)
+      ember-scoped-css: 0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
-  ember-scoped-css@0.24.2(ember-template-lint@7.9.3)(webpack@5.101.3):
+  ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3):
     dependencies:
       '@babel/parser': 7.28.3
       '@embroider/addon-shim': 1.10.0
