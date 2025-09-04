@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use anyhow::Context;
+use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
 
 use crate::worker::Environment;
+use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 
 /// A background job that invalidates the given paths on all CDNs in use on crates.io.
 #[derive(Deserialize, Serialize)]
@@ -46,11 +48,16 @@ impl BackgroundJob for InvalidateCdns {
             }
         }
 
-        if let Some(cloudfront) = ctx.cloudfront() {
-            cloudfront
-                .invalidate_many(self.paths.clone())
-                .await
-                .context("Failed to invalidate paths on CloudFront CDN")?;
+        // Queue CloudFront invalidations for batch processing instead of calling directly
+        if ctx.cloudfront().is_some() {
+            let mut conn = ctx.deadpool.get().await?;
+
+            let result = CloudFrontInvalidationQueueItem::queue_paths(&mut conn, &self.paths).await;
+            result.context("Failed to queue CloudFront invalidation paths")?;
+
+            // Schedule the processing job to handle the queued paths
+            let result = ProcessCloudfrontInvalidationQueue.enqueue(&mut conn).await;
+            result.context("Failed to enqueue CloudFront invalidation processing job")?;
         }
 
         Ok(())

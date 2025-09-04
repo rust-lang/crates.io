@@ -47,7 +47,8 @@ impl BackgroundJob for DumpDb {
         info!("Database dump tarball uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(TAR_PATH).await {
+        let mut conn = env.deadpool.get().await?;
+        if let Err(error) = env.invalidate_cdns(&mut conn, TAR_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
@@ -58,7 +59,7 @@ impl BackgroundJob for DumpDb {
         info!("Database dump zip file uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(ZIP_PATH).await {
+        if let Err(error) = env.invalidate_cdns(&mut conn, ZIP_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
 
