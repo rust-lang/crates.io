@@ -153,7 +153,7 @@ crates_io_trustpub = { path = "crates/crates_io_trustpub", features = ["test-hel
 claims = "=0.8.0"
 diesel = { version = "=2.2.12", features = ["r2d2"] }
 googletest = "=0.14.2"
-insta = { version = "=1.43.1", features = ["glob", "json", "redactions"] }
+insta = { version = "=1.43.2", features = ["glob", "json", "redactions"] }
 jsonwebtoken = "=9.3.1"
 quoted_printable = "=0.5.1"
 regex = "=1.11.2"
