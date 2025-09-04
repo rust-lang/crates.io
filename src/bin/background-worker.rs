@@ -121,6 +121,7 @@ fn main() -> anyhow::Result<()> {
         .configure_default_queue(|queue| queue.num_workers(5))
         .configure_queue("downloads", |queue| queue.num_workers(1))
         .configure_queue("repository", |queue| queue.num_workers(1))
+        .configure_queue("cloudfront", |queue| queue.num_workers(1))
         .register_crates_io_job_types();
 
     runtime.block_on(async {

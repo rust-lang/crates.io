@@ -96,6 +96,7 @@ impl ProcessCloudfrontInvalidationQueue {
 impl BackgroundJob for ProcessCloudfrontInvalidationQueue {
     const JOB_NAME: &'static str = "process_cloudfront_invalidation_queue";
     const DEDUPLICATED: bool = true;
+    const QUEUE: &'static str = "cloudfront";
 
     type Context = Arc<Environment>;
 
