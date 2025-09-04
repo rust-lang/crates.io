@@ -78,7 +78,6 @@ async fn create_user(
             users::name.eq(name),
             users::gh_login.eq(name),
             users::gh_id.eq(gh_id),
-            users::gh_access_token.eq("some random token"),
             users::gh_encrypted_token.eq(&[]),
             users::is_admin.eq(is_admin),
         ))
