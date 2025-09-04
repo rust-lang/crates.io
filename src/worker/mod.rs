@@ -32,6 +32,7 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::NormalizeIndex>()
             .register_job_type::<jobs::ProcessCdnLog>()
             .register_job_type::<jobs::ProcessCdnLogQueue>()
+            .register_job_type::<jobs::ProcessCloudfrontInvalidationQueue>()
             .register_job_type::<jobs::RenderAndUploadReadme>()
             .register_job_type::<jobs::SquashIndex>()
             .register_job_type::<jobs::SyncAdmins>()
