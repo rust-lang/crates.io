@@ -30,6 +30,7 @@ const DEFAULT_BUF_SIZE: usize = 128 * 1024;
 pub struct TarballInfo {
     pub manifest: Manifest,
     pub vcs_info: Option<CargoVcsInfo>,
+    pub linecount_stats: crates_io_linecount::LinecountStats,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -74,6 +75,7 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
     let mut vcs_info = None;
     let mut paths = Vec::new();
     let mut manifests = BTreeMap::new();
+    let mut linecount_stats = crates_io_linecount::LinecountStats::new();
     let mut entries = archive.entries()?;
 
     while let Some(entry) = entries.next().await {
@@ -103,6 +105,12 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
         paths.push(in_pkg_path.to_path_buf());
 
+        // Check if this file should be counted for line statistics
+        let is_file = entry_type.is_file();
+        let language_type_for_counting = is_file
+            .then(|| crates_io_linecount::should_count_path(in_pkg_path))
+            .flatten();
+
         // Let's go hunting for the VCS info and crate manifest. The only valid place for these is
         // in the package root in the tarball.
         let in_pkg_path_str = in_pkg_path.to_string_lossy();
@@ -121,6 +129,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
             validate_manifest(&manifest)?;
 
             manifests.insert(owned_entry_path, manifest);
+        } else if let Some(language_type) = language_type_for_counting {
+            // If this is a file that we want to count, read it and update the line count stats.
+            let mut contents = Vec::new();
+            entry.read_to_end(&mut contents).await?;
+            linecount_stats.add_file(language_type, &contents);
         }
     }
 
@@ -146,7 +159,11 @@ pub async fn process_tarball<R: tokio::io::AsyncRead + Unpin>(
 
     manifest.complete_from_abstract_filesystem(&PathsFileSystem(paths))?;
 
-    Ok(TarballInfo { manifest, vcs_info })
+    Ok(TarballInfo {
+        manifest,
+        vcs_info,
+        linecount_stats,
+    })
 }
 
 struct PathsFileSystem(Vec<PathBuf>);

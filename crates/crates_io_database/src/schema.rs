@@ -1089,6 +1089,8 @@ diesel::table! {
         semver_ord -> Nullable<Jsonb>,
         /// JSONB data containing JWT claims from the trusted publisher (e.g., GitHub Actions context like repository, run_id, sha)
         trustpub_data -> Nullable<Jsonb>,
+        /// Source Lines of Code statistics for this version, stored as JSON with language breakdown and totals.
+        linecounts -> Nullable<Jsonb>,
     }
 }
 
