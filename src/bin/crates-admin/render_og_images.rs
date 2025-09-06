@@ -9,8 +9,8 @@ use tracing::{info, warn};
 
 #[derive(clap::Parser, Debug)]
 #[command(
-    name = "backfill-og-images",
-    about = "Enqueue OG image generation jobs for existing crates"
+    name = "render-og-images",
+    about = "Enqueue OG image generation jobs for crates"
 )]
 pub struct Opts {
     #[arg(long, default_value = "1000")]
@@ -29,7 +29,7 @@ pub struct Opts {
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
 
-    info!("Starting OG image backfill with options: {opts:?}");
+    info!("Starting OG image rendering with options: {opts:?}");
 
     // Helper function to build query
     let build_query = |offset: i64| {
