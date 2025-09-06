@@ -9,8 +9,8 @@ use tracing::{info, warn};
 
 #[derive(clap::Parser, Debug)]
 #[command(
-    name = "backfill-og-images",
-    about = "Enqueue OG image generation jobs for existing crates"
+    name = "render-og-images",
+    about = "Enqueue OG image generation jobs for crates"
 )]
 pub struct Opts {
     #[arg(long, default_value = "1000")]
@@ -24,12 +24,16 @@ pub struct Opts {
     #[arg(long)]
     /// Offset to start enqueueing from (useful for resuming)
     offset: Option<i64>,
+
+    #[arg(long)]
+    /// Skip CDN cache invalidation when generating OG images
+    skip_invalidation: bool,
 }
 
 pub async fn run(opts: Opts) -> Result<()> {
     let mut conn = db::oneoff_connection().await?;
 
-    info!("Starting OG image backfill with options: {opts:?}");
+    info!("Starting OG image rendering with options: {opts:?}");
 
     // Helper function to build query
     let build_query = |offset: i64| {
@@ -79,7 +83,13 @@ pub async fn run(opts: Opts) -> Result<()> {
         // Create batch of jobs
         let jobs = crate_names
             .into_iter()
-            .map(GenerateOgImage::without_cdn_invalidation)
+            .map(|crate_name| {
+                if opts.skip_invalidation {
+                    GenerateOgImage::without_cdn_invalidation(crate_name)
+                } else {
+                    GenerateOgImage::new(crate_name)
+                }
+            })
             .map(|job| {
                 Ok((
                     background_jobs::job_type.eq(GenerateOgImage::JOB_NAME),
