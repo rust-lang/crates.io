@@ -88,6 +88,12 @@ Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe \
 bindings can be found in External FFI bindings.\
 """
 
+[archives]
+name = "Archives"
+description = """
+Crates for reading and writing archive formats.\
+"""
+
 [asynchronous]
 name = "Asynchronous"
 description = """
