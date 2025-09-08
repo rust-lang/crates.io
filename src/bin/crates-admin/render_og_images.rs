@@ -36,7 +36,7 @@ pub async fn run(opts: Opts) -> Result<()> {
     info!("Starting OG image rendering with options: {opts:?}");
 
     // Helper function to build query
-    let build_query = |offset: i64| {
+    let build_query = || {
         let mut query = crates::table
             .select(crates::name)
             .order(crates::name)
@@ -46,16 +46,11 @@ pub async fn run(opts: Opts) -> Result<()> {
             query = query.filter(crates::name.like(format!("{prefix}%")));
         }
 
-        query.offset(offset)
+        query
     };
 
     // Count total crates to process
-    let mut count_query = crates::table.into_boxed();
-    if let Some(prefix) = &opts.prefix {
-        count_query = count_query.filter(crates::name.like(format!("{prefix}%")));
-    }
-    let total_crates: i64 = count_query.count().get_result(&mut conn).await?;
-
+    let total_crates: i64 = build_query().count().get_result(&mut conn).await?;
     info!("Total crates to enqueue: {total_crates}");
 
     let mut offset = opts.offset.unwrap_or(0);
@@ -64,7 +59,8 @@ pub async fn run(opts: Opts) -> Result<()> {
 
     loop {
         // Fetch batch of crate names
-        let crate_names: Vec<String> = build_query(offset)
+        let crate_names: Vec<String> = build_query()
+            .offset(offset)
             .limit(opts.batch_size as i64)
             .load(&mut conn)
             .await?;
