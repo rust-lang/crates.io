@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use crates_io::db;
 use crates_io::schema::{background_jobs, crates};
 use crates_io::worker::jobs::GenerateOgImage;
@@ -37,10 +37,7 @@ pub async fn run(opts: Opts) -> Result<()> {
 
     // Helper function to build query
     let build_query = || {
-        let mut query = crates::table
-            .select(crates::name)
-            .order(crates::name)
-            .into_boxed();
+        let mut query = crates::table.select(crates::name).into_boxed();
 
         if let Some(prefix) = &opts.prefix {
             query = query.filter(crates::name.like(format!("{prefix}%")));
@@ -50,7 +47,8 @@ pub async fn run(opts: Opts) -> Result<()> {
     };
 
     // Count total crates to process
-    let total_crates: i64 = build_query().count().get_result(&mut conn).await?;
+    let result = build_query().count().get_result(&mut conn).await;
+    let total_crates: i64 = result.context("Failed to count matching crates")?;
     info!("Total crates to enqueue: {total_crates}");
 
     let mut offset = opts.offset.unwrap_or(0);
@@ -60,10 +58,12 @@ pub async fn run(opts: Opts) -> Result<()> {
     loop {
         // Fetch batch of crate names
         let crate_names: Vec<String> = build_query()
+            .order(crates::name)
             .offset(offset)
             .limit(opts.batch_size as i64)
             .load(&mut conn)
-            .await?;
+            .await
+            .context("Failed to load crate names")?;
 
         if crate_names.is_empty() {
             break;
@@ -93,7 +93,8 @@ pub async fn run(opts: Opts) -> Result<()> {
                     background_jobs::priority.eq(-10),
                 ))
             })
-            .collect::<serde_json::Result<Vec<_>>>()?;
+            .collect::<serde_json::Result<Vec<_>>>()
+            .context("Failed to enqueue background jobs")?;
 
         // Batch insert all jobs
         let result = diesel::insert_into(background_jobs::table)
