@@ -8,9 +8,11 @@ import { setup } from 'qunit-dom';
 import Application from '../app';
 import config from '../config/environment';
 import registerMatchJsonAssertion from './helpers/match-json';
+import { registerQUnitCallbacks } from './helpers/setup-msw';
 
 setup(QUnit.assert);
 registerMatchJsonAssertion(QUnit.assert);
+registerQUnitCallbacks(QUnit);
 
 setApplication(Application.create(config.APP));
 
