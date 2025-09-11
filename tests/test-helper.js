@@ -1,8 +1,9 @@
 import { setApplication } from '@ember/test-helpers';
-import start from 'ember-exam/test-support/start';
+import { start } from 'ember-qunit';
 import * as QUnit from 'qunit';
 
 import { forceModulesToBeLoaded, sendCoverage } from 'ember-cli-code-coverage/test-support';
+import { loadTests } from 'ember-qunit/test-loader';
 import { setup } from 'qunit-dom';
 
 import Application from '../app';
@@ -19,4 +20,5 @@ QUnit.done(async function () {
   await sendCoverage();
 });
 
+loadTests();
 start();

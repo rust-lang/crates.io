@@ -29,7 +29,7 @@
     "start:live": "ember serve --proxy https://crates.io",
     "start:local": "ember serve --proxy http://127.0.0.1:8888",
     "start:staging": "ember serve --proxy https://staging-crates-io.herokuapp.com",
-    "test": "ember exam --split=2 --parallel",
+    "test": "ember test",
     "test-coverage": "COVERAGE=true npm run test && ember coverage-merge && rm -rf coverage_* coverage/coverage-summary.json && nyc report",
     "e2e": "playwright test"
   },
@@ -103,7 +103,6 @@
     "ember-error-route": "0.2.0",
     "ember-eslint-parser": "0.5.11",
     "ember-event-helpers": "0.1.1",
-    "ember-exam": "10.0.0",
     "ember-inflector": "6.0.0",
     "ember-keyboard": "9.0.3",
     "ember-link": "3.5.0",
