@@ -39,7 +39,6 @@ module.exports = function (defaults) {
       plugins: [
         require.resolve('ember-auto-import/babel-plugin'),
         require.resolve('ember-concurrency/async-arrow-task-transform'),
-        ...require('ember-cli-code-coverage').buildBabelPlugin({ embroider: true }),
       ],
     },
 
