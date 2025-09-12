@@ -93,6 +93,10 @@ pub struct Server {
     /// The expected audience claim (`aud`) for the Trusted Publishing
     /// token exchange.
     pub trustpub_audience: String,
+
+    /// Disables API token creation when set to any non-empty value.
+    /// The value is used as the error message returned to users.
+    pub disable_token_creation: Option<String>,
 }
 
 impl Server {
@@ -128,6 +132,8 @@ impl Server {
     ///   endpoint even with a healthy database pool.
     /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
     ///   by an operator (e.g. `/crates/{crate_id}/{version}/download`).
+    /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
+    ///   and uses the value as the error message returned to users.
     ///
     /// # Panics
     ///
@@ -195,6 +201,7 @@ impl Server {
 
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
+        let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -245,6 +252,7 @@ impl Server {
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
             trustpub_audience,
+            disable_token_creation,
         })
     }
 }

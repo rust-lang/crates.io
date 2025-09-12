@@ -7,7 +7,7 @@ use anyhow::Context;
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::util::errors::{AppResult, bad_request};
+use crate::util::errors::{AppResult, bad_request, custom};
 use crate::util::token::PlainToken;
 use axum::Json;
 use axum::extract::{Path, Query};
@@ -25,7 +25,7 @@ use http::request::Parts;
 use minijinja::context;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
-use tracing::error;
+use tracing::{error, warn};
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -126,6 +126,17 @@ pub async fn create_api_token(
     }
 
     let user = auth.user();
+
+    // Check if token creation is disabled
+    if let Some(disable_message) = &app.config.disable_token_creation {
+        warn!(
+            "Blocked token creation for user `{}` (id: {}) due to disabled flag (token name: `{}`)",
+            user.gh_login, user.id, new.api_token.name
+        );
+
+        let message = disable_message.clone();
+        return Err(custom(StatusCode::SERVICE_UNAVAILABLE, message));
+    }
 
     let max_token_per_user = 500;
     let count: i64 = ApiToken::belonging_to(user)
