@@ -231,8 +231,8 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
       ember-truth-helpers:
-        specifier: 4.0.3
-        version: 4.0.3(ember-source@6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
+        specifier: 5.0.0
+        version: 5.0.0
       ember-web-app:
         specifier: 5.0.1
         version: 5.0.1
@@ -4219,12 +4219,6 @@ packages:
     resolution: {integrity: sha512-fWcbWd4W4nRv8bbato8JB6oGRpATkR+oGYxMIqnfgTgPWaCS0ww7CuUVNpwg1TulojKMCuTXi8Fem2b1NSF1ZQ==}
     engines: {node: 8.* || >= 10.*}
 
-  ember-functions-as-helper-polyfill@2.1.3:
-    resolution: {integrity: sha512-Hte8jfOmSNzrz/vOchf68CGaBWXN2/5qKgFaylqr9omW2i4Wt9JmaBWRkeR0AJ53N57q3DX2TOb166Taq6QjiA==}
-    engines: {node: '>= 14.0.0'}
-    peerDependencies:
-      ember-source: ^3.25.0 || >=4.0.0
-
   ember-in-element-polyfill@1.0.1:
     resolution: {integrity: sha512-eHs+7D7PuQr8a1DPqsJTsEyo3FZ1XuH6WEZaEBPDa9s0xLlwByCNKl8hi1EbXOgvgEZNHHi9Rh0vjxyfakrlgg==}
     engines: {node: 10.* || >= 12}
@@ -4330,10 +4324,8 @@ packages:
     resolution: {integrity: sha512-eL7lZat68E6P/D7b9UoTB5bB5Oh/0aju0Z7PCMi3aTwhaydRaxloE7TGrTRYU+NdJuyNVZXeGyxFxn2frvd3TA==}
     engines: {node: 12.* || >= 14}
 
-  ember-truth-helpers@4.0.3:
-    resolution: {integrity: sha512-T6Ogd3pk9FxYiZfSxdjgn3Hb3Ksqgw7CD23V9qfig9jktNdkNEHo4+3PA3cSD/+3a2kdH3KmNvKyarVuzdtEkA==}
-    peerDependencies:
-      ember-source: '>=3.28.0'
+  ember-truth-helpers@5.0.0:
+    resolution: {integrity: sha512-PnQd6D6hvlNC3k6gBu0SC2cvfXX6wH6W0nToomIIoxqyrD5cllk0zBh/j/1H0KsczVCWeuF9PWj5xJgL4jQAGg==}
 
   ember-web-app@5.0.1:
     resolution: {integrity: sha512-437ue2c2dy8zwjoUohjLqs+Opb4c8bHVw6U3keKYb8F3Mk/XoFTFsgKgFHIUlb7SyBiAQD+6JsNjGXX71Kljcg==}
@@ -6844,6 +6836,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.13.0:
@@ -13371,15 +13364,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-functions-as-helper-polyfill@2.1.3(ember-source@6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
-    dependencies:
-      ember-cli-babel: 7.26.11
-      ember-cli-typescript: 5.3.0
-      ember-cli-version-checker: 5.1.2
-      ember-source: 6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
-    transitivePeerDependencies:
-      - supports-color
-
   ember-in-element-polyfill@1.0.1:
     dependencies:
       debug: 4.4.1(supports-color@8.1.1)
@@ -13620,11 +13604,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-truth-helpers@4.0.3(ember-source@6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)):
+  ember-truth-helpers@5.0.0:
     dependencies:
       '@embroider/addon-shim': 1.10.0
-      ember-functions-as-helper-polyfill: 2.1.3(ember-source@6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5))
-      ember-source: 6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
     transitivePeerDependencies:
       - supports-color
 
