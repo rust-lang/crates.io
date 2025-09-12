@@ -6,8 +6,9 @@ use anyhow::Context;
 
 use crate::app::AppState;
 use crate::auth::AuthCheck;
+use crate::middleware::real_ip::RealIp;
 use crate::models::token::{CrateScope, EndpointScope};
-use crate::util::errors::{AppResult, bad_request};
+use crate::util::errors::{AppResult, bad_request, custom};
 use crate::util::token::PlainToken;
 use axum::Json;
 use axum::extract::{Path, Query};
@@ -20,12 +21,12 @@ use diesel::dsl::{IntervalDsl, now};
 use diesel::prelude::*;
 use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
-use http::StatusCode;
 use http::request::Parts;
+use http::{StatusCode, header};
 use minijinja::context;
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
-use tracing::error;
+use tracing::{error, warn};
 
 #[derive(Deserialize)]
 pub struct GetParams {
@@ -126,6 +127,26 @@ pub async fn create_api_token(
     }
 
     let user = auth.user();
+
+    // Check if token creation is disabled
+    if let Some(disable_message) = &app.config.disable_token_creation {
+        let client_ip = parts.extensions.get::<RealIp>().map(|ip| ip.to_string());
+        let client_ip = client_ip.as_deref().unwrap_or("unknown");
+
+        let mut headers = parts.headers.clone();
+        headers.remove(header::AUTHORIZATION);
+        headers.remove(header::COOKIE);
+
+        warn!(
+            network.client.ip = client_ip,
+            http.headers = ?headers,
+            "Blocked token creation for user `{}` (id: {}) due to disabled flag (token name: `{}`)",
+            user.gh_login, user.id, new.api_token.name
+        );
+
+        let message = disable_message.clone();
+        return Err(custom(StatusCode::SERVICE_UNAVAILABLE, message));
+    }
 
     let max_token_per_user = 500;
     let count: i64 = ApiToken::belonging_to(user)

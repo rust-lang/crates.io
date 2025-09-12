@@ -279,3 +279,21 @@ async fn create_token_with_expiry_date() {
 
     assert_snapshot!(app.emails_snapshot().await);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_disabled() {
+    const ERROR_MESSAGE: &str =
+        "Token creation is temporarily disabled due to an ongoing phishing campaign";
+
+    let (app, _, user) = TestApp::init()
+        .with_config(|config| {
+            config.disable_token_creation = Some(ERROR_MESSAGE.to_string());
+        })
+        .with_user()
+        .await;
+
+    let response = user.put::<()>("/api/v1/me/tokens", NEW_BAR).await;
+    assert_snapshot!(response.status(), @"503 Service Unavailable");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Token creation is temporarily disabled due to an ongoing phishing campaign"}]}"#);
+    assert!(app.emails().await.is_empty());
+}
