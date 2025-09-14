@@ -24,7 +24,7 @@ url = "=2.5.7"
 
 [dev-dependencies]
 claims = "=0.8.0"
-serde_json = "=1.0.143"
+serde_json = "=1.0.145"
 mockito = "=1.7.0"
 test-case = "=3.3.1"
 tokio = { version = "=1.47.1", features = ["macros", "rt-multi-thread"] }
