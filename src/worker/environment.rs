@@ -56,7 +56,7 @@ impl Environment {
             *repo = Some(Repository::open(&self.repository_config)?);
 
             let clone_duration = clone_start.elapsed();
-            info!(duration = ?clone_duration, "Index cloned");
+            info!(duration = clone_duration.as_nanos(), "Index cloned");
         }
 
         let repo_lock = RepositoryLock { repo };
