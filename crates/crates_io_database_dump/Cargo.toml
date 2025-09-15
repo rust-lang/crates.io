@@ -16,7 +16,7 @@ serde = { version = "=1.0.224", features = ["derive"] }
 serde_json = "=1.0.145"
 tar = "=0.4.44"
 tempfile = "=3.22.0"
-toml = "=0.9.5"
+toml = "=0.9.6"
 tracing = "=0.1.41"
 zip = { version = "=5.1.1", default-features = false, features = ["deflate"] }
 
