@@ -64,10 +64,12 @@ export default class Tooltip extends Component {
     return () => cleanup();
   });
 
+  // The `{{~@x~}}` is used for whitespace control to ensure we don't insert a leading whitespace element
   <template>
+    {{~@x~}}
     <span class='anchor' {{this.onInsertAnchor this}} />
 
-    {{#if this.visible}}
+    {{~#if this.visible}}
       {{#in-element this.containerElement}}
         <div class='tooltip' ...attributes {{this.attachTooltip this side=@side}}>
           {{#if (has-block)}}
@@ -77,6 +79,6 @@ export default class Tooltip extends Component {
           {{/if}}
         </div>
       {{/in-element}}
-    {{/if}}
+    {{/if~}}
   </template>
 }
