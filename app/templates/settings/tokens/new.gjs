@@ -10,6 +10,7 @@ import svgJar from 'ember-svg-jar/helpers/svg-jar';
 import { eq, not } from 'ember-truth-helpers';
 
 import LoadingSpinner from 'crates-io/components/loading-spinner';
+import PatternDescription from 'crates-io/components/token-scopes/pattern-description';
 
 <template>
   <h2>New API Token</h2>
@@ -155,7 +156,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
                 {{#if (not pattern.pattern)}}
                   Please enter a crate name pattern
                 {{else if pattern.isValid}}
-                  {{@controller.patternDescription pattern.pattern}}
+                  <PatternDescription @pattern={{pattern.pattern}} />
                 {{else}}
                   Invalid crate name pattern
                 {{/if}}

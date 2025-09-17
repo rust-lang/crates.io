@@ -6,7 +6,7 @@ import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
 import { TrackedArray } from 'tracked-built-ins';
 
-import { patternDescription, scopeDescription } from '../../../utils/token-scopes';
+import { scopeDescription } from '../../../utils/token-scopes';
 
 export default class NewTokenController extends Controller {
   @service notifications;
@@ -25,7 +25,6 @@ export default class NewTokenController extends Controller {
 
   ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'yank'];
 
-  patternDescription = patternDescription;
   scopeDescription = scopeDescription;
 
   constructor() {

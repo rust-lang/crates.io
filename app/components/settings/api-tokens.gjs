@@ -14,11 +14,12 @@ import or from 'ember-truth-helpers/helpers/or';
 
 import CopyButton from 'crates-io/components/copy-button';
 import LoadingSpinner from 'crates-io/components/loading-spinner';
+import PatternDescription from 'crates-io/components/token-scopes/pattern-description';
 import Tooltip from 'crates-io/components/tooltip';
 import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-now';
 import isClipboardSupported from 'crates-io/helpers/is-clipboard-supported';
 
-import { patternDescription, scopeDescription } from '../../utils/token-scopes';
+import { scopeDescription } from '../../utils/token-scopes';
 
 export default class ApiTokens extends Component {
   @service store;
@@ -26,7 +27,6 @@ export default class ApiTokens extends Component {
   @service router;
 
   scopeDescription = scopeDescription;
-  patternDescription = patternDescription;
 
   get sortedTokens() {
     return this.args.tokens
@@ -136,7 +136,7 @@ export default class ApiTokens extends Component {
 
                     {{#each (this.listToParts token.crate_scopes) as |part|~}}
                       {{#if (eq part.type 'element')}}
-                        <strong>{{part.value}}<Tooltip>{{this.patternDescription part.value}}</Tooltip></strong>
+                        <strong>{{part.value}}<Tooltip><PatternDescription @pattern={{part.value}} /></Tooltip></strong>
                       {{~else~}}
                         {{part.value}}
                       {{/if}}
