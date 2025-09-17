@@ -25,6 +25,7 @@ export default class NewTokenController extends Controller {
 
   ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'yank'];
 
+  patternDescription = patternDescription;
   scopeDescription = scopeDescription;
 
   constructor() {
@@ -155,16 +156,6 @@ class CratePattern {
 
   get hasWildcard() {
     return this.pattern.endsWith('*');
-  }
-
-  get description() {
-    if (!this.pattern) {
-      return 'Please enter a crate name pattern';
-    } else if (this.isValid) {
-      return patternDescription(this.pattern);
-    } else {
-      return 'Invalid crate name pattern';
-    }
   }
 
   @action resetValidation() {
