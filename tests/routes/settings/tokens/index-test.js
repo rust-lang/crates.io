@@ -41,4 +41,20 @@ module('/settings/tokens', function (hooks) {
     assert.dom('[data-test-name]', tokens[1]).hasText('token-1');
     assert.dom('[data-test-token]', tokens[1]).doesNotExist();
   });
+
+  test('scope formatting', async function (assert) {
+    let { user } = prepare(this);
+
+    this.db.apiToken.create({
+      user,
+      endpointScopes: ['publish-new', 'publish-update', 'yank'],
+      crateScopes: ['serde', 'serde-*', 'serde_*'],
+    });
+
+    await visit('/settings/tokens');
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token]').exists({ count: 1 });
+    assert.dom('[data-test-endpoint-scopes]').hasText('Scopes: publish-new , publish-update , and yank');
+    assert.dom('[data-test-crate-scopes]').hasText('Crates: serde , serde-* , and serde_*');
+  });
 });
