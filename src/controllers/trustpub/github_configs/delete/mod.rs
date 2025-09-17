@@ -4,6 +4,7 @@ use crate::email::EmailMessage;
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
+use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::GitHubConfig;
 use crates_io_database::models::{Crate, OwnerKind};
 use crates_io_database::schema::{crate_owners, crates, emails, trustpub_configs_github, users};
@@ -24,7 +25,7 @@ mod tests;
     params(
         ("id" = i32, Path, description = "ID of the Trusted Publishing configuration"),
     ),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
     responses((status = 204, description = "Successful Response")),
 )]
@@ -35,11 +36,7 @@ pub async fn delete_trustpub_github_config(
 ) -> AppResult<StatusCode> {
     let mut conn = state.db_write().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-    let auth_user = auth.user();
-
-    // Check that a trusted publishing config with the given ID exists,
-    // and fetch the corresponding crate.
+    // First, find the config and crate to get the crate name for scope validation
     let (config, krate) = trustpub_configs_github::table
         .inner_join(crates::table)
         .filter(trustpub_configs_github::id.eq(id))
@@ -48,6 +45,13 @@ pub async fn delete_trustpub_github_config(
         .await
         .optional()?
         .ok_or_else(not_found)?;
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&krate.name)
+        .check(&parts, &mut conn)
+        .await?;
+    let auth_user = auth.user();
 
     // Load all crate owners for the given crate ID
     let user_owners = crate_owners::table

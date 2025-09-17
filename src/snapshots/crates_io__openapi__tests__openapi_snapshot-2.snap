@@ -4315,6 +4315,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Delete Trusted Publishing configuration for GitHub Actions.",
