@@ -7,9 +7,10 @@ import autoFocus from '@zestia/ember-auto-focus/modifiers/auto-focus';
 import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
-import eq from 'ember-truth-helpers/helpers/eq';
+import { eq, not } from 'ember-truth-helpers';
 
 import LoadingSpinner from 'crates-io/components/loading-spinner';
+import PatternDescription from 'crates-io/components/token-scopes/pattern-description';
 
 <template>
   <h2>New API Token</h2>
@@ -152,7 +153,13 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
               />
 
               <span class='pattern-description' data-test-description>
-                {{pattern.description}}
+                {{#if (not pattern.pattern)}}
+                  Please enter a crate name pattern
+                {{else if pattern.isValid}}
+                  <PatternDescription @pattern={{pattern.pattern}} />
+                {{else}}
+                  Invalid crate name pattern
+                {{/if}}
               </span>
             </div>
 

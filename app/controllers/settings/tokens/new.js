@@ -6,7 +6,7 @@ import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
 import { TrackedArray } from 'tracked-built-ins';
 
-import { patternDescription, scopeDescription } from '../../../utils/token-scopes';
+import { scopeDescription } from '../../../utils/token-scopes';
 
 export default class NewTokenController extends Controller {
   @service notifications;
@@ -155,16 +155,6 @@ class CratePattern {
 
   get hasWildcard() {
     return this.pattern.endsWith('*');
-  }
-
-  get description() {
-    if (!this.pattern) {
-      return 'Please enter a crate name pattern';
-    } else if (this.isValid) {
-      return patternDescription(this.pattern);
-    } else {
-      return 'Invalid crate name pattern';
-    }
   }
 
   @action resetValidation() {
