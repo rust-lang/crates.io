@@ -23,7 +23,7 @@ export default class NewTokenController extends Controller {
   @tracked scopesInvalid;
   @tracked crateScopes;
 
-  ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'yank'];
+  ENDPOINT_SCOPES = ['change-owners', 'publish-new', 'publish-update', 'trusted-publishing', 'yank'];
 
   scopeDescription = scopeDescription;
 
