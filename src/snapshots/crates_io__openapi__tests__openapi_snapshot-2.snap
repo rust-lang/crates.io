@@ -593,6 +593,7 @@ expression: response.json()
         "enum": [
           "publish-new",
           "publish-update",
+          "trusted-publishing",
           "yank",
           "change-owners"
         ],

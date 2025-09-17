@@ -297,3 +297,53 @@ async fn create_token_disabled() {
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Token creation is temporarily disabled due to an ongoing phishing campaign"}]}"#);
     assert!(app.emails().await.is_empty());
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn create_token_with_trusted_publishing_scope() {
+    let (app, _, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let json = json!({
+        "api_token": {
+            "name": "trusted-publishing-token",
+            "crate_scopes": ["my-crate", "my-*"],
+            "endpoint_scopes": ["trusted-publishing"],
+        }
+    });
+
+    let response = user
+        .put::<()>("/api/v1/me/tokens", serde_json::to_vec(&json).unwrap())
+        .await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".api_token.id" => insta::any_id_redaction(),
+        ".api_token.created_at" => "[datetime]",
+        ".api_token.last_used_at" => "[datetime]",
+        ".api_token.token" => insta::api_token_redaction(),
+    });
+
+    let tokens: Vec<ApiToken> = assert_ok!(
+        ApiToken::belonging_to(user.as_model())
+            .select(ApiToken::as_select())
+            .load(&mut conn)
+            .await
+    );
+
+    assert_that!(tokens, len(eq(1)));
+    assert_eq!(tokens[0].name, "trusted-publishing-token");
+    assert!(!tokens[0].revoked);
+    assert_eq!(tokens[0].last_used_at, None);
+    assert_eq!(
+        tokens[0].crate_scopes,
+        Some(vec![
+            CrateScope::try_from("my-crate").unwrap(),
+            CrateScope::try_from("my-*").unwrap()
+        ])
+    );
+    assert_eq!(
+        tokens[0].endpoint_scopes,
+        Some(vec![EndpointScope::TrustedPublishing])
+    );
+
+    assert_snapshot!(app.emails_snapshot().await);
+}
