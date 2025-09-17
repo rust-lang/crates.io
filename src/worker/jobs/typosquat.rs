@@ -57,7 +57,14 @@ async fn check(
         if !squats.is_empty() {
             // Well, well, well. For now, the only action we'll take is to e-mail people who
             // hopefully care to check into things more closely.
-            info!(?squats, "Found potential typosquatting");
+
+            let squats_formatted = squats
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            info!("Found potential typosquatting by new crate `{name}`: {squats_formatted}");
 
             let squats_data: Vec<_> = squats
                 .iter()
@@ -114,6 +121,8 @@ mod tests {
 
     #[tokio::test]
     async fn integration() -> anyhow::Result<()> {
+        crate::util::tracing::init_for_test();
+
         let emails = Emails::new_in_memory();
         let test_db = TestDatabase::new();
         let mut conn = test_db.async_connect().await;
