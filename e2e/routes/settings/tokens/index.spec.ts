@@ -49,8 +49,8 @@ test.describe('/settings/tokens', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens');
     await expect(page.locator('[data-test-api-token]')).toHaveCount(1);
     await expect(page.locator('[data-test-endpoint-scopes]')).toHaveText(
-      'Scopes: publish-new , publish-update , and yank',
+      'Scopes: publish-new, publish-update, and yank',
     );
-    await expect(page.locator('[data-test-crate-scopes]')).toHaveText('Crates: serde , serde-* , and serde_*');
+    await expect(page.locator('[data-test-crate-scopes]')).toHaveText('Crates: serde, serde-*, and serde_*');
   });
 });

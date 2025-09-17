@@ -54,7 +54,7 @@ module('/settings/tokens', function (hooks) {
     await visit('/settings/tokens');
     assert.strictEqual(currentURL(), '/settings/tokens');
     assert.dom('[data-test-api-token]').exists({ count: 1 });
-    assert.dom('[data-test-endpoint-scopes]').hasText('Scopes: publish-new , publish-update , and yank');
-    assert.dom('[data-test-crate-scopes]').hasText('Crates: serde , serde-* , and serde_*');
+    assert.dom('[data-test-endpoint-scopes]').hasText('Scopes: publish-new, publish-update, and yank');
+    assert.dom('[data-test-crate-scopes]').hasText('Crates: serde, serde-*, and serde_*');
   });
 });
