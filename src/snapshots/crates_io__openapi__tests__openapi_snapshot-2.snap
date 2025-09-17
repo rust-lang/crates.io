@@ -4228,6 +4228,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "List Trusted Publishing configurations for GitHub Actions.",
