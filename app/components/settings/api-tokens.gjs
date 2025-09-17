@@ -136,7 +136,7 @@ export default class ApiTokens extends Component {
 
                     {{#each (this.listToParts token.crate_scopes) as |part|~}}
                       {{#if (eq part.type 'element')}}
-                        <strong>{{part.value}}<Tooltip @text={{this.patternDescription part.value}} /></strong>
+                        <strong>{{part.value}}<Tooltip>{{this.patternDescription part.value}}</Tooltip></strong>
                       {{~else~}}
                         {{part.value}}
                       {{/if}}
