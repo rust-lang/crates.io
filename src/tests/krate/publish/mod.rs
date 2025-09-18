@@ -1,3 +1,4 @@
+mod analysis;
 mod audit_action;
 mod auth;
 mod basics;

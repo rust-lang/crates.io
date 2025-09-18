@@ -3,7 +3,8 @@
 use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
-    self, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob, UpdateDefaultVersion,
+    self, AnalyzeCrateFile, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob,
+    UpdateDefaultVersion,
 };
 use axum::Json;
 use axum::body::{Body, Bytes};
@@ -623,6 +624,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
         let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
         let updates_feed_job = jobs::rss::SyncUpdatesFeed;
+        let analyze_crate_file_job = AnalyzeCrateFile::new(version.id);
 
         tokio::try_join!(
             git_index_job.enqueue(conn),
@@ -634,6 +636,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             }),
             updates_feed_job.enqueue(conn).or_else(async |error| {
                 error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
+                Ok::<_, EnqueueError>(None)
+            }),
+            analyze_crate_file_job.enqueue(conn).or_else(async |error| {
+                error!("Failed to enqueue `AnalyzeCrateFile` job: {error}");
                 Ok::<_, EnqueueError>(None)
             }),
         )?;

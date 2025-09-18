@@ -1,0 +1,17 @@
+[package]
+name = "crates_io_linecount"
+version = "0.0.0"
+description = "Lines of code counting for crates.io using tokei"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { version = "=1.0.223", features = ["derive"] }
+tokei = "=13.0.0-alpha.9"
+
+[dev-dependencies]
+claims = "=0.8.0"
+insta = { version = "=1.43.2", features = ["json"] }
