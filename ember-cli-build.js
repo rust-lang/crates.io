@@ -105,7 +105,7 @@ module.exports = function (defaults) {
             },
             {
               test: /\.svg$/,
-              type: 'asset',
+              type: 'asset/resource',
             },
           ],
         },
