@@ -48,7 +48,7 @@ doctest = true
 
 [dependencies]
 aes-gcm = { version = "=0.10.3", features = ["std"] }
-anyhow = "=1.0.99"
+anyhow = "=1.0.100"
 astral-tokio-tar = "=0.5.3"
 async-compression = { version = "=0.4.30", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
