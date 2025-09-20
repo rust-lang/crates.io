@@ -7,6 +7,7 @@ use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
+use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::NewGitHubConfig;
 use crates_io_database::schema::{crate_owners, emails, users};
 use crates_io_github::GitHubError;
@@ -26,7 +27,7 @@ mod tests;
 #[utoipa::path(
     post,
     path = "/api/v1/trusted_publishing/github_configs",
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     request_body = inline(json::CreateRequest),
     tag = "trusted_publishing",
     responses((status = 200, description = "Successful Response", body = inline(json::CreateResponse))),
@@ -47,7 +48,11 @@ pub async fn create_trustpub_github_config(
 
     let mut conn = state.db_write().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&json_config.krate)
+        .check(&parts, &mut conn)
+        .await?;
     let auth_user = auth.user();
 
     let krate = load_crate(&mut conn, &json_config.krate).await?;

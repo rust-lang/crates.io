@@ -1,0 +1,19 @@
+---
+source: src/tests/routes/me/tokens/create.rs
+expression: app.emails_snapshot().await
+---
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: New API token "trusted-publishing-token" created
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+Hello foo!
+
+A new API token with the name "trusted-publishing-token" was recently added to your crates.io account.
+
+If you did not create this token, you should revoke it immediately: https://crates.io/settings/tokens.
+
+--
+The crates.io Team

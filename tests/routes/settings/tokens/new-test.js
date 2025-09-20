@@ -346,4 +346,30 @@ module('/settings/tokens/new', function (hooks) {
     assert.strictEqual(currentURL(), '/settings/tokens/new?from=1');
     assert.dom('[data-test-title]').hasText('Token not found');
   });
+
+  test('trusted-publishing scope', async function (assert) {
+    prepare(this);
+
+    await visit('/settings/tokens/new');
+    assert.strictEqual(currentURL(), '/settings/tokens/new');
+
+    await fillIn('[data-test-name]', 'trusted-publishing-token');
+    await select('[data-test-expiry]', 'none');
+    await click('[data-test-scope="trusted-publishing"]');
+    await click('[data-test-generate]');
+
+    let token = this.db.apiToken.findFirst({ where: { name: { equals: 'trusted-publishing-token' } } });
+    assert.ok(Boolean(token), 'API token has been created in the backend database');
+    assert.strictEqual(token.name, 'trusted-publishing-token');
+    assert.strictEqual(token.expiredAt, null);
+    assert.strictEqual(token.crateScopes, null);
+    assert.deepEqual(token.endpointScopes, ['trusted-publishing']);
+
+    assert.strictEqual(currentURL(), '/settings/tokens');
+    assert.dom('[data-test-api-token="1"] [data-test-name]').hasText('trusted-publishing-token');
+    assert.dom('[data-test-api-token="1"] [data-test-token]').hasText(token.token);
+    assert.dom('[data-test-api-token="1"] [data-test-endpoint-scopes]').hasText('Scopes: trusted-publishing');
+    assert.dom('[data-test-api-token="1"] [data-test-crate-scopes]').doesNotExist();
+    assert.dom('[data-test-api-token="1"] [data-test-expired-at]').doesNotExist();
+  });
 });
