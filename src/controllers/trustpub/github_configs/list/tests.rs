@@ -1,5 +1,6 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
+use crates_io_database::models::token::{CrateScope, EndpointScope};
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
@@ -143,6 +144,112 @@ async fn test_crate_with_no_configs() -> anyhow::Result<()> {
 
     // No configs have been created for this crate
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_legacy_token_auth() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_trusted_publishing_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
+    assert_snapshot!(response.status(), @"200 OK");
+    assert_json_snapshot!(response.json(), {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_without_trusted_publishing_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo").unwrap()]),
+            Some(vec![EndpointScope::PublishUpdate]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("other-crate").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("*").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+    create_config(&mut conn, krate.id, "foo-rs").await?;
+
+    let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
         ".github_configs[].created_at" => "[datetime]",

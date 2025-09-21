@@ -1,6 +1,7 @@
 use crate::tests::builders::CrateBuilder;
 use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_database::models::Crate;
+use crates_io_database::models::token::{CrateScope, EndpointScope};
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use crates_io_database::schema::trustpub_configs_github;
 use diesel::prelude::*;
@@ -85,9 +86,9 @@ async fn test_unauthenticated() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Try to delete the config with API token authentication.
+/// Delete the config with a legacy API token.
 #[tokio::test(flavor = "multi_thread")]
-async fn test_token_auth() -> anyhow::Result<()> {
+async fn test_legacy_token_auth() -> anyhow::Result<()> {
     let (app, _client, cookie_client, token_client) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;
 
@@ -95,15 +96,15 @@ async fn test_token_auth() -> anyhow::Result<()> {
     let config = create_config(&mut conn, krate.id).await?;
 
     let response = token_client.delete::<()>(&delete_url(config.id)).await;
-    assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this action can only be performed on the crates.io website"}]}"#);
+    assert_snapshot!(response.status(), @"204 No Content");
+    assert_eq!(response.text(), "");
 
-    // Verify the config was not deleted
+    // Verify the config was deleted from the database
     let configs = get_all_configs(&mut conn).await?;
-    assert_eq!(configs.len(), 1);
+    assert_eq!(configs.len(), 0);
 
-    // Verify no emails were sent to crate owners
-    assert_eq!(app.emails().await.len(), 0);
+    // Verify emails were sent to crate owners
+    assert_snapshot!(app.emails_snapshot().await);
 
     Ok(())
 }
@@ -176,6 +177,118 @@ async fn test_team_owner() -> anyhow::Result<()> {
 
     // Verify no emails were sent to crate owners
     assert_eq!(app.emails().await.len(), 0);
+
+    Ok(())
+}
+
+/// Delete the config with an API token that has the correct scopes.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_trusted_publishing_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    let response = token_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"204 No Content");
+    assert_eq!(response.text(), "");
+
+    // Verify the config was deleted from the database
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 0);
+
+    // Verify emails were sent to crate owners
+    assert_snapshot!(app.emails_snapshot().await);
+
+    Ok(())
+}
+
+/// Try to delete the config with an API token that does not have the required endpoint scope.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_without_trusted_publishing_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("foo").unwrap()]),
+            Some(vec![EndpointScope::PublishUpdate]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    let response = token_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    // Verify the config was not deleted
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 1);
+
+    // Verify no emails were sent to crate owners
+    assert_eq!(app.emails().await.len(), 0);
+
+    Ok(())
+}
+
+/// Try to delete the config with an API token that has the correct endpoint scope but wrong crate scope.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_wrong_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("other-crate").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    let response = token_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+    // Verify the config was not deleted
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 1);
+
+    // Verify no emails were sent to crate owners
+    assert_eq!(app.emails().await.len(), 0);
+
+    Ok(())
+}
+
+/// Delete the config with an API token that has a wildcard crate scope.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
+    let (app, _client, cookie_client, token_client) = TestApp::full()
+        .with_scoped_token(
+            Some(vec![CrateScope::try_from("*").unwrap()]),
+            Some(vec![EndpointScope::TrustedPublishing]),
+        )
+        .await;
+    let mut conn = app.db_conn().await;
+
+    let krate = create_crate(&mut conn, cookie_client.as_model().id).await?;
+    let config = create_config(&mut conn, krate.id).await?;
+
+    let response = token_client.delete::<()>(&delete_url(config.id)).await;
+    assert_snapshot!(response.status(), @"204 No Content");
+    assert_eq!(response.text(), "");
+
+    // Verify the config was deleted from the database
+    let configs = get_all_configs(&mut conn).await?;
+    assert_eq!(configs.len(), 0);
+
+    // Verify emails were sent to crate owners
+    assert_snapshot!(app.emails_snapshot().await);
 
     Ok(())
 }

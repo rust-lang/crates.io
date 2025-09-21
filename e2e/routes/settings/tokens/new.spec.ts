@@ -336,6 +336,34 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await expect(page).toHaveURL('/settings/tokens/new?from=1');
     await expect(page.locator('[data-test-title]')).toHaveText('Token not found');
   });
+
+  test('trusted-publishing scope', async ({ page, msw }) => {
+    await prepare(msw);
+
+    await page.goto('/settings/tokens/new');
+    await expect(page).toHaveURL('/settings/tokens/new');
+
+    await page.fill('[data-test-name]', 'trusted-publishing-token');
+    await page.locator('[data-test-expiry]').selectOption('none');
+    await page.click('[data-test-scope="trusted-publishing"]');
+    await page.click('[data-test-generate]');
+
+    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'trusted-publishing-token' } } });
+    expect(token, 'API token has been created in the backend database').toBeTruthy();
+    expect(token.name).toBe('trusted-publishing-token');
+    expect(token.expiredAt).toBe(null);
+    expect(token.crateScopes).toBe(null);
+    expect(token.endpointScopes).toEqual(['trusted-publishing']);
+
+    await expect(page).toHaveURL('/settings/tokens');
+    await expect(page.locator('[data-test-api-token="1"] [data-test-name]')).toHaveText('trusted-publishing-token');
+    await expect(page.locator('[data-test-api-token="1"] [data-test-token]')).toHaveText(token.token);
+    await expect(page.locator('[data-test-api-token="1"] [data-test-endpoint-scopes]')).toHaveText(
+      'Scopes: trusted-publishing',
+    );
+    await expect(page.locator('[data-test-api-token="1"] [data-test-crate-scopes]')).toHaveCount(0);
+    await expect(page.locator('[data-test-api-token="1"] [data-test-expired-at]')).toHaveCount(0);
+  });
 });
 
 test.describe('/settings/tokens/new', { tag: '@routes' }, () => {

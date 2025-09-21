@@ -593,6 +593,7 @@ expression: response.json()
         "enum": [
           "publish-new",
           "publish-update",
+          "trusted-publishing",
           "yank",
           "change-owners"
         ],
@@ -4227,6 +4228,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "List Trusted Publishing configurations for GitHub Actions.",
@@ -4277,6 +4281,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Create a new Trusted Publishing configuration for GitHub Actions.",
@@ -4308,6 +4315,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Delete Trusted Publishing configuration for GitHub Actions.",
