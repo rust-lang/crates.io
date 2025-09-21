@@ -41,8 +41,8 @@ importers:
         specifier: 11.12.0
         version: 11.12.0
       pretty-bytes:
-        specifier: 7.0.1
-        version: 7.0.1
+        specifier: 7.1.0
+        version: 7.1.0
       semver:
         specifier: 7.7.2
         version: 7.7.2
@@ -6803,8 +6803,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  pretty-bytes@7.0.1:
-    resolution: {integrity: sha512-285/jRCYIbMGDciDdrw0KPNC4LKEEwz/bwErcYNxSJOi4CpGUuLpb9gQpg3XJP0XYj9ldSRluXxih4lX2YN8Xw==}
+  pretty-bytes@7.1.0:
+    resolution: {integrity: sha512-nODzvTiYVRGRqAOvE84Vk5JDPyyxsVk0/fbA/bq7RqlnhksGpset09XTxbpvLTIjoaF7K8Z8DG8yHtKGTPSYRw==}
     engines: {node: '>=20'}
 
   printf@0.6.1:
@@ -16563,7 +16563,7 @@ snapshots:
 
   prettier@3.6.2: {}
 
-  pretty-bytes@7.0.1: {}
+  pretty-bytes@7.1.0: {}
 
   printf@0.6.1: {}
 
