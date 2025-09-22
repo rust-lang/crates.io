@@ -4,7 +4,7 @@ export default class IntlService extends Service {
   // `undefined` means "use the default language of the browser"
   locale = undefined;
 
-  formatNumber(value) {
-    return Number(value).toLocaleString(this.locale);
+  formatNumber(value, options) {
+    return Number(value).toLocaleString(this.locale, options);
   }
 }
