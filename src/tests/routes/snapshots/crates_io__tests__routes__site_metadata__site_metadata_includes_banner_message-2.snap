@@ -1,0 +1,10 @@
+---
+source: src/tests/routes/site_metadata.rs
+expression: response.json()
+---
+{
+  "banner_message": "Test banner message",
+  "commit": "unknown",
+  "deployed_sha": "unknown",
+  "read_only": true
+}
