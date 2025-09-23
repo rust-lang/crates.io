@@ -64,13 +64,16 @@ export default class ApplicationRoute extends Route {
     let timeout = Ember.testing ? 0 : 1000;
     await rawTimeout(timeout);
 
-    let { read_only: readOnly } = await ajax('/api/v1/site_metadata');
-    if (readOnly) {
-      let message =
+    let { read_only, banner_message } = await ajax('/api/v1/site_metadata');
+
+    if (!banner_message && read_only) {
+      banner_message =
         'crates.io is currently in read-only mode for maintenance reasons. ' +
         'Some functionality will be temporarily unavailable.';
+    }
 
-      this.notifications.info(message, { autoClear: false });
+    if (banner_message) {
+      this.notifications.info(banner_message, { autoClear: false });
     }
   });
 

@@ -39,6 +39,25 @@ test.describe('Acceptance | Read-only Mode', { tag: '@acceptance' }, () => {
     await checkSentryEventsNumber(ember, 1);
     await checkSentryEventsHasName(ember, ['AjaxError']);
   });
+
+  test('banner message is shown when present', async ({ page, msw }) => {
+    await msw.worker.use(
+      http.get('/api/v1/site_metadata', () => HttpResponse.json({ banner_message: 'test message' })),
+    );
+    await page.goto('/');
+
+    await expect(page.locator('[data-test-notification-message="info"]')).toContainText('test message');
+  });
+
+  test('banner message takes precedence over read-only mode', async ({ page, msw }) => {
+    await msw.worker.use(
+      http.get('/api/v1/site_metadata', () => HttpResponse.json({ read_only: true, banner_message: 'test message' })),
+    );
+    await page.goto('/');
+
+    await expect(page.locator('[data-test-notification-message="info"]')).toContainText('test message');
+    await expect(page.locator('[data-test-notification-message="info"]')).not.toContainText('read-only mode');
+  });
 });
 
 async function checkSentryEventsNumber(ember: AppFixtures['ember'], expected: number) {
