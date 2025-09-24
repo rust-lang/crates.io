@@ -1,14 +1,14 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
+use crate::controllers::trustpub::emails::ConfigCreatedEmail;
 use crate::controllers::trustpub::github_configs::json;
-use crate::email::EmailMessage;
 use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
+use crates_io_database::models::OwnerKind;
 use crates_io_database::models::token::EndpointScope;
-use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
-use crates_io_database::models::{Crate, OwnerKind, User};
+use crates_io_database::models::trustpub::NewGitHubConfig;
 use crates_io_database::schema::{crate_owners, emails, users};
 use crates_io_github::GitHubError;
 use crates_io_trustpub::github::validation::{
@@ -141,20 +141,6 @@ pub async fn create_trustpub_github_config(
     };
 
     Ok(Json(json::CreateResponse { github_config }))
-}
-
-#[derive(serde::Serialize)]
-struct ConfigCreatedEmail<'a> {
-    recipient: &'a str,
-    auth_user: &'a User,
-    krate: &'a Crate,
-    saved_config: &'a GitHubConfig,
-}
-
-impl ConfigCreatedEmail<'_> {
-    fn render(&self) -> Result<EmailMessage, minijinja::Error> {
-        EmailMessage::from_template("trustpub_config_created", self)
-    }
 }
 
 async fn send_notification_email(

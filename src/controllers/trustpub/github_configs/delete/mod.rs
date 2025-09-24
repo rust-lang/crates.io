@@ -1,12 +1,12 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::email::EmailMessage;
+use crate::controllers::trustpub::emails::ConfigDeletedEmail;
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
 use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::GitHubConfig;
-use crates_io_database::models::{Crate, OwnerKind, User};
+use crates_io_database::models::{Crate, OwnerKind};
 use crates_io_database::schema::{crate_owners, crates, emails, trustpub_configs_github, users};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -95,20 +95,6 @@ pub async fn delete_trustpub_github_config(
     }
 
     Ok(StatusCode::NO_CONTENT)
-}
-
-#[derive(serde::Serialize)]
-struct ConfigDeletedEmail<'a> {
-    recipient: &'a str,
-    auth_user: &'a User,
-    krate: &'a Crate,
-    config: &'a GitHubConfig,
-}
-
-impl ConfigDeletedEmail<'_> {
-    fn render(&self) -> Result<EmailMessage, minijinja::Error> {
-        EmailMessage::from_template("trustpub_config_deleted", self)
-    }
 }
 
 async fn send_notification_email(
