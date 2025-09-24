@@ -1,6 +1,13 @@
 use crate::email::EmailMessage;
-use crates_io_database::models::trustpub::GitHubConfig;
+use crates_io_database::models::trustpub::{GitHubConfig, GitLabConfig};
 use crates_io_database::models::{Crate, User};
+
+#[derive(Debug, Clone, Copy, serde::Serialize)]
+#[serde(tag = "type")]
+pub enum ConfigType<'a> {
+    GitHub(&'a GitHubConfig),
+    GitLab(&'a GitLabConfig),
+}
 
 #[derive(serde::Serialize)]
 pub struct ConfigCreatedEmail<'a> {
@@ -11,7 +18,7 @@ pub struct ConfigCreatedEmail<'a> {
     /// The crate for which the trusted publishing configuration was created.
     pub krate: &'a Crate,
     /// The trusted publishing configuration that was created.
-    pub saved_config: &'a GitHubConfig,
+    pub saved_config: ConfigType<'a>,
 }
 
 impl ConfigCreatedEmail<'_> {
@@ -29,7 +36,7 @@ pub struct ConfigDeletedEmail<'a> {
     /// The crate for which the trusted publishing configuration was deleted.
     pub krate: &'a Crate,
     /// The trusted publishing configuration that was deleted.
-    pub config: &'a GitHubConfig,
+    pub config: ConfigType<'a>,
 }
 
 impl ConfigDeletedEmail<'_> {
@@ -88,13 +95,26 @@ mod tests {
         }
     }
 
+    fn test_gitlab_config(environment: Option<&str>) -> GitLabConfig {
+        GitLabConfig {
+            id: 1,
+            created_at: Utc::now(),
+            crate_id: 1,
+            namespace_id: None,
+            namespace: "rust-lang".into(),
+            project: "my-crate".into(),
+            workflow_filepath: ".gitlab-ci.yml".into(),
+            environment: environment.map(String::from),
+        }
+    }
+
     #[test]
     fn test_config_created_email() {
         let email = ConfigCreatedEmail {
             recipient: "octocat",
             auth_user: &test_user(),
             krate: &test_crate(),
-            saved_config: &test_github_config(None),
+            saved_config: ConfigType::GitHub(&test_github_config(None)),
         };
 
         let rendered = assert_ok!(email.render());
@@ -108,7 +128,7 @@ mod tests {
             recipient: "octocat",
             auth_user: &test_user(),
             krate: &test_crate(),
-            saved_config: &test_github_config(Some("production")),
+            saved_config: ConfigType::GitHub(&test_github_config(Some("production"))),
         };
 
         let rendered = assert_ok!(email.render());
@@ -122,7 +142,35 @@ mod tests {
             recipient: "team-member",
             auth_user: &test_user(),
             krate: &test_crate(),
-            saved_config: &test_github_config(None),
+            saved_config: ConfigType::GitHub(&test_github_config(None)),
+        };
+
+        let rendered = assert_ok!(email.render());
+        assert_snapshot!(rendered.subject, @"crates.io: Trusted Publishing configuration added to my-crate");
+        assert_snapshot!(rendered.body_text);
+    }
+
+    #[test]
+    fn test_config_created_email_gitlab() {
+        let email = ConfigCreatedEmail {
+            recipient: "octocat",
+            auth_user: &test_user(),
+            krate: &test_crate(),
+            saved_config: ConfigType::GitLab(&test_gitlab_config(None)),
+        };
+
+        let rendered = assert_ok!(email.render());
+        assert_snapshot!(rendered.subject, @"crates.io: Trusted Publishing configuration added to my-crate");
+        assert_snapshot!(rendered.body_text);
+    }
+
+    #[test]
+    fn test_config_created_email_gitlab_with_environment() {
+        let email = ConfigCreatedEmail {
+            recipient: "octocat",
+            auth_user: &test_user(),
+            krate: &test_crate(),
+            saved_config: ConfigType::GitLab(&test_gitlab_config(Some("production"))),
         };
 
         let rendered = assert_ok!(email.render());
@@ -136,7 +184,7 @@ mod tests {
             recipient: "octocat",
             auth_user: &test_user(),
             krate: &test_crate(),
-            config: &test_github_config(None),
+            config: ConfigType::GitHub(&test_github_config(None)),
         };
 
         let rendered = assert_ok!(email.render());
@@ -150,7 +198,7 @@ mod tests {
             recipient: "octocat",
             auth_user: &test_user(),
             krate: &test_crate(),
-            config: &test_github_config(Some("production")),
+            config: ConfigType::GitHub(&test_github_config(Some("production"))),
         };
 
         let rendered = assert_ok!(email.render());
@@ -164,7 +212,35 @@ mod tests {
             recipient: "team-member",
             auth_user: &test_user(),
             krate: &test_crate(),
-            config: &test_github_config(None),
+            config: ConfigType::GitHub(&test_github_config(None)),
+        };
+
+        let rendered = assert_ok!(email.render());
+        assert_snapshot!(rendered.subject, @"crates.io: Trusted Publishing configuration removed from my-crate");
+        assert_snapshot!(rendered.body_text);
+    }
+
+    #[test]
+    fn test_config_deleted_email_gitlab() {
+        let email = ConfigDeletedEmail {
+            recipient: "octocat",
+            auth_user: &test_user(),
+            krate: &test_crate(),
+            config: ConfigType::GitLab(&test_gitlab_config(None)),
+        };
+
+        let rendered = assert_ok!(email.render());
+        assert_snapshot!(rendered.subject, @"crates.io: Trusted Publishing configuration removed from my-crate");
+        assert_snapshot!(rendered.body_text);
+    }
+
+    #[test]
+    fn test_config_deleted_email_gitlab_with_environment() {
+        let email = ConfigDeletedEmail {
+            recipient: "octocat",
+            auth_user: &test_user(),
+            krate: &test_crate(),
+            config: ConfigType::GitLab(&test_gitlab_config(Some("production"))),
         };
 
         let rendered = assert_ok!(email.render());

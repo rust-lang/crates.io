@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
-use crate::controllers::trustpub::emails::ConfigCreatedEmail;
+use crate::controllers::trustpub::emails::{ConfigCreatedEmail, ConfigType};
 use crate::controllers::trustpub::github_configs::json;
 use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
 use anyhow::Context;
@@ -117,11 +117,13 @@ pub async fn create_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
+        let saved_config = ConfigType::GitHub(&saved_config);
+
         let context = ConfigCreatedEmail {
             recipient,
             auth_user,
             krate: &krate,
-            saved_config: &saved_config,
+            saved_config,
         };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
