@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::email::EmailMessage;
+use crate::controllers::trustpub::emails::ConfigDeletedEmail;
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
@@ -12,7 +12,6 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http::request::Parts;
-use minijinja::context;
 use tracing::warn;
 
 #[cfg(test)]
@@ -83,7 +82,12 @@ pub async fn delete_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let context = context! { recipient, auth_user, krate, config };
+        let context = ConfigDeletedEmail {
+            recipient,
+            auth_user,
+            krate: &krate,
+            config: &config,
+        };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
@@ -96,10 +100,10 @@ pub async fn delete_trustpub_github_config(
 async fn send_notification_email(
     state: &AppState,
     email_address: &str,
-    context: minijinja::Value,
+    context: ConfigDeletedEmail<'_>,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("trustpub_config_deleted", context)
-        .context("Failed to render email template")?;
+    let email = context.render();
+    let email = email.context("Failed to render email template")?;
 
     state
         .emails

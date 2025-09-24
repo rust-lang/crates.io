@@ -35,7 +35,7 @@ pub struct Crate {
     pub homepage: Option<String>,
     pub documentation: Option<String>,
     pub repository: Option<String>,
-    max_upload_size: Option<i32>,
+    pub max_upload_size: Option<i32>,
     pub max_features: Option<i16>,
 }
 
