@@ -98,7 +98,7 @@ async fn send_notification_email(
     email_address: &str,
     context: minijinja::Value,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("config_deleted", context)
+    let email = EmailMessage::from_template("trustpub_config_deleted", context)
         .context("Failed to render email template")?;
 
     state
