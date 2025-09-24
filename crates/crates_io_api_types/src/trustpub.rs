@@ -37,3 +37,40 @@ pub struct NewGitHubConfig {
     #[schema(example = json!(null))]
     pub environment: Option<String>,
 }
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+#[schema(as = GitLabConfig)]
+pub struct GitLabConfig {
+    #[schema(example = 42)]
+    pub id: i32,
+    #[schema(example = "regex")]
+    #[serde(rename = "crate")]
+    pub krate: String,
+    #[schema(example = "rust-lang")]
+    pub namespace: String,
+    #[schema(example = json!(null))]
+    pub namespace_id: Option<String>,
+    #[schema(example = "regex")]
+    pub project: String,
+    #[schema(example = ".gitlab-ci.yml")]
+    pub workflow_filepath: String,
+    #[schema(example = json!(null))]
+    pub environment: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+#[schema(as = NewGitLabConfig)]
+pub struct NewGitLabConfig {
+    #[schema(example = "regex")]
+    #[serde(rename = "crate")]
+    pub krate: String,
+    #[schema(example = "rust-lang")]
+    pub namespace: String,
+    #[schema(example = "regex")]
+    pub project: String,
+    #[schema(example = ".gitlab-ci.yml")]
+    pub workflow_filepath: String,
+    #[schema(example = json!(null))]
+    pub environment: Option<String>,
+}

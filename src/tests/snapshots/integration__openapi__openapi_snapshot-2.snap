@@ -650,6 +650,58 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "GitLabConfig": {
+        "properties": {
+          "crate": {
+            "example": "regex",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "environment": {
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "example": 42,
+            "format": "int32",
+            "type": "integer"
+          },
+          "namespace": {
+            "example": "rust-lang",
+            "type": "string"
+          },
+          "namespace_id": {
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "example": "regex",
+            "type": "string"
+          },
+          "workflow_filepath": {
+            "example": ".gitlab-ci.yml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "crate",
+          "namespace",
+          "project",
+          "workflow_filepath",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "Keyword": {
         "properties": {
           "crates_cnt": {
@@ -768,6 +820,40 @@ expression: response.json()
           "repository_owner",
           "repository_name",
           "workflow_filename"
+        ],
+        "type": "object"
+      },
+      "NewGitLabConfig": {
+        "properties": {
+          "crate": {
+            "example": "regex",
+            "type": "string"
+          },
+          "environment": {
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "namespace": {
+            "example": "rust-lang",
+            "type": "string"
+          },
+          "project": {
+            "example": "regex",
+            "type": "string"
+          },
+          "workflow_filepath": {
+            "example": ".gitlab-ci.yml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crate",
+          "namespace",
+          "project",
+          "workflow_filepath"
         ],
         "type": "object"
       },
@@ -4387,6 +4473,60 @@ expression: response.json()
           }
         ],
         "summary": "Delete Trusted Publishing configuration for GitHub Actions.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      }
+    },
+    "/api/v1/trusted_publishing/gitlab_configs": {
+      "post": {
+        "operationId": "create_trustpub_gitlab_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "gitlab_config": {
+                    "$ref": "#/components/schemas/NewGitLabConfig"
+                  }
+                },
+                "required": [
+                  "gitlab_config"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "gitlab_config": {
+                      "$ref": "#/components/schemas/GitLabConfig"
+                    }
+                  },
+                  "required": [
+                    "gitlab_config"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "api_token": []
+          }
+        ],
         "tags": [
           "trusted_publishing"
         ]

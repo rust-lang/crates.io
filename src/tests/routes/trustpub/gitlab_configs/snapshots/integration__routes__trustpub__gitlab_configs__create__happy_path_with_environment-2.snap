@@ -1,0 +1,16 @@
+---
+source: src/tests/routes/trustpub/gitlab_configs/create.rs
+expression: response.json()
+---
+{
+  "gitlab_config": {
+    "crate": "foo",
+    "created_at": "[datetime]",
+    "environment": "production",
+    "id": 1,
+    "namespace": "rust-lang",
+    "namespace_id": null,
+    "project": "foo-rs",
+    "workflow_filepath": ".gitlab-ci.yml"
+  }
+}
