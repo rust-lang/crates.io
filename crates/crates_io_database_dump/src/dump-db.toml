@@ -205,6 +205,18 @@ repository_name = "private"
 workflow_filename = "private"
 environment = "private"
 
+[trustpub_configs_gitlab]
+dependencies = ["crates"]
+[trustpub_configs_gitlab.columns]
+id = "private"
+created_at = "private"
+crate_id = "private"
+namespace = "private"
+namespace_id = "private"
+project = "private"
+workflow_filepath = "private"
+environment = "private"
+
 [trustpub_tokens.columns]
 id = "private"
 created_at = "private"

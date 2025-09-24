@@ -800,6 +800,28 @@ diesel::table! {
 }
 
 diesel::table! {
+    /// Trusted Publisher configuration for GitLab CI
+    trustpub_configs_gitlab (id) {
+        /// Unique identifier of the `trustpub_configs_gitlab` row
+        id -> Int4,
+        /// Date and time when the configuration was created
+        created_at -> Timestamptz,
+        /// Unique identifier of the crate that this configuration is for
+        crate_id -> Int4,
+        /// GitLab namespace (user or group) that owns the project
+        namespace -> Varchar,
+        /// GitLab namespace ID, populated on first token exchange for resurrection attack protection
+        namespace_id -> Nullable<Varchar>,
+        /// Name of the GitLab project that this configuration is for
+        project -> Varchar,
+        /// Path to the CI/CD configuration file that will be used to publish the crate
+        workflow_filepath -> Varchar,
+        /// GitLab environment that will be used to publish the crate (if `NULL` the environment is unrestricted)
+        environment -> Nullable<Varchar>,
+    }
+}
+
+diesel::table! {
     /// Temporary access tokens for Trusted Publishing
     trustpub_tokens (id) {
         /// Unique identifier of the `trustpub_tokens` row
@@ -1137,6 +1159,7 @@ diesel::joinable!(publish_rate_overrides -> users (user_id));
 diesel::joinable!(readme_renderings -> versions (version_id));
 diesel::joinable!(recent_crate_downloads -> crates (crate_id));
 diesel::joinable!(trustpub_configs_github -> crates (crate_id));
+diesel::joinable!(trustpub_configs_gitlab -> crates (crate_id));
 diesel::joinable!(version_downloads -> versions (version_id));
 diesel::joinable!(version_owner_actions -> api_tokens (api_token_id));
 diesel::joinable!(version_owner_actions -> users (user_id));
@@ -1171,6 +1194,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     reserved_crate_names,
     teams,
     trustpub_configs_github,
+    trustpub_configs_gitlab,
     trustpub_tokens,
     trustpub_used_jtis,
     users,
