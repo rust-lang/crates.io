@@ -88,7 +88,7 @@ expression: response.json()
             ]
           },
           "email": {
-            "description": "The user's email address, if set.",
+            "description": "The user's primary email address, if set.",
             "example": "kate@morgan.dev",
             "type": [
               "string",
@@ -96,12 +96,12 @@ expression: response.json()
             ]
           },
           "email_verification_sent": {
-            "description": "Whether the user's email address verification email has been sent.",
+            "description": "Whether the user's has been sent a verification email to their primary email address, if set.",
             "example": true,
             "type": "boolean"
           },
           "email_verified": {
-            "description": "Whether the user's email address has been verified.",
+            "description": "Whether the user's primary email address, if set, has been verified.",
             "example": true,
             "type": "boolean"
           },

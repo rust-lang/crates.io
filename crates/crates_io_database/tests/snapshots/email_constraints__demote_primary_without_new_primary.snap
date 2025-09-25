@@ -1,0 +1,10 @@
+---
+source: crates/crates_io_database/tests/email_constraints.rs
+expression: result
+---
+Err(
+    DatabaseError(
+        Unknown,
+        "User must have one primary email, found 0",
+    ),
+)
