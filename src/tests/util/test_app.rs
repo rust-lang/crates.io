@@ -527,6 +527,7 @@ fn simple_config() -> config::Server {
         content_security_policy: None,
         trustpub_audience: AUDIENCE.to_string(),
         disable_token_creation: None,
+        banner_message: None,
     }
 }
 

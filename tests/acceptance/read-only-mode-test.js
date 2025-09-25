@@ -38,4 +38,21 @@ module('Acceptance | Read-only Mode', function (hooks) {
     assert.deepEqual(this.owner.lookup('service:sentry').events.length, 1);
     assert.true(this.owner.lookup('service:sentry').events[0].error instanceof AjaxError);
   });
+
+  test('banner message is shown when present', async function (assert) {
+    this.worker.use(http.get('/api/v1/site_metadata', () => HttpResponse.json({ banner_message: 'test message' })));
+
+    await visit('/');
+    assert.dom('[data-test-notification-message="info"]').includesText('test message');
+  });
+
+  test('banner message takes precedence over read-only mode', async function (assert) {
+    this.worker.use(
+      http.get('/api/v1/site_metadata', () => HttpResponse.json({ read_only: true, banner_message: 'test message' })),
+    );
+
+    await visit('/');
+    assert.dom('[data-test-notification-message="info"]').includesText('test message');
+    assert.dom('[data-test-notification-message="info"]').doesNotIncludeText('read-only mode');
+  });
 });

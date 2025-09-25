@@ -15,6 +15,9 @@ pub struct MetadataResponse<'a> {
 
     /// Whether the crates.io service is in read-only mode.
     pub read_only: bool,
+
+    /// Optional banner message to display on all pages.
+    pub banner_message: Option<&'a str>,
 }
 
 /// Get crates.io metadata.
@@ -37,6 +40,7 @@ pub async fn get_site_metadata(state: AppState) -> impl IntoResponse {
         deployed_sha,
         commit: deployed_sha,
         read_only,
+        banner_message: state.config.banner_message.as_deref(),
     })
     .into_response()
 }

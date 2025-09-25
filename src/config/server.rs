@@ -97,6 +97,9 @@ pub struct Server {
     /// Disables API token creation when set to any non-empty value.
     /// The value is used as the error message returned to users.
     pub disable_token_creation: Option<String>,
+
+    /// Banner message to display on all pages (e.g., for security incidents).
+    pub banner_message: Option<String>,
 }
 
 impl Server {
@@ -202,6 +205,7 @@ impl Server {
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
         let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
+        let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -253,6 +257,7 @@ impl Server {
             content_security_policy: Some(content_security_policy.parse()?),
             trustpub_audience,
             disable_token_creation,
+            banner_message,
         })
     }
 }

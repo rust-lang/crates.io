@@ -4006,6 +4006,13 @@ expression: response.json()
               "application/json": {
                 "schema": {
                   "properties": {
+                    "banner_message": {
+                      "description": "Optional banner message to display on all pages.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "commit": {
                       "description": "The SHA1 of the currently deployed commit.",
                       "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
