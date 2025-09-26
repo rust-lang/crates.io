@@ -2,6 +2,7 @@ use crate::dialoguer;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use colored::Colorize;
+use crates_io::controllers::krate::delete::max_downloads;
 use crates_io::models::{NewDeletedCrate, User};
 use crates_io::schema::{crate_downloads, deleted_crates};
 use crates_io::worker::jobs;
@@ -163,10 +164,14 @@ impl Display for CrateInfo {
         let owners = self.owners.join(", ");
 
         write!(f, "id={id}, owners={owners}")?;
-        if self.downloads > 5000 {
-            let downloads = format!("downloads={}", self.downloads).bright_red().bold();
-            write!(f, ", {downloads}")?;
+
+        let mut downloads = format!("downloads={}", self.downloads);
+        let age = Utc::now().signed_duration_since(self.created_at);
+        if self.downloads as u64 > max_downloads(&age) {
+            downloads.push_str("🚨🚨🚨");
         }
+        write!(f, ", {downloads}")?;
+
         if self.rev_deps > 0 {
             let rev_deps = format!("rev_deps={}", self.rev_deps).bright_red().bold();
             write!(f, ", {rev_deps}")?;

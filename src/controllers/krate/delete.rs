@@ -182,7 +182,7 @@ async fn get_crate_downloads(conn: &mut AsyncPgConnection, crate_id: i32) -> Que
     Ok(downloads.unwrap_or_default().to_u64().unwrap_or(u64::MAX))
 }
 
-fn max_downloads(age: &TimeDelta) -> u64 {
+pub fn max_downloads(age: &TimeDelta) -> u64 {
     let age_days = age.num_days().to_u64().unwrap_or(u64::MAX);
     let age_months = age_days.div_ceil(30);
     DOWNLOADS_PER_MONTH_LIMIT * age_months
