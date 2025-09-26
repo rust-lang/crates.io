@@ -163,10 +163,13 @@ impl Display for CrateInfo {
         let owners = self.owners.join(", ");
 
         write!(f, "id={id}, owners={owners}")?;
+
+        let mut downloads = format!("downloads={}", self.downloads);
         if self.downloads > 5000 {
-            let downloads = format!("downloads={}", self.downloads).bright_red().bold();
-            write!(f, ", {downloads}")?;
+            downloads = downloads.bright_red().bold();
         }
+        write!(f, ", {downloads}")?;
+
         if self.rev_deps > 0 {
             let rev_deps = format!("rev_deps={}", self.rev_deps).bright_red().bold();
             write!(f, ", {rev_deps}")?;
