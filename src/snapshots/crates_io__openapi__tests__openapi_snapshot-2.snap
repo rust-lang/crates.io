@@ -1108,6 +1108,10 @@ expression: response.json()
               "null"
             ]
           },
+          "linecounts": {
+            "description": "Line count statistics for this version.\n\nStatus: **Unstable**\n\nThis field may be `null` until the version has been analyzed, which\nhappens in an asynchronous background job.",
+            "type": "object"
+          },
           "links": {
             "$ref": "#/components/schemas/VersionLinks",
             "description": "Links to other API endpoints related to this version."
@@ -1190,7 +1194,8 @@ expression: response.json()
           "links",
           "crate_size",
           "audit_actions",
-          "checksum"
+          "checksum",
+          "linecounts"
         ],
         "type": "object"
       },

@@ -22,6 +22,7 @@
 .msrv,
 .edition,
 .license,
+.linecount,
 .bytes,
 .purl {
     display: flex;
@@ -37,7 +38,8 @@
 
 .date,
 .msrv,
-.edition {
+.edition,
+.linecount {
     > span {
         cursor: help;
     }
@@ -49,6 +51,7 @@
     }
 }
 
+.linecount,
 .bytes {
     font-variant-numeric: tabular-nums;
 }

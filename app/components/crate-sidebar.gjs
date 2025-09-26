@@ -21,6 +21,7 @@ import Tooltip from 'crates-io/components/tooltip';
 import dateFormat from 'crates-io/helpers/date-format';
 import dateFormatDistanceToNow from 'crates-io/helpers/date-format-distance-to-now';
 import dateFormatIso from 'crates-io/helpers/date-format-iso';
+import formatShortNum from 'crates-io/helpers/format-short-num';
 import prettyBytes from 'crates-io/helpers/pretty-bytes';
 
 import { simplifyUrl } from './crate-sidebar/link';
@@ -121,6 +122,20 @@ export default class CrateSidebar extends Component {
             {{svgJar 'license'}}
             <span>
               <LicenseExpression @license={{@version.license}} />
+            </span>
+          </div>
+        {{/if}}
+
+        {{#if @version.linecounts.total_code_lines}}
+          <div class='linecount' data-test-linecounts>
+            {{svgJar 'code'}}
+            <span>
+              {{formatShortNum @version.linecounts.total_code_lines}}
+              SLoC
+              <Tooltip>
+                Source Lines of Code<br />
+                <small>(excluding comments, integration tests and example code)</small>
+              </Tooltip>
             </span>
           </div>
         {{/if}}

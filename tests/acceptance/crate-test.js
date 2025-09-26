@@ -306,4 +306,18 @@ module('Acceptance | crate page', function (hooks) {
     assert.strictEqual(currentURL(), '/crates/nanomsg');
     assert.dom('[data-test-keyword]').exists();
   });
+
+  test('sidebar shows correct information', async function (assert) {
+    this.owner.lookup('service:intl').locale = 'en';
+
+    let crate = this.db.crate.create({ name: 'foo' });
+    this.db.version.create({ crate, num: '0.5.0' });
+    this.db.version.create({ crate, num: '1.0.0' });
+
+    await visit('/crates/foo');
+    assert.dom('[data-test-linecounts]').hasText('1,119 SLoC');
+
+    await visit('/crates/foo/0.5.0');
+    assert.dom('[data-test-linecounts]').hasText('520 SLoC');
+  });
 });

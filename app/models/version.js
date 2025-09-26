@@ -25,6 +25,7 @@ export default class Version extends Model {
   @attr yanked;
   @attr license;
   @attr crate_size;
+  @attr linecounts;
 
   /**
    * The minimum supported Rust version of this crate version.
