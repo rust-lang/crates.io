@@ -168,7 +168,7 @@ impl Display for CrateInfo {
         let mut downloads = format!("downloads={}", self.downloads);
         let age = Utc::now().signed_duration_since(self.created_at);
         if self.downloads as u64 > max_downloads(&age) {
-            downloads = downloads.bright_red().bold().to_string();
+            downloads.push_str("🚨🚨🚨");
         }
         write!(f, ", {downloads}")?;
 
