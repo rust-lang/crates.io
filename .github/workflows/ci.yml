@@ -197,6 +197,7 @@ jobs:
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
+      - run: cargo fetch --locked
       - run: cargo build --tests --workspace
       - run: cargo test --workspace
         env:
