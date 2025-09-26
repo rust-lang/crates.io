@@ -9,7 +9,7 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-serde = { version = "=1.0.226", features = ["derive"] }
+serde = { version = "=1.0.227", features = ["derive"] }
 tokei = "=13.0.0-alpha.9"
 
 [dev-dependencies]
