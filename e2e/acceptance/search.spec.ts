@@ -21,6 +21,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
     );
     await expect(page.locator('[data-test-crate-row="0"] [data-test-crate-link]')).toHaveText('kinetic-rust');
     await expect(page.locator('[data-test-crate-row="0"] [data-test-version]')).toHaveText('v0.0.16');
+    await expect(page.locator('[data-test-crate-row="0"] [data-test-crate-spec]')).toHaveRole('heading');
 
     await expect(page.locator('[data-test-crate-row="0"] [data-test-description]')).toHaveText(
       'A Kinetic protocol library written in Rust',
