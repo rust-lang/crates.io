@@ -7,6 +7,7 @@ use crates_io_database::schema::trustpub_configs_github;
 use crates_io_diesel_helpers::lower;
 use crates_io_trustpub::access_token::AccessToken;
 use crates_io_trustpub::github::{GITHUB_ISSUER_URL, GitHubClaims};
+use crates_io_trustpub::keystore::DecodingKey;
 use crates_io_trustpub::unverified::UnverifiedClaims;
 use diesel::prelude::*;
 use diesel::result::DatabaseErrorKind::UniqueViolation;
@@ -57,14 +58,23 @@ pub async fn exchange_trustpub_token(
         }
     };
 
-    // The following code is only supporting GitHub Actions for now, so let's
-    // drop out if the issuer is not GitHub.
-    if unverified_issuer != GITHUB_ISSUER_URL {
-        return Err(unsupported_issuer(&unverified_issuer));
+    match unverified_issuer.as_str() {
+        GITHUB_ISSUER_URL => handle_github_token(&state, &unverified_jwt, &key).await,
+        _ => Err(unsupported_issuer(&unverified_issuer)),
     }
+}
 
+fn unsupported_issuer(issuer: &str) -> BoxedAppError {
+    bad_request(format!("Unsupported JWT issuer: {issuer}"))
+}
+
+async fn handle_github_token(
+    state: &AppState,
+    unverified_jwt: &str,
+    key: &DecodingKey,
+) -> AppResult<Json<json::ExchangeResponse>> {
     let audience = &state.config.trustpub_audience;
-    let signed_claims = GitHubClaims::decode(&unverified_jwt, audience, &key).map_err(|err| {
+    let signed_claims = GitHubClaims::decode(unverified_jwt, audience, key).map_err(|err| {
         warn!("Failed to decode JWT: {err}");
         bad_request("Failed to decode JWT")
     })?;
@@ -187,8 +197,4 @@ pub async fn exchange_trustpub_token(
         .scope_boxed()
     })
     .await
-}
-
-fn unsupported_issuer(issuer: &str) -> BoxedAppError {
-    bad_request(format!("Unsupported JWT issuer: {issuer}"))
 }
