@@ -16,7 +16,7 @@ import truncateText from 'crates-io/helpers/truncate-text';
 <template>
   <div data-test-crate-row ...attributes class='crate-row'>
     <div class='description-box'>
-      <div class='crate-spec'>
+      <div data-test-crate-spec class='crate-spec' role='heading' aria-level='2'>
         {{#let (link_ 'crate' @crate.id) as |l|}}
           <a href={{l.url}} class='name' data-test-crate-link {{on 'click' l.transitionTo}}>
             {{@crate.name}}
