@@ -2,6 +2,7 @@ use super::OidcKeyStore;
 use super::load_jwks::load_jwks;
 use async_trait::async_trait;
 use jsonwebtoken::DecodingKey;
+use jsonwebtoken::jwk::JwkSet;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -22,6 +23,29 @@ pub struct RealOidcKeyStore {
 struct Cache {
     keys: HashMap<String, DecodingKey>,
     last_update: Option<Instant>,
+}
+
+impl Cache {
+    /// Updates the key cache with a new JWK Set, replacing all existing keys.
+    ///
+    /// This method clears the current cache and populates it with decoding keys
+    /// from the provided JWK Set. Keys without a key ID are skipped with a warning.
+    /// The cache's last update timestamp is set to the current time.
+    fn update(&mut self, jwks: &JwkSet) -> anyhow::Result<()> {
+        self.keys.clear();
+        for key in &jwks.keys {
+            if let Some(key_id) = &key.common.key_id {
+                let decoding_key = DecodingKey::from_jwk(key)?;
+                self.keys.insert(key_id.clone(), decoding_key);
+            } else {
+                warn!("OIDC key without a key ID found, skipping.");
+            }
+        }
+
+        self.last_update = Some(Instant::now());
+
+        Ok(())
+    }
 }
 
 impl RealOidcKeyStore {
@@ -68,18 +92,7 @@ impl OidcKeyStore for RealOidcKeyStore {
 
         // Load the keys from the OIDC provider.
         let jwks = load_jwks(&self.client, &self.issuer_uri).await?;
-
-        cache.keys.clear();
-        for key in jwks.keys {
-            if let Some(key_id) = &key.common.key_id {
-                let decoding_key = DecodingKey::from_jwk(&key)?;
-                cache.keys.insert(key_id.clone(), decoding_key);
-            } else {
-                warn!("OIDC key without a key ID found, skipping.");
-            }
-        }
-
-        cache.last_update = Some(Instant::now());
+        cache.update(&jwks)?;
 
         Ok(cache.keys.get(key_id).cloned())
     }
