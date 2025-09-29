@@ -2,6 +2,7 @@ use super::json;
 use crate::app::AppState;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
+use chrono::{DateTime, Utc};
 use crates_io_database::models::trustpub::{GitHubConfig, NewToken, NewUsedJti, TrustpubData};
 use crates_io_database::schema::trustpub_configs_github;
 use crates_io_diesel_helpers::lower;
@@ -67,6 +68,19 @@ fn unsupported_issuer(issuer: &str) -> BoxedAppError {
     bad_request(format!("Unsupported JWT issuer: {issuer}"))
 }
 
+async fn insert_jti(conn: &mut AsyncPgConnection, jti: &str, exp: DateTime<Utc>) -> AppResult<()> {
+    let used_jti = NewUsedJti::new(jti, exp);
+    match used_jti.insert(conn).await {
+        Ok(_) => Ok(()), // JTI was successfully inserted, continue
+        Err(DatabaseError(UniqueViolation, _)) => {
+            warn!("Attempted JWT reuse (jti: {jti})");
+            let detail = "JWT has already been used";
+            Err(bad_request(detail))
+        }
+        Err(err) => Err(err.into()),
+    }
+}
+
 async fn handle_github_token(
     state: &AppState,
     unverified_jwt: &str,
@@ -88,16 +102,7 @@ async fn handle_github_token_inner(
     conn: &mut AsyncPgConnection,
     signed_claims: GitHubClaims,
 ) -> AppResult<Json<json::ExchangeResponse>> {
-    let used_jti = NewUsedJti::new(&signed_claims.jti, signed_claims.exp);
-    match used_jti.insert(conn).await {
-        Ok(_) => {} // JTI was successfully inserted, continue
-        Err(DatabaseError(UniqueViolation, _)) => {
-            warn!("Attempted JWT reuse (jti: {})", signed_claims.jti);
-            let detail = "JWT has already been used";
-            return Err(bad_request(detail));
-        }
-        Err(err) => Err(err)?,
-    };
+    insert_jti(conn, &signed_claims.jti, signed_claims.exp).await?;
 
     let repo = &signed_claims.repository;
     let Some((repository_owner, repository_name)) = repo.split_once('/') else {
