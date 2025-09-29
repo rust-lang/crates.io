@@ -26,6 +26,14 @@ struct Cache {
 }
 
 impl Cache {
+    /// Returns true if the cache was updated within the minimum refresh interval.
+    fn recently_updated(&self) -> bool {
+        const MIN_AGE_BEFORE_REFRESH: Duration = Duration::from_secs(60);
+
+        self.last_update
+            .is_some_and(|last_update| last_update.elapsed() < MIN_AGE_BEFORE_REFRESH)
+    }
+
     /// Updates the key cache with a new JWK Set, replacing all existing keys.
     ///
     /// This method clears the current cache and populates it with decoding keys
@@ -68,8 +76,6 @@ impl RealOidcKeyStore {
 #[async_trait]
 impl OidcKeyStore for RealOidcKeyStore {
     async fn get_oidc_key(&self, key_id: &str) -> anyhow::Result<Option<DecodingKey>> {
-        const MIN_AGE_BEFORE_REFRESH: Duration = Duration::from_secs(60);
-
         // First, try to get the key with just a read lock.
         let cache = self.cache.read().await;
         if let Some(key) = cache.keys.get(key_id) {
@@ -80,10 +86,7 @@ impl OidcKeyStore for RealOidcKeyStore {
         drop(cache);
 
         let mut cache = self.cache.write().await;
-        if cache
-            .last_update
-            .is_some_and(|last_update| last_update.elapsed() < MIN_AGE_BEFORE_REFRESH)
-        {
+        if cache.recently_updated() {
             // If we're in a cooldown from a previous refresh, return
             // whatever is in the cache, which will probably be None
             // given the previous check under the read lock.
