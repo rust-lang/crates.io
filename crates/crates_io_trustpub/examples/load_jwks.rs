@@ -7,12 +7,15 @@ use reqwest::Client;
 enum Provider {
     #[value(name = "github")]
     GitHub,
+    #[value(name = "gitlab")]
+    GitLab,
 }
 
 impl Provider {
     fn issuer_url(&self) -> &'static str {
         match self {
             Provider::GitHub => GITHUB_ISSUER_URL,
+            Provider::GitLab => "https://gitlab.com",
         }
     }
 }
