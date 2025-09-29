@@ -1,5 +1,5 @@
 mod r#impl;
-mod load_jwks;
+pub mod load_jwks;
 
 use async_trait::async_trait;
 pub use r#impl::RealOidcKeyStore;

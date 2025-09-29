@@ -1787,6 +1787,7 @@ dependencies = [
  "bon",
  "chrono",
  "claims",
+ "clap",
  "insta",
  "jsonwebtoken",
  "mockall",
