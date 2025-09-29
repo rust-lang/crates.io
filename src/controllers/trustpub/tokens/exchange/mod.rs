@@ -1,6 +1,6 @@
 use super::json;
 use crate::app::AppState;
-use crate::util::errors::{AppResult, bad_request, server_error};
+use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
 use crates_io_database::models::trustpub::{GitHubConfig, NewToken, NewUsedJti, TrustpubData};
 use crates_io_database::schema::trustpub_configs_github;
@@ -38,8 +38,7 @@ pub async fn exchange_trustpub_token(
 
     let unverified_issuer = unverified_token_data.claims.iss;
     let Some(keystore) = state.oidc_key_stores.get(&unverified_issuer) else {
-        let error = format!("Unsupported JWT issuer: {unverified_issuer}");
-        return Err(bad_request(error));
+        return Err(unsupported_issuer(&unverified_issuer));
     };
 
     let Some(unverified_key_id) = unverified_token_data.header.kid else {
@@ -61,8 +60,7 @@ pub async fn exchange_trustpub_token(
     // The following code is only supporting GitHub Actions for now, so let's
     // drop out if the issuer is not GitHub.
     if unverified_issuer != GITHUB_ISSUER_URL {
-        let error = format!("Unsupported JWT issuer: {unverified_issuer}");
-        return Err(bad_request(error));
+        return Err(unsupported_issuer(&unverified_issuer));
     }
 
     let audience = &state.config.trustpub_audience;
@@ -189,4 +187,8 @@ pub async fn exchange_trustpub_token(
         .scope_boxed()
     })
     .await
+}
+
+fn unsupported_issuer(issuer: &str) -> BoxedAppError {
+    bad_request(format!("Unsupported JWT issuer: {issuer}"))
 }
