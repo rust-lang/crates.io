@@ -1,0 +1,38 @@
+---
+source: crates/crates_io_trustpub/src/gitlab/test_helpers.rs
+expression: claims
+---
+{
+  "iss": "https://gitlab.com",
+  "nbf": "[timestamp]",
+  "exp": "[timestamp]",
+  "iat": "[timestamp]",
+  "jti": "example-id",
+  "sub": "project_path:octocat/hello-world:ref_type:branch:ref:main",
+  "aud": "crates.io",
+  "project_id": "74884433",
+  "project_path": "octocat/hello-world",
+  "namespace_id": "123",
+  "namespace_path": "octocat",
+  "user_id": "39035",
+  "user_login": "octocat",
+  "user_email": "foo@bar.cloud",
+  "user_access_level": "owner",
+  "job_project_id": "74884433",
+  "job_project_path": "octocat/hello-world",
+  "job_namespace_id": "123",
+  "job_namespace_path": "octocat",
+  "pipeline_id": "2069090987",
+  "pipeline_source": "push",
+  "job_id": "11530106120",
+  "ref": "main",
+  "ref_type": "branch",
+  "ref_path": "refs/heads/main",
+  "ref_protected": "true",
+  "runner_id": 12270840,
+  "runner_environment": "gitlab-hosted",
+  "sha": "76719c2658b5c4423810d655a4624af1b38b7091",
+  "project_visibility": "public",
+  "ci_config_ref_uri": "gitlab.com/octocat/hello-world//.gitlab-ci.yml@refs/heads/main",
+  "ci_config_sha": "76719c2658b5c4423810d655a4624af1b38b7091"
+}
