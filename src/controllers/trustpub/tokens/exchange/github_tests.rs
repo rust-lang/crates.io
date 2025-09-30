@@ -397,6 +397,25 @@ async fn test_repository_owner_id_mismatch() -> anyhow::Result<()> {
 }
 
 // ============================================================================
+// Workflow filename matching tests
+// ============================================================================
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_workflow_filename_mismatch() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| {
+        c.workflow_filename = "different.yml";
+    })
+    .await?;
+
+    let body = default_claims().as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the workflow filename `publish.yml` in the JWT. Expected workflow filenames: `different.yml`"}]}"#);
+
+    Ok(())
+}
+
+// ============================================================================
 // Environment matching tests
 // ============================================================================
 
