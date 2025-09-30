@@ -5,6 +5,7 @@ import { service } from '@ember/service';
 export default class UserRoute extends Route {
   @service notifications;
   @service router;
+  @service session;
   @service store;
 
   queryParams = {
@@ -18,7 +19,12 @@ export default class UserRoute extends Route {
       let user = await this.store.queryRecord('user', { user_id });
 
       params.user_id = user.get('id');
-      params.include_yanked = 'n';
+
+      let isCurrentUser = params.user_id === this.session.currentUser?.id;
+      if (!isCurrentUser) {
+        params.include_yanked = 'n';
+      }
+
       let crates = await this.store.query('crate', params);
 
       return { crates, user };
