@@ -68,6 +68,10 @@ fn default_claims() -> FullGitHubClaims {
         .build()
 }
 
+// ============================================================================
+// Success cases and token generation tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -149,6 +153,10 @@ async fn test_case_insensitive() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// JWT decode and validation tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_broken_jwt() -> anyhow::Result<()> {
@@ -270,6 +278,10 @@ async fn test_invalid_audience() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// JTI replay prevention tests
+// ============================================================================
+
 /// Test that OIDC tokens can only be exchanged once
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_reuse() -> anyhow::Result<()> {
@@ -289,6 +301,10 @@ async fn test_token_reuse() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Repository parsing tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_repository() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -303,6 +319,10 @@ async fn test_invalid_repository() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// Workflow filename extraction tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_workflow() -> anyhow::Result<()> {
@@ -319,6 +339,10 @@ async fn test_invalid_workflow() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Repository owner ID validation tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_owner_id() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -334,6 +358,10 @@ async fn test_invalid_owner_id() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Config lookup tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing_config() -> anyhow::Result<()> {
     let (_app, client, _cookie) = TestApp::full()
@@ -348,6 +376,10 @@ async fn test_missing_config() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// Environment matching tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing_environment() -> anyhow::Result<()> {
