@@ -378,6 +378,25 @@ async fn test_missing_config() -> anyhow::Result<()> {
 }
 
 // ============================================================================
+// Repository owner ID verification (resurrection protection) tests
+// ============================================================================
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_repository_owner_id_mismatch() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| {
+        c.repository_owner_id = 999; // Different from OWNER_ID (42)
+    })
+    .await?;
+
+    let body = default_claims().as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the repository owner ID (42) in the JWT. Expected owner IDs: 999. Please recreate the Trusted Publishing config to update the repository owner ID."}]}"#);
+
+    Ok(())
+}
+
+// ============================================================================
 // Environment matching tests
 // ============================================================================
 
