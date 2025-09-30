@@ -36,7 +36,7 @@ import formatNum from 'crates-io/helpers/format-num';
         </h2>
 
         {{#if @controller.hasMoreCrates}}
-          <LinkTo @route='me.crates' class='my-crates-link'>Show all</LinkTo>
+          <LinkTo @route='user' @model={{@controller.session.currentUser.login}} class='my-crates-link'>Show all</LinkTo>
         {{/if}}
       </div>
       <CrateDownloadsList @crates={{@controller.visibleCrates}} />

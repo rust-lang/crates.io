@@ -10,6 +10,7 @@ import ajax from '../utils/ajax';
 const TO_SHOW = 5;
 
 export default class DashboardController extends Controller {
+  @service session;
   @service store;
 
   hasMore = false;
