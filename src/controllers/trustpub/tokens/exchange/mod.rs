@@ -18,7 +18,7 @@ use secrecy::ExposeSecret;
 use tracing::warn;
 
 #[cfg(test)]
-mod tests;
+mod github_tests;
 
 /// Exchange an OIDC token for a temporary access token.
 #[utoipa::path(
