@@ -19,6 +19,15 @@ pub enum TrustpubData {
         /// SHA of the commit
         sha: String,
     },
+    #[serde(rename = "gitlab")]
+    GitLab {
+        /// Project path (e.g. "rust-lang/cargo")
+        project_path: String,
+        /// Job ID
+        job_id: String,
+        /// SHA of the commit
+        sha: String,
+    },
 }
 
 impl ToSql<Jsonb, Pg> for TrustpubData {
@@ -41,7 +50,7 @@ mod tests {
     use insta::assert_json_snapshot;
 
     #[test]
-    fn test_serialization() {
+    fn test_github_serialization() {
         let data = TrustpubData::GitHub {
             repository: "octo-org/octo-repo".to_string(),
             run_id: "example-run-id".to_string(),
@@ -53,6 +62,24 @@ mod tests {
           "provider": "github",
           "repository": "octo-org/octo-repo",
           "run_id": "example-run-id",
+          "sha": "example-sha"
+        }
+        "#);
+    }
+
+    #[test]
+    fn test_gitlab_serialization() {
+        let data = TrustpubData::GitLab {
+            project_path: "rust-lang/cargo".to_string(),
+            job_id: "example-job-id".to_string(),
+            sha: "example-sha".to_string(),
+        };
+
+        assert_json_snapshot!(data, @r#"
+        {
+          "provider": "gitlab",
+          "project_path": "rust-lang/cargo",
+          "job_id": "example-job-id",
           "sha": "example-sha"
         }
         "#);
