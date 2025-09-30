@@ -68,6 +68,10 @@ fn default_claims() -> FullGitHubClaims {
         .build()
 }
 
+// ============================================================================
+// Success cases and token generation tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_happy_path() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -128,6 +132,31 @@ async fn test_happy_path_with_ignored_environment() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+/// Check that the owner name, repository name, and environment are accepted in
+/// a case-insensitive manner.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_case_insensitive() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| c.environment = Some("Prod")).await?;
+
+    let claims = FullGitHubClaims::builder()
+        .owner_id(OWNER_ID)
+        .owner_name("RUST-lanG")
+        .repository_name("foo-RS")
+        .workflow_filename(WORKFLOW_FILENAME)
+        .environment("PROD")
+        .build();
+
+    let body = claims.as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    Ok(())
+}
+
+// ============================================================================
+// JWT decode and validation tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_broken_jwt() -> anyhow::Result<()> {
@@ -249,6 +278,10 @@ async fn test_invalid_audience() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// JTI replay prevention tests
+// ============================================================================
+
 /// Test that OIDC tokens can only be exchanged once
 #[tokio::test(flavor = "multi_thread")]
 async fn test_token_reuse() -> anyhow::Result<()> {
@@ -268,6 +301,10 @@ async fn test_token_reuse() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Repository parsing tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_repository() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -282,6 +319,10 @@ async fn test_invalid_repository() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// Workflow filename extraction tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_workflow() -> anyhow::Result<()> {
@@ -298,6 +339,10 @@ async fn test_invalid_workflow() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Repository owner ID validation tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_invalid_owner_id() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -313,6 +358,10 @@ async fn test_invalid_owner_id() -> anyhow::Result<()> {
     Ok(())
 }
 
+// ============================================================================
+// Config lookup tests
+// ============================================================================
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing_config() -> anyhow::Result<()> {
     let (_app, client, _cookie) = TestApp::full()
@@ -327,6 +376,48 @@ async fn test_missing_config() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// Repository owner ID verification (resurrection protection) tests
+// ============================================================================
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_repository_owner_id_mismatch() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| {
+        c.repository_owner_id = 999; // Different from OWNER_ID (42)
+    })
+    .await?;
+
+    let body = default_claims().as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the repository owner ID (42) in the JWT. Expected owner IDs: 999. Please recreate the Trusted Publishing config to update the repository owner ID."}]}"#);
+
+    Ok(())
+}
+
+// ============================================================================
+// Workflow filename matching tests
+// ============================================================================
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_workflow_filename_mismatch() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| {
+        c.workflow_filename = "different.yml";
+    })
+    .await?;
+
+    let body = default_claims().as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the workflow filename `publish.yml` in the JWT. Expected workflow filenames: `different.yml`"}]}"#);
+
+    Ok(())
+}
+
+// ============================================================================
+// Environment matching tests
+// ============================================================================
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_missing_environment() -> anyhow::Result<()> {
@@ -351,27 +442,6 @@ async fn test_wrong_environment() -> anyhow::Result<()> {
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the environment `not-prod` in the JWT. Expected environments: `prod`"}]}"#);
-
-    Ok(())
-}
-
-/// Check that the owner name, repository name, and environment are accepted in
-/// a case-insensitive manner.
-#[tokio::test(flavor = "multi_thread")]
-async fn test_case_insensitive() -> anyhow::Result<()> {
-    let client = prepare_with_config(|c| c.environment = Some("Prod")).await?;
-
-    let claims = FullGitHubClaims::builder()
-        .owner_id(OWNER_ID)
-        .owner_name("RUST-lanG")
-        .repository_name("foo-RS")
-        .workflow_filename(WORKFLOW_FILENAME)
-        .environment("PROD")
-        .build();
-
-    let body = claims.as_exchange_body()?;
-    let response = client.post::<()>(URL, body).await;
-    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }
