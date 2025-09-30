@@ -129,6 +129,27 @@ async fn test_happy_path_with_ignored_environment() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Check that the owner name, repository name, and environment are accepted in
+/// a case-insensitive manner.
+#[tokio::test(flavor = "multi_thread")]
+async fn test_case_insensitive() -> anyhow::Result<()> {
+    let client = prepare_with_config(|c| c.environment = Some("Prod")).await?;
+
+    let claims = FullGitHubClaims::builder()
+        .owner_id(OWNER_ID)
+        .owner_name("RUST-lanG")
+        .repository_name("foo-RS")
+        .workflow_filename(WORKFLOW_FILENAME)
+        .environment("PROD")
+        .build();
+
+    let body = claims.as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"200 OK");
+
+    Ok(())
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_broken_jwt() -> anyhow::Result<()> {
     let client = prepare().await?;
@@ -351,27 +372,6 @@ async fn test_wrong_environment() -> anyhow::Result<()> {
     let response = client.post::<()>(URL, body).await;
     assert_snapshot!(response.status(), @"400 Bad Request");
     assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"The Trusted Publishing config for repository `rust-lang/foo-rs` does not match the environment `not-prod` in the JWT. Expected environments: `prod`"}]}"#);
-
-    Ok(())
-}
-
-/// Check that the owner name, repository name, and environment are accepted in
-/// a case-insensitive manner.
-#[tokio::test(flavor = "multi_thread")]
-async fn test_case_insensitive() -> anyhow::Result<()> {
-    let client = prepare_with_config(|c| c.environment = Some("Prod")).await?;
-
-    let claims = FullGitHubClaims::builder()
-        .owner_id(OWNER_ID)
-        .owner_name("RUST-lanG")
-        .repository_name("foo-RS")
-        .workflow_filename(WORKFLOW_FILENAME)
-        .environment("PROD")
-        .build();
-
-    let body = claims.as_exchange_body()?;
-    let response = client.post::<()>(URL, body).await;
-    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }
