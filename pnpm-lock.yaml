@@ -103,7 +103,7 @@ importers:
         version: 0.6.0
       '@percy/cli':
         specifier: 1.31.2
-        version: 1.31.2(typescript@5.9.2)
+        version: 1.31.2(typescript@5.9.3)
       '@percy/ember':
         specifier: 5.0.0
         version: 5.0.0(@babel/core@7.28.4)(webpack@5.101.3)
@@ -181,7 +181,7 @@ importers:
         version: 0.2.0
       ember-eslint-parser:
         specifier: 0.5.11
-        version: 0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.2)
+        version: 0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
       ember-event-helpers:
         specifier: 0.1.1
         version: 0.1.1
@@ -247,7 +247,7 @@ importers:
         version: 10.1.8(eslint@9.36.0(jiti@2.5.1))
       eslint-plugin-ember:
         specifier: 12.7.4
-        version: 12.7.4(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.2)
+        version: 12.7.4(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
       eslint-plugin-ember-concurrency:
         specifier: 0.5.1
         version: 0.5.1(eslint@9.36.0(jiti@2.5.1))
@@ -283,16 +283,16 @@ importers:
         version: 2.0.1(@babel/core@7.28.4)
       msw:
         specifier: 2.11.3
-        version: 2.11.3(@types/node@22.18.8)(typescript@5.9.2)
+        version: 2.11.3(@types/node@22.18.8)(typescript@5.9.3)
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.55.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2))
+        version: 3.0.1(@playwright/test@1.55.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3))
       postcss:
         specifier: 8.5.6
         version: 8.5.6
       postcss-loader:
         specifier: 8.2.0
-        version: 8.2.0(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3)
+        version: 8.2.0(postcss@8.5.6)(typescript@5.9.3)(webpack@5.101.3)
       postcss-preset-env:
         specifier: 10.4.0
         version: 10.4.0(postcss@8.5.6)
@@ -315,8 +315,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(@babel/core@7.28.4)
       typescript:
-        specifier: 5.9.2
-        version: 5.9.2
+        specifier: 5.9.3
+        version: 5.9.3
       webpack:
         specifier: 5.101.3
         version: 5.101.3
@@ -325,10 +325,10 @@ importers:
     dependencies:
       '@mswjs/data':
         specifier: 0.16.2
-        version: 0.16.2(@types/node@22.18.8)(typescript@5.9.2)
+        version: 0.16.2(@types/node@22.18.8)(typescript@5.9.3)
       msw:
         specifier: 2.11.3
-        version: 2.11.3(@types/node@22.18.8)(typescript@5.9.2)
+        version: 2.11.3(@types/node@22.18.8)(typescript@5.9.3)
       semver:
         specifier: 7.7.2
         version: 7.7.2
@@ -338,7 +338,7 @@ importers:
         version: 19.0.2
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/node@22.18.8)(happy-dom@19.0.2)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2))(terser@5.44.0)(yaml@2.8.1)
+        version: 3.2.4(@types/node@22.18.8)(happy-dom@19.0.2)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1)
 
 packages:
 
@@ -7824,8 +7824,8 @@ packages:
   typescript-memoize@1.1.1:
     resolution: {integrity: sha512-GQ90TcKpIH4XxYTI2F98yEQYZgjNMOGPpOgdjIBhaLaWji5HPWlRnZ4AeA1hfBxtY7bCGDJsqDDHk/KaHOl5bA==}
 
-  typescript@5.9.2:
-    resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -10266,7 +10266,7 @@ snapshots:
 
   '@mswjs/cookies@1.1.1': {}
 
-  '@mswjs/data@0.16.2(@types/node@22.18.8)(typescript@5.9.2)':
+  '@mswjs/data@0.16.2(@types/node@22.18.8)(typescript@5.9.3)':
     dependencies:
       '@types/lodash': 4.17.20
       '@types/md5': 2.3.5
@@ -10282,7 +10282,7 @@ snapshots:
       strict-event-emitter: 0.5.1
       uuid: 8.3.2
     optionalDependencies:
-      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.2)
+      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -10324,29 +10324,29 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@percy/cli-app@1.31.2(typescript@5.9.2)':
+  '@percy/cli-app@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
-      '@percy/cli-exec': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
+      '@percy/cli-exec': 1.31.2(typescript@5.9.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-build@1.31.2(typescript@5.9.2)':
+  '@percy/cli-build@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-command@1.31.2(typescript@5.9.2)':
+  '@percy/cli-command@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/config': 1.31.2(typescript@5.9.2)
-      '@percy/core': 1.31.2(typescript@5.9.2)
+      '@percy/config': 1.31.2(typescript@5.9.3)
+      '@percy/core': 1.31.2(typescript@5.9.3)
       '@percy/logger': 1.31.2
     transitivePeerDependencies:
       - bufferutil
@@ -10354,18 +10354,18 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-config@1.31.2(typescript@5.9.2)':
+  '@percy/cli-config@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@percy/cli-exec@1.31.2(typescript@5.9.2)':
+  '@percy/cli-exec@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
       '@percy/logger': 1.31.2
       cross-spawn: 7.0.6
       which: 2.0.2
@@ -10375,9 +10375,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-snapshot@1.31.2(typescript@5.9.2)':
+  '@percy/cli-snapshot@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
       yaml: 2.8.1
     transitivePeerDependencies:
       - bufferutil
@@ -10385,9 +10385,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli-upload@1.31.2(typescript@5.9.2)':
+  '@percy/cli-upload@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
       fast-glob: 3.3.3
       image-size: 1.2.1
     transitivePeerDependencies:
@@ -10396,16 +10396,16 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/cli@1.31.2(typescript@5.9.2)':
+  '@percy/cli@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/cli-app': 1.31.2(typescript@5.9.2)
-      '@percy/cli-build': 1.31.2(typescript@5.9.2)
-      '@percy/cli-command': 1.31.2(typescript@5.9.2)
-      '@percy/cli-config': 1.31.2(typescript@5.9.2)
-      '@percy/cli-exec': 1.31.2(typescript@5.9.2)
-      '@percy/cli-snapshot': 1.31.2(typescript@5.9.2)
-      '@percy/cli-upload': 1.31.2(typescript@5.9.2)
-      '@percy/client': 1.31.2(typescript@5.9.2)
+      '@percy/cli-app': 1.31.2(typescript@5.9.3)
+      '@percy/cli-build': 1.31.2(typescript@5.9.3)
+      '@percy/cli-command': 1.31.2(typescript@5.9.3)
+      '@percy/cli-config': 1.31.2(typescript@5.9.3)
+      '@percy/cli-exec': 1.31.2(typescript@5.9.3)
+      '@percy/cli-snapshot': 1.31.2(typescript@5.9.3)
+      '@percy/cli-upload': 1.31.2(typescript@5.9.3)
+      '@percy/client': 1.31.2(typescript@5.9.3)
       '@percy/logger': 1.31.2
     transitivePeerDependencies:
       - bufferutil
@@ -10413,9 +10413,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@percy/client@1.31.2(typescript@5.9.2)':
+  '@percy/client@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/config': 1.31.2(typescript@5.9.2)
+      '@percy/config': 1.31.2(typescript@5.9.3)
       '@percy/env': 1.31.2
       '@percy/logger': 1.31.2
       pac-proxy-agent: 7.2.0
@@ -10424,23 +10424,23 @@ snapshots:
       - supports-color
       - typescript
 
-  '@percy/config@1.31.2(typescript@5.9.2)':
+  '@percy/config@1.31.2(typescript@5.9.3)':
     dependencies:
       '@percy/logger': 1.31.2
       ajv: 8.17.1
-      cosmiconfig: 8.3.6(typescript@5.9.2)
+      cosmiconfig: 8.3.6(typescript@5.9.3)
       yaml: 2.8.1
     transitivePeerDependencies:
       - typescript
 
-  '@percy/core@1.31.2(typescript@5.9.2)':
+  '@percy/core@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/client': 1.31.2(typescript@5.9.2)
-      '@percy/config': 1.31.2(typescript@5.9.2)
+      '@percy/client': 1.31.2(typescript@5.9.3)
+      '@percy/config': 1.31.2(typescript@5.9.3)
       '@percy/dom': 1.31.2
       '@percy/logger': 1.31.2
-      '@percy/monitoring': 1.31.2(typescript@5.9.2)
-      '@percy/webdriver-utils': 1.31.2(typescript@5.9.2)
+      '@percy/monitoring': 1.31.2(typescript@5.9.3)
+      '@percy/webdriver-utils': 1.31.2(typescript@5.9.3)
       content-disposition: 0.5.4
       cross-spawn: 7.0.6
       extract-zip: 2.0.1
@@ -10477,9 +10477,9 @@ snapshots:
 
   '@percy/logger@1.31.2': {}
 
-  '@percy/monitoring@1.31.2(typescript@5.9.2)':
+  '@percy/monitoring@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/config': 1.31.2(typescript@5.9.2)
+      '@percy/config': 1.31.2(typescript@5.9.3)
       '@percy/logger': 1.31.2
       '@percy/sdk-utils': 1.31.2
       systeminformation: 5.27.10
@@ -10492,9 +10492,9 @@ snapshots:
 
   '@percy/sdk-utils@1.31.2': {}
 
-  '@percy/webdriver-utils@1.31.2(typescript@5.9.2)':
+  '@percy/webdriver-utils@1.31.2(typescript@5.9.3)':
     dependencies:
-      '@percy/config': 1.31.2(typescript@5.9.2)
+      '@percy/config': 1.31.2(typescript@5.9.3)
       '@percy/sdk-utils': 1.31.2
     transitivePeerDependencies:
       - typescript
@@ -10923,9 +10923,9 @@ snapshots:
       '@types/node': 22.18.8
     optional: true
 
-  '@typescript-eslint/tsconfig-utils@8.44.0(typescript@5.9.2)':
+  '@typescript-eslint/tsconfig-utils@8.44.0(typescript@5.9.3)':
     dependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -10935,13 +10935,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2))(vite@7.1.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitest/mocker@3.2.4(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3))(vite@7.1.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.0)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.2)
+      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.3)
       vite: 7.1.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.0)(yaml@2.8.1)
 
   '@vitest/pretty-format@3.2.4':
@@ -12316,23 +12316,23 @@ snapshots:
     dependencies:
       layout-base: 2.0.1
 
-  cosmiconfig@8.3.6(typescript@5.9.2):
+  cosmiconfig@8.3.6(typescript@5.9.3):
     dependencies:
       import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
 
-  cosmiconfig@9.0.0(typescript@5.9.2):
+  cosmiconfig@9.0.0(typescript@5.9.3):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
 
   cross-spawn@6.0.6:
     dependencies:
@@ -13406,12 +13406,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-eslint-parser@0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.2):
+  ember-eslint-parser@0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.28.4(supports-color@8.1.1)
       '@babel/eslint-parser': 7.28.4(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))
       '@glimmer/syntax': 0.95.0
-      '@typescript-eslint/tsconfig-utils': 8.44.0(typescript@5.9.2)
+      '@typescript-eslint/tsconfig-utils': 8.44.0(typescript@5.9.3)
       content-tag: 2.0.3
       eslint-scope: 7.2.2
       html-tags: 3.3.1
@@ -13891,11 +13891,11 @@ snapshots:
     dependencies:
       eslint: 9.36.0(jiti@2.5.1)
 
-  eslint-plugin-ember@12.7.4(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.2):
+  eslint-plugin-ember@12.7.4(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3):
     dependencies:
       '@ember-data/rfc395-data': 0.0.4
       css-tree: 3.1.0
-      ember-eslint-parser: 0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.2)
+      ember-eslint-parser: 0.5.11(@babel/core@7.28.4)(eslint@9.36.0(jiti@2.5.1))(typescript@5.9.3)
       ember-rfc176-data: 0.3.18
       eslint: 9.36.0(jiti@2.5.1)
       eslint-utils: 3.0.0(eslint@9.36.0(jiti@2.5.1))
@@ -15831,7 +15831,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2):
+  msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
@@ -15853,7 +15853,7 @@ snapshots:
       until-async: 3.0.2
       yargs: 17.7.2
     optionalDependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
     transitivePeerDependencies:
       - '@types/node'
 
@@ -16273,11 +16273,11 @@ snapshots:
 
   playwright-core@1.55.1: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.55.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2)):
+  playwright-msw@3.0.1(@playwright/test@1.55.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
       '@playwright/test': 1.55.1
-      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.2)
+      msw: 2.11.3(@types/node@22.18.8)(typescript@5.9.3)
       strict-event-emitter: 0.5.1
 
   playwright@1.55.1:
@@ -16407,9 +16407,9 @@ snapshots:
       '@csstools/utilities': 2.0.0(postcss@8.5.6)
       postcss: 8.5.6
 
-  postcss-loader@8.2.0(postcss@8.5.6)(typescript@5.9.2)(webpack@5.101.3):
+  postcss-loader@8.2.0(postcss@8.5.6)(typescript@5.9.3)(webpack@5.101.3):
     dependencies:
-      cosmiconfig: 9.0.0(typescript@5.9.2)
+      cosmiconfig: 9.0.0(typescript@5.9.3)
       jiti: 2.5.1
       postcss: 8.5.6
       semver: 7.7.2
@@ -17827,7 +17827,7 @@ snapshots:
 
   typescript-memoize@1.1.1: {}
 
-  typescript@5.9.2: {}
+  typescript@5.9.3: {}
 
   uc.micro@2.1.0: {}
 
@@ -17983,11 +17983,11 @@ snapshots:
       terser: 5.44.0
       yaml: 2.8.1
 
-  vitest@3.2.4(@types/node@22.18.8)(happy-dom@19.0.2)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2))(terser@5.44.0)(yaml@2.8.1):
+  vitest@3.2.4(@types/node@22.18.8)(happy-dom@19.0.2)(jiti@2.5.1)(jsdom@25.0.1)(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.2))(vite@7.1.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.0)(yaml@2.8.1))
+      '@vitest/mocker': 3.2.4(msw@2.11.3(@types/node@22.18.8)(typescript@5.9.3))(vite@7.1.6(@types/node@22.18.8)(jiti@2.5.1)(terser@5.44.0)(yaml@2.8.1))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
