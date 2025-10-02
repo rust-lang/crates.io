@@ -84,6 +84,7 @@ impl TestDatabase {
     /// Creates a new Postgres database based on a template with all of the
     /// migrations already applied. Once the `TestDatabase` instance is dropped,
     /// the database is automatically deleted.
+    #[allow(clippy::new_without_default)]
     #[instrument]
     pub fn new() -> TestDatabase {
         Self::new_inner(|name, conn| {
