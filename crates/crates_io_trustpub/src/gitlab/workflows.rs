@@ -33,6 +33,8 @@ pub(crate) fn extract_workflow_filepath(workflow_ref: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
+    use proptest::proptest;
+
     #[test]
     fn test_extract_workflow_filename() {
         let test_cases = [
@@ -102,5 +104,10 @@ mod tests {
         let _ = super::extract_workflow_filepath(
             &(".yml@//".repeat(200_000_000) + ".yml@/\n//\x00.yml@y"),
         );
+    }
+
+    #[test]
+    fn test_extract_workflow_filename_proptest() {
+        proptest!(|(s in "\\PC*")| { let _ = super::extract_workflow_filepath(&s); });
     }
 }
