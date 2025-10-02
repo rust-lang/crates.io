@@ -39,10 +39,10 @@ module('Acceptance | Settings', function (hooks) {
 
     assert.dom('[data-test-owners] [data-test-owner-team]').exists({ count: 2 });
     assert.dom('[data-test-owners] [data-test-owner-user]').exists({ count: 2 });
-    assert.dom('a[href="/teams/github:org:thehydroimpulse"]').exists();
-    assert.dom('a[href="/teams/github:org:blabaere"]').exists();
-    assert.dom('a[href="/users/thehydroimpulse"]').exists();
-    assert.dom('a[href="/users/blabaere"]').exists();
+    assert.dom('[data-test-owners] a[href="/teams/github:org:thehydroimpulse"]').exists();
+    assert.dom('[data-test-owners] a[href="/teams/github:org:blabaere"]').exists();
+    assert.dom('[data-test-owners] a[href="/users/thehydroimpulse"]').exists();
+    assert.dom('[data-test-owners] a[href="/users/blabaere"]').exists();
 
     await percySnapshot(assert);
     await a11yAudit(axeConfig);
