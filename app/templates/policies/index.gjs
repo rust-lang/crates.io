@@ -91,7 +91,7 @@ import TextContent from 'crates-io/components/text-content';
       to a malicious user could have a significant impact for any existing users of your crate.</p>
 
     <p>Crate owners can delete their crates under certain conditions: the crate has been published for less than 72
-      hours, or the crate only has a single owner, the crate has been downloaded less than 500 times for each month it
+      hours, or the crate only has a single owner, the crate has been downloaded less than 1000 times for each month it
       has been published, and the crate is not depended upon by any other crate on crates.io. If these conditions are
       not met, the crate will not be deleted. In exceptional cases crate owners may contact
       <a href='mailto:help@crates.io'>the crates.io team</a>
