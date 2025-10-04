@@ -67,6 +67,7 @@ export default class Header extends Component {
               </dd.Trigger>
 
               <dd.Menu class='current-user-links' as |menu|>
+                <menu.Item><LinkTo @route='user' @model={{this.session.currentUser.login}}>Profile</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='dashboard'>Dashboard</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='settings' data-test-settings>Account Settings</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='me.pending-invites'>Owner Invites</LinkTo></menu.Item>
@@ -138,6 +139,7 @@ export default class Header extends Component {
             <dd.Menu class='current-user-links' as |menu|>
               <menu.Item><LinkTo @route='crates'>Browse All Crates</LinkTo></menu.Item>
               {{#if this.session.currentUser}}
+                <menu.Item><LinkTo @route='user' @model={{this.session.currentUser.login}}>Profile</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='dashboard'>Dashboard</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='settings' data-test-me-link>Account Settings</LinkTo></menu.Item>
                 <menu.Item><LinkTo @route='me.pending-invites'>Owner Invites</LinkTo></menu.Item>
