@@ -1669,9 +1669,9 @@ dependencies = [
 
 [[package]]
 name = "crates_io_og_image"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbba4acaec60e16ab000d11e82abb0b50add77fe44fe73c0e61dc91f48dc040e"
+checksum = "bfa81a428f47200841e9e8ce4f5665ab83ed27612c8dd0e83cc2e5f6edf0c6af"
 dependencies = [
  "reqwest",
  "serde",
