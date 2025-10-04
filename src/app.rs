@@ -13,6 +13,7 @@ use axum::extract::{FromRef, FromRequestParts, State};
 use bon::Builder;
 use crates_io_github::GitHubClient;
 use crates_io_trustpub::github::GITHUB_ISSUER_URL;
+use crates_io_trustpub::gitlab::GITLAB_ISSUER_URL;
 use crates_io_trustpub::keystore::{OidcKeyStore, RealOidcKeyStore};
 use deadpool_diesel::Runtime;
 use derive_more::Deref;
@@ -116,6 +117,10 @@ impl<S: app_builder::State> AppBuilder<S> {
                 "github" => {
                     let key_store = RealOidcKeyStore::new(GITHUB_ISSUER_URL.into());
                     key_stores.insert(GITHUB_ISSUER_URL.into(), Box::new(key_store));
+                }
+                "gitlab" => {
+                    let key_store = RealOidcKeyStore::new(GITLAB_ISSUER_URL.into());
+                    key_stores.insert(GITLAB_ISSUER_URL.into(), Box::new(key_store));
                 }
                 provider => {
                     warn!("Unknown Trusted Publishing provider: {provider}");
