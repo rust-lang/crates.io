@@ -210,11 +210,11 @@ importers:
         specifier: 13.1.1
         version: 13.1.1
       ember-scoped-css:
-        specifier: 0.24.3
-        version: 0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)
+        specifier: 1.0.1
+        version: 1.0.1(ember-template-lint@7.9.3)(webpack@5.101.3)
       ember-scoped-css-compat:
         specifier: 10.2.3
-        version: 10.2.3(@babel/core@7.28.4)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3))
+        version: 10.2.3(@babel/core@7.28.4)(ember-scoped-css@1.0.1(ember-template-lint@7.9.3)(webpack@5.101.3))
       ember-source:
         specifier: 6.7.0
         version: 6.7.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
@@ -4311,9 +4311,9 @@ packages:
     peerDependencies:
       ember-scoped-css: '>=0.18.0'
 
-  ember-scoped-css@0.24.3:
-    resolution: {integrity: sha512-qUHNDt8H2nWbSWplv6lVFdNfRTj0ZMmP/eN6z37MBS+QgenZaj5mH6IF2J9HiXR0WcEOiLtF9IHVJmLE3GievA==}
-    engines: {node: '>= 18'}
+  ember-scoped-css@1.0.1:
+    resolution: {integrity: sha512-6h49tR63YRoAH5z0ZLQyOGfggs6oE4zquAI/EOF2zyXhSU/3KyLCMBujDre2Rq7G3qtl7SE9ZZxB/LjFXIexOg==}
+    engines: {node: '>= 22.16'}
     peerDependencies:
       ember-template-lint: '>= 5.7.2'
       webpack: ^5.0.0
@@ -10851,7 +10851,7 @@ snapshots:
 
   '@types/glob@9.0.0':
     dependencies:
-      glob: 8.1.0
+      glob: 9.3.5
 
   '@types/http-errors@2.0.5': {}
 
@@ -13523,16 +13523,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-scoped-css-compat@10.2.3(@babel/core@7.28.4)(ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)):
+  ember-scoped-css-compat@10.2.3(@babel/core@7.28.4)(ember-scoped-css@1.0.1(ember-template-lint@7.9.3)(webpack@5.101.3)):
     dependencies:
       ember-cli-babel: 8.2.0(@babel/core@7.28.4)
       ember-cli-htmlbars: 6.3.0
-      ember-scoped-css: 0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3)
+      ember-scoped-css: 1.0.1(ember-template-lint@7.9.3)(webpack@5.101.3)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
-  ember-scoped-css@0.24.3(ember-template-lint@7.9.3)(webpack@5.101.3):
+  ember-scoped-css@1.0.1(ember-template-lint@7.9.3)(webpack@5.101.3):
     dependencies:
       '@babel/parser': 7.28.4
       '@embroider/addon-shim': 1.10.0
