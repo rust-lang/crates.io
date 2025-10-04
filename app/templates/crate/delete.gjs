@@ -46,7 +46,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
           <li>
             <ol>
               <li>the crate only has a single owner, <em>and</em></li>
-              <li>the crate has been downloaded less than 500 times for each month it has been published.</li>
+              <li>the crate has been downloaded less than 1000 times for each month it has been published.</li>
             </ol>
           </li>
         </ol>
