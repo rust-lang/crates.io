@@ -130,6 +130,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
+- [ ] it contains malicious code
 - [ ] it contains a vulnerability (please try to contact the crate author first)
 - [ ] it is violating the usage policy in some other way (please specify below)
 
@@ -174,6 +175,7 @@ Additional details:
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
+- [ ] it contains malicious code
 - [ ] it contains a vulnerability (please try to contact the crate author first)
 - [x] it is violating the usage policy in some other way (please specify below)
 
@@ -263,6 +265,7 @@ test detail
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
+- [ ] it contains malicious code
 - [ ] it contains a vulnerability (please try to contact the crate author first)
 - [ ] it is violating the usage policy in some other way (please specify below)
 
@@ -303,6 +306,7 @@ Additional details:
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
+- [ ] it contains malicious code
 - [ ] it contains a vulnerability (please try to contact the crate author first)
 - [x] it is violating the usage policy in some other way (please specify below)
 

@@ -24,7 +24,11 @@ const REASONS = [
     description: 'it is abusive or otherwise harmful',
   },
   {
-    reason: 'security',
+    reason: 'malicious-code',
+    description: 'it contains malicious code',
+  },
+  {
+    reason: 'vulnerability',
     description: 'it contains a vulnerability (please try to contact the crate author first)',
   },
   {
