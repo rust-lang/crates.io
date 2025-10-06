@@ -80,6 +80,10 @@ export default class CrateReportForm extends Component {
     this.reasonsInvalid = false;
   }
 
+  get isMaliciousCodeReport() {
+    return this.selectedReasons.includes('malicious-code');
+  }
+
   @action
   submit() {
     if (!this.validate()) {
@@ -91,7 +95,7 @@ export default class CrateReportForm extends Component {
   }
 
   composeMail() {
-    let crate = this.crate;
+    let { crate, isMaliciousCodeReport } = this;
     let reasons = this.reasons
       .map(({ reason, description }) => {
         let selected = this.isReasonSelected(reason);
@@ -107,9 +111,16 @@ Additional details:
 ${this.detail}
 `;
     let subject = `The "${crate}" crate`;
-    let address = 'help@crates.io';
-    let mailto = `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    return mailto;
+    if (isMaliciousCodeReport) {
+      subject = `[SECURITY] ${subject}`;
+    }
+
+    let addresses = 'help@crates.io';
+    if (isMaliciousCodeReport) {
+      addresses += ',security@rust-lang.org';
+    }
+
+    return `mailto:${addresses}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   <template>
@@ -195,7 +206,11 @@ ${this.detail}
       <div class='buttons'>
         <button type='submit' class='report-button button button--small' data-test-id='report-button'>
           Report to
-          <strong>help@crates.io</strong>
+          {{#if this.isMaliciousCodeReport}}
+            <strong>help@crates.io & security@rust-lang.org</strong>
+          {{else}}
+            <strong>help@crates.io</strong>
+          {{/if}}
         </button>
       </div>
     </form>
