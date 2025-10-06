@@ -145,7 +145,7 @@ module('Acceptance | support', function (hooks) {
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -183,7 +183,7 @@ Additional details:
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -284,7 +284,7 @@ test detail
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -320,7 +320,7 @@ Additional details:
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -359,7 +359,7 @@ test detail
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [x] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -372,5 +372,19 @@ test detail
     assert.true(!!window.openKwargs);
     assert.strictEqual(window.openKwargs.url, mailto);
     assert.strictEqual(window.openKwargs.target, '_self');
+  });
+
+  test('shows help text for vulnerability reports', async function (assert) {
+    await visit('/support');
+    await click('[data-test-id="link-crate-violation"]');
+    assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
+
+    await fillIn('[data-test-id="crate-input"]', 'nanomsg');
+    assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
+    assert.dom('[data-test-id="vulnerability-report"]').doesNotExist();
+
+    await click('[data-test-id="vulnerability-checkbox"]');
+    assert.dom('[data-test-id="vulnerability-checkbox"]').isChecked();
+    assert.dom('[data-test-id="vulnerability-report"]').exists();
   });
 });

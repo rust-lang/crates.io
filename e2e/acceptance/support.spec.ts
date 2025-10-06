@@ -133,7 +133,7 @@ test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -178,7 +178,7 @@ Additional details:
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -257,7 +257,7 @@ test detail
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -298,7 +298,7 @@ Additional details:
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [ ] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -344,7 +344,7 @@ test detail
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
 - [x] it contains malicious code
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -358,5 +358,21 @@ test detail
     await page.waitForFunction(() => !!globalThis.openKwargs);
     await page.waitForFunction(expect => globalThis.openKwargs.url === expect, mailto);
     await page.waitForFunction(expect => globalThis.openKwargs.target === expect, '_self');
+  });
+
+  test('shows help text for vulnerability reports', async ({ page }) => {
+    await page.goto('/support');
+    await page.getByTestId('link-crate-violation').click();
+    await expect(page).toHaveURL('/support?inquire=crate-violation');
+
+    const crateInput = page.getByTestId('crate-input');
+    await crateInput.fill('nanomsg');
+    await expect(crateInput).toHaveValue('nanomsg');
+    await expect(page.getByTestId('vulnerability-report')).not.toBeVisible();
+
+    const checkbox = page.getByTestId('vulnerability-checkbox');
+    await checkbox.check();
+    await expect(checkbox).toBeChecked();
+    await expect(page.getByTestId('vulnerability-report')).toBeVisible();
   });
 });
