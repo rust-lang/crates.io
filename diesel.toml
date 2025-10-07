@@ -5,3 +5,6 @@ file = "crates/crates_io_database/src/schema.rs"
 with_docs = true
 patch_file = "crates/crates_io_database/src/schema.patch"
 column_sorting = "name"
+generate_missing_sql_type_definitions = true
+except_custom_type_definitions = ["Tsvector"]
+import_types = ["diesel::sql_types::*", "diesel_full_text_search::Tsvector"]
