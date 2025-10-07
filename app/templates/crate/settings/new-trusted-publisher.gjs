@@ -7,6 +7,7 @@ import autoFocus from '@zestia/ember-auto-focus/modifiers/auto-focus';
 import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
 import eq from 'ember-truth-helpers/helpers/eq';
+import not from 'ember-truth-helpers/helpers/not';
 
 import LoadingSpinner from 'crates-io/components/loading-spinner';
 
@@ -51,6 +52,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             data-test-repository-owner
             {{autoFocus}}
             {{on 'input' @controller.resetRepositoryOwnerValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.repositoryOwnerInvalid}}
@@ -79,6 +81,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             class='input base-input'
             data-test-repository-name
             {{on 'input' @controller.resetRepositoryNameValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.repositoryNameInvalid}}
@@ -107,6 +110,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             class='input base-input'
             data-test-workflow-filename
             {{on 'input' @controller.resetWorkflowFilenameValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.workflowFilenameInvalid}}
@@ -138,6 +142,41 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
               <code>release.yml</code>
               or
               <code>publish.yml</code>.
+            </div>
+          {{/if}}
+
+          {{#if (not @controller.verificationUrl)}}
+            <div class='workflow-verification' data-test-workflow-verification='initial'>
+              The workflow filename will be verified once all necessary fields are filled.
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'success')}}
+            <div class='workflow-verification workflow-verification--success' data-test-workflow-verification='success'>
+              ✓ Workflow file found at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'not-found')}}
+            <div
+              class='workflow-verification workflow-verification--warning'
+              data-test-workflow-verification='not-found'
+            >
+              ⚠ Workflow file not found at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'error')}}
+            <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='error'>
+              ⚠ Could not verify workflow file at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+              (network error)
+            </div>
+          {{else}}
+            <div class='workflow-verification' data-test-workflow-verification='verifying'>
+              Verifying...
             </div>
           {{/if}}
         {{/let}}
