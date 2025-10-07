@@ -32,6 +32,7 @@ impl Keyword {
     pub async fn find_by_keyword(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
         keywords::table
             .filter(keywords::keyword.eq(lower(name)))
+            .select(Keyword::as_select())
             .first(conn)
             .await
     }
@@ -55,6 +56,7 @@ impl Keyword {
 
         keywords::table
             .filter(keywords::keyword.eq_any(&lowercase_names))
+            .select(Keyword::as_select())
             .load(conn)
             .await
     }

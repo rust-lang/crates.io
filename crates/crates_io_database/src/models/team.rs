@@ -45,6 +45,7 @@ impl NewTeam<'_> {
             .on_conflict(teams::github_id)
             .do_update()
             .set(self)
+            .returning(Team::as_returning())
             .get_result(conn)
             .await
     }

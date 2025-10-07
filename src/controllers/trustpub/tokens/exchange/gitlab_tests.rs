@@ -410,6 +410,7 @@ async fn test_lazy_namespace_id_population() -> anyhow::Result<()> {
     let config: GitLabConfig = trustpub_configs_gitlab::table
         .filter(trustpub_configs_gitlab::namespace.eq(NAMESPACE))
         .filter(trustpub_configs_gitlab::project.eq(PROJECT))
+        .select(GitLabConfig::as_select())
         .first(&mut conn)
         .await?;
 

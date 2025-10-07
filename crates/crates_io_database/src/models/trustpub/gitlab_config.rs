@@ -73,6 +73,7 @@ mod tests {
         // Retrieve the config
         let retrieved_config = trustpub_configs_gitlab::table
             .filter(trustpub_configs_gitlab::id.eq(inserted_config.id))
+            .select(GitLabConfig::as_select())
             .first::<GitLabConfig>(&mut conn)
             .await
             .unwrap();

@@ -55,6 +55,7 @@ impl Category {
             async move {
                 let categories: Vec<Category> = categories::table
                     .filter(categories::slug.eq_any(slugs))
+                    .select(Category::as_select())
                     .load(conn)
                     .await?;
 
@@ -400,6 +401,7 @@ mod tests {
             .unwrap();
 
         let cat: Category = Category::by_slug("cat1::sub1")
+            .select(Category::as_select())
             .first(&mut conn)
             .await
             .unwrap();
