@@ -3,11 +3,14 @@ use crate::app::AppState;
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, server_error};
 use axum::Json;
 use chrono::{DateTime, Utc};
-use crates_io_database::models::trustpub::{GitHubConfig, NewToken, NewUsedJti, TrustpubData};
-use crates_io_database::schema::trustpub_configs_github;
+use crates_io_database::models::trustpub::{
+    GitHubConfig, GitLabConfig, NewToken, NewUsedJti, TrustpubData,
+};
+use crates_io_database::schema::{trustpub_configs_github, trustpub_configs_gitlab};
 use crates_io_diesel_helpers::lower;
 use crates_io_trustpub::access_token::AccessToken;
 use crates_io_trustpub::github::{GITHUB_ISSUER_URL, GitHubClaims};
+use crates_io_trustpub::gitlab::{GITLAB_ISSUER_URL, GitLabClaims};
 use crates_io_trustpub::keystore::DecodingKey;
 use crates_io_trustpub::unverified::UnverifiedClaims;
 use diesel::prelude::*;
@@ -19,6 +22,8 @@ use tracing::warn;
 
 #[cfg(test)]
 mod github_tests;
+#[cfg(test)]
+mod gitlab_tests;
 
 /// Exchange an OIDC token for a temporary access token.
 #[utoipa::path(
@@ -60,6 +65,7 @@ pub async fn exchange_trustpub_token(
 
     match unverified_issuer.as_str() {
         GITHUB_ISSUER_URL => handle_github_token(&state, &unverified_jwt, &key).await,
+        GITLAB_ISSUER_URL => handle_gitlab_token(&state, &unverified_jwt, &key).await,
         _ => Err(unsupported_issuer(&unverified_issuer)),
     }
 }
@@ -206,6 +212,170 @@ async fn handle_github_token_inner(
     let trustpub_data = TrustpubData::GitHub {
         repository: signed_claims.repository,
         run_id: signed_claims.run_id,
+        sha: signed_claims.sha,
+    };
+
+    let new_token_model = NewToken {
+        expires_at: chrono::Utc::now() + chrono::Duration::minutes(30),
+        hashed_token: &new_token.sha256(),
+        crate_ids: &crate_ids,
+        trustpub_data: Some(&trustpub_data),
+    };
+
+    new_token_model.insert(conn).await?;
+
+    let token = new_token.finalize().expose_secret().into();
+    Ok(Json(json::ExchangeResponse { token }))
+}
+
+async fn handle_gitlab_token(
+    state: &AppState,
+    unverified_jwt: &str,
+    key: &DecodingKey,
+) -> AppResult<Json<json::ExchangeResponse>> {
+    let audience = &state.config.trustpub_audience;
+    let signed_claims = GitLabClaims::decode(unverified_jwt, audience, key).map_err(|err| {
+        warn!("Failed to decode JWT: {err}");
+        bad_request("Failed to decode JWT")
+    })?;
+
+    let mut conn = state.db_write().await?;
+
+    conn.transaction(|conn| Box::pin(handle_gitlab_token_inner(conn, signed_claims)))
+        .await
+}
+
+async fn handle_gitlab_token_inner(
+    conn: &mut AsyncPgConnection,
+    signed_claims: GitLabClaims,
+) -> AppResult<Json<json::ExchangeResponse>> {
+    insert_jti(conn, &signed_claims.jti, signed_claims.exp).await?;
+
+    // GitLab project paths can contain subgroups, which should be treated as
+    // part of the namespace. We use `rsplit_once()` here to split after the
+    // last slash in the full project path.
+    //
+    // In other words: `foo/bar/baz` becomes `(foo/bar, baz)`.
+    let project_path = &signed_claims.project_path;
+    let Some((namespace, project)) = project_path.rsplit_once('/') else {
+        warn!("Unexpected project_path format in JWT: {project_path}");
+        let message = "Unexpected `project_path` value";
+        return Err(bad_request(message));
+    };
+
+    let Some(workflow_filepath) = signed_claims.workflow_filepath() else {
+        let ci_config_ref_uri = &signed_claims.ci_config_ref_uri;
+        warn!("Unexpected `ci_config_ref_uri` format in JWT: {ci_config_ref_uri}");
+        let message = "Unexpected `ci_config_ref_uri` value";
+        return Err(bad_request(message));
+    };
+
+    let mut repo_configs = trustpub_configs_gitlab::table
+        .select(GitLabConfig::as_select())
+        .filter(lower(trustpub_configs_gitlab::namespace).eq(lower(&namespace)))
+        .filter(lower(trustpub_configs_gitlab::project).eq(lower(&project)))
+        .load(conn)
+        .await?;
+
+    if repo_configs.is_empty() {
+        let message =
+            format!("No Trusted Publishing config found for repository `{project_path}`.");
+        return Err(bad_request(message));
+    }
+
+    // First, handle resurrection protection by lazily storing namespace_id and
+    // verifying it on subsequent exchanges, before checking workflow/environment.
+    let configs_to_update: Vec<i32> = repo_configs
+        .iter()
+        .filter(|config| config.namespace_id.is_none())
+        .map(|config| config.id)
+        .collect();
+
+    if !configs_to_update.is_empty() {
+        diesel::update(trustpub_configs_gitlab::table)
+            .filter(trustpub_configs_gitlab::id.eq_any(&configs_to_update))
+            .filter(trustpub_configs_gitlab::namespace_id.is_null())
+            .set(trustpub_configs_gitlab::namespace_id.eq(&signed_claims.namespace_id))
+            .execute(conn)
+            .await?;
+    }
+
+    // Remove configs that have a stored namespace_id which doesn't match
+    let mismatched_namespace_ids: Vec<String> = repo_configs
+        .extract_if(.., |config| {
+            config
+                .namespace_id
+                .as_ref()
+                .is_some_and(|stored| stored != &signed_claims.namespace_id)
+        })
+        .filter_map(|config| config.namespace_id)
+        .collect();
+
+    if repo_configs.is_empty() {
+        let message = format!(
+            "The Trusted Publishing config for repository `{project_path}` does not match the namespace ID ({}) in the JWT. Expected namespace IDs: {}. Please recreate the Trusted Publishing config to update the namespace ID.",
+            signed_claims.namespace_id,
+            mismatched_namespace_ids.join(", ")
+        );
+        return Err(bad_request(message));
+    }
+
+    // Filter by workflow filepath match
+    let mismatched_workflows: Vec<String> = repo_configs
+        .extract_if(.., |config| config.workflow_filepath != workflow_filepath)
+        .map(|config| format!("`{}`", config.workflow_filepath))
+        .collect();
+
+    if repo_configs.is_empty() {
+        let message = format!(
+            "The Trusted Publishing config for repository `{project_path}` does not match the workflow filepath `{workflow_filepath}` in the JWT. Expected workflow filepaths: {}",
+            mismatched_workflows.join(", ")
+        );
+        return Err(bad_request(message));
+    }
+
+    // Filter by environment (if config requires one)
+    let mismatched_environments: Vec<String> = repo_configs
+        .extract_if(.., |config| {
+            match (&config.environment, &signed_claims.environment) {
+                // Keep configs with no environment requirement
+                (None, _) => false,
+                // Remove configs requiring environment when JWT has none
+                (Some(_), None) => true,
+                // Remove non-matching environments (case-insensitive)
+                (Some(config_env), Some(signed_env)) => {
+                    config_env.to_lowercase() != signed_env.to_lowercase()
+                }
+            }
+        })
+        .filter_map(|config| config.environment.map(|env| format!("`{env}`")))
+        .collect();
+
+    if repo_configs.is_empty() {
+        let message = if let Some(signed_environment) = &signed_claims.environment {
+            format!(
+                "The Trusted Publishing config for repository `{project_path}` does not match the environment `{signed_environment}` in the JWT. Expected environments: {}",
+                mismatched_environments.join(", ")
+            )
+        } else {
+            format!(
+                "The Trusted Publishing config for repository `{project_path}` requires an environment, but the JWT does not specify one. Expected environments: {}",
+                mismatched_environments.join(", ")
+            )
+        };
+        return Err(bad_request(message));
+    }
+
+    let crate_ids = repo_configs
+        .iter()
+        .map(|config| config.crate_id)
+        .collect::<Vec<_>>();
+
+    let new_token = AccessToken::generate();
+
+    let trustpub_data = TrustpubData::GitLab {
+        project_path: signed_claims.project_path,
+        job_id: signed_claims.job_id,
         sha: signed_claims.sha,
     };
 
