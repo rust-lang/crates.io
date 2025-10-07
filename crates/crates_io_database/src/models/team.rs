@@ -40,13 +40,33 @@ impl NewTeam<'_> {
     pub async fn create_or_update(&self, conn: &mut AsyncPgConnection) -> QueryResult<Team> {
         use diesel::insert_into;
 
-        insert_into(teams::table)
-            .values(self)
-            .on_conflict(teams::github_id)
-            .do_update()
-            .set(self)
-            .get_result(conn)
-            .await
+        // First try to update an existing record with matching org_id and login
+        let update_result = diesel::update(
+            teams::table.filter(
+                teams::org_id
+                    .eq(self.org_id)
+                    .and(teams::login.eq(self.login)),
+            ),
+        )
+        .set(self)
+        .returning(Team::as_returning())
+        .get_result(conn)
+        .await;
+
+        match update_result {
+            Ok(team) => Ok(team),
+            Err(diesel::result::Error::NotFound) => {
+                // No existing record found, try to insert
+                insert_into(teams::table)
+                    .values(self)
+                    .on_conflict(teams::github_id)
+                    .do_update()
+                    .set(self)
+                    .get_result(conn)
+                    .await
+            }
+            Err(e) => Err(e),
+        }
     }
 }
 
