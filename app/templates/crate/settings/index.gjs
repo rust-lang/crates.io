@@ -8,6 +8,7 @@ import pageTitle from 'ember-page-title/helpers/page-title';
 import not from 'ember-truth-helpers/helpers/not';
 
 import CrateHeader from 'crates-io/components/crate-header';
+import Tooltip from 'crates-io/components/tooltip';
 import UserAvatar from 'crates-io/components/user-avatar';
 
 <template>
@@ -132,7 +133,18 @@ import UserAvatar from 'crates-io/components/user-avatar';
               href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}'
               target='_blank'
               rel='noopener noreferrer'
-            >{{config.repository_owner}}/{{config.repository_name}}</a><br />
+            >{{config.repository_owner}}/{{config.repository_name}}</a>
+            <span class='owner-id'>
+              · Owner ID:
+              {{config.repository_owner_id}}
+              <Tooltip>
+                This is the owner ID for
+                <strong>{{config.repository_owner}}</strong>
+                from when this configuration was created. If
+                <strong>{{config.repository_owner}}</strong>
+                was recreated on GitHub, this configuration will need to be recreated as well.
+              </Tooltip>
+            </span><br />
             <strong>Workflow:</strong>
             <a
               href='https://github.com/{{config.repository_owner}}/{{config.repository_name}}/blob/HEAD/.github/workflows/{{config.workflow_filename}}'
