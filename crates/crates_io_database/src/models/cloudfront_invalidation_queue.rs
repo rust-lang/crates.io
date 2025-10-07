@@ -39,6 +39,7 @@ impl CloudFrontInvalidationQueueItem {
         cloudfront_invalidation_queue::table
             .order(cloudfront_invalidation_queue::created_at.asc())
             .limit(limit)
+            .select(Self::as_select())
             .load(conn)
             .await
     }

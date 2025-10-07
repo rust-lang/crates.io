@@ -97,7 +97,10 @@ pub async fn find_category(
 ) -> AppResult<Json<GetResponse>> {
     let mut conn = state.db_read().await?;
 
-    let cat: Category = Category::by_slug(&slug).first(&mut conn).await?;
+    let cat: Category = Category::by_slug(&slug)
+        .select(Category::as_select())
+        .first(&mut conn)
+        .await?;
     let (subcats, parents) = tokio::try_join!(
         cat.subcategories(&mut conn),
         cat.parent_categories(&mut conn).boxed(),

@@ -196,7 +196,8 @@ async fn prepare_list(
             crate_owner_invitations::invited_user_id,
         ))
         // We fetch one element over the page limit to then detect whether there is a next page.
-        .limit(pagination.per_page + 1);
+        .limit(pagination.per_page + 1)
+        .select(CrateOwnerInvitation::as_select());
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {

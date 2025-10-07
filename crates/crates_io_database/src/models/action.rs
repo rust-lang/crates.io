@@ -54,7 +54,10 @@ pub struct VersionOwnerAction {
 
 impl VersionOwnerAction {
     pub async fn all(conn: &mut AsyncPgConnection) -> QueryResult<Vec<Self>> {
-        version_owner_actions::table.load(conn).await
+        version_owner_actions::table
+            .select(Self::as_select())
+            .load(conn)
+            .await
     }
 
     pub fn by_version<'a>(
@@ -100,6 +103,7 @@ impl NewVersionOwnerAction {
     pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<VersionOwnerAction> {
         diesel::insert_into(version_owner_actions::table)
             .values(self)
+            .returning(VersionOwnerAction::as_select())
             .get_result(conn)
             .await
     }

@@ -53,7 +53,7 @@ pub async fn list_keywords(
 ) -> AppResult<Json<ListResponse>> {
     use crate::schema::keywords;
 
-    let mut query = keywords::table.into_boxed();
+    let mut query = keywords::table.select(Keyword::as_select()).into_boxed();
 
     query = match &params.sort {
         Some(sort) if sort == "crates" => query.order(keywords::crates_cnt.desc()),

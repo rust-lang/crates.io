@@ -118,6 +118,7 @@ pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
         keywords::table
             .order(keywords::crates_cnt.desc())
             .limit(10)
+            .select(Keyword::as_select())
             .load(&mut conn)
             .boxed(),
     )?;
