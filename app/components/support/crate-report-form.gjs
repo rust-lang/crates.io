@@ -2,6 +2,7 @@ import { Input, Textarea } from '@ember/component';
 import { fn, uniqueId } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
+import { LinkTo } from '@ember/routing';
 import { service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -24,8 +25,12 @@ const REASONS = [
     description: 'it is abusive or otherwise harmful',
   },
   {
-    reason: 'security',
-    description: 'it contains a vulnerability (please try to contact the crate author first)',
+    reason: 'malicious-code',
+    description: 'it contains malicious code',
+  },
+  {
+    reason: 'vulnerability',
+    description: 'it contains a vulnerability',
   },
   {
     reason: 'other',
@@ -76,6 +81,14 @@ export default class CrateReportForm extends Component {
     this.reasonsInvalid = false;
   }
 
+  get isMaliciousCodeReport() {
+    return this.selectedReasons.includes('malicious-code');
+  }
+
+  get isVulnerabilityReport() {
+    return this.selectedReasons.includes('vulnerability');
+  }
+
   @action
   submit() {
     if (!this.validate()) {
@@ -87,7 +100,7 @@ export default class CrateReportForm extends Component {
   }
 
   composeMail() {
-    let crate = this.crate;
+    let { crate, isMaliciousCodeReport } = this;
     let reasons = this.reasons
       .map(({ reason, description }) => {
         let selected = this.isReasonSelected(reason);
@@ -103,9 +116,16 @@ Additional details:
 ${this.detail}
 `;
     let subject = `The "${crate}" crate`;
-    let address = 'help@crates.io';
-    let mailto = `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    return mailto;
+    if (isMaliciousCodeReport) {
+      subject = `[SECURITY] ${subject}`;
+    }
+
+    let addresses = 'help@crates.io';
+    if (isMaliciousCodeReport) {
+      addresses += ',security@rust-lang.org';
+    }
+
+    return `mailto:${addresses}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   <template>
@@ -167,6 +187,20 @@ ${this.detail}
         {{/if}}
       </fieldset>
 
+      {{#if this.isVulnerabilityReport}}
+        <div class='vulnerability-report form-group' data-test-id='vulnerability-report'>
+          <h3>🔍 Vulnerability Report</h3>
+          <p>For crate vulnerabilities, please consider:</p>
+          <ul>
+            <li>Contacting the crate author first when possible</li>
+            <li>Reporting to the
+              <a href='https://rustsec.org/contributing.html' target='_blank' rel='noopener noreferrer'>RustSec Advisory
+                Database</a></li>
+            <li>Reviewing our <LinkTo @route='policies.security' target='_blank'>security policy</LinkTo></li>
+          </ul>
+        </div>
+      {{/if}}
+
       <fieldset class='form-group' data-test-id='fieldset-detail'>
         {{#let (uniqueId) as |id|}}
           <label for={{id}} class='form-group-name'>Detail</label>
@@ -191,7 +225,11 @@ ${this.detail}
       <div class='buttons'>
         <button type='submit' class='report-button button button--small' data-test-id='report-button'>
           Report to
-          <strong>help@crates.io</strong>
+          {{#if this.isMaliciousCodeReport}}
+            <strong>help@crates.io & security@rust-lang.org</strong>
+          {{else}}
+            <strong>help@crates.io</strong>
+          {{/if}}
         </button>
       </div>
     </form>

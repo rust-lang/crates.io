@@ -62,6 +62,22 @@
   }
 }
 
+.vulnerability-report {
+    padding: var(--space-s) var(--space-s);
+    background-color: light-dark(white, #141413);
+    border: 1px solid var(--gray-border);
+    border-radius: var(--space-3xs);
+    width: 100%;
+
+    :first-child {
+        margin-top: 0;
+    }
+
+    :last-child {
+        margin-bottom: 0;
+    }
+}
+
 .buttons {
   position: relative;
   margin: var(--space-m) 0;

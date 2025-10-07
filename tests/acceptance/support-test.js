@@ -13,6 +13,17 @@ import { visit } from '../helpers/visit-ignoring-abort';
 
 module('Acceptance | support', function (hooks) {
   setupApplicationTest(hooks);
+  setupWindowMock(hooks);
+
+  hooks.beforeEach(function () {
+    let crate = this.db.crate.create({ name: 'nanomsg' });
+    this.db.version.create({ crate, num: '0.6.0' });
+
+    window.open = (url, target, features) => {
+      window.openKwargs = { url, target, features };
+      return { document: { write() {}, close() {} }, close() {} };
+    };
+  });
 
   test('shows an inquire list', async function (assert) {
     await visit('/support');
@@ -51,19 +62,8 @@ module('Acceptance | support', function (hooks) {
     );
   });
 
-  module('reporting a crate from support page', function (hooks) {
-    setupWindowMock(hooks);
-
+  module('reporting a crate from support page', function () {
     async function prepare(context, assert) {
-      let { db } = context;
-      let crate = db.crate.create({ name: 'nanomsg' });
-      db.version.create({ crate, num: '0.6.0' });
-
-      window.open = (url, target, features) => {
-        window.openKwargs = { url, target, features };
-        return { document: { write() {}, close() {} }, close() {} };
-      };
-
       await visit('/support');
       await click('[data-test-id="link-crate-violation"]');
       assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
@@ -144,7 +144,8 @@ module('Acceptance | support', function (hooks) {
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains malicious code
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -181,7 +182,8 @@ Additional details:
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains malicious code
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -197,19 +199,8 @@ test detail
     });
   });
 
-  module('reporting a crate from crate page', function (hooks) {
-    setupWindowMock(hooks);
-
+  module('reporting a crate from crate page', function () {
     async function prepare(context, assert) {
-      let { db } = context;
-      let crate = db.crate.create({ name: 'nanomsg' });
-      db.version.create({ crate, num: '0.6.0' });
-
-      window.open = (url, target, features) => {
-        window.openKwargs = { url, target, features };
-        return { document: { write() {}, close() {} }, close() {} };
-      };
-
       await visit('/crates/nanomsg');
       assert.strictEqual(currentURL(), '/crates/nanomsg');
 
@@ -292,7 +283,8 @@ test detail
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains malicious code
+- [ ] it contains a vulnerability
 - [ ] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -327,7 +319,8 @@ Additional details:
 - [x] it contains spam
 - [ ] it is name-squatting (reserving a crate name without content)
 - [ ] it is abusive or otherwise harmful
-- [ ] it contains a vulnerability (please try to contact the crate author first)
+- [ ] it contains malicious code
+- [ ] it contains a vulnerability
 - [x] it is violating the usage policy in some other way (please specify below)
 
 Additional details:
@@ -341,5 +334,57 @@ test detail
       assert.strictEqual(window.openKwargs.url, mailto);
       assert.strictEqual(window.openKwargs.target, '_self');
     });
+  });
+
+  test('malicious code reports are sent to security@rust-lang.org too', async function (assert) {
+    await visit('/support');
+    await click('[data-test-id="link-crate-violation"]');
+    assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
+
+    await fillIn('[data-test-id="crate-input"]', 'nanomsg');
+    assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
+    await click('[data-test-id="malicious-code-checkbox"]');
+    assert.dom('[data-test-id="malicious-code-checkbox"]').isChecked();
+    await fillIn('[data-test-id="detail-input"]', 'test detail');
+    assert.dom('[data-test-id="detail-input"]').hasValue('test detail');
+    await click('[data-test-id="report-button"]');
+
+    assert.dom('[data-test-id="crate-invalid"]').doesNotExist();
+    assert.dom('[data-test-id="reasons-invalid"]').doesNotExist();
+    assert.dom('[data-test-id="detail-invalid"]').doesNotExist();
+
+    let body = `I'm reporting the https://crates.io/crates/nanomsg crate because:
+
+- [ ] it contains spam
+- [ ] it is name-squatting (reserving a crate name without content)
+- [ ] it is abusive or otherwise harmful
+- [x] it contains malicious code
+- [ ] it contains a vulnerability
+- [ ] it is violating the usage policy in some other way (please specify below)
+
+Additional details:
+
+test detail
+`;
+    let subject = `[SECURITY] The "nanomsg" crate`;
+    let addresses = 'help@crates.io,security@rust-lang.org';
+    let mailto = `mailto:${addresses}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    assert.true(!!window.openKwargs);
+    assert.strictEqual(window.openKwargs.url, mailto);
+    assert.strictEqual(window.openKwargs.target, '_self');
+  });
+
+  test('shows help text for vulnerability reports', async function (assert) {
+    await visit('/support');
+    await click('[data-test-id="link-crate-violation"]');
+    assert.strictEqual(currentURL(), '/support?inquire=crate-violation');
+
+    await fillIn('[data-test-id="crate-input"]', 'nanomsg');
+    assert.dom('[data-test-id="crate-input"]').hasValue('nanomsg');
+    assert.dom('[data-test-id="vulnerability-report"]').doesNotExist();
+
+    await click('[data-test-id="vulnerability-checkbox"]');
+    assert.dom('[data-test-id="vulnerability-checkbox"]').isChecked();
+    assert.dom('[data-test-id="vulnerability-report"]').exists();
   });
 });
