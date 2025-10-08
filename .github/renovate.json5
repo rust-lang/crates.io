@@ -49,7 +49,7 @@
             commitMessageTopic: "Rust",
         },
         {
-            matchDepNames: ["/^diesel$/", "/^diesel_/"],
+            matchDepNames: ["/^diesel$/", "/^diesel_/", "/^diesel-/"],
             groupName: "diesel packages",
         },
         {
