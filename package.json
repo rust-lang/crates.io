@@ -85,7 +85,7 @@
     "broccoli-funnel": "3.0.8",
     "ember-a11y-testing": "7.1.2",
     "ember-auto-import": "2.11.0",
-    "ember-cli": "6.7.0",
+    "ember-cli": "6.7.1",
     "ember-cli-babel": "8.2.0",
     "ember-cli-bundle-analyzer": "1.0.0",
     "ember-cli-dependency-checker": "3.3.3",
