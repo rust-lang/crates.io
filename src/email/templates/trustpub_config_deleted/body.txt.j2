@@ -9,12 +9,10 @@ You removed a "Trusted Publishing" configuration for GitHub Actions from your cr
 crates.io user {{ auth_user.gh_login }} removed a "Trusted Publishing" configuration for GitHub Actions from a crate that you manage ("{{ krate.name }}").
 {%- endif %}
 
-Trusted Publishing configuration:
-
-- Repository owner: {{ config.repository_owner }}
-- Repository name: {{ config.repository_name }}
-- Workflow filename: {{ config.workflow_filename }}
-- Environment: {{ config.environment or "(not set)" }}
+The removed configuration was for the workflow file at https://github.com/{{ config.repository_owner }}/{{ config.repository_name }}/blob/HEAD/.github/workflows/{{ config.workflow_filename }}
+{%- if config.environment %} using the `{{ config.environment }}` environment
+{%- endif -%}
+.
 
 If you did not make this change and you think it was made maliciously, you can email help@crates.io for assistance.
 {% endblock %}

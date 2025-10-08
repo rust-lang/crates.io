@@ -13,12 +13,7 @@ Hello foo!
 
 You removed a "Trusted Publishing" configuration for GitHub Actions from your crate "foo".
 
-Trusted Publishing configuration:
-
-- Repository owner: rust-lang
-- Repository name: foo-rs
-- Workflow filename: publish.yml
-- Environment: (not set)
+The removed configuration was for the workflow file at https://github.com/rust-lang/foo-rs/blob/HEAD/.github/workflows/publish.yml.
 
 If you did not make this change and you think it was made maliciously, you can email help@crates.io for assistance.
 
