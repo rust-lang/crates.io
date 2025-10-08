@@ -20,7 +20,7 @@
   "dependencies": {
     "@mswjs/data": "0.16.2",
     "msw": "2.11.3",
-    "semver": "7.7.2"
+    "semver": "7.7.3"
   },
   "devDependencies": {
     "happy-dom": "19.0.2",
