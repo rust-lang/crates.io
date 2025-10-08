@@ -67,6 +67,10 @@
     .details {
         font-size: 0.85em;
         line-height: 1.5;
+
+        .owner-id {
+            color: var(--main-color-light);
+        }
     }
 
     .actions {
