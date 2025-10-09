@@ -87,10 +87,10 @@ cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
 derive_more = { version = "=2.0.1", features = ["deref", "deref_mut", "display"] }
 dialoguer = "=0.12.0"
-diesel = { version = "=2.2.12", features = ["postgres", "serde_json", "chrono", "numeric"] }
-diesel-async = { version = "=0.6.1", features = ["async-connection-wrapper", "deadpool", "postgres"] }
-diesel_full_text_search = "=2.2.0"
-diesel_migrations = { version = "=2.2.0", features = ["postgres"] }
+diesel = { version = "=2.3.2", features = ["postgres", "serde_json", "chrono", "numeric"] }
+diesel-async = { version = "=0.7.3", features = ["async-connection-wrapper", "deadpool", "postgres"] }
+diesel_full_text_search = "=2.3.0"
+diesel_migrations = { version = "=2.3.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
 flate2 = "=1.1.2"
 futures-util = "=0.3.31"
@@ -152,7 +152,7 @@ crates_io_team_repo = { path = "crates/crates_io_team_repo", features = ["mock"]
 crates_io_test_db = { path = "crates/crates_io_test_db" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub", features = ["test-helpers"] }
 claims = "=0.8.0"
-diesel = { version = "=2.2.12", features = ["r2d2"] }
+diesel = { version = "=2.3.2", features = ["r2d2"] }
 googletest = "=0.14.2"
 insta = { version = "=1.43.2", features = ["glob", "json", "redactions"] }
 jsonwebtoken = "=9.3.1"
