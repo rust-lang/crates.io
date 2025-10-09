@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::controllers::trustpub::emails::ConfigDeletedEmail;
+use crate::controllers::trustpub::emails::{ConfigDeletedEmail, ConfigType};
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
@@ -82,11 +82,13 @@ pub async fn delete_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
+        let config = ConfigType::GitHub(&config);
+
         let context = ConfigDeletedEmail {
             recipient,
             auth_user,
             krate: &krate,
-            config: &config,
+            config,
         };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
