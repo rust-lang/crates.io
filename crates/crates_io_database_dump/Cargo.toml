@@ -18,7 +18,7 @@ tar = "=0.4.44"
 tempfile = "=3.23.0"
 toml = "=0.9.7"
 tracing = "=0.1.41"
-zip = { version = "=5.1.1", default-features = false, features = ["deflate"] }
+zip = { version = "=6.0.0", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 crates_io_test_db = { path = "../crates_io_test_db" }
