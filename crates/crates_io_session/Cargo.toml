@@ -12,6 +12,6 @@ axum = { version = "=0.8.6", features = ["macros"] }
 axum-extra = { version = "=0.10.3", features = ["cookie-signed"] }
 base64 = "=0.22.1"
 cookie = { version = "=0.18.1", features = ["secure"] }
-parking_lot = "=0.12.4"
+parking_lot = "=0.12.5"
 
 [dev-dependencies]
