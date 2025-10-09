@@ -245,4 +245,77 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       });
     }
   });
+
+  test.describe('workflow verification', () => {
+    test('success case (200 OK)', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      await msw.worker.use(
+        http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml', () => {
+          return new HttpResponse(null, { status: 200 });
+        }),
+      );
+
+      await expect(page.locator('[data-test-workflow-verification="initial"]')).toHaveText(
+        'The workflow filename will be verified once all necessary fields are filled.',
+      );
+
+      await page.fill('[data-test-repository-owner]', 'rust-lang');
+      await page.fill('[data-test-repository-name]', 'crates.io');
+      await page.fill('[data-test-workflow-filename]', 'ci.yml');
+
+      await expect(page.locator('[data-test-workflow-verification="success"]')).toHaveText(
+        '✓ Workflow file found at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml',
+      );
+    });
+
+    test('not found case (404)', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      await msw.worker.use(
+        http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/missing.yml', () => {
+          return new HttpResponse(null, { status: 404 });
+        }),
+      );
+
+      await page.fill('[data-test-repository-owner]', 'rust-lang');
+      await page.fill('[data-test-repository-name]', 'crates.io');
+      await page.fill('[data-test-workflow-filename]', 'missing.yml');
+
+      await expect(page.locator('[data-test-workflow-verification="not-found"]')).toHaveText(
+        '⚠ Workflow file not found at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/missing.yml',
+      );
+
+      // Verify form can still be submitted
+      await page.click('[data-test-add]');
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
+    });
+
+    test('server error (5xx)', async ({ msw, page }) => {
+      let { crate } = await prepare(msw);
+
+      await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      await msw.worker.use(
+        http.head('https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml', () => {
+          return new HttpResponse(null, { status: 500 });
+        }),
+      );
+
+      await page.fill('[data-test-repository-owner]', 'rust-lang');
+      await page.fill('[data-test-repository-name]', 'crates.io');
+      await page.fill('[data-test-workflow-filename]', 'ci.yml');
+
+      await expect(page.locator('[data-test-workflow-verification="error"]')).toHaveText(
+        '⚠ Could not verify workflow file at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml (network error)',
+      );
+    });
+  });
 });
