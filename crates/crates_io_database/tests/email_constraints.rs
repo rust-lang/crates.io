@@ -39,7 +39,7 @@ async fn insert_test_user(conn: &mut AsyncPgConnection) -> i32 {
         .name(&format!("testuser{}", user_count + 1))
         .gh_id(user_count as i32 + 1)
         .gh_login(&format!("testuser{}", user_count + 1))
-        .gh_access_token("token")
+        .gh_encrypted_token(&[])
         .build()
         .insert(conn)
         .await
