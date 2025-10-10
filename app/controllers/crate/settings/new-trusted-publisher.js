@@ -2,8 +2,8 @@ import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import Ember from 'ember';
 
+import { isTesting } from '@embroider/macros';
 import { rawTimeout, restartableTask, task } from 'ember-concurrency';
 
 export default class NewTrustedPublisherController extends Controller {
@@ -41,7 +41,7 @@ export default class NewTrustedPublisherController extends Controller {
   }
 
   verifyWorkflowTask = restartableTask(async () => {
-    let timeout = Ember.testing ? 0 : 500;
+    let timeout = isTesting() ? 0 : 500;
     await rawTimeout(timeout);
 
     let { verificationUrl } = this;
