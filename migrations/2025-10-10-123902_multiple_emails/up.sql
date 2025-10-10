@@ -20,13 +20,6 @@ EXECUTE FUNCTION enforce_max_emails_per_user();
 -- Add a unique constraint for the combination of user_id and email
 ALTER TABLE emails ADD CONSTRAINT unique_user_email UNIQUE (user_id, email);
 
--- Add a new column for identifying the primary email
-ALTER TABLE emails ADD COLUMN is_primary BOOLEAN DEFAULT FALSE NOT NULL;
-comment on column emails.is_primary is 'Whether this email is the primary email address for the user.';
-
--- Set `is_primary` to true for existing emails
-UPDATE emails SET is_primary = true;
-
 -- Limit primary flag to one email per user
 -- Evaluation of the constraint is deferred to the end of the transaction to allow for replacement of the primary email
 CREATE EXTENSION IF NOT EXISTS btree_gist;

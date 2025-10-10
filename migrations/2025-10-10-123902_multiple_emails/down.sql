@@ -19,9 +19,6 @@ DROP FUNCTION prevent_primary_email_deletion();
 DROP TRIGGER trigger_verify_exactly_one_primary_email ON emails;
 DROP FUNCTION verify_exactly_one_primary_email();
 
--- Remove the primary column from emails table
-ALTER TABLE emails DROP COLUMN is_primary;
-
 -- Remove the GiST extension if it is no longer needed
 DROP EXTENSION IF EXISTS btree_gist;
 
