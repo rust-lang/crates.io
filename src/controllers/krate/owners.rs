@@ -9,6 +9,7 @@ use crate::models::{
     krate::NewOwnerInvite, token::EndpointScope,
 };
 use crate::util::errors::{AppResult, BoxedAppError, bad_request, crate_not_found, custom};
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use crate::views::EncodableOwner;
 use crate::{App, app::AppState};
 use crate::{auth::AuthCheck, email::EmailMessage};
@@ -199,7 +200,7 @@ async fn modify_owners(
 
                 let owners = krate.owners(conn).await?;
 
-                match Rights::get(user, &*app.github, &owners).await? {
+                match Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? {
                     Rights::Full => {}
                     // Yes!
                     Rights::Publish => {
@@ -320,7 +321,8 @@ async fn add_owner(
     login: &str,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     if login.contains(':') {
-        add_team_owner(&*app.github, conn, req_user, krate, login).await
+        let encryption = &app.config.gh_token_encryption;
+        add_team_owner(&*app.github, conn, req_user, krate, login, encryption).await
     } else {
         invite_user_owner(app, conn, req_user, krate, login).await
     }
@@ -363,6 +365,7 @@ async fn add_team_owner(
     req_user: &User,
     krate: &Crate,
     login: &str,
+    encryption: &GitHubTokenEncryption,
 ) -> Result<NewOwnerInvite, OwnerAddError> {
     // github:rust-lang:owners
     let mut chunks = login.split(':');
@@ -381,9 +384,16 @@ async fn add_team_owner(
     })?;
 
     // Always recreate teams to get the most up-to-date GitHub ID
-    let team =
-        create_or_update_github_team(gh_client, conn, &login.to_lowercase(), org, team, req_user)
-            .await?;
+    let team = create_or_update_github_team(
+        gh_client,
+        conn,
+        &login.to_lowercase(),
+        org,
+        team,
+        req_user,
+        encryption,
+    )
+    .await?;
 
     // Teams are added as owners immediately, since the above call ensures
     // the user is a team member.
@@ -408,6 +418,7 @@ pub async fn create_or_update_github_team(
     org_name: &str,
     team_name: &str,
     req_user: &User,
+    encryption: &GitHubTokenEncryption,
 ) -> AppResult<Team> {
     // GET orgs/:org/teams
     // check that `team` is the `slug` in results, and grab its data
@@ -424,7 +435,14 @@ pub async fn create_or_update_github_team(
         )));
     }
 
-    let token = AccessToken::new(req_user.gh_access_token.expose_secret().to_string());
+    let token = encryption
+        .decrypt(&req_user.gh_encrypted_token)
+        .map_err(|err| {
+            custom(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to decrypt GitHub token: {err}"),
+            )
+        })?;
     let team = gh_client.team_by_name(org_name, team_name, &token).await
         .map_err(|_| {
             bad_request(format_args!(

@@ -27,7 +27,11 @@ pub async fn find_team(state: AppState, Path(name): Path<String>) -> AppResult<J
     use crate::schema::teams::dsl::{login, teams};
 
     let mut conn = state.db_read().await?;
-    let team: Team = teams.filter(login.eq(&name)).first(&mut conn).await?;
+    let team: Team = teams
+        .filter(login.eq(&name))
+        .select(Team::as_select())
+        .first(&mut conn)
+        .await?;
     let team = EncodableTeam::from(team);
     Ok(Json(GetResponse { team }))
 }

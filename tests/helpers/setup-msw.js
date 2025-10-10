@@ -6,21 +6,23 @@ import { setupWorker } from 'msw/browser';
 
 import { setupFakeTimers } from './fake-timers';
 
+const worker = setupWorker(
+  ...handlers,
+  http.get('/assets/*', passthrough),
+  http.all(/.*\/percy\/.*/, passthrough),
+  http.get('https://:avatars.githubusercontent.com/u/:id', passthrough),
+);
+
+export function registerQUnitCallbacks(QUnit) {
+  QUnit.begin(() => worker.start({ quiet: true, onUnhandledRequest: 'error' }));
+  QUnit.testDone(() => worker.resetHandlers());
+  QUnit.testDone(() => db.reset());
+  QUnit.done(() => worker.stop());
+}
+
 export default function (hooks) {
   setupWindowMock(hooks);
   setupFakeTimers(hooks, '2017-11-20T12:00:00');
-
-  let worker = setupWorker(
-    ...handlers,
-    http.get('/assets/*', passthrough),
-    http.all(/.*\/percy\/.*/, passthrough),
-    http.get('https://:avatars.githubusercontent.com/u/:id', passthrough),
-  );
-
-  hooks.before(() => worker.start({ quiet: true, onUnhandledRequest: 'error' }));
-  hooks.afterEach(() => worker.resetHandlers());
-  hooks.afterEach(() => db.reset());
-  hooks.after(() => worker.stop());
 
   hooks.beforeEach(function () {
     this.worker = worker;

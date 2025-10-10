@@ -42,6 +42,22 @@ test('happy path', ({ expect }) => {
         "features": {},
         "id": 1,
         "license": "MIT",
+        "linecounts": {
+          "languages": {
+            "JavaScript": {
+              "code_lines": 325,
+              "comment_lines": 80,
+              "files": 8,
+            },
+            "TypeScript": {
+              "code_lines": 195,
+              "comment_lines": 10,
+              "files": 2,
+            },
+          },
+          "total_code_lines": 520,
+          "total_comment_lines": 90,
+        },
         "num": "1.0.0",
         "publishedBy": null,
         "readme": null,

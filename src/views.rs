@@ -927,6 +927,15 @@ pub struct EncodableVersion {
     /// inside it.
     #[schema(value_type = Option<Object>)]
     pub trustpub_data: Option<TrustpubData>,
+
+    /// Line count statistics for this version.
+    ///
+    /// Status: **Unstable**
+    ///
+    /// This field may be `null` until the version has been analyzed, which
+    /// happens in an asynchronous background job.
+    #[schema(value_type = Object)]
+    pub linecounts: Option<serde_json::Value>,
 }
 
 impl EncodableVersion {
@@ -958,6 +967,7 @@ impl EncodableVersion {
             documentation,
             repository,
             trustpub_data,
+            linecounts,
             ..
         } = version;
 
@@ -993,6 +1003,7 @@ impl EncodableVersion {
             documentation,
             repository,
             trustpub_data,
+            linecounts,
             published_by: published_by.map(User::into),
             audit_actions: audit_actions
                 .into_iter()
@@ -1137,6 +1148,7 @@ mod tests {
                     .and_utc(),
             }],
             trustpub_data: None,
+            linecounts: None,
         };
         let json = serde_json::to_string(&ver).unwrap();
         assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));

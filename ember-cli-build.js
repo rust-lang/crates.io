@@ -17,8 +17,6 @@ module.exports = function (defaults) {
     extraPublicTrees.push(funnel(mswParentPath, { include: ['mockServiceWorker.js'] }));
   }
 
-  let browsers = require('./config/targets').browsers;
-
   let app = new EmberApp(defaults, {
     '@embroider/macros': {
       setConfig: {
@@ -41,40 +39,11 @@ module.exports = function (defaults) {
       plugins: [
         require.resolve('ember-auto-import/babel-plugin'),
         require.resolve('ember-concurrency/async-arrow-task-transform'),
-        ...require('ember-cli-code-coverage').buildBabelPlugin({ embroider: true }),
       ],
     },
 
     'ember-cli-babel': {
       throwUnlessParallelizable: true,
-    },
-
-    cssModules: {
-      extension: 'module.css',
-      // see https://github.com/salsify/ember-css-modules/blob/v2.0.1/docs/ORDERING.md
-      headerModules: [
-        'crates-io/styles/shared/a11y',
-        'crates-io/styles/shared/buttons',
-        'crates-io/styles/shared/forms',
-        'crates-io/styles/shared/sort-by',
-        'crates-io/styles/shared/typography',
-        'crates-io/styles/application',
-        // for the `.scopes-list` class
-        'crates-io/styles/settings/tokens/new',
-        // for the `.box-link` class
-        'crates-io/components/front-page-list/item',
-      ],
-      plugins: {
-        postprocess: [
-          require('postcss-preset-env')({
-            browsers,
-            preserve: false,
-            features: {
-              'nesting-rules': true,
-            },
-          }),
-        ],
-      },
     },
 
     emberData: {
@@ -93,7 +62,7 @@ module.exports = function (defaults) {
     },
   });
 
-  app.import('node_modules/normalize.css/normalize.css', { prepend: true });
+  // app.import('node_modules/normalize.css/normalize.css');
   app.import('vendor/qunit.css', { type: 'test' });
 
   const { Webpack } = require('@embroider/webpack');
@@ -116,6 +85,29 @@ module.exports = function (defaults) {
             return callback(null, request, 'global');
           }
           callback();
+        },
+        module: {
+          rules: [
+            // CSS loaders for scoped CSS
+            {
+              test: /\.css$/,
+              use: [
+                { loader: require.resolve('ember-scoped-css/build/app-css-loader') },
+                {
+                  loader: 'postcss-loader',
+                  options: {
+                    postcssOptions: {
+                      plugins: [['postcss-preset-env', { features: { 'nesting-rules': true } }]],
+                    },
+                  },
+                },
+              ],
+            },
+            {
+              test: /\.svg$/,
+              type: 'asset/resource',
+            },
+          ],
         },
         resolve: {
           fallback: {

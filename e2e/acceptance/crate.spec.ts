@@ -81,7 +81,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Crate not found');
+    await expect(page.locator('[data-test-title]')).toHaveText(`Crate "nanomsg" not found`);
     await expect(page.locator('[data-test-go-back]')).toBeVisible();
     await expect(page.locator('[data-test-try-again]')).toHaveCount(0);
   });
@@ -92,7 +92,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page.locator('[data-test-404-page]')).toBeVisible();
-    await expect(page.locator('[data-test-title]')).toHaveText('nanomsg: Failed to load crate data');
+    await expect(page.locator('[data-test-title]')).toHaveText(`Failed to load crate data`);
     await expect(page.locator('[data-test-go-back]')).toHaveCount(0);
     await expect(page.locator('[data-test-try-again]')).toBeVisible();
   });
@@ -131,7 +131,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await page.click('[data-test-versions-tab] a');
 
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
   });
 
@@ -140,12 +140,12 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/nanomsg/versions?per_page=10');
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /10 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+10\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
 
     await page.getByTestId('load-more').click();
     await expect(page.locator('[data-test-page-description]')).toHaveText(
-      /13 of 13\s+nanomsg versions since\s+December \d+th, 2014/,
+      /\s+13\s+of\s+13\s+nanomsg\s+versions since\s+December \d+th, 2014/,
     );
   });
 
@@ -208,6 +208,18 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await page.goto('/crates/nanomsg/0.5.0');
     await expect(page.locator('[data-test-license]')).toHaveText('MIT OR Apache-2.0');
+  });
+
+  test('sidebar shows correct information', async ({ page, msw }) => {
+    let crate = msw.db.crate.create({ name: 'foo' });
+    msw.db.version.create({ crate, num: '0.5.0' });
+    msw.db.version.create({ crate, num: '1.0.0' });
+
+    await page.goto('/crates/foo');
+    await expect(page.locator('[data-test-linecounts]')).toHaveText('1,119 SLoC');
+
+    await page.goto('/crates/foo/0.5.0');
+    await expect(page.locator('[data-test-linecounts]')).toHaveText('520 SLoC');
   });
 
   test.skip('crates can be yanked by owner', async ({ page, msw }) => {

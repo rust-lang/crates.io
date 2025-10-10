@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY background_jobs_priority_id_index;

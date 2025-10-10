@@ -194,8 +194,7 @@ pub async fn list_crates(
     // To avoid breaking existing users, seek-based pagination is only used if an explicit page has
     // not been provided. This way clients relying on meta.next_page will use the faster seek-based
     // paginations, while client hardcoding pages handling will use the slower offset-based code.
-    let (total, next_page, prev_page, data) = if !explicit_page && seek.is_some() {
-        let seek = seek.unwrap();
+    let (total, next_page, prev_page, data) = if !explicit_page && let Some(seek) = seek {
         if let Some(condition) = seek
             .after(&pagination.page)?
             .map(|s| filter_params.seek_after(&s))

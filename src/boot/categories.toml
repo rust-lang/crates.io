@@ -36,7 +36,7 @@ Assistive technology that helps overcome disabilities and impairments to make so
 name = "Aerospace"
 description = """
 Crates for aeronautics (within the atmosphere) and astronautics \
-(in outer space) implications.\
+(in outer space) applications.\
 """
 
 [aerospace.categories.drones]
@@ -49,7 +49,7 @@ and Airships/Balloons.\
 [aerospace.categories.protocols]
 name = "Aerospace protocols"
 description = """
-Crates of protocol implementations for aerospace implications.\
+Crates of protocol implementations for aerospace applications.\
 """
 
 [aerospace.categories.simulation]
@@ -99,6 +99,12 @@ flow, using techniques like futures, promises, waiting, or eventing.\
 name = "Authentication"
 description = """
 Crates to help with the process of confirming identities.\
+"""
+
+[automotive]
+name = "Automotive"
+description = """
+Crates related to the automotive industry, including vehicle control and diagnostics.
 """
 
 [caching]

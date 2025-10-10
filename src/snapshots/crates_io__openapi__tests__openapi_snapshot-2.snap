@@ -593,6 +593,7 @@ expression: response.json()
         "enum": [
           "publish-new",
           "publish-update",
+          "trusted-publishing",
           "yank",
           "change-owners"
         ],
@@ -1107,6 +1108,10 @@ expression: response.json()
               "null"
             ]
           },
+          "linecounts": {
+            "description": "Line count statistics for this version.\n\nStatus: **Unstable**\n\nThis field may be `null` until the version has been analyzed, which\nhappens in an asynchronous background job.",
+            "type": "object"
+          },
           "links": {
             "$ref": "#/components/schemas/VersionLinks",
             "description": "Links to other API endpoints related to this version."
@@ -1189,7 +1194,8 @@ expression: response.json()
           "links",
           "crate_size",
           "audit_actions",
-          "checksum"
+          "checksum",
+          "linecounts"
         ],
         "type": "object"
       },
@@ -2042,7 +2048,7 @@ expression: response.json()
     },
     "/api/v1/crates/{name}": {
       "delete": {
-        "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 500 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
+        "description": "The crate is immediately deleted from the database, and with a small delay\nfrom the git and sparse index, and the crate file storage.\n\nThe crate can only be deleted by the owner of the crate, and only if the\ncrate has been published for less than 72 hours, or if the crate has a\nsingle owner, has been downloaded less than 1000 times for each month it has\nbeen published, and is not depended upon by any other crate on crates.io.",
         "operationId": "delete_crate",
         "parameters": [
           {
@@ -4005,6 +4011,13 @@ expression: response.json()
               "application/json": {
                 "schema": {
                   "properties": {
+                    "banner_message": {
+                      "description": "Optional banner message to display on all pages.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "commit": {
                       "description": "The SHA1 of the currently deployed commit.",
                       "example": "0aebe2cdfacae1229b93853b1c58f9352195f081",
@@ -4227,6 +4240,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "List Trusted Publishing configurations for GitHub Actions.",
@@ -4277,6 +4293,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Create a new Trusted Publishing configuration for GitHub Actions.",
@@ -4308,6 +4327,9 @@ expression: response.json()
         "security": [
           {
             "cookie": []
+          },
+          {
+            "api_token": []
           }
         ],
         "summary": "Delete Trusted Publishing configuration for GitHub Actions.",

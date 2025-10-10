@@ -1,5 +1,6 @@
 pub use self::action::{NewVersionOwnerAction, VersionAction, VersionOwnerAction};
 pub use self::category::{Category, CrateCategory, NewCategory};
+pub use self::cloudfront_invalidation_queue::CloudFrontInvalidationQueueItem;
 pub use self::crate_owner_invitation::{
     CrateOwnerInvitation, NewCrateOwnerInvitation, NewCrateOwnerInvitationOutcome,
 };
@@ -22,6 +23,7 @@ pub mod helpers;
 
 mod action;
 pub mod category;
+mod cloudfront_invalidation_queue;
 pub mod crate_owner_invitation;
 pub mod default_versions;
 mod deleted_crate;

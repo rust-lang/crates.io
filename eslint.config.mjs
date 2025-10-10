@@ -1,6 +1,6 @@
-import babelParser from '@babel/eslint-parser';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import emberEslintParser from 'ember-eslint-parser';
 import ember from 'eslint-plugin-ember';
 import emberConcurrency from 'eslint-plugin-ember-concurrency';
 import importHelpers from 'eslint-plugin-import-helpers';
@@ -66,7 +66,7 @@ export default [
         ...globals.browser,
       },
 
-      parser: babelParser,
+      parser: emberEslintParser,
       ecmaVersion: 2018,
       sourceType: 'module',
 
@@ -115,6 +115,8 @@ export default [
       'unicorn/no-array-for-each': 'off',
       // disabled because `toReversed` is not "widely supported" yet
       'unicorn/no-array-reverse': 'off',
+      // disabled because `toSorted` is not "widely supported" yet
+      'unicorn/no-array-sort': 'off',
       // disabled because it is annoying in some cases...
       'unicorn/no-await-expression-member': 'off',
       // disabled because we need `null` since JSON has no `undefined`
@@ -151,7 +153,7 @@ export default [
             // Node.js built-in modules
             '/^(assert|async_hooks|buffer|child_process|cluster|console|constants|crypto|dgram|dns|domain|events|fs|http|http2|https|inspector|module|net|os|path|perf_hooks|process|punycode|querystring|readline|repl|stream|string_decoder|timers|tls|trace_events|tty|url|util|v8|vm|zli)/',
             // Testing modules
-            ['/^(qunit|ember-qunit|@ember/test-helpers|ember-exam|htmlbars-inline-precompile)$/', '/^ember-exam\\//'],
+            ['/^(qunit|ember-qunit|@ember/test-helpers|htmlbars-inline-precompile)$/', '/^ember-exam\\//'],
             // Ember.js modules
             ['/^@(ember|ember-data|glimmer)\\//', '/^(ember|ember-data|rsvp)$/', '/^ember-data\\//'],
             ['module'],

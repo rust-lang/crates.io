@@ -86,11 +86,11 @@ pub fn block_routes(
     matched_path: Option<&MatchedPath>,
     state: &AppState,
 ) -> Result<(), BoxedAppError> {
-    if let Some(matched_path) = matched_path {
-        if state.config.blocked_routes.contains(matched_path.as_str()) {
-            let body = "This route is temporarily blocked. See https://status.crates.io.";
-            return Err(custom(StatusCode::SERVICE_UNAVAILABLE, body));
-        }
+    if let Some(matched_path) = matched_path
+        && state.config.blocked_routes.contains(matched_path.as_str())
+    {
+        let body = "This route is temporarily blocked. See https://status.crates.io.";
+        return Err(custom(StatusCode::SERVICE_UNAVAILABLE, body));
     }
 
     Ok(())

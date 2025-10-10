@@ -1,0 +1,103 @@
+@layer global {
+    .button-reset {
+        padding: 0;
+        border: none;
+        outline: none;
+        font: inherit;
+        color: inherit;
+        background: none;
+    }
+
+    .button {
+        --text-color: #383838;
+        --disabled-text-color: #858585;
+
+        --bg-color-top: #fede9e;
+        --bg-color-bottom: #fdc452;
+
+        --bg-color-top-light: #fee7b7;
+        --bg-color-bottom-light: #fdcd6b;
+
+        --bg-color-top-dark: #fed585;
+        --bg-color-bottom-dark: #fdbb39;
+
+        padding: var(--space-xs) var(--space-m-l);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-color);
+        text-decoration: none;
+        font-weight: bold;
+        border: none;
+        outline: 0;
+        border-radius: 5000px;
+        background: linear-gradient(to bottom, var(--bg-color-top) 0%, var(--bg-color-bottom) 100%);
+        cursor: pointer;
+
+        &:hover, &:active, &:visited {
+            /*
+             * This is using `important` to override the `a:hover` declaration which
+             * appears to have higher specificity than the `button:hover` declaration.
+             */
+            color: var(--text-color) !important;
+        }
+
+        img, svg {
+            float: left;
+            display: inline-block;
+            margin-right: var(--space-2xs);
+        }
+
+        &:hover, &:focus, &.active {
+            background: linear-gradient(to bottom, var(--bg-color-top-dark) 0%, var(--bg-color-bottom-dark) 100%);
+            outline: 0;
+        }
+
+        &[disabled] {
+            background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+            color: var(--disabled-text-color) !important;
+            cursor: not-allowed;
+        }
+    }
+
+    .button--tan {
+        --bg-color-top: #e8e3c7;
+        --bg-color-bottom: #d6cd99;
+
+        --bg-color-top-light: #efecd9;
+        --bg-color-bottom-light: #ddd6ab;
+
+        --bg-color-top-dark: #e1dab5;
+        --bg-color-bottom-dark: #cfc487;
+    }
+
+    .button--red {
+        --bg-color-top: #ffb8b8;
+        --bg-color-bottom: #f78888;
+
+        --bg-color-top-light: #ffcccc;
+        --bg-color-bottom-light: #f7adad;
+
+        --bg-color-top-dark: #fab4b4;
+        --bg-color-bottom-dark: #ed6b6b;
+    }
+
+    .button--small {
+        padding: var(--space-2xs) var(--space-s);
+    }
+
+    .load-more-button {
+        display: block;
+        text-align: center;
+        width: 100%;
+        padding: var(--space-2xs);
+        outline: 0;
+        border: 0;
+        background-color: light-dark(#dbd9cf, #202023);
+        color: light-dark(#525252, #f9f7ec);
+
+        &:hover, &:focus {
+            background-color: light-dark(#c5c2b2, #26262b);
+        }
+    }
+}

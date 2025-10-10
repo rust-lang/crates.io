@@ -85,6 +85,11 @@ expression: json
     "homepage": null,
     "documentation": null,
     "repository": null,
-    "trustpub_data": null
+    "trustpub_data": null,
+    "linecounts": {
+      "languages": {},
+      "total_code_lines": 0,
+      "total_comment_lines": 0
+    }
   }
 }

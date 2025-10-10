@@ -1,0 +1,1 @@
+<template>Logging out...</template>

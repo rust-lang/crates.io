@@ -6,6 +6,7 @@ use crate::util::errors::{AppResult, bad_request};
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
 use crates_io_database::models::OwnerKind;
+use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::GitHubConfig;
 use crates_io_database::schema::{crate_owners, trustpub_configs_github};
 use diesel::dsl::{exists, select};
@@ -31,7 +32,7 @@ pub struct ListQueryParams {
     get,
     path = "/api/v1/trusted_publishing/github_configs",
     params(ListQueryParams),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
     responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
 )]
@@ -42,7 +43,11 @@ pub async fn list_trustpub_github_configs(
 ) -> AppResult<Json<ListResponse>> {
     let mut conn = state.db_read().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&params.krate)
+        .check(&parts, &mut conn)
+        .await?;
     let auth_user = auth.user();
 
     let krate = load_crate(&mut conn, &params.krate).await?;

@@ -1,9 +1,10 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
-use crate::email::EmailMessage;
+use crate::controllers::trustpub::emails::{ConfigDeletedEmail, ConfigType};
 use crate::util::errors::{AppResult, bad_request, not_found};
 use anyhow::Context;
 use axum::extract::Path;
+use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::GitHubConfig;
 use crates_io_database::models::{Crate, OwnerKind};
 use crates_io_database::schema::{crate_owners, crates, emails, trustpub_configs_github, users};
@@ -11,7 +12,6 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use http::request::Parts;
-use minijinja::context;
 use tracing::warn;
 
 #[cfg(test)]
@@ -24,7 +24,7 @@ mod tests;
     params(
         ("id" = i32, Path, description = "ID of the Trusted Publishing configuration"),
     ),
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
     responses((status = 204, description = "Successful Response")),
 )]
@@ -35,11 +35,7 @@ pub async fn delete_trustpub_github_config(
 ) -> AppResult<StatusCode> {
     let mut conn = state.db_write().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
-    let auth_user = auth.user();
-
-    // Check that a trusted publishing config with the given ID exists,
-    // and fetch the corresponding crate.
+    // First, find the config and crate to get the crate name for scope validation
     let (config, krate) = trustpub_configs_github::table
         .inner_join(crates::table)
         .filter(trustpub_configs_github::id.eq(id))
@@ -48,6 +44,13 @@ pub async fn delete_trustpub_github_config(
         .await
         .optional()?
         .ok_or_else(not_found)?;
+
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&krate.name)
+        .check(&parts, &mut conn)
+        .await?;
+    let auth_user = auth.user();
 
     // Load all crate owners for the given crate ID
     let user_owners = crate_owners::table
@@ -79,7 +82,14 @@ pub async fn delete_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let context = context! { recipient, auth_user, krate, config };
+        let config = ConfigType::GitHub(&config);
+
+        let context = ConfigDeletedEmail {
+            recipient,
+            auth_user,
+            krate: &krate,
+            config,
+        };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
@@ -92,10 +102,10 @@ pub async fn delete_trustpub_github_config(
 async fn send_notification_email(
     state: &AppState,
     email_address: &str,
-    context: minijinja::Value,
+    context: ConfigDeletedEmail<'_>,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("config_deleted", context)
-        .context("Failed to render email template")?;
+    let email = context.render();
+    let email = email.context("Failed to render email template")?;
 
     state
         .emails

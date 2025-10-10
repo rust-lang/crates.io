@@ -19,7 +19,8 @@ pub trait RunnerExt {
 
 impl RunnerExt for Runner<Arc<Environment>> {
     fn register_crates_io_job_types(self) -> Self {
-        self.register_job_type::<jobs::ArchiveVersionDownloads>()
+        self.register_job_type::<jobs::AnalyzeCrateFile>()
+            .register_job_type::<jobs::ArchiveVersionDownloads>()
             .register_job_type::<jobs::CheckTyposquat>()
             .register_job_type::<jobs::CleanProcessedLogFiles>()
             .register_job_type::<jobs::DailyDbMaintenance>()
@@ -32,6 +33,7 @@ impl RunnerExt for Runner<Arc<Environment>> {
             .register_job_type::<jobs::NormalizeIndex>()
             .register_job_type::<jobs::ProcessCdnLog>()
             .register_job_type::<jobs::ProcessCdnLogQueue>()
+            .register_job_type::<jobs::ProcessCloudfrontInvalidationQueue>()
             .register_job_type::<jobs::RenderAndUploadReadme>()
             .register_job_type::<jobs::SquashIndex>()
             .register_job_type::<jobs::SyncAdmins>()

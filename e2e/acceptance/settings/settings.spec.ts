@@ -23,10 +23,10 @@ test.describe('Acceptance | Settings', { tag: '@acceptance' }, () => {
 
     await expect(page.locator('[data-test-owners] [data-test-owner-team]')).toHaveCount(2);
     await expect(page.locator('[data-test-owners] [data-test-owner-user]')).toHaveCount(2);
-    await expect(page.locator('a[href="/teams/github:org:thehydroimpulse"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/teams/github:org:blabaere"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/users/thehydroimpulse"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/users/blabaere"]').first()).toBeVisible();
+    await expect(page.locator('[data-test-owners] a[href="/teams/github:org:thehydroimpulse"]').first()).toBeVisible();
+    await expect(page.locator('[data-test-owners] a[href="/teams/github:org:blabaere"]').first()).toBeVisible();
+    await expect(page.locator('[data-test-owners] a[href="/users/thehydroimpulse"]').first()).toBeVisible();
+    await expect(page.locator('[data-test-owners] a[href="/users/blabaere"]').first()).toBeVisible();
 
     await percy.snapshot();
     await a11y.audit();

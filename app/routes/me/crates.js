@@ -3,15 +3,13 @@ import { service } from '@ember/service';
 import AuthenticatedRoute from '../-authenticated-route';
 
 export default class MeCratesRoute extends AuthenticatedRoute {
-  @service store;
+  @service router;
 
-  queryParams = {
-    page: { refreshModel: true },
-    sort: { refreshModel: true },
-  };
+  redirect(model, transition) {
+    // Redirect to the user's profile page (/users/{username}) with the same query parameters
+    const username = this.session.currentUser.login;
+    const queryParams = transition.to.queryParams;
 
-  model(params) {
-    params.user_id = this.session.currentUser.id;
-    return this.store.query('crate', params);
+    this.router.transitionTo('user', username, { queryParams });
   }
 }

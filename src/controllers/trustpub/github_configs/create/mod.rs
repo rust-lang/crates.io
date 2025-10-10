@@ -1,12 +1,13 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
+use crate::controllers::trustpub::emails::{ConfigCreatedEmail, ConfigType};
 use crate::controllers::trustpub::github_configs::json;
-use crate::email::EmailMessage;
-use crate::util::errors::{AppResult, bad_request, forbidden};
+use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
+use crates_io_database::models::token::EndpointScope;
 use crates_io_database::models::trustpub::NewGitHubConfig;
 use crates_io_database::schema::{crate_owners, emails, users};
 use crates_io_github::GitHubError;
@@ -16,9 +17,6 @@ use crates_io_trustpub::github::validation::{
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
-use minijinja::context;
-use oauth2::AccessToken;
-use secrecy::ExposeSecret;
 use tracing::warn;
 
 #[cfg(test)]
@@ -28,7 +26,7 @@ mod tests;
 #[utoipa::path(
     post,
     path = "/api/v1/trusted_publishing/github_configs",
-    security(("cookie" = [])),
+    security(("cookie" = []), ("api_token" = [])),
     request_body = inline(json::CreateRequest),
     tag = "trusted_publishing",
     responses((status = 200, description = "Successful Response", body = inline(json::CreateResponse))),
@@ -49,7 +47,11 @@ pub async fn create_trustpub_github_config(
 
     let mut conn = state.db_write().await?;
 
-    let auth = AuthCheck::only_cookie().check(&parts, &mut conn).await?;
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&json_config.krate)
+        .check(&parts, &mut conn)
+        .await?;
     let auth_user = auth.user();
 
     let krate = load_crate(&mut conn, &json_config.krate).await?;
@@ -77,8 +79,15 @@ pub async fn create_trustpub_github_config(
     // Lookup `repository_owner_id` via GitHub API
 
     let owner = &json_config.repository_owner;
-    let gh_auth = &auth_user.gh_access_token;
-    let gh_auth = AccessToken::new(gh_auth.expose_secret().to_string());
+
+    let encryption = &state.config.gh_token_encryption;
+    let gh_auth = &auth_user.gh_encrypted_token;
+    let gh_auth = encryption.decrypt(gh_auth).map_err(|err| {
+        let login = &auth_user.gh_login;
+        warn!("Failed to decrypt GitHub token for user {login}: {err}");
+        server_error("Internal server error")
+    })?;
+
     let github_user = match state.github.get_user(owner, &gh_auth).await {
         Ok(user) => user,
         Err(GitHubError::NotFound(_)) => Err(bad_request("Unknown GitHub user or organization"))?,
@@ -108,7 +117,14 @@ pub async fn create_trustpub_github_config(
         .collect::<Vec<_>>();
 
     for (recipient, email_address) in &recipients {
-        let context = context! { recipient, auth_user, krate, saved_config };
+        let saved_config = ConfigType::GitHub(&saved_config);
+
+        let context = ConfigCreatedEmail {
+            recipient,
+            auth_user,
+            krate: &krate,
+            saved_config,
+        };
 
         if let Err(err) = send_notification_email(&state, email_address, context).await {
             warn!("Failed to send trusted publishing notification to {email_address}: {err}");
@@ -132,10 +148,10 @@ pub async fn create_trustpub_github_config(
 async fn send_notification_email(
     state: &AppState,
     email_address: &str,
-    context: minijinja::Value,
+    context: ConfigCreatedEmail<'_>,
 ) -> anyhow::Result<()> {
-    let email = EmailMessage::from_template("config_created", context)
-        .context("Failed to render email template")?;
+    let email = context.render();
+    let email = email.context("Failed to render email template")?;
 
     state
         .emails

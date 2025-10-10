@@ -14,14 +14,6 @@
     ],
     packageRules: [
         {
-            matchCategories: ["rust"],
-            labels: ["A-backend ⚙️"],
-        },
-        {
-            matchCategories: ["js"],
-            labels: ["A-frontend 🐹"],
-        },
-        {
             matchDepNames: ["ember-cli", "ember-data", "ember-source"],
             separateMinorPatch: true,
         },
@@ -55,10 +47,9 @@
             matchManagers: ["custom.regex"],
             matchDepNames: ["rust"],
             commitMessageTopic: "Rust",
-            labels: ["A-backend ⚙️"],
         },
         {
-            matchDepNames: ["/^diesel$/", "/^diesel_/"],
+            matchDepNames: ["/^diesel$/", "/^diesel_/", "/^diesel-/"],
             groupName: "diesel packages",
         },
         {

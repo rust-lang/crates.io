@@ -41,7 +41,7 @@ pub mod faker {
         NewUser::builder()
             .gh_id(next_gh_id())
             .gh_login(login)
-            .gh_access_token("token")
+            .gh_encrypted_token(&[])
             .build()
             .insert(conn)
             .await

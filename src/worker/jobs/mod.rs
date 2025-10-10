@@ -1,3 +1,4 @@
+mod analyze_crate_file;
 mod archive_version_downloads;
 mod daily_db_maintenance;
 mod delete_crate;
@@ -9,6 +10,7 @@ mod generate_og_image;
 mod index;
 mod index_version_downloads_archive;
 mod invalidate_cdns;
+mod process_cloudfront_invalidation_queue;
 mod readmes;
 pub mod rss;
 mod send_publish_notifications;
@@ -17,6 +19,7 @@ pub mod trustpub;
 mod typosquat;
 mod update_default_version;
 
+pub use self::analyze_crate_file::AnalyzeCrateFile;
 pub use self::archive_version_downloads::ArchiveVersionDownloads;
 pub use self::daily_db_maintenance::DailyDbMaintenance;
 pub use self::delete_crate::DeleteCrateFromStorage;
@@ -30,6 +33,7 @@ pub use self::generate_og_image::GenerateOgImage;
 pub use self::index::{NormalizeIndex, SquashIndex, SyncToGitIndex, SyncToSparseIndex};
 pub use self::index_version_downloads_archive::IndexVersionDownloadsArchive;
 pub use self::invalidate_cdns::InvalidateCdns;
+pub use self::process_cloudfront_invalidation_queue::ProcessCloudfrontInvalidationQueue;
 pub use self::readmes::RenderAndUploadReadme;
 pub use self::send_publish_notifications::SendPublishNotificationsJob;
 pub use self::sync_admins::SyncAdmins;

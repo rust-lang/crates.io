@@ -3,12 +3,15 @@ use crate::cloudfront::CloudFront;
 use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::typosquat;
+use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
 use bon::Builder;
+use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_docs_rs::DocsRsClient;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;
+use crates_io_worker::BackgroundJob;
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::deadpool::Pool;
 use object_store::ObjectStore;
@@ -53,7 +56,7 @@ impl Environment {
             *repo = Some(Repository::open(&self.repository_config)?);
 
             let clone_duration = clone_start.elapsed();
-            info!(duration = ?clone_duration, "Index cloned");
+            info!(duration = clone_duration.as_nanos(), "Index cloned");
         }
 
         let repo_lock = RepositoryLock { repo };
@@ -70,9 +73,20 @@ impl Environment {
     }
 
     /// Invalidate a file in all registered CDNs.
-    pub(crate) async fn invalidate_cdns(&self, path: &str) -> anyhow::Result<()> {
-        if let Some(cloudfront) = self.cloudfront() {
-            cloudfront.invalidate(path).await.context("CloudFront")?;
+    pub(crate) async fn invalidate_cdns(
+        &self,
+        conn: &mut AsyncPgConnection,
+        path: &str,
+    ) -> anyhow::Result<()> {
+        // Queue CloudFront invalidations for batch processing instead of calling directly
+        if self.cloudfront().is_some() {
+            let paths = &[path.to_string()];
+            let result = CloudFrontInvalidationQueueItem::queue_paths(conn, paths).await;
+            result.context("Failed to queue CloudFront invalidation path")?;
+
+            // Schedule the processing job to handle the queued paths
+            let result = ProcessCloudfrontInvalidationQueue.enqueue(conn).await;
+            result.context("Failed to enqueue CloudFront invalidation processing job")?;
         }
 
         if let Some(fastly) = self.fastly() {

@@ -54,10 +54,11 @@ impl BackgroundJob for IndexVersionDownloadsArchive {
         info!("index.json generated and uploaded");
 
         info!("Invalidating CDN caches…");
-        if let Err(error) = env.invalidate_cdns(INDEX_PATH).await {
+        let mut conn = env.deadpool.get().await?;
+        if let Err(error) = env.invalidate_cdns(&mut conn, INDEX_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
-        if let Err(error) = env.invalidate_cdns(INDEX_JSON_PATH).await {
+        if let Err(error) = env.invalidate_cdns(&mut conn, INDEX_JSON_PATH).await {
             warn!("Failed to invalidate CDN caches: {error}");
         }
         info!("CDN caches invalidated");

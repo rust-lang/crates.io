@@ -49,6 +49,11 @@ crates_cnt = "public"
 created_at = "public"
 path = "public"
 
+[cloudfront_invalidation_queue.columns]
+id = "private"
+path = "private"
+created_at = "private"
+
 [crate_downloads.columns]
 crate_id = "public"
 downloads = "public"
@@ -201,6 +206,18 @@ repository_name = "private"
 workflow_filename = "private"
 environment = "private"
 
+[trustpub_configs_gitlab]
+dependencies = ["crates"]
+[trustpub_configs_gitlab.columns]
+id = "private"
+created_at = "private"
+crate_id = "private"
+namespace = "private"
+namespace_id = "private"
+project = "private"
+workflow_filepath = "private"
+environment = "private"
+
 [trustpub_tokens.columns]
 id = "private"
 created_at = "private"
@@ -224,7 +241,6 @@ id in (
 )"""
 [users.columns]
 id = "public"
-gh_access_token = "private"
 gh_login = "public"
 name = "public"
 gh_avatar = "public"
@@ -233,8 +249,9 @@ account_lock_reason = "private"
 account_lock_until = "private"
 is_admin = "private"
 publish_notifications = "private"
+gh_encrypted_token = "private"
 [users.column_defaults]
-gh_access_token = "''"
+gh_encrypted_token = "''"
 
 [version_downloads]
 dependencies = ["versions"]
@@ -284,6 +301,8 @@ categories = "public"
 keywords = "public"
 # The following column is private for now, until we can guarantee a stable data schema.
 trustpub_data = "private"
+# The following column is private for now, until we can guarantee a stable data schema.
+linecounts = "private"
 
 [versions_published_by.columns]
 version_id = "private"

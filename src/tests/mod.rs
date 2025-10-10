@@ -6,9 +6,11 @@ use crate::views::{
 };
 
 use crate::tests::util::github::next_gh_id;
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
 mod account_lock;
 mod authentication;
@@ -92,10 +94,16 @@ pub struct OwnerResp {
 }
 
 fn new_user(login: &str) -> NewUser<'_> {
+    static ENCRYPTED_TOKEN: LazyLock<Vec<u8>> = LazyLock::new(|| {
+        GitHubTokenEncryption::for_testing()
+            .encrypt("some random token")
+            .unwrap()
+    });
+
     NewUser::builder()
         .gh_id(next_gh_id())
         .gh_login(login)
-        .gh_access_token("some random token")
+        .gh_encrypted_token(&ENCRYPTED_TOKEN)
         .build()
 }
 

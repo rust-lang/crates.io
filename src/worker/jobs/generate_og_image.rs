@@ -1,7 +1,9 @@
 use crate::models::OwnerKind;
 use crate::schema::*;
 use crate::worker::Environment;
+use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
+use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_og_image::{OgImageAuthorData, OgImageData};
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
@@ -104,18 +106,24 @@ impl BackgroundJob for GenerateOgImage {
         // Invalidate CDN cache for the OG image
         let og_image_path = format!("og-images/{crate_name}.png");
 
-        // Invalidate CloudFront CDN
-        if let Some(cloudfront) = ctx.cloudfront() {
-            if let Err(error) = cloudfront.invalidate(&og_image_path).await {
-                warn!("Failed to invalidate CloudFront CDN for {crate_name}: {error}");
+        // Queue CloudFront invalidation for batch processing
+        if ctx.cloudfront().is_some() {
+            let paths = std::slice::from_ref(&og_image_path);
+            let result = CloudFrontInvalidationQueueItem::queue_paths(&mut conn, paths).await;
+            if let Err(error) = result {
+                warn!("Failed to queue CloudFront invalidation for {crate_name}: {error}");
+            } else if let Err(error) = ProcessCloudfrontInvalidationQueue.enqueue(&mut conn).await {
+                warn!(
+                    "Failed to enqueue CloudFront invalidation processing job for {crate_name}: {error}"
+                );
             }
         }
 
         // Invalidate Fastly CDN
-        if let Some(fastly) = ctx.fastly() {
-            if let Err(error) = fastly.invalidate(&og_image_path).await {
-                warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
-            }
+        if let Some(fastly) = ctx.fastly()
+            && let Err(error) = fastly.invalidate(&og_image_path).await
+        {
+            warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
         }
 
         info!("CDN invalidation completed for crate {crate_name}");

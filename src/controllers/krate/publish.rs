@@ -3,7 +3,8 @@
 use crate::app::AppState;
 use crate::auth::{AuthCheck, AuthHeader, Authentication};
 use crate::worker::jobs::{
-    self, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob, UpdateDefaultVersion,
+    self, AnalyzeCrateFile, CheckTyposquat, GenerateOgImage, SendPublishNotificationsJob,
+    UpdateDefaultVersion,
 };
 use axum::Json;
 use axum::body::{Body, Bytes};
@@ -450,7 +451,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             };
 
             let owners = krate.owners(conn).await?;
-            if Rights::get(user, &*app.github, &owners).await? < Rights::Publish {
+            if Rights::get(user, &*app.github, &owners, &app.config.gh_token_encryption).await? < Rights::Publish {
                 return Err(custom(StatusCode::FORBIDDEN, MISSING_RIGHTS_ERROR_MESSAGE));
             }
 
@@ -601,18 +602,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let pkg_path_in_vcs = tarball_info.vcs_info.map(|info| info.path_in_vcs);
 
-        if let Some(readme) = metadata.readme {
-            if !readme.is_empty() {
-                jobs::RenderAndUploadReadme::new(
-                    version.id,
-                    readme,
-                    metadata
-                        .readme_file
-                        .unwrap_or_else(|| String::from("README.md")),
-                    repository,
-                    pkg_path_in_vcs,
-                ).enqueue(conn).await?;
-            }
+        if let Some(readme) = metadata.readme && !readme.is_empty() {
+            jobs::RenderAndUploadReadme::new(
+                version.id,
+                readme,
+                metadata
+                    .readme_file
+                    .unwrap_or_else(|| String::from("README.md")),
+                repository,
+                pkg_path_in_vcs,
+            ).enqueue(conn).await?;
         }
 
         // Upload crate tarball
@@ -625,6 +624,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         let publish_notifications_job = SendPublishNotificationsJob::new(version.id);
         let crate_feed_job = jobs::rss::SyncCrateFeed::new(krate.name.clone());
         let updates_feed_job = jobs::rss::SyncUpdatesFeed;
+        let analyze_crate_file_job = AnalyzeCrateFile::new(version.id);
 
         tokio::try_join!(
             git_index_job.enqueue(conn),
@@ -636,6 +636,10 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
             }),
             updates_feed_job.enqueue(conn).or_else(async |error| {
                 error!("Failed to enqueue `rss::SyncUpdatesFeed` job: {error}");
+                Ok::<_, EnqueueError>(None)
+            }),
+            analyze_crate_file_job.enqueue(conn).or_else(async |error| {
+                error!("Failed to enqueue `AnalyzeCrateFile` job: {error}");
                 Ok::<_, EnqueueError>(None)
             }),
         )?;
@@ -912,13 +916,13 @@ pub fn validate_dependency(dep: &EncodableCrateDependency) -> AppResult<()> {
         Crate::validate_feature(feature).map_err(bad_request)?;
     }
 
-    if let Some(registry) = &dep.registry {
-        if !registry.is_empty() {
-            return Err(bad_request(format_args!(
-                "Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.",
-                dep.name
-            )));
-        }
+    if let Some(registry) = &dep.registry
+        && !registry.is_empty()
+    {
+        return Err(bad_request(format_args!(
+            "Dependency `{}` is hosted on another registry. Cross-registry dependencies are not permitted on crates.io.",
+            dep.name
+        )));
     }
 
     match semver::VersionReq::parse(&dep.version_req) {

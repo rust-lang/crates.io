@@ -5,6 +5,7 @@ use url::Url;
 
 use crate::Env;
 use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crate::util::gh_token_encryption::GitHubTokenEncryption;
 
 use super::base::Base;
 use super::database_pools::DatabasePools;
@@ -42,6 +43,7 @@ pub struct Server {
     pub session_key: cookie::Key,
     pub gh_client_id: ClientId,
     pub gh_client_secret: ClientSecret,
+    pub gh_token_encryption: GitHubTokenEncryption,
     pub max_upload_size: u32,
     pub max_unpack_size: u64,
     pub max_dependencies: usize,
@@ -91,6 +93,13 @@ pub struct Server {
     /// The expected audience claim (`aud`) for the Trusted Publishing
     /// token exchange.
     pub trustpub_audience: String,
+
+    /// Disables API token creation when set to any non-empty value.
+    /// The value is used as the error message returned to users.
+    pub disable_token_creation: Option<String>,
+
+    /// Banner message to display on all pages (e.g., for security incidents).
+    pub banner_message: Option<String>,
 }
 
 impl Server {
@@ -106,6 +115,7 @@ impl Server {
     /// - `SESSION_KEY`: The key used to sign and encrypt session cookies.
     /// - `GH_CLIENT_ID`: The client ID of the associated GitHub application.
     /// - `GH_CLIENT_SECRET`: The client secret of the associated GitHub application.
+    /// - `GITHUB_TOKEN_ENCRYPTION_KEY`: Key for encrypting GitHub access tokens (64 hex characters).
     /// - `BLOCKED_TRAFFIC`: A list of headers and environment variables to use for blocking
     ///   traffic. See the `block_traffic` module for more documentation.
     /// - `DOWNLOADS_PERSIST_INTERVAL_MS`: how frequent to persist download counts (in ms).
@@ -125,6 +135,8 @@ impl Server {
     ///   endpoint even with a healthy database pool.
     /// - `BLOCKED_ROUTES`: A comma separated list of HTTP route patterns that are manually blocked
     ///   by an operator (e.g. `/crates/{crate_id}/{version}/download`).
+    /// - `DISABLE_TOKEN_CREATION`: If set to any non-empty value, disables API token creation
+    ///   and uses the value as the error message returned to users.
     ///
     /// # Panics
     ///
@@ -177,7 +189,7 @@ impl Server {
         // the `script` in `public/github-redirect.html`
         let content_security_policy = format!(
             "default-src 'self'; \
-            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org {cdn_domain}; \
+            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://raw.githubusercontent.com {cdn_domain}; \
             script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0='; \
             style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
             font-src https://code.cdn.mozilla.net; \
@@ -192,6 +204,8 @@ impl Server {
 
         let domain_name = dotenvy::var("DOMAIN_NAME").unwrap_or_else(|_| "crates.io".into());
         let trustpub_audience = var("TRUSTPUB_AUDIENCE")?.unwrap_or_else(|| domain_name.clone());
+        let disable_token_creation = var("DISABLE_TOKEN_CREATION")?.filter(|s| !s.is_empty());
+        let banner_message = var("BANNER_MESSAGE")?.filter(|s| !s.is_empty());
 
         Ok(Server {
             db: DatabasePools::full_from_environment(&base)?,
@@ -205,6 +219,7 @@ impl Server {
             session_key: cookie::Key::derive_from(required_var("SESSION_KEY")?.as_bytes()),
             gh_client_id: ClientId::new(required_var("GH_CLIENT_ID")?),
             gh_client_secret: ClientSecret::new(required_var("GH_CLIENT_SECRET")?),
+            gh_token_encryption: GitHubTokenEncryption::from_environment()?,
             max_upload_size: 10 * 1024 * 1024, // 10 MB default file upload size limit
             max_unpack_size: 512 * 1024 * 1024, // 512 MB max when decompressed
             max_dependencies: DEFAULT_MAX_DEPENDENCIES,
@@ -241,6 +256,8 @@ impl Server {
             html_render_cache_max_capacity: var_parsed("HTML_RENDER_CACHE_CAP")?.unwrap_or(1024),
             content_security_policy: Some(content_security_policy.parse()?),
             trustpub_audience,
+            disable_token_creation,
+            banner_message,
         })
     }
 }

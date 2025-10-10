@@ -1,0 +1,286 @@
+.row {
+    --bg-color: light-dark(var(--grey200), #242422);
+    --hover-bg-color: light-dark(hsl(217, 37%, 98%), hsl(204, 3%, 11%));
+    --fg-color: light-dark(var(--grey700), #ccc);
+    --shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-size: 18px;
+    padding: var(--space-s) var(--space-m);
+    background-color: light-dark(white, #141413);
+    border-radius: var(--space-3xs);
+    box-shadow: var(--shadow);
+    transition: all var(--transition-slow);
+
+    &:hover, &.focused {
+        background-color: var(--hover-bg-color);
+        transition: all var(--transition-instant);
+    }
+
+    &.focused {
+        box-shadow: 0 0 0 3px var(--yellow500), var(--shadow);
+    }
+
+    &.latest {
+        --bg-color: light-dark(hsl(109, 75%, 87%), hsl(136, 67%, 11%));
+        --hover-bg-color: light-dark(hsl(109, 75%, 97%), hsl(109, 10%, 11%));
+        --fg-color: light-dark(hsl(136, 67%, 38%), hsl(109, 75%, 87%));
+    }
+
+    &.prerelease {
+        --bg-color: light-dark(hsl(39, 100%, 91%), hsl(39, 71%, 15%));
+        --hover-bg-color: light-dark(hsl(39, 100%, 97%), hsl(39, 10%, 11%));
+        --fg-color: light-dark(hsl(39, 71%, 45%), hsl(39, 100%, 91%));
+    }
+
+    &.yanked {
+        --bg-color: light-dark(hsl(0, 92%, 90%), hsl(0, 84%, 12%));
+        --hover-bg-color: light-dark(hsl(0, 92%, 98%), hsl(0, 10%, 11%));
+        --fg-color: light-dark(hsl(0, 84%, 32%), hsl(0, 92%, 90%));
+    }
+}
+
+.release-track, .date, .num-features {
+    z-index: 1;
+    cursor: help;
+}
+
+.date, .num-features {
+    position: relative;
+}
+
+.version {
+    display: grid;
+    grid-template-columns: auto auto;
+    place-items: center;
+
+    @media only screen and (max-width: 550px) {
+        grid-template-columns: auto;
+        margin: 0 var(--space-s);
+    }
+}
+
+.release-track {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: var(--space-xl);
+    height: var(--space-xl);
+    overflow: hidden;
+    margin-right: var(--space-s);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-color);
+    background-color: var(--bg-color);
+    border: 1px solid light-dark(white, #808080);
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+
+    > :global(svg) {
+        height: 1em;
+        width: auto;
+    }
+
+    .row:hover &, .row.focused & {
+        border: var(--space-4xs) solid light-dark(white, #bfbfbf);
+        box-shadow: 0 1px 3px light-dark(var(--fg-color), #232321);
+    }
+
+    @media only screen and (max-width: 550px) {
+        margin: 0 0 var(--space-s);
+    }
+}
+
+.rt-latest {
+    color: hsl(136, 67%, 38%);
+}
+
+.rt-prerelease {
+    color: hsl(35, 95%, 59%);
+}
+
+.rt-yanked {
+    color: hsl(0, 87%, 58%);
+}
+
+.rt-tooltip {
+    word-break: break-all;
+}
+
+.num-link {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: var(--fg-color);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+
+    &:hover {
+        color: var(--fg-color);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+
+.metadata {
+    flex-grow: 1;
+    margin-left: var(--space-m);
+    color: light-dark(var(--grey600), #d1cfc7);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-size: 13px;
+
+    :global(a) {
+        position: relative;
+        color: inherit;
+
+        &:hover {
+            color: light-dark(var(--grey900), #f5f3e9);
+        }
+
+        &:focus-visible {
+            outline: none;
+            color: var(--yellow500);
+        }
+    }
+
+    :global(svg) {
+        height: 1em;
+        width: auto;
+        margin-right: var(--space-4xs);
+        margin-bottom: -.1em;
+    }
+
+    > * + * {
+        margin-top: var(--space-2xs);
+
+        @media only screen and (max-width: 750px) {
+            margin-top: var(--space-xs);
+        }
+    }
+}
+
+.avatar {
+    height: 1.5em;
+    width: auto;
+    margin-left: var(--space-4xs);
+    margin-bottom: -.4em;
+    border-radius: 50%;
+    box-shadow: 0 1px 1px 0 var(--grey600);
+    padding: 1px;
+}
+
+.metadata-row {
+    > * + * {
+        margin-left: var(--space-s);
+    }
+
+    @media only screen and (max-width: 750px) {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        > * + * {
+            margin-left: 0;
+            margin-top: var(--space-xs);
+        }
+    }
+}
+
+.date.new, .tooltip .new {
+    color: hsl(39, 98%, 47%);
+}
+
+.msrv {
+    text-transform: initial;
+}
+
+.msrv, .edition {
+    :global(svg) {
+        /* this makes the text look a little more aligned with the icon... 🤷 */
+        margin-bottom: -0.15em;
+    }
+}
+
+.bytes {
+    font-variant-numeric: tabular-nums;
+    text-transform: none;
+}
+
+.feature-list {
+    padding: 0;
+    margin: var(--space-2xs) var(--space-3xs);
+    list-style: none;
+
+    :global(svg) {
+        height: 1em;
+        width: auto;
+        margin-right: var(--space-4xs);
+        margin-bottom: -.1em;
+    }
+}
+
+.other-features {
+    font-style: italic;
+    margin-top: var(--space-2xs);
+}
+
+.actions {
+    display: flex;
+}
+
+.dropdown {
+    display: flex;
+    font-size: initial;
+    line-height: 1rem;
+}
+
+.icon {
+    width: 2em;
+    height: auto;
+}
+
+.trigger {
+    background: none;
+    border: none;
+    padding: 0;
+    border-radius: 99999px;
+    color: var(--grey600);
+
+    :hover {
+        border-radius: 99999px;
+        color: var(--grey900);
+        background-color: white;
+    }
+}
+
+.menu {
+    top: 100%;
+    right: 0;
+    min-width: max-content;
+}
+
+.menu-button {
+    align-items: center;
+    gap: var(--space-2xs);
+    cursor: pointer;
+    text-transform: capitalize;
+
+    /* This duplicates the styles in .button[disabled] as there's no
+     * obvious way to compose them, given the target selectors. */
+    &[disabled] {
+        background: linear-gradient(to bottom, var(--bg-color-top-light) 0%, var(--bg-color-bottom-light) 100%);
+        color: var(--disabled-text-color) !important;
+        cursor: not-allowed;
+    }
+}

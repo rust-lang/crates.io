@@ -1,0 +1,1 @@
+DROP INDEX idx_trustpub_configs_github_repo;

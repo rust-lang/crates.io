@@ -64,6 +64,22 @@ test('yanks the version', async function () {
       features: {},
       id: 1,
       license: 'MIT',
+      linecounts: {
+        languages: {
+          JavaScript: {
+            code_lines: 325,
+            comment_lines: 80,
+            files: 8,
+          },
+          TypeScript: {
+            code_lines: 195,
+            comment_lines: 10,
+            files: 2,
+          },
+        },
+        total_code_lines: 520,
+        total_comment_lines: 90,
+      },
       links: {
         dependencies: '/api/v1/crates/foo/1.0.0/dependencies',
         version_downloads: '/api/v1/crates/foo/1.0.0/downloads',
@@ -95,6 +111,22 @@ test('yanks the version', async function () {
       features: {},
       id: 1,
       license: 'MIT',
+      linecounts: {
+        languages: {
+          JavaScript: {
+            code_lines: 325,
+            comment_lines: 80,
+            files: 8,
+          },
+          TypeScript: {
+            code_lines: 195,
+            comment_lines: 10,
+            files: 2,
+          },
+        },
+        total_code_lines: 520,
+        total_comment_lines: 90,
+      },
       links: {
         dependencies: '/api/v1/crates/foo/1.0.0/dependencies',
         version_downloads: '/api/v1/crates/foo/1.0.0/downloads',

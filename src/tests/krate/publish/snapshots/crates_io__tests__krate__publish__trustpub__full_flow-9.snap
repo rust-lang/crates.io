@@ -21,6 +21,11 @@ expression: response.json()
     "id": 2,
     "lib_links": null,
     "license": "MIT",
+    "linecounts": {
+      "languages": {},
+      "total_code_lines": 0,
+      "total_comment_lines": 0
+    },
     "links": {
       "authors": "/api/v1/crates/foo/1.1.0/authors",
       "dependencies": "/api/v1/crates/foo/1.1.0/dependencies",

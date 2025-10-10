@@ -11,27 +11,28 @@ workspace = true
 test-helpers = ["dep:bon", "dep:mockall", "dep:serde_json"]
 
 [dependencies]
-anyhow = "=1.0.98"
-async-trait = "=0.1.88"
-bon = { version = "=3.6.5", optional = true }
-chrono = { version = "=0.4.41", features = ["serde"] }
+anyhow = "=1.0.100"
+async-trait = "=0.1.89"
+bon = { version = "=3.8.1", optional = true }
+chrono = { version = "=0.4.42", features = ["serde"] }
 jsonwebtoken = "=9.3.1"
 mockall = { version = "=0.13.1", optional = true }
 rand = "=0.9.2"
-reqwest = { version = "=0.12.22", features = ["gzip", "json"] }
-regex = "=1.11.1"
+reqwest = { version = "=0.12.23", features = ["gzip", "json"] }
+regex = "=1.11.3"
 secrecy = "=0.10.3"
-serde = { version = "=1.0.219", features = ["derive"] }
-serde_json = { version = "=1.0.141", optional = true }
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = { version = "=1.0.145", optional = true }
 sha2 = "=0.10.9"
-thiserror = "=2.0.12"
-tokio = { version = "=1.46.1", features = ["sync"] }
+thiserror = "=2.0.17"
+tokio = { version = "=1.47.1", features = ["sync"] }
 tracing = "=0.1.41"
 
 [dev-dependencies]
-bon = "=3.6.5"
+bon = "=3.8.1"
 claims = "=0.8.0"
-insta = { version = "=1.43.1", features = ["json", "redactions"] }
+clap = { version = "=4.5.48", features = ["derive", "env", "unicode", "wrap_help"] }
+insta = { version = "=1.43.2", features = ["json", "redactions"] }
 mockito = "=1.7.0"
-serde_json = "=1.0.141"
-tokio = { version = "=1.46.1", features = ["macros", "rt-multi-thread"] }
+serde_json = "=1.0.145"
+tokio = { version = "=1.47.1", features = ["macros", "rt-multi-thread"] }

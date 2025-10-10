@@ -1,0 +1,14 @@
+---
+source: src/controllers/trustpub/emails.rs
+expression: rendered.body_text
+---
+Hello octocat!
+
+You removed a "Trusted Publishing" configuration for GitLab CI from your crate "my-crate".
+
+The removed configuration was for the workflow file at https://gitlab.com/rust-lang/my-crate/-/blob/HEAD/.gitlab-ci.yml using the `production` environment.
+
+If you did not make this change and you think it was made maliciously, you can email help@crates.io for assistance.
+
+--
+The crates.io Team

@@ -117,7 +117,7 @@ mod tests {
         NewUser::builder()
             .gh_id(2)
             .gh_login("login")
-            .gh_access_token("access_token")
+            .gh_encrypted_token(&[])
             .build()
             .insert(conn)
             .await

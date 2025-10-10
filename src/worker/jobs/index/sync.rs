@@ -1,7 +1,9 @@
 use crate::index::get_index_data;
 use crate::tasks::spawn_blocking;
 use crate::worker::Environment;
+use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
+use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_index::Repository;
 use crates_io_worker::BackgroundJob;
 use serde::{Deserialize, Serialize};
@@ -113,12 +115,17 @@ impl BackgroundJob for SyncToSparseIndex {
         let future = env.storage.sync_index(&self.krate, content);
         future.await.context("Failed to sync index data")?;
 
-        if let Some(cloudfront) = env.cloudfront() {
+        if env.cloudfront().is_some() {
             let path = Repository::relative_index_file_for_url(&self.krate);
 
-            info!(%path, "Invalidating index file on CloudFront");
-            let future = cloudfront.invalidate(&path);
-            future.await.context("Failed to invalidate CloudFront")?;
+            info!(%path, "Queuing index file invalidation on CloudFront");
+
+            let paths = &[path];
+            let result = CloudFrontInvalidationQueueItem::queue_paths(&mut conn, paths).await;
+            result.context("Failed to queue CloudFront invalidation path")?;
+
+            let result = ProcessCloudfrontInvalidationQueue.enqueue(&mut conn).await;
+            result.context("Failed to enqueue CloudFront invalidation processing job")?;
         }
         Ok(())
     }
