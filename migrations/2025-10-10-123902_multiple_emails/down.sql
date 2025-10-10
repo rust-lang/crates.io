@@ -8,9 +8,6 @@ DROP FUNCTION enforce_max_emails_per_user();
 -- Remove the unique constraint for the combination of user_id and email
 ALTER TABLE emails DROP CONSTRAINT unique_user_email;
 
--- Remove the constraint that allows only one primary email per user
-ALTER TABLE emails DROP CONSTRAINT unique_primary_email_per_user;
-
 -- Remove the trigger that prevents deletion of primary emails
 DROP TRIGGER trigger_prevent_primary_email_deletion ON emails;
 DROP FUNCTION prevent_primary_email_deletion();

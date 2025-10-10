@@ -20,17 +20,6 @@ EXECUTE FUNCTION enforce_max_emails_per_user();
 -- Add a unique constraint for the combination of user_id and email
 ALTER TABLE emails ADD CONSTRAINT unique_user_email UNIQUE (user_id, email);
 
--- Limit primary flag to one email per user
--- Evaluation of the constraint is deferred to the end of the transaction to allow for replacement of the primary email
-CREATE EXTENSION IF NOT EXISTS btree_gist;
-ALTER TABLE emails ADD CONSTRAINT unique_primary_email_per_user
-EXCLUDE USING gist (
-  user_id WITH =,
-  (is_primary::int) WITH =
-)
-WHERE (is_primary)
-DEFERRABLE INITIALLY DEFERRED;
-
 -- Prevent deletion of primary email, unless it's the only email for that user
 CREATE FUNCTION prevent_primary_email_deletion()
 RETURNS TRIGGER AS $$
