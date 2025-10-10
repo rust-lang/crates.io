@@ -27,7 +27,7 @@ impl From<Email> for EmailSnapshot {
             id: email.id,
             user_id: email.user_id,
             email: email.email,
-            primary: email.primary,
+            primary: email.is_primary,
         }
     }
 }
@@ -310,7 +310,7 @@ async fn demote_primary_without_new_primary() {
 
 #[tokio::test]
 // Attempt to create a primary email when one already exists for the user, which should fail.
-// This tests the `unique_primary_email_per_user` constraint.
+// This tests the `verify_exactly_one_primary_email` constraint.
 async fn create_primary_email_when_one_exists() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
