@@ -271,7 +271,7 @@ async fn send_trustpub_notification_emails(
         .filter(crate_owners::deleted.eq(false))
         .inner_join(emails::table.on(crate_owners::owner_id.eq(emails::user_id)))
         .filter(emails::verified.eq(true))
-        .filter(emails::primary.eq(true))
+        .filter(emails::is_primary.eq(true))
         .select((crate_owners::crate_id, emails::email))
         .order((emails::email, crate_owners::crate_id))
         .load::<(i32, String)>(conn)

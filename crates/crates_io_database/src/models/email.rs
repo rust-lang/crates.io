@@ -13,7 +13,7 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
-    pub primary: bool,
+    pub is_primary: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
 }
@@ -26,7 +26,7 @@ pub struct NewEmail<'a> {
     #[builder(default = false)]
     pub verified: bool,
     #[builder(default = false)]
-    pub primary: bool,
+    pub is_primary: bool,
 }
 
 impl NewEmail<'_> {
@@ -47,7 +47,7 @@ impl NewEmail<'_> {
         // Check if the user already has a primary email
         let primary_count = emails::table
             .filter(emails::user_id.eq(self.user_id))
-            .filter(emails::primary.eq(true))
+            .filter(emails::is_primary.eq(true))
             .count()
             .get_result::<i64>(conn)
             .await?;
@@ -68,7 +68,7 @@ impl NewEmail<'_> {
         let updated_email = diesel::update(
             emails::table
                 .filter(emails::user_id.eq(self.user_id))
-                .filter(emails::primary.eq(true)),
+                .filter(emails::is_primary.eq(true)),
         )
         .set((
             emails::email.eq(self.email),

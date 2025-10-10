@@ -90,7 +90,7 @@ async fn create_user(
             emails::user_id.eq(user_id),
             emails::email.eq(format!("{name}@crates.io")),
             emails::verified.eq(true),
-            emails::primary.eq(true),
+            emails::is_primary.eq(true),
         ))
         .execute(conn)
         .await?;

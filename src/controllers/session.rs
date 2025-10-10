@@ -170,7 +170,7 @@ async fn create_or_update_user(
                 let new_email = NewEmail::builder()
                     .user_id(user.id)
                     .email(user_email)
-                    .primary(true)
+                    .is_primary(true)
                     .build();
 
                 if let Some(saved_email) = new_email.insert_primary_if_missing(conn).await? {

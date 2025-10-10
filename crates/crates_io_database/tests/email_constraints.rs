@@ -55,7 +55,7 @@ async fn insert_static_primary_email(
     NewEmail::builder()
         .user_id(user_id)
         .email("primary@example.com")
-        .primary(true)
+        .is_primary(true)
         .build()
         .insert(conn)
         .await
@@ -69,7 +69,7 @@ async fn insert_static_secondary_email(
     NewEmail::builder()
         .user_id(user_id)
         .email("secondary@example.com")
-        .primary(false)
+        .is_primary(false)
         .build()
         .insert(conn)
         .await
@@ -201,7 +201,7 @@ async fn create_secondary_email_with_same_email_as_primary() {
     let secondary = NewEmail::builder()
         .user_id(user_id)
         .email(&primary.email)
-        .primary(false)
+        .is_primary(false)
         .build()
         .insert(&mut conn)
         .await
@@ -223,7 +223,7 @@ async fn create_too_many_emails() {
         let result = NewEmail::builder()
             .user_id(user_id)
             .email(&format!("me+{i}@example.com"))
-            .primary(i == 0)
+            .is_primary(i == 0)
             .build()
             .insert(&mut conn)
             .await
@@ -281,7 +281,7 @@ async fn promote_secondary_to_primary() {
 
     // Query both emails to verify that the primary flag has been updated correctly for both.
     let result = emails::table
-        .select((emails::id, emails::email, emails::primary))
+        .select((emails::id, emails::email, emails::is_primary))
         .load::<(i32, String, bool)>(&mut conn)
         .await;
 
@@ -301,7 +301,7 @@ async fn demote_primary_without_new_primary() {
         .expect("failed to insert primary email");
 
     let result = diesel::update(emails::table.find(primary.id))
-        .set(emails::primary.eq(false))
+        .set(emails::is_primary.eq(false))
         .execute(&mut conn)
         .await;
 
@@ -323,7 +323,7 @@ async fn create_primary_email_when_one_exists() {
     let second = NewEmail::builder()
         .user_id(user_id)
         .email("me+2@example.com")
-        .primary(true)
+        .is_primary(true)
         .build()
         .insert(&mut conn)
         .await

@@ -71,7 +71,7 @@ impl User {
         Email::belonging_to(self)
             .select(emails::email)
             .filter(emails::verified.eq(true))
-            .order(emails::primary.desc())
+            .order(emails::is_primary.desc())
             .first(conn)
             .await
             .optional()

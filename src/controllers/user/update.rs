@@ -109,7 +109,7 @@ pub async fn update_user(
         let new_email = NewEmail::builder()
             .user_id(user.id)
             .email(user_email)
-            .primary(true)
+            .is_primary(true)
             .build();
 
         let saved_email = new_email
