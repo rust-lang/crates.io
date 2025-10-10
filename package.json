@@ -67,6 +67,7 @@
     "@ember/test-waiters": "4.1.1",
     "@embroider/compat": "3.9.3",
     "@embroider/core": "3.5.9",
+    "@embroider/macros": "1.19.5",
     "@embroider/webpack": "4.1.2",
     "@eslint/eslintrc": "3.3.3",
     "@eslint/js": "9.39.1",

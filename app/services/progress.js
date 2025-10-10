@@ -1,8 +1,8 @@
 import Service, { service } from '@ember/service';
 import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
-import Ember from 'ember';
 
+import { isTesting } from '@embroider/macros';
 import { didCancel, dropTask, rawTimeout, task } from 'ember-concurrency';
 
 const SPEED = 200;
@@ -36,7 +36,7 @@ export default class ProgressService extends Service {
   });
 
   updateTask = dropTask(async () => {
-    if (Ember.testing) return;
+    if (isTesting()) return;
 
     let progress = 0;
     this._style = `width: 0%`;

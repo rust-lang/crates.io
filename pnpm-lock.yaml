@@ -84,6 +84,9 @@ importers:
       '@embroider/core':
         specifier: 3.5.9
         version: 3.5.9
+      '@embroider/macros':
+        specifier: 1.19.5
+        version: 1.19.5
       '@embroider/webpack':
         specifier: 4.1.2
         version: 4.1.2(@embroider/core@3.5.9)(webpack@5.103.0)

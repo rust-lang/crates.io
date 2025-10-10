@@ -2,15 +2,15 @@
 import didInsert from '@ember/render-modifiers/modifiers/did-insert';
 import didUpdate from '@ember/render-modifiers/modifiers/did-update';
 import Component from '@glimmer/component';
-import Ember from 'ember';
 
+import { isTesting } from '@embroider/macros';
 import { rawTimeout, restartableTask } from 'ember-concurrency';
 import perform from 'ember-concurrency/helpers/perform';
 import or from 'ember-truth-helpers/helpers/or';
 
 export default class WorkflowVerificationComponent extends Component {
   verifyWorkflowTask = restartableTask(async () => {
-    let timeout = Ember.testing ? 0 : 500;
+    let timeout = isTesting() ? 0 : 500;
     await rawTimeout(timeout);
 
     let { url } = this.args;
