@@ -64,6 +64,12 @@ impl NewEmail<'_> {
         &self,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Email> {
+        if self.is_primary {
+            return Err(diesel::result::Error::QueryBuilderError(
+                "Cannot use insert_or_update_primary with a non-primary email".into(),
+            ));
+        }
+
         // Attempt to update an existing primary email
         let updated_email = diesel::update(
             emails::table
