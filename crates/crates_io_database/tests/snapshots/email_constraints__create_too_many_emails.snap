@@ -1,0 +1,10 @@
+---
+source: crates/crates_io_database/tests/email_constraints.rs
+expression: errors
+---
+[
+    DatabaseError(
+        Unknown,
+        "User cannot have more than 32 emails",
+    ),
+]

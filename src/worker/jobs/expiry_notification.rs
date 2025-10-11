@@ -166,6 +166,7 @@ mod tests {
         NewEmail::builder()
             .user_id(user.id)
             .email("testuser@test.com")
+            .is_primary(true)
             .build()
             .insert(&mut conn)
             .await?;
