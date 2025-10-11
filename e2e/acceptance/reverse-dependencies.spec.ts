@@ -72,7 +72,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL(`/crates/${foo.name}`);
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
       'Could not load reverse dependencies for the "foo" crate',
     );
@@ -86,7 +86,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL(`/crates/${foo.name}`);
     await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
       'Could not load reverse dependencies for the "foo" crate: cannot request more than 100 items',
     );

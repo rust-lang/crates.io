@@ -73,7 +73,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.strictEqual(currentURL(), '/');
+    assert.strictEqual(currentURL(), `/crates/${foo.name}`);
     assert
       .dom('[data-test-notification-message="error"]')
       .hasText('Could not load reverse dependencies for the "foo" crate');
@@ -86,7 +86,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.strictEqual(currentURL(), '/');
+    assert.strictEqual(currentURL(), `/crates/${foo.name}`);
     assert
       .dom('[data-test-notification-message="error"]')
       .hasText('Could not load reverse dependencies for the "foo" crate: cannot request more than 100 items');

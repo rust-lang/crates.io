@@ -26,7 +26,7 @@ export default class ReverseDependenciesRoute extends Route {
       }
 
       this.notifications.error(message);
-      this.router.replaceWith('index');
+      this.router.replaceWith('catch-all');
     }
   }
 
