@@ -18,6 +18,8 @@ env:
   CARGO_TERM_COLOR: always
   # renovate: datasource=crate depName=cargo-deny versioning=semver
   CARGO_DENY_VERSION: 0.18.5
+  # renovate: datasource=github-releases depName=cargo-insta lookupName=mitsuhiko/insta versioning=semver
+  CARGO_INSTA_VERSION: 1.43.2
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
@@ -194,12 +196,15 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
+      - name: Install cargo-insta
+        run: curl -LsSf https://github.com/mitsuhiko/insta/releases/download/${CARGO_INSTA_VERSION}/cargo-insta-installer.sh | sh
+
       - run: sudo systemctl start postgresql.service
       - run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
       - run: cargo fetch --locked
       - run: cargo build --tests --workspace
-      - run: cargo test --workspace
+      - run: cargo insta test --require-full-match --unreferenced=reject --workspace
         env:
           # Set the path to the Fira Sans font for Typst.
           TYPST_FONT_PATH: ${{ github.workspace }}/Fira-4.202/otf
