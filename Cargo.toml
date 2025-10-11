@@ -157,7 +157,7 @@ googletest = "=0.14.2"
 insta = { version = "=1.43.2", features = ["glob", "json", "redactions"] }
 jsonwebtoken = "=9.3.1"
 quoted_printable = "=0.5.1"
-regex = "=1.11.3"
+regex = "=1.12.1"
 sentry = { version = "=0.45.0", features = ["test"] }
 tokio = "=1.47.1"
 zip = { version = "=6.0.0", default-features = false, features = ["deflate"] }
