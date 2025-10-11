@@ -1,7 +1,7 @@
 import Controller from '@ember/controller';
 import { action } from '@ember/object';
-import Ember from 'ember';
 
+import { isTesting } from '@embroider/macros';
 import { alias } from 'macro-decorators';
 
 import ajax from '../../utils/ajax';
@@ -15,7 +15,7 @@ export default class EmailNotificationsSettingsController extends Controller {
   emailNotificationsSuccess = false;
 
   get hasEmailNotificationFeature() {
-    return Ember.testing;
+    return isTesting();
   }
 
   setAllEmailNotifications(value) {
