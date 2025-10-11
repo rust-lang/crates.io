@@ -76,8 +76,8 @@ pub struct AuthorizeQuery {
 ///
 /// ## Query Parameters
 ///
-/// - `code` – temporary code received from the GitHub API  **(Required)**
-/// - `state` – state parameter received from the GitHub API  **(Required)**
+/// - `code` - temporary code received from the GitHub API  **(Required)**
+/// - `state` - state parameter received from the GitHub API  **(Required)**
 #[utoipa::path(
     get,
     path = "/api/private/session/authorize",
