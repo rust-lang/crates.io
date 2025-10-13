@@ -65,30 +65,17 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     await expect(totalRows).toHaveText('22');
   });
 
-  test('shows a generic error if the server is broken', async ({ page, msw }) => {
+  test('shows error message if loading of reverse dependencies fails', async ({ page, msw }) => {
     let { foo } = prepare(msw);
 
     let error = HttpResponse.json({}, { status: 500 });
     await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
-    await expect(page).toHaveURL(`/crates/${foo.name}`);
-    await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
-      'Could not load reverse dependencies for the "foo" crate',
-    );
-  });
-
-  test('shows a detailed error if available', async ({ page, msw }) => {
-    let { foo } = prepare(msw);
-
-    let payload = { errors: [{ detail: 'cannot request more than 100 items' }] };
-    let error = HttpResponse.json(payload, { status: 400 });
-    await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
-
-    await page.goto(`/crates/${foo.name}/reverse_dependencies`);
-    await expect(page).toHaveURL(`/crates/${foo.name}`);
-    await expect(page.locator('[data-test-notification-message="error"]')).toHaveText(
-      'Could not load reverse dependencies for the "foo" crate: cannot request more than 100 items',
-    );
+    await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
+    await expect(page.locator('[data-test-404-page]')).toBeVisible();
+    await expect(page.locator('[data-test-title]')).toHaveText(`${foo.name}: Failed to load dependents`);
+    await expect(page.locator('[data-test-go-back]')).toBeVisible();
+    await expect(page.locator('[data-test-try-again]')).not.toBeVisible();
   });
 });

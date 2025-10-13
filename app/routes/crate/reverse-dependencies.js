@@ -10,7 +10,7 @@ export default class ReverseDependenciesRoute extends Route {
     page: { refreshModel: true },
   };
 
-  async model(params) {
+  async model(params, transition) {
     params.reverse = true;
     params.crate = this.modelFor('crate');
     let crateName = params.crate.name;
@@ -18,15 +18,8 @@ export default class ReverseDependenciesRoute extends Route {
     try {
       return await this.store.query('dependency', params);
     } catch (error) {
-      let message = `Could not load reverse dependencies for the "${crateName}" crate`;
-
-      let details = error.errors?.[0]?.detail;
-      if (details && !details.startsWith('{')) {
-        message += `: ${details}`;
-      }
-
-      this.notifications.error(message);
-      this.router.replaceWith('catch-all');
+      let title = `${crateName}: Failed to load dependents`;
+      this.router.replaceWith('catch-all', { transition, error, title });
     }
   }
 
