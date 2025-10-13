@@ -38,11 +38,21 @@
 
 .expiry-select {
     padding-right: var(--space-m);
-    background-image: url("/assets/dropdown.svg");
+    background-image: url("/assets/dropdown-black.svg");
     background-repeat: no-repeat;
     background-position: calc(100% - var(--space-2xs)) center;
     background-size: 10px;
     appearance: none;
+
+    [data-color-scheme="system"] & {
+        @media (prefers-color-scheme: dark) {
+            background-image: url("/assets/dropdown-white.svg");
+        }
+    }
+
+    [data-color-scheme="dark"] & {
+        background-image: url("/assets/dropdown-white.svg");
+    }
 }
 
 .expiry-date-input {
