@@ -66,29 +66,17 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     assert.dom('[data-test-total-rows]').hasText('22');
   });
 
-  test('shows a generic error if the server is broken', async function (assert) {
+  test('shows error message if loading of reverse dependencies fails', async function (assert) {
     let { foo } = prepare(this);
 
     let error = HttpResponse.json({}, { status: 500 });
     this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
 
     await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.strictEqual(currentURL(), '/');
-    assert
-      .dom('[data-test-notification-message="error"]')
-      .hasText('Could not load reverse dependencies for the "foo" crate');
-  });
-
-  test('shows a detailed error if available', async function (assert) {
-    let { foo } = prepare(this);
-
-    let error = HttpResponse.json({ errors: [{ detail: 'cannot request more than 100 items' }] }, { status: 400 });
-    this.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
-
-    await visit(`/crates/${foo.name}/reverse_dependencies`);
-    assert.strictEqual(currentURL(), '/');
-    assert
-      .dom('[data-test-notification-message="error"]')
-      .hasText('Could not load reverse dependencies for the "foo" crate: cannot request more than 100 items');
+    assert.strictEqual(currentURL(), `/crates/${foo.name}/reverse_dependencies`);
+    assert.dom('[data-test-404-page]').isVisible();
+    assert.dom('[data-test-title]').hasText(`${foo.name}: Failed to load dependents`);
+    assert.dom('[data-test-go-back]').isVisible();
+    assert.dom('[data-test-try-again]').isNotVisible();
   });
 });
