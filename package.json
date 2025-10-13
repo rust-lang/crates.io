@@ -78,7 +78,7 @@
     "@percy/playwright": "1.0.9",
     "@playwright/test": "1.56.0",
     "@sinonjs/fake-timers": "15.0.0",
-    "@types/node": "22.18.9",
+    "@types/node": "22.18.10",
     "@types/sinonjs__fake-timers": "8.1.5",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
