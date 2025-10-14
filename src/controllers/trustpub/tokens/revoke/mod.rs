@@ -33,6 +33,7 @@ pub async fn revoke_trustpub_token(app: AppState, auth: AuthHeader) -> AppResult
 
     let mut conn = app.db_write().await?;
 
+    #[expect(deprecated)]
     diesel::delete(trustpub_tokens::table)
         .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
         .execute(&mut conn)

@@ -18,6 +18,7 @@ fn generate_token() -> (String, Output<Sha256>) {
     (token.finalize().expose_secret().to_string(), token.sha256())
 }
 
+#[expect(deprecated)]
 async fn new_token(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<String> {
     let (token, hashed_token) = generate_token();
 
