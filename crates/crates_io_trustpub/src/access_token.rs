@@ -124,6 +124,7 @@ mod tests {
     }
 
     #[test]
+    #[expect(deprecated)]
     fn test_sha256() {
         let token = AccessToken(SecretString::from(EXAMPLE_TOKEN));
         let hash = token.sha256();
