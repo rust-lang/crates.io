@@ -23,5 +23,5 @@ tracing = "=0.1.41"
 [dev-dependencies]
 clap = { version = "=4.5.49", features = ["derive", "env", "unicode", "wrap_help"] }
 secrecy = "=0.10.3"
-tokio = { version = "=1.47.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "=1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = { version = "=0.3.20", features = ["env-filter"] }
