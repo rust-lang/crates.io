@@ -2,7 +2,7 @@ export default [
   {
     crateId: 'libc',
     default_features: true,
-    features: '',
+    features: [],
     id: 146_231,
     kind: 'normal',
     optional: false,
@@ -13,7 +13,7 @@ export default [
   {
     crateId: 'nanomsg-sys',
     default_features: true,
-    features: '',
+    features: [],
     id: 146_232,
     kind: 'normal',
     optional: false,
@@ -24,7 +24,7 @@ export default [
   {
     crateId: 'nanomsg',
     default_features: true,
-    features: '',
+    features: [],
     id: 146_233,
     kind: 'normal',
     optional: false,
@@ -35,7 +35,7 @@ export default [
   {
     crateId: 'mock-build-deps',
     default_features: true,
-    features: '',
+    features: [],
     id: 146_234,
     kind: 'build',
     optional: false,
@@ -46,7 +46,7 @@ export default [
   {
     crateId: 'mock-dev-deps',
     default_features: true,
-    features: '',
+    features: [],
     id: 146_235,
     kind: 'dev',
     optional: true,

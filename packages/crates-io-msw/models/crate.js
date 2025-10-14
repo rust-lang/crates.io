@@ -5,7 +5,8 @@ import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
 const schema = z.object({
-  id: z.number(),
+  // `z.string()` is used to support some of our old fixture that use strings here for some reason
+  id: z.number().or(z.string()),
 
   name: z.string(),
   description: z.string(),
