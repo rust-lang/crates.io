@@ -3,8 +3,8 @@ import { assert, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns `ok`', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
   assert.strictEqual(response.status, 200);
@@ -12,7 +12,7 @@ test('returns `ok`', async function () {
 });
 
 test('returns 403 when not logged in', async function () {
-  let user = db.user.create();
+  let user = await db.user.create();
 
   let response = await fetch(`/api/v1/users/${user.id}/resend`, { method: 'PUT' });
   assert.strictEqual(response.status, 403);
@@ -20,8 +20,8 @@ test('returns 403 when not logged in', async function () {
 });
 
 test('returns 400 when requesting the wrong user id', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/users/wrong-id/resend`, { method: 'PUT' });
   assert.strictEqual(response.status, 400);

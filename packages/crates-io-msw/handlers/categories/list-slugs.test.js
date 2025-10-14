@@ -11,11 +11,11 @@ test('empty case', async function () {
 });
 
 test('returns a category slugs list', async function () {
-  db.category.create({
+  await db.category.create({
     category: 'no-std',
     description: 'Crates that are able to function without the Rust standard library.',
   });
-  Array.from({ length: 2 }, () => db.category.create());
+  await Promise.all(Array.from({ length: 2 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/category_slugs');
   assert.strictEqual(response.status, 200);
@@ -41,7 +41,7 @@ test('returns a category slugs list', async function () {
 });
 
 test('has no pagination', async function () {
-  Array.from({ length: 25 }, () => db.category.create());
+  await Promise.all(Array.from({ length: 25 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/category_slugs');
   assert.strictEqual(response.status, 200);

@@ -10,15 +10,12 @@ export default http.post('/api/v1/crates/:name/:version/rebuild_docs', async ({ 
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
-  let version = db.version.findFirst({
-    where: {
-      crate: { id: { equals: crate.id } },
-      num: { equals: params.version },
-    },
-  });
+  let version = db.version.findFirst(q =>
+    q.where(version => version.crate.id === crate.id && version.num === params.version),
+  );
   if (!version) return notFound();
 
   return new HttpResponse(null, { status: 201 });

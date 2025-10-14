@@ -16,17 +16,17 @@ export default http.get('/api/private/crate_owner_invitations', ({ request }) =>
 
   let invites;
   if (url.searchParams.has('crate_name')) {
-    let crate = db.crate.findFirst({ where: { name: { equals: url.searchParams.get('crate_name') } } });
+    let crate = db.crate.findFirst(q => q.where({ name: url.searchParams.get('crate_name') }));
     if (!crate) return notFound();
 
-    invites = db.crateOwnerInvitation.findMany({ where: { crate: { id: { equals: crate.id } } } });
+    invites = db.crateOwnerInvitation.findMany(q => q.where(invite => invite.crate.id === crate.id));
   } else if (url.searchParams.has('invitee_id')) {
     let inviteeId = parseInt(url.searchParams.get('invitee_id'));
     if (inviteeId !== user.id) {
       return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
     }
 
-    invites = db.crateOwnerInvitation.findMany({ where: { invitee: { id: { equals: inviteeId } } } });
+    invites = db.crateOwnerInvitation.findMany(q => q.where(invite => invite.invitee.id === inviteeId));
   } else {
     return HttpResponse.json({ errors: [{ detail: 'missing or invalid filter' }] }, { status: 400 });
   }

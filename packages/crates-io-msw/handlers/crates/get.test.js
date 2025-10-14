@@ -9,8 +9,8 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('returns a crate object for known crates', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0-beta.1' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0-beta.1' });
 
   let response = await fetch('/api/v1/crates/rand');
   assert.strictEqual(response.status, 200);
@@ -91,8 +91,8 @@ test('returns a crate object for known crates', async function () {
 });
 
 test('works for non-canonical names', async function () {
-  let crate = db.crate.create({ name: 'foo-bar' });
-  db.version.create({ crate, num: '1.0.0-beta.1' });
+  let crate = await db.crate.create({ name: 'foo-bar' });
+  await db.version.create({ crate, num: '1.0.0-beta.1' });
 
   let response = await fetch('/api/v1/crates/foo_bar');
   assert.strictEqual(response.status, 200);
@@ -173,10 +173,10 @@ test('works for non-canonical names', async function () {
 });
 
 test('includes related versions', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0' });
-  db.version.create({ crate, num: '1.2.0' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0' });
+  await db.version.create({ crate, num: '1.2.0' });
 
   let response = await fetch('/api/v1/crates/rand');
   assert.strictEqual(response.status, 200);
@@ -302,10 +302,10 @@ test('includes related versions', async function () {
 });
 
 test('includes related categories', async function () {
-  let noStd = db.category.create({ category: 'no-std' });
-  db.category.create({ category: 'cli' });
-  let crate = db.crate.create({ name: 'rand', categories: [noStd] });
-  db.version.create({ crate });
+  let noStd = await db.category.create({ category: 'no-std' });
+  await db.category.create({ category: 'cli' });
+  let crate = await db.crate.create({ name: 'rand', categories: [noStd] });
+  await db.version.create({ crate });
 
   let response = await fetch('/api/v1/crates/rand');
   assert.strictEqual(response.status, 200);
@@ -325,10 +325,10 @@ test('includes related categories', async function () {
 });
 
 test('includes related keywords', async function () {
-  let noStd = db.keyword.create({ keyword: 'no-std' });
-  db.keyword.create({ keyword: 'cli' });
-  let crate = db.crate.create({ name: 'rand', keywords: [noStd] });
-  db.version.create({ crate });
+  let noStd = await db.keyword.create({ keyword: 'no-std' });
+  await db.keyword.create({ keyword: 'cli' });
+  let crate = await db.crate.create({ name: 'rand', keywords: [noStd] });
+  await db.version.create({ crate });
 
   let response = await fetch('/api/v1/crates/rand');
   assert.strictEqual(response.status, 200);
@@ -345,14 +345,14 @@ test('includes related keywords', async function () {
 });
 
 test('without versions included', async function () {
-  db.category.create({ category: 'no-std' });
-  db.category.create({ category: 'cli' });
-  db.keyword.create({ keyword: 'no-std' });
-  db.keyword.create({ keyword: 'cli' });
-  let crate = db.crate.create({ name: 'rand', categoryIds: ['no-std'], keywordIds: ['no-std'] });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0' });
-  db.version.create({ crate, num: '1.2.0' });
+  await db.category.create({ category: 'no-std' });
+  await db.category.create({ category: 'cli' });
+  await db.keyword.create({ keyword: 'no-std' });
+  await db.keyword.create({ keyword: 'cli' });
+  let crate = await db.crate.create({ name: 'rand', categoryIds: ['no-std'], keywordIds: ['no-std'] });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0' });
+  await db.version.create({ crate, num: '1.2.0' });
 
   let req = await fetch('/api/v1/crates/rand');
   let expected = await req.json();
@@ -375,10 +375,10 @@ test('without versions included', async function () {
 });
 
 test('includes default_version', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0' });
-  db.version.create({ crate, num: '1.2.0' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0' });
+  await db.version.create({ crate, num: '1.2.0' });
 
   let req = await fetch('/api/v1/crates/rand');
   let expected = await req.json();

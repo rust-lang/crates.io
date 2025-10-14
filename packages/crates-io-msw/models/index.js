@@ -14,9 +14,9 @@ import versionDownloads from './version-download.js';
 import versions from './version.js';
 
 // Define relations
-users.defineRelations(({ many }) => ({
-  followedCrates: many(crates),
-}));
+// users.defineRelations(({ many }) => ({
+//   followedCrates: many(crates),
+// }));
 
 crates.defineRelations(({ many }) => ({
   categories: many(categories),
@@ -84,7 +84,7 @@ export const db = {
   reset() {
     for (let collection of Object.values(this)) {
       if (collection?.deleteMany) {
-        collection.deleteMany(q => q.where(() => true));
+        collection.deleteMany(null);
       }
 
       if (collection?.__counter) {

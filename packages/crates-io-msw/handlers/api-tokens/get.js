@@ -12,12 +12,7 @@ export default http.get('/api/v1/me/tokens/:tokenId', async ({ params }) => {
   }
 
   let { tokenId } = params;
-  let token = db.apiToken.findFirst({
-    where: {
-      id: { equals: parseInt(tokenId) },
-      user: { id: { equals: user.id } },
-    },
-  });
+  let token = db.apiToken.findFirst(q => q.where(token => token.id === parseInt(tokenId) && token.user.id === user.id));
   if (!token) return notFound();
 
   return HttpResponse.json({

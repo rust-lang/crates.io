@@ -6,11 +6,11 @@ import { notFound } from '../../utils/handlers.js';
 export default http.put('/api/v1/me/crate_owner_invitations/accept/:token', async ({ params }) => {
   let { token } = params;
 
-  let invite = db.crateOwnerInvitation.findFirst({ where: { token: { equals: token } } });
+  let invite = db.crateOwnerInvitation.findFirst(q => q.where({ token }));
   if (!invite) return notFound();
 
-  db.crateOwnership.create({ crate: invite.crate, user: invite.invitee });
-  db.crateOwnerInvitation.delete({ where: { id: invite.id } });
+  await db.crateOwnership.create({ crate: invite.crate, user: invite.invitee });
+  db.crateOwnerInvitation.delete(q => q.where({ id: invite.id }));
 
   return HttpResponse.json({ crate_owner_invitation: { crate_id: invite.crate.id, accepted: true } });
 });

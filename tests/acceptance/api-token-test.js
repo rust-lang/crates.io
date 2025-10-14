@@ -92,7 +92,11 @@ module('Acceptance | api-tokens', function (hooks) {
     assert.dom('[data-test-api-token]').exists({ count: 3 });
 
     await click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    assert.strictEqual(this.db.apiToken.findMany({}).length, 2, 'API token has been deleted from the backend database');
+    assert.strictEqual(
+      this.db.apiToken.findMany(null).length,
+      2,
+      'API token has been deleted from the backend database',
+    );
 
     assert.dom('[data-test-api-token]').exists({ count: 2 });
     assert.dom('[data-test-api-token="2"]').exists();

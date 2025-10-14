@@ -23,16 +23,13 @@ export default http.post('/api/v1/trusted_publishing/github_configs', async ({ r
     return HttpResponse.json({ errors: [{ detail: 'missing required fields' }] }, { status: 400 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: crateName } } });
+  let crate = db.crate.findFirst(q => q.where({ name: crateName }));
   if (!crate) return notFound();
 
   // Check if the user is an owner of the crate
-  let isOwner = db.crateOwnership.findFirst({
-    where: {
-      crate: { id: { equals: crate.id } },
-      user: { id: { equals: user.id } },
-    },
-  });
+  let isOwner = db.crateOwnership.findFirst(q =>
+    q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === user.id),
+  );
   if (!isOwner) {
     return HttpResponse.json({ errors: [{ detail: 'You are not an owner of this crate' }] }, { status: 400 });
   }
@@ -45,7 +42,7 @@ export default http.post('/api/v1/trusted_publishing/github_configs', async ({ r
   }
 
   // Create a new GitHub config
-  let config = db.trustpubGithubConfig.create({
+  let config = await db.trustpubGithubConfig.create({
     crate,
     repository_owner,
     repository_name,

@@ -10,7 +10,7 @@ export default http.patch('/api/v1/crates/:name', async ({ request, params }) =>
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return HttpResponse.json({ errors: [{ detail: `crate \`${params.name}\` does not exist` }] }, { status: 404 });
   }
@@ -18,10 +18,9 @@ export default http.patch('/api/v1/crates/:name', async ({ request, params }) =>
   let body = await request.json();
 
   if (body.crate?.trustpub_only != null) {
-    crate = db.crate.update({
-      where: { id: { equals: crate.id } },
-      data: {
-        trustpubOnly: body.crate.trustpub_only,
+    crate = await db.crate.update(q => q.where({ id: crate.id }), {
+      data(crate) {
+        crate.trustpubOnly = body.crate.trustpub_only;
       },
     });
   }

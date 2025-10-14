@@ -19,9 +19,10 @@ export default http.put('/api/v1/users/:user_id', async ({ params, request }) =>
   }
 
   if (json.user.publish_notifications !== undefined) {
-    db.user.update({
-      where: { id: { equals: user.id } },
-      data: { publishNotifications: json.user.publish_notifications },
+    await db.user.update(q => q.where({ id: user.id }), {
+      data(user) {
+        user.publishNotifications = json.user.publish_notifications;
+      },
     });
   }
 
@@ -30,12 +31,11 @@ export default http.put('/api/v1/users/:user_id', async ({ params, request }) =>
       return HttpResponse.json({ errors: [{ detail: 'empty email rejected' }] }, { status: 400 });
     }
 
-    db.user.update({
-      where: { id: { equals: user.id } },
-      data: {
-        email: json.user.email,
-        emailVerified: false,
-        emailVerificationToken: 'secret123',
+    await db.user.update(q => q.where({ id: user.id }), {
+      data(user) {
+        user.email = json.user.email;
+        user.emailVerified = false;
+        user.emailVerificationToken = 'secret123';
       },
     });
   }

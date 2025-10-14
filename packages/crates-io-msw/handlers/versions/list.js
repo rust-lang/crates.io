@@ -8,10 +8,10 @@ import { calculateReleaseTracks } from '../../utils/release-tracks.js';
 
 export default http.get('/api/v1/crates/:name/versions', async ({ request, params }) => {
   let { name } = params;
-  let crate = db.crate.findFirst({ where: { name: { equals: name } } });
+  let crate = db.crate.findFirst(q => q.where({ name }));
   if (!crate) return notFound();
 
-  let versions = db.version.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let versions = db.version.findMany(q => q.where(version => version.crate.id === crate.id));
 
   let url = new URL(request.url);
   let nums = url.searchParams.getAll('nums[]');

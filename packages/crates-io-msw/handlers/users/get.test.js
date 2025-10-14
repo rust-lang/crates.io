@@ -9,7 +9,7 @@ test('returns 404 for unknown users', async function () {
 });
 
 test('returns a user object for known users', async function () {
-  let user = db.user.create({ name: 'John Doe' });
+  let user = await db.user.create({ name: 'John Doe' });
 
   let response = await fetch(`/api/v1/users/${user.login}`);
   assert.strictEqual(response.status, 200);

@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('empty case', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/reverse_dependencies');
   assert.strictEqual(response.status, 200);
@@ -23,19 +23,19 @@ test('empty case', async function () {
 });
 
 test('returns a paginated list of crate versions depending to the specified crate', async function () {
-  let crate = db.crate.create({ name: 'foo' });
+  let crate = await db.crate.create({ name: 'foo' });
 
-  db.dependency.create({
+  await db.dependency.create({
     crate,
-    version: db.version.create({
-      crate: db.crate.create({ name: 'bar' }),
+    version: await db.version.create({
+      crate: await db.crate.create({ name: 'bar' }),
     }),
   });
 
-  db.dependency.create({
+  await db.dependency.create({
     crate,
-    version: db.version.create({
-      crate: db.crate.create({ name: 'baz' }),
+    version: await db.version.create({
+      crate: await db.crate.create({ name: 'baz' }),
     }),
   });
 
@@ -156,14 +156,13 @@ test('returns a paginated list of crate versions depending to the specified crat
 });
 
 test('never returns more than 10 results', async function () {
-  let crate = db.crate.create({ name: 'foo' });
+  let crate = await db.crate.create({ name: 'foo' });
 
-  Array.from({ length: 25 }, () =>
-    db.dependency.create({
-      crate,
-      version: db.version.create({
-        crate: db.crate.create({ name: 'bar' }),
-      }),
+  await Promise.all(
+    Array.from({ length: 25 }, async () => {
+      const depCrate = await db.crate.create({ name: 'bar' });
+      const version = await db.version.create({ crate: depCrate });
+      return db.dependency.create({ crate, version });
     }),
   );
 
@@ -177,13 +176,13 @@ test('never returns more than 10 results', async function () {
 });
 
 test('supports `page` and `per_page` parameters', async function () {
-  let crate = db.crate.create({ name: 'foo' });
+  let crate = await db.crate.create({ name: 'foo' });
 
-  let crates = Array.from({ length: 25 }, (_, i) =>
-    db.crate.create({ name: `crate-${String(i + 1).padStart(2, '0')}` }),
+  let crates = await Promise.all(
+    Array.from({ length: 25 }, (_, i) => db.crate.create({ name: `crate-${String(i + 1).padStart(2, '0')}` })),
   );
-  let versions = crates.map(crate => db.version.create({ crate }));
-  versions.forEach(version => db.dependency.create({ crate, version }));
+  let versions = await Promise.all(crates.map(crate => db.version.create({ crate })));
+  await Promise.all(versions.map(version => db.dependency.create({ crate, version })));
 
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies?page=2&per_page=5');
   assert.strictEqual(response.status, 200);

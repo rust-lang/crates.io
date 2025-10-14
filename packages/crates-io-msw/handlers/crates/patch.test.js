@@ -15,8 +15,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo', {
     method: 'PATCH',
@@ -28,14 +28,14 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('updates trustpub_only flag', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let crate = db.crate.create({ name: 'foo', trustpubOnly: false });
+  let crate = await db.crate.create({ name: 'foo', trustpubOnly: false });
   assert.strictEqual(crate.trustpubOnly, false);
 
-  db.version.create({ crate, num: '1.0.0' });
-  db.crateOwnership.create({ crate, user });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.crateOwnership.create({ crate, user });
 
   let response = await fetch('/api/v1/crates/foo', {
     method: 'PATCH',
@@ -47,6 +47,6 @@ test('updates trustpub_only flag', async function () {
   let json = await response.json();
   assert.strictEqual(json.crate.trustpub_only, true);
 
-  let updatedCrate = db.crate.findFirst({ where: { name: { equals: 'foo' } } });
+  let updatedCrate = db.crate.findFirst(q => q.where({ name: 'foo' }));
   assert.strictEqual(updatedCrate.trustpubOnly, true);
 });

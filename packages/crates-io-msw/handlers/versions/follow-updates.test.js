@@ -11,14 +11,14 @@ test('returns 403 for unauthenticated user', async function () {
 });
 
 test('returns latest versions of followed crates', async function () {
-  let foo = db.crate.create({ name: 'foo' });
-  db.version.create({ crate: foo, num: '1.2.3' });
+  let foo = await db.crate.create({ name: 'foo' });
+  await db.version.create({ crate: foo, num: '1.2.3' });
 
-  let bar = db.crate.create({ name: 'bar' });
-  db.version.create({ crate: bar, num: '0.8.6' });
+  let bar = await db.crate.create({ name: 'bar' });
+  await db.version.create({ crate: bar, num: '0.8.6' });
 
-  let user = db.user.create({ followedCrates: [foo] });
-  db.mswSession.create({ user });
+  let user = await db.user.create({ followedCrates: [foo] });
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates');
   assert.strictEqual(response.status, 200);
@@ -70,8 +70,8 @@ test('returns latest versions of followed crates', async function () {
 });
 
 test('empty case', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates');
   assert.strictEqual(response.status, 200);
@@ -82,11 +82,11 @@ test('empty case', async function () {
 });
 
 test('supports pagination', async function () {
-  let crate = db.crate.create({ name: 'foo' });
-  Array.from({ length: 25 }, () => db.version.create({ crate }));
+  let crate = await db.crate.create({ name: 'foo' });
+  await Promise.all(Array.from({ length: 25 }, () => db.version.create({ crate })));
 
-  let user = db.user.create({ followedCrates: [crate] });
-  db.mswSession.create({ user });
+  let user = await db.user.create({ followedCrates: [crate] });
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates?page=2');
   assert.strictEqual(response.status, 200);

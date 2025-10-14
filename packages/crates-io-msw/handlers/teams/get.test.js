@@ -9,7 +9,7 @@ test('returns 404 for unknown teams', async function () {
 });
 
 test('returns a team object for known teams', async function () {
-  let team = db.team.create({ name: 'maintainers' });
+  let team = await db.team.create({ name: 'maintainers' });
 
   let response = await fetch(`/api/v1/teams/${team.login}`);
   assert.strictEqual(response.status, 200);

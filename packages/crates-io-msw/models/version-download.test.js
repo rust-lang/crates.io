@@ -3,7 +3,9 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `version` is not set', async ({ expect }) => {
-  await expect(() => db.versionDownload.create()).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Missing \`version\` relationship on \`version-download\`]`);
+  await expect(() => db.versionDownload.create()).rejects.toThrowErrorMatchingInlineSnapshot(
+    `[Error: Missing \`version\` relationship on \`version-download\`]`,
+  );
 });
 
 test('happy path', async ({ expect }) => {

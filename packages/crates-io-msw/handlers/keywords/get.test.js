@@ -9,7 +9,7 @@ test('returns 404 for unknown keywords', async function () {
 });
 
 test('returns a keyword object for known keywords', async function () {
-  db.keyword.create({ keyword: 'cli' });
+  await db.keyword.create({ keyword: 'cli' });
 
   let response = await fetch('/api/v1/keywords/cli');
   assert.strictEqual(response.status, 200);
@@ -23,18 +23,18 @@ test('returns a keyword object for known keywords', async function () {
 });
 
 test('calculates `crates_cnt` correctly', async function () {
-  let cli = db.keyword.create({ keyword: 'cli' });
-  Array.from({ length: 7 }, () => db.crate.create({ keywords: [cli] }));
-  let notCli = db.keyword.create({ keyword: 'not-cli' });
-  Array.from({ length: 3 }, () => db.crate.create({ keywords: [notCli] }));
+  let testKeyword = await db.keyword.create({ keyword: 'test-cli-keyword' });
+  await Promise.all(Array.from({ length: 7 }, () => db.crate.create({ keywords: [testKeyword] })));
+  let notTestKeyword = await db.keyword.create({ keyword: 'not-test-cli' });
+  await Promise.all(Array.from({ length: 3 }, () => db.crate.create({ keywords: [notTestKeyword] })));
 
-  let response = await fetch('/api/v1/keywords/cli');
+  let response = await fetch('/api/v1/keywords/test-cli-keyword');
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {
     keyword: {
-      id: 'cli',
+      id: 'test-cli-keyword',
       crates_cnt: 7,
-      keyword: 'cli',
+      keyword: 'test-cli-keyword',
     },
   });
 });

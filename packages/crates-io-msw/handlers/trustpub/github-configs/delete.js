@@ -11,22 +11,19 @@ export default http.delete('/api/v1/trusted_publishing/github_configs/:id', ({ p
   }
 
   let id = parseInt(params.id);
-  let config = db.trustpubGithubConfig.findFirst({ where: { id: { equals: id } } });
+  let config = db.trustpubGithubConfig.findFirst(q => q.where({ id }));
   if (!config) return notFound();
 
   // Check if the user is an owner of the crate
-  let isOwner = db.crateOwnership.findFirst({
-    where: {
-      crate: { id: { equals: config.crate.id } },
-      user: { id: { equals: user.id } },
-    },
-  });
+  let isOwner = db.crateOwnership.findFirst(q =>
+    q.where(ownership => ownership.crate.id === config.crate.id && ownership.user?.id === user.id),
+  );
   if (!isOwner) {
     return HttpResponse.json({ errors: [{ detail: 'You are not an owner of this crate' }] }, { status: 400 });
   }
 
   // Delete the config
-  db.trustpubGithubConfig.delete({ where: { id: { equals: id } } });
+  db.trustpubGithubConfig.delete(q => q.where({ id }));
 
   return new HttpResponse(null, { status: 204 });
 });

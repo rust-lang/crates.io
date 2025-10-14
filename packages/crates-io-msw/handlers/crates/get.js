@@ -12,10 +12,10 @@ const DEFAULT_INCLUDES = ['versions', 'keywords', 'categories'];
 export default http.get('/api/v1/crates/:name', async ({ request, params }) => {
   let { name } = params;
   let canonicalName = toCanonicalName(name);
-  let crate = db.crate.findMany({}).find(it => toCanonicalName(it.name) === canonicalName);
+  let crate = db.crate.findFirst(q => q.where(crate => toCanonicalName(crate.name) === canonicalName));
   if (!crate) return notFound();
 
-  let versions = db.version.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let versions = db.version.findMany(q => q.where(version => version.crate?.id === crate.id));
   versions.sort((a, b) => b.id - a.id);
 
   let url = new URL(request.url);

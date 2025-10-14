@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('empty case', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/downloads');
   assert.strictEqual(response.status, 200);
@@ -22,11 +22,11 @@ test('empty case', async function () {
 });
 
 test('returns a list of version downloads belonging to the specified crate version', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  let versions = Array.from({ length: 2 }, () => db.version.create({ crate }));
-  db.versionDownload.create({ version: versions[0], date: '2020-01-13' });
-  db.versionDownload.create({ version: versions[1], date: '2020-01-14' });
-  db.versionDownload.create({ version: versions[1], date: '2020-01-15' });
+  let crate = await db.crate.create({ name: 'rand' });
+  let versions = await Promise.all(Array.from({ length: 2 }, () => db.version.create({ crate })));
+  await db.versionDownload.create({ version: versions[0], date: '2020-01-13' });
+  await db.versionDownload.create({ version: versions[1], date: '2020-01-14' });
+  await db.versionDownload.create({ version: versions[1], date: '2020-01-15' });
 
   let response = await fetch('/api/v1/crates/rand/downloads');
   assert.strictEqual(response.status, 200);
@@ -55,11 +55,11 @@ test('returns a list of version downloads belonging to the specified crate versi
 });
 
 test('includes related versions', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  let versions = Array.from({ length: 2 }, () => db.version.create({ crate }));
-  db.versionDownload.create({ version: versions[0], date: '2020-01-13' });
-  db.versionDownload.create({ version: versions[1], date: '2020-01-14' });
-  db.versionDownload.create({ version: versions[1], date: '2020-01-15' });
+  let crate = await db.crate.create({ name: 'rand' });
+  let versions = await Promise.all(Array.from({ length: 2 }, () => db.version.create({ crate })));
+  await db.versionDownload.create({ version: versions[0], date: '2020-01-13' });
+  await db.versionDownload.create({ version: versions[1], date: '2020-01-14' });
+  await db.versionDownload.create({ version: versions[1], date: '2020-01-15' });
 
   let response = await fetch('/api/v1/crates/rand/downloads?include=versions');
   assert.strictEqual(response.status, 200);

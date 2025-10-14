@@ -11,8 +11,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
   assert.strictEqual(response.status, 404);
@@ -20,10 +20,10 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('makes the authenticated user follow the crate', async function () {
-  let crate = db.crate.create({ name: 'rand' });
+  let crate = await db.crate.create({ name: 'rand' });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   assert.deepEqual(user.followedCrates, []);
 
@@ -31,6 +31,7 @@ test('makes the authenticated user follow the crate', async function () {
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
 
-  user = db.user.findFirst({ where: { id: user.id } });
-  assert.deepEqual(user.followedCrates, [crate]);
+  user = db.user.findFirst(q => q.where({ id: user.id }));
+  assert.equal(user.followedCrates.length, 1);
+  assert.equal(user.followedCrates[0].name, crate.name);
 });

@@ -10,7 +10,7 @@ export default http.get('/api/v1/crates', async ({ request }) => {
 
   const { start, end } = pageParams(request);
 
-  let crates = db.crate.findMany({});
+  let crates = db.crate.findMany(null);
 
   if (url.searchParams.get('following') === '1') {
     let { user } = getSession();
@@ -37,12 +37,9 @@ export default http.get('/api/v1/crates', async ({ request }) => {
   if (userId) {
     userId = parseInt(userId, 10);
     crates = crates.filter(crate =>
-      db.crateOwnership.findFirst({
-        where: {
-          crate: { id: { equals: crate.id } },
-          user: { id: { equals: userId } },
-        },
-      }),
+      db.crateOwnership.findFirst(q =>
+        q.where(ownership => ownership.crate.id === crate.id && ownership.user?.id === userId),
+      ),
     );
   }
 
@@ -50,12 +47,9 @@ export default http.get('/api/v1/crates', async ({ request }) => {
   if (teamId) {
     teamId = parseInt(teamId, 10);
     crates = crates.filter(crate =>
-      db.crateOwnership.findFirst({
-        where: {
-          crate: { id: { equals: crate.id } },
-          team: { id: { equals: teamId } },
-        },
-      }),
+      db.crateOwnership.findFirst(q =>
+        q.where(ownership => ownership.crate.id === crate.id && ownership.team?.id === teamId),
+      ),
     );
   }
 

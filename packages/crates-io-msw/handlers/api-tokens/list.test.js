@@ -12,18 +12,18 @@ afterEach(() => {
 });
 
 test('returns the list of API token for the authenticated `user`', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  db.apiToken.create({
+  await db.apiToken.create({
     user,
     createdAt: '2017-11-19T12:59:22Z',
     crateScopes: ['serde', 'serde-*'],
     endpointScopes: ['publish-update'],
   });
-  db.apiToken.create({ user, createdAt: '2017-11-19T13:59:22Z', expiredAt: '2023-11-20T10:59:22Z' });
-  db.apiToken.create({ user, createdAt: '2017-11-19T14:59:22Z' });
-  db.apiToken.create({ user, createdAt: '2017-11-19T15:59:22Z', expiredAt: '2017-11-20T10:59:22Z' });
+  await db.apiToken.create({ user, createdAt: '2017-11-19T13:59:22Z', expiredAt: '2023-11-20T10:59:22Z' });
+  await db.apiToken.create({ user, createdAt: '2017-11-19T14:59:22Z' });
+  await db.apiToken.create({ user, createdAt: '2017-11-19T15:59:22Z', expiredAt: '2017-11-20T10:59:22Z' });
 
   let response = await fetch('/api/v1/me/tokens');
   assert.strictEqual(response.status, 200);
@@ -61,8 +61,8 @@ test('returns the list of API token for the authenticated `user`', async functio
 });
 
 test('empty list case', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/tokens');
   assert.strictEqual(response.status, 200);

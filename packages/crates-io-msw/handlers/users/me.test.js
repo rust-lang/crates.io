@@ -3,8 +3,8 @@ import { assert, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns the `user` resource including the private fields', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me');
   assert.strictEqual(response.status, 200);
@@ -26,13 +26,13 @@ test('returns the `user` resource including the private fields', async function 
 });
 
 test('returns a list of `owned_crates`', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let [crate1, , crate3] = Array.from({ length: 3 }, () => db.crate.create());
+  let [crate1, , crate3] = await Promise.all(Array.from({ length: 3 }, () => db.crate.create()));
 
-  db.crateOwnership.create({ crate: crate1, user });
-  db.crateOwnership.create({ crate: crate3, user });
+  await db.crateOwnership.create({ crate: crate1, user });
+  await db.crateOwnership.create({ crate: crate3, user });
 
   let response = await fetch('/api/v1/me');
   assert.strictEqual(response.status, 200);
@@ -45,7 +45,7 @@ test('returns a list of `owned_crates`', async function () {
 });
 
 test('returns an error if unauthenticated', async function () {
-  db.user.create();
+  await db.user.create();
 
   let response = await fetch('/api/v1/me');
   assert.strictEqual(response.status, 403);

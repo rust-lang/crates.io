@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('returns 404 for unknown versions', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
   assert.strictEqual(response.status, 404);
@@ -17,8 +17,8 @@ test('returns 404 for unknown versions', async function () {
 });
 
 test('empty case', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
   assert.strictEqual(response.status, 200);
@@ -28,15 +28,15 @@ test('empty case', async function () {
 });
 
 test('returns a list of dependencies belonging to the specified crate version', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  let version = db.version.create({ crate, num: '1.0.0' });
+  let crate = await db.crate.create({ name: 'rand' });
+  let version = await db.version.create({ crate, num: '1.0.0' });
 
-  let foo = db.crate.create({ name: 'foo' });
-  db.dependency.create({ crate: foo, version });
-  let bar = db.crate.create({ name: 'bar' });
-  db.dependency.create({ crate: bar, version });
-  let baz = db.crate.create({ name: 'baz' });
-  db.dependency.create({ crate: baz, version });
+  let foo = await db.crate.create({ name: 'foo' });
+  await db.dependency.create({ crate: foo, version });
+  let bar = await db.crate.create({ name: 'bar' });
+  await db.dependency.create({ crate: bar, version });
+  let baz = await db.crate.create({ name: 'baz' });
+  await db.dependency.create({ crate: baz, version });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/dependencies');
   assert.strictEqual(response.status, 200);

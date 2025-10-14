@@ -12,14 +12,14 @@ afterEach(() => {
 });
 
 test('creates a new API token', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({ api_token: { name: 'foooo' } });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
 
-  let token = db.apiToken.findMany({})[0];
+  let token = db.apiToken.findMany(null)[0];
   assert.ok(token);
 
   assert.deepEqual(await response.json(), {
@@ -38,8 +38,8 @@ test('creates a new API token', async function () {
 });
 
 test('creates a new API token with scopes', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({
     api_token: {
@@ -51,7 +51,7 @@ test('creates a new API token with scopes', async function () {
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
 
-  let token = db.apiToken.findMany({})[0];
+  let token = db.apiToken.findMany(null)[0];
   assert.ok(token);
 
   assert.deepEqual(await response.json(), {
@@ -70,8 +70,8 @@ test('creates a new API token with scopes', async function () {
 });
 
 test('creates a new API token with expiry date', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let body = JSON.stringify({
     api_token: {
@@ -82,7 +82,7 @@ test('creates a new API token with expiry date', async function () {
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   assert.strictEqual(response.status, 200);
 
-  let token = db.apiToken.findMany({})[0];
+  let token = db.apiToken.findMany(null)[0];
   assert.ok(token);
 
   assert.deepEqual(await response.json(), {
