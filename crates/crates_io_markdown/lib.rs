@@ -121,10 +121,9 @@ impl<'a> MarkdownRenderer<'a> {
             }
         });
 
-        let mut html = Vec::new();
+        let mut html = String::new();
         format_html(root, &options, &mut html).unwrap();
-        let rendered = String::from_utf8(html).unwrap();
-        self.html_sanitizer.clean(&rendered).to_string()
+        self.html_sanitizer.clean(&html).to_string()
     }
 }
 
