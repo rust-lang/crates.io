@@ -12,7 +12,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 /// Publishing" implementation.
 ///
 /// See <https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect#understanding-the-oidc-token>.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GitHubClaims {
     pub aud: String,
     #[serde(with = "ts_seconds")]
