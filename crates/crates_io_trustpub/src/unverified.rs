@@ -29,7 +29,7 @@ static EMPTY_KEY: LazyLock<DecodingKey> = LazyLock::new(|| DecodingKey::from_sec
 /// validation. Specifically, this only extracts the `iss` claim, which is
 /// used to look up the corresponding OIDC key set to then verify the
 /// JWT signature.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct UnverifiedClaims {
     pub iss: String,
 }

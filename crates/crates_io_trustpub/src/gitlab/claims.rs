@@ -12,7 +12,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 /// Publishing" implementation.
 ///
 /// See <https://docs.gitlab.com/ci/secrets/id_token_authentication/#token-payload>.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GitLabClaims {
     pub aud: String,
     #[serde(with = "ts_seconds")]
