@@ -15,7 +15,7 @@ anyhow = "=1.0.100"
 async-trait = "=0.1.89"
 bon = { version = "=3.8.1", optional = true }
 chrono = { version = "=0.4.42", features = ["serde"] }
-jsonwebtoken = "=10.1.0"
+jsonwebtoken = { version = "=10.1.0", features = ["aws_lc_rs"] }
 mockall = { version = "=0.13.1", optional = true }
 rand = "=0.9.2"
 reqwest = { version = "=0.12.24", features = ["gzip", "json"] }
