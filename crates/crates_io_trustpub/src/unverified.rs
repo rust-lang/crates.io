@@ -48,6 +48,7 @@ impl UnverifiedClaims {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_keys::encode_for_testing;
     use claims::{assert_err, assert_ok, assert_some_eq};
     use insta::assert_compact_debug_snapshot;
     use jsonwebtoken::{EncodingKey, Header, encode};
@@ -76,6 +77,18 @@ mod tests {
 
         let decoded = assert_ok!(UnverifiedClaims::decode(&token));
         assert_some_eq!(decoded.header.kid, KEY_ID);
+        assert_eq!(decoded.claims.iss, ISSUER);
+    }
+
+    #[test]
+    fn test_decode_token_encoded_with_test_key() {
+        const ISSUER: &str = "https://example.com";
+
+        let iss = ISSUER.to_string();
+        let claims = TestClaims { iss };
+        let token = encode_for_testing(&claims).unwrap();
+
+        let decoded = assert_ok!(UnverifiedClaims::decode(&token));
         assert_eq!(decoded.claims.iss, ISSUER);
     }
 
