@@ -1,6 +1,8 @@
-import { oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import { z } from 'zod';
 
 import { applyDefault } from '../utils/defaults.js';
+import { preCreateExtension } from '../utils/pre-create-extension.js';
 
 /**
  * This is a MSW-only model, that is used to keep track of the current
@@ -10,16 +12,23 @@ import { applyDefault } from '../utils/defaults.js';
  * This mock implementation means that there can only ever exist one
  * session at a time.
  */
-export default {
-  id: primaryKey(Number),
+const schema = z.object({
+  id: z.number(),
 
-  user: oneOf('user'),
+  user: z.any(),
+});
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
+function preCreate(attrs, counter) {
+  applyDefault(attrs, 'id', () => counter);
 
-    if (!attrs.user) {
-      throw new Error('Missing `user` relationship');
-    }
-  },
-};
+  if (!attrs.user) {
+    throw new Error('Missing `user` relationship');
+  }
+}
+
+const collection = new Collection({
+  schema,
+  extensions: [preCreateExtension(preCreate)],
+});
+
+export default collection;

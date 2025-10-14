@@ -1,14 +1,22 @@
-import { primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import { z } from 'zod';
 
 import { applyDefault } from '../utils/defaults.js';
+import { preCreateExtension } from '../utils/pre-create-extension.js';
 
-export default {
-  id: primaryKey(String),
+const schema = z.object({
+  id: z.string(),
+  keyword: z.string(),
+});
 
-  keyword: String,
+function preCreate(attrs, counter) {
+  applyDefault(attrs, 'keyword', () => `keyword-${counter}`);
+  applyDefault(attrs, 'id', () => attrs.keyword);
+}
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'keyword', () => `keyword-${counter}`);
-    applyDefault(attrs, 'id', () => attrs.keyword);
-  },
-};
+const collection = new Collection({
+  schema,
+  extensions: [preCreateExtension(preCreate)],
+});
+
+export default collection;

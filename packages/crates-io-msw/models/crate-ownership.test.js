@@ -2,33 +2,27 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `crate` is not set', ({ expect }) => {
-  let user = db.user.create();
-  expect(() => db.crateOwnership.create({ user })).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`crate\` relationship on \`crate-ownership\`]`,
-  );
+test('throws if `crate` is not set', async ({ expect }) => {
+  let user = await db.user.create();
+  await expect(() => db.crateOwnership.create({ user })).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Missing \`crate\` relationship on \`crate-ownership\`]`);
 });
 
-test('throws if `team` and `user` are not set', ({ expect }) => {
-  let crate = db.crate.create();
-  expect(() => db.crateOwnership.create({ crate })).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`team\` or \`user\` relationship on \`crate-ownership\`]`,
-  );
+test('throws if `team` and `user` are not set', async ({ expect }) => {
+  let crate = await db.crate.create();
+  await expect(() => db.crateOwnership.create({ crate })).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Missing \`team\` or \`user\` relationship on \`crate-ownership\`]`);
 });
 
-test('throws if `team` and `user` are both set', ({ expect }) => {
-  let crate = db.crate.create();
-  let team = db.team.create();
-  let user = db.user.create();
-  expect(() => db.crateOwnership.create({ crate, team, user })).toThrowErrorMatchingInlineSnapshot(
-    `[Error: \`team\` and \`user\` on a \`crate-ownership\` are mutually exclusive]`,
-  );
+test('throws if `team` and `user` are both set', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let team = await db.team.create();
+  let user = await db.user.create();
+  await expect(() => db.crateOwnership.create({ crate, team, user })).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: \`team\` and \`user\` on a \`crate-ownership\` are mutually exclusive]`);
 });
 
-test('can set `team`', ({ expect }) => {
-  let crate = db.crate.create();
-  let team = db.team.create();
-  let ownership = db.crateOwnership.create({ crate, team });
+test('can set `team`', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let team = await db.team.create();
+  let ownership = await db.crateOwnership.create({ crate, team });
   expect(ownership).toMatchInlineSnapshot(`
     {
       "crate": {
@@ -47,8 +41,6 @@ test('can set `team`', ({ expect }) => {
         "repository": null,
         "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
-        Symbol(type): "crate",
-        Symbol(primaryKey): "id",
       },
       "emailNotifications": true,
       "id": 1,
@@ -59,20 +51,16 @@ test('can set `team`', ({ expect }) => {
         "name": "team-1",
         "org": "rust-lang",
         "url": "https://github.com/rust-lang",
-        Symbol(type): "team",
-        Symbol(primaryKey): "id",
       },
       "user": null,
-      Symbol(type): "crateOwnership",
-      Symbol(primaryKey): "id",
     }
   `);
 });
 
-test('can set `user`', ({ expect }) => {
-  let crate = db.crate.create();
-  let user = db.user.create();
-  let ownership = db.crateOwnership.create({ crate, user });
+test('can set `user`', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let user = await db.user.create();
+  let ownership = await db.crateOwnership.create({ crate, user });
   expect(ownership).toMatchInlineSnapshot(`
     {
       "crate": {
@@ -91,8 +79,6 @@ test('can set `user`', ({ expect }) => {
         "repository": null,
         "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
-        Symbol(type): "crate",
-        Symbol(primaryKey): "id",
       },
       "emailNotifications": true,
       "id": 1,
@@ -109,11 +95,7 @@ test('can set `user`', ({ expect }) => {
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",
-        Symbol(type): "user",
-        Symbol(primaryKey): "id",
       },
-      Symbol(type): "crateOwnership",
-      Symbol(primaryKey): "id",
     }
   `);
 });

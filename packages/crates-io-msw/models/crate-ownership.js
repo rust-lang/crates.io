@@ -1,28 +1,39 @@
-import { nullable, oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import { z } from 'zod';
 
 import { applyDefault } from '../utils/defaults.js';
+import { preCreateExtension } from '../utils/pre-create-extension.js';
 
-export default {
-  id: primaryKey(Number),
+const schema = z.object({
+  id: z.number(),
 
-  emailNotifications: Boolean,
+  emailNotifications: z.boolean(),
 
-  crate: oneOf('crate'),
-  team: nullable(oneOf('team')),
-  user: nullable(oneOf('user')),
+  crate: z.any(),
+  team: z.any().nullable(),
+  user: z.any().nullable(),
+});
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'emailNotifications', () => true);
+function preCreate(attrs, counter) {
+  applyDefault(attrs, 'id', () => counter);
+  applyDefault(attrs, 'emailNotifications', () => true);
+  applyDefault(attrs, 'team', () => null);
+  applyDefault(attrs, 'user', () => null);
 
-    if (!attrs.crate) {
-      throw new Error('Missing `crate` relationship on `crate-ownership`');
-    }
-    if (!attrs.team && !attrs.user) {
-      throw new Error('Missing `team` or `user` relationship on `crate-ownership`');
-    }
-    if (attrs.team && attrs.user) {
-      throw new Error('`team` and `user` on a `crate-ownership` are mutually exclusive');
-    }
-  },
-};
+  if (!attrs.crate) {
+    throw new Error('Missing `crate` relationship on `crate-ownership`');
+  }
+  if (!attrs.team && !attrs.user) {
+    throw new Error('Missing `team` or `user` relationship on `crate-ownership`');
+  }
+  if (attrs.team && attrs.user) {
+    throw new Error('`team` and `user` on a `crate-ownership` are mutually exclusive');
+  }
+}
+
+const collection = new Collection({
+  schema,
+  extensions: [preCreateExtension(preCreate)],
+});
+
+export default collection;

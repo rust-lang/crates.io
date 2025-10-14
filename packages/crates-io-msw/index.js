@@ -14,21 +14,6 @@ import teamHandlers from './handlers/teams.js';
 import trustpubHandlers from './handlers/trustpub.js';
 import userHandlers from './handlers/users.js';
 import versionHandlers from './handlers/versions.js';
-import apiToken from './models/api-token.js';
-import category from './models/category.js';
-import crateOwnerInvitation from './models/crate-owner-invitation.js';
-import crateOwnership from './models/crate-ownership.js';
-import crate from './models/crate.js';
-import dependency from './models/dependency.js';
-import keyword from './models/keyword.js';
-import mswSession from './models/msw-session.js';
-import team from './models/team.js';
-import trustpubGithubConfig from './models/trustpub/github-config.js';
-import trustpubGitlabConfig from './models/trustpub/gitlab-config.js';
-import user from './models/user.js';
-import versionDownload from './models/version-download.js';
-import version from './models/version.js';
-import { factory } from './utils/factory.js';
 
 export const handlers = [
   ...apiTokenHandlers,
@@ -49,19 +34,4 @@ export const handlers = [
   ...versionHandlers,
 ];
 
-export const db = factory({
-  apiToken,
-  category,
-  crateOwnerInvitation,
-  crateOwnership,
-  crate,
-  dependency,
-  keyword,
-  mswSession,
-  team,
-  trustpubGithubConfig,
-  trustpubGitlabConfig,
-  user,
-  versionDownload,
-  version,
-});
+export { db } from './models/index.js';
