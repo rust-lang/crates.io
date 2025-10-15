@@ -335,11 +335,11 @@ importers:
         version: 7.7.3
     devDependencies:
       happy-dom:
-        specifier: 20.0.0
-        version: 20.0.0
+        specifier: 20.0.1
+        version: 20.0.1
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/node@22.18.10)(happy-dom@20.0.0)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1)
+        version: 3.2.4(@types/node@22.18.10)(happy-dom@20.0.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1)
 
 packages:
 
@@ -1801,6 +1801,7 @@ packages:
 
   '@mswjs/data@0.16.2':
     resolution: {integrity: sha512-/C0d/PBcJyQJokUhcjO4HiZPc67hzllKlRtD1XELygl2t991/ATAAQJVcStn4YtVALsNodruzOHT0JIvgr0hnA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@mswjs/interceptors@0.39.7':
     resolution: {integrity: sha512-sURvQbbKsq5f8INV54YJgJEdk8oxBanqkTiXXd33rKmofFCwZLhLRszPduMZ9TA9b8/1CHc/IJmOlBHJk2Q5AQ==}
@@ -5027,8 +5028,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@20.0.0:
-    resolution: {integrity: sha512-GkWnwIFxVGCf2raNrxImLo397RdGhLapj5cT3R2PT7FwL62Ze1DROhzmYW7+J3p9105DYMVenEejEbnq5wA37w==}
+  happy-dom@20.0.1:
+    resolution: {integrity: sha512-LLvZwSHE4XUB6m3G6GQCxfJik6Og7ChaRb4fs11dmPKz6QLqZIihUVsr7qum1VIrJdDQ1HvVlHX+XGMy4OJLTA==}
     engines: {node: '>=20.0.0'}
 
   has-ansi@3.0.0:
@@ -14587,7 +14588,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  happy-dom@20.0.0:
+  happy-dom@20.0.1:
     dependencies:
       '@types/node': 20.19.21
       '@types/whatwg-mimetype': 3.0.2
@@ -17800,7 +17801,7 @@ snapshots:
       terser: 5.44.0
       yaml: 2.8.1
 
-  vitest@3.2.4(@types/node@22.18.10)(happy-dom@20.0.0)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1):
+  vitest@3.2.4(@types/node@22.18.10)(happy-dom@20.0.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.5(@types/node@22.18.10)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
@@ -17827,7 +17828,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.18.10
-      happy-dom: 20.0.0
+      happy-dom: 20.0.1
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
