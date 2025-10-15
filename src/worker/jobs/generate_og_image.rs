@@ -3,6 +3,7 @@ use crate::schema::*;
 use crate::worker::Environment;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
 use anyhow::Context;
+use bigdecimal::ToPrimitive;
 use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_og_image::{OgImageAuthorData, OgImageData};
 use crates_io_worker::BackgroundJob;
@@ -80,7 +81,7 @@ impl BackgroundJob for GenerateOgImage {
             license: row.license.as_deref(),
             tags: &keywords,
             authors: &authors,
-            lines_of_code: None, // We don't track this yet
+            lines_of_code: row.total_code_lines(),
             crate_size: row.crate_size as u32,
             releases: row.num_versions as u32,
         };
@@ -149,8 +150,20 @@ struct QueryRow {
     crate_size: i32,
     #[diesel(select_expression = versions::keywords)]
     keywords: Vec<Option<String>>,
+    #[diesel(select_expression = versions::linecounts.retrieve_as_object("total_code_lines"))]
+    total_code_lines: Option<serde_json::Value>,
     #[diesel(select_expression = default_versions::num_versions.assume_not_null())]
     num_versions: i32,
+}
+
+impl QueryRow {
+    fn total_code_lines(&self) -> Option<u32> {
+        self.total_code_lines
+            .as_ref()
+            .and_then(serde_json::Value::as_u64)
+            .as_ref()
+            .and_then(ToPrimitive::to_u32)
+    }
 }
 
 /// Fetches crate data and default version information by crate name

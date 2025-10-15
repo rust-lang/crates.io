@@ -1,10 +1,13 @@
 use crate::schema::{crates, versions};
 use crate::storage::Storage;
 use crate::worker::Environment;
+use crate::worker::jobs::GenerateOgImage;
 use anyhow::Context;
 use async_compression::tokio::bufread::GzipDecoder;
+use crates_io_database::schema::default_versions;
 use crates_io_linecount::{LinecountStats, PathDetails};
 use crates_io_worker::BackgroundJob;
+use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use futures_util::StreamExt;
@@ -56,6 +59,12 @@ impl BackgroundJob for AnalyzeCrateFile {
             duration = start.elapsed().as_nanos(),
             "Crate file analysis completed for {krate}@{version} (version_id={version_id})"
         );
+
+        if let Err(err) = handle_og_image_rerender(&krate, version_id, &mut conn).await {
+            warn!(
+                "Failed to schedule OG image rerender for {krate}@{version} (version_id={version_id}): {err}"
+            );
+        }
 
         Ok(())
     }
@@ -137,6 +146,29 @@ async fn update_version_linecount_stats(
         .execute(conn)
         .await
         .context("Failed to save linecount stats to the database")?;
+
+    Ok(())
+}
+
+/// Check whether the `version_id` is a default version of any crate and
+/// schedule an OpenGraph image rerender background job if that is the case.
+#[instrument(skip(conn))]
+async fn handle_og_image_rerender(
+    crate_name: &str,
+    version_id: i32,
+    conn: &mut AsyncPgConnection,
+) -> anyhow::Result<()> {
+    let is_default_version = diesel::select(exists(
+        default_versions::table.filter(default_versions::version_id.eq(version_id)),
+    ))
+    .get_result::<bool>(conn)
+    .await?;
+
+    if is_default_version {
+        GenerateOgImage::new(crate_name.to_string())
+            .enqueue(conn)
+            .await?;
+    }
 
     Ok(())
 }
