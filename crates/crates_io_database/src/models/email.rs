@@ -13,6 +13,7 @@ pub struct Email {
     pub user_id: i32,
     pub email: String,
     pub verified: bool,
+    pub is_primary: bool,
     #[diesel(deserialize_as = String, serialize_as = String)]
     pub token: SecretString,
 }
@@ -24,46 +25,71 @@ pub struct NewEmail<'a> {
     pub email: &'a str,
     #[builder(default = false)]
     pub verified: bool,
+    #[builder(default = false)]
+    pub is_primary: bool,
 }
 
 impl NewEmail<'_> {
-    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<()> {
+    pub async fn insert(&self, conn: &mut AsyncPgConnection) -> QueryResult<Email> {
         diesel::insert_into(emails::table)
             .values(self)
-            .execute(conn)
+            .returning(Email::as_returning())
+            .get_result(conn)
+            .await
+    }
+
+    /// Inserts the email into the database and returns it, unless the user already has a
+    /// primary email, in which case it will do nothing and return `None`.
+    pub async fn insert_primary_if_missing(
+        &self,
+        conn: &mut AsyncPgConnection,
+    ) -> QueryResult<Option<Email>> {
+        // Check if the user already has a primary email
+        let primary_count = emails::table
+            .filter(emails::user_id.eq(self.user_id))
+            .filter(emails::is_primary.eq(true))
+            .count()
+            .get_result::<i64>(conn)
             .await?;
 
-        Ok(())
+        if primary_count > 0 {
+            return Ok(None); // User already has a primary email
+        }
+
+        self.insert(conn).await.map(Some)
     }
 
-    /// Inserts the email into the database and returns the confirmation token,
-    /// or does nothing if it already exists and returns `None`.
-    pub async fn insert_if_missing(
+    // Inserts an email for the user, replacing the primary email if it exists.
+    pub async fn insert_or_update_primary(
         &self,
         conn: &mut AsyncPgConnection,
-    ) -> QueryResult<Option<SecretString>> {
-        diesel::insert_into(emails::table)
-            .values(self)
-            .on_conflict_do_nothing()
-            .returning(emails::token)
-            .get_result::<String>(conn)
-            .await
-            .map(Into::into)
-            .optional()
-    }
+    ) -> QueryResult<Email> {
+        if self.is_primary {
+            return Err(diesel::result::Error::QueryBuilderError(
+                "Cannot use insert_or_update_primary with a non-primary email".into(),
+            ));
+        }
 
-    pub async fn insert_or_update(
-        &self,
-        conn: &mut AsyncPgConnection,
-    ) -> QueryResult<SecretString> {
-        diesel::insert_into(emails::table)
-            .values(self)
-            .on_conflict(emails::user_id)
-            .do_update()
-            .set(self)
-            .returning(emails::token)
-            .get_result::<String>(conn)
-            .await
-            .map(Into::into)
+        // Attempt to update an existing primary email
+        let updated_email = diesel::update(
+            emails::table
+                .filter(emails::user_id.eq(self.user_id))
+                .filter(emails::is_primary.eq(true)),
+        )
+        .set((
+            emails::email.eq(self.email),
+            emails::verified.eq(self.verified),
+        ))
+        .returning(Email::as_returning())
+        .get_result(conn)
+        .await
+        .optional()?;
+
+        if let Some(email) = updated_email {
+            Ok(email)
+        } else {
+            // Otherwise, insert a new email
+            self.insert(conn).await
+        }
     }
 }

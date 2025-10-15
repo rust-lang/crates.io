@@ -1,0 +1,18 @@
+---
+source: crates/crates_io_database/tests/email_constraints.rs
+expression: result
+---
+Ok(
+    [
+        (
+            1,
+            "primary@example.com",
+            false,
+        ),
+        (
+            2,
+            "secondary@example.com",
+            true,
+        ),
+    ],
+)

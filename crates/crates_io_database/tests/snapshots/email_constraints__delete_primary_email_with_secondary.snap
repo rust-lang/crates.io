@@ -1,0 +1,10 @@
+---
+source: crates/crates_io_database/tests/email_constraints.rs
+expression: result
+---
+Err(
+    DatabaseError(
+        Unknown,
+        "Cannot delete primary email. Please set another email as primary first.",
+    ),
+)

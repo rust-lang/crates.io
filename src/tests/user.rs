@@ -89,7 +89,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 
     let json = user_without_github_email.show_me().await;
     // Check that the setup is correct and the user indeed has no email
-    assert_eq!(json.user.email, None);
+    assert_eq!(json.user.primary_email, None);
 
     // Add an email address in crates.io
     user_without_github_email
@@ -111,7 +111,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
     let again_user_without_github_email = MockCookieUser::new(&app, u);
 
     let json = again_user_without_github_email.show_me().await;
-    assert_eq!(json.user.email.unwrap(), "apricot@apricots.apricot");
+    assert_eq!(json.user.primary_email.unwrap(), "apricot@apricots.apricot");
 
     Ok(())
 }
@@ -152,7 +152,7 @@ async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
     let user_with_different_email_in_github = MockCookieUser::new(&app, u);
 
     let json = user_with_different_email_in_github.show_me().await;
-    assert_eq!(json.user.email, Some(original_email));
+    assert_eq!(json.user.primary_email, Some(original_email));
 
     Ok(())
 }
@@ -165,14 +165,14 @@ async fn test_email_get_and_put() -> anyhow::Result<()> {
     let (_app, _anon, user) = TestApp::init().with_user().await;
 
     let json = user.show_me().await;
-    assert_eq!(json.user.email.unwrap(), "foo@example.com");
+    assert_eq!(json.user.primary_email.unwrap(), "foo@example.com");
 
     user.update_email("mango@mangos.mango").await;
 
     let json = user.show_me().await;
-    assert_eq!(json.user.email.unwrap(), "mango@mangos.mango");
-    assert!(!json.user.email_verified);
-    assert!(json.user.email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "mango@mangos.mango");
+    assert!(!json.user.primary_email_verified);
+    assert!(json.user.primary_email_verification_sent);
 
     Ok(())
 }
@@ -216,9 +216,9 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
     user.confirm_email(&email_token).await;
 
     let json = user.show_me().await;
-    assert_eq!(json.user.email.unwrap(), "potato2@example.com");
-    assert!(json.user.email_verified);
-    assert!(json.user.email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "potato2@example.com");
+    assert!(json.user.primary_email_verified);
+    assert!(json.user.primary_email_verification_sent);
 
     Ok(())
 }
@@ -259,9 +259,9 @@ async fn test_existing_user_email() -> anyhow::Result<()> {
     let user = MockCookieUser::new(&app, u);
 
     let json = user.show_me().await;
-    assert_eq!(json.user.email.unwrap(), "potahto@example.com");
-    assert!(!json.user.email_verified);
-    assert!(!json.user.email_verification_sent);
+    assert_eq!(json.user.primary_email.unwrap(), "potahto@example.com");
+    assert!(!json.user.primary_email_verified);
+    assert!(!json.user.primary_email_verification_sent);
 
     Ok(())
 }
