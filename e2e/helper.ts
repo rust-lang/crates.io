@@ -1,9 +1,8 @@
 import axeConfig from '@/tests/axe-config';
 import { db, handlers } from '@crates-io/msw';
+import { defineNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { test as base } from '@playwright/test';
 import * as pwFakeTimers from '@sinonjs/fake-timers';
-import type { MockServiceWorker } from 'playwright-msw';
-import { createWorker } from 'playwright-msw';
 
 import { A11yPage } from './fixtures/a11y';
 import { EmberPage, EmberPageOptions } from './fixtures/ember';
@@ -19,7 +18,7 @@ export type AppOptions = {
 export interface AppFixtures {
   clock: FakeTimers;
   msw: {
-    worker: MockServiceWorker;
+    worker: NetworkFixture;
     db: typeof db;
     authenticateAs: (user: any) => Promise<void>;
   };
@@ -53,13 +52,16 @@ export const test = base.extend<AppOptions & AppFixtures>({
     },
     { auto: true, scope: 'test' },
   ],
-  // MockServiceWorker integration via `playwright-msw`.
-  //
-  // We are explicitly not using the `createWorkerFixture()`function, because
-  // uses `auto: true`, and we want to be explicit about our usage of the fixture.
   msw: [
-    async ({ page }, use) => {
-      const worker = await createWorker(page, handlers);
+    async ({ context, page }, use) => {
+      const worker = defineNetworkFixture({
+        context,
+        handlers,
+        // Without this, requests for `foo.json` cannot be intercepted, which causes some tests to fail.
+        skipAssetRequests: false,
+      });
+      await worker.enable();
+
       const authenticateAs = async function (user) {
         await db.mswSession.create({ user });
         await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
@@ -67,7 +69,7 @@ export const test = base.extend<AppOptions & AppFixtures>({
 
       await use({ worker, db, authenticateAs });
       await db.reset();
-      worker.resetCookieStore();
+      await worker.disable();
     },
     { auto: true, scope: 'test' },
   ],
