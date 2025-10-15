@@ -25,7 +25,7 @@ env:
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 9.1.5
   # renovate: datasource=npm depName=pnpm
-  PNPM_VERSION: 10.18.2
+  PNPM_VERSION: 10.18.3
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
   TYPST_VERSION: 0.13.1
   # renovate: datasource=pypi depName=zizmor
