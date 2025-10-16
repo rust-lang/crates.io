@@ -32,7 +32,7 @@ We welcome contributions from the community! Whether you're fixing a bug, implem
 
 [crates.io] is built with [Rust] for the backend services. More specifically, the [axum] web framework and [diesel] for database access, with a [custom-built background worker system](./crates/crates_io_worker). The frontend is an [Ember.js] application written in JavaScript.
 
-Please review our [contribution guidelines](./docs/CONTRIBUTING.md) before submitting your pull request. The same document also contains instructions on how to set up a local development environment.
+Please review our [contribution guidelines](./docs/CONTRIBUTING.md) before submitting your pull request. The same document also contains instructions on how to set up a local development environment, with additional structured documentation available in [AGENTS.md](./AGENTS.md).
 
 ## 🪲 Issue Tracker
 
