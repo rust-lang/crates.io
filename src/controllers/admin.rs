@@ -1,7 +1,7 @@
 use crate::{
     app::AppState,
     auth::AuthCheck,
-    models::{CrateOwner, OwnerKind, User},
+    models::{OwnerKind, User},
     schema::*,
     util::errors::{AppResult, custom},
 };
@@ -12,8 +12,17 @@ use diesel_async::RunQueryDsl;
 use http::{StatusCode, request::Parts};
 use serde::Serialize;
 
-#[derive(Debug, Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, HasQuery)]
+#[diesel(
+    base_query = crate_owners::table
+        .inner_join(crates::table)
+        .left_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
+        .left_join(
+            recent_crate_downloads::table.on(crates::id.eq(recent_crate_downloads::crate_id)),
+        )
+        .inner_join(default_versions::table.on(crates::id.eq(default_versions::crate_id)))
+        .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+)]
 struct DatabaseCrateInfo {
     #[diesel(select_expression = crates::columns::name)]
     name: String,
@@ -78,16 +87,10 @@ pub async fn list(
         .first::<(User, Option<bool>, Option<String>)>(&mut conn)
         .await?;
 
-    let crates: Vec<DatabaseCrateInfo> = CrateOwner::by_owner_kind(OwnerKind::User)
-        .inner_join(crates::table)
-        .left_join(crate_downloads::table.on(crates::id.eq(crate_downloads::crate_id)))
-        .left_join(
-            recent_crate_downloads::table.on(crates::id.eq(recent_crate_downloads::crate_id)),
-        )
-        .inner_join(default_versions::table.on(crates::id.eq(default_versions::crate_id)))
-        .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+    let crates: Vec<DatabaseCrateInfo> = DatabaseCrateInfo::query()
+        .filter(crate_owners::deleted.eq(false))
+        .filter(crate_owners::owner_kind.eq(OwnerKind::User))
         .filter(crate_owners::owner_id.eq(user.id))
-        .select(DatabaseCrateInfo::as_select())
         .order(crates::name.asc())
         .load(&mut conn)
         .await?;
