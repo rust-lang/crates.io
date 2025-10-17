@@ -7,7 +7,7 @@ use crate::models::Crate;
 use crate::schema::*;
 use crates_io_diesel_helpers::lower;
 
-#[derive(Clone, Identifiable, Queryable, Debug, Selectable)]
+#[derive(Clone, Identifiable, HasQuery, Debug)]
 pub struct Keyword {
     pub id: i32,
     pub keyword: String,
@@ -30,9 +30,8 @@ pub struct CrateKeyword {
 
 impl Keyword {
     pub async fn find_by_keyword(conn: &mut AsyncPgConnection, name: &str) -> QueryResult<Keyword> {
-        keywords::table
+        Keyword::query()
             .filter(keywords::keyword.eq(lower(name)))
-            .select(Keyword::as_select())
             .first(conn)
             .await
     }
@@ -54,9 +53,8 @@ impl Keyword {
             .execute(conn)
             .await?;
 
-        keywords::table
+        Keyword::query()
             .filter(keywords::keyword.eq_any(&lowercase_names))
-            .select(Keyword::as_select())
             .load(conn)
             .await
     }

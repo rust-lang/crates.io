@@ -115,10 +115,9 @@ pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
             .load(&mut conn)
             .boxed(),
         Category::toplevel(&mut conn, "crates", 10, 0),
-        keywords::table
+        Keyword::query()
             .order(keywords::crates_cnt.desc())
             .limit(10)
-            .select(Keyword::as_select())
             .load(&mut conn)
             .boxed(),
     )?;
@@ -171,10 +170,9 @@ fn encode_crates(
         .map(|record| record.krate.id)
         .collect::<Vec<_>>();
 
-    let future = versions::table
+    let future = Version::query()
         .filter(versions::crate_id.eq_any(crate_ids))
         .filter(versions::yanked.eq(false))
-        .select(Version::as_select())
         .load(conn);
 
     async move {
