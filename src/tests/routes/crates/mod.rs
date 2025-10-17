@@ -1,4 +1,5 @@
 mod admin;
+mod delete;
 pub mod downloads;
 mod following;
 mod list;

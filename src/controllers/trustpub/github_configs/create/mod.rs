@@ -19,9 +19,6 @@ use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use tracing::warn;
 
-#[cfg(test)]
-mod tests;
-
 /// Create a new Trusted Publishing configuration for GitHub Actions.
 #[utoipa::path(
     post,

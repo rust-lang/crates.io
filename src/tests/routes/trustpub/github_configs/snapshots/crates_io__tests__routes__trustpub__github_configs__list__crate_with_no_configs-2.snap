@@ -1,0 +1,7 @@
+---
+source: src/tests/routes/trustpub/github_configs/list.rs
+expression: response.json()
+---
+{
+  "github_configs": []
+}

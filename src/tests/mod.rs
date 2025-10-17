@@ -24,6 +24,7 @@ mod issues;
 mod krate;
 mod middleware;
 mod not_found_error;
+mod openapi;
 mod owners;
 mod pagination;
 mod read_only_mode;

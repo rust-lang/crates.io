@@ -8,9 +8,6 @@ use diesel_async::RunQueryDsl;
 use http::StatusCode;
 use secrecy::ExposeSecret;
 
-#[cfg(test)]
-mod tests;
-
 /// Revoke a temporary access token.
 ///
 /// The access token is expected to be passed in the `Authorization` header
