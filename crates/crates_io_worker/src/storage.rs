@@ -6,7 +6,7 @@ use diesel::sql_types::{Bool, Integer, Interval};
 use diesel::{delete, update};
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-#[derive(Queryable, Selectable, Identifiable, Debug, Clone)]
+#[derive(HasQuery, Identifiable, Debug, Clone)]
 pub(super) struct BackgroundJob {
     pub(super) id: i64,
     pub(super) job_type: String,
@@ -30,14 +30,13 @@ pub(super) async fn find_next_unlocked_job(
     conn: &mut AsyncPgConnection,
     job_types: &[String],
 ) -> QueryResult<BackgroundJob> {
-    background_jobs::table
-        .select(BackgroundJob::as_select())
+    BackgroundJob::query()
         .filter(background_jobs::job_type.eq_any(job_types))
         .filter(retriable())
         .order((background_jobs::priority.desc(), background_jobs::id))
         .for_update()
         .skip_locked()
-        .first::<BackgroundJob>(conn)
+        .first(conn)
         .await
 }
 
