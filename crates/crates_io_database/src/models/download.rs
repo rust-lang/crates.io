@@ -21,7 +21,7 @@ pub struct VersionDownload {
 /// This struct is used to load all versions of a crate from the database,
 /// without loading the additional data that is unnecessary for download version resolution.
 ///
-#[derive(Queryable, Selectable, Identifiable)]
+#[derive(HasQuery, Identifiable)]
 #[diesel(table_name = versions)]
 pub struct Version {
     pub id: i32,
