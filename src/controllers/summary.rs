@@ -71,46 +71,27 @@ pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
             .select(metadata::total_downloads)
             .get_result(&mut conn)
             .boxed(),
-        crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+        Record::query()
             .order(crates::created_at.desc())
-            .select(Record::as_select())
             .limit(10)
             .load(&mut conn)
             .boxed(),
-        crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+        Record::query()
             .filter(crates::updated_at.ne(crates::created_at))
             .order(crates::updated_at.desc())
-            .select(Record::as_select())
             .limit(10)
             .load(&mut conn)
             .boxed(),
-        crates::table
-            .inner_join(crate_downloads::table)
-            .left_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+        Record::query()
             .filter(crates::name.ne_all(&config.excluded_crate_names))
             .then_order_by(crate_downloads::downloads.desc())
-            .select(Record::as_select())
             .limit(10)
             .load(&mut conn)
             .boxed(),
-        crates::table
-            .inner_join(crate_downloads::table)
-            .inner_join(recent_crate_downloads::table)
-            .left_join(default_versions::table)
-            .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+        Record::query()
             .filter(crates::name.ne_all(&config.excluded_crate_names))
+            .filter(recent_crate_downloads::downloads.is_not_null())
             .then_order_by(recent_crate_downloads::downloads.desc())
-            .select(Record::as_select())
             .limit(10)
             .load(&mut conn)
             .boxed(),
@@ -144,8 +125,14 @@ pub async fn get_summary(state: AppState) -> AppResult<Json<SummaryResponse>> {
     }))
 }
 
-#[derive(Debug, Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, HasQuery)]
+#[diesel(
+    base_query = crates::table
+        .inner_join(crate_downloads::table)
+        .left_join(recent_crate_downloads::table)
+        .left_join(default_versions::table)
+        .left_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+)]
 struct Record {
     #[diesel(embed)]
     krate: Crate,
