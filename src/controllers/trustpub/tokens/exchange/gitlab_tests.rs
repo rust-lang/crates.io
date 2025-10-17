@@ -408,10 +408,9 @@ async fn test_lazy_namespace_id_population() -> anyhow::Result<()> {
     assert_snapshot!(response.status(), @"200 OK");
 
     // Check that namespace_id was populated in the database
-    let config: GitLabConfig = trustpub_configs_gitlab::table
+    let config: GitLabConfig = GitLabConfig::query()
         .filter(trustpub_configs_gitlab::namespace.eq(NAMESPACE))
         .filter(trustpub_configs_gitlab::project.eq(PROJECT))
-        .select(GitLabConfig::as_select())
         .first(&mut conn)
         .await?;
 

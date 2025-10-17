@@ -39,9 +39,7 @@ impl NewApiToken {
 }
 
 /// The model representing a row in the `api_tokens` database table.
-#[derive(
-    Debug, Identifiable, Queryable, Selectable, Associations, serde::Serialize, utoipa::ToSchema,
-)]
+#[derive(Debug, Identifiable, HasQuery, Associations, serde::Serialize, utoipa::ToSchema)]
 #[diesel(belongs_to(User))]
 pub struct ApiToken {
     /// An opaque unique identifier for the token.

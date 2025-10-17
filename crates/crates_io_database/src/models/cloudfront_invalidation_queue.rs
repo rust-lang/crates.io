@@ -2,8 +2,8 @@ use crate::schema::cloudfront_invalidation_queue;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
-#[derive(Debug, Identifiable, Queryable, QueryableByName, Selectable)]
-#[diesel(table_name = cloudfront_invalidation_queue, check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Identifiable, HasQuery, QueryableByName)]
+#[diesel(table_name = cloudfront_invalidation_queue)]
 pub struct CloudFrontInvalidationQueueItem {
     pub id: i64,
     pub path: String,
@@ -36,10 +36,9 @@ impl CloudFrontInvalidationQueueItem {
         limit: i64,
     ) -> QueryResult<Vec<CloudFrontInvalidationQueueItem>> {
         // Fetch the oldest entries up to the limit
-        cloudfront_invalidation_queue::table
+        Self::query()
             .order(cloudfront_invalidation_queue::created_at.asc())
             .limit(limit)
-            .select(Self::as_select())
             .load(conn)
             .await
     }

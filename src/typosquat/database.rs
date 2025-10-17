@@ -39,7 +39,7 @@ impl TopCrates {
         // data structure.
 
         let crates: BTreeMap<i32, (String, Crate)> = BTreeMap::new();
-        let crates = models::Crate::all()
+        let crates = models::Crate::query()
             .inner_join(crate_downloads::table)
             .order(crate_downloads::downloads.desc())
             .limit(num)

@@ -5,10 +5,9 @@ use crates_io_index::DependencyKind as IndexDependencyKind;
 use diesel::prelude::*;
 use diesel::sql_types::{BigInt, Text};
 
-#[derive(Identifiable, Associations, Debug, Queryable, QueryableByName, Selectable)]
+#[derive(Identifiable, Associations, Debug, HasQuery, QueryableByName)]
 #[diesel(
     table_name = dependencies,
-    check_for_backend(diesel::pg::Pg),
     belongs_to(Version),
     belongs_to(Crate),
 )]

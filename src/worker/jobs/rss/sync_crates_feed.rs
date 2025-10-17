@@ -85,10 +85,9 @@ impl BackgroundJob for SyncCratesFeed {
 async fn load_new_crates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<NewCrate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
-    let new_crates = crates::table
+    let new_crates = NewCrate::query()
         .filter(crates::created_at.gt(threshold_dt))
         .order(crates::created_at.desc())
-        .select(NewCrate::as_select())
         .load(conn)
         .await?;
 
@@ -97,16 +96,15 @@ async fn load_new_crates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<NewCra
         return Ok(new_crates);
     }
 
-    crates::table
+    NewCrate::query()
         .order(crates::created_at.desc())
-        .select(NewCrate::as_select())
         .limit(NUM_ITEMS)
         .load(conn)
         .await
 }
 
-#[derive(Debug, Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, HasQuery)]
+#[diesel(table_name = crates)]
 struct NewCrate {
     #[diesel(select_expression = crates::columns::name)]
     name: String,

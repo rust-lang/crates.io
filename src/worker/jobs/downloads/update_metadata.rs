@@ -290,13 +290,12 @@ mod tests {
             .await
             .unwrap();
 
-        let version_before: Version = versions::table
+        let version_before: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
-        let krate_before: Crate = Crate::all()
+        let krate_before: Crate = Crate::query()
             .filter(crates::id.eq(krate.id))
             .first(&mut conn)
             .await
@@ -304,16 +303,15 @@ mod tests {
 
         super::update(&mut conn).await.unwrap();
 
-        let version2: Version = versions::table
+        let version2: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
         assert_eq!(version2.downloads, 2);
         assert_eq!(version2.updated_at, version_before.updated_at);
 
-        let krate2: Crate = Crate::all()
+        let krate2: Crate = Crate::query()
             .filter(crates::id.eq(krate.id))
             .first(&mut conn)
             .await
@@ -330,9 +328,8 @@ mod tests {
 
         super::update(&mut conn).await.unwrap();
 
-        let version3: Version = versions::table
+        let version3: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();

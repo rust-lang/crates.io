@@ -154,7 +154,7 @@ impl RateLimiter {
                 publish_limit_buckets::last_refill.eq(publish_limit_buckets::last_refill
                     + refill_rate.into_sql::<Interval>() * tokens_to_add),
             ))
-            .returning(Bucket::as_select())
+            .returning(Bucket::as_returning())
             .get_result(conn)
             .await
     }
@@ -171,8 +171,8 @@ impl RateLimiter {
     }
 }
 
-#[derive(Queryable, Insertable, Selectable, Debug, PartialEq, Clone, Copy)]
-#[diesel(table_name = publish_limit_buckets, check_for_backend(diesel::pg::Pg))]
+#[derive(HasQuery, Insertable, Debug, PartialEq, Clone, Copy)]
+#[diesel(table_name = publish_limit_buckets)]
 #[allow(dead_code)] // Most fields only read in tests
 struct Bucket {
     user_id: i32,

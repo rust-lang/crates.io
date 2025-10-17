@@ -34,10 +34,9 @@ impl From<VersionAction> for String {
     }
 }
 
-#[derive(Debug, Clone, Copy, Queryable, Identifiable, Selectable, Associations)]
+#[derive(Debug, Clone, Copy, HasQuery, Identifiable, Associations)]
 #[diesel(
     table_name = version_owner_actions,
-    check_for_backend(diesel::pg::Pg),
     belongs_to(Version),
     belongs_to(User, foreign_key = user_id),
     belongs_to(ApiToken, foreign_key = api_token_id),
@@ -54,10 +53,7 @@ pub struct VersionOwnerAction {
 
 impl VersionOwnerAction {
     pub async fn all(conn: &mut AsyncPgConnection) -> QueryResult<Vec<Self>> {
-        version_owner_actions::table
-            .select(Self::as_select())
-            .load(conn)
-            .await
+        Self::query().load(conn).await
     }
 
     pub fn by_version<'a>(

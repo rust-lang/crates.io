@@ -12,7 +12,7 @@ use crate::schema::{crate_owners, emails, users};
 use crates_io_diesel_helpers::lower;
 
 /// The model representing a row in the `users` database table.
-#[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
+#[derive(Clone, Debug, HasQuery, Identifiable, Serialize)]
 pub struct User {
     pub id: i32,
     pub name: Option<String>,
@@ -29,18 +29,13 @@ pub struct User {
 
 impl User {
     pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
-        users::table
-            .find(id)
-            .select(User::as_select())
-            .first(conn)
-            .await
+        User::query().find(id).first(conn).await
     }
 
     pub async fn find_by_login(conn: &mut AsyncPgConnection, login: &str) -> QueryResult<User> {
-        users::table
+        User::query()
             .filter(lower(users::gh_login).eq(login.to_lowercase()))
             .filter(users::gh_id.ne(-1))
-            .select(User::as_select())
             .order(users::gh_id.desc())
             .first(conn)
             .await

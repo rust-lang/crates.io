@@ -25,15 +25,13 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
 }
 
 async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
-    let from: User = users::table
+    let from: User = User::query()
         .filter(users::gh_login.eq(opts.from_user))
-        .select(User::as_select())
         .first(conn)
         .await?;
 
-    let to: User = users::table
+    let to: User = User::query()
         .filter(users::gh_login.eq(opts.to_user))
-        .select(User::as_select())
         .first(conn)
         .await?;
 
@@ -62,7 +60,7 @@ async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User));
-    let crates: Vec<Crate> = Crate::all()
+    let crates: Vec<Crate> = Crate::query()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
         .load(conn)
         .await?;

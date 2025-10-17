@@ -188,7 +188,7 @@ async fn prepare_list(
 
     // Load all the non-expired invitations matching the filter.
     let expire_cutoff = config.ownership_invitations_expiration;
-    let query = crate_owner_invitations::table
+    let query = CrateOwnerInvitation::query()
         .filter(sql_filter)
         .filter(crate_owner_invitations::created_at.gt((Utc::now() - expire_cutoff).naive_utc()))
         .order_by((
@@ -196,8 +196,7 @@ async fn prepare_list(
             crate_owner_invitations::invited_user_id,
         ))
         // We fetch one element over the page limit to then detect whether there is a next page.
-        .limit(pagination.per_page + 1)
-        .select(CrateOwnerInvitation::as_select());
+        .limit(pagination.per_page + 1);
 
     // Load and paginate the results.
     let mut raw_invitations: Vec<CrateOwnerInvitation> = match pagination.page {
@@ -266,9 +265,8 @@ async fn prepare_list(
         .filter(|id| !users.contains_key(id))
         .collect::<Vec<_>>();
     if !missing_users.is_empty() {
-        let new_users: Vec<User> = users::table
+        let new_users: Vec<User> = User::query()
             .filter(users::id.eq_any(missing_users))
-            .select(User::as_select())
             .load(conn)
             .await?;
         for user in new_users.into_iter() {

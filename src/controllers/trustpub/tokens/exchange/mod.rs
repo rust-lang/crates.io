@@ -131,8 +131,7 @@ async fn handle_github_token_inner(
         return Err(bad_request(message));
     };
 
-    let mut repo_configs = trustpub_configs_github::table
-        .select(GitHubConfig::as_select())
+    let mut repo_configs = GitHubConfig::query()
         .filter(lower(trustpub_configs_github::repository_owner).eq(lower(&repository_owner)))
         .filter(lower(trustpub_configs_github::repository_name).eq(lower(&repository_name)))
         .load(conn)
@@ -270,8 +269,7 @@ async fn handle_gitlab_token_inner(
         return Err(bad_request(message));
     };
 
-    let mut repo_configs = trustpub_configs_gitlab::table
-        .select(GitLabConfig::as_select())
+    let mut repo_configs = GitLabConfig::query()
         .filter(lower(trustpub_configs_gitlab::namespace).eq(lower(&namespace)))
         .filter(lower(trustpub_configs_gitlab::project).eq(lower(&project)))
         .load(conn)

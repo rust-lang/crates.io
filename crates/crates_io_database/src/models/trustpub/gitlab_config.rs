@@ -4,8 +4,8 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-#[derive(Debug, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(table_name = trustpub_configs_gitlab, check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Identifiable, HasQuery, Serialize)]
+#[diesel(table_name = trustpub_configs_gitlab)]
 pub struct GitLabConfig {
     pub id: i32,
     pub created_at: DateTime<Utc>,
@@ -71,10 +71,9 @@ mod tests {
         let inserted_config = new_config.insert(&mut conn).await.unwrap();
 
         // Retrieve the config
-        let retrieved_config = trustpub_configs_gitlab::table
+        let retrieved_config = GitLabConfig::query()
             .filter(trustpub_configs_gitlab::id.eq(inserted_config.id))
-            .select(GitLabConfig::as_select())
-            .first::<GitLabConfig>(&mut conn)
+            .first(&mut conn)
             .await
             .unwrap();
 

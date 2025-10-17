@@ -91,9 +91,8 @@ pub async fn get_crate_downloads(
 
     let crate_id: i32 = path.load_crate_id(&mut conn).await?;
 
-    let mut versions: Vec<Version> = versions::table
+    let mut versions: Vec<Version> = Version::query()
         .filter(versions::crate_id.eq(crate_id))
-        .select(Version::as_select())
         .load(&mut conn)
         .await?;
 
