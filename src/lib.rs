@@ -42,8 +42,6 @@ pub mod sqs;
 pub mod ssh;
 pub mod storage;
 pub mod tasks;
-#[cfg(test)]
-pub mod tests;
 pub mod typosquat;
 pub mod util;
 pub mod worker;

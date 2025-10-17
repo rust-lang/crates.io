@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, DependencyBuilder, PublishBuilder};
+use crate::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use insta::{assert_json_snapshot, assert_snapshot};
 
@@ -160,7 +160,7 @@ async fn new_with_underscore_renamed_dependency() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_with_dependency() {
-    use crate::tests::routes::crates::versions::dependencies::Deps;
+    use crate::routes::crates::versions::dependencies::Deps;
 
     let (app, anon, user, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;

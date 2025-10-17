@@ -1,5 +1,5 @@
-use crate::schema::categories;
 use claims::assert_ok;
+use crates_io::schema::categories;
 use crates_io_test_db::TestDatabase;
 use diesel::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
@@ -53,7 +53,7 @@ async fn sync_adds_new_categories() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
 
-    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
+    crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
         .unwrap();
 
@@ -66,10 +66,10 @@ async fn sync_removes_missing_categories() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
 
-    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
+    crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
         .unwrap();
-    crate::boot::categories::sync_with_connection(ALGORITHMS, &mut conn)
+    crates_io::boot::categories::sync_with_connection(ALGORITHMS, &mut conn)
         .await
         .unwrap();
 
@@ -82,10 +82,10 @@ async fn sync_adds_and_removes() {
     let test_db = TestDatabase::new();
     let mut conn = test_db.async_connect().await;
 
-    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
+    crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_SUCH, &mut conn)
         .await
         .unwrap();
-    crate::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &mut conn)
+    crates_io::boot::categories::sync_with_connection(ALGORITHMS_AND_ANOTHER, &mut conn)
         .await
         .unwrap();
 
@@ -99,5 +99,5 @@ async fn test_real_categories() {
     let mut conn = test_db.async_connect().await;
 
     const TOML: &str = include_str!("../boot/categories.toml");
-    assert_ok!(crate::boot::categories::sync_with_connection(TOML, &mut conn).await);
+    assert_ok!(crates_io::boot::categories::sync_with_connection(TOML, &mut conn).await);
 }

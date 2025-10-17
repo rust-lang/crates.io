@@ -1,18 +1,18 @@
 use super::{MockAnonymousUser, MockCookieUser, MockTokenUser};
-use crate::config::{
+use crate::util::chaosproxy::ChaosProxy;
+use crate::util::github::MOCK_GITHUB_DATA;
+use claims::assert_some;
+use crates_io::config::{
     self, Base, CdnLogQueueConfig, CdnLogStorageConfig, DatabasePools, DbPoolConfig,
 };
-use crate::middleware::cargo_compat::StatusCodeConfig;
-use crate::models::NewEmail;
-use crate::models::token::{CrateScope, EndpointScope};
-use crate::rate_limiter::{LimitedAction, RateLimiterConfig};
-use crate::storage::StorageConfig;
-use crate::tests::util::chaosproxy::ChaosProxy;
-use crate::tests::util::github::MOCK_GITHUB_DATA;
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
-use crate::worker::{Environment, RunnerExt};
-use crate::{App, Emails, Env};
-use claims::assert_some;
+use crates_io::middleware::cargo_compat::StatusCodeConfig;
+use crates_io::models::NewEmail;
+use crates_io::models::token::{CrateScope, EndpointScope};
+use crates_io::rate_limiter::{LimitedAction, RateLimiterConfig};
+use crates_io::storage::StorageConfig;
+use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
+use crates_io::worker::{Environment, RunnerExt};
+use crates_io::{App, Emails, Env};
 use crates_io_docs_rs::MockDocsRsClient;
 use crates_io_github::MockGitHubClient;
 use crates_io_index::testing::UpstreamIndex;
@@ -48,7 +48,7 @@ struct TestAppInner {
 
 impl Drop for TestAppInner {
     fn drop(&mut self) {
-        use crate::schema::background_jobs;
+        use crates_io::schema::background_jobs;
         use diesel::prelude::*;
 
         // Avoid a double-panic if the test is already failing
@@ -98,7 +98,7 @@ pub struct TestApp(Rc<TestAppInner>);
 impl TestApp {
     /// Initialize an application with an `Uploader` that panics
     pub fn init() -> TestAppBuilder {
-        crate::util::tracing::init_for_test();
+        crates_io::util::tracing::init_for_test();
 
         TestAppBuilder {
             config: simple_config(),
@@ -132,10 +132,7 @@ impl TestApp {
 
         let email = format!("{username}@example.com");
 
-        let user = crate::tests::new_user(username)
-            .insert(&mut conn)
-            .await
-            .unwrap();
+        let user = crate::new_user(username).insert(&mut conn).await.unwrap();
 
         let new_email = NewEmail::builder()
             .user_id(user.id)
@@ -555,6 +552,6 @@ fn build_app(
         .build();
 
     let app = Arc::new(app);
-    let router = crate::build_handler(Arc::clone(&app));
+    let router = crates_io::build_handler(Arc::clone(&app));
     (app, router)
 }

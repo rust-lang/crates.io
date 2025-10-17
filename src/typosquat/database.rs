@@ -170,9 +170,9 @@ impl From<crate::models::Owner> for Owner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::add_team_to_crate;
     use crate::typosquat::test_util::faker;
     use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::helpers::add_team_to_crate;
     use thiserror::Error;
 
     #[tokio::test]

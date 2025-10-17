@@ -1,8 +1,8 @@
-use crate::models::Category;
-use crate::tests::builders::CrateBuilder;
-use crate::tests::new_category;
-use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::new_category;
+use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use claims::assert_ok;
+use crates_io::models::Category;
 use crates_io_database::schema::categories;
 use diesel::insert_into;
 use diesel_async::RunQueryDsl;

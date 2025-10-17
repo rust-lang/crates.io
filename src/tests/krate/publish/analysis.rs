@@ -1,7 +1,7 @@
-use crate::schema::versions;
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::PublishBuilder;
+use crate::util::{RequestHelper, TestApp};
 use claims::{assert_ok, assert_some};
+use crates_io::schema::versions;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};

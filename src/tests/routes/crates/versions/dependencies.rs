@@ -1,6 +1,6 @@
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::EncodableDependency;
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper, TestApp};
+use crates_io::views::EncodableDependency;
 use insta::assert_snapshot;
 use serde::Deserialize;
 

@@ -1,5 +1,5 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::{RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::{RequestHelper, TestApp};
 use claims::assert_ok_eq;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -64,7 +64,7 @@ async fn can_download_crate_in_read_only_mode() {
 
     // We're in read only mode so the download should not have been counted
 
-    use crate::schema::version_downloads;
+    use crates_io::schema::version_downloads;
     use diesel::dsl::sum;
 
     let dl_count: Result<Option<i64>, _> = version_downloads::table

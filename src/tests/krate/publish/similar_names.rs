@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{RequestHelper, TestApp};
 use googletest::prelude::*;
 use insta::assert_snapshot;
 

@@ -1,10 +1,8 @@
 use crate::{
-    schema::users,
-    tests::{
-        builders::{CrateBuilder, VersionBuilder},
-        util::{RequestHelper, TestApp},
-    },
+    builders::{CrateBuilder, VersionBuilder},
+    util::{RequestHelper, TestApp},
 };
+use crates_io::schema::users;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::{assert_json_snapshot, assert_snapshot};

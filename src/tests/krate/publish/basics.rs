@@ -1,6 +1,6 @@
-use crate::schema::versions_published_by;
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{RequestHelper, TestApp};
+use crates_io::schema::versions_published_by;
 use diesel::QueryDsl;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use googletest::prelude::*;
@@ -163,7 +163,7 @@ async fn new_krate_duplicate_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn new_krate_advance_num_versions() {
-    use crate::schema::default_versions;
+    use crates_io::schema::default_versions;
 
     let (app, _, _, token) = TestApp::full().with_token().await;
     let mut conn = app.db_conn().await;

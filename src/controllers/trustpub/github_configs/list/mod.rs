@@ -15,9 +15,6 @@ use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use serde::Deserialize;
 
-#[cfg(test)]
-mod tests;
-
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
 #[from_request(via(Query))]
 #[into_params(parameter_in = Query)]

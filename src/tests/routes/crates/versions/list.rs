@@ -1,7 +1,7 @@
-use crate::schema::versions;
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::EncodableVersion;
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper, TestApp};
+use crates_io::schema::versions;
+use crates_io::views::EncodableVersion;
 use diesel::{prelude::*, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

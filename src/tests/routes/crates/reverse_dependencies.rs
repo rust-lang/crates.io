@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper, TestApp};
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -154,7 +154,7 @@ async fn yanked_versions_not_included_in_reverse_dependencies() {
         ".versions[].updated_at" => "[datetime]",
     });
 
-    use crate::schema::versions;
+    use crates_io::schema::versions;
     use diesel::{ExpressionMethods, QueryDsl};
     use diesel_async::RunQueryDsl;
 
@@ -180,7 +180,7 @@ async fn reverse_dependencies_includes_published_by_user_when_present() {
     let mut conn = app.db_conn().await;
     let user = user.as_model();
 
-    use crate::schema::versions;
+    use crates_io::schema::versions;
     use diesel::{ExpressionMethods, update};
     use diesel_async::RunQueryDsl;
 

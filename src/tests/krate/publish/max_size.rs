@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{RequestHelper, TestApp};
 use claims::assert_ok;
 use crates_io_tarball::TarballBuilder;
 use flate2::Compression;

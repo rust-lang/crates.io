@@ -1,8 +1,8 @@
-use crate::rate_limiter::LimitedAction;
-use crate::schema::{publish_limit_buckets, publish_rate_overrides};
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::PublishBuilder;
+use crate::util::{RequestHelper, TestApp};
 use chrono::{DateTime, Utc};
+use crates_io::rate_limiter::LimitedAction;
+use crates_io::schema::{publish_limit_buckets, publish_rate_overrides};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;

@@ -1,4 +1,4 @@
-use crate::tests::{RequestHelper, TestApp};
+use crate::{RequestHelper, TestApp};
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]

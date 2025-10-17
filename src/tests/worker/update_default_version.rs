@@ -1,5 +1,5 @@
-use crate::tests::util::TestApp;
-use crate::worker::jobs;
+use crate::util::TestApp;
+use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 
 #[tokio::test(flavor = "multi_thread")]

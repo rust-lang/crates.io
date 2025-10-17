@@ -20,11 +20,6 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use secrecy::ExposeSecret;
 use tracing::warn;
 
-#[cfg(test)]
-mod github_tests;
-#[cfg(test)]
-mod gitlab_tests;
-
 /// Exchange an OIDC token for a temporary access token.
 #[utoipa::path(
     post,

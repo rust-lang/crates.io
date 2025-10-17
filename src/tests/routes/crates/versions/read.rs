@@ -1,6 +1,6 @@
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::insta::{self, assert_json_snapshot};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::insta::{self, assert_json_snapshot};
+use crate::util::{RequestHelper, TestApp};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde_json::Value;
@@ -33,7 +33,7 @@ async fn show_by_crate_name_and_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn show_by_crate_name_and_semver_no_published_by() {
-    use crate::schema::versions;
+    use crates_io::schema::versions;
     use diesel::update;
 
     let (app, anon, user) = TestApp::init().with_user().await;
@@ -66,7 +66,7 @@ async fn show_by_crate_name_and_semver_no_published_by() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn block_bad_version_urls() {
-    use crate::schema::versions;
+    use crates_io::schema::versions;
     use diesel::{ExpressionMethods, update};
 
     let (app, anon, user) = TestApp::init().with_user().await;

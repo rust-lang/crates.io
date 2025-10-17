@@ -46,6 +46,10 @@ opt-level = 2
 name = "crates_io"
 doctest = true
 
+[[test]]
+name = "integration"
+path = "src/tests/mod.rs"
+
 [dependencies]
 aes-gcm = { version = "=0.10.3", features = ["std"] }
 anyhow = "=1.0.100"

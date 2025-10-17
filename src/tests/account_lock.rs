@@ -1,4 +1,4 @@
-use crate::tests::{TestApp, util::RequestHelper};
+use crate::{TestApp, util::RequestHelper};
 use chrono::{DateTime, Duration, Utc};
 use insta::assert_snapshot;
 
@@ -6,7 +6,7 @@ const URL: &str = "/api/v1/me";
 const LOCK_REASON: &str = "test lock reason";
 
 async fn lock_account(app: &TestApp, user_id: i32, until: Option<DateTime<Utc>>) {
-    use crate::schema::users;
+    use crates_io::schema::users;
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
 

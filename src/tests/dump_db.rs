@@ -1,7 +1,7 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::TestApp;
-use crate::worker::jobs::DumpDb;
+use crate::builders::CrateBuilder;
+use crate::util::TestApp;
 use bytes::Buf;
+use crates_io::worker::jobs::DumpDb;
 use crates_io_worker::BackgroundJob;
 use flate2::read::GzDecoder;
 use insta::{assert_debug_snapshot, assert_snapshot};

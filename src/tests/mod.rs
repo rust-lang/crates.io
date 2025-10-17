@@ -1,14 +1,12 @@
-use crate::models::{Crate, CrateOwner, NewCategory, NewTeam, NewUser, Team, User};
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::{
+use crate::util::{RequestHelper, TestApp};
+use crates_io::models::{NewCategory, NewTeam, NewUser};
+use crates_io::views::{
     EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
     GoodCrate,
 };
 
-use crate::tests::util::github::next_gh_id;
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
-use diesel::prelude::*;
-use diesel_async::AsyncPgConnection;
+use crate::util::github::next_gh_id;
+use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
@@ -24,6 +22,7 @@ mod issues;
 mod krate;
 mod middleware;
 mod not_found_error;
+mod openapi;
 mod owners;
 mod pagination;
 mod read_only_mode;
@@ -115,20 +114,7 @@ fn new_team(login: &str) -> NewTeam<'_> {
         .build()
 }
 
-pub async fn add_team_to_crate(
-    t: &Team,
-    krate: &Crate,
-    u: &User,
-    conn: &mut AsyncPgConnection,
-) -> QueryResult<()> {
-    CrateOwner::builder()
-        .crate_id(krate.id)
-        .team_id(t.id)
-        .created_by(u.id)
-        .build()
-        .insert(conn)
-        .await
-}
+pub use crates_io_test_utils::helpers::add_team_to_crate;
 
 fn new_category<'a>(category: &'a str, slug: &'a str, description: &'a str) -> NewCategory<'a> {
     NewCategory {

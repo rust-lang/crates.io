@@ -1,19 +1,19 @@
-use crate::controllers::session;
-use crate::models::{ApiToken, Email, User};
-use crate::tests::TestApp;
-use crate::tests::util::github::next_gh_id;
-use crate::tests::util::{MockCookieUser, RequestHelper};
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
-use crate::util::token::HashedToken;
+use crate::TestApp;
+use crate::util::github::next_gh_id;
+use crate::util::{MockCookieUser, RequestHelper};
 use chrono::{DateTime, Utc};
 use claims::assert_ok;
+use crates_io::controllers::session;
+use crates_io::models::{ApiToken, Email, User};
+use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
+use crates_io::util::token::HashedToken;
 use crates_io_github::GitHubUser;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 use serde_json::json;
 
-impl crate::tests::util::MockCookieUser {
+impl crate::util::MockCookieUser {
     async fn confirm_email(&self, email_token: &str) {
         let url = format!("/api/v1/confirm/{email_token}");
         let response = self.put::<()>(&url, &[] as &[u8]).await;
@@ -120,7 +120,7 @@ async fn github_without_email_does_not_overwrite_email() -> anyhow::Result<()> {
 /// sign in again, that the email in crates.io will remain set to the original email used on GitHub.
 #[tokio::test(flavor = "multi_thread")]
 async fn github_with_email_does_not_overwrite_email() -> anyhow::Result<()> {
-    use crate::schema::emails;
+    use crates_io::schema::emails;
 
     let (app, _, user) = TestApp::init().with_user().await;
     let mut conn = app.db_conn().await;
@@ -184,7 +184,7 @@ async fn test_email_get_and_put() -> anyhow::Result<()> {
 /// the email_verified field on user is now set to true.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_confirm_user_email() -> anyhow::Result<()> {
-    use crate::schema::emails;
+    use crates_io::schema::emails;
 
     let (app, _) = TestApp::init().empty().await;
     let mut conn = app.db_conn().await;
@@ -228,7 +228,7 @@ async fn test_confirm_user_email() -> anyhow::Result<()> {
 /// make the user think we've sent an email when we haven't.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_existing_user_email() -> anyhow::Result<()> {
-    use crate::schema::emails;
+    use crates_io::schema::emails;
     use diesel::update;
 
     let (app, _) = TestApp::init().empty().await;

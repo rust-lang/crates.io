@@ -140,9 +140,9 @@ pub async fn index_metadata(
 mod tests {
     use super::*;
     use crate::schema::users;
-    use crate::tests::builders::{CrateBuilder, VersionBuilder};
     use chrono::{Days, Utc};
     use crates_io_test_db::TestDatabase;
+    use crates_io_test_utils::builders::{CrateBuilder, VersionBuilder};
     use insta::assert_json_snapshot;
 
     #[tokio::test]

@@ -1,6 +1,6 @@
-use crate::schema::emails;
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::PublishBuilder;
+use crate::util::{RequestHelper, TestApp};
+use crates_io::schema::emails;
 use diesel::{ExpressionMethods, delete, update};
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
