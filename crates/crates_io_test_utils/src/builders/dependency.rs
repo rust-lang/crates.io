@@ -1,4 +1,4 @@
-use crate::views::krate_publish as u;
+use crates_io_api_types::krate_publish;
 
 /// A builder for constructing a dependency of another crate.
 pub struct DependencyBuilder {
@@ -49,10 +49,10 @@ impl DependencyBuilder {
         self
     }
 
-    /// Consume this builder to create a `u::CrateDependency`. If the dependent crate doesn't
+    /// Consume this builder to create a `krate_publish::EncodableCrateDependency`. If the dependent crate doesn't
     /// already exist, publishing a crate with this dependency will fail.
-    pub fn build(self) -> u::EncodableCrateDependency {
-        u::EncodableCrateDependency {
+    pub fn build(self) -> krate_publish::EncodableCrateDependency {
+        krate_publish::EncodableCrateDependency {
             name: self.name,
             optional: false,
             default_features: true,

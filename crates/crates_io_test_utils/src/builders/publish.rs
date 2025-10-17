@@ -1,7 +1,7 @@
-use crate::models::DependencyKind;
-use crate::views::krate_publish as u;
 use bytes::{BufMut, Bytes, BytesMut};
 use cargo_manifest::{DependencyDetail, DepsSet, MaybeInherited};
+use crates_io_api_types::krate_publish;
+use crates_io_database::models::DependencyKind;
 use std::collections::BTreeMap;
 
 use crates_io_tarball::TarballBuilder;
@@ -13,7 +13,7 @@ use super::DependencyBuilder;
 /// a crate into the database directly by using CrateBuilder will be faster.
 pub struct PublishBuilder {
     categories: Vec<String>,
-    deps: Vec<u::EncodableCrateDependency>,
+    deps: Vec<krate_publish::EncodableCrateDependency>,
     desc: Option<String>,
     doc_url: Option<String>,
     files: Vec<(String, Bytes)>,
@@ -139,7 +139,7 @@ impl PublishBuilder {
     }
 
     pub fn build(self) -> (String, Vec<u8>) {
-        let metadata = u::PublishMetadata {
+        let metadata = krate_publish::PublishMetadata {
             name: self.krate_name.clone(),
             vers: self.version.to_string(),
             readme: self.readme,
@@ -230,7 +230,7 @@ impl From<PublishBuilder> for Bytes {
 }
 
 fn convert_dependency(
-    encoded: &u::EncodableCrateDependency,
+    encoded: &krate_publish::EncodableCrateDependency,
 ) -> (String, cargo_manifest::Dependency) {
     let (name, package) = match encoded.explicit_name_in_toml.as_ref() {
         None => (encoded.name.to_string(), None),
