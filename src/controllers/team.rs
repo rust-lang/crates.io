@@ -24,12 +24,11 @@ pub struct GetResponse {
     responses((status = 200, description = "Successful Response", body = inline(GetResponse))),
 )]
 pub async fn find_team(state: AppState, Path(name): Path<String>) -> AppResult<Json<GetResponse>> {
-    use crate::schema::teams::dsl::{login, teams};
+    use crate::schema::teams::dsl::login;
 
     let mut conn = state.db_read().await?;
-    let team: Team = teams
+    let team: Team = Team::query()
         .filter(login.eq(&name))
-        .select(Team::as_select())
         .first(&mut conn)
         .await?;
     let team = EncodableTeam::from(team);
