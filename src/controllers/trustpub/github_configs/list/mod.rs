@@ -67,10 +67,9 @@ pub async fn list_trustpub_github_configs(
         return Err(bad_request("You are not an owner of this crate"));
     }
 
-    let configs = trustpub_configs_github::table
+    let configs = GitHubConfig::query()
         .filter(trustpub_configs_github::crate_id.eq(krate.id))
-        .select(GitHubConfig::as_select())
-        .load::<GitHubConfig>(&mut conn)
+        .load(&mut conn)
         .await?;
 
     let github_configs = configs

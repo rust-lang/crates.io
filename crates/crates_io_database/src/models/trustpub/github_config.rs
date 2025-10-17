@@ -4,8 +4,8 @@ use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use serde::Serialize;
 
-#[derive(Debug, Identifiable, Queryable, Selectable, Serialize)]
-#[diesel(table_name = trustpub_configs_github, check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Identifiable, HasQuery, Serialize)]
+#[diesel(table_name = trustpub_configs_github)]
 pub struct GitHubConfig {
     pub id: i32,
     pub created_at: DateTime<Utc>,

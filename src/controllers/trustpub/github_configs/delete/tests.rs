@@ -3,7 +3,6 @@ use crate::tests::util::{RequestHelper, TestApp};
 use crates_io_database::models::Crate;
 use crates_io_database::models::token::{CrateScope, EndpointScope};
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
-use crates_io_database::schema::trustpub_configs_github;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::assert_snapshot;
@@ -34,10 +33,7 @@ async fn create_config(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResu
 }
 
 async fn get_all_configs(conn: &mut AsyncPgConnection) -> QueryResult<Vec<GitHubConfig>> {
-    trustpub_configs_github::table
-        .select(GitHubConfig::as_select())
-        .load::<GitHubConfig>(conn)
-        .await
+    GitHubConfig::query().load(conn).await
 }
 
 /// Delete the config with a valid user that is an owner of the crate.
