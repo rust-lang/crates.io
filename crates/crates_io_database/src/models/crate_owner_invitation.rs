@@ -58,7 +58,7 @@ impl NewCrateOwnerInvitation {
 }
 
 /// The model representing a row in the `crate_owner_invitations` database table.
-#[derive(Clone, Debug, Identifiable, Queryable, Selectable)]
+#[derive(Clone, Debug, Identifiable, HasQuery)]
 #[diesel(primary_key(invited_user_id, crate_id))]
 pub struct CrateOwnerInvitation {
     pub invited_user_id: i32,
@@ -76,18 +76,16 @@ impl CrateOwnerInvitation {
         crate_id: i32,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Self> {
-        crate_owner_invitations::table
+        CrateOwnerInvitation::query()
             .find((user_id, crate_id))
-            .select(CrateOwnerInvitation::as_select())
-            .first::<Self>(conn)
+            .first(conn)
             .await
     }
 
     pub async fn find_by_token(token: &str, conn: &mut AsyncPgConnection) -> QueryResult<Self> {
-        crate_owner_invitations::table
+        CrateOwnerInvitation::query()
             .filter(crate_owner_invitations::token.eq(token))
-            .select(CrateOwnerInvitation::as_select())
-            .first::<Self>(conn)
+            .first(conn)
             .await
     }
 
