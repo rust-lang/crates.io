@@ -1,8 +1,8 @@
 import { action } from '@ember/object';
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
-import Ember from 'ember';
 
+import { isTesting } from '@embroider/macros';
 import { didCancel, dropTask, rawTimeout, task } from 'ember-concurrency';
 
 import ajax from '../utils/ajax';
@@ -61,7 +61,7 @@ export default class ApplicationRoute extends Route {
 
   checkReadOnlyStatusTask = dropTask(async () => {
     // delay the status check to let the more relevant data load first
-    let timeout = Ember.testing ? 0 : 1000;
+    let timeout = isTesting() ? 0 : 1000;
     await rawTimeout(timeout);
 
     let { read_only, banner_message } = await ajax('/api/v1/site_metadata');
