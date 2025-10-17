@@ -6,7 +6,7 @@ use secrecy::SecretString;
 use crate::models::User;
 use crate::schema::emails;
 
-#[derive(Debug, Queryable, Identifiable, Selectable, Associations)]
+#[derive(Debug, HasQuery, Identifiable, Associations)]
 #[diesel(belongs_to(User))]
 pub struct Email {
     pub id: i32,
