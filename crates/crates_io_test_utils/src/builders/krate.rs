@@ -1,5 +1,5 @@
-use crate::models::{Category, Crate, Keyword, NewCrate, update_default_version};
-use crate::schema::{crate_downloads, crates, version_downloads};
+use crates_io_database::models::{Category, Crate, Keyword, NewCrate, update_default_version};
+use crates_io_database::schema::{crate_downloads, crates, version_downloads};
 
 use super::VersionBuilder;
 use chrono::{DateTime, Utc};

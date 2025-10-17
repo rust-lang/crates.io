@@ -1,9 +1,9 @@
-use crate::models::{Crate, NewVersion, Version};
-use crate::schema::dependencies;
+use crates_io_database::models::versions_published_by;
+use crates_io_database::models::{Crate, NewVersion, Version};
+use crates_io_database::schema::dependencies;
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Utc};
-use crates_io_database::models::versions_published_by;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 

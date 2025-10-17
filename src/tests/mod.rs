@@ -15,7 +15,7 @@ use std::sync::LazyLock;
 mod account_lock;
 mod authentication;
 mod blocked_routes;
-pub mod builders;
+pub use crates_io_test_utils::builders;
 mod categories;
 mod cors;
 mod dump_db;

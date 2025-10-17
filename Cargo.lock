@@ -1432,6 +1432,7 @@ dependencies = [
  "crates_io_tarball",
  "crates_io_team_repo",
  "crates_io_test_db",
+ "crates_io_test_utils",
  "crates_io_trustpub",
  "crates_io_worker",
  "csv",
@@ -1792,6 +1793,24 @@ dependencies = [
  "rand 0.9.2",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "crates_io_test_utils"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "cargo-manifest",
+ "chrono",
+ "crates_io_api_types",
+ "crates_io_database",
+ "crates_io_tarball",
+ "diesel",
+ "diesel-async",
+ "semver",
+ "serde_json",
+ "toml 0.9.8",
 ]
 
 [[package]]
