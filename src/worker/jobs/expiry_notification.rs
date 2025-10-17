@@ -122,7 +122,7 @@ pub async fn find_expiring_tokens(
     conn: &mut AsyncPgConnection,
     before: chrono::DateTime<chrono::Utc>,
 ) -> QueryResult<Vec<ApiToken>> {
-    api_tokens::table
+    ApiToken::query()
         .filter(api_tokens::revoked.eq(false))
         .filter(api_tokens::expired_at.is_not_null())
         // Ignore already expired tokens
@@ -133,7 +133,6 @@ pub async fn find_expiring_tokens(
                 .lt(before.naive_utc()),
         )
         .filter(api_tokens::expiry_notification_at.is_null())
-        .select(ApiToken::as_select())
         .order_by(api_tokens::expired_at.asc()) // The most urgent tokens first
         .limit(MAX_ROWS)
         .get_results(conn)
@@ -215,19 +214,17 @@ mod tests {
             sent.1
                 .contains("crates.io: Your API token \"test_token\" is about to expire")
         );
-        let updated_token = api_tokens::table
+        let updated_token = ApiToken::query()
             .filter(api_tokens::id.eq(token.id))
             .filter(api_tokens::expiry_notification_at.is_not_null())
-            .select(ApiToken::as_select())
             .first::<ApiToken>(&mut conn)
             .await?;
         assert_eq!(updated_token.name, "test_token".to_owned());
 
         // Check that the token is not about to expire.
-        let tokens = api_tokens::table
+        let tokens = ApiToken::query()
             .filter(api_tokens::revoked.eq(false))
             .filter(api_tokens::expiry_notification_at.is_null())
-            .select(ApiToken::as_select())
             .load::<ApiToken>(&mut conn)
             .await?;
         assert_eq!(tokens.len(), 3);
