@@ -269,8 +269,7 @@ async fn handle_gitlab_token_inner(
         return Err(bad_request(message));
     };
 
-    let mut repo_configs = trustpub_configs_gitlab::table
-        .select(GitLabConfig::as_select())
+    let mut repo_configs = GitLabConfig::query()
         .filter(lower(trustpub_configs_gitlab::namespace).eq(lower(&namespace)))
         .filter(lower(trustpub_configs_gitlab::project).eq(lower(&project)))
         .load(conn)
