@@ -1,5 +1,6 @@
 mod external_urls;
 pub mod krate_publish;
+pub mod release_tracks;
 pub mod trustpub;
 
 pub use self::external_urls::remove_blocked_urls;

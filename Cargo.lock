@@ -1506,6 +1506,8 @@ dependencies = [
  "chrono",
  "claims",
  "crates_io_database",
+ "indexmap",
+ "semver",
  "sentry-core",
  "serde",
  "serde_json",
