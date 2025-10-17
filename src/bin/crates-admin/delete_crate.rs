@@ -54,11 +54,9 @@ pub async fn run(opts: Opts) -> anyhow::Result<()> {
     let mut crate_names = opts.crate_names;
     crate_names.sort();
 
-    let existing_crates = crates::table
-        .inner_join(crate_downloads::table)
+    let existing_crates = CrateInfo::query()
         .filter(crates::name.eq_any(&crate_names))
-        .select(CrateInfo::as_select())
-        .load::<CrateInfo>(&mut conn)
+        .load(&mut conn)
         .await
         .context("Failed to look up crate name from the database")?;
 
@@ -141,8 +139,11 @@ async fn delete_from_database(
     Ok(())
 }
 
-#[derive(Debug, Clone, Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Clone, HasQuery)]
+#[diesel(
+    base_query = crates::table
+        .inner_join(crate_downloads::table)
+)]
 struct CrateInfo {
     #[diesel(select_expression = crates::columns::name)]
     name: String,
