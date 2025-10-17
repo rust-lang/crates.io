@@ -63,3 +63,35 @@ async fn show_by_crate_name_and_semver_no_published_by() {
         ".version.updated_at" => "[datetime]",
     });
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn block_bad_version_urls() {
+    use crate::schema::versions;
+    use diesel::{ExpressionMethods, update};
+
+    let (app, anon, user) = TestApp::init().with_user().await;
+    let mut conn = app.db_conn().await;
+    let user = user.as_model();
+
+    let _krate = CrateBuilder::new("foo_bad_version_urls", user.id)
+        .version(VersionBuilder::new("1.0.0"))
+        .expect_build(&mut conn)
+        .await;
+
+    update(versions::table)
+        .filter(versions::num.eq("1.0.0"))
+        .set((
+            versions::homepage.eq(Some("http://rust-ci.org/foo/homepage")),
+            versions::documentation.eq(Some("http://rust-ci.org/foo/docs")),
+            versions::repository.eq(Some("http://rust-ci.org/foo/repo")),
+        ))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    let url = "/api/v1/crates/foo_bad_version_urls/1.0.0";
+    let json: Value = anon.get(url).await.good();
+    assert_eq!(json["version"]["homepage"], Value::Null);
+    assert_eq!(json["version"]["documentation"], Value::Null);
+    assert_eq!(json["version"]["repository"], Value::Null);
+}
