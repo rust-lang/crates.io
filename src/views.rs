@@ -968,6 +968,10 @@ impl EncodableVersion {
             ..
         } = version;
 
+        let homepage = remove_blocked_urls(homepage);
+        let documentation = remove_blocked_urls(documentation);
+        let repository = remove_blocked_urls(repository);
+
         let links = EncodableVersionLinks {
             dependencies: format!("/api/v1/crates/{crate_name}/{num}/dependencies"),
             version_downloads: format!("/api/v1/crates/{crate_name}/{num}/downloads"),
