@@ -1415,6 +1415,7 @@ dependencies = [
  "clap",
  "colored 3.0.0",
  "cookie",
+ "crates_io_api_types",
  "crates_io_cdn_logs",
  "crates_io_database",
  "crates_io_database_dump",
@@ -1496,6 +1497,20 @@ dependencies = [
  "utoipa",
  "utoipa-axum",
  "zip",
+]
+
+[[package]]
+name = "crates_io_api_types"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "claims",
+ "crates_io_database",
+ "sentry-core",
+ "serde",
+ "serde_json",
+ "url",
+ "utoipa",
 ]
 
 [[package]]

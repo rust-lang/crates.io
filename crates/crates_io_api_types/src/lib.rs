@@ -1,13 +1,15 @@
-use crate::external_urls::remove_blocked_urls;
-use crate::models::{
+mod external_urls;
+pub mod krate_publish;
+
+pub use self::external_urls::remove_blocked_urls;
+pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
+
+use chrono::{DateTime, Utc};
+use crates_io_database::models::{
     ApiToken, Category, Crate, Dependency, DependencyKind, Keyword, Owner, ReverseDependency, Team,
     TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
 };
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-pub mod krate_publish;
-pub use self::krate_publish::{EncodableCrateDependency, PublishMetadata};
 
 #[derive(Serialize, Deserialize, Debug, utoipa::ToSchema)]
 #[schema(as = Category)]
@@ -397,7 +399,7 @@ impl EncodableCrate {
         let default_version = default_version.map(ToString::to_string);
         if default_version.is_none() {
             let message = format!("Crate `{name}` has no default version");
-            sentry::capture_message(&message, sentry::Level::Info);
+            sentry_core::capture_message(&message, sentry_core::Level::Info);
         }
         let yanked = yanked.unwrap_or_default();
 

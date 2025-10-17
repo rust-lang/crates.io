@@ -5,6 +5,7 @@
 //! [krate](krate/index.html), [user](user/index.html) and [version](version/index.html) modules.
 
 pub use crate::{app::App, email::Emails};
+pub use crates_io_api_types as views;
 pub use crates_io_database::{models, schema};
 use std::sync::Arc;
 
@@ -26,7 +27,6 @@ pub mod config;
 pub mod controllers;
 pub mod db;
 pub mod email;
-pub mod external_urls;
 pub mod fastly;
 pub mod headers;
 pub mod index;
@@ -46,7 +46,6 @@ pub mod tasks;
 pub mod tests;
 pub mod typosquat;
 pub mod util;
-pub mod views;
 pub mod worker;
 
 /// Used for setting different values depending on whether the app is being run in production,

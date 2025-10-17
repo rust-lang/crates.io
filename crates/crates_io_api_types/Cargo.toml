@@ -1,0 +1,22 @@
+[package]
+name = "crates_io_api_types"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rust-lang/crates.io"
+description = "API response types for crates.io"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+chrono = { version = "=0.4.42", default-features = false, features = ["serde"] }
+crates_io_database = { path = "../crates_io_database" }
+sentry-core = "=0.45.0"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.145"
+url = "=2.5.7"
+utoipa = { version = "=5.4.0", features = ["chrono"] }
+
+[dev-dependencies]
+claims = "=0.8.0"
