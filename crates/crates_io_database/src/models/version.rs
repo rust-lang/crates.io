@@ -10,7 +10,7 @@ use serde::Deserialize;
 use crate::models::{Crate, TrustpubData, User};
 use crate::schema::{readme_renderings, versions};
 
-#[derive(Clone, Identifiable, Associations, Debug, Queryable, Selectable)]
+#[derive(Clone, Identifiable, Associations, Debug, HasQuery)]
 #[diesel(belongs_to(Crate), belongs_to(crate::models::download::Version, foreign_key=id))]
 pub struct Version {
     pub id: i32,

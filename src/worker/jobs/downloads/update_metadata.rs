@@ -290,9 +290,8 @@ mod tests {
             .await
             .unwrap();
 
-        let version_before: Version = versions::table
+        let version_before: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
@@ -304,9 +303,8 @@ mod tests {
 
         super::update(&mut conn).await.unwrap();
 
-        let version2: Version = versions::table
+        let version2: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
@@ -330,9 +328,8 @@ mod tests {
 
         super::update(&mut conn).await.unwrap();
 
-        let version3: Version = versions::table
+        let version3: Version = Version::query()
             .find(version.id)
-            .select(Version::as_select())
             .first(&mut conn)
             .await
             .unwrap();
