@@ -4,7 +4,6 @@ use crate::models::{
     TopVersions, TrustpubData, User, Version, VersionDownload, VersionOwnerAction,
 };
 use chrono::{DateTime, Utc};
-use crates_io_github as github;
 use serde::{Deserialize, Serialize};
 
 pub mod krate_publish;
@@ -562,18 +561,19 @@ impl From<Owner> for EncodableOwner {
                     kind: String::from("user"),
                 }
             }
-            Owner::Team(Team {
-                id,
-                name,
-                login,
-                avatar,
-                ..
-            }) => {
-                let url = github::team_url(&login);
+            Owner::Team(team) => {
+                let url = team.url();
+                let Team {
+                    id,
+                    name,
+                    login,
+                    avatar,
+                    ..
+                } = team;
                 Self {
                     id,
                     login,
-                    url: Some(url),
+                    url,
                     avatar,
                     name,
                     kind: String::from("team"),
@@ -609,6 +609,7 @@ pub struct EncodableTeam {
 
 impl From<Team> for EncodableTeam {
     fn from(team: Team) -> Self {
+        let url = team.url();
         let Team {
             id,
             name,
@@ -616,14 +617,13 @@ impl From<Team> for EncodableTeam {
             avatar,
             ..
         } = team;
-        let url = github::team_url(&login);
 
         EncodableTeam {
             id,
             login,
             name,
             avatar,
-            url: Some(url),
+            url,
         }
     }
 }
