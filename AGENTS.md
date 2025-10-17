@@ -10,7 +10,6 @@
   - `/src/tests/` - Backend integration tests with snapshot testing using `insta`
   - `/src/config/` - Configuration loading and validation
   - `/src/util/` - Shared utilities (errors, authentication, pagination)
-  - `/src/views.rs` - Response serialization
 - `/app/` - Frontend Ember.js application
   - `/app/components/` - Reusable UI components (80+ components with scoped CSS files)
   - `/app/routes/` and `/app/controllers/` - Route handlers and data loading
@@ -19,6 +18,7 @@
   - `/app/adapters/`, `/app/serializers/` - Ember Data adapter layer
   - `/app/services/` - Shared services (session, notifications, API client)
 - `/crates/` - Workspace crates providing specialized functionality
+  - `crates_io_api_types/` - API response serialization types
   - `crates_io_database/` - Database models and schema (Diesel ORM)
   - `crates_io_worker/` - Background job queue system
   - `crates_io_index/` - Git index management for crate metadata

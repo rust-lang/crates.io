@@ -3,9 +3,8 @@
 //! to and from structs. The serializing is only utilised in
 //! integration tests.
 
+use crates_io_database::models::DependencyKind;
 use serde::{Deserialize, Serialize};
-
-use crate::models::DependencyKind;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct PublishMetadata {
