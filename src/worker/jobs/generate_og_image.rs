@@ -133,8 +133,12 @@ impl BackgroundJob for GenerateOgImage {
     }
 }
 
-#[derive(Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(HasQuery)]
+#[diesel(
+    base_query = crates::table
+        .inner_join(default_versions::table)
+        .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+)]
 struct QueryRow {
     #[diesel(select_expression = crates::id)]
     _crate_id: i32,
@@ -171,11 +175,8 @@ async fn fetch_crate_data(
     crate_name: &str,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<Option<QueryRow>> {
-    crates::table
-        .inner_join(default_versions::table)
-        .inner_join(versions::table.on(default_versions::version_id.eq(versions::id)))
+    QueryRow::query()
         .filter(crates::name.eq(crate_name))
-        .select(QueryRow::as_select())
         .first(conn)
         .await
         .optional()
