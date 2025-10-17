@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use crates_io_diesel_helpers::SemverVersion;
 use diesel::prelude::*;
 
-#[derive(Queryable, Identifiable, Selectable, Associations, Debug, Clone, Copy)]
+#[derive(HasQuery, Identifiable, Associations, Debug, Clone, Copy)]
 #[diesel(
     primary_key(version_id, date),
     belongs_to(FullVersion, foreign_key=version_id),
