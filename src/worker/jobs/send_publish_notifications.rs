@@ -156,7 +156,12 @@ impl BackgroundJob for SendPublishNotificationsJob {
     }
 }
 
-#[derive(Debug, Queryable, Selectable)]
+#[derive(Debug, HasQuery)]
+#[diesel(
+    base_query = versions::table
+        .inner_join(crates::table)
+        .left_join(users::table),
+)]
 struct PublishDetails {
     #[diesel(select_expression = crates::columns::id)]
     crate_id: i32,
@@ -177,11 +182,8 @@ impl PublishDetails {
         version_id: i32,
         conn: &mut AsyncPgConnection,
     ) -> QueryResult<Option<Self>> {
-        versions::table
-            .find(version_id)
-            .inner_join(crates::table)
-            .left_join(users::table)
-            .select(PublishDetails::as_select())
+        PublishDetails::query()
+            .filter(versions::id.eq(version_id))
             .first(conn)
             .await
             .optional()
