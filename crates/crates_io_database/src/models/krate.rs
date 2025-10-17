@@ -18,8 +18,8 @@ use tracing::instrument;
 
 use super::Team;
 
-#[derive(Debug, Clone, Queryable, Selectable)]
-#[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Clone, HasQuery)]
+#[diesel(table_name = crates)]
 pub struct CrateName {
     pub name: String,
 }
