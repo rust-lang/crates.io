@@ -74,6 +74,18 @@ impl Team {
         let (org, team) = rest.split_once(':')?;
         Some((provider, org, team))
     }
+
+    /// Returns the URL for the team.
+    ///
+    /// Currently only supports GitHub teams. Returns `None` for other providers
+    /// or invalid login formats.
+    pub fn url(&self) -> Option<String> {
+        let (provider, org, _team) = self.split_login()?;
+        match provider {
+            "github" => Some(format!("https://github.com/{org}")),
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -131,6 +143,40 @@ mod tests {
         fn different_provider() {
             let team = new_team("gitlab:my-org:my-team");
             assert_eq!(team.split_login(), Some(("gitlab", "my-org", "my-team")));
+        }
+    }
+
+    mod url {
+        use super::*;
+
+        #[test]
+        fn github_team() {
+            let team = new_team("github:rust-lang:core");
+            assert_eq!(team.url(), Some("https://github.com/rust-lang".to_string()));
+        }
+
+        #[test]
+        fn gitlab_team_returns_none() {
+            let team = new_team("gitlab:my-org:my-team");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn invalid_format_returns_none() {
+            let team = new_team("github:rust-lang");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn empty_login_returns_none() {
+            let team = new_team("");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn github_with_hyphenated_org() {
+            let team = new_team("github:test-org:core");
+            assert_eq!(team.url(), Some("https://github.com/test-org".to_string()));
         }
     }
 }
