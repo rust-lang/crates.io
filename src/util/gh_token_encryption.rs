@@ -18,7 +18,7 @@ impl GitHubTokenEncryption {
 
     /// Creates a new [GitHubTokenEncryption] instance with a cipher for testing
     /// purposes.
-    #[cfg(test)]
+    #[cfg(any(test, debug_assertions))]
     pub fn for_testing() -> Self {
         let test_key = b"test_key_32_bytes_long_for_tests";
         Self::new(Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(test_key)))
