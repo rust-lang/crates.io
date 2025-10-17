@@ -17,10 +17,9 @@ pub async fn get_index_data(
     conn: &mut AsyncPgConnection,
 ) -> anyhow::Result<Option<String>> {
     debug!("Looking up crate by name");
-    let krate = crates::table
-        .select(Crate::as_select())
+    let krate = Crate::query()
         .filter(crates::name.eq(name))
-        .first::<Crate>(conn)
+        .first(conn)
         .await
         .optional();
 

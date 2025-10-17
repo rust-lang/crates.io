@@ -60,7 +60,7 @@ async fn transfer(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()
     let crate_owners = crate_owners::table
         .filter(crate_owners::owner_id.eq(from.id))
         .filter(crate_owners::owner_kind.eq(OwnerKind::User));
-    let crates: Vec<Crate> = Crate::all()
+    let crates: Vec<Crate> = Crate::query()
         .filter(crates::id.eq_any(crate_owners.select(crate_owners::crate_id)))
         .load(conn)
         .await?;

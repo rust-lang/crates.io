@@ -24,8 +24,8 @@ pub struct CrateName {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Queryable, Identifiable, AsChangeset, Selectable, Serialize)]
-#[diesel(table_name = crates, check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Clone, Identifiable, AsChangeset, HasQuery, Serialize)]
+#[diesel(table_name = crates)]
 pub struct Crate {
     pub id: i32,
     pub name: String,

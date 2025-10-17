@@ -295,7 +295,7 @@ mod tests {
             .first(&mut conn)
             .await
             .unwrap();
-        let krate_before: Crate = Crate::all()
+        let krate_before: Crate = Crate::query()
             .filter(crates::id.eq(krate.id))
             .first(&mut conn)
             .await
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(version2.downloads, 2);
         assert_eq!(version2.updated_at, version_before.updated_at);
 
-        let krate2: Crate = Crate::all()
+        let krate2: Crate = Crate::query()
             .filter(crates::id.eq(krate.id))
             .first(&mut conn)
             .await
