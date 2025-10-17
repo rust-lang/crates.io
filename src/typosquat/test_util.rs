@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::models::{Crate, NewTeam, NewUser, Team, User};
-use crate::tests::util::github::next_gh_id;
+use crates_io_test_utils::github::next_gh_id;
 
 pub mod faker {
     use super::*;

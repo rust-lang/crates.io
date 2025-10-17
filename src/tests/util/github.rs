@@ -3,13 +3,8 @@ use crates_io_github::{
     GitHubError, GitHubOrgMembership, GitHubOrganization, GitHubTeam, GitHubTeamMembership,
     GitHubUser, MockGitHubClient,
 };
-use std::sync::atomic::{AtomicUsize, Ordering};
 
-static NEXT_GH_ID: AtomicUsize = AtomicUsize::new(1);
-
-pub fn next_gh_id() -> i32 {
-    NEXT_GH_ID.fetch_add(1, Ordering::SeqCst) as i32
-}
+pub use crates_io_test_utils::github::next_gh_id;
 
 pub(crate) const MOCK_GITHUB_DATA: MockData = MockData {
     orgs: &[MockOrg {
