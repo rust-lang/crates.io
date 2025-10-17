@@ -65,4 +65,118 @@ impl Team {
 
         Ok(teams.collect())
     }
+
+    /// Splits the login into provider, organization, and team name.
+    ///
+    /// Returns `None` if the login format is invalid.
+    pub fn split_login(&self) -> Option<(&str, &str, &str)> {
+        let (provider, rest) = self.login.split_once(':')?;
+        let (org, team) = rest.split_once(':')?;
+        Some((provider, org, team))
+    }
+
+    /// Returns the URL for the team.
+    ///
+    /// Currently only supports GitHub teams. Returns `None` for other providers
+    /// or invalid login formats.
+    pub fn url(&self) -> Option<String> {
+        let (provider, org, _team) = self.split_login()?;
+        match provider {
+            "github" => Some(format!("https://github.com/{org}")),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn new_team(login: &str) -> Team {
+        Team {
+            id: 1,
+            login: login.to_string(),
+            github_id: 1000,
+            name: None,
+            avatar: None,
+            org_id: 2000,
+        }
+    }
+
+    mod split_login {
+        use super::*;
+
+        #[test]
+        fn valid_login() {
+            let team = new_team("github:rust-lang:core");
+            assert_eq!(team.split_login(), Some(("github", "rust-lang", "core")));
+        }
+
+        #[test]
+        fn missing_second_colon() {
+            let team = new_team("github:rust-lang");
+            assert_eq!(team.split_login(), None);
+        }
+
+        #[test]
+        fn missing_both_colons() {
+            let team = new_team("github");
+            assert_eq!(team.split_login(), None);
+        }
+
+        #[test]
+        fn empty_string() {
+            let team = new_team("");
+            assert_eq!(team.split_login(), None);
+        }
+
+        #[test]
+        fn extra_colons() {
+            let team = new_team("github:rust-lang:core:extra");
+            assert_eq!(
+                team.split_login(),
+                Some(("github", "rust-lang", "core:extra"))
+            );
+        }
+
+        #[test]
+        fn different_provider() {
+            let team = new_team("gitlab:my-org:my-team");
+            assert_eq!(team.split_login(), Some(("gitlab", "my-org", "my-team")));
+        }
+    }
+
+    mod url {
+        use super::*;
+
+        #[test]
+        fn github_team() {
+            let team = new_team("github:rust-lang:core");
+            assert_eq!(team.url(), Some("https://github.com/rust-lang".to_string()));
+        }
+
+        #[test]
+        fn gitlab_team_returns_none() {
+            let team = new_team("gitlab:my-org:my-team");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn invalid_format_returns_none() {
+            let team = new_team("github:rust-lang");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn empty_login_returns_none() {
+            let team = new_team("");
+            assert_eq!(team.url(), None);
+        }
+
+        #[test]
+        fn github_with_hyphenated_org() {
+            let team = new_team("github:test-org:core");
+            assert_eq!(team.url(), Some("https://github.com/test-org".to_string()));
+        }
+    }
 }
