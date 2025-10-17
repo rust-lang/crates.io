@@ -1,6 +1,6 @@
-use crate::tests::util::TestApp;
-use crate::worker::jobs::trustpub::DeleteExpiredJtis;
+use crate::util::TestApp;
 use chrono::{TimeDelta, Utc};
+use crates_io::worker::jobs::trustpub::DeleteExpiredJtis;
 use crates_io_database::models::trustpub::NewUsedJti;
 use crates_io_database::schema::trustpub_used_jtis;
 use crates_io_worker::BackgroundJob;

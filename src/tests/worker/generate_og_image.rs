@@ -1,5 +1,5 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::TestApp;
+use crate::builders::CrateBuilder;
+use crate::util::TestApp;
 use claims::{assert_err, assert_ok};
 use crates_io_env_vars::var;
 use crates_io_worker::BackgroundJob;
@@ -35,7 +35,7 @@ async fn test_generate_og_image_job() {
         .await;
 
     // Create and enqueue the job
-    let job = crate::worker::jobs::GenerateOgImage::new("test-crate".to_string());
+    let job = crates_io::worker::jobs::GenerateOgImage::new("test-crate".to_string());
     job.enqueue(&mut conn).await.unwrap();
 
     // Run the background job
@@ -72,7 +72,7 @@ async fn test_generate_og_image_job_nonexistent_crate() {
     let mut conn = app.db_conn().await;
 
     // Create and enqueue the job for a non-existent crate
-    let job = crate::worker::jobs::GenerateOgImage::new("nonexistent-crate".to_string());
+    let job = crates_io::worker::jobs::GenerateOgImage::new("nonexistent-crate".to_string());
     job.enqueue(&mut conn).await.unwrap();
 
     // Run the background job - should complete without error

@@ -1,6 +1,6 @@
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, Response, TestApp};
-use crate::tests::{OkBool, VersionResponse};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{RequestHelper, Response, TestApp};
+use crate::{OkBool, VersionResponse};
 use insta::assert_snapshot;
 use serde_json::json;
 
@@ -124,10 +124,10 @@ async fn unyank_records_an_audit_action() {
 
 mod auth {
     use super::*;
-    use crate::models::token::{CrateScope, EndpointScope};
-    use crate::schema::{crates, users, versions};
-    use crate::tests::util::{MockAnonymousUser, MockCookieUser};
+    use crate::util::{MockAnonymousUser, MockCookieUser};
     use chrono::{Duration, Utc};
+    use crates_io::models::token::{CrateScope, EndpointScope};
+    use crates_io::schema::{crates, users, versions};
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
     use insta::assert_snapshot;

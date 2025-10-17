@@ -1,4 +1,4 @@
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::util::{RequestHelper, TestApp};
 use serde::Deserialize;
 
 #[derive(Deserialize)]

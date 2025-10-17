@@ -1,6 +1,6 @@
-use crate::tests::util::TestApp;
-use crate::worker::jobs::trustpub::DeleteExpiredTokens;
+use crate::util::TestApp;
 use chrono::{TimeDelta, Utc};
+use crates_io::worker::jobs::trustpub::DeleteExpiredTokens;
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_database::schema::trustpub_tokens;
 use crates_io_worker::BackgroundJob;

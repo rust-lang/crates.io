@@ -1,5 +1,5 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{MockAnonymousUser, RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::util::{MockAnonymousUser, RequestHelper, TestApp};
 use claims::{assert_ok, assert_some_eq};
 use crates_io_database::models::trustpub::{GitLabConfig, NewGitLabConfig};
 use crates_io_database::schema::{trustpub_configs_gitlab, trustpub_tokens};

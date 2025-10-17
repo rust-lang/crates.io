@@ -1,10 +1,10 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::{EncodablePrivateUser, OwnedCrate};
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, TestApp};
+use crates_io::views::{EncodablePrivateUser, OwnedCrate};
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde::Deserialize;
 
-impl crate::tests::util::MockCookieUser {
+impl crate::util::MockCookieUser {
     pub async fn show_me(&self) -> UserShowPrivateResponse {
         let url = "/api/v1/me";
         self.get(url).await.good()

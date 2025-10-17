@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{MockTokenUser, RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{MockTokenUser, RequestHelper, TestApp};
 use chrono::{TimeDelta, Utc};
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_github::{GitHubUser, MockGitHubClient};

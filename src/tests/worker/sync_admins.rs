@@ -1,6 +1,6 @@
-use crate::schema::{emails, users};
-use crate::tests::util::TestApp;
-use crate::worker::jobs::SyncAdmins;
+use crate::util::TestApp;
+use crates_io::schema::{emails, users};
+use crates_io::worker::jobs::SyncAdmins;
 use crates_io_team_repo::{MockTeamRepo, Permission, Person};
 use crates_io_worker::BackgroundJob;
 use diesel::QueryResult;

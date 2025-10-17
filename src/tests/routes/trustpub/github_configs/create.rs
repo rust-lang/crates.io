@@ -1,5 +1,5 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, Response, TestApp};
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, Response, TestApp};
 use anyhow::anyhow;
 use bytes::Bytes;
 use crates_io_database::models::token::{CrateScope, EndpointScope};

@@ -1,9 +1,9 @@
-use crate::schema::versions;
-use crate::tests::OkBool;
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::EncodableVersion;
+use crate::OkBool;
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper, TestApp};
 use claims::assert_none;
+use crates_io::schema::versions;
+use crates_io::views::EncodableVersion;
 use diesel::prelude::*;
 use diesel::update;
 use diesel_async::RunQueryDsl;

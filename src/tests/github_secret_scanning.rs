@@ -1,12 +1,12 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::MockRequestExt;
-use crate::tests::util::insta::api_token_redaction;
-use crate::tests::{RequestHelper, TestApp};
-use crate::util::token::HashedToken;
-use crate::{models::ApiToken, schema::api_tokens};
+use crate::builders::CrateBuilder;
+use crate::util::MockRequestExt;
+use crate::util::insta::api_token_redaction;
+use crate::{RequestHelper, TestApp};
 use base64::{Engine as _, engine::general_purpose};
 use chrono::{TimeDelta, Utc};
 use claims::assert_ok;
+use crates_io::util::token::HashedToken;
+use crates_io::{models::ApiToken, schema::api_tokens};
 use crates_io_database::models::CrateOwner;
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_database::schema::trustpub_tokens;

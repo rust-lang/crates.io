@@ -1,12 +1,12 @@
-use crate::models::{NewCategory, NewTeam, NewUser};
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::{
+use crate::util::{RequestHelper, TestApp};
+use crates_io::models::{NewCategory, NewTeam, NewUser};
+use crates_io::views::{
     EncodableCategory, EncodableCrate, EncodableKeyword, EncodableOwner, EncodableVersion,
     GoodCrate,
 };
 
-use crate::tests::util::github::next_gh_id;
-use crate::util::gh_token_encryption::GitHubTokenEncryption;
+use crate::util::github::next_gh_id;
+use crates_io::util::gh_token_encryption::GitHubTokenEncryption;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 

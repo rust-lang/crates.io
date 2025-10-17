@@ -1,17 +1,17 @@
-use crate::models::{Crate, CrateOwner, NewTeam};
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::{OwnerTeamsResponse, RequestHelper, TestApp, add_team_to_crate, new_team};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::{OwnerTeamsResponse, RequestHelper, TestApp, add_team_to_crate, new_team};
+use crates_io::models::{Crate, CrateOwner, NewTeam};
 
 use diesel::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;
 
-impl crate::tests::util::MockAnonymousUser {
+impl crate::util::MockAnonymousUser {
     /// List the team owners of the specified crate.
     async fn crate_owner_teams(
         &self,
         krate_name: &str,
-    ) -> crate::tests::util::Response<OwnerTeamsResponse> {
+    ) -> crate::util::Response<OwnerTeamsResponse> {
         let url = format!("/api/v1/crates/{krate_name}/owner_team");
         self.get(&url).await
     }
@@ -91,7 +91,7 @@ async fn add_renamed_team() -> anyhow::Result<()> {
     let token = user.db_new_token("arbitrary token name").await;
     let owner_id = user.as_model().id;
 
-    use crate::schema::teams;
+    use crates_io::schema::teams;
 
     CrateBuilder::new("foo_renamed_team", owner_id)
         .expect_build(&mut conn)

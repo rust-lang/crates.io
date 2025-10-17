@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper as _, TestApp};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper as _, TestApp};
 use crates_io_database::models::NewUser;
 use crates_io_docs_rs::MockDocsRsClient;
 use insta::assert_snapshot;

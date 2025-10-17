@@ -1,11 +1,11 @@
-use crate::rate_limiter::LimitedAction;
-use crate::schema::publish_limit_buckets;
-use crate::tests::VersionResponse;
-use crate::tests::builders::PublishBuilder;
-use crate::tests::routes::crates::versions::yank_unyank::YankRequestHelper;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::VersionResponse;
+use crate::builders::PublishBuilder;
+use crate::routes::crates::versions::yank_unyank::YankRequestHelper;
+use crate::util::{RequestHelper, TestApp};
 use chrono::Utc;
 use claims::assert_some_eq;
+use crates_io::rate_limiter::LimitedAction;
+use crates_io::schema::publish_limit_buckets;
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

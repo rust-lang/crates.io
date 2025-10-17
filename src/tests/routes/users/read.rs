@@ -1,8 +1,8 @@
-use crate::models::NewUser;
-use crate::schema::users;
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::EncodablePublicUser;
+use crate::util::{RequestHelper, TestApp};
 use claims::assert_ok;
+use crates_io::models::NewUser;
+use crates_io::schema::users;
+use crates_io::views::EncodablePublicUser;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 

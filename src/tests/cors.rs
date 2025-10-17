@@ -1,5 +1,5 @@
-use crate::tests::TestApp;
-use crate::tests::util::{MockRequestExt, RequestHelper};
+use crate::TestApp;
+use crate::util::{MockRequestExt, RequestHelper};
 use insta::assert_snapshot;
 
 #[tokio::test(flavor = "multi_thread")]

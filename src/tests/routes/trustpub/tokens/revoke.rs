@@ -1,4 +1,4 @@
-use crate::tests::util::{MockTokenUser, RequestHelper, TestApp};
+use crate::util::{MockTokenUser, RequestHelper, TestApp};
 use chrono::{TimeDelta, Utc};
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_database::schema::trustpub_tokens;

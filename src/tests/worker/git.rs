@@ -1,8 +1,8 @@
-use crate::models::Crate;
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::worker::jobs;
+use crate::builders::PublishBuilder;
+use crate::util::{RequestHelper, TestApp};
 use claims::{assert_ok, assert_ok_eq};
+use crates_io::models::Crate;
+use crates_io::worker::jobs;
 use crates_io_worker::BackgroundJob;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -49,7 +49,7 @@ async fn index_smoke_test() {
 
     // Delete the crate
 
-    use crate::schema::crates;
+    use crates_io::schema::crates;
 
     let krate: Crate = assert_ok!(Crate::by_name("serde").first(&mut conn).await);
     assert_ok!(

@@ -2,9 +2,9 @@ use googletest::prelude::*;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn publish_records_an_audit_action() {
-    use crate::models::VersionOwnerAction;
-    use crate::tests::builders::PublishBuilder;
-    use crate::tests::util::{RequestHelper, TestApp};
+    use crate::builders::PublishBuilder;
+    use crate::util::{RequestHelper, TestApp};
+    use crates_io::models::VersionOwnerAction;
 
     let (app, anon, _, token) = TestApp::full().with_token().await;
 

@@ -1,7 +1,7 @@
-use crate::models::CrateOwner;
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, TestApp};
 use claims::assert_none;
+use crates_io::models::CrateOwner;
 use crates_io_database::schema::users;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;

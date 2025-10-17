@@ -1,7 +1,7 @@
-use crate::models::NewDeletedCrate;
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::PublishBuilder;
+use crate::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
+use crates_io::models::NewDeletedCrate;
 use crates_io_database::schema::deleted_crates;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

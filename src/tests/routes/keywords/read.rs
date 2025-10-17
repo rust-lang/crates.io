@@ -1,7 +1,7 @@
-use crate::models::Keyword;
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::EncodableKeyword;
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, TestApp};
+use crates_io::models::Keyword;
+use crates_io::views::EncodableKeyword;
 use insta::assert_snapshot;
 use serde::Deserialize;
 

@@ -1,5 +1,5 @@
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, TestApp};
 use crates_io_database::models::Crate;
 use crates_io_database::models::token::{CrateScope, EndpointScope};
 use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};

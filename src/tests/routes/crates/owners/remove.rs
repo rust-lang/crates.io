@@ -1,6 +1,6 @@
-use crate::models::CrateOwner;
-use crate::tests::builders::CrateBuilder;
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::CrateBuilder;
+use crate::util::{RequestHelper, TestApp};
+use crates_io::models::CrateOwner;
 use crates_io_github::{GitHubOrganization, GitHubTeam, GitHubTeamMembership, MockGitHubClient};
 use insta::assert_snapshot;
 

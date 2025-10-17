@@ -1,8 +1,8 @@
-use crate::tests::builders::PublishBuilder;
-use crate::tests::util::MockTokenUser;
-use crate::tests::{RequestHelper, TestApp};
-use crate::{models::ApiToken, views::EncodableMe};
+use crate::builders::PublishBuilder;
+use crate::util::MockTokenUser;
+use crate::{RequestHelper, TestApp};
 use claims::{assert_none, assert_ok, assert_some};
+use crates_io::{models::ApiToken, views::EncodableMe};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use insta::assert_snapshot;

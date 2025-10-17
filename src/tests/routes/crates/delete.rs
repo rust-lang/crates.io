@@ -1,12 +1,12 @@
-use crate::controllers::krate::delete::{DOWNLOADS_PER_MONTH_LIMIT, DeleteQueryParams};
-use crate::models::OwnerKind;
-use crate::schema::{crate_downloads, crates};
-use crate::tests::builders::{DependencyBuilder, PublishBuilder};
-use crate::tests::util::{RequestHelper, Response, TestApp};
+use crate::builders::{DependencyBuilder, PublishBuilder};
+use crate::util::{RequestHelper, Response, TestApp};
 use axum::RequestPartsExt;
 use bigdecimal::ToPrimitive;
 use chrono::{TimeDelta, Utc};
 use claims::{assert_none, assert_some};
+use crates_io::controllers::krate::delete::{DOWNLOADS_PER_MONTH_LIMIT, DeleteQueryParams};
+use crates_io::models::OwnerKind;
+use crates_io::schema::{crate_downloads, crates};
 use crates_io_database::schema::crate_owners;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};

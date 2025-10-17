@@ -1,9 +1,9 @@
-use crate::schema::metadata;
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::new_category;
-use crate::tests::util::{RequestHelper, TestApp};
-use crate::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::new_category;
+use crate::util::{RequestHelper, TestApp};
 use chrono::Utc;
+use crates_io::schema::metadata;
+use crates_io::views::{EncodableCategory, EncodableCrate, EncodableKeyword};
 use crates_io_database::schema::categories;
 use diesel::{ExpressionMethods, insert_into, update};
 use diesel_async::scoped_futures::ScopedFutureExt;

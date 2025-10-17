@@ -1,11 +1,9 @@
-use crate::models::Crate;
-use crate::schema::emails;
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{
-    MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response,
-};
-use crate::tests::{TestApp, add_team_to_crate, new_team};
-use crate::views::{
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{MockAnonymousUser, MockCookieUser, MockTokenUser, RequestHelper, Response};
+use crate::{TestApp, add_team_to_crate, new_team};
+use crates_io::models::Crate;
+use crates_io::schema::emails;
+use crates_io::views::{
     EncodableCrateOwnerInvitationV1, EncodableOwner, EncodablePublicUser, InvitationResponse,
 };
 
@@ -620,7 +618,7 @@ async fn test_accept_invitation_by_mail() {
 /// Hacky way to simulate the expiration of an ownership invitation. Instead of letting a month
 /// pass, the creation date of the invite is moved back a month.
 pub async fn expire_invitation(app: &TestApp, crate_id: i32) {
-    use crate::schema::crate_owner_invitations;
+    use crates_io::schema::crate_owner_invitations;
 
     let mut conn = app.db_conn().await;
 
@@ -807,7 +805,7 @@ async fn test_accept_expired_invitation_by_mail() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn inactive_users_dont_get_invitations() {
-    use crate::models::NewUser;
+    use crates_io::models::NewUser;
 
     let (app, _, owner, owner_token) = TestApp::init().with_token().await;
     let mut conn = app.db_conn().await;

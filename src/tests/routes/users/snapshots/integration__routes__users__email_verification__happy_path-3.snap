@@ -1,5 +1,5 @@
 ---
-source: src/controllers/user/email_verification.rs
+source: src/tests/routes/users/email_verification.rs
 expression: app.emails_snapshot().await
 ---
 To: foo@example.com

@@ -1,8 +1,8 @@
-use crate::models::token::{CrateScope, EndpointScope, NewApiToken};
-use crate::tests::util::insta::{self, assert_json_snapshot};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::util::insta::{self, assert_json_snapshot};
+use crate::util::{RequestHelper, TestApp};
 use chrono::{Duration, Utc};
 use claims::{assert_ok, assert_some};
+use crates_io::models::token::{CrateScope, EndpointScope, NewApiToken};
 use insta::assert_snapshot;
 use serde_json::json;
 

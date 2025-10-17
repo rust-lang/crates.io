@@ -1,6 +1,6 @@
-use crate::schema::api_tokens;
-use crate::tests::builders::{CrateBuilder, PublishBuilder};
-use crate::tests::util::{MockTokenUser, RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, PublishBuilder};
+use crate::util::{MockTokenUser, RequestHelper, TestApp};
+use crates_io::schema::api_tokens;
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;

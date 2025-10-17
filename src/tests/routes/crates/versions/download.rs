@@ -1,5 +1,5 @@
-use crate::tests::builders::{CrateBuilder, VersionBuilder};
-use crate::tests::util::{RequestHelper, TestApp};
+use crate::builders::{CrateBuilder, VersionBuilder};
+use crate::util::{RequestHelper, TestApp};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_redirects() {

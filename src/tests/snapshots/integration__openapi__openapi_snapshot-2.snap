@@ -1,5 +1,5 @@
 ---
-source: src/openapi.rs
+source: src/tests/openapi.rs
 expression: response.json()
 ---
 {
