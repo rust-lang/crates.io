@@ -9,8 +9,8 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use futures_util::FutureExt;
 use futures_util::future::BoxFuture;
 
-#[derive(Clone, Identifiable, Queryable, QueryableByName, Debug, Selectable)]
-#[diesel(table_name = categories, check_for_backend(diesel::pg::Pg))]
+#[derive(Clone, Identifiable, HasQuery, QueryableByName, Debug)]
+#[diesel(table_name = categories)]
 pub struct Category {
     pub id: i32,
     pub category: String,
@@ -53,9 +53,8 @@ impl Category {
     ) -> QueryResult<Vec<String>> {
         conn.transaction(|conn| {
             async move {
-                let categories: Vec<Category> = categories::table
+                let categories: Vec<Category> = Category::query()
                     .filter(categories::slug.eq_any(slugs))
-                    .select(Category::as_select())
                     .load(conn)
                     .await?;
 
