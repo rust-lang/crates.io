@@ -85,11 +85,9 @@ impl BackgroundJob for SyncUpdatesFeed {
 async fn load_version_updates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<VersionUpdate>> {
     let threshold_dt = chrono::Utc::now().naive_utc() - ALWAYS_INCLUDE_AGE;
 
-    let updates = versions::table
-        .inner_join(crates::table)
+    let updates = VersionUpdate::query()
         .filter(versions::created_at.gt(threshold_dt))
         .order(versions::created_at.desc())
-        .select(VersionUpdate::as_select())
         .load(conn)
         .await?;
 
@@ -98,17 +96,15 @@ async fn load_version_updates(conn: &mut AsyncPgConnection) -> QueryResult<Vec<V
         return Ok(updates);
     }
 
-    versions::table
-        .inner_join(crates::table)
+    VersionUpdate::query()
         .order(versions::created_at.desc())
-        .select(VersionUpdate::as_select())
         .limit(NUM_ITEMS)
         .load(conn)
         .await
 }
 
-#[derive(Debug, Queryable, Selectable)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, HasQuery)]
+#[diesel(base_query = versions::table.inner_join(crates::table))]
 struct VersionUpdate {
     #[diesel(select_expression = crates::columns::name)]
     name: String,
