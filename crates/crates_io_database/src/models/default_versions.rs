@@ -13,9 +13,8 @@ use tracing::{debug, instrument, warn};
 /// It implements [Ord] in a way that sorts versions by the criteria specified
 /// in the [update_default_version] function documentation. The default version
 /// will be the "maximum" element in a sorted list of versions.
-#[derive(Clone, Debug, PartialEq, Eq, Queryable, Selectable)]
+#[derive(Clone, Debug, PartialEq, Eq, HasQuery)]
 #[diesel(table_name = versions)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Version {
     pub id: i32,
     #[diesel(deserialize_as = SemverVersion)]
@@ -123,10 +122,9 @@ async fn calculate_default_version(
     use diesel::result::Error::NotFound;
 
     debug!("Loading all versions for the crate…");
-    let versions = versions::table
+    let versions = Version::query()
         .filter(versions::crate_id.eq(crate_id))
-        .select(Version::as_returning())
-        .load::<Version>(conn)
+        .load(conn)
         .await?;
 
     debug!("Found {} versions", versions.len());
