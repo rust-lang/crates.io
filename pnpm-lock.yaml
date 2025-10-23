@@ -121,8 +121,8 @@ importers:
         specifier: 22.18.11
         version: 22.18.11
       '@types/sinonjs__fake-timers':
-        specifier: 8.1.5
-        version: 8.1.5
+        specifier: 15.0.0
+        version: 15.0.0
       '@zestia/ember-auto-focus':
         specifier: 5.1.0
         version: 5.1.0(@babel/core@7.28.4)(ember-source@6.8.0(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.102.1)
@@ -2208,8 +2208,8 @@ packages:
   '@types/serve-static@1.15.9':
     resolution: {integrity: sha512-dOTIuqpWLyl3BBXU3maNQsS4A3zuuoYRNIvYSxxhebPfXg2mzWQEPne/nlJ37yOse6uGgR386uTpdsx4D0QZWA==}
 
-  '@types/sinonjs__fake-timers@8.1.5':
-    resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
+  '@types/sinonjs__fake-timers@15.0.0':
+    resolution: {integrity: sha512-lqKG4X0fO3aJF7Bz590vuCkFt/inbDyL7FXaVjPEYO+LogMZ2fwSDUiP7bJvdYHaCgCQGNOPxquzSrrnVH3fGw==}
 
   '@types/statuses@2.0.6':
     resolution: {integrity: sha512-xMAgYwceFhRA2zY+XbEA7mxYbA093wdiW8Vu6gZPGWy9cmOyU9XesH1tNcEWsKFd5Vzrqx5T3D38PWx1FIIXkA==}
@@ -10722,7 +10722,7 @@ snapshots:
       '@types/node': 22.18.11
       '@types/send': 0.17.5
 
-  '@types/sinonjs__fake-timers@8.1.5': {}
+  '@types/sinonjs__fake-timers@15.0.0': {}
 
   '@types/statuses@2.0.6': {}
 
