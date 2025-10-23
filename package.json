@@ -56,8 +56,8 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
-    "@babel/core": "7.28.4",
-    "@babel/eslint-parser": "7.28.4",
+    "@babel/core": "7.28.5",
+    "@babel/eslint-parser": "7.28.5",
     "@babel/plugin-proposal-decorators": "7.28.0",
     "@crates-io/msw": "workspace:*",
     "@ember/optional-features": "2.2.0",
