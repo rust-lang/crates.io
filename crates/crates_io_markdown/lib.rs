@@ -78,17 +78,14 @@ impl<'a> MarkdownRenderer<'a> {
 
     /// Renders the given markdown to HTML using the current settings.
     fn to_html(&self, text: &str) -> String {
-        use comrak::{
-            Arena, ComrakExtensionOptions, ComrakOptions, ComrakRenderOptions, format_html,
-            parse_document,
-        };
+        use comrak::{Arena, format_html, options, parse_document};
 
-        let render_options = ComrakRenderOptions::builder()
+        let render_options = options::Render::builder()
             // The output will be sanitized with `ammonia`
-            .unsafe_(true)
+            .r#unsafe(true)
             .build();
 
-        let extension_options = ComrakExtensionOptions::builder()
+        let extension_options = options::Extension::builder()
             .alerts(true)
             .autolink(true)
             .multiline_block_quotes(true)
@@ -100,10 +97,10 @@ impl<'a> MarkdownRenderer<'a> {
             .footnotes(true)
             .build();
 
-        let options = ComrakOptions {
+        let options = options::Options {
             render: render_options,
             extension: extension_options,
-            ..ComrakOptions::default()
+            ..options::Options::default()
         };
 
         let arena = Arena::new();
