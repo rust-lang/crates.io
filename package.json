@@ -55,7 +55,7 @@
     "semver": "7.7.3"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.10.2",
+    "@axe-core/playwright": "4.11.0",
     "@babel/core": "7.28.4",
     "@babel/eslint-parser": "7.28.4",
     "@babel/plugin-proposal-decorators": "7.28.0",
