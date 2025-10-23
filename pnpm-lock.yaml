@@ -335,11 +335,11 @@ importers:
         version: 7.7.3
     devDependencies:
       happy-dom:
-        specifier: 20.0.5
-        version: 20.0.5
+        specifier: 20.0.8
+        version: 20.0.8
       vitest:
         specifier: 4.0.1
-        version: 4.0.1(@types/node@22.18.11)(happy-dom@20.0.5)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1)
+        version: 4.0.1(@types/node@22.18.11)(happy-dom@20.0.8)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1)
 
 packages:
 
@@ -5014,8 +5014,8 @@ packages:
     engines: {node: '>=0.4.7'}
     hasBin: true
 
-  happy-dom@20.0.5:
-    resolution: {integrity: sha512-AiqA0rfS7WR1kihXt9W9aA5LFLaOKzwiL+QoI7BkOQ0r21C7VHTOf4k8QNlnWYaHLhpI2tZzJPLV1lY1obDTmw==}
+  happy-dom@20.0.8:
+    resolution: {integrity: sha512-TlYaNQNtzsZ97rNMBAm8U+e2cUQXNithgfCizkDgc11lgmN4j9CKMhO3FPGKWQYPwwkFcPpoXYF/CqEPLgzfOg==}
     engines: {node: '>=20.0.0'}
 
   has-ansi@3.0.0:
@@ -14544,7 +14544,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  happy-dom@20.0.5:
+  happy-dom@20.0.8:
     dependencies:
       '@types/node': 20.19.21
       '@types/whatwg-mimetype': 3.0.2
@@ -17722,7 +17722,7 @@ snapshots:
       terser: 5.44.0
       yaml: 2.8.1
 
-  vitest@4.0.1(@types/node@22.18.11)(happy-dom@20.0.5)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1):
+  vitest@4.0.1(@types/node@22.18.11)(happy-dom@20.0.8)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(terser@5.44.0)(yaml@2.8.1):
     dependencies:
       '@vitest/expect': 4.0.1
       '@vitest/mocker': 4.0.1(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(vite@7.1.9(@types/node@22.18.11)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1))
@@ -17746,7 +17746,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.18.11
-      happy-dom: 20.0.5
+      happy-dom: 20.0.8
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
