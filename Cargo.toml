@@ -97,7 +97,7 @@ diesel-async = { version = "=0.7.3", features = ["async-connection-wrapper", "de
 diesel_full_text_search = "=2.3.0"
 diesel_migrations = { version = "=2.3.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
-flate2 = "=1.1.4"
+flate2 = "=1.1.5"
 futures-util = "=0.3.31"
 generic-array = "=0.14.9" # see https://github.com/RustCrypto/traits/issues/2036
 hex = "=0.4.3"
