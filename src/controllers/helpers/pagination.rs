@@ -1,9 +1,6 @@
-use crate::config::Server;
 use crate::middleware::app::RequestApp;
 use crate::middleware::log_request::RequestLogExt;
-use crate::middleware::real_ip::RealIp;
 use crate::models::helpers::with_count::*;
-use crate::util::HeaderMapExt;
 use crate::util::errors::{AppResult, bad_request};
 use std::num::NonZeroU32;
 
@@ -16,7 +13,6 @@ use diesel::sql_types::BigInt;
 use diesel_async::AsyncPgConnection;
 use futures_util::future::BoxFuture;
 use futures_util::{FutureExt, TryStreamExt};
-use http::header;
 use http::request::Parts;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -125,12 +121,10 @@ impl PaginationOptionsBuilder {
                 parts.request_log().add("bot", "suspected");
             }
 
-            // Block large offsets for known violators of the crawler policy
+            // Block large offsets for performance reasons
             if self.limit_page_numbers {
                 let config = &parts.app().config;
-                if numeric_page > config.max_allowed_page_offset
-                    && is_useragent_or_ip_blocked(config, parts)
-                {
+                if numeric_page > config.max_allowed_page_offset {
                     parts.request_log().add("cause", "large page offset");
 
                     let error = format!(
@@ -327,36 +321,6 @@ impl RawSeekPayload {
     pub(crate) fn decode<D: for<'a> Deserialize<'a>>(&self) -> AppResult<D> {
         decode_seek(&self.0).map_err(|_| bad_request("invalid seek parameter"))
     }
-}
-
-/// Function to check if the request is blocked.
-///
-/// A request can be blocked if either the User Agent is on the User Agent block list or if the client
-/// IP is on the CIDR block list.
-fn is_useragent_or_ip_blocked(config: &Server, req: &Parts) -> bool {
-    let user_agent = req.headers.get_str_or_default(header::USER_AGENT);
-    let client_ip = req.extensions.get::<RealIp>();
-
-    // check if user agent is blocked
-    if config
-        .page_offset_ua_blocklist
-        .iter()
-        .any(|blocked| user_agent.contains(blocked))
-    {
-        return true;
-    }
-
-    // check if client ip is blocked, needs to be an IPv4 address
-    if let Some(client_ip) = client_ip
-        && config
-            .page_offset_cidr_blocklist
-            .iter()
-            .any(|blocked| blocked.contains(**client_ip))
-    {
-        return true;
-    }
-
-    false
 }
 
 /// Encode a payload to be used as a seek key.

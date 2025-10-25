@@ -1,5 +1,3 @@
-use anyhow::{Context, anyhow};
-use ipnetwork::IpNetwork;
 use oauth2::{ClientId, ClientSecret};
 use url::Url;
 
@@ -53,8 +51,6 @@ pub struct Server {
     pub blocked_traffic: Vec<(String, Vec<String>)>,
     pub blocked_ips: HashSet<IpAddr>,
     pub max_allowed_page_offset: u32,
-    pub page_offset_ua_blocklist: Vec<String>,
-    pub page_offset_cidr_blocklist: Vec<IpNetwork>,
     pub excluded_crate_names: Vec<String>,
     pub domain_name: String,
     pub allowed_origins: AllowedOrigins,
@@ -123,12 +119,6 @@ impl Server {
     ///   querying metrics will be completely disabled.
     /// - `WEB_MAX_ALLOWED_PAGE_OFFSET`: Page offsets larger than this value are rejected. Defaults
     ///   to 200.
-    /// - `WEB_PAGE_OFFSET_UA_BLOCKLIST`: A comma separated list of user-agent substrings that will
-    ///   be blocked if `WEB_MAX_ALLOWED_PAGE_OFFSET` is exceeded. Including an empty string in the
-    ///   list will block *all* user-agents exceeding the offset. If not set or empty, no blocking
-    ///   will occur.
-    /// - `WEB_PAGE_OFFSET_CIDR_BLOCKLIST`: A comma separated list of CIDR blocks that will be used
-    ///   to block IP addresses, e.g. `192.168.1.0/24`. If not set or empty, no blocking will occur.
     /// - `INSTANCE_METRICS_LOG_EVERY_SECONDS`: How frequently should instance metrics be logged.
     ///   If the environment variable is not present instance metrics are not logged.
     /// - `FORCE_UNCONDITIONAL_REDIRECTS`: Whether to force unconditional redirects in the download
@@ -156,9 +146,6 @@ impl Server {
         let blocked_ips = HashSet::from_iter(list_parsed("BLOCKED_IPS", IpAddr::from_str)?);
 
         let allowed_origins = AllowedOrigins::from_default_env()?;
-        let page_offset_ua_blocklist = list("WEB_PAGE_OFFSET_UA_BLOCKLIST")?;
-        let page_offset_cidr_blocklist =
-            list_parsed("WEB_PAGE_OFFSET_CIDR_BLOCKLIST", parse_cidr_block)?;
 
         let base = Base::from_environment()?;
         let excluded_crate_names = list("EXCLUDED_CRATE_NAMES")?;
@@ -229,8 +216,6 @@ impl Server {
             blocked_traffic: blocked_traffic(),
             blocked_ips,
             max_allowed_page_offset: var_parsed("WEB_MAX_ALLOWED_PAGE_OFFSET")?.unwrap_or(200),
-            page_offset_ua_blocklist,
-            page_offset_cidr_blocklist,
             excluded_crate_names,
             domain_name,
             allowed_origins,
@@ -266,34 +251,6 @@ impl Server {
     pub fn env(&self) -> Env {
         self.base.env
     }
-}
-
-/// Parses a CIDR block string to a valid `IpNetwork` struct.
-///
-/// The purpose is to be able to block IP ranges that overload the API that uses pagination.
-///
-/// The minimum number of bits for a host prefix must be
-///
-/// * at least 16 for IPv4 based CIDRs.
-/// * at least 64 for IPv6 based CIDRs
-///
-fn parse_cidr_block(block: &str) -> anyhow::Result<IpNetwork> {
-    let cidr = block
-        .parse()
-        .context("WEB_PAGE_OFFSET_CIDR_BLOCKLIST must contain IPv4 or IPv6 CIDR blocks.")?;
-
-    let host_prefix = match cidr {
-        IpNetwork::V4(_) => 16,
-        IpNetwork::V6(_) => 64,
-    };
-
-    if cidr.prefix() < host_prefix {
-        return Err(anyhow!(
-            "WEB_PAGE_OFFSET_CIDR_BLOCKLIST only allows CIDR blocks with a host prefix of at least 16 bits (IPv4) or 64 bits (IPv6)."
-        ));
-    }
-
-    Ok(cidr)
 }
 
 fn blocked_traffic() -> Vec<(String, Vec<String>)> {
@@ -346,7 +303,7 @@ impl FromStr for AllowedOrigins {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use claims::{assert_err, assert_none, assert_ok_eq};
+    use claims::assert_none;
 
     #[test]
     fn parse_traffic_patterns_splits_on_comma_and_looks_for_equal_sign() {
@@ -361,45 +318,5 @@ mod tests {
         assert_eq!(vec![("Baz", "QUX")], patterns_2);
 
         assert_none!(parse_traffic_patterns(pattern_string_3).next());
-    }
-
-    #[test]
-    fn parse_cidr_block_list_successfully() {
-        assert_ok_eq!(
-            parse_cidr_block("127.0.0.1/24"),
-            "127.0.0.1/24".parse::<IpNetwork>().unwrap()
-        );
-        assert_ok_eq!(
-            parse_cidr_block("192.168.0.1/31"),
-            "192.168.0.1/31".parse::<IpNetwork>().unwrap()
-        );
-    }
-
-    #[test]
-    fn parse_cidr_blocks_panics_when_host_ipv4_prefix_is_too_low() {
-        assert_err!(parse_cidr_block("127.0.0.1/8"));
-    }
-
-    #[test]
-    fn parse_cidr_blocks_panics_when_host_ipv6_prefix_is_too_low() {
-        assert_err!(parse_cidr_block(
-            "2001:0db8:0123:4567:89ab:cdef:1234:5678/56"
-        ));
-    }
-
-    #[test]
-    fn parse_ipv6_based_cidr_blocks() {
-        assert_ok_eq!(
-            parse_cidr_block("2002::1234:abcd:ffff:c0a8:101/64"),
-            "2002::1234:abcd:ffff:c0a8:101/64"
-                .parse::<IpNetwork>()
-                .unwrap()
-        );
-        assert_ok_eq!(
-            parse_cidr_block("2001:0db8:0123:4567:89ab:cdef:1234:5678/92"),
-            "2001:0db8:0123:4567:89ab:cdef:1234:5678/92"
-                .parse::<IpNetwork>()
-                .unwrap()
-        );
     }
 }
