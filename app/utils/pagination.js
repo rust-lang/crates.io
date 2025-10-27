@@ -2,20 +2,22 @@ import macro from 'macro-decorators';
 
 const VIEWABLE_PAGES = 9;
 
-export function pagination() {
+export function pagination(options = {}) {
   return macro(function () {
     let { page, per_page: perPage, totalItems } = this;
-    return _pagination(page, perPage, totalItems);
+    let { maxPages } = options;
+    return _pagination(page, perPage, totalItems, maxPages);
   });
 }
 
-function _pagination(page, perPage, totalItems) {
+function _pagination(page, perPage, totalItems, maxPages) {
   let currentPage = parseInt(page, 10) || 1;
 
   let currentPageStart = totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1;
   let currentPageEnd = Math.min(currentPage * perPage, totalItems);
 
-  let availablePages = Math.ceil(totalItems / perPage || 1);
+  let calculatedPages = Math.ceil(totalItems / perPage || 1);
+  let availablePages = maxPages === undefined ? calculatedPages : Math.min(calculatedPages, maxPages);
 
   let nextPage = currentPage + 1;
   if (nextPage > availablePages) {
@@ -54,5 +56,6 @@ function _pagination(page, perPage, totalItems) {
     nextPage,
     prevPage,
     pages,
+    maxPages,
   };
 }
