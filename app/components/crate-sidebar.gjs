@@ -77,26 +77,6 @@ export default class CrateSidebar extends Component {
       <div class='metadata'>
         <h2 class='heading'>Metadata</h2>
 
-        <div class='purl' data-test-purl>
-          {{svgJar 'link'}}
-          <CopyButton @copyText={{@version.purl}} class='button-reset purl-copy-button'>
-            <span class='purl-text'>{{@version.purl}}</span>
-            <Tooltip class='purl-tooltip'><strong>Package URL:</strong>
-              {{@version.purl}}
-              <small>(click to copy)</small></Tooltip>
-          </CopyButton>
-          <a
-            href='https://github.com/package-url/purl-spec'
-            target='_blank'
-            rel='noopener noreferrer'
-            class='purl-help-link'
-            aria-label='Learn more'
-          >
-            {{svgJar 'circle-question'}}
-            <Tooltip @text='Learn more about Package URLs' />
-          </a>
-        </div>
-
         <time datetime={{dateFormatIso @version.created_at}} class='date'>
           {{svgJar 'calendar'}}
           <span>
@@ -146,6 +126,26 @@ export default class CrateSidebar extends Component {
             {{prettyBytes @version.crate_size}}
           </div>
         {{/if}}
+
+        <div class='purl' data-test-purl>
+          {{svgJar 'link'}}
+          <CopyButton @copyText={{@version.purl}} class='button-reset purl-copy-button'>
+            <span class='purl-text'>{{@version.purl}}</span>
+            <Tooltip class='purl-tooltip'><strong>Package URL:</strong>
+              {{@version.purl}}
+              <small>(click to copy)</small></Tooltip>
+          </CopyButton>
+          <a
+            href='https://github.com/package-url/purl-spec'
+            target='_blank'
+            rel='noopener noreferrer'
+            class='purl-help-link'
+            aria-label='Learn more'
+          >
+            {{svgJar 'circle-question'}}
+            <Tooltip @text='Learn more about Package URLs' />
+          </a>
+        </div>
       </div>
 
       {{#unless @version.yanked}}
