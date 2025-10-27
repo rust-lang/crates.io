@@ -37,6 +37,15 @@ impl LogLine<'_> {
             LogLine::V1(line) => line.status,
         }
     }
+
+    pub fn user_agent(&self) -> Option<&str> {
+        match self {
+            LogLine::V1(line) => line
+                .http
+                .as_ref()
+                .and_then(|http| http.useragent.as_deref()),
+        }
+    }
 }
 
 /// This struct corresponds to the `"version": "1"` variant of the [LogLine] enum.
@@ -60,6 +69,14 @@ pub struct LogLineV1<'a> {
     #[serde(borrow)]
     pub url: Cow<'a, str>,
     pub status: u16,
+    #[serde(borrow)]
+    pub http: Option<Http<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Http<'a> {
+    #[serde(borrow)]
+    pub useragent: Option<Cow<'a, str>>,
 }
 
 #[cfg(test)]
@@ -79,6 +96,7 @@ mod tests {
                 method: "GET",
                 url: "https://static.staging.crates.io/?1705420437",
                 status: 403,
+                http: None,
             },
         )
         "#);
@@ -90,6 +108,7 @@ mod tests {
         assert_eq!(output.method(), "GET");
         assert_eq!(output.url(), "https://static.staging.crates.io/?1705420437");
         assert_eq!(output.status(), 403);
+        assert_eq!(output.user_agent(), None);
 
         match output {
             LogLine::V1(l) => {
@@ -97,6 +116,44 @@ mod tests {
                 assert!(is_borrowed(&l.url));
             }
         }
+    }
+
+    #[test]
+    fn test_parse_with_user_agent() {
+        let input = r#"{"bytes":36308,"content_type":"application/gzip","date_time":"2025-10-26T23:57:34.867635728Z","http":{"protocol":"HTTP/2","referer":null,"useragent":"cargo/1.92.0-nightly (344c4567c 2025-10-21)"},"ip":"192.0.2.1","method":"GET","status":200,"url":"https://static.crates.io/crates/scale-info/2.11.3/download","version":"1"}"#;
+        let output = assert_ok!(serde_json::from_str::<LogLine<'_>>(input));
+        assert_debug_snapshot!(output, @r#"
+        V1(
+            LogLineV1 {
+                date_time: 2025-10-26T23:57:34.867635728Z,
+                method: "GET",
+                url: "https://static.crates.io/crates/scale-info/2.11.3/download",
+                status: 200,
+                http: Some(
+                    Http {
+                        useragent: Some(
+                            "cargo/1.92.0-nightly (344c4567c 2025-10-21)",
+                        ),
+                    },
+                ),
+            },
+        )
+        "#);
+
+        assert_eq!(
+            output.date_time().to_string(),
+            "2025-10-26 23:57:34.867635728 UTC"
+        );
+        assert_eq!(output.method(), "GET");
+        assert_eq!(
+            output.url(),
+            "https://static.crates.io/crates/scale-info/2.11.3/download"
+        );
+        assert_eq!(output.status(), 200);
+        assert_eq!(
+            output.user_agent(),
+            Some("cargo/1.92.0-nightly (344c4567c 2025-10-21)")
+        );
     }
 
     #[allow(clippy::ptr_arg)]

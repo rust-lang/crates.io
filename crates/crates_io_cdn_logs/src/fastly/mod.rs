@@ -6,6 +6,7 @@ mod json;
 
 use crate::DownloadsMap;
 use crate::paths::parse_path;
+use crate::user_agent::should_count_user_agent;
 use std::borrow::Cow;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 use tracing::{debug_span, instrument, warn};
@@ -39,6 +40,14 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
 
         if json.status() != 200 {
             // Ignore non-200 responses.
+            continue;
+        }
+
+        if json
+            .user_agent()
+            .is_some_and(|ua| !should_count_user_agent(ua))
+        {
+            // Ignore requests from user agents that should not be counted.
             continue;
         }
 
@@ -191,15 +200,12 @@ mod tests {
             2025-10-26  ipnet@2.11.0 .. 1
             2025-10-26  libc@0.2.177 .. 1
             2025-10-26  lru-slab@0.1.2 .. 1
-            2025-10-26  matrixmultiply@0.3.3 .. 1
             2025-10-26  owo-colors@4.2.3 .. 1
             2025-10-26  parking_lot@0.12.5 .. 1
             2025-10-26  precis-profiles@0.1.11 .. 1
             2025-10-26  precis-tools@0.1.8 .. 1
-            2025-10-26  rand@0.8.5 .. 1
             2025-10-26  scale-info@2.11.3 .. 1
             2025-10-26  tinyvec_macros@0.1.1 .. 1
-            2025-10-26  tower@0.5.2 .. 1
             2025-10-26  unicode-normalization@0.1.22 .. 1
         }
         ");
