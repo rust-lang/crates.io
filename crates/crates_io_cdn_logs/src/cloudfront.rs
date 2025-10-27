@@ -5,6 +5,7 @@
 
 use crate::DownloadsMap;
 use crate::paths::parse_path;
+use crate::user_agent::should_count_user_agent;
 use chrono::NaiveDate;
 use std::borrow::Cow;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt};
@@ -18,6 +19,7 @@ const FIELD_DATE: &str = "date";
 const FIELD_METHOD: &str = "cs-method";
 const FIELD_PATH: &str = "cs-uri-stem";
 const FIELD_STATUS: &str = "sc-status";
+const FIELD_USER_AGENT: &str = "cs(User-Agent)";
 
 #[instrument(level = "debug", skip(reader))]
 pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Result<DownloadsMap> {
@@ -26,6 +28,7 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
     let mut method_index = None;
     let mut path_index = None;
     let mut status_index = None;
+    let mut user_agent_index = None;
 
     let mut downloads = DownloadsMap::new();
 
@@ -47,6 +50,7 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
             method_index = fields.iter().position(|f| f == &FIELD_METHOD);
             path_index = fields.iter().position(|f| f == &FIELD_PATH);
             status_index = fields.iter().position(|f| f == &FIELD_STATUS);
+            user_agent_index = fields.iter().position(|f| f == &FIELD_USER_AGENT);
 
             continue;
         }
@@ -73,6 +77,12 @@ pub async fn count_downloads(reader: impl AsyncBufRead + Unpin) -> anyhow::Resul
         let status = get_value(&values, status_index, FIELD_STATUS);
         if status != "200" {
             // Ignore non-200 responses.
+            continue;
+        }
+
+        let user_agent = get_optional_value(&values, user_agent_index);
+        if user_agent.is_some_and(|ua| !should_count_user_agent(ua)) {
+            // Ignore requests from user agents that should not be counted.
             continue;
         }
 
@@ -120,6 +130,10 @@ fn get_value<'a>(values: &'a [&'a str], index: Option<usize>, field_name: &'stat
         })
 }
 
+fn get_optional_value<'a>(values: &'a [&'a str], index: Option<usize>) -> Option<&'a str> {
+    index.and_then(|i| values.get(i)).copied()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -149,7 +163,6 @@ mod tests {
             2024-01-17  flatbuffers@23.1.21 .. 1
             2024-01-17  jemallocator@0.5.4 .. 1
             2024-01-17  leveldb-sys@2.0.9 .. 1
-            2024-01-17  num_cpus@1.15.0 .. 1
             2024-01-17  paste@1.0.12 .. 1
             2024-01-17  quick-error@1.2.3 .. 1
             2024-01-17  rand@0.8.5 .. 1
