@@ -7,6 +7,7 @@ pub mod fastly;
 mod paths;
 #[cfg(test)]
 mod test_utils;
+pub mod user_agent;
 
 pub use crate::compression::Decompressor;
 pub use crate::download_map::DownloadsMap;
