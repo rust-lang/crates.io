@@ -9,6 +9,8 @@ import { bool, reads } from 'macro-decorators';
 import { pagination } from '../utils/pagination';
 import { CATEGORY_PREFIX, processSearchQuery } from '../utils/search';
 
+const MAX_PAGES = 20;
+
 export default class SearchController extends Controller {
   @service store;
 
@@ -29,7 +31,7 @@ export default class SearchController extends Controller {
     return !this.dataTask.lastComplete && this.dataTask.isRunning;
   }
 
-  @pagination() pagination;
+  @pagination({ maxPages: MAX_PAGES }) pagination;
 
   get pageTitle() {
     return 'Search Results' + (this.q ? ` for '${this.q}'` : '');
