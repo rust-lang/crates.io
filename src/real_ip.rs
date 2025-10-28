@@ -9,21 +9,9 @@ use tracing::warn;
 const X_FORWARDED_FOR: &str = "X-Forwarded-For";
 
 static CLOUD_FRONT_NETWORKS: LazyLock<Vec<IpNetwork>> = LazyLock::new(|| {
-    let ipv4_prefixes = aws_ip_ranges::IP_RANGES
-        .prefixes
+    aws_ip_ranges::CLOUDFRONT_CIDRS
         .iter()
-        .filter(|prefix| prefix.service == "CLOUDFRONT")
-        .map(|prefix| prefix.ip_prefix);
-
-    let ipv6_prefixes = aws_ip_ranges::IP_RANGES
-        .ipv6_prefixes
-        .iter()
-        .filter(|prefix| prefix.service == "CLOUDFRONT")
-        .map(|prefix| prefix.ipv6_prefix);
-
-    ipv4_prefixes
-        .chain(ipv6_prefixes)
-        .filter_map(|prefix| match prefix.parse() {
+        .filter_map(|cidr| match cidr.parse() {
             Ok(ip_network) => Some(ip_network),
             Err(error) => {
                 warn!(%error, "Failed to parse AWS CloudFront CIDR");

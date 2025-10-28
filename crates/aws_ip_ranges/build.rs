@@ -64,20 +64,16 @@ fn generate_cloudfront_cidrs() -> Result<(), Box<dyn Error>> {
     writeln!(file, "/// CloudFront IP ranges from AWS.")?;
     writeln!(file, "pub const CLOUDFRONT_CIDRS: &[&str] = &[")?;
 
-    for prefix in ip_ranges
-        .prefixes
-        .iter()
-        .filter(|p| p.service == "CLOUDFRONT")
-    {
-        writeln!(file, "    {:?},", prefix.ip_prefix)?;
+    for prefix in &ip_ranges.prefixes {
+        if prefix.service == "CLOUDFRONT" {
+            writeln!(file, "    {:?},", prefix.ip_prefix)?;
+        }
     }
 
-    for prefix in ip_ranges
-        .ipv6_prefixes
-        .iter()
-        .filter(|p| p.service == "CLOUDFRONT")
-    {
-        writeln!(file, "    {:?},", prefix.ipv6_prefix)?;
+    for prefix in &ip_ranges.ipv6_prefixes {
+        if prefix.service == "CLOUDFRONT" {
+            writeln!(file, "    {:?},", prefix.ipv6_prefix)?;
+        }
     }
 
     writeln!(file, "];")?;
