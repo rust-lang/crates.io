@@ -444,14 +444,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-ip-ranges"
-version = "0.0.0"
-dependencies = [
- "http 1.3.1",
- "ipnetwork",
-]
-
-[[package]]
 name = "aws-lc-rs"
 version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1396,7 +1388,6 @@ dependencies = [
  "async-compression",
  "async-trait",
  "aws-credential-types",
- "aws-ip-ranges",
  "aws-sdk-cloudfront",
  "aws-sdk-sqs",
  "axum",
@@ -1424,6 +1415,7 @@ dependencies = [
  "crates_io_markdown",
  "crates_io_og_image",
  "crates_io_pagerduty",
+ "crates_io_real_ip",
  "crates_io_session",
  "crates_io_tarball",
  "crates_io_team_repo",
@@ -1706,6 +1698,14 @@ dependencies = [
  "secrecy",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "crates_io_real_ip"
+version = "0.0.0"
+dependencies = [
+ "http 1.3.1",
+ "ipnetwork",
 ]
 
 [[package]]

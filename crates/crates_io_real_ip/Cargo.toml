@@ -1,7 +1,7 @@
 [package]
-name = "aws-ip-ranges"
+name = "crates_io_real_ip"
 version = "0.0.0"
-description = "https://ip-ranges.amazonaws.com/ip-ranges.json as const structs"
+description = "Extract real client IP from X-Forwarded-For headers"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 publish = false

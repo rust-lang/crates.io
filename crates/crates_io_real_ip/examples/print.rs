@@ -1,6 +1,6 @@
 fn main() {
     println!("CloudFront IP ranges:");
-    for cidr in aws_ip_ranges::CLOUDFRONT_NETWORKS {
+    for cidr in crates_io_real_ip::CLOUDFRONT_NETWORKS {
         println!("  {}", cidr);
     }
 }
