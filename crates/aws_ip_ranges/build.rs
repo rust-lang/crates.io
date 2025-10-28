@@ -12,6 +12,7 @@ mod types {
 fn main() -> Result<(), Box<dyn Error>> {
     generate_types_module()?;
     generate_data_rs()?;
+    generate_cloudfront_cidrs()?;
     Ok(())
 }
 
@@ -47,6 +48,39 @@ fn generate_data_rs() -> Result<(), Box<dyn Error>> {
     let ip_ranges = include_bytes!("data/ip-ranges.json");
     let ip_ranges: IpRanges = serde_json::from_slice(ip_ranges)?;
     writeln!(file, "{ip_ranges:?}")?;
+
+    Ok(())
+}
+
+fn generate_cloudfront_cidrs() -> Result<(), Box<dyn Error>> {
+    println!("cargo:rerun-if-changed=data/");
+
+    let path = Path::new(&std::env::var("OUT_DIR")?).join("cloudfront_cidrs.rs");
+    let mut file = BufWriter::new(File::create(path)?);
+
+    let ip_ranges = include_bytes!("data/ip-ranges.json");
+    let ip_ranges: IpRanges = serde_json::from_slice(ip_ranges)?;
+
+    writeln!(file, "/// CloudFront IP ranges from AWS.")?;
+    writeln!(file, "pub const CLOUDFRONT_CIDRS: &[&str] = &[")?;
+
+    for prefix in ip_ranges
+        .prefixes
+        .iter()
+        .filter(|p| p.service == "CLOUDFRONT")
+    {
+        writeln!(file, "    {:?},", prefix.ip_prefix)?;
+    }
+
+    for prefix in ip_ranges
+        .ipv6_prefixes
+        .iter()
+        .filter(|p| p.service == "CLOUDFRONT")
+    {
+        writeln!(file, "    {:?},", prefix.ipv6_prefix)?;
+    }
+
+    writeln!(file, "];")?;
 
     Ok(())
 }
