@@ -3,6 +3,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
 import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
+import { restartableTask, timeout } from 'ember-concurrency';
 import { modifier } from 'ember-modifier';
 
 export default class Tooltip extends Component {
@@ -14,12 +15,20 @@ export default class Tooltip extends Component {
   }
 
   @action show() {
+    this.hideTask.cancelAll();
     this.visible = true;
   }
 
   @action hide() {
-    this.visible = false;
+    this.hideTask.perform().catch(() => {
+      // ignore cancelation errors
+    });
   }
+
+  hideTask = restartableTask(async () => {
+    await timeout(100);
+    this.visible = false;
+  });
 
   onInsertAnchor = modifier((anchor, [component]) => {
     component.anchorElement = anchor.parentElement;
@@ -61,7 +70,14 @@ export default class Tooltip extends Component {
 
     let cleanup = autoUpdate(referenceElement, floatingElement, update);
 
-    return () => cleanup();
+    floatingElement.addEventListener('mouseenter', component.show);
+    floatingElement.addEventListener('mouseleave', component.hide);
+
+    return () => {
+      cleanup();
+      floatingElement.removeEventListener('mouseenter', component.show);
+      floatingElement.removeEventListener('mouseleave', component.hide);
+    };
   });
 
   // The `{{~@x~}}` is used for whitespace control to ensure we don't insert a leading whitespace element
