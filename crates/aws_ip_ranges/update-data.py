@@ -122,7 +122,7 @@ def main():
     print("Generating Rust code...")
     rust_code = generate_rust_code(ipv4_networks, ipv6_networks)
 
-    output_path = Path(__file__).parent / "src" / "lib.rs"
+    output_path = Path(__file__).parent / "src" / "cloudfront.rs"
     print(f"Writing to {output_path}...")
     output_path.write_text(rust_code)
 
