@@ -448,8 +448,6 @@ name = "aws-ip-ranges"
 version = "0.0.0"
 dependencies = [
  "ipnetwork",
- "serde",
- "serde_json",
 ]
 
 [[package]]

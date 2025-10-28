@@ -31,7 +31,7 @@ jobs:
         with:
           persist-credentials: true
 
-      - run: cd crates/aws_ip_ranges && ./update-data.sh
+      - run: python3 crates/aws_ip_ranges/update-data.py
 
       - run: git config user.name 'github-actions[bot]'
       - run: git config user.email 'github-actions[bot]@users.noreply.github.com'
