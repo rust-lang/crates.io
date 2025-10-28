@@ -1,0 +1,51 @@
+name: Update AWS IP Ranges
+
+on:
+  # run if manually triggered
+  workflow_dispatch:
+
+  # run if something on the `main` branch changes
+  push:
+    branches:
+      - main
+
+  # run every hour at XX:42
+  schedule:
+    - cron: "42 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-aws-ip-ranges
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: true
+
+      - run: cd crates/aws_ip_ranges && ./update-data.sh
+
+      - run: git config user.name 'github-actions[bot]'
+      - run: git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - run: git diff --exit-code
+        id: git-diff
+        continue-on-error: true
+
+      # Prevent build failures from getting a git commit
+      - run: cargo build --package aws-ip-ranges
+        if: steps.git-diff.outcome == 'failure'
+
+      - run: git commit --all --message "Update AWS IP ranges data"
+        if: steps.git-diff.outcome == 'failure'
+
+      - run: git push origin main
+        if: steps.git-diff.outcome == 'failure'
