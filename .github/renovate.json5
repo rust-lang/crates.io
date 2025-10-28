@@ -53,10 +53,6 @@
             groupName: "diesel packages",
         },
         {
-            matchDepNames: ["aws-ip-ranges"],
-            automerge: true,
-        },
-        {
             matchUpdateTypes: ["digest"],
             enabled: false,
         },
