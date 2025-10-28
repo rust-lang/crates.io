@@ -1,4 +1,4 @@
-use crate::real_ip::process_xff_headers;
+use aws_ip_ranges::process_xff_headers;
 use axum::extract::{ConnectInfo, Request};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
