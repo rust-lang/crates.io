@@ -32,7 +32,7 @@
             fill: currentColor;
         }
 
-        &:hover {
+        &:hover:not(:global(.disabled)) {
             :global(circle) {
                 fill: var(--main-bg-dark);
             }
@@ -44,5 +44,11 @@
     .next:hover,
     .prev:hover {
         background: none;
+    }
+
+    .next:global(.disabled),
+    .prev:global(.disabled) {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 }

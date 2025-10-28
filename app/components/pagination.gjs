@@ -2,11 +2,13 @@ import { concat, hash } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
 
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
+import { eq } from 'ember-truth-helpers';
 
 <template>
   <nav class='pagination' aria-label='Pagination navigation'>
     <LinkTo
       @query={{hash page=@pagination.prevPage}}
+      @disabled={{eq @pagination.currentPage 1}}
       class='prev'
       rel='prev'
       title='previous page'
@@ -25,6 +27,7 @@ import svgJar from 'ember-svg-jar/helpers/svg-jar';
     </ol>
     <LinkTo
       @query={{hash page=@pagination.nextPage}}
+      @disabled={{eq @pagination.currentPage @pagination.availablePages}}
       class='next'
       rel='next'
       title='next page'
