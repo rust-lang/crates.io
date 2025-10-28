@@ -14,7 +14,7 @@ and commits any changes directly to the main branch.
 
 ```rust
 fn main() {
-    for cidr in aws_ip_ranges::CLOUDFRONT_CIDRS {
+    for cidr in aws_ip_ranges::CLOUDFRONT_NETWORKS {
         println!("{}", cidr);
     }
 }

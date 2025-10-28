@@ -1,28 +1,12 @@
 use http::{HeaderMap, HeaderValue};
-use ipnetwork::IpNetwork;
 use std::iter::Iterator;
 use std::net::IpAddr;
 use std::str::from_utf8;
-use std::sync::LazyLock;
-use tracing::warn;
 
 const X_FORWARDED_FOR: &str = "X-Forwarded-For";
 
-static CLOUD_FRONT_NETWORKS: LazyLock<Vec<IpNetwork>> = LazyLock::new(|| {
-    aws_ip_ranges::CLOUDFRONT_CIDRS
-        .iter()
-        .filter_map(|cidr| match cidr.parse() {
-            Ok(ip_network) => Some(ip_network),
-            Err(error) => {
-                warn!(%error, "Failed to parse AWS CloudFront CIDR");
-                None
-            }
-        })
-        .collect()
-});
-
 fn is_cloud_front_ip(ip: &IpAddr) -> bool {
-    CLOUD_FRONT_NETWORKS
+    aws_ip_ranges::CLOUDFRONT_NETWORKS
         .iter()
         .any(|trusted_proxy| trusted_proxy.contains(*ip))
 }
