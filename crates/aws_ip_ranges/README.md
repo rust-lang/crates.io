@@ -1,22 +1,22 @@
 # aws-ip-ranges
 
-<https://ip-ranges.amazonaws.com/ip-ranges.json> as const structs
+CloudFront IP ranges from <https://ip-ranges.amazonaws.com/ip-ranges.json>
 
 ## Description
 
-If the data from <https://ip-ranges.amazonaws.com/ip-ranges.json> is used in a
-Rust program, it can be slow to fetch it every time. This crate provides the
-data as const structs, so it can be compiled into the program.
+This crate provides AWS CloudFront IP ranges as a compile-time constant array,
+eliminating the need to fetch and parse the data at runtime.
 
 An hourly GitHub Actions workflow updates the data in this crate automatically
-and releases a new version of the crate if the data has changed.
+and commits any changes directly to the main branch.
 
 ## Usage
 
 ```rust
 fn main() {
-  let ip_ranges = aws_ip_ranges::IP_RANGES;
-  println!("{ip_ranges:#?}");
+    for cidr in aws_ip_ranges::CLOUDFRONT_CIDRS {
+        println!("{}", cidr);
+    }
 }
 ```
 

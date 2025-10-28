@@ -1,4 +1,6 @@
 fn main() {
-    let ip_ranges = aws_ip_ranges::IP_RANGES;
-    println!("{ip_ranges:#?}");
+    println!("CloudFront IP ranges:");
+    for cidr in aws_ip_ranges::CLOUDFRONT_CIDRS {
+        println!("  {}", cidr);
+    }
 }
