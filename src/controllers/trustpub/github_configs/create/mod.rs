@@ -3,7 +3,7 @@ use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::emails::{ConfigCreatedEmail, ConfigType};
 use crate::controllers::trustpub::github_configs::json;
-use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
+use crate::util::errors::{AppResult, bad_request, custom, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
@@ -62,7 +62,7 @@ pub async fn create_trustpub_github_config(
             "This crate already has the maximum number of GitHub Trusted Publishing configurations ({})",
             MAX_CONFIGS_PER_CRATE
         );
-        return Err(bad_request(&message));
+        return Err(custom(http::StatusCode::CONFLICT, message));
     }
 
     let user_owners = crate_owners::table

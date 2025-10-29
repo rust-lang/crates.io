@@ -579,7 +579,7 @@ async fn test_too_many_configs() -> anyhow::Result<()> {
     }))?;
 
     let response = cookie_client.post::<()>(URL, body).await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.status(), @"409 Conflict");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This crate already has the maximum number of GitHub Trusted Publishing configurations (5)"}]}"#);
 
     Ok(())
