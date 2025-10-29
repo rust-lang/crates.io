@@ -35,7 +35,6 @@ pub mod metrics;
 pub mod middleware;
 pub mod openapi;
 pub mod rate_limiter;
-mod real_ip;
 mod router;
 pub mod sentry;
 pub mod sqs;
