@@ -17,6 +17,16 @@ pub struct GitHubConfig {
     pub environment: Option<String>,
 }
 
+impl GitHubConfig {
+    pub async fn count_for_crate(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
+        trustpub_configs_github::table
+            .filter(trustpub_configs_github::crate_id.eq(crate_id))
+            .count()
+            .get_result(conn)
+            .await
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[diesel(table_name = trustpub_configs_github, check_for_backend(diesel::pg::Pg))]
 pub struct NewGitHubConfig<'a> {

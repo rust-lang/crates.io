@@ -3,12 +3,12 @@ use crate::auth::AuthCheck;
 use crate::controllers::krate::load_crate;
 use crate::controllers::trustpub::emails::{ConfigCreatedEmail, ConfigType};
 use crate::controllers::trustpub::github_configs::json;
-use crate::util::errors::{AppResult, bad_request, forbidden, server_error};
+use crate::util::errors::{AppResult, bad_request, custom, forbidden, server_error};
 use anyhow::Context;
 use axum::Json;
 use crates_io_database::models::OwnerKind;
 use crates_io_database::models::token::EndpointScope;
-use crates_io_database::models::trustpub::NewGitHubConfig;
+use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
 use crates_io_database::schema::{crate_owners, emails, users};
 use crates_io_github::GitHubError;
 use crates_io_trustpub::github::validation::{
@@ -18,6 +18,8 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
 use tracing::warn;
+
+const MAX_CONFIGS_PER_CRATE: usize = 5;
 
 /// Create a new Trusted Publishing configuration for GitHub Actions.
 #[utoipa::path(
@@ -52,6 +54,16 @@ pub async fn create_trustpub_github_config(
     let auth_user = auth.user();
 
     let krate = load_crate(&mut conn, &json_config.krate).await?;
+
+    // Check if the crate has reached the maximum number of configs
+    let config_count = GitHubConfig::count_for_crate(&mut conn, krate.id).await?;
+    if config_count >= MAX_CONFIGS_PER_CRATE as i64 {
+        let message = format!(
+            "This crate already has the maximum number of GitHub Trusted Publishing configurations ({})",
+            MAX_CONFIGS_PER_CRATE
+        );
+        return Err(custom(http::StatusCode::CONFLICT, message));
+    }
 
     let user_owners = crate_owners::table
         .filter(crate_owners::crate_id.eq(krate.id))
