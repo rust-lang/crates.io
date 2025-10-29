@@ -537,3 +537,50 @@ async fn test_unverified_email() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_too_many_configs() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full()
+        .with_github(simple_github_mock())
+        .with_user()
+        .await;
+
+    let mut conn = app.db_conn().await;
+
+    CrateBuilder::new(CRATE_NAME, cookie_client.as_model().id)
+        .build(&mut conn)
+        .await?;
+
+    // Create 5 configurations (the maximum)
+    for i in 0..5 {
+        let body = serde_json::to_vec(&json!({
+            "github_config": {
+                "crate": CRATE_NAME,
+                "repository_owner": "rust-lang",
+                "repository_name": format!("foo-rs-{}", i),
+                "workflow_filename": "publish.yml",
+                "environment": null,
+            }
+        }))?;
+
+        let response = cookie_client.post::<()>(URL, body).await;
+        assert_eq!(response.status(), 200);
+    }
+
+    // Try to create a 6th configuration
+    let body = serde_json::to_vec(&json!({
+        "github_config": {
+            "crate": CRATE_NAME,
+            "repository_owner": "rust-lang",
+            "repository_name": "foo-rs-6",
+            "workflow_filename": "publish.yml",
+            "environment": null,
+        }
+    }))?;
+
+    let response = cookie_client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This crate already has the maximum number of GitHub Trusted Publishing configurations (5)"}]}"#);
+
+    Ok(())
+}
