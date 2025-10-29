@@ -40,11 +40,11 @@ jobs:
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
-      - run: git config --global user.name '${APP_SLUG}[bot]'
+      - run: git config --global user.name "${APP_SLUG}[bot]"
         env:
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
 
-      - run: git config --global user.email '${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com'
+      - run: git config --global user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
         env:
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           USER_ID: ${{ steps.get-user-id.outputs.user-id }}
