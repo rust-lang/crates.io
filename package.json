@@ -186,14 +186,14 @@
     "last 1 years"
   ],
   "engines": {
-    "node": "22.21.0",
+    "node": "22.21.1",
     "pnpm": "10.19.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "22.21.0"
+    "node": "22.21.1"
   },
   "exports": {
     "./tests/*": "./tests/*",
