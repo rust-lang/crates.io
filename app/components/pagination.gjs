@@ -38,7 +38,7 @@ import Tooltip from './tooltip';
       {{svgJar 'right-pag'}}
       {{#if (eq @pagination.currentPage @pagination.maxPages)}}
         <Tooltip>
-          Page limit reached for performance reasons. For bulk data access, please visit
+          For performance reasons, no more pages are available. For bulk data access, please visit
           <a href='https://crates.io/data-access' target='_blank' rel='noopener noreferrer'>crates.io/data-access</a>.
         </Tooltip>
       {{/if}}
