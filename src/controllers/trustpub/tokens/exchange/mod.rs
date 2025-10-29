@@ -105,6 +105,17 @@ async fn handle_github_token_inner(
 ) -> AppResult<Json<json::ExchangeResponse>> {
     insert_jti(conn, &signed_claims.jti, signed_claims.exp).await?;
 
+    if signed_claims.event_name == "pull_request_target"
+        || signed_claims.event_name == "workflow_run"
+    {
+        let message = format!(
+            "Trusted Publishing does not support the `{}` event trigger due to security concerns. \
+             Please use a different trigger such as `push`, `release`, or `workflow_dispatch`.",
+            signed_claims.event_name
+        );
+        return Err(bad_request(message));
+    }
+
     let repo = &signed_claims.repository;
     let Some((repository_owner, repository_name)) = repo.split_once('/') else {
         warn!("Unexpected repository format in JWT: {repo}");

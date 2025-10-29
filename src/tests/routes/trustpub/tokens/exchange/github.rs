@@ -417,6 +417,40 @@ async fn test_workflow_filename_mismatch() -> anyhow::Result<()> {
 }
 
 // ============================================================================
+// Dangerous event trigger tests
+// ============================================================================
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_request_target_event_rejected() -> anyhow::Result<()> {
+    let client = prepare().await?;
+
+    let mut claims = default_claims();
+    claims.event_name = "pull_request_target".into();
+
+    let body = claims.as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Trusted Publishing does not support the `pull_request_target` event trigger due to security concerns. Please use a different trigger such as `push`, `release`, or `workflow_dispatch`."}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_workflow_run_event_rejected() -> anyhow::Result<()> {
+    let client = prepare().await?;
+
+    let mut claims = default_claims();
+    claims.event_name = "workflow_run".into();
+
+    let body = claims.as_exchange_body()?;
+    let response = client.post::<()>(URL, body).await;
+    assert_snapshot!(response.status(), @"400 Bad Request");
+    assert_snapshot!(response.json(), @r#"{"errors":[{"detail":"Trusted Publishing does not support the `workflow_run` event trigger due to security concerns. Please use a different trigger such as `push`, `release`, or `workflow_dispatch`."}]}"#);
+
+    Ok(())
+}
+
+// ============================================================================
 // Environment matching tests
 // ============================================================================
 
