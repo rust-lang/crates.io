@@ -5,13 +5,15 @@ import { pagination } from '../utils/pagination';
 
 // TODO: reduce duplication with controllers/crates
 
+const MAX_PAGES = 50;
+
 export default class UserController extends Controller {
   queryParams = ['page', 'per_page', 'sort'];
   @tracked page = '1';
   @tracked per_page = 10;
   @tracked sort = 'alpha';
 
-  @pagination() pagination;
+  @pagination({ maxPages: MAX_PAGES }) pagination;
 
   get currentSortBy() {
     if (this.sort === 'downloads') {

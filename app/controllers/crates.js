@@ -3,13 +3,15 @@ import { tracked } from '@glimmer/tracking';
 
 import { pagination } from '../utils/pagination';
 
+const MAX_PAGES = 20;
+
 export default class CratesController extends Controller {
   queryParams = ['page', 'per_page', 'sort'];
   @tracked page = '1';
   @tracked per_page = 50;
   @tracked sort = 'recent-downloads';
 
-  @pagination() pagination;
+  @pagination({ maxPages: MAX_PAGES }) pagination;
 
   get currentSortBy() {
     if (this.sort === 'downloads') {

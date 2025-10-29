@@ -4,6 +4,8 @@ import { LinkTo } from '@ember/routing';
 import svgJar from 'ember-svg-jar/helpers/svg-jar';
 import { eq } from 'ember-truth-helpers';
 
+import Tooltip from './tooltip';
+
 <template>
   <nav class='pagination' aria-label='Pagination navigation'>
     <LinkTo
@@ -34,6 +36,12 @@ import { eq } from 'ember-truth-helpers';
       data-test-pagination-next
     >
       {{svgJar 'right-pag'}}
+      {{#if (eq @pagination.currentPage @pagination.maxPages)}}
+        <Tooltip>
+          For performance reasons, no more pages are available. For bulk data access, please visit
+          <a href='https://crates.io/data-access' target='_blank' rel='noopener noreferrer'>crates.io/data-access</a>.
+        </Tooltip>
+      {{/if}}
     </LinkTo>
   </nav>
 </template>
