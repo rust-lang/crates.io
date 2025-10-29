@@ -4212,6 +4212,37 @@ expression: response.json()
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The page number to request.\n\nThis parameter is mutually exclusive with `seek` and not supported for\nall requests.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The number of items to request per page.",
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The seek key to request.\n\nThis parameter is mutually exclusive with `page` and not supported for\nall requests.\n\nThe seek key can usually be found in the `meta.next_page` field of\npaginated responses.",
+            "in": "query",
+            "name": "seek",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4225,10 +4256,33 @@ expression: response.json()
                         "$ref": "#/components/schemas/GitHubConfig"
                       },
                       "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_page": {
+                          "description": "Query string to the next page of results, if any.",
+                          "example": "?seek=abc123",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "description": "The total number of GitHub configs belonging to the crate.",
+                          "example": 42,
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
-                    "github_configs"
+                    "github_configs",
+                    "meta"
                   ],
                   "type": "object"
                 }
