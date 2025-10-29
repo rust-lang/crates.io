@@ -133,8 +133,8 @@ importers:
         specifier: 3.0.8
         version: 3.0.8
       ember-a11y-testing:
-        specifier: 7.1.2
-        version: 7.1.2(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1)
+        specifier: 7.1.3
+        version: 7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1)
       ember-auto-import:
         specifier: 2.11.1
         version: 2.11.1(webpack@5.102.1)
@@ -3956,8 +3956,8 @@ packages:
   electron-to-chromium@1.5.240:
     resolution: {integrity: sha512-OBwbZjWgrCOH+g6uJsA2/7Twpas2OlepS9uvByJjR2datRDuKGYeD+nP8lBBks2qnB7bGJNHDUx7c/YLaT3QMQ==}
 
-  ember-a11y-testing@7.1.2:
-    resolution: {integrity: sha512-V30dZgfj3itq+4/H78livBN1X4wvYeCJnsPTnQFqZfgrQyEfCYLL6d96W0T4UoahQao+PFzJcR2P/CpMU9j5nw==}
+  ember-a11y-testing@7.1.3:
+    resolution: {integrity: sha512-3d4oqSGRBqYbX6nqcruLzfQrQSoLpRd5iinITusefylk1aQd7HJdoJLkL+En8YLqTt3DsUfImnX3svT0flMhsw==}
     engines: {node: 16.* || >= 18}
     peerDependencies:
       '@ember/test-helpers': ^3.0.3 || ^4.0.2 || ^5.0.0
@@ -12635,7 +12635,7 @@ snapshots:
 
   electron-to-chromium@1.5.240: {}
 
-  ember-a11y-testing@7.1.2(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1):
+  ember-a11y-testing@7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1):
     dependencies:
       '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
       '@ember/test-waiters': 4.1.1
@@ -12644,7 +12644,7 @@ snapshots:
       axe-core: 4.11.0
       broccoli-persistent-filter: 3.1.3
       ember-auto-import: 2.11.1(webpack@5.102.1)
-      ember-cli-babel: 7.26.11
+      ember-cli-babel: 8.2.0(@babel/core@7.28.5)
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 4.2.1
       ember-cli-version-checker: 5.1.2
@@ -12653,6 +12653,7 @@ snapshots:
     optionalDependencies:
       qunit: 2.24.2
     transitivePeerDependencies:
+      - '@babel/core'
       - '@glint/template'
       - supports-color
       - webpack
