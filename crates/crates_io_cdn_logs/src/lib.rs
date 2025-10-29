@@ -7,6 +7,7 @@ pub mod fastly;
 mod paths;
 #[cfg(test)]
 mod test_utils;
+pub mod user_agent;
 
 pub use crate::compression::Decompressor;
 pub use crate::download_map::DownloadsMap;
@@ -74,7 +75,6 @@ mod tests {
             2024-01-17  flatbuffers@23.1.21 .. 1
             2024-01-17  jemallocator@0.5.4 .. 1
             2024-01-17  leveldb-sys@2.0.9 .. 1
-            2024-01-17  num_cpus@1.15.0 .. 1
             2024-01-17  paste@1.0.12 .. 1
             2024-01-17  quick-error@1.2.3 .. 1
             2024-01-17  rand@0.8.5 .. 1
