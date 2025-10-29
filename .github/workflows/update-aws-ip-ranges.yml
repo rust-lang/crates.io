@@ -41,7 +41,7 @@ jobs:
         continue-on-error: true
 
       # Prevent build failures from getting a git commit
-      - run: cargo build --package aws-ip-ranges
+      - run: cargo check --package crates_io_real_ip
         if: steps.git-diff.outcome == 'failure'
 
       - run: git commit --all --message "Update AWS IP ranges data"
