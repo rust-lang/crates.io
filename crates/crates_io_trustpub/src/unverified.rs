@@ -1,29 +1,6 @@
+use jsonwebtoken::TokenData;
 use jsonwebtoken::errors::Error;
-use jsonwebtoken::{DecodingKey, TokenData, Validation};
 use serde::Deserialize;
-use std::collections::HashSet;
-use std::sync::LazyLock;
-
-/// [`Validation`] configuration for decoding JWTs without any
-/// signature validation.
-///
-/// **This must only be used to extract the `iss` claim from the JWT, which
-/// is then used to look up the corresponding OIDC key set.**
-static NO_VALIDATION: LazyLock<Validation> = LazyLock::new(|| {
-    let mut no_validation = Validation::default();
-    no_validation.validate_aud = false;
-    no_validation.validate_exp = false;
-    no_validation.required_spec_claims = HashSet::new();
-    no_validation.insecure_disable_signature_validation();
-    no_validation
-});
-
-/// Empty [`DecodingKey`] used for decoding JWTs without any signature
-/// validation.
-///
-/// **This must only be used to extract the `iss` claim from the JWT, which
-/// is then used to look up the corresponding OIDC key set.**
-static EMPTY_KEY: LazyLock<DecodingKey> = LazyLock::new(|| DecodingKey::from_secret(b""));
 
 /// Claims that are extracted from the JWT without any signature
 /// validation. Specifically, this only extracts the `iss` claim, which is
@@ -41,7 +18,7 @@ impl UnverifiedClaims {
     /// **This must only be used to extract the `iss` claim from the JWT, which
     /// is then used to look up the corresponding OIDC key set.**
     pub fn decode(token: &str) -> Result<TokenData<Self>, Error> {
-        jsonwebtoken::decode(token, &EMPTY_KEY, &NO_VALIDATION)
+        jsonwebtoken::dangerous::insecure_decode(token)
     }
 }
 

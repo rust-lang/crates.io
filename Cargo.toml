@@ -161,7 +161,7 @@ claims = "=0.8.0"
 diesel = { version = "=2.3.3", features = ["r2d2"] }
 googletest = "=0.14.2"
 insta = { version = "=1.43.2", features = ["glob", "json", "redactions"] }
-jsonwebtoken = "=9.3.1"
+jsonwebtoken = { version = "=10.1.0", features = ["aws_lc_rs"] }
 quoted_printable = "=0.5.1"
 regex = "=1.12.2"
 sentry = { version = "=0.45.0", features = ["test"] }
