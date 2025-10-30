@@ -2,11 +2,21 @@
 
 import { execSync } from 'node:child_process';
 
-function exec(command) {
+function exec(command, options = {}) {
   return execSync(command, {
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe'],
+    ...options,
   });
+}
+
+function isClaudeAvailable() {
+  try {
+    exec('which claude');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function parseGitHubCompareUrl(url) {
@@ -88,6 +98,83 @@ function getMigrations(from, to) {
   }
 }
 
+function formatCommits(commits) {
+  return commits.map(c => `${c.sha.slice(0, 8)}\t${c.author}\t${c.message}`).join('\n');
+}
+
+function formatMigrations(migrations) {
+  let output = `\n${'='.repeat(80)}\n`;
+  output += `Database Migrations (${migrations.length}):\n`;
+  output += '='.repeat(80);
+
+  if (migrations.length === 0) {
+    output += `\nNo database migrations`;
+  }
+
+  for (const migration of migrations) {
+    output += `\n\n${migration.dir}\n`;
+    output += '-'.repeat(80);
+
+    if (migration.upContent) {
+      output += '\n\nup.sql:\n';
+      output += migration.upContent;
+    }
+
+    if (migration.downContent) {
+      output += '\ndown.sql:\n';
+      output += migration.downContent;
+    }
+  }
+
+  return output;
+}
+
+function generateChangelog(commits, migrations, url) {
+  const commitList = formatCommits(commits);
+  const migrationInfo = formatMigrations(migrations);
+
+  const prompt = `You are generating a deployment changelog for crates.io based on git commit history and database migrations.
+
+Generate a deployment announcement in this exact style:
+
+:rocket:  **Deploying to production**
+
+This deployment:
+- [bullet point summarizing a key change]
+- [bullet point summarizing another key change]
+- updates dependencies
+
+[Statement about database migrations and rollback safety]
+
+${url}
+
+Guidelines:
+- Start with ":rocket:  **Deploying to production**" (note: two spaces after emoji)
+- Use "This deployment:" followed by a bulleted list
+- Group related commits into single bullets
+- Always include "updates dependencies" as the last bullet if there are dependency updates (Renovate commits)
+- Focus on user-facing changes and significant internal changes
+- For the migration statement:
+  - If no migrations: "It contains no database migrations and should be safe to rollback."
+  - If migrations that are safe: "**It contains [describe migration], but should be safe to rollback.**"
+  - If migrations need care: "**This deployment contains [describe migration]. [Explain rollback implications]**"
+- End with the GitHub compare URL
+- Be concise but informative
+- Use present tense
+
+Commit history:
+${commitList}
+${migrationInfo}
+
+Generate only the deployment announcement, no additional explanation.`;
+
+  try {
+    return exec('claude', { input: prompt }).trim();
+  } catch (error) {
+    throw new Error(`Failed to generate changelog with Claude CLI: ${error.message}`);
+  }
+}
+
 function main() {
   const url = process.argv[2];
 
@@ -108,33 +195,17 @@ function main() {
       return;
     }
 
-    console.log(`Found ${commits.length} commit${commits.length === 1 ? '' : 's'}:\n`);
-
-    for (const commit of commits) {
-      console.log(`${commit.sha.slice(0, 8)}\t${commit.author}\t${commit.message}`);
-    }
-
     const migrations = getMigrations(from, to);
 
-    if (migrations.length !== 0) {
+    console.log(`Found ${commits.length} commit${commits.length === 1 ? '' : 's'}:\n`);
+    console.log(formatCommits(commits));
+    console.log(formatMigrations(migrations));
+
+    if (isClaudeAvailable()) {
       console.log(`\n${'='.repeat(80)}`);
-      console.log(`Database Migrations (${migrations.length}):`);
-      console.log('='.repeat(80));
-
-      for (const migration of migrations) {
-        console.log(`\n${migration.dir}`);
-        console.log('-'.repeat(80));
-
-        if (migration.upContent) {
-          console.log('\nup.sql:');
-          console.log(migration.upContent);
-        }
-
-        if (migration.downContent) {
-          console.log('down.sql:');
-          console.log(migration.downContent);
-        }
-      }
+      console.log('Generating deployment changelog...\n');
+      const changelog = generateChangelog(commits, migrations, url);
+      console.log(changelog);
     }
   } catch (error) {
     console.error(`Error: ${error.message}`);
