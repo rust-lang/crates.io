@@ -11,7 +11,9 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of the package foo (1.0.0) was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+A new version of foo crate was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+
+View v1.0.0 here: https://crates.io/crates/foo/1.0.0
 
 If you have questions or security concerns, you can contact us at help@crates.io. If you would like to stop receiving these security notifications, you can disable them in your account settings.
 
@@ -49,7 +51,9 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of the package foo (1.1.0) was published by GitHub Actions (https://github.com/rust-lang/foo-rs/actions/runs/example-run-id) at [0000-00-00T00:00:00Z].
+A new version of foo crate was published by GitHub Actions (https://github.com/rust-lang/foo-rs/actions/runs/example-run-id) at [0000-00-00T00:00:00Z].
+
+View v1.1.0 here: https://crates.io/crates/foo/1.1.0
 
 If you have questions or security concerns, you can contact us at help@crates.io. If you would like to stop receiving these security notifications, you can disable them in your account settings.
 
