@@ -186,6 +186,7 @@ export default [
       'blueprints/*/index.js',
       'config/**/*.js',
       'lib/*/index.js',
+      'script/**/*.mjs',
       'server/**/*.js',
     ],
 
