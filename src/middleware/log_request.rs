@@ -12,8 +12,9 @@ use axum::response::IntoResponse;
 use axum_extra::TypedHeader;
 use axum_extra::headers::UserAgent;
 use derive_more::Deref;
-use http::{Method, Uri};
+use http::{Method, Uri, header};
 use parking_lot::Mutex;
+use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -47,6 +48,16 @@ pub async fn log_requests(
 
     let custom_metadata = RequestLog::default();
     req.extensions_mut().insert(custom_metadata.clone());
+
+    // Log all authorization headers via hashed mask
+    let hashed_auth_header = req
+        .headers()
+        .get(header::AUTHORIZATION)
+        .map(|header| hex::encode(Sha256::digest(header.as_bytes())));
+    let hashed_cookie_header = req
+        .headers()
+        .get(header::COOKIE)
+        .map(|header| hex::encode(Sha256::digest(header.as_bytes())));
 
     let response = next.run(req).await;
 
@@ -83,6 +94,8 @@ pub async fn log_requests(
         http.matched_path = %matched_path,
         http.request_id = %request_metadata.request_id.as_ref().map(|h| h.as_str()).unwrap_or_default(),
         http.useragent = %request_metadata.user_agent.as_ref().map(|h| h.as_str()).unwrap_or_default(),
+        http.request.headers.hashed_authorization = hashed_auth_header.unwrap_or_default(),
+        http.request.headers.hashed_cookie = hashed_cookie_header.unwrap_or_default(),
         http.status_code = status.as_u16(),
         cause = response.extensions().get::<CauseField>().map(|e| e.0.as_str()).unwrap_or_default(),
         error.message = response.extensions().get::<ErrorField>().map(|e| e.0.as_str()).unwrap_or_default(),
