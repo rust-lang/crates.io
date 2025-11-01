@@ -257,3 +257,67 @@ async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pagination() -> anyhow::Result<()> {
+    let (app, _, cookie_client) = TestApp::full().with_user().await;
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+
+    // Create 15 configs
+    for i in 0..15 {
+        create_config(&mut conn, krate.id, &format!("repo-{i}")).await?;
+    }
+
+    // Request first page with per_page=5
+    let response = cookie_client
+        .get_with_query::<()>(URL, "crate=foo&per_page=5")
+        .await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    // Extract the next_page URL and make a second request
+    let next_page = json["meta"]["next_page"]
+        .as_str()
+        .expect("next_page should be present");
+    let next_url = format!("{}{}", URL, next_page);
+    let response = cookie_client.get::<()>(&next_url).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    // Third page (last page with data)
+    let next_page = json["meta"]["next_page"]
+        .as_str()
+        .expect("next_page should be present");
+    let next_url = format!("{}{}", URL, next_page);
+    let response = cookie_client.get::<()>(&next_url).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    // The third page has exactly 5 items, so next_page will be present
+    // (cursor-based pagination is conservative about indicating more pages)
+    // Following it should give us an empty fourth page
+    let next_page = json["meta"]["next_page"]
+        .as_str()
+        .expect("next_page should be present on third page");
+    let next_url = format!("{}{}", URL, next_page);
+    let response = cookie_client.get::<()>(&next_url).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json, {
+        ".github_configs[].created_at" => "[datetime]",
+    });
+
+    Ok(())
+}

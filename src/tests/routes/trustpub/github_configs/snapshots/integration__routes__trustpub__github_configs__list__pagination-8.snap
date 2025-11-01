@@ -1,11 +1,11 @@
 ---
 source: src/tests/routes/trustpub/github_configs/list.rs
-expression: response.json()
+expression: json
 ---
 {
   "github_configs": [],
   "meta": {
     "next_page": null,
-    "total": 0
+    "total": 15
   }
 }

@@ -1,0 +1,62 @@
+---
+source: src/tests/routes/trustpub/github_configs/list.rs
+expression: json
+---
+{
+  "github_configs": [
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 11,
+      "repository_name": "repo-10",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 12,
+      "repository_name": "repo-11",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 13,
+      "repository_name": "repo-12",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 14,
+      "repository_name": "repo-13",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 15,
+      "repository_name": "repo-14",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    }
+  ],
+  "meta": {
+    "next_page": "?crate=foo&per_page=5&seek=MTU",
+    "total": 15
+  }
+}
