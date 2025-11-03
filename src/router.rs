@@ -101,6 +101,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         .routes(routes!(
             trustpub::gitlab_configs::create::create_trustpub_gitlab_config,
             trustpub::gitlab_configs::delete::delete_trustpub_gitlab_config,
+            trustpub::gitlab_configs::list::list_trustpub_gitlab_configs,
         ))
         .split_for_parts();
 
