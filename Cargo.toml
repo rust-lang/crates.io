@@ -60,7 +60,7 @@ aws-credential-types = { version = "=1.2.8", features = ["hardcoded-credentials"
 aws-sdk-cloudfront = "=1.100.0"
 aws-sdk-sqs = "=1.88.0"
 axum = { version = "=0.8.6", features = ["macros", "matched-path"] }
-axum-extra = { version = "=0.10.3", features = ["erased-json", "query", "typed-header"] }
+axum-extra = { version = "=0.12.1", features = ["erased-json", "middleware", "query", "typed-header"] }
 base64 = "=0.22.1"
 bigdecimal = { version = "=0.4.9", features = ["serde"] }
 bon = "=3.8.1"
