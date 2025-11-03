@@ -1,7 +1,11 @@
 use crate::app::AppState;
 use crate::auth::AuthCheck;
+use crate::controllers::helpers::pagination::{
+    Page, PaginationOptions, PaginationQueryParams, encode_seek,
+};
 use crate::controllers::krate::load_crate;
-use crate::controllers::trustpub::github_configs::json::{self, ListResponse};
+use crate::controllers::trustpub::github_configs::json::{self, ListResponse, ListResponseMeta};
+use crate::util::RequestUtils;
 use crate::util::errors::{AppResult, bad_request};
 use axum::Json;
 use axum::extract::{FromRequestParts, Query};
@@ -13,6 +17,7 @@ use diesel::dsl::{exists, select};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use http::request::Parts;
+use indexmap::IndexMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, FromRequestParts, utoipa::IntoParams)]
@@ -28,7 +33,7 @@ pub struct ListQueryParams {
 #[utoipa::path(
     get,
     path = "/api/v1/trusted_publishing/github_configs",
-    params(ListQueryParams),
+    params(ListQueryParams, PaginationQueryParams),
     security(("cookie" = []), ("api_token" = [])),
     tag = "trusted_publishing",
     responses((status = 200, description = "Successful Response", body = inline(ListResponse))),
@@ -64,10 +69,13 @@ pub async fn list_trustpub_github_configs(
         return Err(bad_request("You are not an owner of this crate"));
     }
 
-    let configs = GitHubConfig::query()
-        .filter(trustpub_configs_github::crate_id.eq(krate.id))
-        .load(&mut conn)
-        .await?;
+    let pagination = PaginationOptions::builder()
+        .enable_seek(true)
+        .enable_pages(false)
+        .gather(&parts)?;
+
+    let (configs, total, next_page) =
+        list_configs(&mut conn, krate.id, &pagination, &parts).await?;
 
     let github_configs = configs
         .into_iter()
@@ -83,5 +91,91 @@ pub async fn list_trustpub_github_configs(
         })
         .collect();
 
-    Ok(Json(ListResponse { github_configs }))
+    Ok(Json(ListResponse {
+        github_configs,
+        meta: ListResponseMeta { total, next_page },
+    }))
+}
+
+async fn list_configs(
+    conn: &mut diesel_async::AsyncPgConnection,
+    crate_id: i32,
+    options: &PaginationOptions,
+    req: &Parts,
+) -> AppResult<(Vec<GitHubConfig>, i64, Option<String>)> {
+    use seek::*;
+
+    let seek = Seek::Id;
+
+    assert!(
+        !matches!(&options.page, Page::Numeric(_)),
+        "?page= is not supported"
+    );
+
+    let make_base_query = || {
+        GitHubConfig::query()
+            .filter(trustpub_configs_github::crate_id.eq(crate_id))
+            .into_boxed()
+    };
+
+    let mut query = make_base_query();
+    query = query.limit(options.per_page);
+    query = query.order(trustpub_configs_github::id.asc());
+
+    if let Some(SeekPayload::Id(Id { id })) = seek.after(&options.page)? {
+        query = query.filter(trustpub_configs_github::id.gt(id));
+    }
+
+    let data: Vec<GitHubConfig> = query.load(conn).await?;
+
+    let next_page = next_seek_params(&data, options, |last| seek.to_payload(last))?
+        .map(|p| req.query_with_params(p));
+
+    // Avoid the count query if we're on the first page and got fewer results than requested
+    let total =
+        if matches!(options.page, Page::Unspecified) && data.len() < options.per_page as usize {
+            data.len() as i64
+        } else {
+            make_base_query().count().get_result(conn).await?
+        };
+
+    Ok((data, total, next_page))
+}
+
+fn next_seek_params<T, S, F>(
+    records: &[T],
+    options: &PaginationOptions,
+    f: F,
+) -> AppResult<Option<IndexMap<String, String>>>
+where
+    F: Fn(&T) -> S,
+    S: serde::Serialize,
+{
+    if records.len() < options.per_page as usize {
+        return Ok(None);
+    }
+
+    let seek = f(records.last().unwrap());
+    let mut opts = IndexMap::new();
+    opts.insert("seek".into(), encode_seek(seek)?);
+    Ok(Some(opts))
+}
+
+mod seek {
+    use crate::controllers::helpers::pagination::seek;
+    use crates_io_database::models::trustpub::GitHubConfig;
+
+    seek!(
+        pub enum Seek {
+            Id { id: i32 },
+        }
+    );
+
+    impl Seek {
+        pub(crate) fn to_payload(&self, record: &GitHubConfig) -> SeekPayload {
+            match *self {
+                Seek::Id => SeekPayload::Id(Id { id: record.id }),
+            }
+        }
+    }
 }

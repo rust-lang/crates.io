@@ -24,5 +24,9 @@ expression: response.json()
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
     }
-  ]
+  ],
+  "meta": {
+    "next_page": null,
+    "total": 2
+  }
 }
