@@ -23,8 +23,8 @@ pub(crate) fn extract_workflow_filepath(workflow_ref: &str) -> Option<&str> {
     // Get the basename (part after last slash, or whole string if no slash)
     let basename = filepath.rsplit('/').next()?;
 
-    // Basename must not start with a dot (rejects ".yml", ".yaml", "somedir/.yaml")
-    if basename.starts_with('.') {
+    // Basename must not be empty aside from extension (rejects ".yml", ".yaml", "somedir/.yaml")
+    if basename == ".yml" || basename == ".yaml" {
         return None;
     }
 
@@ -82,6 +82,14 @@ mod tests {
             (
                 "gitlab.com/foo/bar//a/b.yml@refs/heads/main",
                 Some("a/b.yml"),
+            ),
+            (
+                "gitlab.com/foo/bar//.gitlab-ci.yml@refs/heads/main",
+                Some(".gitlab-ci.yml"),
+            ),
+            (
+                "gitlab.com/foo/bar//.gitlab-ci.yaml@refs/heads/main",
+                Some(".gitlab-ci.yaml"),
             ),
             // Malformed `ci_config_ref_uri`s.
             ("gitlab.com/foo/bar//notnested.wrongsuffix@/some/ref", None),
