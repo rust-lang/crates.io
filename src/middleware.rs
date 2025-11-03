@@ -13,7 +13,7 @@ mod update_metrics;
 
 use ::sentry::integrations::tower as sentry_tower;
 use axum::Router;
-use axum::middleware::{from_fn, from_fn_with_state};
+use axum::middleware::{ResponseAxumBodyLayer, from_fn, from_fn_with_state};
 use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
 use std::time::Duration;
@@ -90,6 +90,9 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
         .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
 }
 
-pub fn conditional_layer<L, F: FnOnce() -> L>(condition: bool, layer: F) -> Either<L, Identity> {
+pub fn conditional_layer<L, F: FnOnce() -> L>(
+    condition: bool,
+    layer: F,
+) -> Either<(ResponseAxumBodyLayer, L), Identity> {
     option_layer(condition.then(layer))
 }
