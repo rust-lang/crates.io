@@ -168,8 +168,8 @@ jobs:
         with:
           persist-credentials: false
 
-      # Remove the Android SDK to free up space
-      - run: sudo rm -rf /usr/local/lib/android
+      # Remove the Android SDK in the background to free up space
+      - run: sudo rm -rf /usr/local/lib/android &
 
       - name: Install Typst
         run: |
