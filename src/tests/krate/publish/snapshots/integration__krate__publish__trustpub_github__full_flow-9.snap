@@ -1,5 +1,5 @@
 ---
-source: src/tests/krate/publish/trustpub.rs
+source: src/tests/krate/publish/trustpub_github.rs
 expression: response.json()
 ---
 {
