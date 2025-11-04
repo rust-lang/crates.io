@@ -288,13 +288,19 @@ async fn authenticate(parts: &Parts, conn: &mut AsyncPgConnection) -> AppResult<
 
     match authenticate_via_cookie(parts, conn).await {
         Ok(None) => {}
-        Ok(Some(auth)) => return Ok(Authentication::Cookie(auth)),
+        Ok(Some(auth)) => {
+            parts.request_log().add("auth_type", "cookie");
+            return Ok(Authentication::Cookie(auth));
+        }
         Err(err) => return Err(err),
     }
 
     match authenticate_via_token(parts, conn).await {
         Ok(None) => {}
-        Ok(Some(auth)) => return Ok(Authentication::Token(auth)),
+        Ok(Some(auth)) => {
+            parts.request_log().add("auth_type", "token");
+            return Ok(Authentication::Token(auth));
+        }
         Err(err) => return Err(err),
     }
 

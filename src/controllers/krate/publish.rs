@@ -172,6 +172,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         .transpose()?;
 
     let auth = if let Some(trustpub_token) = trustpub_token {
+        request_log.add("auth_type", "trustpub");
+
         let Some(existing_crate) = &existing_crate else {
             let error = forbidden(
                 "Trusted Publishing tokens do not support creating new crates. Publish the crate manually, first",
