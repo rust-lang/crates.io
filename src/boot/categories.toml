@@ -29,7 +29,7 @@
 [accessibility]
 name = "Accessibility"
 description = """
-Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible. \
+Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible.\
 """
 
 [aerospace]
@@ -104,7 +104,7 @@ Crates to help with the process of confirming identities.\
 [automotive]
 name = "Automotive"
 description = """
-Crates related to the automotive industry, including vehicle control and diagnostics.
+Crates related to the automotive industry, including vehicle control and diagnostics.\
 """
 
 [caching]
@@ -233,7 +233,7 @@ includes binding generators and helpful language constructs.\
 [development-tools.categories.procedural-macro-helpers]
 name = "Procedural macro helpers"
 description = """
-Crates to help you write procedural macros in Rust.
+Crates to help you write procedural macros in Rust.\
 """
 
 [development-tools.categories.profiling]
@@ -258,7 +258,7 @@ Crates to help with sending, receiving, formatting, and parsing email.\
 name = "Embedded development"
 description = """
 Crates that are primarily useful on embedded devices or \
-without an operating system.
+without an operating system.\
 """
 
 [emulators]
@@ -280,7 +280,7 @@ name = "External FFI bindings"
 description = """
 Direct Rust FFI bindings to libraries written in other languages; \
 often denoted by a -sys suffix. Safe and idiomatic wrappers are in \
-the API bindings category.
+the API bindings category.\
 """
 
 [filesystem]
@@ -354,7 +354,7 @@ languages and regions.\
 [mathematics]
 name = "Mathematics"
 description = """
-Crates with a mathematical aspect.
+Crates with a mathematical aspect.\
 """
 
 [memory-management]
@@ -374,25 +374,25 @@ engines.\
 [multimedia.categories.audio]
 name = "Audio"
 description = """
-Crates that record, output, or process audio.
+Crates that record, output, or process audio.\
 """
 
 [multimedia.categories.video]
 name = "Video"
 description = """
-Crates that record, output, or process video.
+Crates that record, output, or process video.\
 """
 
 [multimedia.categories.images]
 name = "Images"
 description = """
-Crates that process or build images.
+Crates that process or build images.\
 """
 
 [multimedia.categories.encoding]
 name = "Encoding"
 description = """
-Crates that encode or decode binary data in multimedia formats.
+Crates that encode or decode binary data in multimedia formats.\
 """
 
 [network-programming]
@@ -405,7 +405,7 @@ or SSH, or lower-level network protocols such as TCP or UDP.\
 [no-std]
 name = "No standard library"
 description = """
-Crates that are able to function without the Rust standard library.
+Crates that are able to function without the Rust standard library.\
 """
 
 [no-std.categories.no-alloc]
@@ -514,7 +514,7 @@ biology, machine learning, geoscience, and other scientific fields.\
 [science.categories.geo]
 name = "Geospatial"
 description = """
-Processing of spatial information, maps, navigation data, and geographic information systems.
+Processing of spatial information, maps, navigation data, and geographic information systems.\
 """
 
 [science.categories.robotics]
