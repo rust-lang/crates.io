@@ -1,5 +1,6 @@
 use crate::schema::{default_versions, versions};
 use crates_io_diesel_helpers::SemverVersion;
+use diesel::dsl::jsonb_typeof;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use tracing::{debug, instrument, warn};
@@ -119,17 +120,21 @@ async fn calculate_default_version(
     crate_id: i32,
     conn: &mut AsyncPgConnection,
 ) -> QueryResult<Version> {
-    use diesel::result::Error::NotFound;
-
-    debug!("Loading all versions for the crate…");
-    let versions = Version::query()
+    debug!("Loading default version for the crate…");
+    Version::query()
         .filter(versions::crate_id.eq(crate_id))
-        .load(conn)
-        .await?;
-
-    debug!("Found {} versions", versions.len());
-
-    versions.into_iter().max().ok_or(NotFound)
+        .order((
+            // 1. Non-yanked first
+            versions::yanked,
+            // 2. Non-prerelease first
+            jsonb_typeof(versions::semver_ord.retrieve_as_object(3)).eq("array"),
+            // 3. Higher semver first
+            versions::semver_ord.desc(),
+            // 4. Higher ID first as tie-breaker
+            versions::id.desc(),
+        ))
+        .first(conn)
+        .await
 }
 
 #[cfg(test)]
