@@ -19,19 +19,19 @@ impl Category {
     fn from_parent(
         slug: &str,
         name: &str,
-        description: &str,
+        description: String,
         parent: Option<&Category>,
     ) -> Category {
         match parent {
             Some(parent) => Category {
                 slug: format!("{}::{}", parent.slug, slug),
                 name: format!("{}::{}", parent.name, name),
-                description: description.into(),
+                description,
             },
             None => Category {
                 slug: slug.into(),
                 name: name.into(),
-                description: description.into(),
+                description,
             },
         }
     }
@@ -47,6 +47,10 @@ fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a
     toml.get(key).and_then(toml::Value::as_str).unwrap_or("")
 }
 
+fn process_description(description: &str) -> String {
+    description.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 fn categories_from_toml(
     categories: &toml::value::Table,
     parent: Option<&Category>,
@@ -58,10 +62,13 @@ fn categories_from_toml(
             .as_table()
             .with_context(|| format!("category {slug} was not a TOML table"))?;
 
+        let description = optional_string_from_toml(details, "description");
+        let description = process_description(description);
+
         let category = Category::from_parent(
             slug,
             required_string_from_toml(details, "name")?,
-            optional_string_from_toml(details, "description"),
+            description,
             parent,
         );
 
@@ -119,4 +126,48 @@ pub async fn sync_with_connection(toml_str: &str, conn: &mut AsyncPgConnection) 
         .scope_boxed()
     })
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_description() {
+        // Leading whitespace
+        assert_eq!(process_description("  description"), "description");
+        assert_eq!(process_description("\tdescription"), "description");
+        assert_eq!(process_description("\n\ndescription"), "description");
+
+        // Trailing whitespace
+        assert_eq!(process_description("description  "), "description");
+        assert_eq!(process_description("description\t"), "description");
+        assert_eq!(process_description("description\n\n"), "description");
+
+        // Both leading and trailing whitespace
+        assert_eq!(process_description("  description  "), "description");
+        assert_eq!(process_description("\tdescription\t"), "description");
+        assert_eq!(
+            process_description("\n  description with spaces  \n"),
+            "description with spaces"
+        );
+
+        // Collapses internal whitespace
+        assert_eq!(
+            process_description("  multi  word   description  "),
+            "multi word description"
+        );
+        assert_eq!(
+            process_description("  description\nwith\nnewlines  "),
+            "description with newlines"
+        );
+        assert_eq!(
+            process_description("text\n\n\nwith\t\tmultiple\n  whitespace"),
+            "text with multiple whitespace"
+        );
+
+        // Empty string
+        assert_eq!(process_description(""), "");
+        assert_eq!(process_description("   "), "");
+    }
 }
