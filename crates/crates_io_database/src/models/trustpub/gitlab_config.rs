@@ -17,6 +17,16 @@ pub struct GitLabConfig {
     pub environment: Option<String>,
 }
 
+impl GitLabConfig {
+    pub async fn count_for_crate(conn: &mut AsyncPgConnection, crate_id: i32) -> QueryResult<i64> {
+        trustpub_configs_gitlab::table
+            .filter(trustpub_configs_gitlab::crate_id.eq(crate_id))
+            .count()
+            .get_result(conn)
+            .await
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[diesel(table_name = trustpub_configs_gitlab, check_for_backend(diesel::pg::Pg))]
 pub struct NewGitLabConfig<'a> {

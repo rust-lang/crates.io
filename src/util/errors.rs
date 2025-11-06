@@ -238,6 +238,12 @@ impl From<crates_io_trustpub::github::validation::ValidationError> for BoxedAppE
     }
 }
 
+impl From<crates_io_trustpub::gitlab::validation::ValidationError> for BoxedAppError {
+    fn from(error: crates_io_trustpub::gitlab::validation::ValidationError) -> Self {
+        bad_request(error)
+    }
+}
+
 // =============================================================================
 // Internal error for use with `chain_error`
 

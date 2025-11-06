@@ -98,6 +98,9 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
             trustpub::github_configs::delete::delete_trustpub_github_config,
             trustpub::github_configs::list::list_trustpub_github_configs,
         ))
+        .routes(routes!(
+            trustpub::gitlab_configs::create::create_trustpub_gitlab_config,
+        ))
         .split_for_parts();
 
     let mut router = router
