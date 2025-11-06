@@ -11,6 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{ErrorKind, Write};
 use std::sync::Arc;
+use std::time::Instant;
 use tracing::{debug, info, instrument};
 
 #[derive(Serialize, Deserialize)]
@@ -56,6 +57,7 @@ impl BackgroundJob for SyncToGitIndex {
                 Err(error) => return Err(error.into()),
             };
 
+            let commit_and_push_start = Instant::now();
             match (old, new) {
                 (None, Some(new)) => {
                     fs::create_dir_all(dst.parent().unwrap())?;
@@ -74,6 +76,10 @@ impl BackgroundJob for SyncToGitIndex {
                 }
                 _ => debug!("Skipping sync because index is up-to-date"),
             }
+            info!(
+                duration = commit_and_push_start.elapsed().as_nanos(),
+                "Committed and pushed"
+            );
 
             Ok(())
         })
