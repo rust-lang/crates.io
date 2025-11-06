@@ -7,7 +7,6 @@ use diesel_async::pooled_connection::deadpool::Pool;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use futures_util::FutureExt;
-use sentry_core::{Hub, SentryFutureExt};
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::time::Duration;
@@ -87,10 +86,7 @@ impl<Context: Clone + Send + Sync + 'static> Worker<Context> {
                         .and_then(std::convert::identity)
                 });
 
-                let result = future
-                    .instrument(span.clone())
-                    .bind_hub(Hub::current())
-                    .await;
+                let result = future.instrument(span.clone()).await;
 
                 let _enter = span.enter();
                 match result {
