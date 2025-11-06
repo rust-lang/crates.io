@@ -47,6 +47,10 @@ fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a
     toml.get(key).and_then(toml::Value::as_str).unwrap_or("")
 }
 
+fn process_description(description: &str) -> &str {
+    description.trim()
+}
+
 fn categories_from_toml(
     categories: &toml::value::Table,
     parent: Option<&Category>,
@@ -58,10 +62,13 @@ fn categories_from_toml(
             .as_table()
             .with_context(|| format!("category {slug} was not a TOML table"))?;
 
+        let description = optional_string_from_toml(details, "description");
+        let description = process_description(description);
+
         let category = Category::from_parent(
             slug,
             required_string_from_toml(details, "name")?,
-            optional_string_from_toml(details, "description"),
+            description,
             parent,
         );
 
@@ -119,4 +126,44 @@ pub async fn sync_with_connection(toml_str: &str, conn: &mut AsyncPgConnection) 
         .scope_boxed()
     })
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_description() {
+        // Leading whitespace
+        assert_eq!(process_description("  description"), "description");
+        assert_eq!(process_description("\tdescription"), "description");
+        assert_eq!(process_description("\n\ndescription"), "description");
+
+        // Trailing whitespace
+        assert_eq!(process_description("description  "), "description");
+        assert_eq!(process_description("description\t"), "description");
+        assert_eq!(process_description("description\n\n"), "description");
+
+        // Both leading and trailing whitespace
+        assert_eq!(process_description("  description  "), "description");
+        assert_eq!(process_description("\tdescription\t"), "description");
+        assert_eq!(
+            process_description("\n  description with spaces  \n"),
+            "description with spaces"
+        );
+
+        // Preserves internal whitespace
+        assert_eq!(
+            process_description("  multi word description  "),
+            "multi word description"
+        );
+        assert_eq!(
+            process_description("  description\nwith\nnewlines  "),
+            "description\nwith\nnewlines"
+        );
+
+        // Empty string
+        assert_eq!(process_description(""), "");
+        assert_eq!(process_description("   "), "");
+    }
 }
