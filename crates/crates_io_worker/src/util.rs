@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use sentry_core::Hub;
+use sentry_core::{Hub, SentryFutureExt};
 use std::any::Any;
 use std::future::Future;
 use std::panic::PanicHookInfo;
@@ -20,7 +20,7 @@ where
 
     hub.configure_scope(|scope| scope.set_span(Some(tx.clone().into())));
 
-    let result = callback().await;
+    let result = callback().bind_hub(hub).await;
 
     tx.set_status(match result.is_ok() {
         true => sentry_core::protocol::SpanStatus::Ok,
