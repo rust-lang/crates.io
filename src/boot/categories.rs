@@ -47,8 +47,8 @@ fn optional_string_from_toml<'a>(toml: &'a toml::value::Table, key: &str) -> &'a
     toml.get(key).and_then(toml::Value::as_str).unwrap_or("")
 }
 
-fn process_description(description: &str) -> &str {
-    description.trim()
+fn process_description(description: &str) -> String {
+    description.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn categories_from_toml(
@@ -68,7 +68,7 @@ fn categories_from_toml(
         let category = Category::from_parent(
             slug,
             required_string_from_toml(details, "name")?,
-            description,
+            &description,
             parent,
         );
 
@@ -152,14 +152,18 @@ mod tests {
             "description with spaces"
         );
 
-        // Preserves internal whitespace
+        // Collapses internal whitespace
         assert_eq!(
-            process_description("  multi word description  "),
+            process_description("  multi  word   description  "),
             "multi word description"
         );
         assert_eq!(
             process_description("  description\nwith\nnewlines  "),
-            "description\nwith\nnewlines"
+            "description with newlines"
+        );
+        assert_eq!(
+            process_description("text\n\n\nwith\t\tmultiple\n  whitespace"),
+            "text with multiple whitespace"
         );
 
         // Empty string
