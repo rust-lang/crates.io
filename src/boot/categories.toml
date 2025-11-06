@@ -29,609 +29,609 @@
 [accessibility]
 name = "Accessibility"
 description = """
-Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible.\
+Assistive technology that helps overcome disabilities and impairments to make software usable by as many people as possible.
 """
 
 [aerospace]
 name = "Aerospace"
 description = """
-Crates for aeronautics (within the atmosphere) and astronautics \
-(in outer space) applications.\
+Crates for aeronautics (within the atmosphere) and astronautics
+(in outer space) applications.
 """
 
 [aerospace.categories.drones]
 name = "Drones"
 description = """
-Crates related to Multicopters, Fixed wing, VTOL (Vertical Takeoff and Landing) \
-and Airships/Balloons.\
+Crates related to Multicopters, Fixed wing, VTOL (Vertical Takeoff and Landing)
+and Airships/Balloons.
 """
 
 [aerospace.categories.protocols]
 name = "Aerospace protocols"
 description = """
-Crates of protocol implementations for aerospace applications.\
+Crates of protocol implementations for aerospace applications.
 """
 
 [aerospace.categories.simulation]
 name = "Aerospace simulations"
 description = """
-Crates related to any kind of simulations used in aerospace - fluids, \
-aerodynamics, etc.\
+Crates related to any kind of simulations used in aerospace - fluids,
+aerodynamics, etc.
 """
 
 [aerospace.categories.space-protocols]
 name = "Space protocols"
 description = """
-Protocol implementations for implications in space like CCSDS.\
+Protocol implementations for implications in space like CCSDS.
 """
 
 [aerospace.categories.unmanned-aerial-vehicles]
 name = "Unmanned aerial vehicles"
 description = """
-Crates related to Unmanned aerial vehicles like Multicopters, Fixed wing, \
-VTOL (Vertical Takeoff and Landing), Airships/Balloons, Rovers, Boats, \
-Submersibles.\
+Crates related to Unmanned aerial vehicles like Multicopters, Fixed wing,
+VTOL (Vertical Takeoff and Landing), Airships/Balloons, Rovers, Boats,
+Submersibles.
 """
 
 [algorithms]
 name = "Algorithms"
 description = """
-Rust implementations of core algorithms such as hashing, sorting, \
-searching, and more.\
+Rust implementations of core algorithms such as hashing, sorting,
+searching, and more.
 """
 
 [api-bindings]
 name = "API bindings"
 description = """
-Idiomatic wrappers of specific APIs for convenient access from \
-Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe \
-bindings can be found in External FFI bindings.\
+Idiomatic wrappers of specific APIs for convenient access from
+Rust. Includes HTTP API wrappers as well. Non-idiomatic or unsafe
+bindings can be found in External FFI bindings.
 """
 
 [asynchronous]
 name = "Asynchronous"
 description = """
-Crates to help you deal with events independently of the main program \
-flow, using techniques like futures, promises, waiting, or eventing.\
+Crates to help you deal with events independently of the main program
+flow, using techniques like futures, promises, waiting, or eventing.
 """
 
 [authentication]
 name = "Authentication"
 description = """
-Crates to help with the process of confirming identities.\
+Crates to help with the process of confirming identities.
 """
 
 [automotive]
 name = "Automotive"
 description = """
-Crates related to the automotive industry, including vehicle control and diagnostics.\
+Crates related to the automotive industry, including vehicle control and diagnostics.
 """
 
 [caching]
 name = "Caching"
 description = """
-Crates to store the results of previous computations in order to reuse \
-the results.\
+Crates to store the results of previous computations in order to reuse 
+the results.
 """
 
 [compilers]
 name = "Compilers"
 description = """
-Compiler implementations, including interpreters and transpilers.\
+Compiler implementations, including interpreters and transpilers.
 """
 
 [command-line-interface]
 name = "Command-line interface"
 description = """
-Crates to help create command line interfaces, such as argument \
-parsers, line-editing, or output coloring and formatting.\
+Crates to help create command line interfaces, such as argument 
+parsers, line-editing, or output coloring and formatting.
 """
 
 [command-line-utilities]
 name = "Command line utilities"
 description = """
-Applications to run at the command line.\
+Applications to run at the command line.
 """
 
 [compression]
 name = "Compression"
 description = """
-Algorithms for making data smaller.\
+Algorithms for making data smaller.
 """
 
 [computer-vision]
 name = "Computer vision"
 description = """
-Crates for comprehending the world from video or images.\
+Crates for comprehending the world from video or images.
 """
 
 [config]
 name = "Configuration"
 description = """
-Crates to facilitate configuration management for applications.\
+Crates to facilitate configuration management for applications.
 """
 
 [concurrency]
 name = "Concurrency"
 description = """
-Crates for implementing concurrent and parallel computation.\
+Crates for implementing concurrent and parallel computation.
 """
 
 [cryptography]
 name = "Cryptography"
 description = """
-Algorithms intended for securing data.\
+Algorithms intended for securing data.
 """
 
 [cryptography.categories.cryptocurrencies]
 name = "Cryptocurrencies"
 description = """
-Crates for digital currencies, wallets, and distributed ledgers.\
+Crates for digital currencies, wallets, and distributed ledgers.
 """
 
 [database]
 name = "Database interfaces"
 description = """
-Crates to interface with database management systems.\
+Crates to interface with database management systems.
 """
 
 [database-implementations]
 name = "Database implementations"
 description = """
-Databases allow clients to store and query large amounts of data in an \
-efficient manner. This category is for database management systems \
-implemented in Rust.\
+Databases allow clients to store and query large amounts of data in an 
+efficient manner. This category is for database management systems 
+implemented in Rust.
 """
 
 [data-structures]
 name = "Data structures"
 description = """
-Rust implementations of particular ways of organizing data suited for \
-specific purposes.\
+Rust implementations of particular ways of organizing data suited for 
+specific purposes.
 """
 
 [date-and-time]
 name = "Date and time"
 description = """
-Crates to manage the inherent complexity of dealing with the fourth \
-dimension.\
+Crates to manage the inherent complexity of dealing with the fourth 
+dimension.
 """
 
 [development-tools]
 name = "Development tools"
 description = """
-Crates that provide developer-facing features such as testing, debugging, \
-linting, performance profiling, autocompletion, formatting, and more.\
+Crates that provide developer-facing features such as testing, debugging, 
+linting, performance profiling, autocompletion, formatting, and more.
 """
 
 [development-tools.categories.build-utils]
 name = "Build Utils"
 description = """
-Utilities for build scripts and other build time steps.\
+Utilities for build scripts and other build time steps.
 """
 
 [development-tools.categories.cargo-plugins]
 name = "Cargo plugins"
 description = """
-Subcommands that extend the capabilities of Cargo.\
+Subcommands that extend the capabilities of Cargo.
 """
 
 [development-tools.categories.debugging]
 name = "Debugging"
 description = """
-Crates to help you figure out what is going on with your code such as \
-logging, tracing, or assertions.\
+Crates to help you figure out what is going on with your code such as 
+logging, tracing, or assertions.
 """
 
 [development-tools.categories.ffi]
 name = "FFI"
 description = """
-Crates to help you better interface with other languages. This \
-includes binding generators and helpful language constructs.\
+Crates to help you better interface with other languages. This 
+includes binding generators and helpful language constructs.
 """
 
 [development-tools.categories.procedural-macro-helpers]
 name = "Procedural macro helpers"
 description = """
-Crates to help you write procedural macros in Rust.\
+Crates to help you write procedural macros in Rust.
 """
 
 [development-tools.categories.profiling]
 name = "Profiling"
 description = """
-Crates to help you figure out the performance of your code.\
+Crates to help you figure out the performance of your code.
 """
 
 [development-tools.categories.testing]
 name = "Testing"
 description = """
-Crates to help you verify the correctness of your code.\
+Crates to help you verify the correctness of your code.
 """
 
 [email]
 name = "Email"
 description = """
-Crates to help with sending, receiving, formatting, and parsing email.\
+Crates to help with sending, receiving, formatting, and parsing email.
 """
 
 [embedded]
 name = "Embedded development"
 description = """
-Crates that are primarily useful on embedded devices or \
-without an operating system.\
+Crates that are primarily useful on embedded devices or 
+without an operating system.
 """
 
 [emulators]
 name = "Emulators"
 description = """
-Emulators allow one computer to behave like another, often to allow \
-running software that is not natively available on the host \
-computer. Video game systems are commonly emulated.\
+Emulators allow one computer to behave like another, often to allow 
+running software that is not natively available on the host 
+computer. Video game systems are commonly emulated.
 """
 
 [encoding]
 name = "Encoding"
 description = """
-Encoding and/or decoding data from one data format to another.\
+Encoding and/or decoding data from one data format to another.
 """
 
 [external-ffi-bindings]
 name = "External FFI bindings"
 description = """
-Direct Rust FFI bindings to libraries written in other languages; \
-often denoted by a -sys suffix. Safe and idiomatic wrappers are in \
-the API bindings category.\
+Direct Rust FFI bindings to libraries written in other languages; 
+often denoted by a -sys suffix. Safe and idiomatic wrappers are in 
+the API bindings category.
 """
 
 [filesystem]
 name = "Filesystem"
 description = """
-Crates for dealing with files and filesystems.\
+Crates for dealing with files and filesystems.
 """
 
 [finance]
 name = "Finance"
 description = """
-Crates for dealing with money. Accounting, trading, investments, taxes, banking and payment processing using government-backed currencies.\
+Crates for dealing with money. Accounting, trading, investments, taxes, banking and payment processing using government-backed currencies.
 """
 
 [game-engines]
 name = "Game engines"
 description = """
-For crates that try to provide a \"one-stop-shop\" for \
-all of your game development needs.\
+For crates that try to provide a \"one-stop-shop\" for 
+all of your game development needs.
 """
 
 [game-development]
 name = "Game development"
 description = """
-For crates that focus on some individual part of accelerating \
-the development of games.\
+For crates that focus on some individual part of accelerating 
+the development of games.
 """
 
 [games]
 name = "Games"
 description = """
-Applications for fun and entertainment. If Rust the video game were \
-implemented in Rust the programming language, it would belong in this \
-category. Libraries to help create video games are in the \
-Game engines category.\
+Applications for fun and entertainment. If Rust the video game were 
+implemented in Rust the programming language, it would belong in this 
+category. Libraries to help create video games are in the 
+Game engines category.
 """
 
 [graphics]
 name = "Graphics"
 description = """
-Crates for graphics libraries and applications, including raster and vector \
-graphics primitives such as geometry, curves, and color.\
+Crates for graphics libraries and applications, including raster and vector 
+graphics primitives such as geometry, curves, and color.
 """
 
 [gui]
 name = "GUI"
 description = """
-Crates to help you create a graphical user interface.\
+Crates to help you create a graphical user interface.
 """
 
 [hardware-support]
 name = "Hardware support"
 description = """
-Crates to interface with specific CPU or other hardware features.\
+Crates to interface with specific CPU or other hardware features.
 """
 
 [internationalization]
 name = "Internationalization (i18n)"
 description = """
-Crates to help develop software capable of adapting to various \
-languages and regions.\
+Crates to help develop software capable of adapting to various 
+languages and regions.
 """
 
 [localization]
 name = "Localization (L10n)"
 description = """
-Crates to help adapting internationalized software to specific \
-languages and regions.\
+Crates to help adapting internationalized software to specific 
+languages and regions.
 """
 
 [mathematics]
 name = "Mathematics"
 description = """
-Crates with a mathematical aspect.\
+Crates with a mathematical aspect.
 """
 
 [memory-management]
 name = "Memory management"
 description = """
-Crates to help with allocation, memory mapping, garbage collection, \
-reference counting, or interfaces to foreign memory managers.\
+Crates to help with allocation, memory mapping, garbage collection, 
+reference counting, or interfaces to foreign memory managers.
 """
 
 [multimedia]
 name = "Multimedia"
 description = """
-Crates that provide audio, video, and image processing or rendering \
-engines.\
+Crates that provide audio, video, and image processing or rendering 
+engines.
 """
 
 [multimedia.categories.audio]
 name = "Audio"
 description = """
-Crates that record, output, or process audio.\
+Crates that record, output, or process audio.
 """
 
 [multimedia.categories.video]
 name = "Video"
 description = """
-Crates that record, output, or process video.\
+Crates that record, output, or process video.
 """
 
 [multimedia.categories.images]
 name = "Images"
 description = """
-Crates that process or build images.\
+Crates that process or build images.
 """
 
 [multimedia.categories.encoding]
 name = "Encoding"
 description = """
-Crates that encode or decode binary data in multimedia formats.\
+Crates that encode or decode binary data in multimedia formats.
 """
 
 [network-programming]
 name = "Network programming"
 description = """
-Crates dealing with higher-level network protocols such as FTP, HTTP, \
-or SSH, or lower-level network protocols such as TCP or UDP.\
+Crates dealing with higher-level network protocols such as FTP, HTTP, 
+or SSH, or lower-level network protocols such as TCP or UDP.
 """
 
 [no-std]
 name = "No standard library"
 description = """
-Crates that are able to function without the Rust standard library.\
+Crates that are able to function without the Rust standard library.
 """
 
 [no-std.categories.no-alloc]
 name = "No dynamic allocation"
 description = """
-Crates that are able to function without the Rust alloc crate.\
+Crates that are able to function without the Rust alloc crate.
 """
 
 [os]
 name = "Operating systems"
 description = """
-Bindings to operating system-specific APIs.\
+Bindings to operating system-specific APIs.
 """
 
 [os.categories.android-apis]
 name = "Android APIs"
 description = """
-Bindings to Android-specific APIs.\
+Bindings to Android-specific APIs.
 """
 
 [os.categories.linux-apis]
 name = "Linux APIs"
 description = """
-Bindings to Linux-specific APIs.\
+Bindings to Linux-specific APIs.
 """
 
 [os.categories.freebsd-apis]
 name = "FreeBSD APIs"
 description = """
-Bindings to FreeBSD-specific APIs.\
+Bindings to FreeBSD-specific APIs.
 """
 
 [os.categories.macos-apis]
 name = "macOS APIs"
 description = """
-Bindings to macOS-specific APIs.\
+Bindings to macOS-specific APIs.
 """
 
 [os.categories.unix-apis]
 name = "Unix APIs"
 description = """
-Bindings to Unix-specific APIs.\
+Bindings to Unix-specific APIs.
 """
 
 [os.categories.windows-apis]
 name = "Windows APIs"
 description = """
-Bindings to Windows-specific APIs.\
+Bindings to Windows-specific APIs.
 """
 
 [parser-implementations]
 name = "Parser implementations"
 description = """
-Parsers implemented for particular formats or languages.\
+Parsers implemented for particular formats or languages.
 """
 
 [parsing]
 name = "Parsing tools"
 description = """
-Crates to help create parsers of binary and text \
-formats. Format-specific parsers belong in other, more specific \
-categories.\
+Crates to help create parsers of binary and text 
+formats. Format-specific parsers belong in other, more specific 
+categories.
 """
 
 [rendering]
 name = "Rendering"
 description = """
-Real-time or offline rendering of 2D or 3D graphics, \
-usually with the help of a graphics card.\
+Real-time or offline rendering of 2D or 3D graphics, 
+usually with the help of a graphics card.
 """
 
 [rendering.categories.engine]
 name = "Rendering engine"
 description = """
-High-level solutions for rendering on the screen.\
+High-level solutions for rendering on the screen.
 """
 
 [rendering.categories.graphics-api]
 name = "Graphics APIs"
 description = """
-Crates that provide direct access to the hardware's or the operating \
-system's rendering capabilities.\
+Crates that provide direct access to the hardware's or the operating 
+system's rendering capabilities.
 """
 
 [rendering.categories.data-formats]
 name = "Data formats"
 description = """
-Loading and parsing of data formats related to 2D or 3D rendering, like \
-3D models or animation sheets.\
+Loading and parsing of data formats related to 2D or 3D rendering, like 
+3D models or animation sheets.
 """
 
 [rust-patterns]
 name = "Rust patterns"
 description = """
-Shared solutions for particular situations specific to programming in \
-Rust.\
+Shared solutions for particular situations specific to programming in 
+Rust.
 """
 
 [science]
 name = "Science"
 description = """
-Crates related to solving problems involving physics, chemistry, \
-biology, machine learning, geoscience, and other scientific fields.\
+Crates related to solving problems involving physics, chemistry, 
+biology, machine learning, geoscience, and other scientific fields.
 """
 
 [science.categories.geo]
 name = "Geospatial"
 description = """
-Processing of spatial information, maps, navigation data, and geographic information systems.\
+Processing of spatial information, maps, navigation data, and geographic information systems.
 """
 
 [science.categories.robotics]
 name = "Robotics"
 description = """
-Crates related to robotics.\
+Crates related to robotics.
 """
 
 [science.categories.neuroscience]
 name = "Neuroscience"
 description = """
-Crates for research tools and processing of data related to the brain and nervous system.\
+Crates for research tools and processing of data related to the brain and nervous system.
 """
 
 [science.categories.bioinformatics]
 name = "Bioinformatics"
 description = """
-Crates for processing large-scale biological data.\
+Crates for processing large-scale biological data.
 """
 
 [science.categories.bioinformatics.categories.genomics]
 name = "Genomics"
 description = """
-Crates for processing genetic data, including sequences, abdundance, variants and analysis.\
+Crates for processing genetic data, including sequences, abdundance, variants and analysis.
 """
 
 [science.categories.bioinformatics.categories.proteomics]
 name = "Proteomics"
 description = """
-Crates for processing protein data including sequences, abdundance and analysis.\
+Crates for processing protein data including sequences, abdundance and analysis.
 """
 
 [science.categories.bioinformatics.categories.sequence-analysis]
 name = "Sequence analysis"
 description = """
-Crates for processing biological sequences, including alignment, assembly, and annotation.\
+Crates for processing biological sequences, including alignment, assembly, and annotation.
 """
 
 [security]
 name = "Security"
 description = """
-Crates related to cybersecurity, penetration testing, code review, vulnerability research, and reverse engineering.\
+Crates related to cybersecurity, penetration testing, code review, vulnerability research, and reverse engineering.
 """
 
 [simulation]
 name = "Simulation"
 description = """
-Crates used to model or construct models for some activity, e.g. to.\
-simulate a networking protocol.\
+Crates used to model or construct models for some activity, e.g. to.
+simulate a networking protocol.
 """
 
 [template-engine]
 name = "Template engine"
 description = """
-Crates designed to combine templates with data to produce result \
-documents, usually with an emphasis on processing text.\
+Crates designed to combine templates with data to produce result 
+documents, usually with an emphasis on processing text.
 """
 
 [text-editors]
 name = "Text editors"
 description = """
-Applications for editing text.\
+Applications for editing text.
 """
 
 [text-processing]
 name = "Text processing"
 description = """
-Crates to deal with the complexities of human language when expressed \
-in textual form.\
+Crates to deal with the complexities of human language when expressed 
+in textual form.
 """
 
 [value-formatting]
 name = "Value formatting"
 description = """
-Crates to allow an application to format values for display to a user, \
-potentially adapting the display to various languages and regions.\
+Crates to allow an application to format values for display to a user, 
+potentially adapting the display to various languages and regions.
 """
 
 [virtualization]
 name = "Virtualization"
 description = """
 For the creation and management of virtual environments and resources
-of any form including containerization systems.\
+of any form including containerization systems.
 """
 
 [visualization]
 name = "Visualization"
 description = """
-Ways to view data, such as plotting or graphing.\
+Ways to view data, such as plotting or graphing.
 """
 
 [wasm]
 name = "WebAssembly"
 description = """
-Crates for use when targeting WebAssembly, or for manipulating WebAssembly.\
+Crates for use when targeting WebAssembly, or for manipulating WebAssembly.
 """
 
 [web-programming]
 name = "Web programming"
 description = """
-Crates to create applications for the web.\
+Crates to create applications for the web.
 """
 
 [web-programming.categories.http-client]
 name = "HTTP client"
 description = """
-Crates to make HTTP network requests.\
+Crates to make HTTP network requests.
 """
 
 [web-programming.categories.http-server]
 name = "HTTP server"
 description = """
-Crates to serve data over HTTP.\
+Crates to serve data over HTTP.
 """
 
 [web-programming.categories.websocket]
 name = "WebSocket"
 description = """
-Crates to communicate over the WebSocket protocol.\
+Crates to communicate over the WebSocket protocol.
 """
