@@ -19,19 +19,19 @@ impl Category {
     fn from_parent(
         slug: &str,
         name: &str,
-        description: &str,
+        description: String,
         parent: Option<&Category>,
     ) -> Category {
         match parent {
             Some(parent) => Category {
                 slug: format!("{}::{}", parent.slug, slug),
                 name: format!("{}::{}", parent.name, name),
-                description: description.into(),
+                description,
             },
             None => Category {
                 slug: slug.into(),
                 name: name.into(),
-                description: description.into(),
+                description,
             },
         }
     }
@@ -68,7 +68,7 @@ fn categories_from_toml(
         let category = Category::from_parent(
             slug,
             required_string_from_toml(details, "name")?,
-            &description,
+            description,
             parent,
         );
 
