@@ -5,6 +5,7 @@ use crates_io_env_vars::{required_var, required_var_parsed, var};
 use secrecy::{ExposeSecret, SecretString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Instant;
 use tempfile::TempDir;
 use url::Url;
 
@@ -282,8 +283,13 @@ impl Repository {
     pub fn reset_head(&self) -> anyhow::Result<()> {
         let original_head = self.head_oid()?;
 
+        let fetch_start = Instant::now();
         self.run_command(Command::new("git").args(["fetch", "origin", "master"]))?;
+        info!(duration = fetch_start.elapsed().as_nanos(), "Index fetched");
+
+        let reset_start = Instant::now();
         self.run_command(Command::new("git").args(["reset", "--hard", "origin/master"]))?;
+        info!(duration = reset_start.elapsed().as_nanos(), "Index reset");
 
         let head = self.head_oid()?;
         if head != original_head {
