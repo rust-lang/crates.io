@@ -4532,6 +4532,40 @@ expression: response.json()
         ]
       }
     },
+    "/api/v1/trusted_publishing/gitlab_configs/{id}": {
+      "delete": {
+        "operationId": "delete_trustpub_gitlab_config",
+        "parameters": [
+          {
+            "description": "ID of the Trusted Publishing configuration",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "api_token": []
+          }
+        ],
+        "summary": "Delete Trusted Publishing configuration for GitLab CI/CD.",
+        "tags": [
+          "trusted_publishing"
+        ]
+      }
+    },
     "/api/v1/trusted_publishing/tokens": {
       "delete": {
         "description": "The access token is expected to be passed in the `Authorization` header\nas a `Bearer` token, similar to how it is used in the publish endpoint.",
