@@ -207,6 +207,12 @@ import UserAvatar from 'crates-io/components/user-avatar';
             {{/if}}
           </td>
           <td class='actions'>
+            <button
+              type='button'
+              class='button button--small'
+              data-test-remove-config-button
+              {{on 'click' (perform @controller.removeConfigTask config)}}
+            >Remove</button>
           </td>
         </tr>
       {{/each}}
