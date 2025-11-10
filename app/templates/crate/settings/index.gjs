@@ -6,6 +6,7 @@ import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
 import pageTitle from 'ember-page-title/helpers/page-title';
 import not from 'ember-truth-helpers/helpers/not';
+import or from 'ember-truth-helpers/helpers/or';
 
 import CrateHeader from 'crates-io/components/crate-header';
 import Tooltip from 'crates-io/components/tooltip';
@@ -165,11 +166,55 @@ import UserAvatar from 'crates-io/components/user-avatar';
             >Remove</button>
           </td>
         </tr>
-      {{else}}
+      {{/each}}
+      {{#each @controller.gitlabConfigs as |config|}}
+        <tr data-test-gitlab-config={{config.id}}>
+          <td>GitLab</td>
+          <td class='details'>
+            <strong>Repository:</strong>
+            <a
+              href='https://gitlab.com/{{config.namespace}}/{{config.project}}'
+              target='_blank'
+              rel='noopener noreferrer'
+            >{{config.namespace}}/{{config.project}}</a>
+            <span class='owner-id'>
+              · Namespace ID:
+              {{#if config.namespace_id}}
+                {{config.namespace_id}}
+                <Tooltip>
+                  This is the namespace ID for
+                  <strong>{{config.namespace}}</strong>
+                  from the first publish using this configuration. If
+                  <strong>{{config.namespace}}</strong>
+                  was recreated on GitLab, this configuration will need to be recreated as well.
+                </Tooltip>
+              {{else}}
+                (not yet set)
+                <Tooltip>
+                  The namespace ID will be captured from the first publish using this configuration.
+                </Tooltip>
+              {{/if}}
+            </span><br />
+            <strong>Workflow:</strong>
+            <a
+              href='https://gitlab.com/{{config.namespace}}/{{config.project}}/-/blob/HEAD/{{config.workflow_filepath}}'
+              target='_blank'
+              rel='noopener noreferrer'
+            >{{config.workflow_filepath}}</a><br />
+            {{#if config.environment}}
+              <strong>Environment:</strong>
+              {{config.environment}}
+            {{/if}}
+          </td>
+          <td class='actions'>
+          </td>
+        </tr>
+      {{/each}}
+      {{#unless (or @controller.githubConfigs.length @controller.gitlabConfigs.length)}}
         <tr data-test-no-config>
           <td colspan='3'>No trusted publishers configured for this crate.</td>
         </tr>
-      {{/each}}
+      {{/unless}}
     </tbody>
   </table>
 

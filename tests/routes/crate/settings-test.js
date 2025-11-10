@@ -144,5 +144,49 @@ module('Route | crate.settings', hooks => {
           .hasText('Failed to remove Trusted Publishing configuration: Server error');
       });
     });
+
+    module('GitLab', function () {
+      test('happy path', async function (assert) {
+        const { crate, user } = prepare(this);
+        this.authenticateAs(user);
+
+        // Create two GitLab configs for the crate
+        this.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'rust-lang',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+        });
+
+        this.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'johndoe',
+          namespace_id: '1234',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+          environment: 'release',
+        });
+
+        await visit(`/crates/${crate.name}/settings`);
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+
+        await percySnapshot(assert);
+
+        // Check that the GitLab config is displayed
+        assert.dom('[data-test-trusted-publishing]').exists();
+        assert.dom('[data-test-gitlab-config]').exists({ count: 2 });
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(1)').hasText('GitLab');
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Repository: rust-lang/crates.io');
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Namespace ID: (not yet set)');
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').doesNotIncludeText('Environment');
+        assert.dom('[data-test-gitlab-config="2"] td:nth-child(1)').hasText('GitLab');
+        assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Repository: johndoe/crates.io');
+        assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Namespace ID: 1234');
+        assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
+        assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Environment: release');
+        assert.dom('[data-test-no-config]').doesNotExist();
+      });
+    });
   });
 });
