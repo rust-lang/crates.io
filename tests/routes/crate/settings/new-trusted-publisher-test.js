@@ -513,5 +513,91 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
       assert.dom('[data-test-gitlab-config]').exists({ count: 0 });
     });
+
+    module('workflow verification', function () {
+      test('success case (200 OK)', async function (assert) {
+        let { crate } = prepare(this);
+
+        await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+        // Select GitLab from the publisher dropdown
+        await fillIn('[data-test-publisher]', 'GitLab');
+
+        this.worker.use(
+          http.head('https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/.gitlab-ci.yml', () => {
+            return new HttpResponse(null, { status: 200 });
+          }),
+        );
+
+        assert
+          .dom('[data-test-workflow-verification="initial"]')
+          .hasText('The workflow filepath will be verified once all necessary fields are filled.');
+
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', '.gitlab-ci.yml');
+
+        await waitFor('[data-test-workflow-verification="success"]');
+
+        let expected = '✓ Workflow file found at https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/.gitlab-ci.yml';
+        assert.dom('[data-test-workflow-verification="success"]').hasText(expected);
+      });
+
+      test('not found case (404)', async function (assert) {
+        let { crate } = prepare(this);
+
+        await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+        // Select GitLab from the publisher dropdown
+        await fillIn('[data-test-publisher]', 'GitLab');
+
+        this.worker.use(
+          http.head('https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/missing.yml', () => {
+            return new HttpResponse(null, { status: 404 });
+          }),
+        );
+
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', 'missing.yml');
+
+        await waitFor('[data-test-workflow-verification="not-found"]');
+
+        let expected = '⚠ Workflow file not found at https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/missing.yml';
+        assert.dom('[data-test-workflow-verification="not-found"]').hasText(expected);
+
+        // Verify form can still be submitted
+        await click('[data-test-add]');
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+      });
+
+      test('server error (5xx)', async function (assert) {
+        let { crate } = prepare(this);
+
+        await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+        // Select GitLab from the publisher dropdown
+        await fillIn('[data-test-publisher]', 'GitLab');
+
+        this.worker.use(
+          http.head('https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/.gitlab-ci.yml', () => {
+            return new HttpResponse(null, { status: 500 });
+          }),
+        );
+
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', '.gitlab-ci.yml');
+
+        await waitFor('[data-test-workflow-verification="error"]');
+
+        let expected =
+          '⚠ Could not verify workflow file at https://gitlab.com/rust-lang/crates.io/-/raw/HEAD/.gitlab-ci.yml (network error)';
+        assert.dom('[data-test-workflow-verification="error"]').hasText(expected);
+      });
+    });
   });
 });
