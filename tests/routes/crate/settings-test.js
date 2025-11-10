@@ -223,12 +223,54 @@ module('Route | crate.settings', hooks => {
         assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Namespace ID: (not yet set)');
         assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
         assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').doesNotIncludeText('Environment');
+        assert.dom('[data-test-gitlab-config="1"] [data-test-remove-config-button]').exists();
         assert.dom('[data-test-gitlab-config="2"] td:nth-child(1)').hasText('GitLab');
         assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Repository: johndoe/crates.io');
         assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Namespace ID: 1234');
         assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
         assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Environment: release');
+        assert.dom('[data-test-gitlab-config="2"] [data-test-remove-config-button]').exists();
         assert.dom('[data-test-no-config]').doesNotExist();
+
+        // Click the remove button
+        await click('[data-test-gitlab-config="2"] [data-test-remove-config-button]');
+
+        // Check that the config is no longer displayed
+        assert.dom('[data-test-gitlab-config]').exists({ count: 1 });
+        assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Repository: rust-lang/crates.io');
+        assert.dom('[data-test-notification-message]').hasText('Trusted Publishing configuration removed successfully');
+      });
+
+      test('deletion failure', async function (assert) {
+        let { crate, user } = prepare(this);
+        this.authenticateAs(user);
+
+        // Create a GitLab config for the crate
+        let config = this.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'rust-lang',
+          namespace_id: '1234',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+          environment: 'release',
+        });
+
+        // Mock the server to return an error when trying to delete the config
+        this.worker.use(
+          http.delete(`/api/v1/trusted_publishing/gitlab_configs/${config.id}`, () => {
+            return HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 });
+          }),
+        );
+
+        await visit(`/crates/${crate.name}/settings`);
+        assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+        assert.dom('[data-test-gitlab-config]').exists({ count: 1 });
+
+        await click('[data-test-remove-config-button]');
+        assert.dom('[data-test-gitlab-config]').exists({ count: 1 });
+        assert
+          .dom('[data-test-notification-message]')
+          .hasText('Failed to remove Trusted Publishing configuration: Server error');
       });
     });
   });
