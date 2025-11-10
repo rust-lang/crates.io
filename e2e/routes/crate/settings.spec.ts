@@ -143,5 +143,50 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         );
       });
     });
+
+    test.describe('GitLab', () => {
+      test('happy path', async ({ msw, page, percy }) => {
+        const { crate } = await prepare(msw);
+
+        // Create two GitLab configs for the crate
+        msw.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'rust-lang',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+        });
+
+        msw.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'johndoe',
+          namespace_id: '1234',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+          environment: 'release',
+        });
+
+        await page.goto('/crates/foo/settings');
+        await expect(page).toHaveURL('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
+        await expect(page.locator('[data-test-add-trusted-publisher-button]')).toBeVisible();
+        await expect(page.locator('[data-test-gitlab-config]')).toHaveCount(2);
+        await expect(page.locator('[data-test-gitlab-config="1"] td:nth-child(1)')).toHaveText('GitLab');
+        let details = page.locator('[data-test-gitlab-config="1"] td:nth-child(2)');
+        await expect(details).toContainText('Repository: rust-lang/crates.io');
+        await expect(details).toContainText('Namespace ID: (not yet set)');
+        await expect(details).toContainText('Workflow: .gitlab-ci.yml');
+        await expect(details).not.toContainText('Environment');
+        await expect(page.locator('[data-test-gitlab-config="2"] td:nth-child(1)')).toHaveText('GitLab');
+        details = page.locator('[data-test-gitlab-config="2"] td:nth-child(2)');
+        await expect(details).toContainText('Repository: johndoe/crates.io');
+        await expect(details).toContainText('Namespace ID: 1234');
+        await expect(details).toContainText('Workflow: .gitlab-ci.yml');
+        await expect(details).toContainText('Environment: release');
+        await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
+
+        await percy.snapshot();
+      });
+    });
   });
 });
