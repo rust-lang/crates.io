@@ -9,6 +9,7 @@ export default class NewTrustedPublisherRoute extends Route {
   setupController(controller, model) {
     super.setupController(controller, model);
 
+    controller.publisher = 'GitHub';
     controller.namespace = '';
     controller.project = '';
     controller.workflow = '';
