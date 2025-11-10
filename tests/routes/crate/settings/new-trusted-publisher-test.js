@@ -124,8 +124,8 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
         assert.dom('[data-test-publisher]').hasValue(publisher);
-        assert.dom('[data-test-repository-owner]').hasValue(owner);
-        assert.dom('[data-test-repository-name]').hasValue(repo);
+        assert.dom('[data-test-namespace]').hasValue(owner);
+        assert.dom('[data-test-project]').hasValue(repo);
       });
     }
   });
@@ -149,17 +149,17 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
       // Check that the form is displayed correctly
       assert.dom('[data-test-publisher]').exists();
-      assert.dom('[data-test-repository-owner]').exists();
-      assert.dom('[data-test-repository-name]').exists();
-      assert.dom('[data-test-workflow-filename]').exists();
+      assert.dom('[data-test-namespace]').exists();
+      assert.dom('[data-test-project]').exists();
+      assert.dom('[data-test-workflow]').exists();
       assert.dom('[data-test-environment]').exists();
       assert.dom('[data-test-add]').exists();
       assert.dom('[data-test-cancel]').exists();
 
       // Fill in the form
-      await fillIn('[data-test-repository-owner]', 'rust-lang');
-      await fillIn('[data-test-repository-name]', 'crates.io');
-      await fillIn('[data-test-workflow-filename]', 'ci.yml');
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', 'ci.yml');
       await fillIn('[data-test-environment]', 'release');
 
       // Submit the form
@@ -200,14 +200,14 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       await click('[data-test-add]');
 
       // Check that validation errors are displayed
-      assert.dom('[data-test-repository-owner-group] [data-test-error]').exists();
-      assert.dom('[data-test-repository-name-group] [data-test-error]').exists();
-      assert.dom('[data-test-workflow-filename-group] [data-test-error]').exists();
+      assert.dom('[data-test-namespace-group] [data-test-error]').exists();
+      assert.dom('[data-test-project-group] [data-test-error]').exists();
+      assert.dom('[data-test-workflow-group] [data-test-error]').exists();
 
       // Fill in the required fields
-      await fillIn('[data-test-repository-owner]', 'rust-lang');
-      await fillIn('[data-test-repository-name]', 'crates.io');
-      await fillIn('[data-test-workflow-filename]', 'ci.yml');
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', 'ci.yml');
 
       // Submit the form
       await click('[data-test-add]');
@@ -227,17 +227,17 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
 
       // Fill in the form
-      await fillIn('[data-test-repository-owner]', 'rust-lang');
-      await fillIn('[data-test-repository-name]', 'crates.io');
-      await fillIn('[data-test-workflow-filename]', 'ci.yml');
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', 'ci.yml');
 
       // Submit the form
       let clickPromise = click('[data-test-add]');
       await waitFor('[data-test-add] [data-test-spinner]');
       assert.dom('[data-test-publisher]').isDisabled();
-      assert.dom('[data-test-repository-owner]').isDisabled();
-      assert.dom('[data-test-repository-name]').isDisabled();
-      assert.dom('[data-test-workflow-filename]').isDisabled();
+      assert.dom('[data-test-namespace]').isDisabled();
+      assert.dom('[data-test-project]').isDisabled();
+      assert.dom('[data-test-workflow]').isDisabled();
       assert.dom('[data-test-environment]').isDisabled();
       assert.dom('[data-test-add]').isDisabled();
 
@@ -251,9 +251,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
         .hasText('An error has occurred while adding the Trusted Publishing configuration: Server error');
 
       assert.dom('[data-test-publisher]').isEnabled();
-      assert.dom('[data-test-repository-owner]').isEnabled();
-      assert.dom('[data-test-repository-name]').isEnabled();
-      assert.dom('[data-test-workflow-filename]').isEnabled();
+      assert.dom('[data-test-namespace]').isEnabled();
+      assert.dom('[data-test-project]').isEnabled();
+      assert.dom('[data-test-workflow]').isEnabled();
       assert.dom('[data-test-environment]').isEnabled();
       assert.dom('[data-test-add]').isEnabled();
 
@@ -279,9 +279,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
           .dom('[data-test-workflow-verification="initial"]')
           .hasText('The workflow filename will be verified once all necessary fields are filled.');
 
-        await fillIn('[data-test-repository-owner]', 'rust-lang');
-        await fillIn('[data-test-repository-name]', 'crates.io');
-        await fillIn('[data-test-workflow-filename]', 'ci.yml');
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', 'ci.yml');
 
         await waitFor('[data-test-workflow-verification="success"]');
 
@@ -302,9 +302,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
           }),
         );
 
-        await fillIn('[data-test-repository-owner]', 'rust-lang');
-        await fillIn('[data-test-repository-name]', 'crates.io');
-        await fillIn('[data-test-workflow-filename]', 'missing.yml');
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', 'missing.yml');
 
         await waitFor('[data-test-workflow-verification="not-found"]');
 
@@ -329,9 +329,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
           }),
         );
 
-        await fillIn('[data-test-repository-owner]', 'rust-lang');
-        await fillIn('[data-test-repository-name]', 'crates.io');
-        await fillIn('[data-test-workflow-filename]', 'ci.yml');
+        await fillIn('[data-test-namespace]', 'rust-lang');
+        await fillIn('[data-test-project]', 'crates.io');
+        await fillIn('[data-test-workflow]', 'ci.yml');
 
         await waitFor('[data-test-workflow-verification="error"]');
 

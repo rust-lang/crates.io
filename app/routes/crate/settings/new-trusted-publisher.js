@@ -9,9 +9,9 @@ export default class NewTrustedPublisherRoute extends Route {
   setupController(controller, model) {
     super.setupController(controller, model);
 
-    controller.repositoryOwner = '';
-    controller.repositoryName = '';
-    controller.workflowFilename = '';
+    controller.namespace = '';
+    controller.project = '';
+    controller.workflow = '';
     controller.environment = '';
 
     let repository = model.crate.repository;
@@ -20,8 +20,8 @@ export default class NewTrustedPublisherRoute extends Route {
         let url = new URL(repository);
         let pathParts = url.pathname.slice(1).split('/');
         if (pathParts.length >= 2) {
-          controller.repositoryOwner = pathParts[0];
-          controller.repositoryName = pathParts[1].replace(/.git$/, '');
+          controller.namespace = pathParts[0];
+          controller.project = pathParts[1].replace(/.git$/, '');
         }
       } catch {
         // ignore malformed URLs
