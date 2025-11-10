@@ -59,6 +59,55 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
   });
 
   test.describe('Trusted Publishing', () => {
+    test('mixed GitHub and GitLab configs', async ({ msw, page, percy }) => {
+      const { crate } = await prepare(msw);
+
+      // Create GitHub config
+      msw.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
+      // Create GitLab config
+      msw.db.trustpubGitlabConfig.create({
+        crate,
+        namespace: 'johndoe',
+        namespace_id: '1234',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+        environment: 'production',
+      });
+
+      await page.goto('/crates/foo/settings');
+      await expect(page).toHaveURL('/crates/foo/settings');
+
+      await percy.snapshot();
+
+      // Check that both GitHub and GitLab configs are displayed
+      await expect(page.locator('[data-test-trusted-publishing]')).toBeVisible();
+      await expect(page.locator('[data-test-add-trusted-publisher-button]')).toBeVisible();
+      await expect(page.locator('[data-test-github-config]')).toHaveCount(1);
+      await expect(page.locator('[data-test-gitlab-config]')).toHaveCount(1);
+
+      // Verify GitHub config
+      await expect(page.locator('[data-test-github-config="1"] td:nth-child(1)')).toHaveText('GitHub');
+      let details = page.locator('[data-test-github-config="1"] td:nth-child(2)');
+      await expect(details).toContainText('Repository: rust-lang/crates.io');
+      await expect(details).toContainText('Workflow: ci.yml');
+
+      // Verify GitLab config
+      await expect(page.locator('[data-test-gitlab-config="1"] td:nth-child(1)')).toHaveText('GitLab');
+      details = page.locator('[data-test-gitlab-config="1"] td:nth-child(2)');
+      await expect(details).toContainText('Repository: johndoe/crates.io');
+      await expect(details).toContainText('Namespace ID: 1234');
+      await expect(details).toContainText('Workflow: .gitlab-ci.yml');
+      await expect(details).toContainText('Environment: production');
+
+      await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
+    });
+
     test.describe('GitHub', () => {
       test('happy path', async ({ msw, page, percy }) => {
         const { crate } = await prepare(msw);
@@ -98,8 +147,6 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         await expect(details).toContainText('Environment: release');
         await expect(page.locator('[data-test-github-config="2"] [data-test-remove-config-button]')).toBeVisible();
         await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
-
-        await percy.snapshot();
 
         // Click the remove button
         await page.click('[data-test-github-config="2"] [data-test-remove-config-button]');
@@ -184,8 +231,6 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         await expect(details).toContainText('Workflow: .gitlab-ci.yml');
         await expect(details).toContainText('Environment: release');
         await expect(page.locator('[data-test-no-config]')).not.toBeVisible();
-
-        await percy.snapshot();
       });
     });
   });

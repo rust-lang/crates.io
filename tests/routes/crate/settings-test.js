@@ -63,6 +63,53 @@ module('Route | crate.settings', hooks => {
   });
 
   module('Trusted Publishing', function () {
+    test('mixed GitHub and GitLab configs', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      // Create GitHub configs
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
+      // Create GitLab configs
+      this.db.trustpubGitlabConfig.create({
+        crate,
+        namespace: 'johndoe',
+        namespace_id: '1234',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+        environment: 'production',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+
+      await percySnapshot(assert);
+
+      // Check that both GitHub and GitLab configs are displayed
+      assert.dom('[data-test-trusted-publishing]').exists();
+      assert.dom('[data-test-github-config]').exists({ count: 1 });
+      assert.dom('[data-test-gitlab-config]').exists({ count: 1 });
+
+      // Verify GitHub config
+      assert.dom('[data-test-github-config="1"] td:nth-child(1)').hasText('GitHub');
+      assert.dom('[data-test-github-config="1"] td:nth-child(2)').includesText('Repository: rust-lang/crates.io');
+      assert.dom('[data-test-github-config="1"] td:nth-child(2)').includesText('Workflow: ci.yml');
+
+      // Verify GitLab config
+      assert.dom('[data-test-gitlab-config="1"] td:nth-child(1)').hasText('GitLab');
+      assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Repository: johndoe/crates.io');
+      assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Namespace ID: 1234');
+      assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
+      assert.dom('[data-test-gitlab-config="1"] td:nth-child(2)').includesText('Environment: production');
+
+      assert.dom('[data-test-no-config]').doesNotExist();
+    });
+
     module('GitHub', function () {
       test('happy path', async function (assert) {
         const { crate, user } = prepare(this);
@@ -86,8 +133,6 @@ module('Route | crate.settings', hooks => {
 
         await visit(`/crates/${crate.name}/settings`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
-
-        await percySnapshot(assert);
 
         // Check that the GitHub config is displayed
         assert.dom('[data-test-trusted-publishing]').exists();
@@ -169,8 +214,6 @@ module('Route | crate.settings', hooks => {
 
         await visit(`/crates/${crate.name}/settings`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
-
-        await percySnapshot(assert);
 
         // Check that the GitLab config is displayed
         assert.dom('[data-test-trusted-publishing]').exists();
