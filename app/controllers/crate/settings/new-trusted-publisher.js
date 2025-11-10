@@ -35,7 +35,7 @@ export default class NewTrustedPublisherController extends Controller {
   }
 
   get verificationUrl() {
-    if (this.namespace && this.project && this.workflow) {
+    if (this.publisher === 'GitHub' && this.namespace && this.project && this.workflow) {
       return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
     }
   }
