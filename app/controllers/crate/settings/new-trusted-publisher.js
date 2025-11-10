@@ -2,9 +2,8 @@ import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import Ember from 'ember';
 
-import { rawTimeout, restartableTask, task } from 'ember-concurrency';
+import { task } from 'ember-concurrency';
 
 export default class NewTrustedPublisherController extends Controller {
   @service notifications;
@@ -41,28 +40,6 @@ export default class NewTrustedPublisherController extends Controller {
       return `https://gitlab.com/${this.namespace}/${this.project}/-/raw/HEAD/${this.workflow}`;
     }
   }
-
-  verifyWorkflowTask = restartableTask(async () => {
-    let timeout = Ember.testing ? 0 : 500;
-    await rawTimeout(timeout);
-
-    let { verificationUrl } = this;
-    if (!verificationUrl) return null;
-
-    try {
-      let response = await fetch(verificationUrl, { method: 'HEAD' });
-
-      if (response.ok) {
-        return 'success';
-      } else if (response.status === 404) {
-        return 'not-found';
-      } else {
-        return 'error';
-      }
-    } catch {
-      return 'error';
-    }
-  });
 
   saveConfigTask = task(async () => {
     if (!this.validate()) return;
