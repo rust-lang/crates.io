@@ -26,6 +26,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
           class='publisher-select base-input'
           data-test-publisher
           {{on 'change' @controller.publisherChanged}}
+          {{on 'change' (perform @controller.verifyWorkflowTask)}}
         >
           {{#each @controller.publishers as |publisher|}}
             <option value={{publisher}} selected={{eq @controller.publisher publisher}}>{{publisher}}</option>
@@ -232,6 +233,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             data-test-namespace
             {{autoFocus}}
             {{on 'input' @controller.resetNamespaceValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.namespaceInvalid}}
@@ -260,6 +262,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             class='input base-input'
             data-test-project
             {{on 'input' @controller.resetProjectValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.projectInvalid}}
@@ -288,6 +291,7 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
             class='input base-input'
             data-test-workflow
             {{on 'input' @controller.resetWorkflowValidation}}
+            {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
           {{#if @controller.workflowInvalid}}
@@ -308,6 +312,41 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
               <code>.gitlab-ci.yml</code>
               or
               <code>ci/publish.yml</code>.
+            </div>
+          {{/if}}
+
+          {{#if (not @controller.verificationUrl)}}
+            <div class='workflow-verification' data-test-workflow-verification='initial'>
+              The workflow filepath will be verified once all necessary fields are filled.
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'success')}}
+            <div class='workflow-verification workflow-verification--success' data-test-workflow-verification='success'>
+              ✓ Workflow file found at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'not-found')}}
+            <div
+              class='workflow-verification workflow-verification--warning'
+              data-test-workflow-verification='not-found'
+            >
+              ⚠ Workflow file not found at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+            </div>
+          {{else if (eq @controller.verifyWorkflowTask.last.value 'error')}}
+            <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='error'>
+              ⚠ Could not verify workflow file at
+              <a href='{{@controller.verificationUrl}}' target='_blank' rel='noopener noreferrer'>
+                {{@controller.verificationUrl}}
+              </a>
+              (network error)
+            </div>
+          {{else}}
+            <div class='workflow-verification' data-test-workflow-verification='verifying'>
+              Verifying...
             </div>
           {{/if}}
         {{/let}}
