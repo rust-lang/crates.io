@@ -343,6 +343,147 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
   });
 
   module('GitLab', function () {
-    // Placeholder for GitLab tests when they are implemented
+    test('happy path', async function (assert) {
+      let { crate } = prepare(this);
+
+      this.db.trustpubGitlabConfig.create({
+        crate,
+        namespace: 'johndoe',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+      await click('[data-test-add-trusted-publisher-button]');
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      // Check that the form is displayed correctly
+      assert.dom('[data-test-publisher]').exists();
+      assert.dom('[data-test-namespace]').exists();
+      assert.dom('[data-test-project]').exists();
+      assert.dom('[data-test-workflow]').exists();
+
+      // Select GitLab from the publisher dropdown
+      await fillIn('[data-test-publisher]', 'GitLab');
+
+      // Check that GitLab fields are displayed
+      assert.dom('[data-test-namespace]').exists();
+      assert.dom('[data-test-project]').exists();
+      assert.dom('[data-test-workflow]').exists();
+      assert.dom('[data-test-environment]').exists();
+      assert.dom('[data-test-add]').exists();
+      assert.dom('[data-test-cancel]').exists();
+
+      // Fill in the form
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', '.gitlab-ci.yml');
+      await fillIn('[data-test-environment]', 'production');
+
+      // Submit the form
+      await click('[data-test-add]');
+
+      // Check that we're redirected back to the crate settings page
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+
+      // Check that the config was created
+      let config = this.db.trustpubGitlabConfig.findFirst({
+        where: {
+          namespace: { equals: 'rust-lang' },
+          project: { equals: 'crates.io' },
+          workflow_filepath: { equals: '.gitlab-ci.yml' },
+          environment: { equals: 'production' },
+        },
+      });
+      assert.ok(config, 'Config was created');
+
+      // Check that the success notification is displayed
+      assert.dom('[data-test-notification-message]').hasText('Trusted Publishing configuration added successfully');
+
+      // Check that the config is displayed on the crate settings page
+      assert.dom('[data-test-gitlab-config]').exists({ count: 2 });
+      assert.dom('[data-test-gitlab-config="2"] td:nth-child(1)').hasText('GitLab');
+      assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Repository: rust-lang/crates.io');
+      assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Workflow: .gitlab-ci.yml');
+      assert.dom('[data-test-gitlab-config="2"] td:nth-child(2)').includesText('Environment: production');
+    });
+
+    test('validation errors', async function (assert) {
+      let { crate } = prepare(this);
+
+      await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      // Select GitLab from the publisher dropdown
+      await fillIn('[data-test-publisher]', 'GitLab');
+
+      // Submit the form without filling in required fields
+      await click('[data-test-add]');
+
+      // Check that validation errors are displayed
+      assert.dom('[data-test-namespace-group] [data-test-error]').exists();
+      assert.dom('[data-test-project-group] [data-test-error]').exists();
+      assert.dom('[data-test-workflow-group] [data-test-error]').exists();
+
+      // Fill in the required fields
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', '.gitlab-ci.yml');
+
+      // Submit the form
+      await click('[data-test-add]');
+
+      // Check that we're redirected back to the crate settings page
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+    });
+
+    test('loading and error state', async function (assert) {
+      let { crate } = prepare(this);
+
+      // Mock the server to return an error
+      let deferred = defer();
+      this.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
+
+      await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
+
+      // Select GitLab from the publisher dropdown
+      await fillIn('[data-test-publisher]', 'GitLab');
+
+      // Fill in the form
+      await fillIn('[data-test-namespace]', 'rust-lang');
+      await fillIn('[data-test-project]', 'crates.io');
+      await fillIn('[data-test-workflow]', '.gitlab-ci.yml');
+
+      // Submit the form
+      let clickPromise = click('[data-test-add]');
+      await waitFor('[data-test-add] [data-test-spinner]');
+      assert.dom('[data-test-publisher]').isDisabled();
+      assert.dom('[data-test-namespace]').isDisabled();
+      assert.dom('[data-test-project]').isDisabled();
+      assert.dom('[data-test-workflow]').isDisabled();
+      assert.dom('[data-test-environment]').isDisabled();
+      assert.dom('[data-test-add]').isDisabled();
+
+      // Resolve the deferred with an error
+      deferred.resolve(HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 }));
+      await clickPromise;
+
+      // Check that the error notification is displayed
+      assert
+        .dom('[data-test-notification-message]')
+        .hasText('An error has occurred while adding the Trusted Publishing configuration: Server error');
+
+      assert.dom('[data-test-publisher]').isEnabled();
+      assert.dom('[data-test-namespace]').isEnabled();
+      assert.dom('[data-test-project]').isEnabled();
+      assert.dom('[data-test-workflow]').isEnabled();
+      assert.dom('[data-test-environment]').isEnabled();
+      assert.dom('[data-test-add]').isEnabled();
+
+      await click('[data-test-cancel]');
+      assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
+      assert.dom('[data-test-gitlab-config]').exists({ count: 0 });
+    });
   });
 });
