@@ -1,0 +1,62 @@
+---
+source: src/tests/routes/trustpub/gitlab_configs/list.rs
+expression: json
+---
+{
+  "gitlab_configs": [
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 11,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "repo-10",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 12,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "repo-11",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 13,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "repo-12",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 14,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "repo-13",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 15,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "repo-14",
+      "workflow_filepath": ".gitlab-ci.yml"
+    }
+  ],
+  "meta": {
+    "next_page": "?crate=foo&per_page=5&seek=MTU",
+    "total": 15
+  }
+}
