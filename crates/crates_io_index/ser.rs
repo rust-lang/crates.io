@@ -31,6 +31,7 @@ mod tests {
             yanked: None,
             links: None,
             rust_version: None,
+            pubtime: None,
             v: None,
         };
         let mut buffer = Vec::new();
@@ -58,6 +59,7 @@ mod tests {
                 yanked: None,
                 links: None,
                 rust_version: None,
+                pubtime: None,
                 v: None,
             })
             .collect::<Vec<_>>();
