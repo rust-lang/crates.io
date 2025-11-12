@@ -106,6 +106,10 @@ export default class CrateHeader extends Component {
         Dependents
       </nav.Tab>
 
+      <nav.Tab @link={{link_ 'crate.security' @crate}} data-test-security-tab>
+        Security
+      </nav.Tab>
+
       {{#if this.isOwner}}
         <nav.Tab @link={{link_ 'crate.settings' @crate}} data-test-settings-tab>
           Settings
