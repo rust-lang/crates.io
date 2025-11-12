@@ -78,7 +78,7 @@
     "@percy/playwright": "1.0.9",
     "@playwright/test": "1.56.1",
     "@sinonjs/fake-timers": "15.0.0",
-    "@types/node": "24.10.0",
+    "@types/node": "24.10.1",
     "@types/sinonjs__fake-timers": "15.0.1",
     "@zestia/ember-auto-focus": "5.1.0",
     "broccoli-asset-rev": "3.0.0",
@@ -186,14 +186,14 @@
     "last 1 years"
   ],
   "engines": {
-    "node": "24.11.0",
+    "node": "24.11.1",
     "pnpm": "10.21.0"
   },
   "ember": {
     "edition": "octane"
   },
   "volta": {
-    "node": "24.11.0"
+    "node": "24.11.1"
   },
   "exports": {
     "./tests/*": "./tests/*",
