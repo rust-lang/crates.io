@@ -18,6 +18,7 @@ Router.map(function () {
     this.route('range', { path: '/range/:range' });
 
     this.route('reverse-dependencies', { path: 'reverse_dependencies' });
+    this.route('security');
 
     this.route('owners');
     this.route('settings', function () {
