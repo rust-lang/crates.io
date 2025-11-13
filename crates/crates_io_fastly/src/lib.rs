@@ -2,7 +2,7 @@
 
 use anyhow::{Context, anyhow};
 use reqwest::Client;
-use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderValue, InvalidHeaderValue};
 use secrecy::{ExposeSecret, SecretString};
 use tracing::{debug, instrument, trace};
 
@@ -60,18 +60,11 @@ impl Fastly {
 
         trace!(?url);
 
-        let api_token = self.api_token.expose_secret();
-        let mut api_token = HeaderValue::try_from(api_token)?;
-        api_token.set_sensitive(true);
-
-        let mut headers = HeaderMap::new();
-        headers.append("Fastly-Key", api_token);
-
         debug!("sending invalidation request to Fastly");
         let response = self
             .client
             .post(&url)
-            .headers(headers)
+            .header("Fastly-Key", self.token_header_value()?)
             .send()
             .await
             .context("failed to send invalidation request to Fastly")?;
@@ -96,5 +89,13 @@ impl Fastly {
                 Err(error).with_context(|| format!("failed to purge {url}"))
             }
         }
+    }
+
+    fn token_header_value(&self) -> Result<HeaderValue, InvalidHeaderValue> {
+        let api_token = self.api_token.expose_secret();
+
+        let mut header_value = HeaderValue::try_from(api_token)?;
+        header_value.set_sensitive(true);
+        Ok(header_value)
     }
 }
