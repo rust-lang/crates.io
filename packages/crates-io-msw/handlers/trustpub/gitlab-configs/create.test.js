@@ -1,0 +1,227 @@
+import { afterEach, assert, beforeEach, test, vi } from 'vitest';
+
+import { db } from '../../../index.js';
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test('happy path', async function () {
+  vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+  let crate = db.crate.create({ name: 'test-crate' });
+  db.version.create({ crate });
+
+  let user = db.user.create({ emailVerified: true });
+  db.mswSession.create({ user });
+
+  // Create crate ownership
+  db.crateOwnership.create({
+    crate,
+    user,
+  });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: crate.name,
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    gitlab_config: {
+      id: 1,
+      crate: crate.name,
+      namespace: 'rust-lang',
+      namespace_id: null,
+      project: 'crates.io',
+      workflow_filepath: '.gitlab-ci.yml',
+      environment: null,
+      created_at: '2023-01-01T00:00:00.000Z',
+    },
+  });
+});
+
+test('happy path with environment', async function () {
+  vi.setSystemTime(new Date('2023-02-01T00:00:00Z'));
+
+  let crate = db.crate.create({ name: 'test-crate-env' });
+  db.version.create({ crate });
+
+  let user = db.user.create({ emailVerified: true });
+  db.mswSession.create({ user });
+
+  // Create crate ownership
+  db.crateOwnership.create({
+    crate,
+    user,
+  });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: crate.name,
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+        environment: 'production',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    gitlab_config: {
+      id: 1,
+      crate: crate.name,
+      namespace: 'rust-lang',
+      namespace_id: null,
+      project: 'crates.io',
+      workflow_filepath: '.gitlab-ci.yml',
+      environment: 'production',
+      created_at: '2023-02-01T00:00:00.000Z',
+    },
+  });
+});
+
+test('returns 403 if unauthenticated', async function () {
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: 'test-crate',
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 403);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'must be logged in to perform that action' }],
+  });
+});
+
+test('returns 400 if request body is invalid', async function () {
+  let user = db.user.create();
+  db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+
+  assert.strictEqual(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'invalid request body' }],
+  });
+});
+
+test('returns 400 if required fields are missing', async function () {
+  let user = db.user.create();
+  db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: 'test-crate',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'missing required fields' }],
+  });
+});
+
+test("returns 404 if crate can't be found", async function () {
+  let user = db.user.create();
+  db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: 'nonexistent',
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 404);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'Not Found' }],
+  });
+});
+
+test('returns 400 if user is not an owner of the crate', async function () {
+  let crate = db.crate.create({ name: 'test-crate-not-owner' });
+  db.version.create({ crate });
+
+  let user = db.user.create();
+  db.mswSession.create({ user });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: crate.name,
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'You are not an owner of this crate' }],
+  });
+});
+
+test('returns 403 if user email is not verified', async function () {
+  let crate = db.crate.create({ name: 'test-crate-unverified' });
+  db.version.create({ crate });
+
+  let user = db.user.create({ emailVerified: false });
+  db.mswSession.create({ user });
+
+  // Create crate ownership
+  db.crateOwnership.create({
+    crate,
+    user,
+  });
+
+  let response = await fetch('/api/v1/trusted_publishing/gitlab_configs', {
+    method: 'POST',
+    body: JSON.stringify({
+      gitlab_config: {
+        crate: crate.name,
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      },
+    }),
+  });
+
+  assert.strictEqual(response.status, 403);
+  assert.deepEqual(await response.json(), {
+    errors: [{ detail: 'You must verify your email address to create a Trusted Publishing config' }],
+  });
+});

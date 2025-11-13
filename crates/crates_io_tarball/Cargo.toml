@@ -20,7 +20,7 @@ tar = { version = "=0.4.44", optional = true }
 thiserror = "=2.0.17"
 tracing = "=0.1.41"
 tokio = { version = "=1.48.0", features = ["io-util", "macros", "rt-multi-thread"] }
-async-compression = { version = "=0.4.32", default-features = false, features = ["gzip", "tokio"] }
+async-compression = { version = "=0.4.33", default-features = false, features = ["gzip", "tokio"] }
 futures-util = "=0.3.31"
 
 [dev-dependencies]
@@ -28,7 +28,7 @@ anyhow = "=1.0.100"
 claims = "=0.8.0"
 clap = { version = "=4.5.51", features = ["derive", "unicode", "wrap_help"] }
 flate2 = { version = "=1.1.5" }
-indicatif = { version = "=0.18.2", features = ["rayon"] }
+indicatif = { version = "=0.18.3", features = ["rayon"] }
 insta = "=1.43.2"
 rayon = "=1.11.0"
 tar = { version = "=0.4.44" }

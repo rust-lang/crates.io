@@ -23,6 +23,7 @@ import keyword from './models/keyword.js';
 import mswSession from './models/msw-session.js';
 import team from './models/team.js';
 import trustpubGithubConfig from './models/trustpub/github-config.js';
+import trustpubGitlabConfig from './models/trustpub/gitlab-config.js';
 import user from './models/user.js';
 import versionDownload from './models/version-download.js';
 import version from './models/version.js';
@@ -57,6 +58,7 @@ export const db = factory({
   mswSession,
   team,
   trustpubGithubConfig,
+  trustpubGitlabConfig,
   user,
   versionDownload,
   version,

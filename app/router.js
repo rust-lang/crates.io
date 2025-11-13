@@ -35,7 +35,6 @@ Router.map(function () {
     this.route('pending-invites');
   });
   this.route('settings', function () {
-    this.route('email-notifications');
     this.route('profile');
     this.route('tokens', function () {
       this.route('new');
