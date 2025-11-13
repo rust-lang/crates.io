@@ -1607,6 +1607,7 @@ dependencies = [
  "async-trait",
  "claims",
  "crates_io_env_vars",
+ "crates_io_version",
  "http 1.3.1",
  "mockall",
  "mockito",
@@ -1634,6 +1635,7 @@ dependencies = [
 name = "crates_io_fastly"
 version = "0.0.0"
 dependencies = [
+ "crates_io_version",
  "reqwest",
  "secrecy",
  "thiserror 2.0.17",
@@ -1726,6 +1728,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
+ "crates_io_version",
  "reqwest",
  "secrecy",
  "serde",
@@ -1850,6 +1853,7 @@ dependencies = [
  "chrono",
  "claims",
  "clap",
+ "crates_io_version",
  "insta",
  "jsonwebtoken",
  "mockall",

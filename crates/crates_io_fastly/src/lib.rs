@@ -1,7 +1,8 @@
 #![doc = include_str!("../README.md")]
 
-use reqwest::Client;
+use crates_io_version::user_agent;
 use reqwest::header::{HeaderValue, InvalidHeaderValue};
+use reqwest::{Client, ClientBuilder};
 use secrecy::{ExposeSecret, SecretString};
 use thiserror::Error;
 use tracing::{debug, instrument, trace};
@@ -31,7 +32,11 @@ pub struct Fastly {
 
 impl Fastly {
     pub fn new(api_token: SecretString) -> Self {
-        let client = Client::new();
+        let client = ClientBuilder::new()
+            .user_agent(user_agent())
+            .build()
+            .unwrap();
+
         Self { client, api_token }
     }
 

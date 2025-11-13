@@ -48,7 +48,7 @@ impl RealDocsRsClient {
     pub fn new(base_url: Url, api_token: impl Into<String>) -> Self {
         Self {
             client: reqwest::Client::builder()
-                .user_agent("crates.io")
+                .user_agent(crates_io_version::user_agent())
                 .build()
                 .unwrap(),
             base_url,
