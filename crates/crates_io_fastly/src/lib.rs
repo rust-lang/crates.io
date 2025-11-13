@@ -13,7 +13,8 @@ pub struct Fastly {
 }
 
 impl Fastly {
-    pub fn new(client: Client, api_token: SecretString) -> Self {
+    pub fn new(api_token: SecretString) -> Self {
+        let client = Client::new();
         Self { client, api_token }
     }
 
