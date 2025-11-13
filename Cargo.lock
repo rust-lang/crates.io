@@ -1422,7 +1422,6 @@ dependencies = [
  "crates_io_env_vars",
  "crates_io_fastly",
  "crates_io_github",
- "crates_io_heroku",
  "crates_io_index",
  "crates_io_linecount",
  "crates_io_markdown",
@@ -1435,6 +1434,7 @@ dependencies = [
  "crates_io_test_db",
  "crates_io_test_utils",
  "crates_io_trustpub",
+ "crates_io_version",
  "crates_io_worker",
  "csv",
  "deadpool-diesel",
@@ -1572,8 +1572,8 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
- "crates_io_heroku",
  "crates_io_test_db",
+ "crates_io_version",
  "diesel",
  "diesel-async",
  "flate2",
@@ -1864,6 +1864,14 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "crates_io_version"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "crates_io_heroku",
 ]
 
 [[package]]

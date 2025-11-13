@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use axum::Json;
 use axum::response::IntoResponse;
-use crates_io_heroku::commit;
+use crates_io_version::commit;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
