@@ -11,9 +11,13 @@ pub struct Fastly {
 }
 
 impl Fastly {
+    pub fn new(client: Client, api_token: SecretString) -> Self {
+        Self { client, api_token }
+    }
+
     pub fn from_environment(client: Client) -> Option<Self> {
         let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?.into();
-        Some(Self { client, api_token })
+        Some(Self::new(client, api_token))
     }
 
     /// Invalidate a path on Fastly
