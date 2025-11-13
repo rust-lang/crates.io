@@ -28,7 +28,7 @@ impl Fastly {
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
-    pub async fn invalidate(&self, base_domain: &str, path: &str) -> anyhow::Result<()> {
+    pub async fn purge_both_domains(&self, base_domain: &str, path: &str) -> anyhow::Result<()> {
         self.purge(base_domain, path).await?;
 
         let prefixed_domain = format!("fastly-{base_domain}");

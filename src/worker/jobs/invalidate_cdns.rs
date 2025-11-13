@@ -44,7 +44,7 @@ impl BackgroundJob for InvalidateCdns {
         {
             for path in self.paths.iter() {
                 fastly
-                    .invalidate(cdn_domain, path)
+                    .purge_both_domains(cdn_domain, path)
                     .await
                     .with_context(|| format!("Failed to invalidate path on Fastly CDN: {path}"))?;
             }

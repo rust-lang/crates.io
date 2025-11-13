@@ -123,7 +123,7 @@ impl BackgroundJob for GenerateOgImage {
         // Invalidate Fastly CDN
         if let Some(fastly) = ctx.fastly()
             && let Some(cdn_domain) = &ctx.config.storage.cdn_prefix
-            && let Err(error) = fastly.invalidate(cdn_domain, &og_image_path).await
+            && let Err(error) = fastly.purge_both_domains(cdn_domain, &og_image_path).await
         {
             warn!("Failed to invalidate Fastly CDN for {crate_name}: {error}");
         }

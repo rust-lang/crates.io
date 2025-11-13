@@ -95,7 +95,7 @@ impl Environment {
             && let Some(cdn_domain) = &self.config.storage.cdn_prefix
         {
             fastly
-                .invalidate(cdn_domain, path)
+                .purge_both_domains(cdn_domain, path)
                 .await
                 .context("Fastly")?;
         }
