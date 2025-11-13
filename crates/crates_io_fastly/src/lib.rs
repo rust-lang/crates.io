@@ -1,10 +1,27 @@
 #![doc = include_str!("../README.md")]
 
-use anyhow::{Context, anyhow};
 use reqwest::Client;
-use reqwest::header::{HeaderMap, HeaderValue, InvalidHeaderValue};
+use reqwest::header::{HeaderValue, InvalidHeaderValue};
 use secrecy::{ExposeSecret, SecretString};
+use thiserror::Error;
 use tracing::{debug, instrument, trace};
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("Wildcard invalidations are not supported for Fastly")]
+    WildcardNotSupported,
+
+    #[error("Invalid API token format")]
+    InvalidApiToken(#[from] InvalidHeaderValue),
+
+    #[error("Failed to `POST {url}`{}: {source}", status.map(|s| format!(" (status: {})", s)).unwrap_or_default())]
+    PurgeFailed {
+        url: String,
+        status: Option<reqwest::StatusCode>,
+        #[source]
+        source: reqwest::Error,
+    },
+}
 
 #[derive(Debug)]
 pub struct Fastly {
@@ -30,7 +47,7 @@ impl Fastly {
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
-    pub async fn purge_both_domains(&self, base_domain: &str, path: &str) -> anyhow::Result<()> {
+    pub async fn purge_both_domains(&self, base_domain: &str, path: &str) -> Result<(), Error> {
         self.purge(base_domain, path).await?;
 
         let prefixed_domain = format!("fastly-{base_domain}");
@@ -48,11 +65,9 @@ impl Fastly {
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
-    pub async fn purge(&self, domain: &str, path: &str) -> anyhow::Result<()> {
+    pub async fn purge(&self, domain: &str, path: &str) -> Result<(), Error> {
         if path.contains('*') {
-            return Err(anyhow!(
-                "wildcard invalidations are not supported for Fastly"
-            ));
+            return Err(Error::WildcardNotSupported);
         }
 
         let path = path.trim_start_matches('/');
@@ -67,7 +82,11 @@ impl Fastly {
             .header("Fastly-Key", self.token_header_value()?)
             .send()
             .await
-            .context("failed to send invalidation request to Fastly")?;
+            .map_err(|source| Error::PurgeFailed {
+                url: url.clone(),
+                status: None,
+                source,
+            })?;
 
         let status = response.status();
 
@@ -86,7 +105,11 @@ impl Fastly {
                     "invalidation request to Fastly failed"
                 );
 
-                Err(error).with_context(|| format!("failed to purge {url}"))
+                Err(Error::PurgeFailed {
+                    url,
+                    status: Some(status),
+                    source: error,
+                })
             }
         }
     }

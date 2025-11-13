@@ -1632,9 +1632,9 @@ dependencies = [
 name = "crates_io_fastly"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "reqwest",
  "secrecy",
+ "thiserror 2.0.17",
  "tracing",
 ]
 
