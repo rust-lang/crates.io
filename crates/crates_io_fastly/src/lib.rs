@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use anyhow::{Context, anyhow};
 use reqwest::Client;
 use reqwest::header::{HeaderMap, HeaderValue};

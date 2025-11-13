@@ -1,6 +1,5 @@
 use crate::Emails;
 use crate::cloudfront::CloudFront;
-use crate::fastly::Fastly;
 use crate::storage::Storage;
 use crate::typosquat;
 use crate::worker::jobs::ProcessCloudfrontInvalidationQueue;
@@ -8,6 +7,7 @@ use anyhow::Context;
 use bon::Builder;
 use crates_io_database::models::CloudFrontInvalidationQueueItem;
 use crates_io_docs_rs::DocsRsClient;
+use crates_io_fastly::Fastly;
 use crates_io_index::{Repository, RepositoryConfig};
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepo;

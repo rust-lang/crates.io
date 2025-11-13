@@ -1420,6 +1420,7 @@ dependencies = [
  "crates_io_diesel_helpers",
  "crates_io_docs_rs",
  "crates_io_env_vars",
+ "crates_io_fastly",
  "crates_io_github",
  "crates_io_index",
  "crates_io_linecount",
@@ -1625,6 +1626,16 @@ dependencies = [
  "anyhow",
  "claims",
  "dotenvy",
+]
+
+[[package]]
+name = "crates_io_fastly"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "secrecy",
+ "tracing",
 ]
 
 [[package]]

@@ -73,6 +73,7 @@ crates_io_database_dump = { path = "crates/crates_io_database_dump" }
 crates_io_diesel_helpers = { path = "crates/crates_io_diesel_helpers" }
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
+crates_io_fastly = { path = "crates/crates_io_fastly" }
 crates_io_github = { path = "crates/crates_io_github" }
 crates_io_index = { path = "crates/crates_io_index" }
 crates_io_linecount = { path = "crates/crates_io_linecount" }

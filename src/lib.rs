@@ -27,7 +27,6 @@ pub mod config;
 pub mod controllers;
 pub mod db;
 pub mod email;
-pub mod fastly;
 pub mod headers;
 pub mod index;
 mod licenses;
