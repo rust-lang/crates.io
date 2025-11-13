@@ -1,6 +1,6 @@
 use anyhow::Context;
 use crates_io_env_vars::{required_var, var, var_parsed};
-use crates_io_heroku::slug_commit;
+use crates_io_heroku::commit;
 use sentry::IntoDsn;
 use sentry::types::Dsn;
 
@@ -29,7 +29,7 @@ impl SentryConfig {
         Ok(Self {
             dsn,
             environment,
-            release: slug_commit()?,
+            release: commit()?,
             traces_sample_rate: var_parsed("SENTRY_TRACES_SAMPLE_RATE")?.unwrap_or(0.0),
         })
     }
