@@ -48,6 +48,14 @@ impl Fastly {
         Ok(())
     }
 
+    /// Invalidate a path on Fastly
+    ///
+    /// This method takes a domain and path and invalidates the cached content
+    /// on Fastly. The path must not contain a wildcard, since the Fastly API
+    /// does not support wildcard invalidations.
+    ///
+    /// More information on Fastly's APIs for cache invalidations can be found here:
+    /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
     pub async fn purge(&self, domain: &str, path: &str) -> anyhow::Result<()> {
         if path.contains('*') {
