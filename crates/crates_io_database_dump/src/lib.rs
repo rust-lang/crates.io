@@ -70,8 +70,10 @@ impl DumpDirectory {
         }
         let metadata = Metadata {
             timestamp: &self.timestamp,
-            crates_io_commit: std::env::var("HEROKU_SLUG_COMMIT")
-                .unwrap_or_else(|_| "unknown".to_owned()),
+            crates_io_commit: crates_io_heroku::slug_commit()
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| "unknown".to_owned()),
         };
         let path = self.path().join("metadata.json");
         debug!(?path, "Writing metadata.json file…");
