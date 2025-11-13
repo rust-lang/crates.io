@@ -2590,6 +2590,32 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "owners": {
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "example": [
+                      "octocat",
+                      "github:rust-lang:owners"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "owners"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -2684,6 +2710,32 @@ expression: response.json()
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "owners": {
+                    "description": "List of owner login names to add or remove.\n\nFor users, use just the username (e.g., `\"octocat\"`).\nFor GitHub teams, use the format `github:org:team` (e.g., `\"github:rust-lang:owners\"`).",
+                    "example": [
+                      "octocat",
+                      "github:rust-lang:owners"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "owners"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
