@@ -22,3 +22,19 @@
 pub fn commit() -> anyhow::Result<Option<String>> {
     crates_io_heroku::commit()
 }
+
+/// Returns a User-Agent string identifying the crates.io service.
+///
+/// The User-Agent format is `crates.io/[commit] (https://crates.io)` when
+/// the commit SHA is known, or `crates.io (https://crates.io)` when unknown.
+///
+/// The commit SHA is truncated to the first 7 characters.
+pub fn user_agent() -> String {
+    match commit() {
+        Ok(Some(commit_sha)) => {
+            let short_sha = commit_sha.chars().take(7).collect::<String>();
+            format!("crates.io/{short_sha} (https://crates.io)")
+        }
+        _ => "crates.io (https://crates.io)".to_string(),
+    }
+}
