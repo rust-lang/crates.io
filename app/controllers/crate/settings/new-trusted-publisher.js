@@ -12,13 +12,13 @@ export default class NewTrustedPublisherController extends Controller {
   @service router;
 
   @tracked publisher = 'GitHub';
-  @tracked repositoryOwner = '';
-  @tracked repositoryName = '';
-  @tracked workflowFilename = '';
+  @tracked namespace = '';
+  @tracked project = '';
+  @tracked workflow = '';
   @tracked environment = '';
-  @tracked repositoryOwnerInvalid = false;
-  @tracked repositoryNameInvalid = false;
-  @tracked workflowFilenameInvalid = false;
+  @tracked namespaceInvalid = false;
+  @tracked projectInvalid = false;
+  @tracked workflowInvalid = false;
 
   get crate() {
     return this.model.crate;
@@ -29,14 +29,14 @@ export default class NewTrustedPublisherController extends Controller {
   }
 
   get repository() {
-    if (this.repositoryOwner && this.repositoryName) {
-      return `${this.repositoryOwner}/${this.repositoryName}`;
+    if (this.namespace && this.project) {
+      return `${this.namespace}/${this.project}`;
     }
   }
 
   get verificationUrl() {
-    if (this.repositoryOwner && this.repositoryName && this.workflowFilename) {
-      return `https://raw.githubusercontent.com/${this.repositoryOwner}/${this.repositoryName}/HEAD/.github/workflows/${this.workflowFilename}`;
+    if (this.namespace && this.project && this.workflow) {
+      return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
     }
   }
 
@@ -67,9 +67,9 @@ export default class NewTrustedPublisherController extends Controller {
 
     let config = this.store.createRecord('trustpub-github-config', {
       crate: this.crate,
-      repository_owner: this.repositoryOwner,
-      repository_name: this.repositoryName,
-      workflow_filename: this.workflowFilename,
+      repository_owner: this.namespace,
+      repository_name: this.project,
+      workflow_filename: this.workflow,
       environment: this.environment || null,
     });
 
@@ -77,9 +77,9 @@ export default class NewTrustedPublisherController extends Controller {
       // Save the new config on the backend
       await config.save();
 
-      this.repositoryOwner = '';
-      this.repositoryName = '';
-      this.workflowFilename = '';
+      this.namespace = '';
+      this.project = '';
+      this.workflow = '';
       this.environment = '';
 
       // Navigate back to the crate settings page
@@ -99,22 +99,22 @@ export default class NewTrustedPublisherController extends Controller {
   });
 
   validate() {
-    this.repositoryOwnerInvalid = !this.repositoryOwner;
-    this.repositoryNameInvalid = !this.repositoryName;
-    this.workflowFilenameInvalid = !this.workflowFilename;
+    this.namespaceInvalid = !this.namespace;
+    this.projectInvalid = !this.project;
+    this.workflowInvalid = !this.workflow;
 
-    return !this.repositoryOwnerInvalid && !this.repositoryNameInvalid && !this.workflowFilenameInvalid;
+    return !this.namespaceInvalid && !this.projectInvalid && !this.workflowInvalid;
   }
 
-  @action resetRepositoryOwnerValidation() {
-    this.repositoryOwnerInvalid = false;
+  @action resetNamespaceValidation() {
+    this.namespaceInvalid = false;
   }
 
-  @action resetRepositoryNameValidation() {
-    this.repositoryNameInvalid = false;
+  @action resetProjectValidation() {
+    this.projectInvalid = false;
   }
 
-  @action resetWorkflowFilenameValidation() {
-    this.workflowFilenameInvalid = false;
+  @action resetWorkflowValidation() {
+    this.workflowInvalid = false;
   }
 }

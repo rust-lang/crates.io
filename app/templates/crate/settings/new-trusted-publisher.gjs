@@ -37,25 +37,25 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
     </div>
 
     {{#if (eq @controller.publisher 'GitHub')}}
-      <div class='form-group' data-test-repository-owner-group>
+      <div class='form-group' data-test-namespace-group>
         {{#let (uniqueId) as |id|}}
           <label for={{id}} class='form-group-name'>Repository owner</label>
 
           <Input
             id={{id}}
             @type='text'
-            @value={{@controller.repositoryOwner}}
+            @value={{@controller.namespace}}
             disabled={{@controller.saveConfigTask.isRunning}}
             aria-required='true'
-            aria-invalid={{if @controller.repositoryOwnerInvalid 'true' 'false'}}
+            aria-invalid={{if @controller.namespaceInvalid 'true' 'false'}}
             class='input base-input'
-            data-test-repository-owner
+            data-test-namespace
             {{autoFocus}}
-            {{on 'input' @controller.resetRepositoryOwnerValidation}}
+            {{on 'input' @controller.resetNamespaceValidation}}
             {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
-          {{#if @controller.repositoryOwnerInvalid}}
+          {{#if @controller.namespaceInvalid}}
             <div class='form-group-error' data-test-error>
               Please enter a repository owner.
             </div>
@@ -67,24 +67,24 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
         {{/let}}
       </div>
 
-      <div class='form-group' data-test-repository-name-group>
+      <div class='form-group' data-test-project-group>
         {{#let (uniqueId) as |id|}}
           <label for={{id}} class='form-group-name'>Repository name</label>
 
           <Input
             id={{id}}
             @type='text'
-            @value={{@controller.repositoryName}}
+            @value={{@controller.project}}
             disabled={{@controller.saveConfigTask.isRunning}}
             aria-required='true'
-            aria-invalid={{if @controller.repositoryNameInvalid 'true' 'false'}}
+            aria-invalid={{if @controller.projectInvalid 'true' 'false'}}
             class='input base-input'
-            data-test-repository-name
-            {{on 'input' @controller.resetRepositoryNameValidation}}
+            data-test-project
+            {{on 'input' @controller.resetProjectValidation}}
             {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
-          {{#if @controller.repositoryNameInvalid}}
+          {{#if @controller.projectInvalid}}
             <div class='form-group-error' data-test-error>
               Please enter a repository name.
             </div>
@@ -96,24 +96,24 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
         {{/let}}
       </div>
 
-      <div class='form-group' data-test-workflow-filename-group>
+      <div class='form-group' data-test-workflow-group>
         {{#let (uniqueId) as |id|}}
           <label for={{id}} class='form-group-name'>Workflow filename</label>
 
           <Input
             id={{id}}
             @type='text'
-            @value={{@controller.workflowFilename}}
+            @value={{@controller.workflow}}
             disabled={{@controller.saveConfigTask.isRunning}}
             aria-required='true'
-            aria-invalid={{if @controller.workflowFilenameInvalid 'true' 'false'}}
+            aria-invalid={{if @controller.workflowInvalid 'true' 'false'}}
             class='input base-input'
-            data-test-workflow-filename
-            {{on 'input' @controller.resetWorkflowFilenameValidation}}
+            data-test-workflow
+            {{on 'input' @controller.resetWorkflowValidation}}
             {{on 'input' (perform @controller.verifyWorkflowTask)}}
           />
 
-          {{#if @controller.workflowFilenameInvalid}}
+          {{#if @controller.workflowInvalid}}
             <div class='form-group-error' data-test-error>
               Please enter a workflow filename.
             </div>

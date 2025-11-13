@@ -115,8 +115,8 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
         await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
         await expect(page.locator('[data-test-publisher]')).toHaveValue(publisher);
-        await expect(page.locator('[data-test-repository-owner]')).toHaveValue(owner);
-        await expect(page.locator('[data-test-repository-name]')).toHaveValue(repo);
+        await expect(page.locator('[data-test-namespace]')).toHaveValue(owner);
+        await expect(page.locator('[data-test-project]')).toHaveValue(repo);
       });
     }
   });
@@ -140,17 +140,17 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
 
       // Check that the form is displayed correctly
       await expect(page.locator('[data-test-publisher]')).toBeVisible();
-      await expect(page.locator('[data-test-repository-owner]')).toBeVisible();
-      await expect(page.locator('[data-test-repository-name]')).toBeVisible();
-      await expect(page.locator('[data-test-workflow-filename]')).toBeVisible();
+      await expect(page.locator('[data-test-namespace]')).toBeVisible();
+      await expect(page.locator('[data-test-project]')).toBeVisible();
+      await expect(page.locator('[data-test-workflow]')).toBeVisible();
       await expect(page.locator('[data-test-environment]')).toBeVisible();
       await expect(page.locator('[data-test-add]')).toBeVisible();
       await expect(page.locator('[data-test-cancel]')).toBeVisible();
 
       // Fill in the form
-      await page.fill('[data-test-repository-owner]', 'rust-lang');
-      await page.fill('[data-test-repository-name]', 'crates.io');
-      await page.fill('[data-test-workflow-filename]', 'ci.yml');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
       await page.fill('[data-test-environment]', 'release');
 
       // Submit the form
@@ -194,14 +194,14 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await page.click('[data-test-add]');
 
       // Check that validation errors are displayed
-      await expect(page.locator('[data-test-repository-owner-group] [data-test-error]')).toBeVisible();
-      await expect(page.locator('[data-test-repository-name-group] [data-test-error]')).toBeVisible();
-      await expect(page.locator('[data-test-workflow-filename-group] [data-test-error]')).toBeVisible();
+      await expect(page.locator('[data-test-namespace-group] [data-test-error]')).toBeVisible();
+      await expect(page.locator('[data-test-project-group] [data-test-error]')).toBeVisible();
+      await expect(page.locator('[data-test-workflow-group] [data-test-error]')).toBeVisible();
 
       // Fill in the required fields
-      await page.fill('[data-test-repository-owner]', 'rust-lang');
-      await page.fill('[data-test-repository-name]', 'crates.io');
-      await page.fill('[data-test-workflow-filename]', 'ci.yml');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
 
       // Submit the form
       await page.click('[data-test-add]');
@@ -221,17 +221,17 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
 
       // Fill in the form
-      await page.fill('[data-test-repository-owner]', 'rust-lang');
-      await page.fill('[data-test-repository-name]', 'crates.io');
-      await page.fill('[data-test-workflow-filename]', 'ci.yml');
+      await page.fill('[data-test-namespace]', 'rust-lang');
+      await page.fill('[data-test-project]', 'crates.io');
+      await page.fill('[data-test-workflow]', 'ci.yml');
 
       // Submit the form
       await page.click('[data-test-add]');
       await expect(page.locator('[data-test-add] [data-test-spinner]')).toBeVisible();
       await expect(page.locator('[data-test-publisher]')).toBeDisabled();
-      await expect(page.locator('[data-test-repository-owner]')).toBeDisabled();
-      await expect(page.locator('[data-test-repository-name]')).toBeDisabled();
-      await expect(page.locator('[data-test-workflow-filename]')).toBeDisabled();
+      await expect(page.locator('[data-test-namespace]')).toBeDisabled();
+      await expect(page.locator('[data-test-project]')).toBeDisabled();
+      await expect(page.locator('[data-test-workflow]')).toBeDisabled();
       await expect(page.locator('[data-test-environment]')).toBeDisabled();
       await expect(page.locator('[data-test-add]')).toBeDisabled();
 
@@ -244,9 +244,9 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       );
 
       await expect(page.locator('[data-test-publisher]')).toBeEnabled();
-      await expect(page.locator('[data-test-repository-owner]')).toBeEnabled();
-      await expect(page.locator('[data-test-repository-name]')).toBeEnabled();
-      await expect(page.locator('[data-test-workflow-filename]')).toBeEnabled();
+      await expect(page.locator('[data-test-namespace]')).toBeEnabled();
+      await expect(page.locator('[data-test-project]')).toBeEnabled();
+      await expect(page.locator('[data-test-workflow]')).toBeEnabled();
       await expect(page.locator('[data-test-environment]')).toBeEnabled();
       await expect(page.locator('[data-test-add]')).toBeEnabled();
 
@@ -272,9 +272,9 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
           'The workflow filename will be verified once all necessary fields are filled.',
         );
 
-        await page.fill('[data-test-repository-owner]', 'rust-lang');
-        await page.fill('[data-test-repository-name]', 'crates.io');
-        await page.fill('[data-test-workflow-filename]', 'ci.yml');
+        await page.fill('[data-test-namespace]', 'rust-lang');
+        await page.fill('[data-test-project]', 'crates.io');
+        await page.fill('[data-test-workflow]', 'ci.yml');
 
         await expect(page.locator('[data-test-workflow-verification="success"]')).toHaveText(
           '✓ Workflow file found at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml',
@@ -293,9 +293,9 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
           }),
         );
 
-        await page.fill('[data-test-repository-owner]', 'rust-lang');
-        await page.fill('[data-test-repository-name]', 'crates.io');
-        await page.fill('[data-test-workflow-filename]', 'missing.yml');
+        await page.fill('[data-test-namespace]', 'rust-lang');
+        await page.fill('[data-test-project]', 'crates.io');
+        await page.fill('[data-test-workflow]', 'missing.yml');
 
         await expect(page.locator('[data-test-workflow-verification="not-found"]')).toHaveText(
           '⚠ Workflow file not found at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/missing.yml',
@@ -318,9 +318,9 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
           }),
         );
 
-        await page.fill('[data-test-repository-owner]', 'rust-lang');
-        await page.fill('[data-test-repository-name]', 'crates.io');
-        await page.fill('[data-test-workflow-filename]', 'ci.yml');
+        await page.fill('[data-test-namespace]', 'rust-lang');
+        await page.fill('[data-test-project]', 'crates.io');
+        await page.fill('[data-test-workflow]', 'ci.yml');
 
         await expect(page.locator('[data-test-workflow-verification="error"]')).toHaveText(
           '⚠ Could not verify workflow file at https://raw.githubusercontent.com/rust-lang/crates.io/HEAD/.github/workflows/ci.yml (network error)',
