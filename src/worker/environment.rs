@@ -91,8 +91,13 @@ impl Environment {
             result.context("Failed to enqueue CloudFront invalidation processing job")?;
         }
 
-        if let Some(fastly) = self.fastly() {
-            fastly.invalidate(path).await.context("Fastly")?;
+        if let Some(fastly) = self.fastly()
+            && let Some(cdn_domain) = &self.config.storage.cdn_prefix
+        {
+            fastly
+                .invalidate(cdn_domain, path)
+                .await
+                .context("Fastly")?;
         }
 
         Ok(())

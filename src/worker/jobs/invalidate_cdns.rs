@@ -39,10 +39,12 @@ impl BackgroundJob for InvalidateCdns {
         // For now, we won't parallelise: most crate deletions are for new crates with one (or very
         // few) versions, so the actual number of paths being invalidated is likely to be small, and
         // this is all happening from either a background job or admin command anyway.
-        if let Some(fastly) = ctx.fastly() {
+        if let Some(fastly) = ctx.fastly()
+            && let Some(cdn_domain) = &ctx.config.storage.cdn_prefix
+        {
             for path in self.paths.iter() {
                 fastly
-                    .invalidate(path)
+                    .invalidate(cdn_domain, path)
                     .await
                     .with_context(|| format!("Failed to invalidate path on Fastly CDN: {path}"))?;
             }

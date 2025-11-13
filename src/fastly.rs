@@ -8,19 +8,12 @@ use tracing::{debug, instrument, trace};
 pub struct Fastly {
     client: Client,
     api_token: SecretString,
-    static_domain_name: String,
 }
 
 impl Fastly {
     pub fn from_environment(client: Client) -> Option<Self> {
         let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?.into();
-        let static_domain_name = dotenvy::var("S3_CDN").expect("missing S3_CDN");
-
-        Some(Self {
-            client,
-            api_token,
-            static_domain_name,
-        })
+        Some(Self { client, api_token })
     }
 
     /// Invalidate a path on Fastly
@@ -35,10 +28,10 @@ impl Fastly {
     /// More information on Fastly's APIs for cache invalidations can be found here:
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
-    pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
-        self.purge(&self.static_domain_name, path).await?;
+    pub async fn invalidate(&self, base_domain: &str, path: &str) -> anyhow::Result<()> {
+        self.purge(base_domain, path).await?;
 
-        let prefixed_domain = format!("fastly-{}", self.static_domain_name);
+        let prefixed_domain = format!("fastly-{base_domain}");
         self.purge(&prefixed_domain, path).await?;
 
         Ok(())
