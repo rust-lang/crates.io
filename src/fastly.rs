@@ -36,14 +36,10 @@ impl Fastly {
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
     pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
-        let domains = [
-            &self.static_domain_name,
-            &format!("fastly-{}", self.static_domain_name),
-        ];
+        self.purge(&self.static_domain_name, path).await?;
 
-        for domain in domains {
-            self.purge(domain, path).await?;
-        }
+        let prefixed_domain = format!("fastly-{}", self.static_domain_name);
+        self.purge(&prefixed_domain, path).await?;
 
         Ok(())
     }
