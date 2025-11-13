@@ -46,17 +46,19 @@ impl Fastly {
             &self.static_domain_name,
             &format!("fastly-{}", self.static_domain_name),
         ];
-        let path = path.trim_start_matches('/');
 
-        for domain in domains.iter() {
-            let url = format!("https://api.fastly.com/purge/{domain}/{path}");
-            self.purge_url(&url).await?;
+        for domain in domains {
+            self.purge(domain, path).await?;
         }
 
         Ok(())
     }
 
-    async fn purge_url(&self, url: &str) -> anyhow::Result<()> {
+    #[instrument(skip(self))]
+    pub async fn purge(&self, domain: &str, path: &str) -> anyhow::Result<()> {
+        let path = path.trim_start_matches('/');
+        let url = format!("https://api.fastly.com/purge/{domain}/{path}");
+
         trace!(?url);
 
         let api_token = self.api_token.expose_secret();
@@ -69,7 +71,7 @@ impl Fastly {
         debug!("sending invalidation request to Fastly");
         let response = self
             .client
-            .post(url)
+            .post(&url)
             .headers(headers)
             .send()
             .await
