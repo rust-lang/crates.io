@@ -27,6 +27,7 @@ use crates_io_index::RepositoryConfig;
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepoImpl;
 use crates_io_worker::Runner;
+use generic_array::functional::FunctionalSequence;
 use object_store::prefix::PrefixStore;
 use reqwest::Client;
 use std::sync::Arc;
@@ -85,7 +86,10 @@ fn main() -> anyhow::Result<()> {
         .expect("Couldn't build client");
 
     let emails = Emails::from_environment(&config);
-    let fastly = Fastly::from_environment(client.clone());
+
+    let fastly_api_token = var("FASTLY_API_TOKEN")?.map(Into::into);
+    let fastly = fastly_api_token.map(|token| Fastly::new(client, token));
+
     let team_repo = TeamRepoImpl::default();
 
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);

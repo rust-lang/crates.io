@@ -15,11 +15,6 @@ impl Fastly {
         Self { client, api_token }
     }
 
-    pub fn from_environment(client: Client) -> Option<Self> {
-        let api_token = dotenvy::var("FASTLY_API_TOKEN").ok()?.into();
-        Some(Self::new(client, api_token))
-    }
-
     /// Invalidate a path on Fastly
     ///
     /// This method takes a path and invalidates the cached content on Fastly. The path must not
