@@ -36,12 +36,6 @@ impl Fastly {
     /// <https://developer.fastly.com/reference/api/purging/>
     #[instrument(skip(self))]
     pub async fn invalidate(&self, path: &str) -> anyhow::Result<()> {
-        if path.contains('*') {
-            return Err(anyhow!(
-                "wildcard invalidations are not supported for Fastly"
-            ));
-        }
-
         let domains = [
             &self.static_domain_name,
             &format!("fastly-{}", self.static_domain_name),
@@ -56,6 +50,12 @@ impl Fastly {
 
     #[instrument(skip(self))]
     pub async fn purge(&self, domain: &str, path: &str) -> anyhow::Result<()> {
+        if path.contains('*') {
+            return Err(anyhow!(
+                "wildcard invalidations are not supported for Fastly"
+            ));
+        }
+
         let path = path.trim_start_matches('/');
         let url = format!("https://api.fastly.com/purge/{domain}/{path}");
 
