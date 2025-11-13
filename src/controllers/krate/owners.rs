@@ -119,6 +119,7 @@ pub struct ModifyResponse {
     put,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
+    request_body = inline(ChangeOwnersRequest),
     security(
         ("api_token" = []),
         ("cookie" = []),
@@ -140,6 +141,7 @@ pub async fn add_owners(
     delete,
     path = "/api/v1/crates/{name}/owners",
     params(CratePath),
+    request_body = inline(ChangeOwnersRequest),
     security(
         ("api_token" = []),
         ("cookie" = []),
@@ -156,8 +158,13 @@ pub async fn remove_owners(
     modify_owners(app, path.name, parts, body, false).await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct ChangeOwnersRequest {
+    /// List of owner login names to add or remove.
+    ///
+    /// For users, use just the username (e.g., `"octocat"`).
+    /// For GitHub teams, use the format `github:org:team` (e.g., `"github:rust-lang:owners"`).
+    #[schema(example = json!(["octocat", "github:rust-lang:owners"]))]
     #[serde(alias = "users")]
     owners: Vec<String>,
 }
