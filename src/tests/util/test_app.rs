@@ -524,6 +524,7 @@ fn simple_config() -> config::Server {
         disable_token_creation: None,
         banner_message: None,
         index_include_pubtime: false,
+        sparse_index_fastly_enabled: true,
     }
 }
 
