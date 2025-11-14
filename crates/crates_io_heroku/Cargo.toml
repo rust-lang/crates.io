@@ -1,0 +1,12 @@
+[package]
+name = "crates_io_heroku"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = "=1.0.100"
+crates_io_env_vars = { path = "../crates_io_env_vars" }

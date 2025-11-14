@@ -1421,6 +1421,7 @@ dependencies = [
  "crates_io_docs_rs",
  "crates_io_env_vars",
  "crates_io_github",
+ "crates_io_heroku",
  "crates_io_index",
  "crates_io_linecount",
  "crates_io_markdown",
@@ -1570,6 +1571,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "crates_io_heroku",
  "crates_io_test_db",
  "diesel",
  "diesel-async",
@@ -1643,6 +1645,14 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "crates_io_heroku"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "crates_io_env_vars",
 ]
 
 [[package]]

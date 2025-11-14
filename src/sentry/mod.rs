@@ -12,7 +12,8 @@ use tracing::warn;
 /// be set if a DSN is provided.
 ///
 /// `HEROKU_SLUG_COMMIT`, if present, will be used as the `release` property
-/// on all events.
+/// on all events. This environment variable is provided by Heroku when the
+/// `runtime-dyno-metadata` Labs feature is enabled.
 pub fn init() -> Option<ClientInitGuard> {
     let config = match SentryConfig::from_environment() {
         Ok(config) => config,
