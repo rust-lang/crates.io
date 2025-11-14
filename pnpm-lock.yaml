@@ -73,8 +73,8 @@ importers:
         specifier: 4.0.1
         version: 4.0.1
       '@ember/test-helpers':
-        specifier: 5.4.0
-        version: 5.4.0(@babel/core@7.28.5)
+        specifier: 5.4.1
+        version: 5.4.1(@babel/core@7.28.5)
       '@ember/test-waiters':
         specifier: 4.1.1
         version: 4.1.1
@@ -134,7 +134,7 @@ importers:
         version: 3.0.8
       ember-a11y-testing:
         specifier: 7.1.3
-        version: 7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1)
+        version: 7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1)
       ember-auto-import:
         specifier: 2.11.2
         version: 2.11.2(webpack@5.102.1)
@@ -173,7 +173,7 @@ importers:
         version: 5.1.0(@babel/core@7.28.5)
       ember-data:
         specifier: 5.8.0
-        version: 5.8.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(@ember/test-waiters@4.1.1)(ember-inflector@6.0.0(@babel/core@7.28.5))(qunit@2.24.2)
+        version: 5.8.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(@ember/test-waiters@4.1.1)(ember-inflector@6.0.0(@babel/core@7.28.5))(qunit@2.24.2)
       ember-disable-prototype-extensions:
         specifier: 1.1.3
         version: 1.1.3
@@ -191,10 +191,10 @@ importers:
         version: 6.0.0(@babel/core@7.28.5)
       ember-keyboard:
         specifier: 9.0.4
-        version: 9.0.4(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))
+        version: 9.0.4(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))
       ember-link:
         specifier: 3.5.0
-        version: 3.5.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))
+        version: 3.5.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))
       ember-load-initializers:
         specifier: 3.0.1
         version: 3.0.1(ember-source@6.8.1(@glimmer/component@2.0.0)(rsvp@4.8.5))
@@ -206,7 +206,7 @@ importers:
         version: 9.0.3
       ember-qunit:
         specifier: 9.0.4
-        version: 9.0.4(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)
+        version: 9.0.4(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(qunit@2.24.2)
       ember-resolver:
         specifier: 13.1.1
         version: 13.1.1
@@ -1308,14 +1308,18 @@ packages:
   '@ember/string@4.0.1':
     resolution: {integrity: sha512-VWeng8BSWrIsdPfffOQt/bKwNKJL7+37gPFh/6iZZ9bke+S83kKqkS30poo4bTGfRcMnvAE0ie7txom+iDu81Q==}
 
-  '@ember/test-helpers@5.4.0':
-    resolution: {integrity: sha512-+dJ27A+w2/S8yYNnVEgHBrQFY9AM4A8KCSzLlO1nSvLsl1WYIz4GMlHOATaeDXuy+AMe7QTYspCsHqZ+5//GMg==}
+  '@ember/test-helpers@5.4.1':
+    resolution: {integrity: sha512-BUdT91ra+QibEWAUwtZmvTGFoDHJCxDU+fkQENA8Zs0FR3pZiICxxP/fgdlNExCjjdm1letut7ENoueBuDdixQ==}
 
   '@ember/test-waiters@4.1.1':
     resolution: {integrity: sha512-HbK70JYCDJcGI0CrwcbjeL2QHAn0HLwa3oGep7mr6l/yO95U7JYA8VN+/9VTsWJTmKueLtWayUqEmGS3a3mVOg==}
 
   '@embroider/addon-shim@1.10.0':
     resolution: {integrity: sha512-gcJuHiXgnrzaU8NyU+2bMbtS6PNOr5v5B8OXBqaBvTCsMpXLvKo8OBOQFCoUN0rPX2J6VaFqrbi/371sMvzZug==}
+    engines: {node: 12.* || 14.* || >= 16}
+
+  '@embroider/addon-shim@1.10.2':
+    resolution: {integrity: sha512-EfI9cJ5/3QSUJtwm7x1MXrx3TEa2p7RNgSHefy7fvGm8/DP1xUFL25nST1NaHbHcqR1UhMlrTtv5iUIDoVzeQQ==}
     engines: {node: 12.* || 14.* || >= 16}
 
   '@embroider/babel-loader-9@3.1.2':
@@ -9451,10 +9455,10 @@ snapshots:
 
   '@ember/string@4.0.1': {}
 
-  '@ember/test-helpers@5.4.0(@babel/core@7.28.5)':
+  '@ember/test-helpers@5.4.1(@babel/core@7.28.5)':
     dependencies:
       '@ember/test-waiters': 4.1.1
-      '@embroider/addon-shim': 1.10.0
+      '@embroider/addon-shim': 1.10.2
       '@embroider/macros': 1.19.2
       '@simple-dom/interface': 1.4.0
       decorator-transforms: 2.3.0(@babel/core@7.28.5)
@@ -9473,6 +9477,15 @@ snapshots:
       - supports-color
 
   '@embroider/addon-shim@1.10.0':
+    dependencies:
+      '@embroider/shared-internals': 3.0.1
+      broccoli-funnel: 3.0.8
+      common-ancestor-path: 1.0.1
+      semver: 7.7.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@embroider/addon-shim@1.10.2':
     dependencies:
       '@embroider/shared-internals': 3.0.1
       broccoli-funnel: 3.0.8
@@ -12656,9 +12669,9 @@ snapshots:
 
   electron-to-chromium@1.5.249: {}
 
-  ember-a11y-testing@7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1):
+  ember-a11y-testing@7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1):
     dependencies:
-      '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
+      '@ember/test-helpers': 5.4.1(@babel/core@7.28.5)
       '@ember/test-waiters': 4.1.1
       '@glimmer/env': 0.1.7
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
@@ -13145,7 +13158,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-data@5.8.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(@ember/test-waiters@4.1.1)(ember-inflector@6.0.0(@babel/core@7.28.5))(qunit@2.24.2):
+  ember-data@5.8.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(@ember/test-waiters@4.1.1)(ember-inflector@6.0.0(@babel/core@7.28.5))(qunit@2.24.2):
     dependencies:
       '@ember-data/adapter': 5.8.0(@babel/core@7.28.5)
       '@ember-data/debug': 5.8.0(@babel/core@7.28.5)
@@ -13168,7 +13181,7 @@ snapshots:
       '@warp-drive/legacy': 5.8.0(@warp-drive/core@5.8.0(@babel/core@7.28.5))(@warp-drive/utilities@5.8.0(@warp-drive/core@5.8.0(@babel/core@7.28.5)))
       '@warp-drive/utilities': 5.8.0(@warp-drive/core@5.8.0(@babel/core@7.28.5))
     optionalDependencies:
-      '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
+      '@ember/test-helpers': 5.4.1(@babel/core@7.28.5)
       qunit: 2.24.2
     transitivePeerDependencies:
       - '@babel/core'
@@ -13223,19 +13236,19 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-keyboard@9.0.4(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5)):
+  ember-keyboard@9.0.4(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5)):
     dependencies:
       '@embroider/addon-shim': 1.10.0
       ember-modifier: 4.2.2(@babel/core@7.28.5)
     optionalDependencies:
-      '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
+      '@ember/test-helpers': 5.4.1(@babel/core@7.28.5)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
 
-  ember-link@3.5.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.0(@babel/core@7.28.5)):
+  ember-link@3.5.0(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5)):
     dependencies:
-      '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
+      '@ember/test-helpers': 5.4.1(@babel/core@7.28.5)
       '@embroider/addon-shim': 1.10.0
       '@embroider/macros': 1.19.2
       decorator-transforms: 2.3.0(@babel/core@7.28.5)
@@ -13274,9 +13287,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-qunit@9.0.4(@ember/test-helpers@5.4.0(@babel/core@7.28.5))(qunit@2.24.2):
+  ember-qunit@9.0.4(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(qunit@2.24.2):
     dependencies:
-      '@ember/test-helpers': 5.4.0(@babel/core@7.28.5)
+      '@ember/test-helpers': 5.4.1(@babel/core@7.28.5)
       '@embroider/addon-shim': 1.10.0
       '@embroider/macros': 1.19.2
       qunit: 2.24.2
