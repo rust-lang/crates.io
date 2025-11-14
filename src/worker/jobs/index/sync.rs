@@ -42,7 +42,7 @@ impl BackgroundJob for SyncToGitIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let new = get_index_data(&crate_name, &mut conn)
+        let new = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
             .await
             .context("Failed to get index data")?;
 
@@ -114,7 +114,7 @@ impl BackgroundJob for SyncToSparseIndex {
         let crate_name = self.krate.clone();
         let mut conn = env.deadpool.get().await?;
 
-        let content = get_index_data(&crate_name, &mut conn)
+        let content = get_index_data(&crate_name, &mut conn, env.config.index_include_pubtime)
             .await
             .context("Failed to get index data")?;
 

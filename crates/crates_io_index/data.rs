@@ -1,4 +1,5 @@
 use crate::features::FeaturesMap;
+use chrono::{DateTime, Utc};
 use std::cmp::Ordering;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -24,6 +25,9 @@ pub struct Crate {
     pub links: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_version: Option<String>,
+    /// Publication timestamp in ISO8601 format
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pubtime: Option<DateTime<Utc>>,
     /// The schema version for this entry.
     ///
     /// If this is None, it defaults to version 1. Entries with unknown
