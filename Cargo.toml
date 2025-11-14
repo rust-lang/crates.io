@@ -75,7 +75,6 @@ crates_io_docs_rs = { path = "crates/crates_io_docs_rs" }
 crates_io_env_vars = { path = "crates/crates_io_env_vars" }
 crates_io_fastly = { path = "crates/crates_io_fastly" }
 crates_io_github = { path = "crates/crates_io_github" }
-crates_io_heroku = { path = "crates/crates_io_heroku" }
 crates_io_index = { path = "crates/crates_io_index" }
 crates_io_linecount = { path = "crates/crates_io_linecount" }
 crates_io_markdown = { path = "crates/crates_io_markdown" }
@@ -86,6 +85,7 @@ crates_io_session = { path = "crates/crates_io_session" }
 crates_io_tarball = { path = "crates/crates_io_tarball" }
 crates_io_team_repo = { path = "crates/crates_io_team_repo" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub" }
+crates_io_version = { path = "crates/crates_io_version" }
 crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.4.0"
 chrono = { version = "=0.4.42", default-features = false, features = ["serde"] }

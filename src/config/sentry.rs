@@ -1,6 +1,6 @@
 use anyhow::Context;
 use crates_io_env_vars::{required_var, var, var_parsed};
-use crates_io_heroku::commit;
+use crates_io_version::commit;
 use sentry::IntoDsn;
 use sentry::types::Dsn;
 

@@ -30,7 +30,9 @@ fn main() -> anyhow::Result<()> {
 
     let emails = Emails::from_environment(&config);
 
-    let client = Client::new();
+    let user_agent = crates_io_version::user_agent();
+    let client = Client::builder().user_agent(user_agent).build()?;
+
     let github = RealGitHubClient::new(client);
     let github = Box::new(github);
 

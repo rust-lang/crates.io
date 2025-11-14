@@ -70,7 +70,7 @@ impl DumpDirectory {
         }
         let metadata = Metadata {
             timestamp: &self.timestamp,
-            crates_io_commit: crates_io_heroku::commit()
+            crates_io_commit: crates_io_version::commit()
                 .ok()
                 .flatten()
                 .unwrap_or_else(|| "unknown".to_owned()),

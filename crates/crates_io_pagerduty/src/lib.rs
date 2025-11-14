@@ -45,7 +45,11 @@ impl PagerdutyClient {
     pub async fn send(&self, event: &Event) -> Result<()> {
         let service_key = &self.service_key;
 
-        let response = Client::new()
+        let client = Client::builder()
+            .user_agent(crates_io_version::user_agent())
+            .build()?;
+
+        let response = client
             .post("https://events.pagerduty.com/generic/2010-04-15/create_event.json")
             .header(header::ACCEPT, "application/vnd.pagerduty+json;version=2")
             .header(header::AUTHORIZATION, self.authorization.expose_secret())
