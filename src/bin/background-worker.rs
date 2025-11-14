@@ -16,19 +16,18 @@ extern crate tracing;
 use anyhow::Context;
 use crates_io::app::create_database_pool;
 use crates_io::cloudfront::CloudFront;
-use crates_io::fastly::Fastly;
 use crates_io::ssh;
 use crates_io::storage::Storage;
 use crates_io::worker::{Environment, RunnerExt};
 use crates_io::{Emails, config};
 use crates_io_docs_rs::RealDocsRsClient;
 use crates_io_env_vars::var;
+use crates_io_fastly::Fastly;
 use crates_io_index::RepositoryConfig;
 use crates_io_og_image::OgImageGenerator;
 use crates_io_team_repo::TeamRepoImpl;
 use crates_io_worker::Runner;
 use object_store::prefix::PrefixStore;
-use reqwest::Client;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
@@ -79,13 +78,11 @@ fn main() -> anyhow::Result<()> {
     let downloads_archive_store = PrefixStore::new(storage.as_inner(), "archive/version-downloads");
     let downloads_archive_store = Box::new(downloads_archive_store);
 
-    let client = Client::builder()
-        .timeout(Duration::from_secs(45))
-        .build()
-        .expect("Couldn't build client");
-
     let emails = Emails::from_environment(&config);
-    let fastly = Fastly::from_environment(client.clone());
+
+    let fastly_api_token = var("FASTLY_API_TOKEN")?.map(Into::into);
+    let fastly = fastly_api_token.map(Fastly::new);
+
     let team_repo = TeamRepoImpl::default();
 
     let docs_rs = RealDocsRsClient::from_environment().map(|cl| Box::new(cl) as _);
