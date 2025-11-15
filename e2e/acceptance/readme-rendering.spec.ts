@@ -35,7 +35,7 @@ const README_HTML = `
 </div>
 </div>
 
-<p><strong>Serde is a framework for <em>ser</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
+<p><strong>Serde is a framework for <em>set</em>ializing and <em>de</em>serializing Rust data structures efficiently and generically.</strong></p>
 <hr>
 <p>You may be looking for:</p>
 <ul>
