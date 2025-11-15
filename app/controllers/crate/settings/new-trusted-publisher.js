@@ -25,7 +25,7 @@ export default class NewTrustedPublisherController extends Controller {
   }
 
   get publishers() {
-    return ['GitHub'];
+    return ['GitHub', 'GitLab'];
   }
 
   get repository() {
@@ -37,6 +37,8 @@ export default class NewTrustedPublisherController extends Controller {
   get verificationUrl() {
     if (this.publisher === 'GitHub' && this.namespace && this.project && this.workflow) {
       return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
+    } else if (this.publisher === 'GitLab' && this.namespace && this.project && this.workflow) {
+      return `https://gitlab.com/${this.namespace}/${this.project}/-/raw/HEAD/${this.workflow}`;
     }
   }
 
@@ -65,13 +67,24 @@ export default class NewTrustedPublisherController extends Controller {
   saveConfigTask = task(async () => {
     if (!this.validate()) return;
 
-    let config = this.store.createRecord('trustpub-github-config', {
-      crate: this.crate,
-      repository_owner: this.namespace,
-      repository_name: this.project,
-      workflow_filename: this.workflow,
-      environment: this.environment || null,
-    });
+    let config;
+    if (this.publisher === 'GitHub') {
+      config = this.store.createRecord('trustpub-github-config', {
+        crate: this.crate,
+        repository_owner: this.namespace,
+        repository_name: this.project,
+        workflow_filename: this.workflow,
+        environment: this.environment || null,
+      });
+    } else if (this.publisher === 'GitLab') {
+      config = this.store.createRecord('trustpub-gitlab-config', {
+        crate: this.crate,
+        namespace: this.namespace,
+        project: this.project,
+        workflow_filepath: this.workflow,
+        environment: this.environment || null,
+      });
+    }
 
     try {
       // Save the new config on the backend
@@ -104,6 +117,10 @@ export default class NewTrustedPublisherController extends Controller {
     this.workflowInvalid = !this.workflow;
 
     return !this.namespaceInvalid && !this.projectInvalid && !this.workflowInvalid;
+  }
+
+  @action publisherChanged(event) {
+    this.publisher = event.target.value;
   }
 
   @action resetNamespaceValidation() {

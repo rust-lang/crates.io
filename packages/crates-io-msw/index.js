@@ -3,6 +3,7 @@ import categoryHandlers from './handlers/categories.js';
 import cratesHandlers from './handlers/crates.js';
 import docsRsHandlers from './handlers/docs-rs.js';
 import githubHandlers from './handlers/github.js';
+import gitlabHandlers from './handlers/gitlab.js';
 import inviteHandlers from './handlers/invites.js';
 import keywordHandlers from './handlers/keywords.js';
 import metadataHandlers from './handlers/metadata.js';
@@ -35,6 +36,7 @@ export const handlers = [
   ...cratesHandlers,
   ...docsRsHandlers,
   ...githubHandlers,
+  ...gitlabHandlers,
   ...inviteHandlers,
   ...keywordHandlers,
   ...metadataHandlers,
