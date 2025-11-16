@@ -1,24 +1,30 @@
-use anyhow::{Context, anyhow};
 use std::net::SocketAddr;
+use std::str::FromStr as _;
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+
+use anyhow::{Context, anyhow};
+use futures_util::FutureExt as _;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::broadcast::Sender;
+use tokio_postgres::Config;
+use tokio_postgres::config::Host;
 use tracing::{debug, error};
 use url::Url;
 
 pub(crate) struct ChaosProxy {
     address: SocketAddr,
-    backend_address: SocketAddr,
+    backend_config: Config,
 
     break_networking_send: Sender<()>,
     restore_networking_send: Sender<()>,
 }
 
 impl ChaosProxy {
-    pub(crate) async fn new(backend_address: SocketAddr) -> anyhow::Result<Arc<Self>> {
-        debug!("Creating ChaosProxy for {backend_address}");
+    pub(crate) async fn new(backend_config: Config) -> anyhow::Result<Arc<Self>> {
+        debug!(?backend_config, "Creating ChaosProxy");
 
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
@@ -29,7 +35,7 @@ impl ChaosProxy {
 
         let instance = Arc::new(ChaosProxy {
             address,
-            backend_address,
+            backend_config,
 
             break_networking_send,
             restore_networking_send,
@@ -47,15 +53,12 @@ impl ChaosProxy {
     }
 
     pub(crate) async fn proxy_database_url(url: &str) -> anyhow::Result<(Arc<Self>, String)> {
-        let mut db_url = Url::parse(url).context("failed to parse database url")?;
-        let backend_addr = db_url
-            .socket_addrs(|| Some(5432))
-            .context("could not resolve database url")?
-            .first()
-            .copied()
-            .ok_or_else(|| anyhow!("the database url does not point to any IP"))?;
+        let backend_config =
+            Config::from_str(url).context("failed to parse database url as config")?;
 
-        let instance = ChaosProxy::new(backend_addr).await?;
+        let mut db_url = Url::parse(url).context("failed to parse database url")?;
+
+        let instance = ChaosProxy::new(backend_config).await?;
 
         db_url
             .set_ip_host(instance.address.ip())
@@ -118,22 +121,61 @@ impl ChaosProxy {
 
     async fn accept_connection(&self, accepted: TcpStream) -> anyhow::Result<()> {
         let (client_read, client_write) = accepted.into_split();
-        let (backend_read, backend_write) = TcpStream::connect(&self.backend_address)
-            .await?
-            .into_split();
 
-        let break_networking_send = self.break_networking_send.clone();
+        let host = self.backend_config.get_hosts().first().unwrap();
+        let port = self.backend_config.get_ports().first().unwrap();
+
+        let (backend_to_client, client_to_backend) = match &host {
+            Host::Tcp(hostname) => {
+                let (backend_read, backend_write) = TcpStream::connect((hostname.as_ref(), *port))
+                    .await?
+                    .into_split();
+                (
+                    proxy_data(
+                        self.break_networking_send.clone(),
+                        client_read,
+                        backend_write,
+                    )
+                    .boxed(),
+                    proxy_data(
+                        self.break_networking_send.clone(),
+                        backend_read,
+                        client_write,
+                    )
+                    .boxed(),
+                )
+            }
+            #[cfg(not(unix))]
+            Host::Unix(_) => panic!("Unix sockets not supported on this platform"),
+            #[cfg(unix)]
+            Host::Unix(path) => {
+                let path = path.join(format!(".s.PGSQL.{port}"));
+                let (backend_read, backend_write) = UnixStream::connect(path).await?.into_split();
+                (
+                    proxy_data(
+                        self.break_networking_send.clone(),
+                        client_read,
+                        backend_write,
+                    )
+                    .boxed(),
+                    proxy_data(
+                        self.break_networking_send.clone(),
+                        backend_read,
+                        client_write,
+                    )
+                    .boxed(),
+                )
+            }
+        };
+
         tokio::spawn(async move {
-            if let Err(error) = proxy_data(break_networking_send, client_read, backend_write).await
-            {
+            if let Err(error) = backend_to_client.await {
                 error!(%error, "ChaosProxy connection error");
             }
         });
 
-        let break_networking_send = self.break_networking_send.clone();
         tokio::spawn(async move {
-            if let Err(error) = proxy_data(break_networking_send, backend_read, client_write).await
-            {
+            if let Err(error) = client_to_backend.await {
                 error!(%error, "ChaosProxy connection error");
             }
         });
@@ -144,8 +186,8 @@ impl ChaosProxy {
 
 async fn proxy_data(
     break_networking_send: Sender<()>,
-    mut from: OwnedReadHalf,
-    mut to: OwnedWriteHalf,
+    mut from: impl AsyncRead + Unpin,
+    mut to: impl AsyncWrite + Unpin,
 ) -> anyhow::Result<()> {
     let mut break_connections_recv = break_networking_send.subscribe();
     let mut buf = [0; 1024];
