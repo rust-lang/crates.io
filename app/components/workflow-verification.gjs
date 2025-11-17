@@ -6,19 +6,18 @@ import Ember from 'ember';
 
 import { rawTimeout, restartableTask } from 'ember-concurrency';
 import perform from 'ember-concurrency/helpers/perform';
-import eq from 'ember-truth-helpers/helpers/eq';
-import not from 'ember-truth-helpers/helpers/not';
+import or from 'ember-truth-helpers/helpers/or';
 
 export default class WorkflowVerificationComponent extends Component {
   verifyWorkflowTask = restartableTask(async () => {
     let timeout = Ember.testing ? 0 : 500;
     await rawTimeout(timeout);
 
-    let { verificationUrl } = this.args;
-    if (!verificationUrl) return null;
+    let { url } = this.args;
+    if (!url) return null;
 
     try {
-      let response = await fetch(verificationUrl, { method: 'HEAD' });
+      let response = await fetch(url, { method: 'HEAD' });
 
       if (response.ok) {
         return 'success';
@@ -32,43 +31,61 @@ export default class WorkflowVerificationComponent extends Component {
     }
   });
 
+  get isRunning() {
+    return this.verifyWorkflowTask.isRunning;
+  }
+
+  get isSuccess() {
+    return this.verifyWorkflowTask.last?.value === 'success';
+  }
+
+  get isNotFound() {
+    return this.verifyWorkflowTask.last?.value === 'not-found';
+  }
+
+  get isError() {
+    return this.verifyWorkflowTask.last?.value === 'error';
+  }
+
+  get status() {
+    if (this.isRunning) {
+      return 'running';
+    } else if (this.isSuccess) {
+      return 'success';
+    } else if (this.isNotFound) {
+      return 'not-found';
+    } else if (this.isError) {
+      return 'error';
+    } else {
+      return 'initial';
+    }
+  }
+
   <template>
     <div
+      class='workflow-verification
+        {{if this.isSuccess "workflow-verification--success"}}
+        {{if (or this.isNotFound this.isError) "workflow-verification--warning"}}'
+      data-test-workflow-verification={{this.status}}
       {{didInsert (perform this.verifyWorkflowTask)}}
-      {{didUpdate (perform this.verifyWorkflowTask @verificationUrl)}}
+      {{didUpdate (perform this.verifyWorkflowTask @url)}}
     >
-      {{#if (not @verificationUrl)}}
-        <div class='workflow-verification' data-test-workflow-verification='initial'>
-          The workflow
-          {{@fieldType}}
-          will be verified once all necessary fields are filled.
-        </div>
-      {{else if (eq this.verifyWorkflowTask.last.value 'success')}}
-        <div class='workflow-verification workflow-verification--success' data-test-workflow-verification='success'>
-          ✓ Workflow file found at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
-          </a>
-        </div>
-      {{else if (eq this.verifyWorkflowTask.last.value 'not-found')}}
-        <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='not-found'>
-          ⚠ Workflow file not found at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
-          </a>
-        </div>
-      {{else if (eq this.verifyWorkflowTask.last.value 'error')}}
-        <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='error'>
-          ⚠ Could not verify workflow file at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
-          </a>
-          (network error)
-        </div>
+      {{#if this.isRunning}}
+        Verifying...
+      {{else if this.isSuccess}}
+        ✓ Workflow file found at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+      {{else if this.isNotFound}}
+        ⚠ Workflow file not found at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+      {{else if this.isError}}
+        ⚠ Could not verify workflow file at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+        (network error)
       {{else}}
-        <div class='workflow-verification' data-test-workflow-verification='verifying'>
-          Verifying...
-        </div>
+        The workflow
+        {{@fieldType}}
+        will be verified once all necessary fields are filled.
       {{/if}}
     </div>
   </template>

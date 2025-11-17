@@ -151,7 +151,7 @@ import WorkflowVerification from 'crates-io/components/workflow-verification';
             </div>
           {{/if}}
 
-          <WorkflowVerification @verificationUrl={{@controller.verificationUrl}} @fieldType='filename' />
+          <WorkflowVerification @url={{@controller.verificationUrl}} @fieldType='filename' />
         {{/let}}
       </div>
 
@@ -275,7 +275,7 @@ import WorkflowVerification from 'crates-io/components/workflow-verification';
             </div>
           {{/if}}
 
-          <WorkflowVerification @verificationUrl={{@controller.verificationUrl}} @fieldType='filepath' />
+          <WorkflowVerification @url={{@controller.verificationUrl}} @fieldType='filepath' />
         {{/let}}
       </div>
 
