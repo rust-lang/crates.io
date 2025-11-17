@@ -150,7 +150,7 @@ utoipa-axum = "=0.2.0"
 tikv-jemallocator = { version = "=0.6.1", features = ['unprefixed_malloc_on_supported_platforms', 'profiling'] }
 
 [dev-dependencies]
-bytes = "=1.10.1"
+bytes = "=1.11.0"
 crates_io_docs_rs = { path = "crates/crates_io_docs_rs", features = ["mock"] }
 crates_io_github = { path = "crates/crates_io_github", features = ["mock"] }
 crates_io_index = { path = "crates/crates_io_index", features = ["testing"] }
