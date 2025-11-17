@@ -12,12 +12,48 @@
         margin-right: var(--space-xs);
     }
 
+    &[data-variant="note"] {
+        background-color: light-dark(hsl(213, 93%, 90%), hsl(213, 50%, 20%));
+        border-color: hsl(213, 93%, 62%);
+
+        :global(svg) {
+            color: hsl(213, 93%, 62%);
+        }
+    }
+
+    &[data-variant="tip"] {
+        background-color: light-dark(hsl(128, 49%, 90%), hsl(128, 30%, 20%));
+        border-color: hsl(128, 49%, 49%);
+
+        :global(svg) {
+            color: hsl(128, 49%, 49%);
+        }
+    }
+
+    &[data-variant="important"] {
+        background-color: light-dark(hsl(262, 90%, 90%), hsl(262, 50%, 20%));
+        border-color: hsl(262, 90%, 73%);
+
+        :global(svg) {
+            color: hsl(262, 90%, 73%);
+        }
+    }
+
     &[data-variant="warning"] {
         background-color: light-dark(var(--yellow100), var(--yellow900));
         border-color: var(--yellow500);
 
         :global(svg) {
             color: var(--yellow500);
+        }
+    }
+
+    &[data-variant="caution"] {
+        background-color: light-dark(hsl(3, 93%, 90%), hsl(3, 50%, 20%));
+        border-color: hsl(3, 93%, 63%);
+
+        :global(svg) {
+            color: hsl(3, 93%, 63%);
         }
     }
 }
