@@ -1,0 +1,27 @@
+.alert {
+    display: flex;
+    padding: var(--space-xs);
+    border-left-style: solid;
+    border-left-width: 4px;
+    border-radius: var(--space-3xs);
+
+    :global(svg) {
+        flex-shrink: 0;
+        width: 1em;
+        height: 1em;
+        margin-right: var(--space-xs);
+    }
+
+    &[data-variant="warning"] {
+        background-color: light-dark(var(--yellow100), var(--yellow900));
+        border-color: var(--yellow500);
+
+        :global(svg) {
+            color: var(--yellow500);
+        }
+    }
+}
+
+.alert-content {
+    text-wrap: pretty;
+}
