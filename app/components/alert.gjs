@@ -5,7 +5,7 @@ import { eq } from 'ember-truth-helpers';
   <div ...attributes class='alert' data-variant={{@variant}}>
     {{#unless @hideIcon}}
       {{#if (eq @variant 'warning')}}
-        {{svgJar 'triangle-exclamation'}}
+        {{svgJar 'alert-warning'}}
       {{/if}}
     {{/unless}}
     <div class='alert-content'>
