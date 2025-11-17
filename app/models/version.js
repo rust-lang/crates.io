@@ -69,7 +69,9 @@ export default class Version extends Model {
   get trustpubUrl() {
     return this.trustpub_data?.provider === 'github'
       ? `https://github.com/${this.trustpub_data.repository}/actions/runs/${this.trustpub_data.run_id}`
-      : null;
+      : this.trustpub_data?.provider === 'gitlab'
+        ? `https://gitlab.com/${this.trustpub_data.project_path}/-/jobs/${this.trustpub_data.job_id}`
+        : null;
   }
 
   @belongsTo('crate', { async: false, inverse: 'versions' }) crate;
