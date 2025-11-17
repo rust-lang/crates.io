@@ -23,6 +23,6 @@
     "semver": "7.7.3"
   },
   "devDependencies": {
-    "vitest": "4.0.9"
+    "vitest": "4.0.10"
   }
 }
