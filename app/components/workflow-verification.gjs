@@ -6,6 +6,7 @@ import Ember from 'ember';
 
 import { rawTimeout, restartableTask } from 'ember-concurrency';
 import perform from 'ember-concurrency/helpers/perform';
+import or from 'ember-truth-helpers/helpers/or';
 
 export default class WorkflowVerificationComponent extends Component {
   verifyWorkflowTask = restartableTask(async () => {
@@ -62,48 +63,30 @@ export default class WorkflowVerificationComponent extends Component {
 
   <template>
     <div {{didInsert (perform this.verifyWorkflowTask)}} {{didUpdate (perform this.verifyWorkflowTask @url)}}>
-      {{#if this.isRunning}}
-        <div class='workflow-verification' data-test-workflow-verification={{this.status}}>
+      <div
+        class='workflow-verification
+          {{if this.isSuccess "workflow-verification--success"}}
+          {{if (or this.isNotFound this.isError) "workflow-verification--warning"}}'
+        data-test-workflow-verification={{this.status}}
+      >
+        {{#if this.isRunning}}
           Verifying...
-        </div>
-      {{else if this.isSuccess}}
-        <div
-          class='workflow-verification workflow-verification--success'
-          data-test-workflow-verification={{this.status}}
-        >
+        {{else if this.isSuccess}}
           ✓ Workflow file found at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
-            {{@url}}
-          </a>
-        </div>
-      {{else if this.isNotFound}}
-        <div
-          class='workflow-verification workflow-verification--warning'
-          data-test-workflow-verification={{this.status}}
-        >
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+        {{else if this.isNotFound}}
           ⚠ Workflow file not found at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
-            {{@url}}
-          </a>
-        </div>
-      {{else if this.isError}}
-        <div
-          class='workflow-verification workflow-verification--warning'
-          data-test-workflow-verification={{this.status}}
-        >
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+        {{else if this.isError}}
           ⚠ Could not verify workflow file at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
-            {{@url}}
-          </a>
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
           (network error)
-        </div>
-      {{else}}
-        <div class='workflow-verification' data-test-workflow-verification={{this.status}}>
+        {{else}}
           The workflow
           {{@fieldType}}
           will be verified once all necessary fields are filled.
-        </div>
-      {{/if}}
+        {{/if}}
+      </div>
     </div>
   </template>
 }
