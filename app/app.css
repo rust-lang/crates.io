@@ -35,6 +35,7 @@
         --yellow500: hsl(44, 100%, 60%);
         --yellow700: hsl(44, 67%, 50%);
         --yellow800: hsl(44, 67%, 20%);
+        --yellow900: hsl(44, 30%, 23%);
 
         --header-bg-color: light-dark(hsl(115, 31%, 20%), #141413);
 

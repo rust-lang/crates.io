@@ -27,6 +27,27 @@ export default class NewTrustedPublisherRoute extends Route {
       } catch {
         // ignore malformed URLs
       }
+    } else if (repository && repository.startsWith('https://gitlab.com/')) {
+      controller.publisher = 'GitLab';
+      try {
+        let url = new URL(repository);
+        let pathParts = url.pathname.slice(1).split('/');
+
+        // Find the repository path end (indicated by /-/ for trees/blobs/etc)
+        let repoEndIndex = pathParts.indexOf('-');
+        if (repoEndIndex !== -1) {
+          pathParts = pathParts.slice(0, repoEndIndex);
+        }
+
+        if (pathParts.length >= 2) {
+          // For GitLab, support nested groups: https://gitlab.com/a/b/c
+          // namespace = "a/b", project = "c"
+          controller.namespace = pathParts.slice(0, -1).join('/');
+          controller.project = pathParts.at(-1).replace(/.git$/, '');
+        }
+      } catch {
+        // ignore malformed URLs
+      }
     }
   }
 }
