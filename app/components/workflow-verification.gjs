@@ -46,28 +46,51 @@ export default class WorkflowVerificationComponent extends Component {
     return this.verifyWorkflowTask.last?.value === 'error';
   }
 
+  get status() {
+    if (this.isRunning) {
+      return 'running';
+    } else if (this.isSuccess) {
+      return 'success';
+    } else if (this.isNotFound) {
+      return 'not-found';
+    } else if (this.isError) {
+      return 'error';
+    } else {
+      return 'initial';
+    }
+  }
+
   <template>
     <div {{didInsert (perform this.verifyWorkflowTask)}} {{didUpdate (perform this.verifyWorkflowTask @url)}}>
       {{#if this.isRunning}}
-        <div class='workflow-verification' data-test-workflow-verification='verifying'>
+        <div class='workflow-verification' data-test-workflow-verification={{this.status}}>
           Verifying...
         </div>
       {{else if this.isSuccess}}
-        <div class='workflow-verification workflow-verification--success' data-test-workflow-verification='success'>
+        <div
+          class='workflow-verification workflow-verification--success'
+          data-test-workflow-verification={{this.status}}
+        >
           ✓ Workflow file found at
           <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
             {{@url}}
           </a>
         </div>
       {{else if this.isNotFound}}
-        <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='not-found'>
+        <div
+          class='workflow-verification workflow-verification--warning'
+          data-test-workflow-verification={{this.status}}
+        >
           ⚠ Workflow file not found at
           <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
             {{@url}}
           </a>
         </div>
       {{else if this.isError}}
-        <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='error'>
+        <div
+          class='workflow-verification workflow-verification--warning'
+          data-test-workflow-verification={{this.status}}
+        >
           ⚠ Could not verify workflow file at
           <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
             {{@url}}
@@ -75,7 +98,7 @@ export default class WorkflowVerificationComponent extends Component {
           (network error)
         </div>
       {{else}}
-        <div class='workflow-verification' data-test-workflow-verification='initial'>
+        <div class='workflow-verification' data-test-workflow-verification={{this.status}}>
           The workflow
           {{@fieldType}}
           will be verified once all necessary fields are filled.
