@@ -56,6 +56,30 @@
     border-radius: 4px;
 }
 
+.gitlab-wip-notice {
+    display: flex;
+    margin: var(--space-m) 0;
+    padding: var(--space-xs);
+    background-color: light-dark(var(--yellow100), var(--yellow900));
+    border-color: var(--yellow500);
+    border-left-style: solid;
+    border-left-width: 4px;
+    border-radius: var(--space-3xs);
+    font-size: 0.85em;
+
+    :global(svg) {
+        flex-shrink: 0;
+        width: 1em;
+        height: 1em;
+        color: var(--yellow500);
+    }
+
+    :global(p) {
+        margin: 0 0 0 var(--space-xs);
+        text-wrap: pretty;
+    }
+}
+
 .workflow-verification {
     margin-top: var(--space-2xs);
     font-size: 0.85em;

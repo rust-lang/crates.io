@@ -6,6 +6,7 @@ import { LinkTo } from '@ember/routing';
 import autoFocus from '@zestia/ember-auto-focus/modifiers/auto-focus';
 import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
+import svgJar from 'ember-svg-jar/helpers/svg-jar';
 import eq from 'ember-truth-helpers/helpers/eq';
 import not from 'ember-truth-helpers/helpers/not';
 
@@ -36,6 +37,13 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
         Select the CI/CD platform where your publishing workflow is configured.
       </div>
     </div>
+
+    {{#if (eq @controller.publisher 'GitLab')}}
+      <div class='gitlab-wip-notice' data-test-gitlab-wip-notice>
+        {{svgJar 'triangle-exclamation'}}
+        <p>GitLab Trusted Publishing is currently in public beta. You may encounter unexpected behavior.</p>
+      </div>
+    {{/if}}
 
     {{#if (eq @controller.publisher 'GitHub')}}
       <div class='form-group' data-test-namespace-group>
