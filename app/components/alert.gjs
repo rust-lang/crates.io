@@ -6,6 +6,8 @@ import { eq } from 'ember-truth-helpers';
     {{#unless @hideIcon}}
       {{#if (eq @variant 'note')}}
         {{svgJar 'alert-note'}}
+      {{else if (eq @variant 'success')}}
+        {{svgJar 'check-circle'}}
       {{else if (eq @variant 'tip')}}
         {{svgJar 'alert-tip'}}
       {{else if (eq @variant 'important')}}

@@ -21,7 +21,8 @@
         }
     }
 
-    &[data-variant="tip"] {
+    &[data-variant="tip"],
+    &[data-variant="success"] {
         background-color: light-dark(hsl(128, 49%, 90%), hsl(128, 30%, 20%));
         border-color: hsl(128, 49%, 49%);
 
