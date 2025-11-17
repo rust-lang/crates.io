@@ -12,11 +12,11 @@ export default class WorkflowVerificationComponent extends Component {
     let timeout = Ember.testing ? 0 : 500;
     await rawTimeout(timeout);
 
-    let { verificationUrl } = this.args;
-    if (!verificationUrl) return null;
+    let { url } = this.args;
+    if (!url) return null;
 
     try {
-      let response = await fetch(verificationUrl, { method: 'HEAD' });
+      let response = await fetch(url, { method: 'HEAD' });
 
       if (response.ok) {
         return 'success';
@@ -47,10 +47,7 @@ export default class WorkflowVerificationComponent extends Component {
   }
 
   <template>
-    <div
-      {{didInsert (perform this.verifyWorkflowTask)}}
-      {{didUpdate (perform this.verifyWorkflowTask @verificationUrl)}}
-    >
+    <div {{didInsert (perform this.verifyWorkflowTask)}} {{didUpdate (perform this.verifyWorkflowTask @url)}}>
       {{#if this.isRunning}}
         <div class='workflow-verification' data-test-workflow-verification='verifying'>
           Verifying...
@@ -58,22 +55,22 @@ export default class WorkflowVerificationComponent extends Component {
       {{else if this.isSuccess}}
         <div class='workflow-verification workflow-verification--success' data-test-workflow-verification='success'>
           ✓ Workflow file found at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
+            {{@url}}
           </a>
         </div>
       {{else if this.isNotFound}}
         <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='not-found'>
           ⚠ Workflow file not found at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
+            {{@url}}
           </a>
         </div>
       {{else if this.isError}}
         <div class='workflow-verification workflow-verification--warning' data-test-workflow-verification='error'>
           ⚠ Could not verify workflow file at
-          <a href='{{@verificationUrl}}' target='_blank' rel='noopener noreferrer'>
-            {{@verificationUrl}}
+          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>
+            {{@url}}
           </a>
           (network error)
         </div>
