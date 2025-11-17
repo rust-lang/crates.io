@@ -3,9 +3,11 @@ import { eq } from 'ember-truth-helpers';
 
 <template>
   <div ...attributes class='alert' data-variant={{@variant}}>
-    {{#if (eq @variant 'warning')}}
-      {{svgJar 'triangle-exclamation'}}
-    {{/if}}
+    {{#unless @hideIcon}}
+      {{#if (eq @variant 'warning')}}
+        {{svgJar 'triangle-exclamation'}}
+      {{/if}}
+    {{/unless}}
     <div class='alert-content'>
       {{yield}}
     </div>
