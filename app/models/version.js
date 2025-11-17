@@ -55,7 +55,11 @@ export default class Version extends Model {
    * @type {string | null}
    */
   get trustpubPublisher() {
-    return this.trustpub_data?.provider === 'github' ? 'GitHub' : null;
+    return this.trustpub_data?.provider === 'github'
+      ? 'GitHub'
+      : this.trustpub_data?.provider === 'gitlab'
+        ? 'GitLab'
+        : null;
   }
 
   /**
