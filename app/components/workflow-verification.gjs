@@ -62,31 +62,31 @@ export default class WorkflowVerificationComponent extends Component {
   }
 
   <template>
-    <div {{didInsert (perform this.verifyWorkflowTask)}} {{didUpdate (perform this.verifyWorkflowTask @url)}}>
-      <div
-        class='workflow-verification
-          {{if this.isSuccess "workflow-verification--success"}}
-          {{if (or this.isNotFound this.isError) "workflow-verification--warning"}}'
-        data-test-workflow-verification={{this.status}}
-      >
-        {{#if this.isRunning}}
-          Verifying...
-        {{else if this.isSuccess}}
-          ✓ Workflow file found at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
-        {{else if this.isNotFound}}
-          ⚠ Workflow file not found at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
-        {{else if this.isError}}
-          ⚠ Could not verify workflow file at
-          <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
-          (network error)
-        {{else}}
-          The workflow
-          {{@fieldType}}
-          will be verified once all necessary fields are filled.
-        {{/if}}
-      </div>
+    <div
+      class='workflow-verification
+        {{if this.isSuccess "workflow-verification--success"}}
+        {{if (or this.isNotFound this.isError) "workflow-verification--warning"}}'
+      data-test-workflow-verification={{this.status}}
+      {{didInsert (perform this.verifyWorkflowTask)}}
+      {{didUpdate (perform this.verifyWorkflowTask @url)}}
+    >
+      {{#if this.isRunning}}
+        Verifying...
+      {{else if this.isSuccess}}
+        ✓ Workflow file found at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+      {{else if this.isNotFound}}
+        ⚠ Workflow file not found at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+      {{else if this.isError}}
+        ⚠ Could not verify workflow file at
+        <a href='{{@url}}' target='_blank' rel='noopener noreferrer'>{{@url}}</a>
+        (network error)
+      {{else}}
+        The workflow
+        {{@fieldType}}
+        will be verified once all necessary fields are filled.
+      {{/if}}
     </div>
   </template>
 }
