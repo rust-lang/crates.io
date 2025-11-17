@@ -3,10 +3,10 @@ import { on } from '@ember/modifier';
 
 import perform from 'ember-concurrency/helpers/perform';
 import preventDefault from 'ember-event-helpers/helpers/prevent-default';
-import svgJar from 'ember-svg-jar/helpers/svg-jar';
 import not from 'ember-truth-helpers/helpers/not';
 import or from 'ember-truth-helpers/helpers/or';
 
+import Alert from 'crates-io/components/alert';
 import LoadingSpinner from 'crates-io/components/loading-spinner';
 
 <template>
@@ -16,12 +16,10 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
 
       <p>Are you sure you want to delete the crate "{{@model.name}}"?</p>
 
-      <div class='warning'>
-        {{svgJar 'triangle-exclamation'}}
-        <p><strong>Important:</strong>
-          This action will permanently delete the crate and its associated versions. Deleting a crate cannot be
-          reversed!</p>
-      </div>
+      <Alert @variant='warning'>
+        <strong>Important:</strong>
+        This action will permanently delete the crate and its associated versions. Deleting a crate cannot be reversed!
+      </Alert>
 
       <div class='impact'>
         <h3>Potential Impact:</h3>
@@ -66,16 +64,18 @@ import LoadingSpinner from 'crates-io/components/loading-spinner';
         </label>
       </div>
 
-      <label class='confirmation'>
-        <Input
-          @type='checkbox'
-          @checked={{@controller.isConfirmed}}
-          disabled={{@controller.deleteTask.isRunning}}
-          data-test-confirmation-checkbox
-          {{on 'change' @controller.toggleConfirmation}}
-        />
-        I understand that deleting this crate is permanent and cannot be undone.
-      </label>
+      <Alert @variant='warning' @hideIcon={{true}}>
+        <label class='confirmation'>
+          <Input
+            @type='checkbox'
+            @checked={{@controller.isConfirmed}}
+            disabled={{@controller.deleteTask.isRunning}}
+            data-test-confirmation-checkbox
+            {{on 'change' @controller.toggleConfirmation}}
+          />
+          I understand that deleting this crate is permanent and cannot be undone.
+        </label>
+      </Alert>
 
       <div class='actions'>
         <button
