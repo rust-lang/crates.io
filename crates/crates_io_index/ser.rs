@@ -21,6 +21,7 @@ mod tests {
 
     #[test]
     fn test_write_crate() {
+        let pubtime = chrono::DateTime::from_timestamp_nanos(1_763_456_303_013_233_232);
         let krate = Crate {
             name: "foo".to_string(),
             vers: "1.2.3".to_string(),
@@ -31,7 +32,7 @@ mod tests {
             yanked: None,
             links: None,
             rust_version: None,
-            pubtime: None,
+            pubtime: Some(pubtime),
             v: None,
         };
         let mut buffer = Vec::new();
@@ -39,7 +40,7 @@ mod tests {
         assert_ok_eq!(
             String::from_utf8(buffer),
             "\
-            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null}\n\
+            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null,\"pubtime\":\"2025-11-18T08:58:23.013233232Z\"}\n\
         "
         );
     }
