@@ -39,6 +39,10 @@ pub enum Command {
         dry_run: bool,
     },
     ProcessCdnLogQueue(jobs::ProcessCdnLogQueue),
+    RunSql {
+        #[arg(required = true)]
+        file_name: String,
+    },
     SendTokenExpiryNotifications,
     SquashIndex,
     SyncAdmins {
@@ -112,6 +116,31 @@ pub async fn run(command: Command) -> Result<()> {
         }
         Command::ProcessCdnLogQueue(job) => {
             job.enqueue(&mut conn).await?;
+        }
+        Command::RunSql { file_name } => {
+            // The job will fail if the file doesn't actually exist, so let's check that up front.
+            let sql_dir = std::env::current_dir()?.join(jobs::SQL_DIRECTORY);
+            let mut file_path = sql_dir.clone();
+            file_path.push(&file_name);
+            file_path.set_extension("sql");
+
+            if !std::fs::exists(file_path)? {
+                let mut available_sql_files: Vec<_> = std::fs::read_dir(sql_dir)?
+                    .filter_map(|result| {
+                        result.ok().and_then(|dir_entry| {
+                            dir_entry
+                                .path()
+                                .file_stem()
+                                .map(|stem| stem.display().to_string())
+                        })
+                    })
+                    .collect();
+                available_sql_files.sort();
+                anyhow::bail!(
+                    "{file_name} does not exist. Available SQL files are: {available_sql_files:?}"
+                );
+            }
+            jobs::RunSql::new(file_name).enqueue(&mut conn).await?;
         }
         Command::SendTokenExpiryNotifications => {
             jobs::SendTokenExpiryNotifications
