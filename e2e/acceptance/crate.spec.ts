@@ -297,7 +297,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-keyword]')).toBeVisible();
   });
 
-  test('keywords are shown when navigating from crate to searchs, and then back to crate', async ({ page, msw }) => {
+  test('keywords are shown when navigating from crate to searches, and then back to crate', async ({ page, msw }) => {
     loadFixtures(msw.db);
 
     await page.goto('/crates/nanomsg');
