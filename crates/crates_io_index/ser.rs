@@ -1,4 +1,6 @@
 use crate::Crate;
+use chrono::{DateTime, Utc};
+use serde::Serializer;
 use std::io::Write;
 
 fn write_crate<W: Write>(krate: &Crate, mut writer: W) -> anyhow::Result<()> {
@@ -12,6 +14,21 @@ pub fn write_crates<W: Write>(crates: &[Crate], mut writer: W) -> anyhow::Result
         write_crate(krate, &mut writer)?;
     }
     Ok(())
+}
+
+/// Serialize `pubtime` with seconds precision `DateTime<Utc>`
+pub fn serialize_pubtime<S>(dt: &Option<DateTime<Utc>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match dt {
+        Some(dt) => {
+            let secs = dt.timestamp();
+            let dt_secs = DateTime::from_timestamp(secs, 0).unwrap();
+            serializer.serialize_some(&dt_secs)
+        }
+        None => serializer.serialize_none(),
+    }
 }
 
 #[cfg(test)]
@@ -40,7 +57,7 @@ mod tests {
         assert_ok_eq!(
             String::from_utf8(buffer),
             "\
-            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null,\"pubtime\":\"2025-11-18T08:58:23.013233232Z\"}\n\
+            {\"name\":\"foo\",\"vers\":\"1.2.3\",\"deps\":[],\"cksum\":\"0123456789asbcdef\",\"features\":{},\"yanked\":null,\"pubtime\":\"2025-11-18T08:58:23Z\"}\n\
         "
         );
     }
