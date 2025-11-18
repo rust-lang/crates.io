@@ -1,4 +1,5 @@
 use crate::features::FeaturesMap;
+use crate::ser::serialize_pubtime;
 use chrono::{DateTime, Utc};
 use std::cmp::Ordering;
 
@@ -26,7 +27,10 @@ pub struct Crate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rust_version: Option<String>,
     /// Publication timestamp in ISO8601 format
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_pubtime"
+    )]
     pub pubtime: Option<DateTime<Utc>>,
     /// The schema version for this entry.
     ///
