@@ -8,20 +8,19 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
   <TextContent @boxed={{true}}>
     <h2>What is Trusted Publishing?</h2>
     <p>
-      Trusted Publishing is a secure way to publish your Rust crates from GitHub Actions without manually managing API
-      tokens. It uses OpenID Connect (OIDC) to verify that your workflow is running from your repository, then provides
-      a short-lived token for publishing.
+      Trusted Publishing is a secure way to publish your Rust crates from CI/CD platforms like GitHub Actions and GitLab
+      CI/CD without manually managing API tokens. It uses OpenID Connect (OIDC) to verify that your workflow is running
+      from your repository, then provides a short-lived token for publishing.
     </p>
 
     <p>
-      Instead of storing long-lived API tokens in your repository secrets, Trusted Publishing allows GitHub Actions to
-      authenticate directly with crates.io using cryptographically signed tokens that prove the workflow's identity.
+      Instead of storing long-lived API tokens in your repository secrets, Trusted Publishing allows your CI/CD platform
+      to authenticate directly with crates.io using cryptographically signed tokens that prove the workflow's identity.
     </p>
 
     <p>
       <strong>Note:</strong>
-      crates.io currently only supports GitHub Actions, but we are planning to support other CI/CD platforms like GitLab
-      CI/CD in the future.
+      GitLab CI/CD support is currently in public beta.
     </p>
 
     <h3>Security Benefits</h3>
@@ -29,8 +28,8 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
       <li><strong>No long-lived API tokens</strong> to manage or rotate</li>
       <li><strong>Tokens automatically expire</strong> after 30 minutes</li>
       <li><strong>Repository and workflow verification</strong> prevents unauthorized publishing</li>
-      <li><strong>OIDC-based cryptographic verification</strong> with GitHub's public JWKS</li>
-      <li><strong>Optional GitHub Actions environments</strong> for additional access controls</li>
+      <li><strong>OIDC-based cryptographic verification</strong> with your platform's public JWKS</li>
+      <li><strong>Optional environments</strong> for additional access controls</li>
     </ul>
 
     <h2>Quick Start</h2>
@@ -38,8 +37,8 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
 
     <ol>
       <li><strong>Configure your crate for Trusted Publishing</strong> in the crates.io settings</li>
-      <li><strong>Set up your GitHub Actions workflow</strong>
-        with the required permissions and authentication action</li>
+      <li><strong>Set up your CI/CD workflow</strong>
+        with the required permissions and authentication</li>
       <li><strong>Publish your crate</strong> using the automated workflow</li>
     </ol>
 
@@ -47,7 +46,7 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
     <ul>
       <li>Your crate must already be published to crates.io (initial publish requires an API token)</li>
       <li>You must be an owner of the crate on crates.io</li>
-      <li>Your repository must be on GitHub</li>
+      <li>Your repository must be on GitHub or GitLab</li>
     </ul>
 
     <h2>Configuring Trusted Publishing</h2>
@@ -57,17 +56,27 @@ import highlightSyntax from 'crates-io/modifiers/highlight-syntax';
 
     <ol>
       <li>Go to your crate's Settings → Trusted Publishing</li>
-      <li>Click the "Add" button and fill in:
-        <ul>
-          <li><strong>Repository owner:</strong> Your GitHub username or organization</li>
-          <li><strong>Repository name:</strong> The name of your repository</li>
-          <li><strong>Workflow filename:</strong>
-            The filename of your GitHub Actions workflow (e.g., "release.yml")</li>
-          <li><strong>Environment:</strong> Optional environment name if you're using GitHub environments</li>
-        </ul>
-      </li>
-      <li>Save the configuration</li>
+      <li>Click the "Add" button and select your platform (GitHub or GitLab)</li>
+      <li>Fill in the platform-specific fields and save the configuration</li>
     </ol>
+
+    <h3>GitHub Configuration</h3>
+    <ul>
+      <li><strong>Repository owner:</strong> Your GitHub username or organization</li>
+      <li><strong>Repository name:</strong> The name of your repository</li>
+      <li><strong>Workflow filename:</strong>
+        The filename of your GitHub Actions workflow (e.g., "release.yml")</li>
+      <li><strong>Environment:</strong> Optional environment name if you're using GitHub environments</li>
+    </ul>
+
+    <h3>GitLab Configuration</h3>
+    <ul>
+      <li><strong>Namespace:</strong> Your GitLab username or group path</li>
+      <li><strong>Project:</strong> The name of your project</li>
+      <li><strong>Workflow filepath:</strong>
+        The full filepath of your GitLab CI/CD workflow (e.g., "ci/release.yml")</li>
+      <li><strong>Environment:</strong> Optional environment name if you're using GitLab CI/CD environments</li>
+    </ul>
 
     <h2>GitHub Actions Setup</h2>
     <p>
@@ -103,10 +112,69 @@ jobs:
       protection rules like required reviewers or deployment branches.
     </p>
 
+    <h2>GitLab CI/CD Setup <small>(Public Beta)</small></h2>
+    <p>
+      Create a workflow file at
+      <code>.gitlab-ci.yml</code>. This example workflow will automatically publish your crate each time you push a
+      version tag (like
+      <code>v1.0.0</code>):
+    </p>
+
+    {{! template-lint-disable no-whitespace-for-layout }}
+    {{! prettier-ignore }}
+    <pre><code class='language-yaml' {{highlightSyntax}}>publish:
+  image: rust:1.91.0-alpine
+  environment: release
+  only:
+    - tags  # Only run on tag pushes
+  id_tokens:
+    CRATES_IO_ID_TOKEN:
+      aud: crates.io
+  before_script:
+    - apk add --no-cache bash curl jq
+  script:
+    # Exchange OIDC token for publish token
+    - CARGO_REGISTRY_TOKEN=$(bash exchange-token.sh)
+    # Publish to crates.io
+    - CARGO_REGISTRY_TOKEN="$CARGO_REGISTRY_TOKEN" cargo publish</code></pre>
+
+    <p>
+      Create a helper script at
+      <code>exchange-token.sh</code>
+      in your repository root:
+    </p>
+
+    {{! template-lint-disable no-whitespace-for-layout }}
+    {{! prettier-ignore }}
+    <pre><code class='language-bash' {{highlightSyntax}}>#!/bin/bash
+set -e
+
+# Exchange JWT token
+echo "Exchanging OIDC token..." >&2
+RESPONSE=$(curl -s -X POST https://crates.io/api/v1/trusted_publishing/tokens \
+  -H "Content-Type: application/json" \
+  -d "{\"jwt\": \"$CRATES_IO_ID_TOKEN\"}")
+
+# Extract publish token
+CRATES_IO_PUBLISH_TOKEN=$(echo "$RESPONSE" | jq -r '.token')
+
+if [ "$CRATES_IO_PUBLISH_TOKEN" = "null" ] || [ -z "$CRATES_IO_PUBLISH_TOKEN" ]; then
+  echo "Failed to get upload token" >&2
+  echo "$RESPONSE" >&2
+  exit 1
+fi
+
+echo "$CRATES_IO_PUBLISH_TOKEN"</code></pre>
+    <p>
+      <strong>Optional:</strong>
+      For enhanced security, create a GitLab CI/CD environment named "release" in your repository settings with
+      protection rules like required reviewers or deployment branches.
+    </p>
+
     <h2>Security &amp; Best Practices</h2>
     <ul>
       <li><strong>Use specific workflow filenames</strong> to reduce the attack surface</li>
-      <li><strong>Use GitHub Actions environments</strong> with protection rules for sensitive publishing</li>
+      <li><strong>Use environments with protection rules</strong> for sensitive publishing</li>
       <li><strong>Limit workflow triggers</strong> to specific tags or protected branches</li>
       <li><strong>Review all actions used</strong> in your release workflow</li>
       <li><strong>Monitor publishing activities</strong> through crates.io email notifications</li>
@@ -114,11 +182,12 @@ jobs:
 
     <p>
       <strong>How it works:</strong>
-      GitHub Actions generates an OIDC token that proves your workflow's identity. The
+      Your CI/CD platform generates an OIDC token that proves your workflow's identity. For GitHub, the
       <code>rust-lang/crates-io-auth-action</code>
-      exchanges this for a 30-minute access token that
+      exchanges this for a 30-minute access token. For GitLab, the provided script exchanges the token via the crates.io
+      API.
       <code>cargo publish</code>
-      uses automatically.
+      uses this token automatically.
     </p>
 
     <h2>Migration from API Tokens</h2>
@@ -137,6 +206,13 @@ jobs:
       <li><a
           href='https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment'
         >GitHub: Using environments for deployment</a></li>
+      <li>
+        <a href='https://docs.gitlab.com/ee/ci/secrets/id_token_authentication.html'>GitLab: OpenID Connect (OIDC)
+          authentication</a>
+      </li>
+      <li>
+        <a href='https://docs.gitlab.com/ee/ci/environments/'>GitLab: Environments and deployments</a>
+      </li>
     </ul>
   </TextContent>
 </template>
