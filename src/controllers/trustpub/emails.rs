@@ -79,6 +79,7 @@ mod tests {
             repository: None,
             max_upload_size: None,
             max_features: None,
+            trustpub_only: false,
         }
     }
 

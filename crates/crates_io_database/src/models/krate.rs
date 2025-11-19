@@ -37,6 +37,7 @@ pub struct Crate {
     pub repository: Option<String>,
     pub max_upload_size: Option<i32>,
     pub max_features: Option<i16>,
+    pub trustpub_only: bool,
 }
 
 /// We literally never want to select `textsearchable_index_col`
@@ -52,6 +53,7 @@ type AllColumns = (
     crates::repository,
     crates::max_upload_size,
     crates::max_features,
+    crates::trustpub_only,
 );
 
 pub const ALL_COLUMNS: AllColumns = (
@@ -65,6 +67,7 @@ pub const ALL_COLUMNS: AllColumns = (
     crates::repository,
     crates::max_upload_size,
     crates::max_features,
+    crates::trustpub_only,
 );
 
 pub const MAX_NAME_LENGTH: usize = 64;
