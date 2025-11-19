@@ -359,6 +359,10 @@ expression: response.json()
               "null"
             ]
           },
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": "boolean"
+          },
           "updated_at": {
             "description": "The date and time this crate was last updated.",
             "example": "2019-12-13T13:46:41Z",
@@ -394,7 +398,8 @@ expression: response.json()
           "max_version",
           "newest_version",
           "links",
-          "exact_match"
+          "exact_match",
+          "trustpub_only"
         ],
         "type": "object"
       },
