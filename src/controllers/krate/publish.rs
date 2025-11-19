@@ -216,6 +216,16 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         AuthType::Regular(Box::new(auth))
     };
 
+    // Check if crate requires trusted publishing
+    if let Some(existing_crate) = &existing_crate
+        && existing_crate.trustpub_only
+        && matches!(auth, AuthType::Regular(_))
+    {
+        return Err(forbidden(
+            "You tried to publish with an API token but this crate requires trusted publishing.",
+        ));
+    }
+
     let verified_email_address = if let Some(user) = auth.user() {
         let verified_email_address = user.verified_email(&mut conn).await?;
         Some(verified_email_address.ok_or_else(|| verified_email_error(&app.config.domain_name))?)

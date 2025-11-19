@@ -1,6 +1,6 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{MockTokenUser, RequestHelper, TestApp};
-use crates_io::schema::api_tokens;
+use crates_io::schema::{api_tokens, crates};
 use diesel::ExpressionMethods;
 use diesel_async::RunQueryDsl;
 use googletest::prelude::*;
@@ -77,4 +77,32 @@ async fn new_krate_with_bearer_token() {
     rss/crates/foo_new.xml
     rss/updates.xml
     ");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn publish_with_token_rejected_when_trustpub_only() {
+    let (app, _, user, token) = TestApp::full().with_token().await;
+    let mut conn = app.db_conn().await;
+
+    // Create a crate
+    CrateBuilder::new("foo_trustpub_only", user.as_model().id)
+        .expect_build(&mut conn)
+        .await;
+
+    // Set trustpub_only to true
+    diesel::update(crates::table)
+        .filter(crates::name.eq("foo_trustpub_only"))
+        .set(crates::trustpub_only.eq(true))
+        .execute(&mut conn)
+        .await
+        .unwrap();
+
+    // Try to publish with API token - should be rejected
+    let crate_to_publish = PublishBuilder::new("foo_trustpub_only", "1.0.0");
+    let response = token.publish_crate(crate_to_publish).await;
+    assert_snapshot!(response.status(), @"403 Forbidden");
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You tried to publish with an API token but this crate requires trusted publishing."}]}"#);
+
+    assert_that!(app.stored_files().await, is_empty());
+    assert_that!(app.emails().await, is_empty());
 }
