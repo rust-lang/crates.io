@@ -1,0 +1,25 @@
+---
+source: src/tests/routes/crates/update.rs
+expression: app.emails_snapshot().await
+---
+To: foo@example.com
+From: crates.io <noreply@crates.io>
+Subject: crates.io: Publishing method restriction changed for foo
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+Hello foo!
+
+You changed the publishing method restriction for your crate "foo".
+
+This crate can now ONLY be published via Trusted Publishing. Publishing with API tokens has been disabled.
+
+This means that only trusted publishers (like GitHub Actions or GitLab CI workflows) that you have configured will be able to publish new versions of this crate. API tokens will no longer work for publishing.
+
+If you did not make this change and you think it was made maliciously, you can revert the setting from the "Settings" tab on the crate's page.
+
+If you are unable to revert the change and need to do so, you can email help@crates.io for assistance.
+
+--
+The crates.io Team
