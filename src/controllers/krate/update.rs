@@ -3,9 +3,10 @@ use crate::auth::AuthCheck;
 use crate::controllers::krate::CratePath;
 use crate::email::EmailMessage;
 use crate::middleware::real_ip::RealIp;
+use crate::models::token::EndpointScope;
 use crate::models::{Crate, User};
 use crate::schema::*;
-use crate::util::errors::{AppResult, crate_not_found, custom};
+use crate::util::errors::{AppResult, crate_not_found, custom, forbidden};
 use crate::views::EncodableCrate;
 use anyhow::Context;
 use axum::{Extension, Json};
@@ -52,11 +53,24 @@ pub async fn update_crate(
 ) -> AppResult<Json<PatchResponse>> {
     let mut conn = app.db_write().await?;
 
-    // Check that the user is authenticated
-    let auth = AuthCheck::only_cookie().check(&req, &mut conn).await?;
-
     // Check that the crate exists
     let krate = path.load_crate(&mut conn).await?;
+
+    // Check that the user is authenticated with appropriate permissions
+    let auth = AuthCheck::default()
+        .with_endpoint_scope(EndpointScope::TrustedPublishing)
+        .for_crate(&krate.name)
+        .check(&req, &mut conn)
+        .await?;
+
+    if auth
+        .api_token()
+        .is_some_and(|token| token.endpoint_scopes.is_none())
+    {
+        return Err(forbidden(
+            "This endpoint cannot be used with legacy API tokens. Use a scoped API token instead.",
+        ));
+    }
 
     // Update crate settings in a transaction
     conn.transaction(|conn| {
