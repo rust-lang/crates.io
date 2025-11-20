@@ -1,5 +1,6 @@
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
+use crates_io::models::token::{CrateScope, EndpointScope};
 use insta::{assert_json_snapshot, assert_snapshot};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -130,4 +131,140 @@ async fn test_update_nonexistent_crate() {
     assert_snapshot!(response.status(), @"404 Not Found");
 
     assert_eq!(app.emails().await.len(), 0);
+}
+
+mod auth {
+    use super::*;
+
+    const CRATE_NAME: &str = "foo";
+
+    async fn prepare() -> (TestApp, crate::util::MockCookieUser) {
+        let (app, _, user) = TestApp::full().with_user().await;
+        let mut conn = app.db_conn().await;
+
+        // Create a crate
+        let owner_id = user.as_model().id;
+        CrateBuilder::new(CRATE_NAME, owner_id)
+            .expect_build(&mut conn)
+            .await;
+
+        (app, user)
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_legacy_token() {
+        let (app, user) = prepare().await;
+        let token = user.db_new_token("test-token").await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"403 Forbidden");
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
+
+        assert_eq!(app.emails().await.len(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_correct_endpoint_scope() {
+        let (app, user) = prepare().await;
+        let token = user
+            .db_new_scoped_token(
+                "test-token",
+                None,
+                Some(vec![EndpointScope::TrustedPublishing]),
+                None,
+            )
+            .await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"200 OK");
+
+        assert!(!app.emails().await.is_empty());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_incorrect_endpoint_scope() {
+        let (app, user) = prepare().await;
+        let token = user
+            .db_new_scoped_token(
+                "test-token",
+                None,
+                Some(vec![EndpointScope::PublishUpdate]),
+                None,
+            )
+            .await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"403 Forbidden");
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+        assert_eq!(app.emails().await.len(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_only_crate_scope() {
+        let (app, user) = prepare().await;
+        let token = user
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
+                None,
+                None,
+            )
+            .await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"403 Forbidden");
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
+
+        assert_eq!(app.emails().await.len(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_incorrect_crate_scope() {
+        let (app, user) = prepare().await;
+        let token = user
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from("bar").unwrap()]),
+                Some(vec![EndpointScope::TrustedPublishing]),
+                None,
+            )
+            .await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"403 Forbidden");
+        assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
+
+        assert_eq!(app.emails().await.len(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn token_user_with_both_scopes() {
+        let (app, user) = prepare().await;
+        let token = user
+            .db_new_scoped_token(
+                "test-token",
+                Some(vec![CrateScope::try_from(CRATE_NAME).unwrap()]),
+                Some(vec![EndpointScope::TrustedPublishing]),
+                None,
+            )
+            .await;
+
+        let url = format!("/api/v1/crates/{}", CRATE_NAME);
+        let body = serde_json::json!({ "trustpub_only": true });
+        let response = token.patch::<()>(&url, body.to_string()).await;
+        assert_snapshot!(response.status(), @"200 OK");
+
+        assert!(!app.emails().await.is_empty());
+    }
 }
