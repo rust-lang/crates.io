@@ -912,6 +912,18 @@ expression: response.json()
         ],
         "type": "object"
       },
+      "PatchRequest": {
+        "properties": {
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "PublishWarnings": {
         "properties": {
           "invalid_badges": {
@@ -2252,6 +2264,63 @@ expression: response.json()
           }
         },
         "summary": "Get crate metadata.",
+        "tags": [
+          "crates"
+        ]
+      },
+      "patch": {
+        "operationId": "update_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate",
+                      "description": "The updated crate metadata."
+                    }
+                  },
+                  "required": [
+                    "crate"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Update crate settings.",
         "tags": [
           "crates"
         ]

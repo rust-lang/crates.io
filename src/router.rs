@@ -31,6 +31,7 @@ pub fn build_axum_router(state: AppState) -> Router<()> {
         // Routes used by the frontend
         .routes(routes!(
             krate::metadata::find_crate,
+            krate::update::update_crate,
             krate::delete::delete_crate
         ))
         .routes(routes!(
