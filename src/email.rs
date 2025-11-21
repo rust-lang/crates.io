@@ -267,6 +267,7 @@ mod tests {
 
         let content = result.unwrap();
         insta::assert_snapshot!(content, @r"
+
         Hello testuser!
 
         Welcome to crates.io. Please click the link below to verify your email address:
