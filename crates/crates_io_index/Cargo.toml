@@ -30,4 +30,4 @@ url = "=2.5.7"
 
 [dev-dependencies]
 claims = "=0.8.0"
-insta = "=1.43.2"
+insta = "=1.44.1"
