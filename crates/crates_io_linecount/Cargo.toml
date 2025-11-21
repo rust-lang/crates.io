@@ -14,4 +14,4 @@ tokei = "=13.0.0-alpha.9"
 
 [dev-dependencies]
 claims = "=0.8.0"
-insta = { version = "=1.43.2", features = ["json"] }
+insta = { version = "=1.44.1", features = ["json"] }
