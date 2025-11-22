@@ -1,5 +1,15 @@
 # Contributing to crates.io
 
+* [Attending the weekly team meetings](#attending-the-weekly-team-meetings)
+* [Finding an issue to work on](#finding-an-issue-to-work-on)
+* [Submitting a Pull Request](#submitting-a-pull-request)
+* [Reviewing Pull Requests](#)
+* [Checking Release State](#)
+* [Setting up a development environment](#setting-up-a-development-environment)
+  * [Working on the Frontend](#working-on-the-frontend)
+  * [Working on the Backend](#working-on-the-backend)
+  * [Running crates.io with Docker](#running-cratesio-with-docker)
+
 ## Attending the weekly team meetings
 
 Each Friday at 11:00am US east coast time the crates.io team gets together
@@ -69,7 +79,7 @@ There you will find the commits involved in the current release.
 If you are only interested on the commit hash, you can also hit the site
 metadata endpoint available on `/api/v1/site_metadata`.
 
-## Setting up a development environment
+# Setting up a development environment
 
 First, you'll need git to clone the repo. [GitHub has help pages about setting
 up git](https://help.github.com/articles/set-up-git/), and once you've done
@@ -81,7 +91,7 @@ git clone https://github.com/rust-lang/crates.io.git
 cd crates.io/
 ```
 
-### Working on the Frontend
+## Working on the Frontend
 
 If the changes you'd like to make only involve:
 
@@ -100,7 +110,7 @@ you can run your frontend against the production API.
 If you need to set up the backend, you'll probably want to set up the frontend
 as well.
 
-#### Frontend requirements
+### Frontend requirements
 
 In order to run the frontend on Windows and macOS, you will need to have installed:
 
@@ -117,7 +127,7 @@ to ensure that the use of `npm` does not require the use of `sudo`.
 The front end should run fine after these steps. Please file an issue if you run
 into any trouble.
 
-#### Building and serving the frontend
+### Building and serving the frontend
 
 To install the npm packages that crates.io uses, run:
 
@@ -141,7 +151,7 @@ talk to:
 | `pnpm start:local`                        | Backend server running locally            | See the Working on the backend section for setup        |
 | `pnpm start -- --proxy https://crates.io` | Whatever is specified in `--proxy` arg    | If your use case is not covered here                    |
 
-#### Running the frontend tests
+### Running the frontend tests
 
 You can run the frontend tests with:
 
@@ -149,9 +159,9 @@ You can run the frontend tests with:
 pnpm test
 ```
 
-### Working on the Backend
+## Working on the Backend
 
-#### Backend Requirements
+### Backend Requirements
 
 In order to run the backend, you will need to have installed:
 
@@ -160,18 +170,20 @@ In order to run the backend, you will need to have installed:
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
 - [diesel_cli](http://diesel.rs/guides/getting-started/) >= 2.0.0 and < 3.0.0
 
-##### Rust
+> [!NOTE]
+> The backend codebase assumes `cfg(unix)`. If you're running on Windows we recommend that you use
+> a WSL environment for development and follow the Linux instructions below.
+
+#### Rust
 
 - [rustup](https://rustup.rs/) is the installation method we'd recommend for
   all platforms.
 
-##### Postgres
+#### Postgres
 
 Postgres can be a little finicky to install and get set up. These are the
 methods we'd recommend for each operating system:
 
-- Windows: use the [Windows installers recommended by
-  Postgres](https://www.postgresql.org/download/windows/)
 - macOS: Either [Postgres.app](https://postgresapp.com/) or through
   [Homebrew](https://brew.sh/) by running `brew install postgresql@13` and
   following the post-installation instructions
@@ -256,12 +268,8 @@ postgres`). Generally, the problem is that by default the postgres server is
 > we'll help fix the problem and will add the solution to these
 > instructions!
 
-##### OpenSSL
+#### OpenSSL
 
-- Windows: [Win32 OpenSSL Installation
-  Project](http://slproweb.com/products/Win32OpenSSL.html) provides installers
-  for the latest versions. Scroll down to “Download Win32 OpenSSL”, pick the
-  64-bit non-Light version of OpenSSL, and install it.
 - macOS: you can also install with homebrew by using `brew install openssl`
 - Linux: you should be able to use the distribution repositories. It will be
   called `openssl`, `openssl-devel`, or `libssl-dev`. OpenSSL needs
@@ -271,10 +279,11 @@ postgres`). Generally, the problem is that by default the postgres server is
   - Fedora: `sudo dnf install openssl-devel pkgconfig`
   - Arch Linux: `sudo pacman -S openssl pkg-config`
 
+> [!TIP]
 > If you have problems with OpenSSL, see [rust-openssl's
 > README](https://github.com/sfackler/rust-openssl) for some suggestions.
 
-##### `diesel_cli`
+#### `diesel_cli`
 
 On all platforms, install through `cargo` by running:
 
@@ -289,9 +298,9 @@ This will install a binary named `diesel`, so you should be able to run `diesel
 linking with `cc` failed: exit code: 1``, you're probably missing some
 > Postgres related libraries. See the Postgres section above on how to fix this.
 
-#### Building and serving the backend
+### Building and serving the backend
 
-##### Environment variables
+#### Environment variables
 
 Copy the `.env.sample` file to `.env`. Modify the settings as appropriate;
 minimally you'll need to specify or modify the value of the `DATABASE_URL` var.
@@ -326,7 +335,7 @@ Try using `postgres://postgres@localhost/cargo_registry` first.
 > For a guide to finding your pg_hba.conf file, check out [this post](https://askubuntu.com/questions/256534/how-do-i-find-the-path-to-pg-hba-conf-from-the-shell) on the Ubuntu Stack Exchange.
 > For information on updating your pg_hba.conf file and reloading it, see [this post](https://stackoverflow.com/questions/17996957/fe-sendauth-no-password-supplied) on Stack Overflow.
 
-##### Creating the database
+#### Creating the database
 
 You can name your development database anything as long as it matches the
 database name in the `DATABASE_URL` value. This example assumes a database
@@ -344,7 +353,7 @@ Then run the migrations:
 diesel migration run
 ```
 
-##### Setting up the git index
+#### Setting up the git index
 
 Set up the git repo for the crate index by running:
 
@@ -352,7 +361,7 @@ Set up the git repo for the crate index by running:
 ./script/init-local-index.sh
 ```
 
-##### Starting the server and the frontend
+#### Starting the server and the frontend
 
 Build and start the server by running this command (you'll need to stop this
 with `CTRL-C` and rerun this command every time you change the backend code):
@@ -378,7 +387,7 @@ pnpm start:local
 
 And then you should be able to visit <http://localhost:4200>!
 
-##### Using Mailgun to Send Emails
+#### Using Mailgun to Send Emails
 
 We currently have email functionality enabled for confirming a user's email
 address. In development, the sending of emails is simulated by a file
@@ -425,7 +434,7 @@ set up manually, log in to your account. If the variables were set through
 Heroku, you should be able to click on the Mailgun icon in your Heroku
 dashboard, which should take you to your Mailgun dashboard.
 
-#### Running the backend tests
+### Running the backend tests
 
 In your `.env` file, set `TEST_DATABASE_URL` to a value that's the same as
 `DATABASE_URL`, or use a different database name. The `TEST_DATABASE_URL`
@@ -448,14 +457,14 @@ Run the backend API server tests with this command:
 cargo test
 ```
 
-#### Using your local crates.io with cargo
+### Using your local crates.io with cargo
 
 Once you have a local instance of crates.io running at <http://localhost:4200> by
 following the instructions in the "Working on the Backend" section, you can go
 to another Rust project and tell cargo to use your local crates.io instead of
 production.
 
-##### Publishing a crate to your local crates.io
+#### Publishing a crate to your local crates.io
 
 In order to publish a crate, you need an API token. In order to get an API
 token, you need to be able to log in with GitHub OAuth. In order to be able to
@@ -504,7 +513,7 @@ crate is downloaded. If you try to install a crate from your local crates.io and
 `cargo` can't find the crate files, it is probably because this directory does not
 exist.
 
-##### Downloading a crate from your local crates.io
+#### Downloading a crate from your local crates.io
 
 In _another_ crate, you can use the crate you've published as a dependency by
 telling `cargo` to replace crates.io with your local crates.io as a source.
@@ -533,7 +542,7 @@ this crate's `Cargo.toml`, and `cargo build` should display output like this:
     Finished dev [unoptimized + debuginfo] target(s) in 0.56 secs
 ```
 
-### Running crates.io with Docker
+## Running crates.io with Docker
 
 There are Dockerfiles to build both the backend and the frontend,
 (`backend.Dockerfile` and `frontend.Dockerfile`) respectively, but it is most
@@ -561,7 +570,7 @@ services:
 These environment variables can also be defined in a local `.env` file, see `.env.sample`
 for various configuration options.
 
-#### Accessing services
+### Accessing services
 
 By default, the services will be exposed on their normal ports:
 
@@ -571,7 +580,7 @@ By default, the services will be exposed on their normal ports:
 
 These can be changed with the `docker-compose.override.yml` file.
 
-#### Publishing crates
+### Publishing crates
 
 Unlike a local setup, the Git index is not stored in the `./tmp` folder, so in
 order to publish to the Dockerized crates.io, run
@@ -580,7 +589,7 @@ order to publish to the Dockerized crates.io, run
 cargo publish --index http://localhost:8888/git/index --token $YOUR_TOKEN
 ```
 
-#### Changing code
+### Changing code
 
 The `app/` directory is mounted directly into the frontend Docker container,
 which means that the Ember live-reload server will still just work. If
@@ -617,7 +626,7 @@ docker compose rm backend
 docker compose up -d
 ```
 
-#### Volumes
+### Volumes
 
 A number of names volumes are created, as can be seen in the `volumes` section
 of the `docker-compose.yml` file.
