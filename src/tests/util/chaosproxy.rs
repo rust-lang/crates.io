@@ -5,9 +5,7 @@ use std::sync::Arc;
 use anyhow::{Context, anyhow};
 use futures_util::FutureExt as _;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-#[cfg(unix)]
-use tokio::net::UnixStream;
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::{TcpListener, TcpStream, UnixStream};
 use tokio::sync::broadcast::Sender;
 use tokio_postgres::Config;
 use tokio_postgres::config::Host;
@@ -145,9 +143,6 @@ impl ChaosProxy {
                     .boxed(),
                 )
             }
-            #[cfg(not(unix))]
-            Host::Unix(_) => panic!("Unix sockets not supported on this platform"),
-            #[cfg(unix)]
             Host::Unix(path) => {
                 let path = path.join(format!(".s.PGSQL.{port}"));
                 let (backend_read, backend_write) = UnixStream::connect(path).await?.into_split();
