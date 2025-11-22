@@ -160,6 +160,10 @@ In order to run the backend, you will need to have installed:
 - [OpenSSL](https://www.openssl.org/) >= 1.0.2k
 - [diesel_cli](http://diesel.rs/guides/getting-started/) >= 2.0.0 and < 3.0.0
 
+> [!NOTE]
+> The backend codebase assumes `cfg(unix)`. If you're running on Windows we recommend that you use
+> a WSL environment for development and follow the Linux instructions below.
+
 ##### Rust
 
 - [rustup](https://rustup.rs/) is the installation method we'd recommend for
@@ -170,8 +174,6 @@ In order to run the backend, you will need to have installed:
 Postgres can be a little finicky to install and get set up. These are the
 methods we'd recommend for each operating system:
 
-- Windows: use the [Windows installers recommended by
-  Postgres](https://www.postgresql.org/download/windows/)
 - macOS: Either [Postgres.app](https://postgresapp.com/) or through
   [Homebrew](https://brew.sh/) by running `brew install postgresql@13` and
   following the post-installation instructions
@@ -258,10 +260,6 @@ postgres`). Generally, the problem is that by default the postgres server is
 
 ##### OpenSSL
 
-- Windows: [Win32 OpenSSL Installation
-  Project](http://slproweb.com/products/Win32OpenSSL.html) provides installers
-  for the latest versions. Scroll down to “Download Win32 OpenSSL”, pick the
-  64-bit non-Light version of OpenSSL, and install it.
 - macOS: you can also install with homebrew by using `brew install openssl`
 - Linux: you should be able to use the distribution repositories. It will be
   called `openssl`, `openssl-devel`, or `libssl-dev`. OpenSSL needs
@@ -271,6 +269,7 @@ postgres`). Generally, the problem is that by default the postgres server is
   - Fedora: `sudo dnf install openssl-devel pkgconfig`
   - Arch Linux: `sudo pacman -S openssl pkg-config`
 
+> [!TIP]
 > If you have problems with OpenSSL, see [rust-openssl's
 > README](https://github.com/sfackler/rust-openssl) for some suggestions.
 
