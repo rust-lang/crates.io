@@ -33,6 +33,7 @@ expression: response.json()
     "num_versions": 2,
     "recent_downloads": 10,
     "repository": null,
+    "trustpub_only": false,
     "updated_at": "[datetime]",
     "versions": [
       2,

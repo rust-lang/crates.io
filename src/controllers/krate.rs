@@ -15,6 +15,7 @@ pub mod owners;
 pub mod publish;
 pub mod rev_deps;
 pub mod search;
+pub mod update;
 pub mod versions;
 
 #[derive(Deserialize, FromRequestParts, IntoParams)]

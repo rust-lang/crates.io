@@ -16,6 +16,7 @@ pub struct CrateBuilder<'a> {
     krate: NewCrate<'a>,
     owner_id: i32,
     recent_downloads: Option<i32>,
+    trustpub_only: bool,
     updated_at: Option<DateTime<Utc>>,
     versions: Vec<VersionBuilder>,
 }
@@ -34,6 +35,7 @@ impl<'a> CrateBuilder<'a> {
             },
             owner_id,
             recent_downloads: None,
+            trustpub_only: false,
             updated_at: None,
             versions: Vec::new(),
         }
@@ -113,6 +115,12 @@ impl<'a> CrateBuilder<'a> {
         self
     }
 
+    /// Sets the crate's `trustpub_only` flag.
+    pub fn trustpub_only(mut self, trustpub_only: bool) -> Self {
+        self.trustpub_only = trustpub_only;
+        self
+    }
+
     pub async fn build(mut self, connection: &mut AsyncPgConnection) -> anyhow::Result<Crate> {
         use diesel::{insert_into, select, update};
 
@@ -166,6 +174,14 @@ impl<'a> CrateBuilder<'a> {
         if let Some(updated_at) = self.updated_at {
             krate = update(&krate)
                 .set(crates::updated_at.eq(updated_at))
+                .returning(Crate::as_returning())
+                .get_result(connection)
+                .await?;
+        }
+
+        if self.trustpub_only {
+            krate = update(&krate)
+                .set(crates::trustpub_only.eq(true))
                 .returning(Crate::as_returning())
                 .get_result(connection)
                 .await?;
