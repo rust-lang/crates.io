@@ -1,0 +1,18 @@
+.heading {
+  font-size: 1.17em;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+}
+
+.advisories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  margin-top: var(--space-2xs);
+  background-color: light-dark(white, #141413);
+  padding: var(--space-m) var(--space-l);
+  list-style: none;
+}
