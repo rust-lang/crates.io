@@ -27,6 +27,7 @@ test('happy path', ({ expect }) => {
         "name": "crate-1",
         "recent_downloads": 321,
         "repository": null,
+        "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
         Symbol(type): "crate",
         Symbol(primaryKey): "id",
