@@ -101,7 +101,7 @@ async fn publish_with_token_rejected_when_trustpub_only() {
     let crate_to_publish = PublishBuilder::new("foo_trustpub_only", "1.0.0");
     let response = token.publish_crate(crate_to_publish).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"You tried to publish with an API token but this crate requires trusted publishing."}]}"#);
+    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing)."}]}"#);
 
     assert_that!(app.stored_files().await, is_empty());
     assert_that!(app.emails().await, is_empty());

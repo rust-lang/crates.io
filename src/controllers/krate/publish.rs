@@ -222,7 +222,7 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
         && matches!(auth, AuthType::Regular(_))
     {
         return Err(forbidden(
-            "You tried to publish with an API token but this crate requires trusted publishing.",
+            "New versions of this crate can only be published using Trusted Publishing (see https://crates.io/docs/trusted-publishing).",
         ));
     }
 
