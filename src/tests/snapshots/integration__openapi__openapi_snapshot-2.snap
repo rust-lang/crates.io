@@ -914,6 +914,18 @@ expression: response.json()
       },
       "PatchRequest": {
         "properties": {
+          "crate": {
+            "$ref": "#/components/schemas/PatchRequestCrate",
+            "description": "The crate settings to update."
+          }
+        },
+        "required": [
+          "crate"
+        ],
+        "type": "object"
+      },
+      "PatchRequestCrate": {
+        "properties": {
           "trustpub_only": {
             "description": "Whether this crate can only be published via Trusted Publishing.",
             "type": [

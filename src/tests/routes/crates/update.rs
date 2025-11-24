@@ -17,7 +17,7 @@ async fn test_enable_trustpub_only() {
     let url = "/api/v1/crates/foo";
 
     // Try to set trustpub_only to false when it's already false (no change)
-    let body = serde_json::json!({ "trustpub_only": false });
+    let body = serde_json::json!({ "crate": { "trustpub_only": false } });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
@@ -28,7 +28,7 @@ async fn test_enable_trustpub_only() {
     });
 
     // Now enable trustpub_only
-    let body = serde_json::json!({ "trustpub_only": true });
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
@@ -68,7 +68,7 @@ async fn test_disable_trustpub_only() {
     let url = "/api/v1/crates/foo";
 
     // Try to set trustpub_only to true when it's already true (no change)
-    let body = serde_json::json!({ "trustpub_only": true });
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
@@ -79,7 +79,7 @@ async fn test_disable_trustpub_only() {
     });
 
     // Now disable trustpub_only
-    let body = serde_json::json!({ "trustpub_only": false });
+    let body = serde_json::json!({ "crate": { "trustpub_only": false } });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
@@ -117,7 +117,7 @@ async fn test_update_trustpub_only_requires_authentication() {
 
     // Try to update as an unauthenticated user
     let url = "/api/v1/crates/foo";
-    let body = serde_json::json!({ "trustpub_only": true });
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = anon.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
 
@@ -140,7 +140,7 @@ async fn test_update_trustpub_only_requires_ownership() {
 
     // Try to update with a different user
     let url = "/api/v1/crates/foo";
-    let body = serde_json::json!({ "trustpub_only": true });
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = another_user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
 
@@ -152,7 +152,7 @@ async fn test_update_nonexistent_crate() {
     let (app, _, user) = TestApp::full().with_user().await;
 
     let url = "/api/v1/crates/nonexistent";
-    let body = serde_json::json!({ "trustpub_only": true });
+    let body = serde_json::json!({ "crate": { "trustpub_only": true } });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"404 Not Found");
 
@@ -183,7 +183,7 @@ mod auth {
         let token = user.db_new_token("test-token").await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
@@ -204,7 +204,7 @@ mod auth {
             .await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"200 OK");
 
@@ -224,7 +224,7 @@ mod auth {
             .await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
@@ -245,7 +245,7 @@ mod auth {
             .await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"This endpoint cannot be used with legacy API tokens. Use a scoped API token instead."}]}"#);
@@ -266,7 +266,7 @@ mod auth {
             .await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"403 Forbidden");
         assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"this token does not have the required permissions to perform this action"}]}"#);
@@ -287,7 +287,7 @@ mod auth {
             .await;
 
         let url = format!("/api/v1/crates/{}", CRATE_NAME);
-        let body = serde_json::json!({ "trustpub_only": true });
+        let body = serde_json::json!({ "crate": { "trustpub_only": true } });
         let response = token.patch::<()>(&url, body.to_string()).await;
         assert_snapshot!(response.status(), @"200 OK");
 
