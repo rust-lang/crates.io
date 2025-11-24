@@ -58,6 +58,7 @@ test('returns a paginated crates list', async function () {
         num_versions: 2,
         repository: null,
         recent_downloads: 321,
+        trustpub_only: false,
         updated_at: '2017-02-24T12:34:56Z',
         versions: null,
         yanked: false,

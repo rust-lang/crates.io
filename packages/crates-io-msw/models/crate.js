@@ -16,6 +16,7 @@ export default {
   updated_at: String,
   badges: Array,
   _extra_downloads: Array,
+  trustpubOnly: Boolean,
 
   categories: manyOf('category'),
   keywords: manyOf('keyword'),
@@ -31,5 +32,6 @@ export default {
     applyDefault(attrs, 'repository', () => null);
     applyDefault(attrs, 'created_at', () => '2010-06-16T21:30:45Z');
     applyDefault(attrs, 'updated_at', () => '2017-02-24T12:34:56Z');
+    applyDefault(attrs, 'trustpubOnly', () => false);
   },
 };
