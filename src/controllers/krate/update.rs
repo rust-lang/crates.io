@@ -19,6 +19,13 @@ use tracing::{info, warn};
 
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct PatchRequest {
+    /// The crate settings to update.
+    #[serde(rename = "crate")]
+    pub krate: PatchRequestCrate,
+}
+
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct PatchRequestCrate {
     /// Whether this crate can only be published via Trusted Publishing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trustpub_only: Option<bool>,
@@ -105,7 +112,7 @@ async fn update_inner(
     }
 
     // Update trustpub_only if provided
-    if let Some(trustpub_only) = body.trustpub_only
+    if let Some(trustpub_only) = body.krate.trustpub_only
         && trustpub_only != krate.trustpub_only
     {
         diesel::update(crates::table)
