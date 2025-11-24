@@ -26,6 +26,7 @@ env:
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'rust-lang' }}
     steps:
       - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2
         id: app-token
