@@ -15,6 +15,19 @@ async fn test_enable_trustpub_only() {
         .await;
 
     let url = "/api/v1/crates/foo";
+
+    // Try to set trustpub_only to false when it's already false (no change)
+    let body = serde_json::json!({ "trustpub_only": false });
+    let response = user.patch::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json["crate"]["trustpub_only"], @"false");
+    assert_json_snapshot!(json, {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    // Now enable trustpub_only
     let body = serde_json::json!({ "trustpub_only": true });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");
@@ -53,6 +66,19 @@ async fn test_disable_trustpub_only() {
         .await;
 
     let url = "/api/v1/crates/foo";
+
+    // Try to set trustpub_only to true when it's already true (no change)
+    let body = serde_json::json!({ "trustpub_only": true });
+    let response = user.patch::<()>(url, body.to_string()).await;
+    assert_snapshot!(response.status(), @"200 OK");
+    let json = response.json();
+    assert_json_snapshot!(json["crate"]["trustpub_only"], @"true");
+    assert_json_snapshot!(json, {
+        ".crate.created_at" => "[datetime]",
+        ".crate.updated_at" => "[datetime]",
+    });
+
+    // Now disable trustpub_only
     let body = serde_json::json!({ "trustpub_only": false });
     let response = user.patch::<()>(url, body.to_string()).await;
     assert_snapshot!(response.status(), @"200 OK");

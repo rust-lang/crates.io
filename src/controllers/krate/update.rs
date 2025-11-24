@@ -105,7 +105,9 @@ async fn update_inner(
     }
 
     // Update trustpub_only if provided
-    if let Some(trustpub_only) = body.trustpub_only {
+    if let Some(trustpub_only) = body.trustpub_only
+        && trustpub_only != krate.trustpub_only
+    {
         diesel::update(crates::table)
             .filter(crates::id.eq(krate.id))
             .set(crates::trustpub_only.eq(trustpub_only))
