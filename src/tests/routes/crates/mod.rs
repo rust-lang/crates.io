@@ -7,4 +7,5 @@ mod new;
 pub mod owners;
 mod read;
 mod reverse_dependencies;
+mod update;
 pub mod versions;

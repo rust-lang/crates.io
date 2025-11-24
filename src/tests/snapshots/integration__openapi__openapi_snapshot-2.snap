@@ -359,6 +359,10 @@ expression: response.json()
               "null"
             ]
           },
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": "boolean"
+          },
           "updated_at": {
             "description": "The date and time this crate was last updated.",
             "example": "2019-12-13T13:46:41Z",
@@ -394,7 +398,8 @@ expression: response.json()
           "max_version",
           "newest_version",
           "links",
-          "exact_match"
+          "exact_match",
+          "trustpub_only"
         ],
         "type": "object"
       },
@@ -905,6 +910,18 @@ expression: response.json()
           "login",
           "kind"
         ],
+        "type": "object"
+      },
+      "PatchRequest": {
+        "properties": {
+          "trustpub_only": {
+            "description": "Whether this crate can only be published via Trusted Publishing.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "PublishWarnings": {
@@ -2247,6 +2264,63 @@ expression: response.json()
           }
         },
         "summary": "Get crate metadata.",
+        "tags": [
+          "crates"
+        ]
+      },
+      "patch": {
+        "operationId": "update_crate",
+        "parameters": [
+          {
+            "description": "Name of the crate",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "crate": {
+                      "$ref": "#/components/schemas/Crate",
+                      "description": "The updated crate metadata."
+                    }
+                  },
+                  "required": [
+                    "crate"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "api_token": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Update crate settings.",
         "tags": [
           "crates"
         ]

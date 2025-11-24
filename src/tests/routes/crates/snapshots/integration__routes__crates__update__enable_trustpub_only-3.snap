@@ -1,9 +1,8 @@
 ---
-source: src/tests/routes/crates/read.rs
-expression: response.json()
+source: src/tests/routes/crates/update.rs
+expression: json
 ---
 {
-  "categories": null,
   "crate": {
     "badges": [],
     "categories": null,
@@ -14,19 +13,19 @@ expression: response.json()
     "downloads": 0,
     "exact_match": false,
     "homepage": null,
-    "id": "new",
+    "id": "foo",
     "keywords": null,
     "links": {
-      "owner_team": "/api/v1/crates/new/owner_team",
-      "owner_user": "/api/v1/crates/new/owner_user",
-      "owners": "/api/v1/crates/new/owners",
-      "reverse_dependencies": "/api/v1/crates/new/reverse_dependencies",
-      "version_downloads": "/api/v1/crates/new/downloads",
-      "versions": "/api/v1/crates/new/versions"
+      "owner_team": "/api/v1/crates/foo/owner_team",
+      "owner_user": "/api/v1/crates/foo/owner_user",
+      "owners": "/api/v1/crates/foo/owners",
+      "reverse_dependencies": "/api/v1/crates/foo/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo/downloads",
+      "versions": "/api/v1/crates/foo/versions"
     },
     "max_stable_version": null,
     "max_version": "0.0.0",
-    "name": "new",
+    "name": "foo",
     "newest_version": "0.0.0",
     "num_versions": 1,
     "recent_downloads": null,
@@ -35,7 +34,5 @@ expression: response.json()
     "updated_at": "[datetime]",
     "versions": null,
     "yanked": false
-  },
-  "keywords": null,
-  "versions": null
+  }
 }

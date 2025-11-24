@@ -1,6 +1,7 @@
 use crate::builders::{CrateBuilder, PublishBuilder};
 use crate::util::{MockTokenUser, RequestHelper, TestApp};
 use chrono::{TimeDelta, Utc};
+use crates_io::schema::crates;
 use crates_io_database::models::trustpub::NewToken;
 use crates_io_github::{GitHubUser, MockGitHubClient};
 use crates_io_trustpub::access_token::AccessToken;
@@ -9,7 +10,8 @@ use crates_io_trustpub::github::test_helpers::FullGitHubClaims;
 use crates_io_trustpub::keystore::MockOidcKeyStore;
 use crates_io_trustpub::test_keys::encode_for_testing;
 use diesel::QueryResult;
-use diesel_async::AsyncPgConnection;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use insta::{assert_json_snapshot, assert_snapshot};
 use mockall::predicate::*;
 use p256::ecdsa::signature::digest::Output;
@@ -322,6 +324,33 @@ async fn test_token_for_wrong_crate() -> anyhow::Result<()> {
     let response = oidc_token_client.publish_crate(pb).await;
     assert_snapshot!(response.status(), @"403 Forbidden");
     assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"The provided access token is not valid for crate `bar`"}]}"#);
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_trustpub_works_when_trustpub_only_enabled() -> anyhow::Result<()> {
+    let (app, _client, cookie_client) = TestApp::full().with_user().await;
+
+    let mut conn = app.db_conn().await;
+
+    let owner_id = cookie_client.as_model().id;
+    let krate = CrateBuilder::new("foo", owner_id).build(&mut conn).await?;
+
+    // Set trustpub_only to true
+    diesel::update(crates::table)
+        .filter(crates::name.eq(&krate.name))
+        .set(crates::trustpub_only.eq(true))
+        .execute(&mut conn)
+        .await?;
+
+    let token = new_token(&mut conn, krate.id).await?;
+    let oidc_token_client = MockTokenUser::with_auth_header(token, app.clone());
+
+    // Publishing with trusted publishing should work
+    let pb = PublishBuilder::new(&krate.name, "1.1.0");
+    let response = oidc_token_client.publish_crate(pb).await;
+    assert_snapshot!(response.status(), @"200 OK");
 
     Ok(())
 }

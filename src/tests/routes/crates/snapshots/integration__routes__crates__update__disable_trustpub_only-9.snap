@@ -1,0 +1,84 @@
+---
+source: src/tests/routes/crates/update.rs
+expression: json
+---
+{
+  "categories": [],
+  "crate": {
+    "badges": [],
+    "categories": [],
+    "created_at": "[datetime]",
+    "default_version": "0.99.0",
+    "description": null,
+    "documentation": null,
+    "downloads": 0,
+    "exact_match": false,
+    "homepage": null,
+    "id": "foo",
+    "keywords": [],
+    "links": {
+      "owner_team": "/api/v1/crates/foo/owner_team",
+      "owner_user": "/api/v1/crates/foo/owner_user",
+      "owners": "/api/v1/crates/foo/owners",
+      "reverse_dependencies": "/api/v1/crates/foo/reverse_dependencies",
+      "version_downloads": "/api/v1/crates/foo/downloads",
+      "versions": null
+    },
+    "max_stable_version": "0.99.0",
+    "max_version": "0.99.0",
+    "name": "foo",
+    "newest_version": "0.99.0",
+    "num_versions": 1,
+    "recent_downloads": null,
+    "repository": null,
+    "trustpub_only": false,
+    "updated_at": "[datetime]",
+    "versions": [
+      1
+    ],
+    "yanked": false
+  },
+  "keywords": [],
+  "versions": [
+    {
+      "audit_actions": [],
+      "bin_names": null,
+      "checksum": "                                                                ",
+      "crate": "foo",
+      "crate_size": 0,
+      "created_at": "[datetime]",
+      "description": null,
+      "dl_path": "/api/v1/crates/foo/0.99.0/download",
+      "documentation": null,
+      "downloads": 0,
+      "edition": null,
+      "features": {},
+      "has_lib": null,
+      "homepage": null,
+      "id": 1,
+      "lib_links": null,
+      "license": null,
+      "linecounts": null,
+      "links": {
+        "authors": "/api/v1/crates/foo/0.99.0/authors",
+        "dependencies": "/api/v1/crates/foo/0.99.0/dependencies",
+        "version_downloads": "/api/v1/crates/foo/0.99.0/downloads"
+      },
+      "num": "0.99.0",
+      "published_by": {
+        "avatar": null,
+        "id": 1,
+        "login": "foo",
+        "name": null,
+        "url": "https://github.com/foo"
+      },
+      "readme_path": "/api/v1/crates/foo/0.99.0/readme",
+      "repository": null,
+      "rust_version": null,
+      "trustpub_data": null,
+      "updated_at": "[datetime]",
+      "yank_message": null,
+      "yanked": false
+    }
+  ]
+}

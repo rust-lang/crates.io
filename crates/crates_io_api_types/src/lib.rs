@@ -361,6 +361,9 @@ pub struct EncodableCrate {
     /// Whether the crate name was an exact match.
     #[schema(deprecated)]
     pub exact_match: bool,
+
+    /// Whether this crate can only be published via Trusted Publishing.
+    pub trustpub_only: bool,
 }
 
 impl EncodableCrate {
@@ -386,6 +389,7 @@ impl EncodableCrate {
             homepage,
             documentation,
             repository,
+            trustpub_only,
             ..
         } = krate;
         let versions_link = match versions {
@@ -451,6 +455,7 @@ impl EncodableCrate {
             exact_match,
             description,
             repository,
+            trustpub_only,
             links: EncodableCrateLinks {
                 version_downloads: format!("/api/v1/crates/{name}/downloads"),
                 versions: versions_link,
@@ -1201,6 +1206,7 @@ mod tests {
                 reverse_dependencies: "".to_string(),
             },
             exact_match: false,
+            trustpub_only: false,
         };
         let json = serde_json::to_string(&crt).unwrap();
         assert_some!(json.as_str().find(r#""updated_at":"2017-01-06T14:23:11Z""#));
