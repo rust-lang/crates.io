@@ -99,7 +99,7 @@ jobs:
     permissions:
       id-token: write     # Required for OIDC token exchange
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: rust-lang/crates-io-auth-action@v1
       id: auth
     - run: cargo publish
