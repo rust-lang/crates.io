@@ -54,6 +54,11 @@
     background-color: light-dark(white, #141413);
     border-radius: var(--space-3xs);
     box-shadow: 0 1px 3px light-dark(hsla(51, 90%, 42%, .35), #232321);
+}
+
+.trustpub table {
+    width: 100%;
+    border-spacing: 0;
 
     :global(tbody) > :global(tr) > :global(td) {
         border-top: 1px solid light-dark(hsla(51, 90%, 42%, .25), #232321);
@@ -82,7 +87,7 @@
             display: none;
         }
 
-        tbody > tr > td:first-child {
+        tbody > tr:not(.no-trustpub-config) > td:first-child {
             padding-bottom: 0;
         }
 
@@ -107,6 +112,10 @@
             text-align: left;
         }
     }
+}
+
+.trustpub-only-checkbox {
+    border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
 }
 
 .email-column {

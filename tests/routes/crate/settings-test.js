@@ -1,5 +1,7 @@
-import { click, currentURL } from '@ember/test-helpers';
+import { click, currentURL, waitFor } from '@ember/test-helpers';
 import { module, test } from 'qunit';
+
+import { defer } from 'rsvp';
 
 import percySnapshot from '@percy/ember';
 import { http, HttpResponse } from 'msw';
@@ -272,6 +274,65 @@ module('Route | crate.settings', hooks => {
           .dom('[data-test-notification-message]')
           .hasText('Failed to remove Trusted Publishing configuration: Server error');
       });
+    });
+  });
+
+  module('trustpub_only checkbox', function () {
+    test('enabling trustpub_only', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
+      assert.false(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+
+      await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
+      assert.true(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+    });
+
+    test('disabling trustpub_only', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
+      assert.true(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+
+      await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
+      assert.false(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+    });
+
+    test('loading and error state', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      let deferred = defer();
+      this.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-spinner]').doesNotExist();
+
+      let clickPromise = click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+      await waitFor('[data-test-trustpub-only-checkbox] [data-test-spinner]');
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-spinner]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').doesNotExist();
+
+      deferred.resolve(HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 }));
+      await clickPromise;
+
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-spinner]').doesNotExist();
+      assert.dom('[data-test-notification-message]').hasText('Server error');
     });
   });
 });
