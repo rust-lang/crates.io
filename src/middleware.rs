@@ -16,6 +16,7 @@ use axum::Router;
 use axum::middleware::{ResponseAxumBodyLayer, from_fn, from_fn_with_state};
 use axum_extra::either::Either;
 use axum_extra::middleware::option_layer;
+use http::StatusCode;
 use std::time::Duration;
 use tower::layer::util::Identity;
 use tower_http::add_extension::AddExtensionLayer;
@@ -85,7 +86,10 @@ pub fn apply_axum_middleware(state: AppState, router: Router<()>) -> Router {
     router
         .layer(middlewares_2)
         .layer(middlewares_1)
-        .layer(TimeoutLayer::new(Duration::from_secs(30)))
+        .layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(30),
+        ))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(30)))
         .layer(CompressionLayer::new().quality(CompressionLevel::Fastest))
 }
