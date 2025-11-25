@@ -27,10 +27,10 @@ dbg_macro = "warn"
 todo = "warn"
 
 [package.metadata.cargo-machete]
-ignored = ["astral-tokio-tar", "generic-array"]
+ignored = ["astral-tokio-tar"]
 
 [workspace.metadata.cargo-machete]
-ignored = ["astral-tokio-tar", "generic-array"]
+ignored = ["astral-tokio-tar"]
 
 [lints]
 workspace = true
@@ -101,7 +101,6 @@ diesel_migrations = { version = "=2.3.0", features = ["postgres"] }
 dotenvy = "=0.15.7"
 flate2 = "=1.1.5"
 futures-util = "=0.3.31"
-generic-array = "=0.14.9" # see https://github.com/RustCrypto/traits/issues/2036
 hex = "=0.4.3"
 http = "=1.4.0"
 hyper = { version = "=1.8.1", features = ["client", "http1"] }
