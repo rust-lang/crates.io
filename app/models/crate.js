@@ -30,6 +30,12 @@ export default class Crate extends Model {
   @attr repository;
 
   /**
+   * Whether this crate can only be published via Trusted Publishing.
+   * @type {boolean}
+   */
+  @attr trustpub_only;
+
+  /**
    * This isn't an attribute in the crate response.
    * It's actually the `meta` attribute that belongs to `versions`
    * and needs to be assigned to `crate` manually.
