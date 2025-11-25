@@ -226,7 +226,9 @@ import UserAvatar from 'crates-io/components/user-avatar';
       </tbody>
     </table>
 
-    <TrustpubOnlyCheckbox @crate={{@controller.crate}} class='trustpub-only-checkbox' />
+    {{#if @controller.showTrustpubOnlyCheckbox}}
+      <TrustpubOnlyCheckbox @crate={{@controller.crate}} class='trustpub-only-checkbox' />
+    {{/if}}
   </div>
 
   <h2 class='header'>Danger Zone</h2>

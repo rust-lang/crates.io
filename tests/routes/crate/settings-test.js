@@ -278,9 +278,93 @@ module('Route | crate.settings', hooks => {
   });
 
   module('trustpub_only checkbox', function () {
+    test('hidden when no configs and flag is false', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').doesNotExist();
+    });
+
+    test('visible when GitHub configs exist', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
+    });
+
+    test('visible when GitLab configs exist', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      this.db.trustpubGitlabConfig.create({
+        crate,
+        namespace: 'rust-lang',
+        project: 'crates.io',
+        workflow_filepath: '.gitlab-ci.yml',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
+    });
+
+    test('visible when flag is true but no configs', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
+    });
+
+    test('stays visible after disabling when no configs exist', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
+
+      await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+      // Checkbox stays visible after disabling (within same page visit)
+      assert.dom('[data-test-trustpub-only-checkbox]').exists();
+      assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
+
+      // After navigating away and back, checkbox should be hidden
+      await visit(`/crates/${crate.name}`);
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-checkbox]').doesNotExist();
+    });
+
     test('enabling trustpub_only', async function (assert) {
       const { crate, user } = prepare(this);
       this.authenticateAs(user);
+
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -298,6 +382,13 @@ module('Route | crate.settings', hooks => {
       this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
       this.authenticateAs(user);
 
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
       await visit(`/crates/${crate.name}/settings`);
 
       assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
@@ -312,6 +403,13 @@ module('Route | crate.settings', hooks => {
     test('loading and error state', async function (assert) {
       const { crate, user } = prepare(this);
       this.authenticateAs(user);
+
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
 
       let deferred = defer();
       this.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));

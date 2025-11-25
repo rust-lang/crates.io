@@ -13,6 +13,18 @@ export default class CrateSettingsController extends Controller {
   username = '';
   @tracked addOwnerVisible = false;
 
+  /**
+   * Tracks whether the trustpub_only checkbox was visible when the page loaded.
+   * This prevents the checkbox from disappearing immediately when unchecked
+   * if there are no configs - it will only disappear on the next page visit.
+   */
+  trustpubOnlyCheckboxWasVisible = false;
+
+  get showTrustpubOnlyCheckbox() {
+    let hasConfigs = this.githubConfigs?.length > 0 || this.gitlabConfigs?.length > 0;
+    return hasConfigs || this.crate?.trustpub_only || this.trustpubOnlyCheckboxWasVisible;
+  }
+
   @action showAddOwnerForm() {
     this.addOwnerVisible = true;
     this.username = '';
