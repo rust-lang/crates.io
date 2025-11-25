@@ -20,9 +20,16 @@ export default class CrateSettingsController extends Controller {
    */
   trustpubOnlyCheckboxWasVisible = false;
 
+  get #hasConfigs() {
+    return this.githubConfigs?.length > 0 || this.gitlabConfigs?.length > 0;
+  }
+
   get showTrustpubOnlyCheckbox() {
-    let hasConfigs = this.githubConfigs?.length > 0 || this.gitlabConfigs?.length > 0;
-    return hasConfigs || this.crate?.trustpub_only || this.trustpubOnlyCheckboxWasVisible;
+    return this.#hasConfigs || this.crate?.trustpub_only || this.trustpubOnlyCheckboxWasVisible;
+  }
+
+  get showTrustpubOnlyWarning() {
+    return this.crate?.trustpub_only && !this.#hasConfigs;
   }
 
   @action showAddOwnerForm() {

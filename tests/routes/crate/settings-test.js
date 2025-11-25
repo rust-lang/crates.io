@@ -277,6 +277,86 @@ module('Route | crate.settings', hooks => {
     });
   });
 
+  module('trustpub_only warning banner', function () {
+    test('hidden when flag is false', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-warning]').doesNotExist();
+    });
+
+    test('hidden when flag is true and configs exist', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-warning]').doesNotExist();
+    });
+
+    test('shown when flag is true but no configs exist', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-warning]').exists();
+      assert
+        .dom('[data-test-trustpub-only-warning]')
+        .hasText(
+          'Trusted publishing is required but no publishers are configured. Publishing to this crate is currently blocked.',
+        );
+    });
+
+    test('disappears when checkbox is unchecked', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-warning]').exists();
+
+      await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+      assert.dom('[data-test-trustpub-only-warning]').doesNotExist();
+    });
+
+    test('appears when checkbox is checked with no configs', async function (assert) {
+      const { crate, user } = prepare(this);
+      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+      this.authenticateAs(user);
+
+      this.db.trustpubGithubConfig.create({
+        crate,
+        repository_owner: 'rust-lang',
+        repository_name: 'crates.io',
+        workflow_filename: 'ci.yml',
+      });
+
+      await visit(`/crates/${crate.name}/settings`);
+
+      assert.dom('[data-test-trustpub-only-warning]').doesNotExist();
+
+      // Remove the config
+      await click('[data-test-github-config="1"] [data-test-remove-config-button]');
+
+      // Warning should now appear
+      assert.dom('[data-test-trustpub-only-warning]').exists();
+    });
+  });
+
   module('trustpub_only checkbox', function () {
     test('hidden when no configs and flag is false', async function (assert) {
       const { crate, user } = prepare(this);

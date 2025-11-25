@@ -114,6 +114,10 @@
     }
 }
 
+.trustpub-only-warning {
+    margin-bottom: var(--space-s);
+}
+
 .trustpub-only-checkbox {
     border-top: 1px solid light-dark(hsla(51, 90%, 42%, 0.25), #232321);
 }

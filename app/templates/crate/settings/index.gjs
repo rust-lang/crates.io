@@ -8,6 +8,7 @@ import pageTitle from 'ember-page-title/helpers/page-title';
 import not from 'ember-truth-helpers/helpers/not';
 import or from 'ember-truth-helpers/helpers/or';
 
+import Alert from 'crates-io/components/alert';
 import CrateHeader from 'crates-io/components/crate-header';
 import Tooltip from 'crates-io/components/tooltip';
 import TrustpubOnlyCheckbox from 'crates-io/components/trustpub-only-checkbox';
@@ -116,6 +117,12 @@ import UserAvatar from 'crates-io/components/user-avatar';
       </LinkTo>
     </div>
   </div>
+
+  {{#if @controller.showTrustpubOnlyWarning}}
+    <Alert @variant='warning' class='trustpub-only-warning' data-test-trustpub-only-warning>
+      Trusted publishing is required but no publishers are configured. Publishing to this crate is currently blocked.
+    </Alert>
+  {{/if}}
 
   <div class='trustpub'>
     <table data-test-trusted-publishing>
