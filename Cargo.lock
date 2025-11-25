@@ -1160,6 +1160,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-cargo"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38ae55615695e768a76899c8411b4ebacfbe525e964f94fd24f0007b10b45cd3"
+dependencies = [
+ "anstyle",
+ "clap",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.5.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6305,13 +6315,14 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokei"
-version = "13.0.0-alpha.9"
+version = "13.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27f7cb17c9074ed59f35d72cbd07dcf458ee761c3c0aa81341027f606be3163a"
+checksum = "3a9791c506cf4a8b6ab053c88ec41a1e2ae19df2f6e81f3bfc34380d1d6e2964"
 dependencies = [
  "aho-corasick",
  "arbitrary",
  "clap",
+ "clap-cargo",
  "colored 2.2.0",
  "crossbeam-channel",
  "dashmap",
