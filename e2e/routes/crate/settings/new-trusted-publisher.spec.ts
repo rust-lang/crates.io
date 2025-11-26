@@ -4,11 +4,11 @@ import { defer } from '@/e2e/deferred';
 
 test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
 
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user });
 
     await msw.authenticateAs(user);
 
@@ -18,7 +18,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
   test('unauthenticated', async ({ msw, page }) => {
     let { crate } = await prepare(msw);
 
-    msw.db.mswSession.deleteMany({});
+    msw.db.mswSession.deleteMany(null);
 
     await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
     await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -29,7 +29,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
   test('not an owner', async ({ msw, page }) => {
     let { crate } = await prepare(msw);
 
-    msw.db.crateOwnership.deleteMany({});
+    msw.db.crateOwnership.deleteMany(null);
 
     await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
     await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -135,9 +135,10 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       test(name, async ({ msw, page }) => {
         let { crate } = await prepare(msw);
 
-        msw.db.crate.update({
-          where: { id: { equals: crate.id } },
-          data: { repository: url },
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.repository = url;
+          },
         });
 
         await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -153,7 +154,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
     test('happy path', async ({ msw, page, percy }) => {
       let { crate } = await prepare(msw);
 
-      msw.db.trustpubGithubConfig.create({
+      await msw.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'johndoe',
         repository_name: 'crates.io',
@@ -188,14 +189,15 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
 
       // Check that the config was created
-      let config = msw.db.trustpubGithubConfig.findFirst({
-        where: {
-          repository_owner: { equals: 'rust-lang' },
-          repository_name: { equals: 'crates.io' },
-          workflow_filename: { equals: 'ci.yml' },
-          environment: { equals: 'release' },
-        },
-      });
+      let config = msw.db.trustpubGithubConfig.findFirst(q =>
+        q.where(
+          c =>
+            c.repository_owner === 'rust-lang' &&
+            c.repository_name === 'crates.io' &&
+            c.workflow_filename === 'ci.yml' &&
+            c.environment === 'release',
+        ),
+      );
       expect(config, 'Config was created').toBeDefined();
 
       // Check that the success notification is displayed
@@ -361,7 +363,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
     test('happy path', async ({ msw, page }) => {
       let { crate } = await prepare(msw);
 
-      msw.db.trustpubGitlabConfig.create({
+      await msw.db.trustpubGitlabConfig.create({
         crate,
         namespace: 'johndoe',
         project: 'crates.io',
@@ -402,14 +404,15 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
       await expect(page).toHaveURL(`/crates/${crate.name}/settings`);
 
       // Check that the config was created
-      let config = msw.db.trustpubGitlabConfig.findFirst({
-        where: {
-          namespace: { equals: 'rust-lang' },
-          project: { equals: 'crates.io' },
-          workflow_filepath: { equals: '.gitlab-ci.yml' },
-          environment: { equals: 'production' },
-        },
-      });
+      let config = msw.db.trustpubGitlabConfig.findFirst(q =>
+        q.where(
+          c =>
+            c.namespace === 'rust-lang' &&
+            c.project === 'crates.io' &&
+            c.workflow_filepath === '.gitlab-ci.yml' &&
+            c.environment === 'production',
+        ),
+      );
       expect(config, 'Config was created').toBeDefined();
 
       // Check that the success notification is displayed

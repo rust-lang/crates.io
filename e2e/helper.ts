@@ -58,12 +58,12 @@ export const test = base.extend<AppOptions & AppFixtures>({
   msw: async ({ page }, use) => {
     const worker = await createWorker(page, handlers);
     const authenticateAs = async function (user) {
-      db.mswSession.create({ user });
+      await db.mswSession.create({ user });
       await page.addInitScript("globalThis.localStorage.setItem('isLoggedIn', '1')");
     };
 
     await use({ worker, db, authenticateAs });
-    db.reset();
+    await db.reset();
     worker.resetCookieStore();
   },
   ember: [

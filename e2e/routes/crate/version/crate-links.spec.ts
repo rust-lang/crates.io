@@ -2,13 +2,13 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
   test('shows all external crate links', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({
+    let crate = await msw.db.crate.create({
       name: 'foo',
       homepage: 'https://crates.io/',
       documentation: 'https://doc.rust-lang.org/cargo/getting-started/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/foo');
 
@@ -27,8 +27,8 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
   });
 
   test('shows no external crate links if none are set', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/foo');
 
@@ -38,12 +38,12 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
   });
 
   test('hide the homepage link if it is the same as the repository', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({
+    let crate = await msw.db.crate.create({
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io',
       repository: 'https://github.com/rust-lang/crates.io',
     });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/foo');
 
@@ -56,12 +56,12 @@ test.describe('Route | crate.version | crate links', { tag: '@routes' }, () => {
   });
 
   test('hide the homepage link if it is the same as the repository plus `.git`', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({
+    let crate = await msw.db.crate.create({
       name: 'foo',
       homepage: 'https://github.com/rust-lang/crates.io/',
       repository: 'https://github.com/rust-lang/crates.io.git',
     });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/foo');
 

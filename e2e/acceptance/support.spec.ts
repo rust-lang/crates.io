@@ -2,8 +2,8 @@ import { test, expect } from '@/e2e/helper';
 
 test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '0.6.0' });
+    let crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '0.6.0' });
 
     // mock `window.open()`
     await page.addInitScript(() => {

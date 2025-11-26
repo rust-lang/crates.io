@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   test('searching for "rust"', async ({ page, msw, percy, a11y }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
@@ -34,7 +34,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('searching for "rust" from query', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/search?q=rust');
 
@@ -47,7 +47,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('clearing search results', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/search?q=rust');
 
@@ -62,7 +62,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('pressing S key to focus the search bar', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/');
 
@@ -91,7 +91,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('check search results are by default displayed by relevance', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/');
     await page.fill('[data-test-search-input]', 'rust');
@@ -101,8 +101,8 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('error handling when searching from the frontpage', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'rust' });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    let crate = await msw.db.crate.create({ name: 'rust' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.json({}, { status: 500 });
     await msw.worker.use(http.get('/api/v1/crates', () => error));
@@ -131,8 +131,8 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('error handling when searching from the search page', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'rust' });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    let crate = await msw.db.crate.create({ name: 'rust' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/search?q=rust');
     await expect(page.locator('[data-test-crate-row]')).toHaveCount(1);
@@ -220,7 +220,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('visiting without query parameters works', async ({ page, msw }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/search');
 

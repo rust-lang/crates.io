@@ -5,17 +5,17 @@ test.describe('Acceptance | Settings | Remove Owner', { tag: '@acceptance' }, ()
   let user1, user2, team1, team2, crate;
 
   test.beforeEach(async ({ msw }) => {
-    user1 = msw.db.user.create({ name: 'blabaere' });
-    user2 = msw.db.user.create({ name: 'thehydroimpulse' });
-    team1 = msw.db.team.create({ org: 'org', name: 'blabaere' });
-    team2 = msw.db.team.create({ org: 'org', name: 'thehydroimpulse' });
+    user1 = await msw.db.user.create({ name: 'blabaere' });
+    user2 = await msw.db.user.create({ name: 'thehydroimpulse' });
+    team1 = await msw.db.team.create({ org: 'org', name: 'blabaere' });
+    team2 = await msw.db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-    crate = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate, num: '1.0.0' });
-    msw.db.crateOwnership.create({ crate, user: user1 });
-    msw.db.crateOwnership.create({ crate, user: user2 });
-    msw.db.crateOwnership.create({ crate, team: team1 });
-    msw.db.crateOwnership.create({ crate, team: team2 });
+    crate = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
+    await msw.db.crateOwnership.create({ crate, user: user1 });
+    await msw.db.crateOwnership.create({ crate, user: user2 });
+    await msw.db.crateOwnership.create({ crate, team: team1 });
+    await msw.db.crateOwnership.create({ crate, team: team2 });
 
     await msw.authenticateAs(user1);
   });

@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () => {
   test('unsubscribe and resubscribe', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
     await msw.authenticateAs(user);
 
     await page.goto('/settings/profile');
@@ -15,19 +15,19 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
     await expect(page.locator('[data-test-notifications] input[type=checkbox]')).not.toBeChecked();
 
     await page.click('[data-test-notifications] button');
-    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = msw.db.user.findFirst(q => q.where({ id: user.id }));
     expect(user.publishNotifications).toBe(false);
 
     await page.click('[data-test-notifications] input[type=checkbox]');
     await expect(page.locator('[data-test-notifications] input[type=checkbox]')).toBeChecked();
 
     await page.click('[data-test-notifications] button');
-    user = msw.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = msw.db.user.findFirst(q => q.where({ id: user.id }));
     expect(user.publishNotifications).toBe(true);
   });
 
   test('loading state', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
     await msw.authenticateAs(user);
 
     let deferred = defer();
@@ -48,7 +48,7 @@ test.describe('Acceptance | publish notifications', { tag: '@acceptance' }, () =
   });
 
   test('error state', async ({ page, msw }) => {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
     await msw.authenticateAs(user);
 
     msw.worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.text('', { status: 500 })));

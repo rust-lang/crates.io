@@ -4,18 +4,18 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route: crate.delete', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
 
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user });
 
     await msw.authenticateAs(user);
   }
 
   test('unauthenticated', async ({ msw, page }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
 
     await page.goto('/crates/foo/delete');
     await expect(page).toHaveURL('/crates/foo/delete');
@@ -24,13 +24,13 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
   });
 
   test('not an owner', async ({ msw, page }) => {
-    let user1 = msw.db.user.create();
+    let user1 = await msw.db.user.create();
     await msw.authenticateAs(user1);
 
-    let user2 = msw.db.user.create();
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user: user2 });
+    let user2 = await msw.db.user.create();
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user: user2 });
 
     await page.goto('/crates/foo/delete');
     await expect(page).toHaveURL('/crates/foo/delete');
@@ -57,8 +57,8 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
     let message = 'Crate foo has been successfully deleted.';
     await expect(page.locator('[data-test-notification-message="success"]')).toHaveText(message);
 
-    let crate = msw.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
-    expect(crate).toBeNull();
+    let crate = msw.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    expect(crate).toBeUndefined();
   });
 
   test('loading state', async ({ page, msw }) => {

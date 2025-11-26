@@ -12,23 +12,23 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 
 test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => {
   async function prepare(msw) {
-    let inviter = msw.db.user.create({ name: 'janed' });
-    let inviter2 = msw.db.user.create({ name: 'wycats' });
+    let inviter = await msw.db.user.create({ name: 'janed' });
+    let inviter2 = await msw.db.user.create({ name: 'wycats' });
 
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
 
-    let nanomsg = msw.db.crate.create({ name: 'nanomsg' });
-    msw.db.version.create({ crate: nanomsg });
-    msw.db.crateOwnerInvitation.create({
+    let nanomsg = await msw.db.crate.create({ name: 'nanomsg' });
+    await msw.db.version.create({ crate: nanomsg });
+    await msw.db.crateOwnerInvitation.create({
       crate: nanomsg,
       createdAt: '2016-12-24T12:34:56Z',
       invitee: user,
       inviter,
     });
 
-    let ember = msw.db.crate.create({ name: 'ember-rs' });
-    msw.db.version.create({ crate: ember });
-    msw.db.crateOwnerInvitation.create({
+    let ember = await msw.db.crate.create({ name: 'ember-rs' });
+    await msw.db.version.create({ crate: ember });
+    await msw.db.crateOwnerInvitation.create({
       crate: ember,
       createdAt: '2020-12-31T12:34:56Z',
       invitee: user,
@@ -70,7 +70,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 
   test('shows empty list message', async ({ page, msw }) => {
     await prepare(msw);
-    msw.db.crateOwnerInvitation.deleteMany({});
+    msw.db.crateOwnerInvitation.deleteMany(null);
 
     await page.goto('/me/pending-invites');
     await expect(page).toHaveURL('/me/pending-invites');
@@ -81,20 +81,14 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
   test('invites can be declined', async ({ page, msw }) => {
     let { nanomsg, user } = await prepare(msw);
 
-    let invites = msw.db.crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    let invites = msw.db.crateOwnerInvitation.findMany(q =>
+      q.where(inv => inv.crate.id === nanomsg.id && inv.invitee.id === user.id),
+    );
     expect(invites.length).toBe(1);
 
-    let owners = msw.db.crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    let owners = msw.db.crateOwnership.findMany(q =>
+      q.where(ownership => ownership.crate.id === nanomsg.id && ownership.user.id === user.id),
+    );
     expect(owners.length).toBe(0);
 
     await page.goto('/me/pending-invites');
@@ -111,20 +105,14 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     await expect(page.locator('[data-test-error-message]')).toHaveCount(0);
     await expect(page.locator('[data-test-accepted-message]')).toHaveCount(0);
 
-    invites = msw.db.crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    invites = msw.db.crateOwnerInvitation.findMany(q =>
+      q.where(inv => inv.crate.id === nanomsg.id && inv.invitee.id === user.id),
+    );
     expect(invites.length).toBe(0);
 
-    owners = msw.db.crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    owners = msw.db.crateOwnership.findMany(q =>
+      q.where(ownership => ownership.crate.id === nanomsg.id && ownership.user.id === user.id),
+    );
     expect(owners.length).toBe(0);
   });
 
@@ -146,20 +134,14 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
   test('invites can be accepted', async ({ page, percy, msw }) => {
     let { nanomsg, user } = await prepare(msw);
 
-    let invites = msw.db.crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    let invites = msw.db.crateOwnerInvitation.findMany(q =>
+      q.where(inv => inv.crate.id === nanomsg.id && inv.invitee.id === user.id),
+    );
     expect(invites.length).toBe(1);
 
-    let owners = msw.db.crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    let owners = msw.db.crateOwnership.findMany(q =>
+      q.where(ownership => ownership.crate.id === nanomsg.id && ownership.user.id === user.id),
+    );
     expect(owners.length).toBe(0);
 
     await page.goto('/me/pending-invites');
@@ -176,20 +158,14 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
 
     await percy.snapshot();
 
-    invites = msw.db.crateOwnerInvitation.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        invitee: { id: { equals: user.id } },
-      },
-    });
+    invites = msw.db.crateOwnerInvitation.findMany(q =>
+      q.where(inv => inv.crate.id === nanomsg.id && inv.invitee.id === user.id),
+    );
     expect(invites.length).toBe(0);
 
-    owners = msw.db.crateOwnership.findMany({
-      where: {
-        crate: { id: { equals: nanomsg.id } },
-        user: { id: { equals: user.id } },
-      },
-    });
+    owners = msw.db.crateOwnership.findMany(q =>
+      q.where(ownership => ownership.crate.id === nanomsg.id && ownership.user.id === user.id),
+    );
     expect(owners.length).toBe(1);
   });
 

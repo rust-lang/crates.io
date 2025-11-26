@@ -2,12 +2,14 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
   test('listing categories', async ({ page, msw, percy, a11y }) => {
-    msw.db.category.create({ category: 'API bindings' });
-    let algos = msw.db.category.create({ category: 'Algorithms' });
-    msw.db.crate.create({ categories: [algos] });
-    let async = msw.db.category.create({ category: 'Asynchronous' });
-    Array.from({ length: 15 }).forEach(() => msw.db.crate.create({ categories: [async] }));
-    msw.db.category.create({ category: 'Everything', crates_cnt: 1234 });
+    await msw.db.category.create({ category: 'API bindings' });
+    let algos = await msw.db.category.create({ category: 'Algorithms' });
+    await msw.db.crate.create({ categories: [algos] });
+    let async = await msw.db.category.create({ category: 'Asynchronous' });
+    for (let i = 0; i < 15; i++) {
+      await msw.db.crate.create({ categories: [async] });
+    }
+    await msw.db.category.create({ category: 'Everything', crates_cnt: 1234 });
 
     await page.goto('/categories');
 
@@ -21,7 +23,7 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
   });
 
   test('category/:category_id index default sort is recent-downloads', async ({ page, msw, percy, a11y }) => {
-    msw.db.category.create({ category: 'Algorithms' });
+    await msw.db.category.create({ category: 'Algorithms' });
     await page.goto('/categories/algorithms');
 
     await expect(page.locator('[data-test-category-sort] [data-test-current-order]')).toHaveText('Recent Downloads');
@@ -31,8 +33,8 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
   });
 
   test('listing category slugs', async ({ page, msw }) => {
-    msw.db.category.create({ category: 'Algorithms', description: 'Crates for algorithms' });
-    msw.db.category.create({ category: 'Asynchronous', description: 'Async crates' });
+    await msw.db.category.create({ category: 'Algorithms', description: 'Crates for algorithms' });
+    await msw.db.category.create({ category: 'Asynchronous', description: 'Async crates' });
     await page.goto('/category_slugs');
 
     await expect(page.locator('[data-test-category-slug="algorithms"]')).toHaveText('algorithms');
@@ -45,7 +47,7 @@ test.describe('Acceptance | categories', { tag: '@acceptance' }, () => {
 test.describe('Acceptance | categories (locale: de)', { tag: '@acceptance' }, () => {
   test.use({ locale: 'de' });
   test('listing categories', async ({ page, msw }) => {
-    msw.db.category.create({ category: 'Everything', crates_cnt: 1234 });
+    await msw.db.category.create({ category: 'Everything', crates_cnt: 1234 });
     await page.goto('categories');
 
     await expect(page.locator('[data-test-category="everything"] [data-test-crate-count]')).toHaveText('1.234 crates');

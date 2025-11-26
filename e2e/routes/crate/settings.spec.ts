@@ -4,11 +4,11 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.settings', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = msw.db.user.create();
+    let user = await msw.db.user.create();
 
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user });
 
     await msw.authenticateAs(user);
 
@@ -16,8 +16,8 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
   }
 
   test('unauthenticated', async ({ msw, page }) => {
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
 
     await page.goto('/crates/foo/settings');
     await expect(page).toHaveURL('/crates/foo/settings');
@@ -26,13 +26,13 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
   });
 
   test('not an owner', async ({ msw, page }) => {
-    let user1 = msw.db.user.create();
+    let user1 = await msw.db.user.create();
     await msw.authenticateAs(user1);
 
-    let user2 = msw.db.user.create();
-    let crate = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate });
-    msw.db.crateOwnership.create({ crate, user: user2 });
+    let user2 = await msw.db.user.create();
+    let crate = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate });
+    await msw.db.crateOwnership.create({ crate, user: user2 });
 
     await page.goto('/crates/foo/settings');
     await expect(page).toHaveURL('/crates/foo/settings');
@@ -63,7 +63,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       const { crate } = await prepare(msw);
 
       // Create GitHub config
-      msw.db.trustpubGithubConfig.create({
+      await msw.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -71,7 +71,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       });
 
       // Create GitLab config
-      msw.db.trustpubGitlabConfig.create({
+      await msw.db.trustpubGitlabConfig.create({
         crate,
         namespace: 'johndoe',
         namespace_id: '1234',
@@ -113,14 +113,14 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         const { crate } = await prepare(msw);
 
         // Create two GitHub configs for the crate
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
           workflow_filename: 'ci.yml',
         });
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'johndoe',
           repository_name: 'crates.io',
@@ -164,7 +164,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         let { crate } = await prepare(msw);
 
         // Create a GitHub config for the crate
-        let config = msw.db.trustpubGithubConfig.create({
+        let config = await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -196,14 +196,14 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         const { crate } = await prepare(msw);
 
         // Create two GitLab configs for the crate
-        msw.db.trustpubGitlabConfig.create({
+        await msw.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'rust-lang',
           project: 'crates.io',
           workflow_filepath: '.gitlab-ci.yml',
         });
 
-        msw.db.trustpubGitlabConfig.create({
+        await msw.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'johndoe',
           namespace_id: '1234',
@@ -250,7 +250,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         let { crate } = await prepare(msw);
 
         // Create a GitLab config for the crate
-        let config = msw.db.trustpubGitlabConfig.create({
+        let config = await msw.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'rust-lang',
           namespace_id: '1234',
@@ -289,9 +289,13 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('hidden when flag is true and configs exist', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -305,7 +309,11 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('shown when flag is true but no configs exist', async ({ msw, page, percy }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
         await page.goto('/crates/foo/settings');
 
@@ -319,7 +327,11 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('disappears when checkbox is unchecked', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
         await page.goto('/crates/foo/settings');
 
@@ -332,9 +344,13 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('appears when last config is removed', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -363,7 +379,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       test('visible when GitHub configs exist', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -379,7 +395,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       test('visible when GitLab configs exist', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
 
-        msw.db.trustpubGitlabConfig.create({
+        await msw.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'rust-lang',
           project: 'crates.io',
@@ -394,7 +410,11 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('visible when flag is true but no configs', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
         await page.goto('/crates/foo/settings');
 
@@ -404,7 +424,11 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
 
       test('stays visible after disabling when no configs exist', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
         await page.goto('/crates/foo/settings');
 
@@ -427,7 +451,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
       test('enabling trustpub_only', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -437,19 +461,23 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         await page.goto('/crates/foo/settings');
 
         await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
-        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(false);
+        expect(msw.db.crate.findFirst(q => q.where({ name: crate.name }))?.trustpubOnly).toBe(false);
 
         await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
 
         await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
-        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(true);
+        expect(msw.db.crate.findFirst(q => q.where({ name: crate.name }))?.trustpubOnly).toBe(true);
       });
 
       test('disabling trustpub_only', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
-        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+        await msw.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.trustpubOnly = true;
+          },
+        });
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -459,18 +487,18 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         await page.goto('/crates/foo/settings');
 
         await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
-        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(true);
+        expect(msw.db.crate.findFirst(q => q.where({ name: crate.name }))?.trustpubOnly).toBe(true);
 
         await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
 
         await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
-        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(false);
+        expect(msw.db.crate.findFirst(q => q.where({ name: crate.name }))?.trustpubOnly).toBe(false);
       });
 
       test('loading and error state', async ({ msw, page }) => {
         const { crate } = await prepare(msw);
 
-        msw.db.trustpubGithubConfig.create({
+        await msw.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',

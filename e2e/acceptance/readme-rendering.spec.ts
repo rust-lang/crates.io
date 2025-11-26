@@ -119,8 +119,8 @@ graph TD;
 
 test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
   test('it works', async ({ page, msw, percy }) => {
-    let crate = msw.db.crate.create({ name: 'serde' });
-    msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', readme: README_HTML });
 
     await page.goto('/crates/serde');
     const readme = page.locator('[data-test-readme]');
@@ -134,16 +134,16 @@ test.describe('Acceptance | README rendering', { tag: '@acceptance' }, () => {
   });
 
   test('it shows a fallback if no readme is available', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'serde' });
-    msw.db.version.create({ crate, num: '1.0.0' });
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0' });
 
     await page.goto('/crates/serde');
     await expect(page.locator('[data-test-no-readme]')).toBeVisible();
   });
 
   test('it shows an error message and retry button if loading fails', async ({ page, msw }) => {
-    let crate = msw.db.crate.create({ name: 'serde' });
-    msw.db.version.create({ crate, num: '1.0.0', readme: 'foo' });
+    let crate = await msw.db.crate.create({ name: 'serde' });
+    await msw.db.version.create({ crate, num: '1.0.0', readme: 'foo' });
 
     // Simulate a server error when fetching the README
     msw.worker.use(http.get('/api/v1/crates/:name/:version/readme', () => HttpResponse.html('', { status: 500 })));

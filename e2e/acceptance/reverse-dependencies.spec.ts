@@ -2,24 +2,24 @@ import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@acceptance' }, () => {
-  function prepare(msw) {
-    let foo = msw.db.crate.create({ name: 'foo' });
-    msw.db.version.create({ crate: foo });
+  async function prepare(msw) {
+    let foo = await msw.db.crate.create({ name: 'foo' });
+    await msw.db.version.create({ crate: foo });
 
-    let bar = msw.db.crate.create({ name: 'bar' });
-    let barV = msw.db.version.create({ crate: bar });
+    let bar = await msw.db.crate.create({ name: 'bar' });
+    let barV = await msw.db.version.create({ crate: bar });
 
-    let baz = msw.db.crate.create({ name: 'baz' });
-    let bazV = msw.db.version.create({ crate: baz });
+    let baz = await msw.db.crate.create({ name: 'baz' });
+    let bazV = await msw.db.version.create({ crate: baz });
 
-    msw.db.dependency.create({ crate: foo, version: barV });
-    msw.db.dependency.create({ crate: foo, version: bazV });
+    await msw.db.dependency.create({ crate: foo, version: barV });
+    await msw.db.dependency.create({ crate: foo, version: bazV });
 
     return { foo, bar, baz };
   }
 
   test('shows a list of crates depending on the selected crate', async ({ page, msw }) => {
-    let { foo, bar, baz } = prepare(msw);
+    let { foo, bar, baz } = await prepare(msw);
 
     await page.goto(`/crates/${foo.name}/reverse_dependencies`);
     await expect(page).toHaveURL(`/crates/${foo.name}/reverse_dependencies`);
@@ -34,12 +34,12 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
   });
 
   test('supports pagination', async ({ page, msw }) => {
-    let { foo } = prepare(msw);
+    let { foo } = await prepare(msw);
 
     for (let i = 0; i < 20; i++) {
-      let crate = msw.db.crate.create();
-      let version = msw.db.version.create({ crate });
-      msw.db.dependency.create({ crate: foo, version });
+      let crate = await msw.db.crate.create();
+      let version = await msw.db.version.create({ crate });
+      await msw.db.dependency.create({ crate: foo, version });
     }
 
     const row = page.locator('[data-test-row]');
@@ -66,7 +66,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
   });
 
   test('shows error message if loading of reverse dependencies fails', async ({ page, msw }) => {
-    let { foo } = prepare(msw);
+    let { foo } = await prepare(msw);
 
     let error = HttpResponse.json({}, { status: 500 });
     await msw.worker.use(http.get('/api/v1/crates/:crate_id/reverse_dependencies', () => error));
