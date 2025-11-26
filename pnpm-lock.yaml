@@ -283,11 +283,11 @@ importers:
         specifier: 2.0.1
         version: 2.0.1(@babel/core@7.28.5)
       msw:
-        specifier: 2.12.2
-        version: 2.12.2(@types/node@24.10.1)(typescript@5.9.3)
+        specifier: 2.12.3
+        version: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.56.1)(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3))
+        version: 3.0.1(@playwright/test@1.56.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))
       postcss:
         specifier: 8.5.6
         version: 8.5.6
@@ -328,15 +328,15 @@ importers:
         specifier: 0.16.2
         version: 0.16.2(@types/node@24.10.1)(typescript@5.9.3)
       msw:
-        specifier: 2.12.2
-        version: 2.12.2(@types/node@24.10.1)(typescript@5.9.3)
+        specifier: 2.12.3
+        version: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       semver:
         specifier: 7.7.3
         version: 7.7.3
     devDependencies:
       vitest:
         specifier: 4.0.13
-        version: 4.0.13(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.1)
+        version: 4.0.13(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.1)
 
 packages:
 
@@ -5982,8 +5982,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  msw@2.12.2:
-    resolution: {integrity: sha512-Fsr8AR5Yu6C0thoWa1Z8qGBFQLDvLsWlAn/v3CNLiUizoRqBYArK3Ex3thXpMWRr1Li5/MKLOEZ5mLygUmWi1A==}
+  msw@2.12.3:
+    resolution: {integrity: sha512-/5rpGC0eK8LlFqsHaBmL19/PVKxu/CCt8pO1vzp9X6SDLsRDh/Ccudkf3Ur5lyaKxJz9ndAx+LaThdv0ySqB6A==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -6777,6 +6777,7 @@ packages:
   raw-body@1.1.7:
     resolution: {integrity: sha512-WmJJU2e9Y6M5UzTOkHaM7xJGAPQD8PNzx3bAd2+uhZAim6wDk6dAZxPVYLF67XhbR4hmKGh33Lpmh4XWrCH5Mg==}
     engines: {node: '>= 0.8.0'}
+    deprecated: No longer maintained. Please upgrade to a stable version.
 
   raw-body@2.5.2:
     resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
@@ -7448,6 +7449,10 @@ packages:
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
 
+  tagged-tag@1.0.0:
+    resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
+    engines: {node: '>=20'}
+
   tap-parser@7.0.0:
     resolution: {integrity: sha512-05G8/LrzqOOFvZhhAk32wsGiPZ1lfUrl+iV7+OkKgfofZxiceZWMHkKmow71YsyVQ8IvGBP2EjcIjE5gL4l5lA==}
     hasBin: true
@@ -7641,6 +7646,10 @@ packages:
   type-fest@4.41.0:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
+
+  type-fest@5.2.0:
+    resolution: {integrity: sha512-xxCJm+Bckc6kQBknN7i9fnP/xobQRsRQxR01CztFkp/h++yfVxUUcmMgfR2HttJx/dpWjS9ubVuyspJv24Q9DA==}
+    engines: {node: '>=20'}
 
   type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
@@ -10127,7 +10136,7 @@ snapshots:
       strict-event-emitter: 0.5.1
       uuid: 8.3.2
     optionalDependencies:
-      msw: 2.12.2(@types/node@24.10.1)(typescript@5.9.3)
+      msw: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -10726,13 +10735,13 @@ snapshots:
       chai: 6.2.1
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.13(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.13(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 4.0.13
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      msw: 2.12.2(@types/node@24.10.1)(typescript@5.9.3)
+      msw: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       vite: 7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1)
 
   '@vitest/pretty-format@4.0.13':
@@ -15604,7 +15613,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3):
+  msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3):
     dependencies:
       '@inquirer/confirm': 5.1.21(@types/node@24.10.1)
       '@mswjs/interceptors': 0.40.0
@@ -15621,7 +15630,7 @@ snapshots:
       statuses: 2.0.2
       strict-event-emitter: 0.5.1
       tough-cookie: 6.0.0
-      type-fest: 4.41.0
+      type-fest: 5.2.0
       until-async: 3.0.2
       yargs: 17.7.2
     optionalDependencies:
@@ -16041,11 +16050,11 @@ snapshots:
 
   playwright-core@1.56.1: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.56.1)(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3)):
+  playwright-msw@3.0.1(@playwright/test@1.56.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
       '@playwright/test': 1.56.1
-      msw: 2.12.2(@types/node@24.10.1)(typescript@5.9.3)
+      msw: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       strict-event-emitter: 0.5.1
 
   playwright@1.56.1:
@@ -17233,6 +17242,8 @@ snapshots:
 
   systeminformation@5.27.11: {}
 
+  tagged-tag@1.0.0: {}
+
   tap-parser@7.0.0:
     dependencies:
       events-to-array: 1.1.2
@@ -17515,6 +17526,10 @@ snapshots:
 
   type-fest@4.41.0: {}
 
+  type-fest@5.2.0:
+    dependencies:
+      tagged-tag: 1.0.0
+
   type-is@1.6.18:
     dependencies:
       media-typer: 0.3.0
@@ -17694,10 +17709,10 @@ snapshots:
       terser: 5.44.1
       yaml: 2.8.1
 
-  vitest@4.0.13(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.1):
+  vitest@4.0.13(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.1):
     dependencies:
       '@vitest/expect': 4.0.13
-      '@vitest/mocker': 4.0.13(msw@2.12.2(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1))
+      '@vitest/mocker': 4.0.13(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1))
       '@vitest/pretty-format': 4.0.13
       '@vitest/runner': 4.0.13
       '@vitest/snapshot': 4.0.13
