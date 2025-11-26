@@ -10,8 +10,8 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Acceptance | sudo', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context, isAdmin) {
-    const user = context.db.user.create({
+  async function prepare(context, isAdmin) {
+    const user = await context.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -19,22 +19,22 @@ module('Acceptance | sudo', function (hooks) {
       isAdmin,
     });
 
-    const crate = context.db.crate.create({
+    const crate = await context.db.crate.create({
       name: 'foo',
       newest_version: '0.1.0',
     });
 
-    const version = context.db.version.create({
+    const version = await context.db.version.create({
       crate,
       num: '0.1.0',
     });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
     return { user, crate, version };
   }
 
   test('non-admin users do not see any controls', async function (assert) {
-    prepare(this, false);
+    await prepare(this, false);
 
     await visit('/crates/foo/versions');
 
@@ -50,7 +50,7 @@ module('Acceptance | sudo', function (hooks) {
   });
 
   test('admin user is not initially in sudo mode', async function (assert) {
-    prepare(this, true);
+    await prepare(this, true);
 
     await visit('/crates/foo/versions');
 
@@ -69,7 +69,7 @@ module('Acceptance | sudo', function (hooks) {
   });
 
   test('admin user can enter sudo mode', async function (assert) {
-    prepare(this, true);
+    await prepare(this, true);
 
     await visit('/crates/foo/versions');
 
@@ -101,7 +101,7 @@ module('Acceptance | sudo', function (hooks) {
   });
 
   test('admin can yank a crate in sudo mode', async function (assert) {
-    prepare(this, true);
+    await prepare(this, true);
 
     await visit('/crates/foo/versions');
     await click('[data-test-enable-admin-actions]');
@@ -111,12 +111,12 @@ module('Acceptance | sudo', function (hooks) {
     await click('[data-test-version-yank-button="0.1.0"]');
 
     await waitFor('[data-test-version-unyank-button="0.1.0"]');
-    const crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
-    const version = this.db.version.findFirst({ crate: { id: { equals: crate.id } }, num: { equals: '0.1.0' } });
+    const crate = this.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    const version = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
     assert.true(version.yanked, 'The version should be yanked');
     assert.dom('[data-test-version-unyank-button="0.1.0"]').exists();
     await click('[data-test-version-unyank-button="0.1.0"]');
-    const updatedVersion = this.db.version.findFirst({ crate: { id: { equals: crate.id } }, num: { equals: '0.1.0' } });
+    const updatedVersion = this.db.version.findFirst(q => q.where(v => v.crate.id === crate.id && v.num === '0.1.0'));
     assert.false(updatedVersion.yanked, 'The version should be unyanked');
 
     await waitFor('[data-test-version-yank-button="0.1.0"]');

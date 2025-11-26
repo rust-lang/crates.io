@@ -9,22 +9,22 @@ module('Acceptance | Email Confirmation', function (hooks) {
   setupApplicationTest(hooks);
 
   test('unauthenticated happy path', async function (assert) {
-    let user = this.db.user.create({ emailVerificationToken: 'badc0ffee' });
+    let user = await this.db.user.create({ emailVerificationToken: 'badc0ffee' });
     assert.false(user.emailVerified);
 
     await visit('/confirm/badc0ffee');
     assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.true(user.emailVerified);
   });
 
   test('authenticated happy path', async function (assert) {
-    let user = this.db.user.create({ emailVerificationToken: 'badc0ffee' });
+    let user = await this.db.user.create({ emailVerificationToken: 'badc0ffee' });
     assert.false(user.emailVerified);
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     await visit('/confirm/badc0ffee');
     assert.strictEqual(currentURL(), '/');
@@ -33,7 +33,7 @@ module('Acceptance | Email Confirmation', function (hooks) {
     let { currentUser } = this.owner.lookup('service:session');
     assert.true(currentUser.email_verified);
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.true(user.emailVerified);
   });
 

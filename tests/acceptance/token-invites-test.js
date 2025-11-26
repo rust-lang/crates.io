@@ -47,12 +47,12 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
   });
 
   test('shows success for known token', async function (assert) {
-    let inviter = this.db.user.create();
-    let invitee = this.db.user.create();
+    let inviter = await this.db.user.create();
+    let invitee = await this.db.user.create();
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate });
-    let invite = this.db.crateOwnerInvitation.create({ crate, invitee, inviter });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate });
+    let invite = await this.db.crateOwnerInvitation.create({ crate, invitee, inviter });
 
     await visit(`/accept-invite/${invite.token}`);
     assert.strictEqual(currentURL(), `/accept-invite/${invite.token}`);

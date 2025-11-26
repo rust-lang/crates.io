@@ -8,20 +8,20 @@ import { visit } from '../helpers/visit-ignoring-abort';
 module('Bug #4506', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
+  async function prepare(context) {
     let { db } = context;
 
-    let noStd = db.keyword.create({ keyword: 'no-std' });
+    let noStd = await db.keyword.create({ keyword: 'no-std' });
 
-    let foo = db.crate.create({ name: 'foo', keywords: [noStd] });
-    db.version.create({ crate: foo });
+    let foo = await db.crate.create({ name: 'foo', keywords: [noStd] });
+    await db.version.create({ crate: foo });
 
-    let bar = db.crate.create({ name: 'bar', keywords: [noStd] });
-    db.version.create({ crate: bar });
+    let bar = await db.crate.create({ name: 'bar', keywords: [noStd] });
+    await db.version.create({ crate: bar });
   }
 
   test('is fixed', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/foo');
     assert.dom('[data-test-keyword]').exists({ count: 1 });
@@ -32,7 +32,7 @@ module('Bug #4506', function (hooks) {
   });
 
   test('is fixed for /keywords too', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/keywords');
     assert.dom('[data-test-keyword]').exists({ count: 1 });

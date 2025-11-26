@@ -16,11 +16,11 @@ module('Acceptance | crate versions page', function (hooks) {
       sha: 'abcdef1234567890',
     };
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
-    this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
-    this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01', trustpub_data: trustpubData });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    await this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    await this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01', trustpub_data: trustpubData });
 
     await visit('/crates/nanomsg/versions');
     assert.strictEqual(currentURL(), '/crates/nanomsg/versions');
@@ -38,16 +38,16 @@ module('Acceptance | crate versions page', function (hooks) {
   });
 
   test('shows correct release tracks label after yanking/unyanking', async function (assert) {
-    let user = this.db.user.create();
-    this.authenticateAs(user);
+    let user = await this.db.user.create();
+    await this.authenticateAs(user);
 
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.crateOwnership.create({ crate, user });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.crateOwnership.create({ crate, user });
 
-    this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
-    this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
-    this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
-    this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
+    await this.db.version.create({ crate, num: '0.1.0', created_at: '2017-01-01' });
+    await this.db.version.create({ crate, num: '0.2.0', created_at: '2018-01-01' });
+    await this.db.version.create({ crate, num: '0.3.0', created_at: '2019-01-01', rust_version: '1.69' });
+    await this.db.version.create({ crate, num: '0.2.1', created_at: '2020-01-01' });
 
     await visit('/crates/nanomsg/versions');
     assert.strictEqual(currentURL(), '/crates/nanomsg/versions');

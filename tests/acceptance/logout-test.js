@@ -11,8 +11,8 @@ module('Acceptance | Logout', function (hooks) {
   setupWindowMock(hooks);
 
   test('successful logout', async function (assert) {
-    let user = this.db.user.create({ name: 'John Doe' });
-    this.authenticateAs(user);
+    let user = await this.db.user.create({ name: 'John Doe' });
+    await this.authenticateAs(user);
 
     await visit('/crates');
     assert.strictEqual(currentURL(), '/crates');

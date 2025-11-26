@@ -28,8 +28,8 @@ export default function (hooks) {
     this.worker = worker;
     this.db = db;
 
-    this.authenticateAs = user => {
-      db.mswSession.create({ user });
+    this.authenticateAs = async user => {
+      await db.mswSession.create({ user });
       window.localStorage.setItem('isLoggedIn', '1');
     };
   });

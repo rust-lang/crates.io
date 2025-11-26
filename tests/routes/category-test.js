@@ -32,7 +32,7 @@ module('Route | category', function (hooks) {
   });
 
   test('updates the search field when the categories route is accessed', async function (assert) {
-    this.db.category.create({ category: 'foo' });
+    await this.db.category.create({ category: 'foo' });
 
     await visit('/');
     assert.dom('[data-test-search-input]').hasValue('');

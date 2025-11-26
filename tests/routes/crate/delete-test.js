@@ -13,21 +13,21 @@ import { visit } from '../../helpers/visit-ignoring-abort';
 module('Route: crate.delete', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let user = context.db.user.create();
+  async function prepare(context) {
+    let user = await context.db.user.create();
 
-    let crate = context.db.crate.create({ name: 'foo' });
-    context.db.version.create({ crate });
-    context.db.crateOwnership.create({ crate, user });
+    let crate = await context.db.crate.create({ name: 'foo' });
+    await context.db.version.create({ crate });
+    await context.db.crateOwnership.create({ crate, user });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
 
     return { user };
   }
 
   test('unauthenticated', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate });
 
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
@@ -36,13 +36,13 @@ module('Route: crate.delete', function (hooks) {
   });
 
   test('not an owner', async function (assert) {
-    let user1 = this.db.user.create();
-    this.authenticateAs(user1);
+    let user1 = await this.db.user.create();
+    await this.authenticateAs(user1);
 
-    let user2 = this.db.user.create();
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate });
-    this.db.crateOwnership.create({ crate, user: user2 });
+    let user2 = await this.db.user.create();
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate });
+    await this.db.crateOwnership.create({ crate, user: user2 });
 
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
@@ -51,7 +51,7 @@ module('Route: crate.delete', function (hooks) {
   });
 
   test('happy path', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/foo/delete');
     assert.strictEqual(currentURL(), '/crates/foo/delete');
@@ -69,12 +69,12 @@ module('Route: crate.delete', function (hooks) {
     let message = 'Crate foo has been successfully deleted.';
     assert.dom('[data-test-notification-message="success"]').hasText(message);
 
-    let crate = this.db.crate.findFirst({ where: { name: { equals: 'foo' } } });
-    assert.strictEqual(crate, null);
+    let crate = this.db.crate.findFirst(q => q.where({ name: 'foo' }));
+    assert.strictEqual(crate, undefined);
   });
 
   test('loading state', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let deferred = defer();
     this.worker.use(http.delete('/api/v1/crates/foo', () => deferred.promise));
@@ -94,7 +94,7 @@ module('Route: crate.delete', function (hooks) {
   });
 
   test('error state', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let payload = { errors: [{ detail: 'only crates without reverse dependencies can be deleted after 72 hours' }] };
     let error = HttpResponse.json(payload, { status: 422 });
