@@ -19,5 +19,9 @@ export default class SettingsIndexRoute extends Route {
     controller.set('crate', crate);
     controller.set('githubConfigs', githubConfigs);
     controller.set('gitlabConfigs', gitlabConfigs);
+
+    // Capture whether the trustpub_only checkbox should be visible on initial load
+    let hasConfigs = githubConfigs?.length > 0 || gitlabConfigs?.length > 0;
+    controller.set('trustpubOnlyCheckboxWasVisible', hasConfigs || crate.trustpub_only);
   }
 }

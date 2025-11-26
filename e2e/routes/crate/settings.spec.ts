@@ -1,5 +1,5 @@
 import { expect, test } from '@/e2e/helper';
-import { click } from '@ember/test-helpers';
+import { defer } from '@/e2e/deferred';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.settings', { tag: '@routes' }, () => {
@@ -275,6 +275,229 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         await expect(page.locator('[data-test-notification-message]')).toHaveText(
           'Failed to remove Trusted Publishing configuration: Server error',
         );
+      });
+    });
+
+    test.describe('trustpub_only warning banner', () => {
+      test('hidden when flag is false', async ({ msw, page }) => {
+        await prepare(msw);
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).not.toBeVisible();
+      });
+
+      test('hidden when flag is true and configs exist', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).not.toBeVisible();
+      });
+
+      test('shown when flag is true but no configs exist', async ({ msw, page, percy }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-warning]')).toHaveText(
+          'Trusted publishing is required but no publishers are configured. Publishing to this crate is currently blocked.',
+        );
+
+        await percy.snapshot();
+      });
+
+      test('disappears when checkbox is unchecked', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).toBeVisible();
+
+        await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).not.toBeVisible();
+      });
+
+      test('appears when last config is removed', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).not.toBeVisible();
+
+        await page.click('[data-test-github-config="1"] [data-test-remove-config-button]');
+
+        await expect(page.locator('[data-test-trustpub-only-warning]')).toBeVisible();
+      });
+    });
+
+    test.describe('trustpub_only checkbox', () => {
+      test('hidden when no configs and flag is false', async ({ msw, page }) => {
+        await prepare(msw);
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).not.toBeVisible();
+      });
+
+      test('visible when GitHub configs exist', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
+      });
+
+      test('visible when GitLab configs exist', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+
+        msw.db.trustpubGitlabConfig.create({
+          crate,
+          namespace: 'rust-lang',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
+      });
+
+      test('visible when flag is true but no configs', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
+      });
+
+      test('stays visible after disabling when no configs exist', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
+
+        await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+        // Checkbox stays visible after disabling (within same page visit)
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
+
+        // After navigating away and back, checkbox should be hidden
+        await page.goto('/crates/foo');
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox]')).not.toBeVisible();
+      });
+
+      test('enabling trustpub_only', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
+        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(false);
+
+        await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
+        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(true);
+      });
+
+      test('disabling trustpub_only', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+        msw.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeChecked();
+        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(true);
+
+        await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeChecked();
+        expect(msw.db.crate.findFirst({ where: { name: { equals: crate.name } } })?.trustpubOnly).toBe(false);
+      });
+
+      test('loading and error state', async ({ msw, page }) => {
+        const { crate } = await prepare(msw);
+
+        msw.db.trustpubGithubConfig.create({
+          crate,
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+        });
+
+        let deferred = defer();
+        msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
+
+        await page.goto('/crates/foo/settings');
+
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-spinner]')).not.toBeVisible();
+
+        await page.click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
+
+        // Check loading state
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-spinner]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).not.toBeVisible();
+
+        // Resolve with error
+        deferred.resolve(HttpResponse.json({ errors: [{ detail: 'Server error' }] }, { status: 500 }));
+
+        // Check that spinner is gone and checkbox is back
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-checkbox]')).toBeVisible();
+        await expect(page.locator('[data-test-trustpub-only-checkbox] [data-test-spinner]')).not.toBeVisible();
+        await expect(page.locator('[data-test-notification-message]')).toHaveText('Server error');
       });
     });
   });

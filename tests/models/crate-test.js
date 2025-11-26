@@ -13,6 +13,52 @@ module('Model | Crate', function (hooks) {
     this.store = this.owner.lookup('service:store');
   });
 
+  module('setTrustpubOnlyTask', function () {
+    test('enables trustpub_only', async function (assert) {
+      let user = this.db.user.create();
+      this.authenticateAs(user);
+
+      let crate = this.db.crate.create({ trustpubOnly: false });
+      this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+      assert.false(crateRecord.trustpub_only);
+      assert.false(this.db.crate.findFirst({ where: { id: { equals: crate.id } } }).trustpubOnly);
+
+      await crateRecord.setTrustpubOnlyTask.perform(true);
+      assert.true(crateRecord.trustpub_only);
+      assert.true(this.db.crate.findFirst({ where: { id: { equals: crate.id } } }).trustpubOnly);
+    });
+
+    test('disables trustpub_only', async function (assert) {
+      let user = this.db.user.create();
+      this.authenticateAs(user);
+
+      let crate = this.db.crate.create({ trustpubOnly: true });
+      this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+      assert.true(crateRecord.trustpub_only);
+      assert.true(this.db.crate.findFirst({ where: { id: { equals: crate.id } } }).trustpubOnly);
+
+      await crateRecord.setTrustpubOnlyTask.perform(false);
+      assert.false(crateRecord.trustpub_only);
+      assert.false(this.db.crate.findFirst({ where: { id: { equals: crate.id } } }).trustpubOnly);
+    });
+
+    test('requires authentication', async function (assert) {
+      let crate = this.db.crate.create();
+      this.db.version.create({ crate });
+
+      let crateRecord = await this.store.findRecord('crate', crate.name);
+
+      await assert.rejects(crateRecord.setTrustpubOnlyTask.perform(true), function (error) {
+        assert.deepEqual(error.errors, [{ detail: 'must be logged in to perform that action' }]);
+        return true;
+      });
+    });
+  });
+
   module('inviteOwner()', function () {
     test('happy path', async function (assert) {
       let user = this.db.user.create();
