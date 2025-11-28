@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('empty case', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/owner_user');
   assert.strictEqual(response.status, 200);
@@ -19,9 +19,9 @@ test('empty case', async function () {
 });
 
 test('returns the list of users that own the specified crate', async function () {
-  let user = db.user.create({ name: 'John Doe' });
-  let crate = db.crate.create({ name: 'rand' });
-  db.crateOwnership.create({ crate, user });
+  let user = await db.user.create({ name: 'John Doe' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.crateOwnership.create({ crate, user });
 
   let response = await fetch('/api/v1/crates/rand/owner_user');
   assert.strictEqual(response.status, 200);

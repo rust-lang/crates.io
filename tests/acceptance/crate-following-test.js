@@ -10,28 +10,28 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 module('Acceptance | Crate following', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context, { loggedIn = true, following = false } = {}) {
+  async function prepare(context, { loggedIn = true, following = false } = {}) {
     let { db } = context;
 
-    let crate = db.crate.create({ name: 'nanomsg' });
-    db.version.create({ crate, num: '0.6.0' });
+    let crate = await db.crate.create({ name: 'nanomsg' });
+    await db.version.create({ crate, num: '0.6.0' });
 
     if (loggedIn) {
       let followedCrates = following ? [crate] : [];
-      let user = db.user.create({ followedCrates });
-      context.authenticateAs(user);
+      let user = await db.user.create({ followedCrates });
+      await context.authenticateAs(user);
     }
   }
 
   test("unauthenticated users don't see the follow button", async function (assert) {
-    prepare(this, { loggedIn: false });
+    await prepare(this, { loggedIn: false });
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-follow-button]').doesNotExist();
   });
 
   test('authenticated users see a loading spinner and can follow/unfollow crates', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     let followingDeferred = defer();
     this.worker.use(http.get('/api/v1/crates/:crate_id/following', () => followingDeferred.promise));
@@ -74,7 +74,7 @@ module('Acceptance | Crate following', function (hooks) {
   });
 
   test('error handling when loading following state fails', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     this.worker.use(http.get('/api/v1/crates/:crate_id/following', () => HttpResponse.json({}, { status: 500 })));
 
@@ -88,7 +88,7 @@ module('Acceptance | Crate following', function (hooks) {
   });
 
   test('error handling when follow fails', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     this.worker.use(http.put('/api/v1/crates/:crate_id/follow', () => HttpResponse.json({}, { status: 500 })));
 
@@ -100,7 +100,7 @@ module('Acceptance | Crate following', function (hooks) {
   });
 
   test('error handling when unfollow fails', async function (assert) {
-    prepare(this, { following: true });
+    await prepare(this, { following: true });
 
     this.worker.use(http.delete('/api/v1/crates/:crate_id/follow', () => HttpResponse.json({}, { status: 500 })));
 

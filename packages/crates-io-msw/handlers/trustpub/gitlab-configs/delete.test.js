@@ -3,20 +3,20 @@ import { assert, test } from 'vitest';
 import { db } from '../../../index.js';
 
 test('happy path', async function () {
-  let crate = db.crate.create({ name: 'test-crate' });
-  db.version.create({ crate });
+  let crate = await db.crate.create({ name: 'test-crate' });
+  await db.version.create({ crate });
 
-  let user = db.user.create({ email_verified: true });
-  db.mswSession.create({ user });
+  let user = await db.user.create({ email_verified: true });
+  await db.mswSession.create({ user });
 
   // Create crate ownership
-  db.crateOwnership.create({
+  await db.crateOwnership.create({
     crate,
     user,
   });
 
   // Create GitLab config
-  let config = db.trustpubGitlabConfig.create({
+  let config = await db.trustpubGitlabConfig.create({
     crate,
     namespace: 'rust-lang',
     project: 'crates.io',
@@ -32,8 +32,8 @@ test('happy path', async function () {
   assert.strictEqual(await response.text(), '');
 
   // Verify the config was deleted
-  let deletedConfig = db.trustpubGitlabConfig.findFirst({ where: { id: { equals: config.id } } });
-  assert.strictEqual(deletedConfig, null);
+  let deletedConfig = db.trustpubGitlabConfig.findFirst(q => q.where({ id: config.id }));
+  assert.strictEqual(deletedConfig, undefined);
 });
 
 test('returns 403 if unauthenticated', async function () {
@@ -48,8 +48,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 if config ID is invalid', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/trusted_publishing/gitlab_configs/invalid', {
     method: 'DELETE',
@@ -62,8 +62,8 @@ test('returns 404 if config ID is invalid', async function () {
 });
 
 test("returns 404 if config can't be found", async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/trusted_publishing/gitlab_configs/999999', {
     method: 'DELETE',
@@ -76,17 +76,17 @@ test("returns 404 if config can't be found", async function () {
 });
 
 test('returns 400 if user is not an owner of the crate', async function () {
-  let crate = db.crate.create({ name: 'test-crate-not-owner' });
-  db.version.create({ crate });
+  let crate = await db.crate.create({ name: 'test-crate-not-owner' });
+  await db.version.create({ crate });
 
-  let owner = db.user.create();
-  db.crateOwnership.create({
+  let owner = await db.user.create();
+  await db.crateOwnership.create({
     crate,
     user: owner,
   });
 
   // Create GitLab config
-  let config = db.trustpubGitlabConfig.create({
+  let config = await db.trustpubGitlabConfig.create({
     crate,
     namespace: 'rust-lang',
     project: 'crates.io',
@@ -95,8 +95,8 @@ test('returns 400 if user is not an owner of the crate', async function () {
   });
 
   // Login as a different user
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs/${config.id}`, {
     method: 'DELETE',

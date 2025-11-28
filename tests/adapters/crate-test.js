@@ -10,10 +10,10 @@ module('Adapter | crate', function (hooks) {
   setupMsw(hooks);
 
   test('findRecord requests are coalesced', async function (assert) {
-    let _foo = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate: _foo });
-    let _bar = this.db.crate.create({ name: 'bar' });
-    this.db.version.create({ crate: _bar });
+    let _foo = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate: _foo });
+    let _bar = await this.db.crate.create({ name: 'bar' });
+    await this.db.version.create({ crate: _bar });
 
     // if request coalescing works correctly, then this regular API endpoint
     // should not be hit in this case
@@ -28,12 +28,12 @@ module('Adapter | crate', function (hooks) {
   });
 
   test('findRecord requests do not include versions by default', async function (assert) {
-    let _foo = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate: _foo, num: '0.0.1' });
-    this.db.version.create({ crate: _foo, num: '0.0.2' });
-    this.db.version.create({ crate: _foo, num: '0.0.3' });
+    let _foo = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate: _foo, num: '0.0.1' });
+    await this.db.version.create({ crate: _foo, num: '0.0.2' });
+    await this.db.version.create({ crate: _foo, num: '0.0.3' });
 
-    let versions = this.db.version.getAll().reverse();
+    let versions = this.db.version.findMany(null).reverse();
     let default_version = versions.find(it => it.num === '0.0.3');
 
     let store = this.owner.lookup('service:store');

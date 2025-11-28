@@ -16,8 +16,8 @@ module('Acceptance | crate page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('visiting a crate page from the front page', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg', newest_version: '0.6.1' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/');
     await click('[data-test-just-updated] [data-test-crate-link="0"]');
@@ -30,9 +30,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
-    this.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.0' });
+    await this.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
 
     await visit('/crates/nanomsg');
 
@@ -49,9 +49,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.0' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/');
 
@@ -65,9 +65,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('visiting /crates/nanomsg/0.6.0', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.0' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.6.0');
 
@@ -104,9 +104,9 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('unknown versions fall back to latest version and show an error message', async function (assert) {
-    let crate = this.db.crate.create({ name: 'nanomsg' });
-    this.db.version.create({ crate, num: '0.6.0' });
-    this.db.version.create({ crate, num: '0.6.1' });
+    let crate = await this.db.crate.create({ name: 'nanomsg' });
+    await this.db.version.create({ crate, num: '0.6.0' });
+    await this.db.version.create({ crate, num: '0.6.1' });
 
     await visit('/crates/nanomsg/0.7.0');
 
@@ -118,8 +118,8 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('works for non-canonical names', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo-bar' });
-    this.db.version.create({ crate });
+    let crate = await this.db.crate.create({ name: 'foo-bar' });
+    await this.db.version.create({ crate });
 
     await visit('/crates/foo_bar');
 
@@ -131,7 +131,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the versions page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     // default with a page size more than 13
     await visit('/crates/nanomsg');
@@ -143,7 +143,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the versions page with custom per_page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg/versions?per_page=10');
 
@@ -158,7 +158,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the reverse dependencies page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-rev-deps-tab] a');
@@ -168,7 +168,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to a user page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="blabaere"]');
@@ -178,7 +178,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to a team page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     await click('[data-test-owners] [data-test-owner-link="github:org:thehydroimpulse"]');
@@ -188,7 +188,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates having user-owners', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -200,7 +200,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates having team-owners', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -209,7 +209,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('crates license is supplied by version', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-license]').hasText('Apache-2.0');
@@ -219,10 +219,10 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   skip('crates can be yanked by owner', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
-    this.authenticateAs(user);
+    let user = this.db.user.findFirst(q => q.where({ login: 'thehydroimpulse' }));
+    await this.authenticateAs(user);
 
     await visit('/crates/nanomsg/0.5.0');
     await click('[data-test-version-yank-button="0.5.0"]');
@@ -238,7 +238,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the owners page when not logged in', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
 
@@ -246,10 +246,10 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the owners page when not an owner', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'iain8' } } });
-    this.authenticateAs(user);
+    let user = this.db.user.findFirst(q => q.where({ login: 'iain8' }));
+    await this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
 
@@ -257,10 +257,10 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('navigating to the settings page', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
-    let user = this.db.user.findFirst({ where: { login: { equals: 'thehydroimpulse' } } });
-    this.authenticateAs(user);
+    let user = this.db.user.findFirst(q => q.where({ login: 'thehydroimpulse' }));
+    await this.authenticateAs(user);
 
     await visit('/crates/nanomsg');
     await click('[data-test-settings-tab] a');
@@ -269,7 +269,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('keywords are shown when navigating from search', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/search?q=nanomsg');
     await click('[data-test-crate-link]');
@@ -279,7 +279,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('keywords are shown when navigating from crate to keywords, and then back to crate', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-keyword]').exists();
@@ -293,7 +293,7 @@ module('Acceptance | crate page', function (hooks) {
   });
 
   test('keywords are shown when navigating from crate to searchs, and then back to crate', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/crates/nanomsg');
     assert.dom('[data-test-keyword]').exists();
@@ -310,9 +310,9 @@ module('Acceptance | crate page', function (hooks) {
   test('sidebar shows correct information', async function (assert) {
     this.owner.lookup('service:intl').locale = 'en';
 
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '0.5.0' });
-    this.db.version.create({ crate, num: '1.0.0' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '0.5.0' });
+    await this.db.version.create({ crate, num: '1.0.0' });
 
     await visit('/crates/foo');
     assert.dom('[data-test-linecounts]').hasText('1,119 SLoC');

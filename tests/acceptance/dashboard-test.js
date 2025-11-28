@@ -19,41 +19,43 @@ module('Acceptance | Dashboard', function (hooks) {
   });
 
   test('shows the dashboard when logged in', async function (assert) {
-    let user = this.db.user.create({
+    let user = await this.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     {
-      let crate = this.db.crate.create({ name: 'rand' });
-      this.db.version.create({ crate, num: '0.5.0' });
-      this.db.version.create({ crate, num: '0.6.0' });
-      this.db.version.create({ crate, num: '0.7.0' });
-      this.db.version.create({ crate, num: '0.7.1' });
-      this.db.version.create({ crate, num: '0.7.2' });
-      this.db.version.create({ crate, num: '0.7.3' });
-      this.db.version.create({ crate, num: '0.8.0' });
-      this.db.version.create({ crate, num: '0.8.1' });
-      this.db.version.create({ crate, num: '0.9.0' });
-      this.db.version.create({ crate, num: '1.0.0' });
-      this.db.version.create({ crate, num: '1.1.0' });
-      user = this.db.user.update({
-        where: { id: { equals: user.id } },
-        data: { followedCrates: [...user.followedCrates, crate] },
+      let crate = await this.db.crate.create({ name: 'rand' });
+      await this.db.version.create({ crate, num: '0.5.0' });
+      await this.db.version.create({ crate, num: '0.6.0' });
+      await this.db.version.create({ crate, num: '0.7.0' });
+      await this.db.version.create({ crate, num: '0.7.1' });
+      await this.db.version.create({ crate, num: '0.7.2' });
+      await this.db.version.create({ crate, num: '0.7.3' });
+      await this.db.version.create({ crate, num: '0.8.0' });
+      await this.db.version.create({ crate, num: '0.8.1' });
+      await this.db.version.create({ crate, num: '0.9.0' });
+      await this.db.version.create({ crate, num: '1.0.0' });
+      await this.db.version.create({ crate, num: '1.1.0' });
+      user = await this.db.user.update(q => q.where({ id: user.id }), {
+        data(user) {
+          user.followedCrates = [...user.followedCrates, crate];
+        },
       });
     }
 
     {
-      let crate = this.db.crate.create({ name: 'nanomsg' });
-      this.db.crateOwnership.create({ crate, user });
-      this.db.version.create({ crate, num: '0.1.0' });
-      user = this.db.user.update({
-        where: { id: { equals: user.id } },
-        data: { followedCrates: [...user.followedCrates, crate] },
+      let crate = await this.db.crate.create({ name: 'nanomsg' });
+      await this.db.crateOwnership.create({ crate, user });
+      await this.db.version.create({ crate, num: '0.1.0' });
+      user = await this.db.user.update(q => q.where({ id: user.id }), {
+        data(user) {
+          user.followedCrates = [...user.followedCrates, crate];
+        },
       });
     }
 

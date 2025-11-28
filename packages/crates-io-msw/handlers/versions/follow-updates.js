@@ -12,7 +12,7 @@ export default http.get('/api/v1/me/updates', ({ request }) => {
   }
 
   let allVersions = user.followedCrates
-    .flatMap(crate => db.version.findMany({ where: { crate: { id: { equals: crate.id } } } }))
+    .flatMap(crate => db.version.findMany(q => q.where(version => version.crate.id === crate.id)))
     .sort((a, b) => b.id - a.id);
 
   let { start, end, page, perPage } = pageParams(request);

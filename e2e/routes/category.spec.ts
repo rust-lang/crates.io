@@ -23,7 +23,7 @@ test.describe('Route | category', { tag: '@routes' }, () => {
   });
 
   test('updates the search field when the categories route is accessed', async ({ page, msw }) => {
-    msw.db.category.create({ category: 'foo' });
+    await msw.db.category.create({ category: 'foo' });
 
     const searchInput = page.locator('[data-test-search-input]');
     await page.goto('/');

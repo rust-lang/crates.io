@@ -13,7 +13,7 @@ module('Acceptance | team page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('has team organization display', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 
@@ -25,7 +25,7 @@ module('Acceptance | team page', function (hooks) {
   });
 
   test('has link to github in team header', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 
@@ -33,7 +33,7 @@ module('Acceptance | team page', function (hooks) {
   });
 
   test('team organization details has github profile icon', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/teams/github:org:thehydroimpulse');
 

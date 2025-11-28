@@ -11,8 +11,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/yank', { method: 'DELETE' });
   assert.strictEqual(response.status, 404);
@@ -20,10 +20,10 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('returns 404 for unknown versions', async function () {
-  db.crate.create({ name: 'foo' });
+  await db.crate.create({ name: 'foo' });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/yank', { method: 'DELETE' });
   assert.strictEqual(response.status, 404);
@@ -31,17 +31,17 @@ test('returns 404 for unknown versions', async function () {
 });
 
 test('yanks the version', async function () {
-  let crate = db.crate.create({ name: 'foo' });
-  let version = db.version.create({ crate, num: '1.0.0', yanked: false });
+  let crate = await db.crate.create({ name: 'foo' });
+  let version = await db.version.create({ crate, num: '1.0.0', yanked: false });
   assert.strictEqual(version.yanked, false);
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/yank', { method: 'DELETE' });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
 
-  version = db.version.findFirst({ where: { id: version.id } });
+  version = db.version.findFirst(q => q.where({ id: version.id }));
   assert.strictEqual(version.yanked, true);
 });

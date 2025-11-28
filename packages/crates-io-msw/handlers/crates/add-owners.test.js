@@ -13,8 +13,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body: ADD_USER_BODY });
   assert.strictEqual(response.status, 404);
@@ -22,13 +22,13 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('can add new owner', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let crate = db.crate.create({ name: 'foo' });
-  db.crateOwnership.create({ crate, user });
+  let crate = await db.crate.create({ name: 'foo' });
+  await db.crateOwnership.create({ crate, user });
 
-  let user2 = db.user.create();
+  let user2 = await db.user.create();
 
   let body = JSON.stringify({ owners: [user2.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
@@ -38,24 +38,24 @@ test('can add new owner', async function () {
     msg: 'user user-2 has been invited to be an owner of crate foo',
   });
 
-  let owners = db.crateOwnership.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(owners.length, 1);
   assert.strictEqual(owners[0].user.id, user.id);
 
-  let invites = db.crateOwnerInvitation.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(invites.length, 1);
   assert.strictEqual(invites[0].inviter.id, user.id);
   assert.strictEqual(invites[0].invitee.id, user2.id);
 });
 
 test('can add team owner', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let crate = db.crate.create({ name: 'foo' });
-  db.crateOwnership.create({ crate, user });
+  let crate = await db.crate.create({ name: 'foo' });
+  await db.crateOwnership.create({ crate, user });
 
-  let team = db.team.create();
+  let team = await db.team.create();
 
   let body = JSON.stringify({ owners: [team.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
@@ -65,27 +65,27 @@ test('can add team owner', async function () {
     msg: 'team github:rust-lang:team-1 has been added as an owner of crate foo',
   });
 
-  let owners = db.crateOwnership.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(owners.length, 2);
   assert.strictEqual(owners[0].user.id, user.id);
   assert.strictEqual(owners[0].team, null);
   assert.strictEqual(owners[1].user, null);
   assert.strictEqual(owners[1].team.id, user.id);
 
-  let invites = db.crateOwnerInvitation.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(invites.length, 0);
 });
 
 test('can add multiple owners', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let crate = db.crate.create({ name: 'foo' });
-  db.crateOwnership.create({ crate, user });
+  let crate = await db.crate.create({ name: 'foo' });
+  await db.crateOwnership.create({ crate, user });
 
-  let team = db.team.create();
-  let user2 = db.user.create();
-  let user3 = db.user.create();
+  let team = await db.team.create();
+  let user2 = await db.user.create();
+  let user3 = await db.user.create();
 
   let body = JSON.stringify({ owners: [user2.login, team.login, user3.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
@@ -95,14 +95,14 @@ test('can add multiple owners', async function () {
     msg: 'user user-2 has been invited to be an owner of crate foo,team github:rust-lang:team-1 has been added as an owner of crate foo,user user-3 has been invited to be an owner of crate foo',
   });
 
-  let owners = db.crateOwnership.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(owners.length, 2);
   assert.strictEqual(owners[0].user.id, user.id);
   assert.strictEqual(owners[0].team, null);
   assert.strictEqual(owners[1].user, null);
   assert.strictEqual(owners[1].team.id, user.id);
 
-  let invites = db.crateOwnerInvitation.findMany({ where: { crate: { id: { equals: crate.id } } } });
+  let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
   assert.strictEqual(invites.length, 2);
   assert.strictEqual(invites[0].inviter.id, user.id);
   assert.strictEqual(invites[0].invitee.id, user2.id);

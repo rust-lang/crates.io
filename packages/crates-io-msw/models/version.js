@@ -1,51 +1,60 @@
-import { nullable, oneOf, primaryKey } from '@mswjs/data';
+import { Collection } from '@msw/data';
+import { z } from 'zod';
 
 import { applyDefault } from '../utils/defaults.js';
+import { preCreateExtension } from '../utils/pre-create-extension.js';
 
 const LICENSES = ['MIT/Apache-2.0', 'MIT', 'Apache-2.0'];
 
 const LANGUAGES = ['Rust', 'JavaScript', 'TypeScript', 'Python', 'CSS', 'HTML', 'Shell'];
 
-export default {
-  id: primaryKey(Number),
+const schema = z.object({
+  id: z.number(),
 
-  num: String,
-  created_at: String,
-  updated_at: String,
-  yanked: Boolean,
-  yank_message: nullable(String),
-  license: String,
-  downloads: Number,
-  features: Object,
-  crate_size: Number,
-  readme: nullable(String),
-  rust_version: nullable(String),
-  trustpub_data: nullable(Object),
-  linecounts: nullable(Object),
+  num: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  yanked: z.boolean(),
+  yank_message: z.string().nullable(),
+  license: z.string(),
+  downloads: z.number(),
+  features: z.record(z.string(), z.any()).default(() => ({})),
+  crate_size: z.number(),
+  readme: z.string().nullable(),
+  rust_version: z.string().nullable(),
+  trustpub_data: z.any().nullable(),
+  linecounts: z.any().nullable(),
 
-  crate: oneOf('crate'),
-  publishedBy: nullable(oneOf('user')),
+  crate: z.any(),
+  publishedBy: z.any().nullable().default(null),
+});
 
-  preCreate(attrs, counter) {
-    applyDefault(attrs, 'id', () => counter);
-    applyDefault(attrs, 'num', () => `1.0.${attrs.id - 1}`);
-    applyDefault(attrs, 'created_at', () => '2010-06-16T21:30:45Z');
-    applyDefault(attrs, 'updated_at', () => '2017-02-24T12:34:56Z');
-    applyDefault(attrs, 'yanked', () => false);
-    applyDefault(attrs, 'yank_message', () => null);
-    applyDefault(attrs, 'license', () => LICENSES[attrs.id % LICENSES.length]);
-    applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 1234);
-    applyDefault(attrs, 'crate_size', () => (((attrs.id + 13) * 42) % 13) * 54_321);
-    applyDefault(attrs, 'readme', () => null);
-    applyDefault(attrs, 'rust_version', () => null);
-    applyDefault(attrs, 'trustpub_data', () => null);
-    applyDefault(attrs, 'linecounts', () => generateLinecounts(attrs.id));
+function preCreate(attrs, counter) {
+  applyDefault(attrs, 'id', () => counter);
+  applyDefault(attrs, 'num', () => `1.0.${attrs.id - 1}`);
+  applyDefault(attrs, 'created_at', () => '2010-06-16T21:30:45Z');
+  applyDefault(attrs, 'updated_at', () => '2017-02-24T12:34:56Z');
+  applyDefault(attrs, 'yanked', () => false);
+  applyDefault(attrs, 'yank_message', () => null);
+  applyDefault(attrs, 'license', () => LICENSES[attrs.id % LICENSES.length]);
+  applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 1234);
+  applyDefault(attrs, 'crate_size', () => (((attrs.id + 13) * 42) % 13) * 54_321);
+  applyDefault(attrs, 'readme', () => null);
+  applyDefault(attrs, 'rust_version', () => null);
+  applyDefault(attrs, 'trustpub_data', () => null);
+  applyDefault(attrs, 'linecounts', () => generateLinecounts(attrs.id));
 
-    if (!attrs.crate) {
-      throw new Error(`Missing \`crate\` relationship on \`version:${attrs.num}\``);
-    }
-  },
-};
+  if (!attrs.crate) {
+    throw new Error(`Missing \`crate\` relationship on \`version:${attrs.num}\``);
+  }
+}
+
+const collection = new Collection({
+  schema,
+  extensions: [preCreateExtension(preCreate)],
+});
+
+export default collection;
 
 function generateLinecounts(id) {
   // Some versions don't have linecount data (simulating older versions)

@@ -2,35 +2,35 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `crate` is not set', ({ expect }) => {
-  let inviter = db.user.create();
-  let invitee = db.user.create();
-  expect(() => db.crateOwnerInvitation.create({ inviter, invitee })).toThrowErrorMatchingInlineSnapshot(
+test('throws if `crate` is not set', async ({ expect }) => {
+  let inviter = await db.user.create();
+  let invitee = await db.user.create();
+  await expect(() => db.crateOwnerInvitation.create({ inviter, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`crate\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
-test('throws if `inviter` is not set', ({ expect }) => {
-  let crate = db.crate.create();
-  let invitee = db.user.create();
-  expect(() => db.crateOwnerInvitation.create({ crate, invitee })).toThrowErrorMatchingInlineSnapshot(
+test('throws if `inviter` is not set', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let invitee = await db.user.create();
+  await expect(() => db.crateOwnerInvitation.create({ crate, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`inviter\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
-test('throws if `invitee` is not set', ({ expect }) => {
-  let crate = db.crate.create();
-  let inviter = db.user.create();
-  expect(() => db.crateOwnerInvitation.create({ crate, inviter })).toThrowErrorMatchingInlineSnapshot(
+test('throws if `invitee` is not set', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let inviter = await db.user.create();
+  await expect(() => db.crateOwnerInvitation.create({ crate, inviter })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`invitee\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
-test('happy path', ({ expect }) => {
-  let crate = db.crate.create();
-  let inviter = db.user.create();
-  let invitee = db.user.create();
-  let invite = db.crateOwnerInvitation.create({ crate, inviter, invitee });
+test('happy path', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let inviter = await db.user.create();
+  let invitee = await db.user.create();
+  let invite = await db.crateOwnerInvitation.create({ crate, inviter, invitee });
   expect(invite).toMatchInlineSnapshot(`
     {
       "crate": {
@@ -49,8 +49,6 @@ test('happy path', ({ expect }) => {
         "repository": null,
         "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
-        Symbol(type): "crate",
-        Symbol(primaryKey): "id",
       },
       "createdAt": "2016-12-24T12:34:56Z",
       "expiresAt": "2017-01-24T12:34:56Z",
@@ -67,8 +65,6 @@ test('happy path', ({ expect }) => {
         "name": "User 2",
         "publishNotifications": true,
         "url": "https://github.com/user-2",
-        Symbol(type): "user",
-        Symbol(primaryKey): "id",
       },
       "inviter": {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
@@ -82,12 +78,8 @@ test('happy path', ({ expect }) => {
         "name": "User 1",
         "publishNotifications": true,
         "url": "https://github.com/user-1",
-        Symbol(type): "user",
-        Symbol(primaryKey): "id",
       },
       "token": "secret-token-1",
-      Symbol(type): "crateOwnerInvitation",
-      Symbol(primaryKey): "id",
     }
   `);
 });

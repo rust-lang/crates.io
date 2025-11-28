@@ -9,8 +9,8 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('returns 404 for unknown versions', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0-alpha.1' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0-alpha.1' });
   let response = await fetch('/api/v1/crates/rand/1.0.0-beta.1');
   assert.strictEqual(response.status, 404);
   assert.deepEqual(await response.json(), {
@@ -19,8 +19,8 @@ test('returns 404 for unknown versions', async function () {
 });
 
 test('returns a version object for known version', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0-beta.1' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0-beta.1' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0-beta.1');
   assert.strictEqual(response.status, 200);

@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw';
 test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
   test.use({ locale: 'en' });
   test('visiting /', async ({ page, msw, percy, a11y }) => {
-    loadFixtures(msw.db);
+    await loadFixtures(msw.db);
 
     await page.goto('/');
 

@@ -2,7 +2,7 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | Logout', { tag: '@acceptance' }, () => {
   test('successful logout', async ({ page, msw }) => {
-    let user = msw.db.user.create({ name: 'John Doe' });
+    let user = await msw.db.user.create({ name: 'John Doe' });
     await msw.authenticateAs(user);
 
     await page.goto('/crates');

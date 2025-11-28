@@ -14,8 +14,8 @@ test('empty case', async function () {
 });
 
 test('returns a paginated keywords list', async function () {
-  db.keyword.create({ keyword: 'api' });
-  Array.from({ length: 2 }, () => db.keyword.create());
+  await db.keyword.create({ keyword: 'api' });
+  await Promise.all(Array.from({ length: 2 }, () => db.keyword.create()));
 
   let response = await fetch('/api/v1/keywords');
   assert.strictEqual(response.status, 200);
@@ -44,7 +44,7 @@ test('returns a paginated keywords list', async function () {
 });
 
 test('never returns more than 10 results', async function () {
-  Array.from({ length: 25 }, () => db.keyword.create());
+  await Promise.all(Array.from({ length: 25 }, () => db.keyword.create()));
 
   let response = await fetch('/api/v1/keywords');
   assert.strictEqual(response.status, 200);
@@ -55,7 +55,9 @@ test('never returns more than 10 results', async function () {
 });
 
 test('supports `page` and `per_page` parameters', async function () {
-  Array.from({ length: 25 }, (_, i) => db.keyword.create({ keyword: `k${String(i + 1).padStart(2, '0')}` }));
+  await Promise.all(
+    Array.from({ length: 25 }, (_, i) => db.keyword.create({ keyword: `k${String(i + 1).padStart(2, '0')}` })),
+  );
 
   let response = await fetch('/api/v1/keywords?page=2&per_page=5');
   assert.strictEqual(response.status, 200);

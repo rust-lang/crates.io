@@ -6,13 +6,12 @@ import { serializeVersion } from '../../serializers/version.js';
 import { notFound, pageParams } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/crates/:name/reverse_dependencies', async ({ request, params }) => {
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) return notFound();
 
   let { start, end } = pageParams(request);
 
-  let allDependencies = db.dependency.findMany({
-    where: { crate: { id: { equals: crate.id } } },
+  let allDependencies = db.dependency.findMany(q => q.where(dep => dep.crate.id === crate.id), {
     orderBy: { version: { crate: { downloads: 'desc' } } },
   });
 

@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('returns 404 for unknown versions', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   assert.strictEqual(response.status, 404);
@@ -17,8 +17,8 @@ test('returns 404 for unknown versions', async function () {
 });
 
 test('empty case', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   assert.strictEqual(response.status, 200);
@@ -28,11 +28,11 @@ test('empty case', async function () {
 });
 
 test('returns a list of version downloads belonging to the specified crate version', async function () {
-  let crate = db.crate.create({ name: 'rand' });
-  let version = db.version.create({ crate, num: '1.0.0' });
-  db.versionDownload.create({ version, date: '2020-01-13' });
-  db.versionDownload.create({ version, date: '2020-01-14' });
-  db.versionDownload.create({ version, date: '2020-01-15' });
+  let crate = await db.crate.create({ name: 'rand' });
+  let version = await db.version.create({ crate, num: '1.0.0' });
+  await db.versionDownload.create({ version, date: '2020-01-13' });
+  await db.versionDownload.create({ version, date: '2020-01-14' });
+  await db.versionDownload.create({ version, date: '2020-01-15' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   assert.strictEqual(response.status, 200);

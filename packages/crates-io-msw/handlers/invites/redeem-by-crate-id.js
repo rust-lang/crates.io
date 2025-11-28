@@ -13,19 +13,16 @@ export default http.put('/api/v1/me/crate_owner_invitations/:crate_id', async ({
   let body = await request.json();
   let { accepted, crate_id: crateId } = body.crate_owner_invite;
 
-  let invite = db.crateOwnerInvitation.findFirst({
-    where: {
-      crate: { id: { equals: parseInt(crateId) } },
-      invitee: { id: { equals: user.id } },
-    },
-  });
+  let invite = db.crateOwnerInvitation.findFirst(q =>
+    q.where(invite => invite.crate.id === parseInt(crateId) && invite.invitee.id === user.id),
+  );
   if (!invite) return notFound();
 
   if (accepted) {
-    db.crateOwnership.create({ crate: invite.crate, user });
+    await db.crateOwnership.create({ crate: invite.crate, user });
   }
 
-  db.crateOwnerInvitation.delete({ where: { id: invite.id } });
+  db.crateOwnerInvitation.delete(q => q.where({ id: invite.id }));
 
   return HttpResponse.json({ crate_owner_invitation: { crate_id: crateId, accepted } });
 });

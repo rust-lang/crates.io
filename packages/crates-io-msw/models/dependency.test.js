@@ -2,24 +2,24 @@ import { test } from 'vitest';
 
 import { db } from '../index.js';
 
-test('throws if `crate` is not set', ({ expect }) => {
-  let version = db.version.create({ crate: db.crate.create() });
-  expect(() => db.dependency.create({ version })).toThrowErrorMatchingInlineSnapshot(
+test('throws if `crate` is not set', async ({ expect }) => {
+  let version = await db.version.create({ crate: await db.crate.create() });
+  await expect(() => db.dependency.create({ version })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`crate\` relationship on \`dependency:1\`]`,
   );
 });
 
-test('throws if `version` is not set', ({ expect }) => {
-  let crate = db.crate.create();
-  expect(() => db.dependency.create({ crate })).toThrowErrorMatchingInlineSnapshot(
+test('throws if `version` is not set', async ({ expect }) => {
+  let crate = await db.crate.create();
+  await expect(() => db.dependency.create({ crate })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`version\` relationship on \`dependency:1\`]`,
   );
 });
 
-test('happy path', ({ expect }) => {
-  let crate = db.crate.create();
-  let version = db.version.create({ crate: db.crate.create() });
-  let dependency = db.dependency.create({ crate, version });
+test('happy path', async ({ expect }) => {
+  let crate = await db.crate.create();
+  let version = await db.version.create({ crate: await db.crate.create() });
+  let dependency = await db.dependency.create({ crate, version });
   expect(dependency).toMatchInlineSnapshot(`
     {
       "crate": {
@@ -38,8 +38,6 @@ test('happy path', ({ expect }) => {
         "repository": null,
         "trustpubOnly": false,
         "updated_at": "2017-02-24T12:34:56Z",
-        Symbol(type): "crate",
-        Symbol(primaryKey): "id",
       },
       "default_features": false,
       "features": [],
@@ -65,8 +63,6 @@ test('happy path', ({ expect }) => {
           "repository": null,
           "trustpubOnly": false,
           "updated_at": "2017-02-24T12:34:56Z",
-          Symbol(type): "crate",
-          Symbol(primaryKey): "id",
         },
         "crate_size": 162963,
         "created_at": "2010-06-16T21:30:45Z",
@@ -98,11 +94,7 @@ test('happy path', ({ expect }) => {
         "updated_at": "2017-02-24T12:34:56Z",
         "yank_message": null,
         "yanked": false,
-        Symbol(type): "version",
-        Symbol(primaryKey): "id",
       },
-      Symbol(type): "dependency",
-      Symbol(primaryKey): "id",
     }
   `);
 });

@@ -8,28 +8,28 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 module('Acceptance | Settings | Remove Owner', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
+  async function prepare(context) {
     let { db } = context;
 
-    let user1 = db.user.create({ name: 'blabaere' });
-    let user2 = db.user.create({ name: 'thehydroimpulse' });
-    let team1 = db.team.create({ org: 'org', name: 'blabaere' });
-    let team2 = db.team.create({ org: 'org', name: 'thehydroimpulse' });
+    let user1 = await db.user.create({ name: 'blabaere' });
+    let user2 = await db.user.create({ name: 'thehydroimpulse' });
+    let team1 = await db.team.create({ org: 'org', name: 'blabaere' });
+    let team2 = await db.team.create({ org: 'org', name: 'thehydroimpulse' });
 
-    let crate = db.crate.create({ name: 'nanomsg' });
-    db.version.create({ crate, num: '1.0.0' });
-    db.crateOwnership.create({ crate, user: user1 });
-    db.crateOwnership.create({ crate, user: user2 });
-    db.crateOwnership.create({ crate, team: team1 });
-    db.crateOwnership.create({ crate, team: team2 });
+    let crate = await db.crate.create({ name: 'nanomsg' });
+    await db.version.create({ crate, num: '1.0.0' });
+    await db.crateOwnership.create({ crate, user: user1 });
+    await db.crateOwnership.create({ crate, user: user2 });
+    await db.crateOwnership.create({ crate, team: team1 });
+    await db.crateOwnership.create({ crate, team: team2 });
 
-    context.authenticateAs(user1);
+    await context.authenticateAs(user1);
 
     return { crate, team1, team2, user1, user2 };
   }
 
   test('remove a crate owner when owner is a user', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-owner-user="thehydroimpulse"] [data-test-remove-owner-button]');
@@ -39,7 +39,7 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
   });
 
   test('remove a user crate owner (error behavior)', async function (assert) {
-    let { crate, user2 } = prepare(this);
+    let { crate, user2 } = await prepare(this);
 
     // we are intentionally returning a 200 response here, because is what
     // the real backend also returns due to legacy reasons
@@ -57,7 +57,7 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
   });
 
   test('remove a crate owner when owner is a team', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     await visit('/crates/nanomsg/settings');
     await click('[data-test-owner-team="github:org:thehydroimpulse"] [data-test-remove-owner-button]');
@@ -67,7 +67,7 @@ module('Acceptance | Settings | Remove Owner', function (hooks) {
   });
 
   test('remove a team crate owner (error behavior)', async function (assert) {
-    let { crate, team1 } = prepare(this);
+    let { crate, team1 } = await prepare(this);
 
     // we are intentionally returning a 200 response here, because is what
     // the real backend also returns due to legacy reasons

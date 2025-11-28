@@ -14,15 +14,15 @@ if (s.has('devmode')) {
     setupApplicationTest(hooks);
 
     test('authenticated', async function () {
-      let user = this.db.user.create();
-      this.authenticateAs(user);
+      let user = await this.db.user.create();
+      await this.authenticateAs(user);
 
-      let crate = this.db.crate.create({ name: 'foo' });
-      this.db.version.create({ crate, num: '0.1.0' });
-      this.db.crateOwnership.create({ crate, user });
+      let crate = await this.db.crate.create({ name: 'foo' });
+      await this.db.version.create({ crate, num: '0.1.0' });
+      await this.db.crateOwnership.create({ crate, user });
 
       crate = this.db.crate.create({ name: 'bar' });
-      this.db.version.create({ crate, num: '1.0.0' });
+      await this.db.version.create({ crate, num: '1.0.0' });
 
       let router = this.owner.lookup('service:router');
       router.on('routeDidChange', () => {

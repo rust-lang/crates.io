@@ -3,21 +3,21 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ msw }) => {
-    let user = msw.db.user.create({
+    let user = await msw.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
       avatar: 'https://avatars2.githubusercontent.com/u/1234567?v=4',
     });
 
-    msw.db.apiToken.create({
+    await msw.db.apiToken.create({
       user,
       name: 'foo',
       createdAt: '2017-08-01T12:34:56',
       lastUsedAt: '2017-11-02T01:45:14',
     });
 
-    msw.db.apiToken.create({
+    await msw.db.apiToken.create({
       user,
       name: 'BAR',
       createdAt: '2017-11-19T17:59:22',
@@ -25,7 +25,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
       expiredAt: '2017-12-19T17:59:22',
     });
 
-    msw.db.apiToken.create({
+    await msw.db.apiToken.create({
       user,
       name: 'recently expired',
       createdAt: '2017-08-01T12:34:56',
@@ -79,7 +79,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
 
     await page.click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    expect(msw.db.apiToken.findMany({}).length, 'API token has been deleted from the backend database').toBe(2);
+    expect(msw.db.apiToken.findMany(null).length, 'API token has been deleted from the backend database').toBe(2);
 
     await expect(page.locator('[data-test-api-token]')).toHaveCount(2);
     await expect(page.locator('[data-test-api-token="2"]')).toBeVisible();
@@ -134,7 +134,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
 
     await page.click('[data-test-generate]');
 
-    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'the new token' } } })?.token;
+    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))?.token;
     expect(token, 'API token has been created in the backend database').toBeTruthy();
 
     await expect(page.locator('[data-test-api-token="4"] [data-test-name]')).toHaveText('the new token');
@@ -152,7 +152,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await page.click('[data-test-scope="publish-update"]');
     await page.click('[data-test-generate]');
 
-    let token = msw.db.apiToken.findFirst({ where: { name: { equals: 'the new token' } } })?.token;
+    let token = msw.db.apiToken.findFirst(q => q.where({ name: 'the new token' }))?.token;
     await expect(page.locator('[data-test-token]')).toHaveText(token);
 
     // leave the API tokens page

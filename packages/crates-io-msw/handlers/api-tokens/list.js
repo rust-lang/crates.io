@@ -18,10 +18,7 @@ export default http.get('/api/v1/me/tokens', async ({ request }) => {
   }
 
   let apiTokens = db.apiToken
-    .findMany({
-      where: { user: { id: { equals: user.id } } },
-      orderBy: { id: 'desc' },
-    })
+    .findMany(q => q.where(token => token.user.id === user.id), { orderBy: { id: 'desc' } })
     .filter(token => !token.expiredAt || new Date(token.expiredAt) > expiredAfter);
 
   return HttpResponse.json({

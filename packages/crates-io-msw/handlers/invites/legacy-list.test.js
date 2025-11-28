@@ -3,8 +3,8 @@ import { assert, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('empty case', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/crate_owner_invitations');
   assert.strictEqual(response.status, 200);
@@ -12,25 +12,25 @@ test('empty case', async function () {
 });
 
 test('returns the list of invitations for the authenticated user', async function () {
-  let nanomsg = db.crate.create({ name: 'nanomsg' });
-  db.version.create({ crate: nanomsg });
+  let nanomsg = await db.crate.create({ name: 'nanomsg' });
+  await db.version.create({ crate: nanomsg });
 
-  let ember = db.crate.create({ name: 'ember-rs' });
-  db.version.create({ crate: ember });
+  let ember = await db.crate.create({ name: 'ember-rs' });
+  await db.version.create({ crate: ember });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
-  let inviter = db.user.create({ name: 'janed' });
-  db.crateOwnerInvitation.create({
+  let inviter = await db.user.create({ name: 'janed' });
+  await db.crateOwnerInvitation.create({
     crate: nanomsg,
     createdAt: '2016-12-24T12:34:56Z',
     invitee: user,
     inviter,
   });
 
-  let inviter2 = db.user.create({ name: 'wycats' });
-  db.crateOwnerInvitation.create({
+  let inviter2 = await db.user.create({ name: 'wycats' });
+  await db.crateOwnerInvitation.create({
     crate: ember,
     createdAt: '2020-12-31T12:34:56Z',
     invitee: user,

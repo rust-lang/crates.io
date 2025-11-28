@@ -6,16 +6,16 @@ import { setupApplicationTest } from 'crates-io/tests/helpers';
 module('Bug #11772', function (hooks) {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
+  async function prepare(context) {
     let { db } = context;
 
     // Create a crate that will appear in "New Crates" section
-    let newCrate = db.crate.create({ name: 'test-crate' });
-    db.version.create({ crate: newCrate, num: '1.2.3' });
+    let newCrate = await db.crate.create({ name: 'test-crate' });
+    await db.version.create({ crate: newCrate, num: '1.2.3' });
   }
 
   test('crate versions should remain correct after navigating back from crate details', async function (assert) {
-    prepare(this);
+    await prepare(this);
 
     // Visit homepage
     await visit('/');
@@ -42,8 +42,8 @@ module('Bug #11772', function (hooks) {
     let { db } = this;
 
     // Create a crate with an actual v0.0.0 version
-    let zeroCrate = db.crate.create({ name: 'test-zero-crate' });
-    db.version.create({ crate: zeroCrate, num: '0.0.0' });
+    let zeroCrate = await db.crate.create({ name: 'test-zero-crate' });
+    await db.version.create({ crate: zeroCrate, num: '0.0.0' });
 
     // Visit homepage
     await visit('/');

@@ -3,14 +3,14 @@ import { assert, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns 200 when authenticated', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch('/api/private/session', { method: 'DELETE' });
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
 
-  assert.notOk(db.mswSession.findFirst({}));
+  assert.notOk(db.mswSession.findFirst(null));
 });
 
 test('returns 200 when unauthenticated', async function () {
@@ -18,5 +18,5 @@ test('returns 200 when unauthenticated', async function () {
   assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
 
-  assert.notOk(db.mswSession.findFirst({}));
+  assert.notOk(db.mswSession.findFirst(null));
 });

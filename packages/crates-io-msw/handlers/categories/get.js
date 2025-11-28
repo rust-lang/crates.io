@@ -6,7 +6,7 @@ import { notFound } from '../../utils/handlers.js';
 
 export default http.get('/api/v1/categories/:category_id', ({ params }) => {
   let catId = params.category_id;
-  let category = db.category.findFirst({ where: { id: { equals: catId } } });
+  let category = db.category.findFirst(q => q.where({ id: catId }));
   if (!category) {
     return notFound();
   }

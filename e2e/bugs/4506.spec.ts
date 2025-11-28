@@ -2,13 +2,13 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Bug #4506', { tag: '@bugs' }, () => {
   test.beforeEach(async ({ msw }) => {
-    let noStd = msw.db.keyword.create({ keyword: 'no-std' });
+    let noStd = await msw.db.keyword.create({ keyword: 'no-std' });
 
-    let foo = msw.db.crate.create({ name: 'foo', keywords: [noStd] });
-    msw.db.version.create({ crate: foo });
+    let foo = await msw.db.crate.create({ name: 'foo', keywords: [noStd] });
+    await msw.db.version.create({ crate: foo });
 
-    let bar = msw.db.crate.create({ name: 'bar', keywords: [noStd] });
-    msw.db.version.create({ crate: bar });
+    let bar = await msw.db.crate.create({ name: 'bar', keywords: [noStd] });
+    await msw.db.version.create({ crate: bar });
   });
 
   test('is fixed', async ({ page }) => {

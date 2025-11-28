@@ -11,7 +11,7 @@ export default http.get('/api/v1/me/crate_owner_invitations', () => {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let invites = db.crateOwnerInvitation.findMany({ where: { invitee: { id: { equals: user.id } } } });
+  let invites = db.crateOwnerInvitation.findMany(q => q.where(invite => invite.invitee.id === user.id));
 
   let inviters = invites.map(invite => invite.inviter);
   let invitees = invites.map(invite => invite.invitee);

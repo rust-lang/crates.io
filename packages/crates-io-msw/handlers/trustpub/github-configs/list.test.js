@@ -3,20 +3,20 @@ import { assert, test } from 'vitest';
 import { db } from '../../../index.js';
 
 test('happy path', async function () {
-  let crate = db.crate.create({ name: 'test-crate' });
-  db.version.create({ crate });
+  let crate = await db.crate.create({ name: 'test-crate' });
+  await db.version.create({ crate });
 
-  let user = db.user.create({ email_verified: true });
-  db.mswSession.create({ user });
+  let user = await db.user.create({ email_verified: true });
+  await db.mswSession.create({ user });
 
   // Create crate ownership
-  db.crateOwnership.create({
+  await db.crateOwnership.create({
     crate,
     user,
   });
 
   // Create GitHub configs
-  let config1 = db.trustpubGithubConfig.create({
+  let config1 = await db.trustpubGithubConfig.create({
     crate,
     repository_owner: 'rust-lang',
     repository_owner_id: 1,
@@ -25,7 +25,7 @@ test('happy path', async function () {
     created_at: '2023-01-01T00:00:00Z',
   });
 
-  let config2 = db.trustpubGithubConfig.create({
+  let config2 = await db.trustpubGithubConfig.create({
     crate,
     repository_owner: 'rust-lang',
     repository_owner_id: 42,
@@ -64,14 +64,14 @@ test('happy path', async function () {
 });
 
 test('happy path with no configs', async function () {
-  let crate = db.crate.create({ name: 'test-crate-empty' });
-  db.version.create({ crate });
+  let crate = await db.crate.create({ name: 'test-crate-empty' });
+  await db.version.create({ crate });
 
-  let user = db.user.create({ email_verified: true });
-  db.mswSession.create({ user });
+  let user = await db.user.create({ email_verified: true });
+  await db.mswSession.create({ user });
 
   // Create crate ownership
-  db.crateOwnership.create({
+  await db.crateOwnership.create({
     crate,
     user,
   });
@@ -92,8 +92,8 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 400 if query params are missing', async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs`);
   assert.strictEqual(response.status, 400);
@@ -103,8 +103,8 @@ test('returns 400 if query params are missing', async function () {
 });
 
 test("returns 404 if crate can't be found", async function () {
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs?crate=nonexistent`);
   assert.strictEqual(response.status, 404);
@@ -114,11 +114,11 @@ test("returns 404 if crate can't be found", async function () {
 });
 
 test('returns 400 if user is not an owner of the crate', async function () {
-  let crate = db.crate.create({ name: 'test-crate-not-owner' });
-  db.version.create({ crate });
+  let crate = await db.crate.create({ name: 'test-crate-not-owner' });
+  await db.version.create({ crate });
 
-  let user = db.user.create();
-  db.mswSession.create({ user });
+  let user = await db.user.create();
+  await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs?crate=${crate.name}`);
   assert.strictEqual(response.status, 400);

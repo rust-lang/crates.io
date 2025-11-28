@@ -14,11 +14,11 @@ test('empty case', async function () {
 });
 
 test('returns a paginated categories list', async function () {
-  db.category.create({
+  await db.category.create({
     category: 'no-std',
     description: 'Crates that are able to function without the Rust standard library.',
   });
-  Array.from({ length: 2 }, () => db.category.create());
+  await Promise.all(Array.from({ length: 2 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/categories');
   assert.strictEqual(response.status, 200);
@@ -56,7 +56,7 @@ test('returns a paginated categories list', async function () {
 });
 
 test('never returns more than 10 results', async function () {
-  Array.from({ length: 25 }, () => db.category.create());
+  await Promise.all(Array.from({ length: 25 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/categories');
   assert.strictEqual(response.status, 200);
@@ -67,10 +67,12 @@ test('never returns more than 10 results', async function () {
 });
 
 test('supports `page` and `per_page` parameters', async function () {
-  Array.from({ length: 25 }, (_, i) =>
-    db.category.create({
-      category: `cat-${String(i + 1).padStart(2, '0')}`,
-    }),
+  await Promise.all(
+    Array.from({ length: 25 }, (_, i) =>
+      db.category.create({
+        category: `cat-${String(i + 1).padStart(2, '0')}`,
+      }),
+    ),
   );
 
   let response = await fetch('/api/v1/categories?page=2&per_page=5');

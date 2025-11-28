@@ -18,10 +18,10 @@ test('empty case', async function () {
 });
 
 test('returns the data for the front page', async function () {
-  Array.from({ length: 15 }, () => db.category.create());
-  Array.from({ length: 25 }, () => db.keyword.create());
-  let crates = Array.from({ length: 20 }, () => db.crate.create());
-  crates.forEach(crate => db.version.create({ crate }));
+  await Promise.all(Array.from({ length: 15 }, () => db.category.create()));
+  await Promise.all(Array.from({ length: 25 }, () => db.keyword.create()));
+  let crates = await Promise.all(Array.from({ length: 20 }, () => db.crate.create()));
+  await Promise.all(crates.map(crate => db.version.create({ crate })));
 
   let response = await fetch('/api/v1/summary');
   assert.strictEqual(response.status, 200);

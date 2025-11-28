@@ -13,22 +13,22 @@ import { visit } from '../../../helpers/visit-ignoring-abort';
 module('Route | crate.settings.new-trusted-publisher', hooks => {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    let user = context.db.user.create();
+  async function prepare(context) {
+    let user = await context.db.user.create();
 
-    let crate = context.db.crate.create({ name: 'foo' });
-    context.db.version.create({ crate });
-    context.db.crateOwnership.create({ crate, user });
+    let crate = await context.db.crate.create({ name: 'foo' });
+    await context.db.version.create({ crate });
+    await context.db.crateOwnership.create({ crate, user });
 
-    context.authenticateAs(user);
+    await context.authenticateAs(user);
 
     return { crate, user };
   }
 
   test('unauthenticated', async function (assert) {
-    let { crate } = prepare(this);
+    let { crate } = await prepare(this);
 
-    this.db.mswSession.deleteMany({});
+    this.db.mswSession.deleteMany(null);
 
     await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -37,9 +37,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
   });
 
   test('not an owner', async function (assert) {
-    let { crate } = prepare(this);
+    let { crate } = await prepare(this);
 
-    this.db.crateOwnership.deleteMany({});
+    this.db.crateOwnership.deleteMany(null);
 
     await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -48,7 +48,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
   });
 
   test('cancel button', async function (assert) {
-    let { crate } = prepare(this);
+    let { crate } = await prepare(this);
 
     await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -143,10 +143,11 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
     for (let { name, url, publisher, owner, repo } of testCases) {
       test(name, async function (assert) {
-        let { crate } = prepare(this);
-        this.db.crate.update({
-          where: { id: { equals: crate.id } },
-          data: { repository: url },
+        let { crate } = await prepare(this);
+        await this.db.crate.update(q => q.where({ id: crate.id }), {
+          data(c) {
+            c.repository = url;
+          },
         });
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -160,9 +161,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
   module('GitHub', function () {
     test('happy path', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'johndoe',
         repository_name: 'crates.io',
@@ -197,14 +198,14 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
 
       // Check that the config was created
-      let config = this.db.trustpubGithubConfig.findFirst({
-        where: {
-          repository_owner: { equals: 'rust-lang' },
-          repository_name: { equals: 'crates.io' },
-          workflow_filename: { equals: 'ci.yml' },
-          environment: { equals: 'release' },
-        },
-      });
+      let config = this.db.trustpubGithubConfig.findFirst(q =>
+        q.where({
+          repository_owner: 'rust-lang',
+          repository_name: 'crates.io',
+          workflow_filename: 'ci.yml',
+          environment: 'release',
+        }),
+      );
       assert.ok(config, 'Config was created');
 
       // Check that the success notification is displayed
@@ -219,7 +220,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
     });
 
     test('validation errors', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
       await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -245,7 +246,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
     });
 
     test('loading and error state', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
       // Mock the server to return an error
       let deferred = defer();
@@ -292,7 +293,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
     module('workflow verification', function () {
       test('success case (200 OK)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -319,7 +320,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       });
 
       test('not found case (404)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -346,7 +347,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       });
 
       test('server error (5xx)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -372,9 +373,9 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
   module('GitLab', function () {
     test('happy path', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
-      this.db.trustpubGitlabConfig.create({
+      await this.db.trustpubGitlabConfig.create({
         crate,
         namespace: 'johndoe',
         project: 'crates.io',
@@ -415,14 +416,14 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
 
       // Check that the config was created
-      let config = this.db.trustpubGitlabConfig.findFirst({
-        where: {
-          namespace: { equals: 'rust-lang' },
-          project: { equals: 'crates.io' },
-          workflow_filepath: { equals: '.gitlab-ci.yml' },
-          environment: { equals: 'production' },
-        },
-      });
+      let config = this.db.trustpubGitlabConfig.findFirst(q =>
+        q.where({
+          namespace: 'rust-lang',
+          project: 'crates.io',
+          workflow_filepath: '.gitlab-ci.yml',
+          environment: 'production',
+        }),
+      );
       assert.ok(config, 'Config was created');
 
       // Check that the success notification is displayed
@@ -437,7 +438,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
     });
 
     test('validation errors', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
       await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
       assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -466,7 +467,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
     });
 
     test('loading and error state', async function (assert) {
-      let { crate } = prepare(this);
+      let { crate } = await prepare(this);
 
       // Mock the server to return an error
       let deferred = defer();
@@ -516,7 +517,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
 
     module('workflow verification', function () {
       test('success case (200 OK)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -545,7 +546,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       });
 
       test('not found case (404)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -574,7 +575,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
       });
 
       test('server error (5xx)', async function (assert) {
-        let { crate } = prepare(this);
+        let { crate } = await prepare(this);
 
         await visit(`/crates/${crate.name}/settings/new-trusted-publisher`);
         assert.strictEqual(currentURL(), `/crates/${crate.name}/settings/new-trusted-publisher`);

@@ -13,7 +13,7 @@ module('Acceptance | user page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('has user display', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 
@@ -24,7 +24,7 @@ module('Acceptance | user page', function (hooks) {
   });
 
   test('has link to github in user header', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 
@@ -32,7 +32,7 @@ module('Acceptance | user page', function (hooks) {
   });
 
   test('user details has github profile icon', async function (assert) {
-    loadFixtures(this.db);
+    await loadFixtures(this.db);
 
     await visit('/users/thehydroimpulse');
 

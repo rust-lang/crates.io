@@ -11,9 +11,9 @@ module('Acceptance | Email Change', function (hooks) {
   setupApplicationTest(hooks);
 
   test('happy path', async function (assert) {
-    let user = this.db.user.create({ email: 'old@email.com' });
+    let user = await this.db.user.create({ email: 'old@email.com' });
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     await visit('/settings/profile');
     assert.strictEqual(currentURL(), '/settings/profile');
@@ -45,16 +45,16 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-verification-sent]').exists();
     assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled();
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.strictEqual(user.email, 'new@email.com');
     assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
   test('happy path with `email: null`', async function (assert) {
-    let user = this.db.user.create({ email: undefined });
+    let user = await this.db.user.create({ email: null });
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     await visit('/settings/profile');
     assert.strictEqual(currentURL(), '/settings/profile');
@@ -82,16 +82,16 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-verification-sent]').exists();
     assert.dom('[data-test-email-input] [data-test-resend-button]').isEnabled();
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.strictEqual(user.email, 'new@email.com');
     assert.false(user.emailVerified);
     assert.ok(user.emailVerificationToken);
   });
 
   test('cancel button', async function (assert) {
-    let user = this.db.user.create({ email: 'old@email.com' });
+    let user = await this.db.user.create({ email: 'old@email.com' });
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     await visit('/settings/profile');
     await click('[data-test-email-input] [data-test-edit-button]');
@@ -104,16 +104,16 @@ module('Acceptance | Email Change', function (hooks) {
     assert.dom('[data-test-email-input] [data-test-not-verified]').doesNotExist();
     assert.dom('[data-test-email-input] [data-test-verification-sent]').doesNotExist();
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.strictEqual(user.email, 'old@email.com');
     assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
   });
 
   test('server error', async function (assert) {
-    let user = this.db.user.create({ email: 'old@email.com' });
+    let user = await this.db.user.create({ email: 'old@email.com' });
 
-    this.authenticateAs(user);
+    await this.authenticateAs(user);
 
     this.worker.use(http.put('/api/v1/users/:user_id', () => HttpResponse.json({}, { status: 500 })));
 
@@ -128,7 +128,7 @@ module('Acceptance | Email Change', function (hooks) {
       .dom('[data-test-notification-message="error"]')
       .hasText('Error in saving email: An unknown error occurred while saving this email.');
 
-    user = this.db.user.findFirst({ where: { id: { equals: user.id } } });
+    user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.strictEqual(user.email, 'old@email.com');
     assert.true(user.emailVerified);
     assert.notOk(user.emailVerificationToken);
@@ -136,9 +136,9 @@ module('Acceptance | Email Change', function (hooks) {
 
   module('Resend button', function () {
     test('happy path', async function (assert) {
-      let user = this.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
+      let user = await this.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
 
-      this.authenticateAs(user);
+      await this.authenticateAs(user);
 
       await visit('/settings/profile');
       assert.strictEqual(currentURL(), '/settings/profile');
@@ -154,9 +154,9 @@ module('Acceptance | Email Change', function (hooks) {
     });
 
     test('server error', async function (assert) {
-      let user = this.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
+      let user = await this.db.user.create({ email: 'john@doe.com', emailVerificationToken: 'secret123' });
 
-      this.authenticateAs(user);
+      await this.authenticateAs(user);
 
       this.worker.use(http.put('/api/v1/users/:user_id/resend', () => HttpResponse.json({}, { status: 500 })));
 

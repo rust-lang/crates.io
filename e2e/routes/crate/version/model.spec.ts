@@ -3,10 +3,10 @@ import { expect, test } from '@/e2e/helper';
 test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => {
   test.describe('with explicit version number in the URL', () => {
     test('shows yanked versions', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0' });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1' });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0' });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await page.goto('/crates/foo/1.2.3');
       await expect(page).toHaveURL(`/crates/foo/1.2.3`);
@@ -19,10 +19,10 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
     });
 
     test('shows error page for unknown versions', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0' });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1' });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0' });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await page.goto('/crates/foo/2.0.0');
       await expect(page).toHaveURL(`/crates/foo/2.0.0`);
@@ -34,11 +34,11 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
   });
   test.describe('without version number in the URL', () => {
     test('defaults to the highest stable version', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0' });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1' });
-      msw.db.version.create({ crate, num: '2.0.0' });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0' });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1' });
+      await msw.db.version.create({ crate, num: '2.0.0' });
 
       await page.goto('/crates/foo');
       await expect(page).toHaveURL(`/crates/foo`);
@@ -51,10 +51,10 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
     });
 
     test('defaults to the highest stable version, even if there are higher prereleases', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0' });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1' });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0' });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1' });
 
       await page.goto('/crates/foo');
       await expect(page).toHaveURL(`/crates/foo`);
@@ -67,12 +67,12 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
     });
 
     test('defaults to the highest not-yanked version', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0', yanked: true });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1' });
-      msw.db.version.create({ crate, num: '2.0.0-beta.2' });
-      msw.db.version.create({ crate, num: '2.0.0', yanked: true });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0', yanked: true });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1' });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.2' });
+      await msw.db.version.create({ crate, num: '2.0.0', yanked: true });
 
       await page.goto('/crates/foo');
       await expect(page).toHaveURL(`/crates/foo`);
@@ -85,10 +85,10 @@ test.describe('Route | crate.version | model() hook', { tag: '@routes' }, () => 
     });
 
     test('if there are only yanked versions, it defaults to the latest version', async ({ page, msw }) => {
-      let crate = msw.db.crate.create({ name: 'foo' });
-      msw.db.version.create({ crate, num: '1.0.0', yanked: true });
-      msw.db.version.create({ crate, num: '1.2.3', yanked: true });
-      msw.db.version.create({ crate, num: '2.0.0-beta.1', yanked: true });
+      let crate = await msw.db.crate.create({ name: 'foo' });
+      await msw.db.version.create({ crate, num: '1.0.0', yanked: true });
+      await msw.db.version.create({ crate, num: '1.2.3', yanked: true });
+      await msw.db.version.create({ crate, num: '2.0.0-beta.1', yanked: true });
 
       await page.goto('/crates/foo');
       await expect(page).toHaveURL(`/crates/foo`);

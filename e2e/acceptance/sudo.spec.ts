@@ -3,7 +3,7 @@ import { format } from 'date-fns/format';
 
 test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
   async function prepare(msw, { isAdmin = false } = {}) {
-    let user = msw.db.user.create({
+    let user = await msw.db.user.create({
       login: 'johnnydee',
       name: 'John Doe',
       email: 'john@doe.com',
@@ -11,12 +11,12 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
       isAdmin,
     });
 
-    let crate = msw.db.crate.create({
+    let crate = await msw.db.crate.create({
       name: 'foo',
       newest_version: '0.1.0',
     });
 
-    let version = msw.db.version.create({
+    let version = await msw.db.version.create({
       crate,
       num: '0.1.0',
     });
@@ -117,14 +117,14 @@ test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {
     await yankButton.click();
 
     // Verify backend state after yanking
-    version = msw.db.version.findFirst({ where: { id: { equals: version.id } } });
+    version = msw.db.version.findFirst(q => q.where({ id: version.id }));
     expect(version.yanked, 'The version should be yanked').toBe(true);
 
     await expect(unyankButton).toBeVisible();
     await unyankButton.click();
 
     // Verify backend state after unyanking
-    version = msw.db.version.findFirst({ where: { id: { equals: version.id } } });
+    version = msw.db.version.findFirst(q => q.where({ id: version.id }));
     expect(version.yanked, 'The version should be unyanked').toBe(false);
 
     await expect(yankButton).toBeVisible();

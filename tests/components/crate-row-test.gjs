@@ -10,11 +10,11 @@ module('Component | CrateRow', function (hooks) {
   setupMsw(hooks);
 
   test('shows crate name and highest stable version', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0' });
-    this.db.version.create({ crate, num: '1.2.3', yanked: true });
-    this.db.version.create({ crate, num: '2.0.0-beta.1' });
-    this.db.version.create({ crate, num: '1.1.2' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0' });
+    await this.db.version.create({ crate, num: '1.2.3', yanked: true });
+    await this.db.version.create({ crate, num: '2.0.0-beta.1' });
+    await this.db.version.create({ crate, num: '1.1.2' });
 
     let store = this.owner.lookup('service:store');
     let crateModel = await store.findRecord('crate', crate.name);
@@ -26,10 +26,10 @@ module('Component | CrateRow', function (hooks) {
   });
 
   test('shows crate name and highest version, if there is no stable version available', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0-beta.1' });
-    this.db.version.create({ crate, num: '1.0.0-beta.3' });
-    this.db.version.create({ crate, num: '1.0.0-beta.2' });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0-beta.1' });
+    await this.db.version.create({ crate, num: '1.0.0-beta.3' });
+    await this.db.version.create({ crate, num: '1.0.0-beta.2' });
 
     let store = this.owner.lookup('service:store');
     let crateModel = await store.findRecord('crate', crate.name);
@@ -41,9 +41,9 @@ module('Component | CrateRow', function (hooks) {
   });
 
   test('shows crate name and no version if all versions are yanked', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '1.0.0', yanked: true });
-    this.db.version.create({ crate, num: '1.2.3', yanked: true });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '1.0.0', yanked: true });
+    await this.db.version.create({ crate, num: '1.2.3', yanked: true });
 
     let store = this.owner.lookup('service:store');
     let crateModel = await store.findRecord('crate', crate.name);

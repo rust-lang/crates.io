@@ -10,12 +10,7 @@ export default http.delete('/api/v1/me/tokens/:tokenId', async ({ params }) => {
   }
 
   let { tokenId } = params;
-  db.apiToken.delete({
-    where: {
-      id: { equals: parseInt(tokenId) },
-      user: { id: { equals: user.id } },
-    },
-  });
+  db.apiToken.delete(q => q.where(token => token.id === parseInt(tokenId) && token.user.id === user.id));
 
   return HttpResponse.json({});
 });

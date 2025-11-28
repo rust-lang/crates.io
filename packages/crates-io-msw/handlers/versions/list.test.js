@@ -9,7 +9,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('empty case', async function () {
-  db.crate.create({ name: 'rand' });
+  await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/versions');
   assert.strictEqual(response.status, 200);
@@ -20,14 +20,14 @@ test('empty case', async function () {
 });
 
 test('returns all versions belonging to the specified crate', async function () {
-  let user = db.user.create();
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0', publishedBy: user });
-  db.version.create({ crate, num: '1.2.0', rust_version: '1.69' });
+  let user = await db.user.create();
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0', publishedBy: user });
+  await db.version.create({ crate, num: '1.2.0', rust_version: '1.69' });
 
   let response = await fetch('/api/v1/crates/rand/versions');
-  // assert.strictEqual(response.status, 200);
+  assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {
     versions: [
       {
@@ -156,11 +156,11 @@ test('returns all versions belonging to the specified crate', async function () 
 });
 
 test('supports `sort` parameters', async function () {
-  let user = db.user.create();
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
-  db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
+  let user = await db.user.create();
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
+  await db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
 
   // sort by `semver` by default
   {
@@ -195,11 +195,11 @@ test('supports `sort` parameters', async function () {
 });
 
 test('supports multiple `ids[]` parameters', async function () {
-  let user = db.user.create();
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0', publishedBy: user });
-  db.version.create({ crate, num: '1.2.0', rust_version: '1.69' });
+  let user = await db.user.create();
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0', publishedBy: user });
+  await db.version.create({ crate, num: '1.2.0', rust_version: '1.69' });
   let response = await fetch('/api/v1/crates/rand/versions?nums[]=1.0.0&nums[]=1.2.0');
   assert.strictEqual(response.status, 200);
   let json = await response.json();
@@ -210,11 +210,11 @@ test('supports multiple `ids[]` parameters', async function () {
 });
 
 test('supports seek pagination', async function () {
-  let user = db.user.create();
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
-  db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
+  let user = await db.user.create();
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
+  await db.version.create({ crate, num: '1.1.0', rust_version: '1.69' });
 
   async function seek_forwards(queryParams) {
     let calls = 0;
@@ -289,19 +289,19 @@ test('supports seek pagination', async function () {
 });
 
 test('include `release_tracks` meta', async function () {
-  let user = db.user.create();
-  let crate = db.crate.create({ name: 'rand' });
-  db.version.create({ crate, num: '0.0.1' });
-  db.version.create({ crate, num: '0.0.2', yanked: true });
-  db.version.create({ crate, num: '1.0.0' });
-  db.version.create({ crate, num: '1.1.0', publishedBy: user });
-  db.version.create({ crate, num: '1.2.0', rust_version: '1.69', yanked: true });
+  let user = await db.user.create();
+  let crate = await db.crate.create({ name: 'rand' });
+  await db.version.create({ crate, num: '0.0.1' });
+  await db.version.create({ crate, num: '0.0.2', yanked: true });
+  await db.version.create({ crate, num: '1.0.0' });
+  await db.version.create({ crate, num: '1.1.0', publishedBy: user });
+  await db.version.create({ crate, num: '1.2.0', rust_version: '1.69', yanked: true });
 
   let req = await fetch('/api/v1/crates/rand/versions');
   let expected = await req.json();
 
   let response = await fetch('/api/v1/crates/rand/versions?include=release_tracks');
-  // assert.strictEqual(response.status, 200);
+  assert.strictEqual(response.status, 200);
   assert.deepEqual(await response.json(), {
     ...expected,
     meta: {

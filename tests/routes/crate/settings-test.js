@@ -13,19 +13,19 @@ import { visit } from '../../helpers/visit-ignoring-abort';
 module('Route | crate.settings', hooks => {
   setupApplicationTest(hooks);
 
-  function prepare(context) {
-    const user = context.db.user.create();
+  async function prepare(context) {
+    const user = await context.db.user.create();
 
-    const crate = context.db.crate.create({ name: 'foo' });
-    context.db.version.create({ crate });
-    context.db.crateOwnership.create({ crate, user });
+    const crate = await context.db.crate.create({ name: 'foo' });
+    await context.db.version.create({ crate });
+    await context.db.crateOwnership.create({ crate, user });
 
     return { crate, user };
   }
 
   test('unauthenticated', async function (assert) {
-    const crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate });
+    const crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate });
 
     await visit('/crates/foo/settings');
     assert.strictEqual(currentURL(), '/crates/foo/settings');
@@ -34,10 +34,10 @@ module('Route | crate.settings', hooks => {
   });
 
   test('not an owner', async function (assert) {
-    const { crate } = prepare(this);
+    const { crate } = await prepare(this);
 
-    const otherUser = this.db.user.create();
-    this.authenticateAs(otherUser);
+    const otherUser = await this.db.user.create();
+    await this.authenticateAs(otherUser);
 
     await visit(`/crates/${crate.name}/settings`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
@@ -46,8 +46,8 @@ module('Route | crate.settings', hooks => {
   });
 
   test('happy path', async function (assert) {
-    const { crate, user } = prepare(this);
-    this.authenticateAs(user);
+    const { crate, user } = await prepare(this);
+    await this.authenticateAs(user);
 
     await visit(`/crates/${crate.name}/settings`);
     assert.strictEqual(currentURL(), `/crates/${crate.name}/settings`);
@@ -66,11 +66,11 @@ module('Route | crate.settings', hooks => {
 
   module('Trusted Publishing', function () {
     test('mixed GitHub and GitLab configs', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
       // Create GitHub configs
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -78,7 +78,7 @@ module('Route | crate.settings', hooks => {
       });
 
       // Create GitLab configs
-      this.db.trustpubGitlabConfig.create({
+      await this.db.trustpubGitlabConfig.create({
         crate,
         namespace: 'johndoe',
         namespace_id: '1234',
@@ -114,18 +114,18 @@ module('Route | crate.settings', hooks => {
 
     module('GitHub', function () {
       test('happy path', async function (assert) {
-        const { crate, user } = prepare(this);
-        this.authenticateAs(user);
+        const { crate, user } = await prepare(this);
+        await this.authenticateAs(user);
 
         // Create two GitHub configs for the crate
-        this.db.trustpubGithubConfig.create({
+        await this.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
           workflow_filename: 'ci.yml',
         });
 
-        this.db.trustpubGithubConfig.create({
+        await this.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'johndoe',
           repository_name: 'crates.io',
@@ -161,11 +161,11 @@ module('Route | crate.settings', hooks => {
       });
 
       test('deletion failure', async function (assert) {
-        let { crate, user } = prepare(this);
-        this.authenticateAs(user);
+        let { crate, user } = await prepare(this);
+        await this.authenticateAs(user);
 
         // Create a GitHub config for the crate
-        let config = this.db.trustpubGithubConfig.create({
+        let config = await this.db.trustpubGithubConfig.create({
           crate,
           repository_owner: 'rust-lang',
           repository_name: 'crates.io',
@@ -194,18 +194,18 @@ module('Route | crate.settings', hooks => {
 
     module('GitLab', function () {
       test('happy path', async function (assert) {
-        const { crate, user } = prepare(this);
-        this.authenticateAs(user);
+        const { crate, user } = await prepare(this);
+        await this.authenticateAs(user);
 
         // Create two GitLab configs for the crate
-        this.db.trustpubGitlabConfig.create({
+        await this.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'rust-lang',
           project: 'crates.io',
           workflow_filepath: '.gitlab-ci.yml',
         });
 
-        this.db.trustpubGitlabConfig.create({
+        await this.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'johndoe',
           namespace_id: '1234',
@@ -244,11 +244,11 @@ module('Route | crate.settings', hooks => {
       });
 
       test('deletion failure', async function (assert) {
-        let { crate, user } = prepare(this);
-        this.authenticateAs(user);
+        let { crate, user } = await prepare(this);
+        await this.authenticateAs(user);
 
         // Create a GitLab config for the crate
-        let config = this.db.trustpubGitlabConfig.create({
+        let config = await this.db.trustpubGitlabConfig.create({
           crate,
           namespace: 'rust-lang',
           namespace_id: '1234',
@@ -279,8 +279,8 @@ module('Route | crate.settings', hooks => {
 
   module('trustpub_only warning banner', function () {
     test('hidden when flag is false', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -288,11 +288,15 @@ module('Route | crate.settings', hooks => {
     });
 
     test('hidden when flag is true and configs exist', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -305,9 +309,13 @@ module('Route | crate.settings', hooks => {
     });
 
     test('shown when flag is true but no configs exist', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -320,9 +328,13 @@ module('Route | crate.settings', hooks => {
     });
 
     test('disappears when checkbox is unchecked', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -334,11 +346,15 @@ module('Route | crate.settings', hooks => {
     });
 
     test('appears when checkbox is checked with no configs', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -359,8 +375,8 @@ module('Route | crate.settings', hooks => {
 
   module('trustpub_only checkbox', function () {
     test('hidden when no configs and flag is false', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -368,10 +384,10 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when GitHub configs exist', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -385,10 +401,10 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when GitLab configs exist', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
-      this.db.trustpubGitlabConfig.create({
+      await this.db.trustpubGitlabConfig.create({
         crate,
         namespace: 'rust-lang',
         project: 'crates.io',
@@ -402,9 +418,13 @@ module('Route | crate.settings', hooks => {
     });
 
     test('visible when flag is true but no configs', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -413,9 +433,13 @@ module('Route | crate.settings', hooks => {
     });
 
     test('stays visible after disabling when no configs exist', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
       await visit(`/crates/${crate.name}/settings`);
 
@@ -436,10 +460,10 @@ module('Route | crate.settings', hooks => {
     });
 
     test('enabling trustpub_only', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -449,20 +473,24 @@ module('Route | crate.settings', hooks => {
       await visit(`/crates/${crate.name}/settings`);
 
       assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
-      assert.false(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+      assert.false(this.db.crate.findFirst(q => q.where({ name: crate.name })).trustpubOnly);
 
       await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
 
       assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
-      assert.true(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+      assert.true(this.db.crate.findFirst(q => q.where({ name: crate.name })).trustpubOnly);
     });
 
     test('disabling trustpub_only', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.db.crate.update({ where: { id: { equals: crate.id } }, data: { trustpubOnly: true } });
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.db.crate.update(q => q.where({ id: crate.id }), {
+        data(c) {
+          c.trustpubOnly = true;
+        },
+      });
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',
@@ -472,19 +500,19 @@ module('Route | crate.settings', hooks => {
       await visit(`/crates/${crate.name}/settings`);
 
       assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isChecked();
-      assert.true(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+      assert.true(this.db.crate.findFirst(q => q.where({ name: crate.name })).trustpubOnly);
 
       await click('[data-test-trustpub-only-checkbox] [data-test-checkbox]');
 
       assert.dom('[data-test-trustpub-only-checkbox] [data-test-checkbox]').isNotChecked();
-      assert.false(this.db.crate.findFirst({ where: { name: { equals: crate.name } } }).trustpubOnly);
+      assert.false(this.db.crate.findFirst(q => q.where({ name: crate.name })).trustpubOnly);
     });
 
     test('loading and error state', async function (assert) {
-      const { crate, user } = prepare(this);
-      this.authenticateAs(user);
+      const { crate, user } = await prepare(this);
+      await this.authenticateAs(user);
 
-      this.db.trustpubGithubConfig.create({
+      await this.db.trustpubGithubConfig.create({
         crate,
         repository_owner: 'rust-lang',
         repository_name: 'crates.io',

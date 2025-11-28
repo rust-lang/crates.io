@@ -9,12 +9,12 @@ export default http.delete('/api/v1/crates/:name', async ({ params }) => {
     return HttpResponse.json({ errors: [{ detail: 'must be logged in to perform that action' }] }, { status: 403 });
   }
 
-  let crate = db.crate.findFirst({ where: { name: { equals: params.name } } });
+  let crate = db.crate.findFirst(q => q.where({ name: params.name }));
   if (!crate) {
     return HttpResponse.json({ errors: [{ detail: `crate \`${params.name}\` does not exist` }] }, { status: 404 });
   }
 
-  db.crate.delete({ where: { id: crate.id } });
+  db.crate.delete(q => q.where({ id: crate.id }));
 
   return new HttpResponse(null, { status: 204 });
 });

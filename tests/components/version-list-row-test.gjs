@@ -10,9 +10,9 @@ module('Component | VersionList::Row', function (hooks) {
   setupMsw(hooks);
 
   test('handle non-standard semver strings', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({ crate, num: '0.4.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
-    this.db.version.create({ crate, num: '0.3.0-alpha.01', created_at: Date.now(), updated_at: Date.now() });
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({ crate, num: '0.4.0-alpha.01' });
+    await this.db.version.create({ crate, num: '0.3.0-alpha.01' });
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
@@ -31,9 +31,9 @@ module('Component | VersionList::Row', function (hooks) {
   });
 
   test('handle node-semver parsing errors', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
+    let crate = await this.db.crate.create({ name: 'foo' });
     let version = '18446744073709551615.18446744073709551615.18446744073709551615';
-    this.db.version.create({ crate, num: version });
+    await this.db.version.create({ crate, num: version });
 
     let store = this.owner.lookup('service:store');
     let crateRecord = await store.findRecord('crate', crate.name);
@@ -46,27 +46,21 @@ module('Component | VersionList::Row', function (hooks) {
   });
 
   test('pluralize "feature" only when appropriate', async function (assert) {
-    let crate = this.db.crate.create({ name: 'foo' });
-    this.db.version.create({
+    let crate = await this.db.crate.create({ name: 'foo' });
+    await this.db.version.create({
       crate,
       num: '0.1.0',
       features: {},
-      created_at: Date.now(),
-      updated_at: Date.now(),
     });
-    this.db.version.create({
+    await this.db.version.create({
       crate,
       num: '0.2.0',
       features: { one: [] },
-      created_at: Date.now(),
-      updated_at: Date.now(),
     });
-    this.db.version.create({
+    await this.db.version.create({
       crate,
       num: '0.3.0',
       features: { one: [], two: [] },
-      created_at: Date.now(),
-      updated_at: Date.now(),
     });
 
     let store = this.owner.lookup('service:store');
