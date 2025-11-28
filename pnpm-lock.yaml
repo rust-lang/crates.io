@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@babel/runtime': 7.28.4
-  ember-auto-import: 2.11.2
+  ember-auto-import: 2.12.0
   ember-get-config: 2.1.1
   ember-inflector: 6.0.0
   ember-modifier: 4.2.2
@@ -136,8 +136,8 @@ importers:
         specifier: 7.1.3
         version: 7.1.3(@babel/core@7.28.5)(@ember/test-helpers@5.4.1(@babel/core@7.28.5))(qunit@2.24.2)(webpack@5.102.1)
       ember-auto-import:
-        specifier: 2.11.2
-        version: 2.11.2(webpack@5.102.1)
+        specifier: 2.12.0
+        version: 2.12.0(webpack@5.102.1)
       ember-cli:
         specifier: 6.8.0
         version: 6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
@@ -1362,6 +1362,10 @@ packages:
     peerDependenciesMeta:
       '@glint/template':
         optional: true
+
+  '@embroider/reverse-exports@0.2.0':
+    resolution: {integrity: sha512-WFsw8nQpHZiWGEDYpa/A79KEFfTisqteXbY+jg9eZiww1r1G+LZvsmdszDp86TkotUSCqrMbK/ewn0jR1CJmqg==}
+    engines: {node: 12.* || 14.* || >= 16}
 
   '@embroider/shared-internals@2.9.0':
     resolution: {integrity: sha512-8untWEvGy6av/oYibqZWMz/yB+LHsKxEOoUZiLvcpFwWj2Sipc0DcXeTJQZQZ++otNkLCWyDrDhOLrOkgjOPSg==}
@@ -3947,8 +3951,8 @@ packages:
       qunit:
         optional: true
 
-  ember-auto-import@2.11.2:
-    resolution: {integrity: sha512-eR67ggmPQ6Upx6Smbur0HTRYqQshyxJMKPkWBHwWZmZ8sOA5piR0raL7ccKO0Hrn4ZEkp8ih24yAwvssb6K4NQ==}
+  ember-auto-import@2.12.0:
+    resolution: {integrity: sha512-J9wVTddnpx1ZPf6CgtMs8byp5t9ZZITUX9v+H+PgSDSgbYbDrVlKr2RGDfJLrnaTpuWwZqh1b54/9jLaERr6QA==}
     engines: {node: 12.* || 14.* || >= 16}
 
   ember-cli-babel-plugin-helpers@1.1.1:
@@ -5833,6 +5837,10 @@ packages:
     resolution: {integrity: sha512-qvwipnozMohxLXG1pOqoLiZKNkC4r4qqRucSoDwXowsNGDSULiqFTRUF05vcZWnwJSG22qTsynQhxbaMtnX9gw==}
     engines: {node: '>=8'}
 
+  mem@8.1.1:
+    resolution: {integrity: sha512-qFCFUDs7U3b8mBDPyz5EToEKoAkgCzqquIgi9nkkR9bixxOVOre+09lbuH7+9Kn2NFpm56M3GUWVbU2hQgdACA==}
+    engines: {node: '>=10'}
+
   memory-scroll@2.0.1:
     resolution: {integrity: sha512-SuAFm2qNUqAuJ4mIyq4JhPe7EAuFy1pR0GIv+TbXbSqi9hkUTGq4XtFthE/eDpyiW4y6+7d/39ntJxeBy/atvQ==}
 
@@ -5891,6 +5899,10 @@ packages:
   mimic-fn@2.1.0:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
     engines: {node: '>=6'}
+
+  mimic-fn@3.1.0:
+    resolution: {integrity: sha512-Ysbi9uYW9hFyfrThdDEQuykN4Ey6BuwPD2kpI5ES/nFTDn/98yxYNLZJcgUAKPT/mcrLLKaGzJR9YVxJrIdASQ==}
+    engines: {node: '>=8'}
 
   mini-css-extract-plugin@2.9.4:
     resolution: {integrity: sha512-ZWYT7ln73Hptxqxk2DxPU9MmapXRhxkJD6tkSR04dnQxm8BGu2hzgKLugK5yySD97u/8yy7Ma7E76k9ZdvtjkQ==}
@@ -9606,6 +9618,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@embroider/reverse-exports@0.2.0':
+    dependencies:
+      mem: 8.1.1
+      resolve.exports: 2.0.3
+
   '@embroider/shared-internals@2.9.0':
     dependencies:
       babel-import-util: 2.1.1
@@ -10289,7 +10306,7 @@ snapshots:
   '@percy/ember@5.0.0(@babel/core@7.28.5)(webpack@5.102.1)':
     dependencies:
       '@percy/sdk-utils': 1.31.4
-      ember-auto-import: 2.11.2(webpack@5.102.1)
+      ember-auto-import: 2.12.0(webpack@5.102.1)
       ember-cli-babel: 8.2.0(@babel/core@7.28.5)
     transitivePeerDependencies:
       - '@babel/core'
@@ -10397,7 +10414,7 @@ snapshots:
       '@embroider/macros': 1.19.4
       '@sentry/browser': 10.27.0
       '@sentry/core': 10.27.0
-      ember-auto-import: 2.11.2(webpack@5.102.1)
+      ember-auto-import: 2.12.0(webpack@5.102.1)
       ember-cli-babel: 8.2.0(@babel/core@7.28.5)
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
@@ -10881,7 +10898,7 @@ snapshots:
 
   '@zestia/ember-auto-focus@5.1.0(@babel/core@7.28.5)(ember-source@6.8.2(@glimmer/component@2.0.0)(rsvp@4.8.5))(webpack@5.102.1)':
     dependencies:
-      ember-auto-import: 2.11.2(webpack@5.102.1)
+      ember-auto-import: 2.12.0(webpack@5.102.1)
       ember-cli-babel: 7.26.11
       ember-cli-htmlbars: 6.3.0
       ember-modifier: 4.2.2(@babel/core@7.28.5)
@@ -12632,7 +12649,7 @@ snapshots:
       '@scalvert/ember-setup-middleware-reporter': 0.1.1
       axe-core: 4.11.0
       broccoli-persistent-filter: 3.1.3
-      ember-auto-import: 2.11.2(webpack@5.102.1)
+      ember-auto-import: 2.12.0(webpack@5.102.1)
       ember-cli-babel: 8.2.0(@babel/core@7.28.5)
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 4.2.1
@@ -12647,7 +12664,7 @@ snapshots:
       - supports-color
       - webpack
 
-  ember-auto-import@2.11.2(webpack@5.102.1):
+  ember-auto-import@2.12.0(webpack@5.102.1):
     dependencies:
       '@babel/core': 7.28.5(supports-color@8.1.1)
       '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.28.5)
@@ -12656,6 +12673,7 @@ snapshots:
       '@babel/plugin-transform-class-static-block': 7.28.3(@babel/core@7.28.5)(supports-color@8.1.1)
       '@babel/preset-env': 7.28.5(@babel/core@7.28.5)(supports-color@8.1.1)
       '@embroider/macros': 1.19.4
+      '@embroider/reverse-exports': 0.2.0
       '@embroider/shared-internals': 2.9.1(supports-color@8.1.1)
       babel-loader: 8.4.1(@babel/core@7.28.5)(webpack@5.102.1)
       babel-plugin-ember-modules-api-polyfill: 3.5.0
@@ -15406,6 +15424,11 @@ snapshots:
       mimic-fn: 2.1.0
       p-is-promise: 2.1.0
 
+  mem@8.1.1:
+    dependencies:
+      map-age-cleaner: 0.1.3
+      mimic-fn: 3.1.0
+
   memory-scroll@2.0.1(@babel/core@7.28.5):
     dependencies:
       '@embroider/addon-shim': 1.10.2
@@ -15495,6 +15518,8 @@ snapshots:
   mimic-fn@1.2.0: {}
 
   mimic-fn@2.1.0: {}
+
+  mimic-fn@3.1.0: {}
 
   mini-css-extract-plugin@2.9.4(webpack@5.102.1):
     dependencies:
