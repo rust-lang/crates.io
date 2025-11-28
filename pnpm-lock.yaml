@@ -50,7 +50,7 @@ importers:
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.11.0
-        version: 4.11.0(playwright-core@1.56.1)
+        version: 4.11.0(playwright-core@1.57.0)
       '@babel/core':
         specifier: 7.28.5
         version: 7.28.5(supports-color@8.1.1)
@@ -110,10 +110,10 @@ importers:
         version: 5.0.0(@babel/core@7.28.5)(webpack@5.102.1)
       '@percy/playwright':
         specifier: 1.0.10
-        version: 1.0.10(playwright-core@1.56.1)
+        version: 1.0.10(playwright-core@1.57.0)
       '@playwright/test':
-        specifier: 1.56.1
-        version: 1.56.1
+        specifier: 1.57.0
+        version: 1.57.0
       '@sinonjs/fake-timers':
         specifier: 15.0.0
         version: 15.0.0
@@ -287,7 +287,7 @@ importers:
         version: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.56.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))
+        version: 3.0.1(@playwright/test@1.57.0)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3))
       postcss:
         specifier: 8.5.6
         version: 8.5.6
@@ -1911,8 +1911,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.56.1':
-    resolution: {integrity: sha512-vSMYtL/zOcFpvJCW71Q/OEGQb7KYBPAdKh35WNSkaZA75JlAO8ED8UN6GUNTm3drWomcbcqRPFqQbLae8yBTdg==}
+  '@playwright/test@1.57.0':
+    resolution: {integrity: sha512-6TyEnHgd6SArQO8UO2OMTxshln3QMWBtPGrOCgs3wVEmQmwyuNtB10IZMfmYDE0riwNR1cu4q+pPcxMVtaG3TA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6401,8 +6401,8 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.56.1:
-    resolution: {integrity: sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==}
+  playwright-core@1.57.0:
+    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6413,8 +6413,8 @@ packages:
       '@playwright/test': '>=1.20.0'
       msw: ^2.0.0
 
-  playwright@1.56.1:
-    resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
+  playwright@1.57.0:
+    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6722,6 +6722,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.13.0:
@@ -8199,10 +8200,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@axe-core/playwright@4.11.0(playwright-core@1.56.1)':
+  '@axe-core/playwright@4.11.0(playwright-core@1.57.0)':
     dependencies:
       axe-core: 4.11.0
-      playwright-core: 1.56.1
+      playwright-core: 1.57.0
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -10330,9 +10331,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@percy/playwright@1.0.10(playwright-core@1.56.1)':
+  '@percy/playwright@1.0.10(playwright-core@1.57.0)':
     dependencies:
-      playwright-core: 1.56.1
+      playwright-core: 1.57.0
 
   '@percy/sdk-utils@1.31.4':
     dependencies:
@@ -10350,9 +10351,9 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@playwright/test@1.56.1':
+  '@playwright/test@1.57.0':
     dependencies:
-      playwright: 1.56.1
+      playwright: 1.57.0
 
   '@pnpm/constants@1001.3.1': {}
 
@@ -16027,18 +16028,18 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.56.1: {}
+  playwright-core@1.57.0: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.56.1)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3)):
+  playwright-msw@3.0.1(@playwright/test@1.57.0)(msw@2.12.3(@types/node@24.10.1)(typescript@5.9.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
-      '@playwright/test': 1.56.1
+      '@playwright/test': 1.57.0
       msw: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
       strict-event-emitter: 0.5.1
 
-  playwright@1.56.1:
+  playwright@1.57.0:
     dependencies:
-      playwright-core: 1.56.1
+      playwright-core: 1.57.0
     optionalDependencies:
       fsevents: 2.3.2
 
