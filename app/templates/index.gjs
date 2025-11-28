@@ -75,6 +75,71 @@ import placeholders from 'crates-io/helpers/placeholders';
     </button>
   {{else}}
     <div class='lists' data-test-lists>
+      <section data-test-most-downloaded>
+        <h2><LinkTo @route='crates' @query={{hash sort='downloads'}}>Most Downloaded</LinkTo></h2>
+        <ol class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
+          {{#if @controller.dataTask.isRunning}}
+            {{#each (placeholders 10)}}
+              <li>
+                <Placeholder />
+              </li>
+            {{/each}}
+          {{else}}
+            {{#each @controller.model.most_downloaded as |crate index|}}
+              <li>
+                <Item @link={{link_ 'crate' crate.id}} @title={{crate.name}} data-test-crate-link={{index}} />
+              </li>
+            {{/each}}
+          {{/if}}
+        </ol>
+      </section>
+
+      <section data-test-categories>
+        <h2><LinkTo @route='categories'>Popular Categories</LinkTo></h2>
+        <ul class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
+          {{#if @controller.dataTask.isRunning}}
+            {{#each (placeholders 10)}}
+              <li>
+                <Placeholder @withSubtitle={{true}} />
+              </li>
+            {{/each}}
+          {{else}}
+            {{#each @controller.model.popular_categories as |category|}}
+              <li>
+                <Item
+                  @link={{link_ 'category' category.slug}}
+                  @title={{category.category}}
+                  @subtitle='{{formatNum category.crates_cnt}} crates'
+                />
+              </li>
+            {{/each}}
+          {{/if}}
+        </ul>
+      </section>
+
+      <section data-test-keywords>
+        <h2><LinkTo @route='keywords'>Popular Keywords</LinkTo></h2>
+        <ul class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
+          {{#if @controller.dataTask.isRunning}}
+            {{#each (placeholders 10)}}
+              <li>
+                <Placeholder @withSubtitle={{true}} />
+              </li>
+            {{/each}}
+          {{else}}
+            {{#each @controller.model.popular_keywords as |keyword|}}
+              <li>
+                <Item
+                  @link={{link_ 'keyword' keyword.id}}
+                  @title={{keyword.id}}
+                  @subtitle='{{formatNum keyword.crates_cnt}} crates'
+                />
+              </li>
+            {{/each}}
+          {{/if}}
+        </ul>
+      </section>
+
       <section data-test-new-crates>
         <h2><LinkTo @route='crates' @query={{hash sort='new'}}>New Crates</LinkTo></h2>
         <ol class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
@@ -93,25 +158,6 @@ import placeholders from 'crates-io/helpers/placeholders';
                   @subtitle='v{{crate.newest_version}}'
                   data-test-crate-link={{index}}
                 />
-              </li>
-            {{/each}}
-          {{/if}}
-        </ol>
-      </section>
-
-      <section data-test-most-downloaded>
-        <h2><LinkTo @route='crates' @query={{hash sort='downloads'}}>Most Downloaded</LinkTo></h2>
-        <ol class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
-          {{#if @controller.dataTask.isRunning}}
-            {{#each (placeholders 10)}}
-              <li>
-                <Placeholder />
-              </li>
-            {{/each}}
-          {{else}}
-            {{#each @controller.model.most_downloaded as |crate index|}}
-              <li>
-                <Item @link={{link_ 'crate' crate.id}} @title={{crate.name}} data-test-crate-link={{index}} />
               </li>
             {{/each}}
           {{/if}}
@@ -159,52 +205,6 @@ import placeholders from 'crates-io/helpers/placeholders';
             {{/each}}
           {{/if}}
         </ol>
-      </section>
-
-      <section data-test-keywords>
-        <h2><LinkTo @route='keywords'>Popular Keywords</LinkTo></h2>
-        <ul class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
-          {{#if @controller.dataTask.isRunning}}
-            {{#each (placeholders 10)}}
-              <li>
-                <Placeholder @withSubtitle={{true}} />
-              </li>
-            {{/each}}
-          {{else}}
-            {{#each @controller.model.popular_keywords as |keyword|}}
-              <li>
-                <Item
-                  @link={{link_ 'keyword' keyword.id}}
-                  @title={{keyword.id}}
-                  @subtitle='{{formatNum keyword.crates_cnt}} crates'
-                />
-              </li>
-            {{/each}}
-          {{/if}}
-        </ul>
-      </section>
-
-      <section data-test-categories>
-        <h2><LinkTo @route='categories'>Popular Categories</LinkTo></h2>
-        <ul class='list' aria-busy='{{@controller.dataTask.isRunning}}'>
-          {{#if @controller.dataTask.isRunning}}
-            {{#each (placeholders 10)}}
-              <li>
-                <Placeholder @withSubtitle={{true}} />
-              </li>
-            {{/each}}
-          {{else}}
-            {{#each @controller.model.popular_categories as |category|}}
-              <li>
-                <Item
-                  @link={{link_ 'category' category.slug}}
-                  @title={{category.category}}
-                  @subtitle='{{formatNum category.crates_cnt}} crates'
-                />
-              </li>
-            {{/each}}
-          {{/if}}
-        </ul>
       </section>
     </div>
   {{/if}}
