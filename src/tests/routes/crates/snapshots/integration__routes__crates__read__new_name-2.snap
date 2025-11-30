@@ -26,6 +26,7 @@ expression: response.json()
     },
     "max_stable_version": null,
     "max_version": "0.0.0",
+    "monthly_downloads": null,
     "name": "new",
     "newest_version": "0.0.0",
     "num_versions": 1,
@@ -34,6 +35,7 @@ expression: response.json()
     "trustpub_only": false,
     "updated_at": "[datetime]",
     "versions": null,
+    "weekly_downloads": null,
     "yanked": false
   },
   "keywords": null,

@@ -187,7 +187,9 @@ pub async fn find_crate(
         cats.as_deref(),
         false,
         downloads,
-        recent_downloads,
+        recent_downloads.map(|(d, _, _)| d),
+        recent_downloads.map(|(_, m, _)| m),
+        recent_downloads.map(|(_, _, w)| w),
     );
 
     let encodable_versions = versions_publishers_and_audit_actions.map(|vpa| {
@@ -289,14 +291,18 @@ fn load_recent_downloads(
     conn: &mut AsyncPgConnection,
     crate_id: i32,
     includes: bool,
-) -> BoxFuture<'_, AppResult<Option<i64>>> {
+) -> BoxFuture<'_, AppResult<Option<(i64, i64, i64)>>> {
     if !includes {
         return always_ready(|| Ok(None)).boxed();
     }
 
     let fut = recent_crate_downloads::table
         .filter(recent_crate_downloads::crate_id.eq(crate_id))
-        .select(recent_crate_downloads::downloads)
+        .select((
+            recent_crate_downloads::downloads,
+            recent_crate_downloads::monthly,
+            recent_crate_downloads::weekly,
+        ))
         .get_result(conn);
     async move { Ok(fut.await.optional()?) }.boxed()
 }

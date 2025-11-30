@@ -28,6 +28,7 @@ expression: response.json()
     },
     "max_stable_version": null,
     "max_version": "0.0.0",
+    "monthly_downloads": 10,
     "name": "foo_show",
     "newest_version": "0.0.0",
     "num_versions": 2,
@@ -39,6 +40,7 @@ expression: response.json()
       2,
       1
     ],
+    "weekly_downloads": 10,
     "yanked": true
   },
   "keywords": [

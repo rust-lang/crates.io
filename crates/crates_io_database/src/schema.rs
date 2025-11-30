@@ -783,6 +783,14 @@ diesel::table! {
         ///
         /// Its SQL type is `BigInt`.
         downloads -> BigInt,
+        /// The `monthly` column of the `recent_crate_downloads` table.
+        ///
+        /// Its SQL type is `BigInt`.
+        monthly -> BigInt,
+        /// The `weekly` column of the `recent_crate_downloads` table.
+        ///
+        /// Its SQL type is `BigInt`.
+        weekly -> BigInt,
     }
 }
 

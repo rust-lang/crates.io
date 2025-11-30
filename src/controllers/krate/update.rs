@@ -189,6 +189,8 @@ async fn update_inner(
         false,
         downloads,
         recent_downloads,
+        None,
+        None,
     );
 
     Ok(Json(PatchResponse {

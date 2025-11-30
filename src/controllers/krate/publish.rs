@@ -701,6 +701,8 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
                 false,
                 downloads,
                 None,
+                None,
+                None,
             ),
             warnings,
         }))
