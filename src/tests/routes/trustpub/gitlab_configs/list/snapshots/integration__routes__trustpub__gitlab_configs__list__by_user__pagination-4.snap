@@ -1,0 +1,62 @@
+---
+source: src/tests/routes/trustpub/gitlab_configs/list/by_user.rs
+expression: json
+---
+{
+  "gitlab_configs": [
+    {
+      "crate": "bbb",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 6,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "bbb-repo-0",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "bbb",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 7,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "bbb-repo-1",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "bbb",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 8,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "bbb-repo-2",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "bbb",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 9,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "bbb-repo-3",
+      "workflow_filepath": ".gitlab-ci.yml"
+    },
+    {
+      "crate": "bbb",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 10,
+      "namespace": "rust-lang",
+      "namespace_id": null,
+      "project": "bbb-repo-4",
+      "workflow_filepath": ".gitlab-ci.yml"
+    }
+  ],
+  "meta": {
+    "next_page": "?user_id=1&per_page=5&seek=MTA",
+    "total": 15
+  }
+}
