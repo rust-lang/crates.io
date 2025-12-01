@@ -34,15 +34,10 @@ export default class NewTrustedPublisherController extends Controller {
   }
 
   get verificationUrl() {
+    if (this.publisher !== 'GitHub') return;
     if (!this.namespace || !this.project || !this.workflow) return;
 
-    if (this.publisher === 'GitHub') {
-      return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
-    }
-
-    if (this.publisher === 'GitLab') {
-      return `https://gitlab.com/${this.namespace}/${this.project}/-/raw/HEAD/${this.workflow}`;
-    }
+    return `https://raw.githubusercontent.com/${this.namespace}/${this.project}/HEAD/.github/workflows/${this.workflow}`;
   }
 
   saveConfigTask = task(async () => {
