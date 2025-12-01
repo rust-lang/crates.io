@@ -183,7 +183,6 @@ pub async fn publish(app: AppState, req: Parts, body: Body) -> AppResult<Json<Go
 
         let hashed_token = trustpub_token.sha256();
 
-        #[expect(deprecated)]
         let (crate_ids, trustpub_data): (Vec<Option<i32>>, Option<TrustpubData>) =
             trustpub_tokens::table
                 .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))

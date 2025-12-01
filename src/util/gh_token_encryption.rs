@@ -9,7 +9,6 @@ pub struct GitHubTokenEncryption {
     cipher: Aes256Gcm,
 }
 
-#[expect(deprecated)]
 impl GitHubTokenEncryption {
     /// Creates a new [GitHubTokenEncryption] instance with the provided cipher
     pub fn new(cipher: Aes256Gcm) -> Self {
@@ -92,7 +91,6 @@ impl GitHubTokenEncryption {
 }
 
 #[cfg(test)]
-#[expect(deprecated)]
 mod tests {
     use super::*;
     use aes_gcm::{Key, KeyInit};
