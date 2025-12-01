@@ -17,6 +17,10 @@ export default class CrateSidebarLink extends Component {
     return this.text.startsWith('github.com/');
   }
 
+  get isGitLab() {
+    return this.text.startsWith('gitlab.com/');
+  }
+
   <template>
     <div ...attributes>
       <h2 class='title' data-test-title>{{@title}}</h2>
@@ -25,6 +29,8 @@ export default class CrateSidebarLink extends Component {
           {{svgJar 'docs-rs' class=(scopedClass 'icon') data-test-icon='docs-rs'}}
         {{else if this.isGitHub}}
           {{svgJar 'github' class=(scopedClass 'icon') data-test-icon='github'}}
+        {{else if this.isGitLab}}
+          {{svgJar 'gitlab' class=(scopedClass 'icon') data-test-icon='gitlab'}}
         {{else}}
           {{svgJar 'link' class=(scopedClass 'icon') data-test-icon='link'}}
         {{/if}}
