@@ -37,7 +37,6 @@ impl HashedToken {
     }
 
     pub fn hash(plaintext: &str) -> Vec<u8> {
-        #[expect(deprecated)]
         Sha256::digest(plaintext.as_bytes()).as_slice().to_vec()
     }
 }
@@ -99,7 +98,6 @@ mod tests {
     use googletest::prelude::*;
 
     #[test]
-    #[expect(deprecated)]
     fn test_generated_and_parse() {
         let token = PlainToken::generate();
         assert_that!(token.expose_secret(), starts_with(TOKEN_PREFIX));
