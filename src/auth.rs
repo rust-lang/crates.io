@@ -219,6 +219,21 @@ impl Authentication {
             Authentication::Token(token) => &token.user,
         }
     }
+
+    /// Returns an error if the request was authenticated with a legacy API token.
+    ///
+    /// Legacy tokens are tokens without any endpoint scopes. They were created
+    /// before the scoped token feature was introduced.
+    pub fn reject_legacy_tokens(&self) -> AppResult<()> {
+        if let Some(token) = self.api_token()
+            && token.endpoint_scopes.is_none()
+        {
+            return Err(forbidden(
+                "This endpoint cannot be used with legacy API tokens. Use a scoped API token instead.",
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[instrument(skip_all)]
