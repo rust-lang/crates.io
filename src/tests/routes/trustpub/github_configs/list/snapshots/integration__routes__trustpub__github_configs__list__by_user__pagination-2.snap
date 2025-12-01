@@ -1,0 +1,62 @@
+---
+source: src/tests/routes/trustpub/github_configs/list/by_user.rs
+expression: json
+---
+{
+  "github_configs": [
+    {
+      "crate": "aaa",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 1,
+      "repository_name": "aaa-repo-0",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "aaa",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 2,
+      "repository_name": "aaa-repo-1",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "aaa",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 3,
+      "repository_name": "aaa-repo-2",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "aaa",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 4,
+      "repository_name": "aaa-repo-3",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "aaa",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 5,
+      "repository_name": "aaa-repo-4",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    }
+  ],
+  "meta": {
+    "next_page": "?user_id=1&per_page=5&seek=NQ",
+    "total": 15
+  }
+}

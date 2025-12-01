@@ -1,0 +1,62 @@
+---
+source: src/tests/routes/trustpub/github_configs/list/by_user.rs
+expression: json
+---
+{
+  "github_configs": [
+    {
+      "crate": "ccc",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 11,
+      "repository_name": "ccc-repo-0",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "ccc",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 12,
+      "repository_name": "ccc-repo-1",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "ccc",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 13,
+      "repository_name": "ccc-repo-2",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "ccc",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 14,
+      "repository_name": "ccc-repo-3",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "ccc",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 15,
+      "repository_name": "ccc-repo-4",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    }
+  ],
+  "meta": {
+    "next_page": "?user_id=1&per_page=5&seek=MTU",
+    "total": 15
+  }
+}

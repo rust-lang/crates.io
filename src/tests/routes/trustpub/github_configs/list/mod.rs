@@ -2,6 +2,7 @@ use crate::util::{RequestHelper, TestApp};
 use insta::assert_snapshot;
 
 mod by_crate;
+mod by_user;
 
 pub const URL: &str = "/api/v1/trusted_publishing/github_configs";
 
