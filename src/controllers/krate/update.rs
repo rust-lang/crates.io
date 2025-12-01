@@ -6,7 +6,7 @@ use crate::middleware::real_ip::RealIp;
 use crate::models::token::EndpointScope;
 use crate::models::{Crate, User};
 use crate::schema::*;
-use crate::util::errors::{AppResult, crate_not_found, custom, forbidden};
+use crate::util::errors::{AppResult, crate_not_found, custom};
 use crate::views::EncodableCrate;
 use anyhow::Context;
 use axum::{Extension, Json};
@@ -70,14 +70,7 @@ pub async fn update_crate(
         .check(&req, &mut conn)
         .await?;
 
-    if auth
-        .api_token()
-        .is_some_and(|token| token.endpoint_scopes.is_none())
-    {
-        return Err(forbidden(
-            "This endpoint cannot be used with legacy API tokens. Use a scoped API token instead.",
-        ));
-    }
+    auth.reject_legacy_tokens()?;
 
     // Update crate settings in a transaction
     conn.transaction(|conn| {
