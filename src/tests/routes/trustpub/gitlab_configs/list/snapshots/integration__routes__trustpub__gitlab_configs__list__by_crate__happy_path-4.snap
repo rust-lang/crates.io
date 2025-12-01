@@ -1,17 +1,17 @@
 ---
-source: src/tests/routes/trustpub/gitlab_configs/list.rs
+source: src/tests/routes/trustpub/gitlab_configs/list/by_crate.rs
 expression: response.json()
 ---
 {
   "gitlab_configs": [
     {
-      "crate": "foo",
+      "crate": "bar",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 1,
+      "id": 3,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "foo-rs",
+      "project": "BAR",
       "workflow_filepath": ".gitlab-ci.yml"
     }
   ],

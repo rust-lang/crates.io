@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/github_configs/list.rs
+source: src/tests/routes/trustpub/github_configs/list/by_crate.rs
 expression: json
 ---
 {
@@ -8,8 +8,8 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 6,
-      "repository_name": "repo-5",
+      "id": 11,
+      "repository_name": "repo-10",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
@@ -18,8 +18,8 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 7,
-      "repository_name": "repo-6",
+      "id": 12,
+      "repository_name": "repo-11",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
@@ -28,8 +28,8 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 8,
-      "repository_name": "repo-7",
+      "id": 13,
+      "repository_name": "repo-12",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
@@ -38,8 +38,8 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 9,
-      "repository_name": "repo-8",
+      "id": 14,
+      "repository_name": "repo-13",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
@@ -48,15 +48,15 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 10,
-      "repository_name": "repo-9",
+      "id": 15,
+      "repository_name": "repo-14",
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
     }
   ],
   "meta": {
-    "next_page": "?crate=foo&per_page=5&seek=MTA",
+    "next_page": "?crate=foo&per_page=5&seek=MTU",
     "total": 15
   }
 }

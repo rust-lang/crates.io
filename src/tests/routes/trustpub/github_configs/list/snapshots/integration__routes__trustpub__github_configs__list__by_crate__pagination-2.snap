@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/github_configs/list.rs
+source: src/tests/routes/trustpub/github_configs/list/by_crate.rs
 expression: json
 ---
 {
