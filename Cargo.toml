@@ -85,6 +85,7 @@ crates_io_session = { path = "crates/crates_io_session" }
 crates_io_tarball = { path = "crates/crates_io_tarball" }
 crates_io_team_repo = { path = "crates/crates_io_team_repo" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub" }
+crates_io_validation = { path = "crates/crates_io_validation" }
 crates_io_version = { path = "crates/crates_io_version" }
 crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.4.0"

@@ -1,0 +1,15 @@
+[package]
+name = "crates_io_validation"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = "=2.0.17"
+unicode-xid = "=0.2.6"
+
+[dev-dependencies]
+claims = "=0.8.0"
