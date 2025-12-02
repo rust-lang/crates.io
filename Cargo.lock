@@ -1417,6 +1417,7 @@ dependencies = [
  "crates_io_test_db",
  "crates_io_test_utils",
  "crates_io_trustpub",
+ "crates_io_validation",
  "crates_io_version",
  "crates_io_worker",
  "csv",
@@ -1529,6 +1530,7 @@ dependencies = [
  "crates_io_diesel_helpers",
  "crates_io_index",
  "crates_io_test_db",
+ "crates_io_validation",
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
@@ -1544,7 +1546,6 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "tracing",
- "unicode-xid",
  "utoipa",
 ]
 
@@ -1851,6 +1852,15 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "crates_io_validation"
+version = "0.0.0"
+dependencies = [
+ "claims",
+ "thiserror 2.0.17",
+ "unicode-xid",
 ]
 
 [[package]]
