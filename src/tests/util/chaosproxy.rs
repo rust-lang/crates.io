@@ -83,37 +83,33 @@ impl ChaosProxy {
             .context("Failed to send the restore_networking message")
     }
 
-    async fn server_loop(&self, initial_listener: TcpListener) -> anyhow::Result<()> {
-        let mut listener = Some(initial_listener);
-
+    async fn server_loop(&self, listener: TcpListener) -> anyhow::Result<()> {
+        let mut is_broken = false;
         let mut break_networking_recv = self.break_networking_send.subscribe();
         let mut restore_networking_recv = self.restore_networking_send.subscribe();
 
         loop {
-            if let Some(l) = &listener {
-                debug!("ChaosProxy waiting for connections");
-                tokio::select! {
-                    accepted = l.accept() => {
-                        let (stream, address ) = accepted?;
+            debug!("ChaosProxy waiting for connections");
+            tokio::select! {
+                accepted = listener.accept() => {
+                    let (stream, address) = accepted?;
+                    if is_broken {
+                        debug!("ChaosProxy dropped connection from {address}");
+                    } else {
                         debug!("ChaosProxy accepted connection from {address}");
                         self.accept_connection(stream).await?;
-                    },
+                    }
+                },
 
-                    _ = break_networking_recv.recv() => {
-                        debug!("ChaosProxy breaking networking");
-
-                        // Setting the listener to `None` results in the listener being dropped,
-                        // which closes the network port. A new listener will be established when
-                        // networking is restored.
-                        listener = None;
-                    },
-                };
-            } else {
-                debug!("ChaosProxy networking is broken, waiting for restore signal");
-                let _ = restore_networking_recv.recv().await;
-                debug!("ChaosProxy restoring networking");
-                listener = Some(TcpListener::bind(self.address).await?);
-            }
+                _ = break_networking_recv.recv(), if !is_broken => {
+                    debug!("ChaosProxy breaking networking");
+                    is_broken = true;
+                },
+                _ = restore_networking_recv.recv(), if is_broken =>{
+                    debug!("ChaosProxy restoring networking");
+                    is_broken = false;
+                },
+            };
         }
     }
 
