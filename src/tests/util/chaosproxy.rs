@@ -1,11 +1,13 @@
-use std::net::SocketAddr;
+use std::fs::Permissions;
+use std::os::unix::fs::PermissionsExt as _;
 use std::str::FromStr as _;
 use std::sync::Arc;
 
 use anyhow::{Context, anyhow};
 use futures_util::FutureExt as _;
+use tempfile::TempDir;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream, UnixStream};
+use tokio::net::{TcpStream, UnixListener, UnixStream};
 use tokio::sync::broadcast::Sender;
 use tokio_postgres::Config;
 use tokio_postgres::config::Host;
@@ -13,9 +15,8 @@ use tracing::{debug, error};
 use url::Url;
 
 pub(crate) struct ChaosProxy {
-    address: SocketAddr,
+    socket_dir: TempDir,
     backend_config: Config,
-
     break_networking_send: Sender<()>,
     restore_networking_send: Sender<()>,
 }
@@ -24,17 +25,20 @@ impl ChaosProxy {
     pub(crate) async fn new(backend_config: Config) -> anyhow::Result<Arc<Self>> {
         debug!(?backend_config, "Creating ChaosProxy");
 
-        let listener = TcpListener::bind("127.0.0.1:0").await?;
-        let address = listener.local_addr()?;
-        debug!("ChaosProxy listening on {address}");
+        let directory_permissions = Permissions::from_mode(0o700);
+        let socket_dir = tempfile::Builder::new()
+            .permissions(directory_permissions)
+            .tempdir()?;
+        let socket_path = socket_dir.path().join(".s.PGSQL.5432");
+
+        let listener = UnixListener::bind(&socket_path)?;
 
         let (break_networking_send, _) = tokio::sync::broadcast::channel(16);
         let (restore_networking_send, _) = tokio::sync::broadcast::channel(16);
 
-        let instance = Arc::new(ChaosProxy {
-            address,
+        let instance = Arc::new(Self {
+            socket_dir,
             backend_config,
-
             break_networking_send,
             restore_networking_send,
         });
@@ -58,13 +62,15 @@ impl ChaosProxy {
 
         let instance = ChaosProxy::new(backend_config).await?;
 
+        let host = instance
+            .socket_dir
+            .path()
+            .to_str()
+            .unwrap()
+            .replace("/", "%2F");
         db_url
-            .set_ip_host(instance.address.ip())
-            .map_err(|_| anyhow!("Failed to set IP host on the URL"))?;
-
-        db_url
-            .set_port(Some(instance.address.port()))
-            .map_err(|_| anyhow!("Failed to set post on the URL"))?;
+            .set_host(Some(&host))
+            .map_err(|e| anyhow!("Failed to set socket host on the URL: {e}"))?;
 
         debug!("ChaosProxy database URL: {db_url}");
 
@@ -83,7 +89,7 @@ impl ChaosProxy {
             .context("Failed to send the restore_networking message")
     }
 
-    async fn server_loop(&self, listener: TcpListener) -> anyhow::Result<()> {
+    async fn server_loop(&self, listener: UnixListener) -> anyhow::Result<()> {
         let mut is_broken = false;
         let mut break_networking_recv = self.break_networking_send.subscribe();
         let mut restore_networking_recv = self.restore_networking_send.subscribe();
@@ -94,9 +100,9 @@ impl ChaosProxy {
                 accepted = listener.accept() => {
                     let (stream, address) = accepted?;
                     if is_broken {
-                        debug!("ChaosProxy dropped connection from {address}");
+                        debug!("ChaosProxy dropped connection from {address:?}");
                     } else {
-                        debug!("ChaosProxy accepted connection from {address}");
+                        debug!("ChaosProxy accepted connection from {address:?}");
                         self.accept_connection(stream).await?;
                     }
                 },
@@ -113,7 +119,7 @@ impl ChaosProxy {
         }
     }
 
-    async fn accept_connection(&self, accepted: TcpStream) -> anyhow::Result<()> {
+    async fn accept_connection(&self, accepted: UnixStream) -> anyhow::Result<()> {
         let (client_read, client_write) = accepted.into_split();
 
         let host = self.backend_config.get_hosts().first().unwrap();
