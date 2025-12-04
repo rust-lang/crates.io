@@ -72,6 +72,13 @@ impl ChaosProxy {
             .set_host(Some(&host))
             .map_err(|e| anyhow!("Failed to set socket host on the URL: {e}"))?;
 
+        // Drop any `host=` query params as that would route around our proxy.
+        let db_url_clone = db_url.clone();
+        db_url
+            .query_pairs_mut()
+            .clear()
+            .extend_pairs(db_url_clone.query_pairs().filter(|(key, _)| key != "host"));
+
         debug!("ChaosProxy database URL: {db_url}");
 
         Ok((instance, db_url.into()))
@@ -123,7 +130,7 @@ impl ChaosProxy {
         let (client_read, client_write) = accepted.into_split();
 
         let host = self.backend_config.get_hosts().first().unwrap();
-        let port = self.backend_config.get_ports().first().unwrap();
+        let port = self.backend_config.get_ports().first().unwrap_or(&5432);
 
         let (backend_to_client, client_to_backend) = match &host {
             Host::Tcp(hostname) => {

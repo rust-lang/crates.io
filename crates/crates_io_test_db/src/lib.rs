@@ -32,7 +32,7 @@ impl TemplateDatabase {
     fn new() -> Self {
         let mut base_url: Url = required_var_parsed("TEST_DATABASE_URL").unwrap();
 
-        if base_url.host().is_none() {
+        if base_url.host().is_none() && !base_url.query_pairs().any(|(key, _)| key == "host") {
             // Default to a Unix socket if no hostname is provided.
             base_url.set_host(Some("%2Frun%2Fpostgresql")).unwrap();
         }
