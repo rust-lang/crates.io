@@ -26,6 +26,11 @@ pub async fn oneoff_connection() -> anyhow::Result<AsyncPgConnection> {
 pub fn connection_url(config: &config::DbPoolConfig) -> String {
     let mut url = Url::parse(config.url.expose_secret()).expect("Invalid database URL");
 
+    // Support `postgres:///db_name` shorthand for easier local development.
+    if url.host().is_none() {
+        maybe_append_url_param(&mut url, "host", "/run/postgresql");
+    }
+
     if config.enforce_tls {
         maybe_append_url_param(&mut url, "sslmode", "require");
     }
