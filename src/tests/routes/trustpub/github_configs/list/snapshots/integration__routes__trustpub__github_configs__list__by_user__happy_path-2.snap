@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/github_configs/list.rs
+source: src/tests/routes/trustpub/github_configs/list/by_user.rs
 expression: response.json()
 ---
 {
@@ -13,10 +13,20 @@ expression: response.json()
       "repository_owner": "rust-lang",
       "repository_owner_id": 42,
       "workflow_filename": "publish.yml"
+    },
+    {
+      "crate": "bar",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 2,
+      "repository_name": "BAR",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
     }
   ],
   "meta": {
     "next_page": null,
-    "total": 1
+    "total": 2
   }
 }

@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/gitlab_configs/list.rs
+source: src/tests/routes/trustpub/gitlab_configs/list/by_user.rs
 expression: response.json()
 ---
 {
@@ -15,13 +15,13 @@ expression: response.json()
       "workflow_filepath": ".gitlab-ci.yml"
     },
     {
-      "crate": "foo",
+      "crate": "bar",
       "created_at": "[datetime]",
       "environment": null,
       "id": 2,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "foo",
+      "project": "BAR",
       "workflow_filepath": ".gitlab-ci.yml"
     }
   ],

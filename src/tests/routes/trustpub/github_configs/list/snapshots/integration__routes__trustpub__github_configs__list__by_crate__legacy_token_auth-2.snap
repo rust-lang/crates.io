@@ -1,0 +1,22 @@
+---
+source: src/tests/routes/trustpub/github_configs/list/by_crate.rs
+expression: response.json()
+---
+{
+  "github_configs": [
+    {
+      "crate": "foo",
+      "created_at": "[datetime]",
+      "environment": null,
+      "id": 1,
+      "repository_name": "foo-rs",
+      "repository_owner": "rust-lang",
+      "repository_owner_id": 42,
+      "workflow_filename": "publish.yml"
+    }
+  ],
+  "meta": {
+    "next_page": null,
+    "total": 1
+  }
+}

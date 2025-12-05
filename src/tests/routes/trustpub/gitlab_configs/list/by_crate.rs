@@ -1,25 +1,23 @@
+use super::URL;
 use crate::builders::CrateBuilder;
 use crate::util::{RequestHelper, TestApp};
 use crates_io_database::models::token::{CrateScope, EndpointScope};
-use crates_io_database::models::trustpub::{GitHubConfig, NewGitHubConfig};
+use crates_io_database::models::trustpub::{GitLabConfig, NewGitLabConfig};
 use diesel::prelude::*;
 use diesel_async::AsyncPgConnection;
 use insta::{assert_json_snapshot, assert_snapshot};
 use serde_json::json;
 
-const URL: &str = "/api/v1/trusted_publishing/github_configs";
-
 async fn create_config(
     conn: &mut AsyncPgConnection,
     crate_id: i32,
-    repository_name: &str,
-) -> QueryResult<GitHubConfig> {
-    let config = NewGitHubConfig {
+    project: &str,
+) -> QueryResult<GitLabConfig> {
+    let config = NewGitLabConfig {
         crate_id,
-        repository_owner: "rust-lang",
-        repository_owner_id: 42,
-        repository_name,
-        workflow_filename: "publish.yml",
+        namespace: "rust-lang",
+        project,
+        workflow_filepath: ".gitlab-ci.yml",
         environment: None,
     };
 
@@ -42,13 +40,13 @@ async fn test_happy_path() -> anyhow::Result<()> {
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     let response = cookie_client.get_with_query::<()>(URL, "crate=Bar").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())
@@ -124,17 +122,6 @@ async fn test_crate_not_found() -> anyhow::Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_no_query_param() -> anyhow::Result<()> {
-    let (_, _, cookie_client) = TestApp::full().with_user().await;
-
-    let response = cookie_client.get::<()>(URL).await;
-    assert_snapshot!(response.status(), @"400 Bad Request");
-    assert_snapshot!(response.text(), @r#"{"errors":[{"detail":"Failed to deserialize query string: missing field `crate`"}]}"#);
-
-    Ok(())
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn test_crate_with_no_configs() -> anyhow::Result<()> {
     let (app, _, cookie_client) = TestApp::full().with_user().await;
     let mut conn = app.db_conn().await;
@@ -146,7 +133,7 @@ async fn test_crate_with_no_configs() -> anyhow::Result<()> {
     let response = cookie_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())
@@ -164,7 +151,7 @@ async fn test_legacy_token_auth() -> anyhow::Result<()> {
     let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())
@@ -187,7 +174,7 @@ async fn test_token_auth_with_trusted_publishing_scope() -> anyhow::Result<()> {
     let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())
@@ -252,7 +239,7 @@ async fn test_token_auth_with_wildcard_crate_scope() -> anyhow::Result<()> {
     let response = token_client.get_with_query::<()>(URL, "crate=foo").await;
     assert_snapshot!(response.status(), @"200 OK");
     assert_json_snapshot!(response.json(), {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())
@@ -278,31 +265,31 @@ async fn test_pagination() -> anyhow::Result<()> {
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     // Extract the next_page URL and make a second request
     let next_page = json["meta"]["next_page"]
         .as_str()
         .expect("next_page should be present");
-    let next_url = format!("{}{}", URL, next_page);
+    let next_url = format!("{URL}{next_page}");
     let response = cookie_client.get::<()>(&next_url).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     // Third page (last page with data)
     let next_page = json["meta"]["next_page"]
         .as_str()
         .expect("next_page should be present");
-    let next_url = format!("{}{}", URL, next_page);
+    let next_url = format!("{URL}{next_page}");
     let response = cookie_client.get::<()>(&next_url).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     // The third page has exactly 5 items, so next_page will be present
@@ -311,12 +298,12 @@ async fn test_pagination() -> anyhow::Result<()> {
     let next_page = json["meta"]["next_page"]
         .as_str()
         .expect("next_page should be present on third page");
-    let next_url = format!("{}{}", URL, next_page);
+    let next_url = format!("{URL}{next_page}");
     let response = cookie_client.get::<()>(&next_url).await;
     assert_snapshot!(response.status(), @"200 OK");
     let json = response.json();
     assert_json_snapshot!(json, {
-        ".github_configs[].created_at" => "[datetime]",
+        ".gitlab_configs[].created_at" => "[datetime]",
     });
 
     Ok(())

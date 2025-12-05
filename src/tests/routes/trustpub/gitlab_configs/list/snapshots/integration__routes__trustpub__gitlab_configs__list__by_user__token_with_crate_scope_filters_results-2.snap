@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/gitlab_configs/list.rs
+source: src/tests/routes/trustpub/gitlab_configs/list/by_user.rs
 expression: response.json()
 ---
 {

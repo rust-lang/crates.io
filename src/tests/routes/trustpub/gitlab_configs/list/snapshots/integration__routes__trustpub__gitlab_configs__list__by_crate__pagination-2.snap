@@ -1,5 +1,5 @@
 ---
-source: src/tests/routes/trustpub/gitlab_configs/list.rs
+source: src/tests/routes/trustpub/gitlab_configs/list/by_crate.rs
 expression: json
 ---
 {
@@ -8,55 +8,55 @@ expression: json
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 11,
+      "id": 1,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "repo-10",
+      "project": "repo-0",
       "workflow_filepath": ".gitlab-ci.yml"
     },
     {
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 12,
+      "id": 2,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "repo-11",
+      "project": "repo-1",
       "workflow_filepath": ".gitlab-ci.yml"
     },
     {
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 13,
+      "id": 3,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "repo-12",
+      "project": "repo-2",
       "workflow_filepath": ".gitlab-ci.yml"
     },
     {
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 14,
+      "id": 4,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "repo-13",
+      "project": "repo-3",
       "workflow_filepath": ".gitlab-ci.yml"
     },
     {
       "crate": "foo",
       "created_at": "[datetime]",
       "environment": null,
-      "id": 15,
+      "id": 5,
       "namespace": "rust-lang",
       "namespace_id": null,
-      "project": "repo-14",
+      "project": "repo-4",
       "workflow_filepath": ".gitlab-ci.yml"
     }
   ],
   "meta": {
-    "next_page": "?crate=foo&per_page=5&seek=MTU",
+    "next_page": "?crate=foo&per_page=5&seek=NQ",
     "total": 15
   }
 }
