@@ -99,6 +99,9 @@ pub struct Server {
 
     /// Include publication timestamp in index entries (ISO8601 format).
     pub index_include_pubtime: bool,
+
+    /// Enable Fastly CDN invalidation for sparse index files.
+    pub sparse_index_fastly_enabled: bool,
 }
 
 impl Server {
@@ -248,6 +251,8 @@ impl Server {
             disable_token_creation,
             banner_message,
             index_include_pubtime,
+            sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
+                .unwrap_or(false),
         })
     }
 }
