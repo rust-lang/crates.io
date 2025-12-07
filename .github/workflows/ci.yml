@@ -23,7 +23,7 @@ env:
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
-  OXIPNG_VERSION: 9.1.5
+  OXIPNG_VERSION: 10.0.0
   # renovate: datasource=npm depName=pnpm
   PNPM_VERSION: 10.24.0
   # renovate: datasource=github-releases depName=typst/typst versioning=semver
