@@ -25,7 +25,7 @@ importers:
         version: 3.4.0
       '@sentry/ember':
         specifier: 10.29.0
-        version: 10.29.0(ember-cli@6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)
+        version: 10.29.0(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
@@ -139,8 +139,8 @@ importers:
         specifier: 2.12.0
         version: 2.12.0(webpack@5.103.0)
       ember-cli:
-        specifier: 6.8.0
-        version: 6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+        specifier: 6.8.1
+        version: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       ember-cli-babel:
         specifier: 8.2.0
         version: 8.2.0(@babel/core@7.28.5)
@@ -149,7 +149,7 @@ importers:
         version: 1.0.0
       ember-cli-dependency-checker:
         specifier: 3.3.3
-        version: 3.3.3(ember-cli@6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
+        version: 3.3.3(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -4065,8 +4065,8 @@ packages:
     resolution: {integrity: sha512-rk7GY+FmLn/2e22HsZs0Ycrz8HQ1W3Fv+2TFOuEFW9optnDXDgkntPBIl6gact/LHsfBM5RKbM3dHsIIeLgl0Q==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-cli@6.8.0:
-    resolution: {integrity: sha512-qUMfPDvyMUWjK+na34YHv/8AQGn5WJTcCL5qaMwa5MLi2hnKBzvCBwd99nORJdLG9GpCxYzxFQ+txyEkfmvk7g==}
+  ember-cli@6.8.1:
+    resolution: {integrity: sha512-lA/eW8ESZyYIuyyIkicxkEfsV3pZzDLaJJsEEAV09Bfw9x9yPxPn/6yJcX5xTmj+cYWfkeQlOWj4ZKvXNIzwiA==}
     engines: {node: '>= 20.11'}
     hasBin: true
 
@@ -10428,7 +10428,7 @@ snapshots:
 
   '@sentry/core@10.29.0': {}
 
-  '@sentry/ember@10.29.0(ember-cli@6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)':
+  '@sentry/ember@10.29.0(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)':
     dependencies:
       '@babel/core': 7.28.5(supports-color@8.1.1)
       '@embroider/macros': 1.19.5
@@ -10439,7 +10439,7 @@ snapshots:
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
     optionalDependencies:
-      ember-cli: 6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -10661,7 +10661,7 @@ snapshots:
 
   '@types/glob@9.0.0':
     dependencies:
-      glob: 8.1.0
+      glob: 10.5.0
 
   '@types/http-errors@2.0.5': {}
 
@@ -12810,10 +12810,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.3(ember-cli@6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
+  ember-cli-dependency-checker@3.3.3(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       find-yarn-workspace-root: 2.0.0
       is-git-url: 1.0.0
       resolve: 1.22.11
@@ -12976,7 +12976,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@6.8.0(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
+  ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
     dependencies:
       '@ember-tooling/blueprint-blueprint': 0.2.1
       '@ember-tooling/blueprint-model': 0.4.1
