@@ -15,7 +15,7 @@ anyhow = "=1.0.100"
 async-trait = "=0.1.89"
 mockall = { version = "=0.14.0", optional = true }
 oauth2 = { version = "=5.0.0", default-features = false }
-reqwest = { version = "=0.12.24", features = ["json"] }
+reqwest = { version = "=0.12.25", features = ["json"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 thiserror = "=2.0.17"
 tracing = "=0.1.43"
