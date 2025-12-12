@@ -25,7 +25,7 @@ importers:
         version: 3.4.0
       '@sentry/ember':
         specifier: 10.29.0
-        version: 10.29.0(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)
+        version: 10.29.0(ember-cli@6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)
       chart.js:
         specifier: 4.5.1
         version: 4.5.1
@@ -118,8 +118,8 @@ importers:
         specifier: 15.0.0
         version: 15.0.0
       '@types/node':
-        specifier: 24.10.1
-        version: 24.10.1
+        specifier: 24.10.2
+        version: 24.10.2
       '@types/sinonjs__fake-timers':
         specifier: 15.0.1
         version: 15.0.1
@@ -140,7 +140,7 @@ importers:
         version: 2.12.0(webpack@5.103.0)
       ember-cli:
         specifier: 6.8.1
-        version: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+        version: 6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       ember-cli-babel:
         specifier: 8.2.0
         version: 8.2.0(@babel/core@7.28.5)
@@ -149,7 +149,7 @@ importers:
         version: 1.0.0
       ember-cli-dependency-checker:
         specifier: 3.3.3
-        version: 3.3.3(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
+        version: 3.3.3(ember-cli@6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))
       ember-cli-dependency-lint:
         specifier: 2.0.1
         version: 2.0.1
@@ -284,10 +284,10 @@ importers:
         version: 2.0.1(@babel/core@7.28.5)
       msw:
         specifier: 2.12.4
-        version: 2.12.4(@types/node@24.10.1)(typescript@5.9.3)
+        version: 2.12.4(@types/node@24.10.2)(typescript@5.9.3)
       playwright-msw:
         specifier: 3.0.1
-        version: 3.0.1(@playwright/test@1.57.0)(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3))
+        version: 3.0.1(@playwright/test@1.57.0)(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3))
       postcss:
         specifier: 8.5.6
         version: 8.5.6
@@ -329,7 +329,7 @@ importers:
         version: 1.1.2
       msw:
         specifier: 2.12.4
-        version: 2.12.4(@types/node@24.10.1)(typescript@5.9.3)
+        version: 2.12.4(@types/node@24.10.2)(typescript@5.9.3)
       semver:
         specifier: 7.7.3
         version: 7.7.3
@@ -339,7 +339,7 @@ importers:
     devDependencies:
       vitest:
         specifier: 4.0.15
-        version: 4.0.15(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.2)
+        version: 4.0.15(@types/node@24.10.2)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.2)
 
 packages:
 
@@ -2170,8 +2170,8 @@ packages:
   '@types/minimatch@3.0.5':
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
 
-  '@types/node@24.10.1':
-    resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
+  '@types/node@24.10.2':
+    resolution: {integrity: sha512-WOhQTZ4G8xZ1tjJTvKOpyEVSGgOTvJAfDK3FNFgELyaTpzhdgHVHeqW8V+UJvzF5BT+/B54T/1S2K6gd9c7bbA==}
 
   '@types/q@1.5.8':
     resolution: {integrity: sha512-hroOstUScF6zhIi+5+x0dzqrHA1EJi+Irri6b1fxolMTqqHIV/Cg77EtnQcZqZCu8hR3mX2BzIxN4/GzI68Kfw==}
@@ -10037,38 +10037,38 @@ snapshots:
 
   '@inquirer/ansi@1.0.2': {}
 
-  '@inquirer/confirm@5.1.21(@types/node@24.10.1)':
+  '@inquirer/confirm@5.1.21(@types/node@24.10.2)':
     dependencies:
-      '@inquirer/core': 10.3.2(@types/node@24.10.1)
-      '@inquirer/type': 3.0.10(@types/node@24.10.1)
+      '@inquirer/core': 10.3.2(@types/node@24.10.2)
+      '@inquirer/type': 3.0.10(@types/node@24.10.2)
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
-  '@inquirer/core@10.3.2(@types/node@24.10.1)':
+  '@inquirer/core@10.3.2(@types/node@24.10.2)':
     dependencies:
       '@inquirer/ansi': 1.0.2
       '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@24.10.1)
+      '@inquirer/type': 3.0.10(@types/node@24.10.2)
       cli-width: 4.1.0
       mute-stream: 2.0.0
       signal-exit: 4.1.0
       wrap-ansi: 6.2.0
       yoctocolors-cjs: 2.1.3
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
-  '@inquirer/external-editor@1.0.3(@types/node@24.10.1)':
+  '@inquirer/external-editor@1.0.3(@types/node@24.10.2)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.0
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@inquirer/figures@1.0.15': {}
 
-  '@inquirer/type@3.0.10(@types/node@24.10.1)':
+  '@inquirer/type@3.0.10(@types/node@24.10.2)':
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -10428,7 +10428,7 @@ snapshots:
 
   '@sentry/core@10.29.0': {}
 
-  '@sentry/ember@10.29.0(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)':
+  '@sentry/ember@10.29.0(ember-cli@6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7))(webpack@5.103.0)':
     dependencies:
       '@babel/core': 7.28.5(supports-color@8.1.1)
       '@embroider/macros': 1.19.5
@@ -10439,7 +10439,7 @@ snapshots:
       ember-cli-htmlbars: 6.3.0
       ember-cli-typescript: 5.3.0
     optionalDependencies:
-      ember-cli: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
@@ -10474,7 +10474,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/chai-as-promised@7.1.8':
     dependencies:
@@ -10489,11 +10489,11 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/d3-array@3.2.2': {}
 
@@ -10633,7 +10633,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.7':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -10647,15 +10647,15 @@ snapshots:
 
   '@types/fs-extra@5.1.0':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/geojson@7946.0.16': {}
 
@@ -10671,7 +10671,7 @@ snapshots:
 
   '@types/minimatch@3.0.5': {}
 
-  '@types/node@24.10.1':
+  '@types/node@24.10.2':
     dependencies:
       undici-types: 7.16.0
 
@@ -10684,21 +10684,21 @@ snapshots:
   '@types/rimraf@2.0.5':
     dependencies:
       '@types/glob': 9.0.0
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/send@0.17.6':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
 
   '@types/serve-static@1.15.10':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       '@types/send': 0.17.6
 
   '@types/sinonjs__fake-timers@15.0.1': {}
@@ -10720,7 +10720,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
     optional: true
 
   '@typescript-eslint/tsconfig-utils@8.48.1(typescript@5.9.3)':
@@ -10736,14 +10736,14 @@ snapshots:
       chai: 6.2.1
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.15(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))':
+  '@vitest/mocker@4.0.15(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3))(vite@7.2.6(@types/node@24.10.2)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 4.0.15
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      msw: 2.12.4(@types/node@24.10.1)(typescript@5.9.3)
-      vite: 7.2.6(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)
+      msw: 2.12.4(@types/node@24.10.2)(typescript@5.9.3)
+      vite: 7.2.6(@types/node@24.10.2)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)
 
   '@vitest/pretty-format@4.0.15':
     dependencies:
@@ -12810,10 +12810,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli-dependency-checker@3.3.3(ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
+  ember-cli-dependency-checker@3.3.3(ember-cli@6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)):
     dependencies:
       chalk: 2.4.2
-      ember-cli: 6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
+      ember-cli: 6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7)
       find-yarn-workspace-root: 2.0.0
       is-git-url: 1.0.0
       resolve: 1.22.11
@@ -12976,7 +12976,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-cli@6.8.1(@types/node@24.10.1)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
+  ember-cli@6.8.1(@types/node@24.10.2)(ejs@3.1.10)(handlebars@4.7.8)(underscore@1.13.7):
     dependencies:
       '@ember-tooling/blueprint-blueprint': 0.2.1
       '@ember-tooling/blueprint-model': 0.4.1
@@ -13032,7 +13032,7 @@ snapshots:
       heimdalljs-logger: 0.1.10
       http-proxy: 1.18.1
       inflection: 2.0.1
-      inquirer: 9.3.8(@types/node@24.10.1)
+      inquirer: 9.3.8(@types/node@24.10.2)
       is-git-url: 1.0.0
       is-language-code: 3.1.0
       isbinaryfile: 5.0.7
@@ -13501,7 +13501,7 @@ snapshots:
   engine.io@6.6.4:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -14816,9 +14816,9 @@ snapshots:
       strip-ansi: 6.0.1
       through: 2.3.8
 
-  inquirer@9.3.8(@types/node@24.10.1):
+  inquirer@9.3.8(@types/node@24.10.2):
     dependencies:
-      '@inquirer/external-editor': 1.0.3(@types/node@24.10.1)
+      '@inquirer/external-editor': 1.0.3(@types/node@24.10.2)
       '@inquirer/figures': 1.0.15
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
@@ -15095,7 +15095,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -15632,9 +15632,9 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3):
+  msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3):
     dependencies:
-      '@inquirer/confirm': 5.1.21(@types/node@24.10.1)
+      '@inquirer/confirm': 5.1.21(@types/node@24.10.2)
       '@mswjs/interceptors': 0.40.0
       '@open-draft/deferred-promise': 2.2.0
       '@types/statuses': 2.0.6
@@ -16069,11 +16069,11 @@ snapshots:
 
   playwright-core@1.57.0: {}
 
-  playwright-msw@3.0.1(@playwright/test@1.57.0)(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3)):
+  playwright-msw@3.0.1(@playwright/test@1.57.0)(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3)):
     dependencies:
       '@mswjs/cookies': 1.1.1
       '@playwright/test': 1.57.0
-      msw: 2.12.4(@types/node@24.10.1)(typescript@5.9.3)
+      msw: 2.12.4(@types/node@24.10.2)(typescript@5.9.3)
       strict-event-emitter: 0.5.1
 
   playwright@1.57.0:
@@ -17739,7 +17739,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2):
+  vite@7.2.6(@types/node@24.10.2)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -17748,16 +17748,16 @@ snapshots:
       rollup: '@rollup/wasm-node@4.53.3'
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       fsevents: 2.3.3
       jiti: 2.6.1
       terser: 5.44.1
       yaml: 2.8.2
 
-  vitest@4.0.15(@types/node@24.10.1)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.2):
+  vitest@4.0.15(@types/node@24.10.2)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3))(terser@5.44.1)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.15
-      '@vitest/mocker': 4.0.15(msw@2.12.4(@types/node@24.10.1)(typescript@5.9.3))(vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.15(msw@2.12.4(@types/node@24.10.2)(typescript@5.9.3))(vite@7.2.6(@types/node@24.10.2)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))
       '@vitest/pretty-format': 4.0.15
       '@vitest/runner': 4.0.15
       '@vitest/snapshot': 4.0.15
@@ -17774,10 +17774,10 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.2.6(@types/node@24.10.1)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)
+      vite: 7.2.6(@types/node@24.10.2)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.2
       jsdom: 25.0.1(supports-color@8.1.1)
     transitivePeerDependencies:
       - jiti
