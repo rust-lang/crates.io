@@ -17,6 +17,7 @@
   - `/app/models/` - Ember Data models (crate, version, user, keyword, etc.)
   - `/app/adapters/`, `/app/serializers/` - Ember Data adapter layer
   - `/app/services/` - Shared services (session, notifications, API client)
+- `/svelte/` - Frontend SvelteKit application (WIP)
 - `/crates/` - Workspace crates providing specialized functionality
   - `crates_io_api_types/` - API response serialization types
   - `crates_io_database/` - Database models and schema (Diesel ORM)
