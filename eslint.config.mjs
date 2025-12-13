@@ -25,6 +25,7 @@ export default [
       '.git/**/*',
       'crates/',
       'playwright-report/',
+      'svelte/',
       'target/',
       'test-results/',
       'tmp/',
