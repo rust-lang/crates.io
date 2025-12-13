@@ -2,8 +2,9 @@
   import '$lib/css/global.css';
   import favicon from '$lib/assets/favicon.svg';
 
+  import Header from '$lib/components/Header.svelte';
+
   // TODO: import ProgressBar from '$lib/components/ProgressBar.svelte';
-  // TODO: import Header from '$lib/components/Header.svelte';
   // TODO: import Footer from '$lib/components/Footer.svelte';
 
   let { children } = $props();
@@ -21,7 +22,8 @@
 <!-- TODO: <NotificationContainer position='top-right' /> -->
 <div id="tooltip-container"></div>
 
-<!-- TODO: <Header hero={isIndex} /> -->
+<!-- TODO: pass `hero` prop based on whether we're on the index route -->
+<Header />
 
 <main class="main">
   <div class="inner-main width-limit">
