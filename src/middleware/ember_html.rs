@@ -22,25 +22,54 @@ use url::Url;
 use crate::app::AppState;
 
 const OG_IMAGE_FALLBACK_URL: &str = "https://crates.io/assets/og-image.png";
-const INDEX_TEMPLATE_NAME: &str = "index_html";
 const PATH_PREFIX_CRATES: &str = "/crates/";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum FrontendApp {
+    Ember,
+    Svelte,
+}
+
+impl FrontendApp {
+    fn from_path(path: &str) -> Self {
+        if path.starts_with("/svelte/") {
+            FrontendApp::Svelte
+        } else {
+            FrontendApp::Ember
+        }
+    }
+
+    fn index_template_name(&self) -> &'static str {
+        match self {
+            FrontendApp::Ember => "index_html",
+            FrontendApp::Svelte => "svelte_index_html",
+        }
+    }
+}
 
 /// The [`Shared`] allows for multiple tasks to wait on a single future, [`BoxFuture`] allows
 /// us to name the type in the declaration of static variables, and the [`Arc`] ensures
 /// the [`minijinja::Environment`] doesn't get cloned each request.
 type TemplateEnvFut = Shared<BoxFuture<'static, Arc<minijinja::Environment<'static>>>>;
-type TemplateCache = moka::future::Cache<Cow<'static, str>, String>;
+type TemplateCache = moka::future::Cache<(Cow<'static, str>, FrontendApp), String>;
 
 /// Initialize [`minijinja::Environment`] given the index.html file at `dist/index.html`.
 /// This should only be done once as it will load said file from persistent storage.
 async fn init_template_env() -> Arc<minijinja::Environment<'static>> {
+    let mut env = minijinja::Environment::empty();
+
     let template_j2 = tokio::fs::read_to_string("dist/index.html")
         .await
         .expect("Error loading dist/index.html template. Is the frontend package built yet?");
 
-    let mut env = minijinja::Environment::empty();
-    env.add_template_owned(INDEX_TEMPLATE_NAME, template_j2)
+    env.add_template_owned(FrontendApp::Ember.index_template_name(), template_j2)
         .expect("Error loading template");
+
+    if let Ok(svelte_template) = tokio::fs::read_to_string("svelte/build/200.html").await {
+        env.add_template_owned(FrontendApp::Svelte.index_template_name(), svelte_template)
+            .expect("Error loading Svelte template");
+    }
+
     Arc::new(env)
 }
 
@@ -83,8 +112,10 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
         let html_cache = RENDERED_HTML_CACHE
             .get_or_init(|| init_html_cache(state.config.html_render_cache_max_capacity));
 
+        let frontend_app = FrontendApp::from_path(path);
+
         let render_result = html_cache
-            .entry_by_ref(&og_image_url)
+            .entry_by_ref(&(og_image_url.clone(), frontend_app))
             .or_try_insert_with::<_, minijinja::Error>(async {
                 // `LazyLock::deref` blocks as long as its initializer is running in another thread.
                 // Note that this won't take long, as the constructed Futures are not awaited
@@ -94,7 +125,7 @@ pub async fn serve_html(state: AppState, request: Request, next: Next) -> Respon
                 // Render the HTML given the OG image URL
                 let env = template_env.clone().await;
                 let html = env
-                    .get_template(INDEX_TEMPLATE_NAME)?
+                    .get_template(frontend_app.index_template_name())?
                     .render(minijinja::context! { og_image_url})?;
 
                 Ok(html)
