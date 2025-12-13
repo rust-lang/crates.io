@@ -22,6 +22,8 @@ env:
   CARGO_INSTA_VERSION: 1.44.3
   # renovate: datasource=crate depName=cargo-machete versioning=semver
   CARGO_MACHETE_VERSION: 0.9.1
+  # renovate: datasource=crate depName=diesel-guard versioning=semver
+  DIESEL_GUARD_VERSION: 0.2.0
   # renovate: datasource=github-releases depName=shssoichiro/oxipng versioning=semver
   OXIPNG_VERSION: 10.0.0
   # renovate: datasource=npm depName=pnpm
@@ -78,6 +80,11 @@ jobs:
           files: Cargo.lock
 
       - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        id: changed-files-migrations
+        with:
+          files: migrations/**
+
+      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
         id: changed-files-ci
         with:
           files: .github/workflows/**
@@ -86,6 +93,7 @@ jobs:
       non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
       non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
       rust-lockfile: ${{ steps.changed-files-rust-lockfile.outputs.any_modified }}
+      migrations: ${{ steps.changed-files-migrations.outputs.any_modified }}
       ci: ${{ steps.changed-files-ci.outputs.any_modified }}
 
   percy-nonce:
@@ -150,6 +158,24 @@ jobs:
 
       - run: cargo install cargo-machete --vers ${CARGO_MACHETE_VERSION}
       - run: cargo machete
+
+  backend-migrations:
+    name: Backend / migrations
+    runs-on: ubuntu-24.04
+    needs: changed-files
+    if: needs.changed-files.outputs.migrations == 'true' || needs.changed-files.outputs.ci == 'true'
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - run: cargo install diesel-guard --vers ${DIESEL_GUARD_VERSION}
+      - run: diesel-guard check migrations/
 
   backend-test:
     name: Backend / Test
