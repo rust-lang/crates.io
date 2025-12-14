@@ -60,8 +60,8 @@ If you have a Code of Conduct concern, please contact the moderators using the l
 
 Licensed under either of these:
 
-- Apache License, Version 2.0, ([LICENSE-APACHE](./LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](./LICENSE-MIT) or https://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](./LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](./LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 [crates.io]: https://crates.io/
 [Rust]: https://www.rust-lang.org/
