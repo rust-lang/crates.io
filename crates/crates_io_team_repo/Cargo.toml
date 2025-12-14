@@ -14,7 +14,7 @@ mock = ["mockall"]
 anyhow = "=1.0.100"
 async-trait = "=0.1.89"
 mockall = { version = "=0.14.0", optional = true }
-reqwest = { version = "=0.12.24", features = ["gzip", "json"] }
+reqwest = { version = "=0.12.25", features = ["gzip", "json"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 
 [dev-dependencies]

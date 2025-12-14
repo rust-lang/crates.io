@@ -4432,9 +4432,19 @@ expression: response.json()
             "description": "Name of the crate to list Trusted Publishing configurations for.",
             "in": "query",
             "name": "crate",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "User ID to list Trusted Publishing configurations for all crates owned by the user.",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
             }
           },
           {
@@ -4624,9 +4634,19 @@ expression: response.json()
             "description": "Name of the crate to list Trusted Publishing configurations for.",
             "in": "query",
             "name": "crate",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "User ID to list Trusted Publishing configurations for all crates owned by the user.",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
             }
           },
           {

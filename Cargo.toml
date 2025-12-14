@@ -54,11 +54,11 @@ path = "src/tests/mod.rs"
 aes-gcm = { version = "=0.10.3", features = ["std"] }
 anyhow = "=1.0.100"
 astral-tokio-tar = "=0.5.6"
-async-compression = { version = "=0.4.34", default-features = false, features = ["gzip", "tokio"] }
+async-compression = { version = "=0.4.36", default-features = false, features = ["gzip", "tokio"] }
 async-trait = "=0.1.89"
-aws-credential-types = { version = "=1.2.10", features = ["hardcoded-credentials"] }
-aws-sdk-cloudfront = "=1.105.0"
-aws-sdk-sqs = "=1.90.0"
+aws-credential-types = { version = "=1.2.11", features = ["hardcoded-credentials"] }
+aws-sdk-cloudfront = "=1.106.0"
+aws-sdk-sqs = "=1.91.0"
 axum = { version = "=0.8.7", features = ["macros", "matched-path"] }
 axum-extra = { version = "=0.12.2", features = ["erased-json", "middleware", "query", "typed-header"] }
 base64 = "=0.22.1"
@@ -85,6 +85,7 @@ crates_io_session = { path = "crates/crates_io_session" }
 crates_io_tarball = { path = "crates/crates_io_tarball" }
 crates_io_team_repo = { path = "crates/crates_io_team_repo" }
 crates_io_trustpub = { path = "crates/crates_io_trustpub" }
+crates_io_validation = { path = "crates/crates_io_validation" }
 crates_io_version = { path = "crates/crates_io_version" }
 crates_io_worker = { path = "crates/crates_io_worker" }
 csv = "=1.4.0"
@@ -92,14 +93,14 @@ chrono = { version = "=0.4.42", default-features = false, features = ["serde"] }
 clap = { version = "=4.5.53", features = ["derive", "env", "unicode", "wrap_help"] }
 cookie = { version = "=0.18.1", features = ["secure"] }
 deadpool-diesel = { version = "=0.6.1", features = ["postgres", "tracing"] }
-derive_more = { version = "=2.0.1", features = ["deref", "deref_mut", "display"] }
+derive_more = { version = "=2.1.0", features = ["deref", "deref_mut", "display"] }
 dialoguer = "=0.12.0"
 diesel = { version = "=2.3.4", features = ["postgres", "serde_json", "chrono", "numeric"] }
 diesel-async = { version = "=0.7.4", features = ["async-connection-wrapper", "deadpool", "postgres"] }
 diesel_full_text_search = "=2.3.0"
 diesel_migrations = { version = "=2.3.1", features = ["postgres"] }
 dotenvy = "=0.15.7"
-flate2 = "=1.1.5"
+flate2 = "=1.1.7"
 futures-util = "=0.3.31"
 hex = "=0.4.3"
 http = "=1.4.0"
@@ -108,7 +109,7 @@ indexmap = { version = "=2.12.1", features = ["serde"] }
 indicatif = "=0.18.3"
 json-subscriber = "=0.2.6"
 lettre = { version = "=0.11.19", default-features = false, features = ["file-transport", "smtp-transport", "hostname", "builder", "tokio1", "tokio1-native-tls"] }
-minijinja = { version = "=2.12.0", features = ["loader"] }
+minijinja = { version = "=2.14.0", features = ["loader"] }
 mockall = "=0.14.0"
 moka = { version = "=0.12.11", default-features = false, features = ["future"] }
 native-tls = "=0.2.14"
@@ -120,7 +121,7 @@ paste = "=1.0.15"
 postgres-native-tls = "=0.5.2"
 prometheus = { version = "=0.14.0", default-features = false }
 rand = "=0.9.2"
-reqwest = { version = "=0.12.24", features = ["gzip", "json"] }
+reqwest = { version = "=0.12.25", features = ["gzip", "json"] }
 rss = { version = "=2.0.12", default-features = false, features = ["atom"] }
 secrecy = "=0.10.3"
 semver = { version = "=1.0.27", features = ["serde"] }
@@ -128,7 +129,7 @@ sentry = { version = "=0.46.0", features = ["tracing", "tower", "tower-axum-matc
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.145"
 sha2 = "=0.10.9"
-spdx = "=0.12.0"
+spdx = "=0.13.2"
 tar = "=0.4.44"
 tempfile = "=3.23.0"
 thiserror = "=2.0.17"
@@ -138,7 +139,7 @@ tokio-postgres = "=0.7.15"
 tokio-util = "=0.7.17"
 toml = "=0.9.8"
 tower = "=0.5.2"
-tower-http = { version = "=0.6.7", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
+tower-http = { version = "=0.6.8", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
 tracing = "=0.1.43"
 tracing-subscriber = { version = "=0.3.22", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }

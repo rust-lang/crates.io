@@ -9,9 +9,9 @@ workspace = true
 
 [dependencies]
 anyhow = "=1.0.100"
-async-compression = { version = "=0.4.34", features = ["gzip", "tokio", "zstd"] }
+async-compression = { version = "=0.4.36", features = ["gzip", "tokio", "zstd"] }
 chrono = { version = "=0.4.42", features = ["serde"] }
-derive_more = { version = "=2.0.1", features = ["deref"] }
+derive_more = { version = "=2.1.0", features = ["deref"] }
 percent-encoding = "=2.3.2"
 semver = "=1.0.27"
 serde = { version = "=1.0.228", features = ["derive"] }
@@ -22,7 +22,7 @@ tracing = "=0.1.43"
 [dev-dependencies]
 claims = "=0.8.0"
 clap = { version = "=4.5.53", features = ["derive"] }
-criterion = { version = "=0.7.0", features = ["async_tokio"] }
+criterion = { version = "=0.8.1", features = ["async_tokio"] }
 insta = "=1.44.3"
 tokio = { version = "=1.48.0", features = ["fs", "macros", "rt", "rt-multi-thread"] }
 tracing-subscriber = { version = "=0.3.22", features = ["env-filter"] }

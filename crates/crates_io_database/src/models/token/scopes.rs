@@ -1,4 +1,4 @@
-use crate::models::Crate;
+use crates_io_validation::validate_crate_name;
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::serialize::{self, IsNull, Output, ToSql};
@@ -113,7 +113,7 @@ impl CrateScope {
         }
 
         let name_without_wildcard = pattern.strip_suffix('*').unwrap_or(pattern);
-        Crate::validate_crate_name("crate", name_without_wildcard).is_ok()
+        validate_crate_name("crate", name_without_wildcard).is_ok()
     }
 
     pub fn matches(&self, crate_name: &str) -> bool {

@@ -1,0 +1,11 @@
+---
+source: src/tests/routes/trustpub/gitlab_configs/list/by_user.rs
+expression: json
+---
+{
+  "gitlab_configs": [],
+  "meta": {
+    "next_page": null,
+    "total": 15
+  }
+}

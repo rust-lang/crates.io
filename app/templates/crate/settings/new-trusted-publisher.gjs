@@ -274,8 +274,6 @@ import WorkflowVerification from 'crates-io/components/workflow-verification';
               <code>ci/publish.yml</code>.
             </div>
           {{/if}}
-
-          <WorkflowVerification @url={{@controller.verificationUrl}} @fieldType='filepath' />
         {{/let}}
       </div>
 

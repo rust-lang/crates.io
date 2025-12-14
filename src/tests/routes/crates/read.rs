@@ -144,7 +144,7 @@ async fn version_size() {
         .iter()
         .find(|v| v.num == "2.0.0")
         .expect("Could not find v2.0.0");
-    assert_eq!(version2.crate_size, 191);
+    assert_eq!(version2.crate_size, 192);
 }
 
 #[tokio::test(flavor = "multi_thread")]

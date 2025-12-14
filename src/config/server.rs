@@ -99,6 +99,9 @@ pub struct Server {
 
     /// Include publication timestamp in index entries (ISO8601 format).
     pub index_include_pubtime: bool,
+
+    /// Enable Fastly CDN invalidation for sparse index files.
+    pub sparse_index_fastly_enabled: bool,
 }
 
 impl Server {
@@ -179,7 +182,7 @@ impl Server {
         // the `script` in `public/github-redirect.html`
         let content_security_policy = format!(
             "default-src 'self'; \
-            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://raw.githubusercontent.com https://gitlab.com {cdn_domain}; \
+            connect-src 'self' *.ingest.sentry.io https://docs.rs https://play.rust-lang.org https://raw.githubusercontent.com {cdn_domain}; \
             script-src 'self' 'unsafe-eval' 'sha256-n1+BB7Ckjcal1Pr7QNBh/dKRTtBQsIytFodRiIosXdE=' 'sha256-dbf9FMl76C7BnK1CC3eWb3pvsQAUaTYSHAlBy9tNTG0='; \
             style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; \
             font-src https://code.cdn.mozilla.net; \
@@ -248,6 +251,8 @@ impl Server {
             disable_token_creation,
             banner_message,
             index_include_pubtime,
+            sparse_index_fastly_enabled: var_parsed("SPARSE_INDEX_FASTLY_ENABLED")?
+                .unwrap_or(false),
         })
     }
 }

@@ -145,7 +145,6 @@ async fn alert_revoke_token(
         let hashed_token = token.sha256();
 
         // Delete the token and return crate_ids for notifications
-        #[expect(deprecated)]
         let crate_ids = diesel::delete(trustpub_tokens::table)
             .filter(trustpub_tokens::hashed_token.eq(hashed_token.as_slice()))
             .returning(trustpub_tokens::crate_ids)

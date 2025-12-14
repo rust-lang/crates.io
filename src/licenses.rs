@@ -5,6 +5,7 @@ const PARSE_MODE: spdx::ParseMode = spdx::ParseMode {
     allow_imprecise_license_names: false,
     allow_postfix_plus_on_gpl: true,
     allow_deprecated: true,
+    allow_unknown: false,
 };
 
 pub fn parse_license_expr(s: &str) -> Result<Expression, ParseError> {
