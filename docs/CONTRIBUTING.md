@@ -272,9 +272,9 @@ Another options is to use a standalone Docker container for Postgres.
 
 ```sh
 # example using postgres 15.15-trixie
-docker run -e POSTGRES_PASSWORD=admin -p 5432:5432 postgres:15.15-trixie
+docker run -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:15.15-trixie
 # database URL will be
-# DATABASE_URL=postgres://postgres:admin@localhost:5432/cargo_registry
+# DATABASE_URL=postgres://postgres:password@localhost:5432/cargo_registry
 ```
 
 #### OpenSSL
