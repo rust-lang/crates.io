@@ -54,6 +54,7 @@ jobs:
             e2e/**
             packages/**
             public/**
+            svelte/**
             tests/**
             eslint.config.mjs
             .template-lintrc.js
