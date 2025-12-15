@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
 
   import logo from '$lib/assets/cargo.png';
+  import LockIcon from '$lib/assets/lock.svg?component';
 
   // TODO: import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   // TODO: import Dropdown from './Dropdown.svelte';
@@ -10,7 +11,6 @@
   // TODO: import UserAvatar from './UserAvatar.svelte';
 
   // TODO: import session service
-  // TODO: import lock icon SVG
 
   interface Props {
     hero?: boolean;
@@ -57,7 +57,7 @@
       <!--   <Dropdown data-test-user-menu> ... </Dropdown> -->
       <!-- {:else} -->
       <button type="button" class="login-button button-reset" data-test-login-button>
-        <!-- TODO: add lock icon -->
+        <LockIcon />
         Log in with GitHub
       </button>
       <!-- {/if} -->
@@ -245,13 +245,11 @@
     */
   }
 
-  /* TODO: uncomment when lock icon is added
-  .login-icon {
+  .login-button :global(svg) {
     width: 1em;
     margin-right: var(--space-2xs);
     opacity: 0.5;
   }
-  */
 
   /* TODO: uncomment when UserAvatar is implemented
   .avatar {

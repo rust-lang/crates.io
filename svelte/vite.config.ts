@@ -1,9 +1,10 @@
+import svg from '@poppanator/sveltekit-svg';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [sveltekit()],
+  plugins: [sveltekit(), svg()],
 
   test: {
     expect: { requireAssertions: true },
