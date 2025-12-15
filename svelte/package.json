@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "2.0.0",
-    "@eslint/js": "9.39.1",
+    "@eslint/js": "9.39.2",
     "@ianvs/prettier-plugin-sort-imports": "4.7.0",
     "@poppanator/sveltekit-svg": "6.0.1",
     "@sveltejs/adapter-static": "3.0.10",
@@ -25,7 +25,7 @@
     "@sveltejs/vite-plugin-svelte": "6.2.1",
     "@types/node": "24.10.3",
     "@vitest/browser-playwright": "4.0.15",
-    "eslint": "9.39.1",
+    "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-svelte": "3.13.1",
     "globals": "16.5.0",
