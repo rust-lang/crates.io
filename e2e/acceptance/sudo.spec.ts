@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { format } from 'date-fns/format';
 
 test.describe('Acceptance | sudo', { tag: '@acceptance' }, () => {

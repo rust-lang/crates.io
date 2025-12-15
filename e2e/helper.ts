@@ -1,14 +1,14 @@
+import axeConfig from '@/tests/axe-config';
+import { db, handlers } from '@crates-io/msw';
 import { test as base } from '@playwright/test';
+import * as pwFakeTimers from '@sinonjs/fake-timers';
 import type { MockServiceWorker } from 'playwright-msw';
 import { createWorker } from 'playwright-msw';
-import { db, handlers } from '@crates-io/msw';
 
-import * as pwFakeTimers from '@sinonjs/fake-timers';
-import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
-import { PercyPage } from './fixtures/percy';
 import { A11yPage } from './fixtures/a11y';
 import { EmberPage, EmberPageOptions } from './fixtures/ember';
-import axeConfig from '@/tests/axe-config';
+import { FakeTimers, FakeTimersOptions } from './fixtures/fake-timers';
+import { PercyPage } from './fixtures/percy';
 
 export type AppOptions = {
   clockOptions: FakeTimersOptions;

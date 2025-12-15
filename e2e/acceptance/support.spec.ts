@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | support page', { tag: '@acceptance' }, () => {
   test.beforeEach(async ({ page, msw }) => {

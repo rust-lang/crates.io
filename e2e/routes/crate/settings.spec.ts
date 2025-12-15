@@ -1,5 +1,5 @@
-import { expect, test } from '@/e2e/helper';
 import { defer } from '@/e2e/deferred';
+import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.settings', { tag: '@routes' }, () => {

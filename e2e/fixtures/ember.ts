@@ -1,5 +1,7 @@
+import type _Ember from 'ember';
+
+import { APP_HOOK_CUSTOM_EVENTS, APP_HOOK_KEY, SENTRY_HOOK_KEY } from '@/app/consts';
 import { Page } from '@playwright/test';
-import { APP_HOOK_KEY, APP_HOOK_CUSTOM_EVENTS, SENTRY_HOOK_KEY } from '@/app/consts';
 
 const HOOK_MAPPING = {
   hook: APP_HOOK_KEY,
@@ -68,8 +70,6 @@ export class EmberPage {
     await this.addHelpers({ testing, mockSentry });
   }
 }
-
-import type _Ember from 'ember';
 
 type _Ember = typeof _Ember;
 type HookFn = (owner: _Ember.ApplicationInstance, app: _Ember.Application) => void | Promise<void>;

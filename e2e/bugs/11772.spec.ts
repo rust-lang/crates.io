@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Bug #11772', { tag: '@bugs' }, () => {
   async function prepare(msw: any) {
