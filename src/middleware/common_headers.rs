@@ -38,6 +38,8 @@ pub async fn add_common_headers(
         expires(&mut headers, 10 * ONE_YEAR);
     }
 
+    let is_svelte = path.starts_with("/svelte/");
+
     let response = next.run(request).await;
 
     headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, v("*"));
@@ -47,7 +49,10 @@ pub async fn add_common_headers(
         headers.insert(header::X_CONTENT_TYPE_OPTIONS, v("nosniff"));
         headers.insert(header::X_FRAME_OPTIONS, v("SAMEORIGIN"));
         headers.insert(header::X_XSS_PROTECTION, v("0"));
-        if let Some(ref csp) = state.config.content_security_policy {
+        if let Some(ref csp) = state.config.content_security_policy
+            // TODO: CSP is disabled for the Svelte frontend for now
+            && !is_svelte
+        {
             headers.insert(header::CONTENT_SECURITY_POLICY, csp.clone());
         }
         headers.insert(header::VARY, v("Accept, Accept-Encoding, Cookie"));
