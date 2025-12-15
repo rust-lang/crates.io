@@ -1,8 +1,8 @@
 <script lang="ts">
-  import '$lib/css/global.css';
   import favicon from '$lib/assets/favicon.svg';
-
   import Header from '$lib/components/Header.svelte';
+
+  import '$lib/css/global.css';
 
   // TODO: import ProgressBar from '$lib/components/ProgressBar.svelte';
   // TODO: import Footer from '$lib/components/Footer.svelte';
