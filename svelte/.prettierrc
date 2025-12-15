@@ -4,7 +4,23 @@
   "singleQuote": true,
   "tabWidth": 2,
   "trailingComma": "all",
-  "plugins": ["prettier-plugin-svelte"],
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-svelte"],
+  "importOrder": [
+    "<TYPES>^(node:)",
+    "<TYPES>",
+    "<TYPES>^[.]",
+    "",
+    "<BUILTIN_MODULES>",
+    "",
+    "^svelte$",
+    "^\\$app/",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^\\$lib/",
+    "^[.]"
+  ],
+  "importOrderParserPlugins": ["typescript"],
+  "importOrderTypeScriptVersion": "5.9.3",
   "overrides": [
     {
       "files": "*.svelte",
