@@ -1,6 +1,6 @@
+import { defer } from '@/e2e/deferred';
 import { expect, test } from '@/e2e/helper';
 import { http, HttpResponse } from 'msw';
-import { defer } from '@/e2e/deferred';
 
 test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }, () => {
   async function prepare(msw) {

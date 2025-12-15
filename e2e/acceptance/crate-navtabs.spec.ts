@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 import { Locator } from '@playwright/test';
 
 test.describe('Acceptance | crate navigation tabs', { tag: '@acceptance' }, () => {

@@ -1,14 +1,14 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import emberEslintParser from 'ember-eslint-parser';
 import ember from 'eslint-plugin-ember';
 import emberConcurrency from 'eslint-plugin-ember-concurrency';
-import importHelpers from 'eslint-plugin-import-helpers';
 import prettier from 'eslint-plugin-prettier';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -59,7 +59,6 @@ export default [
       ember,
       'ember-concurrency': emberConcurrency,
       prettier,
-      'import-helpers': importHelpers,
     },
 
     languageOptions: {
@@ -90,9 +89,6 @@ export default [
     rules: {
       // it's fine to use `return` without a value and rely on the implicit `undefined` return value
       'getter-return': 'off',
-
-      // declaration sort is taken care of by `import-helpers/order-imports`
-      'sort-imports': ['error', { ignoreDeclarationSort: true, ignoreCase: true }],
 
       'prettier/prettier': 'error',
 
@@ -145,25 +141,6 @@ export default [
       // disabled because of false positives
       'unicorn/consistent-destructuring': 'off',
       'unicorn/filename-case': ['error', { case: 'kebabCase', ignore: ['^-'] }],
-
-      'import-helpers/order-imports': [
-        'error',
-        {
-          newlinesBetween: 'always',
-          groups: [
-            // Node.js built-in modules
-            '/^(assert|async_hooks|buffer|child_process|cluster|console|constants|crypto|dgram|dns|domain|events|fs|http|http2|https|inspector|module|net|os|path|perf_hooks|process|punycode|querystring|readline|repl|stream|string_decoder|timers|tls|trace_events|tty|url|util|v8|vm|zli)/',
-            // Testing modules
-            ['/^(qunit|ember-qunit|@ember/test-helpers|htmlbars-inline-precompile)$/', '/^ember-exam\\//'],
-            // Ember.js modules
-            ['/^@(ember|ember-data|glimmer)\\//', '/^(ember|ember-data|rsvp)$/', '/^ember-data\\//'],
-            ['module'],
-            ['/^crates-io\\//'],
-            ['parent', 'sibling', 'index'],
-          ],
-          alphabetize: { order: 'asc', ignoreCase: true },
-        },
-      ],
     },
   },
 

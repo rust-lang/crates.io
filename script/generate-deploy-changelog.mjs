@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { execSync } from 'node:child_process';
 
 function exec(command, options = {}) {

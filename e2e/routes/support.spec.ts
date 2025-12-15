@@ -1,4 +1,4 @@
-import { test, expect } from '@/e2e/helper';
+import { expect, test } from '@/e2e/helper';
 
 test.describe('Route | support', { tag: '@routes' }, () => {
   test('should not retain query params when exiting and then returning', async ({ page }) => {
