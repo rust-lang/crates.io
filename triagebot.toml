@@ -34,3 +34,8 @@ trigger_files = [
     "Cargo.lock",
     "rust-toolchain.toml",
 ]
+
+[autolabel."A-svelte"]
+trigger_files = [
+    "svelte/",
+]
