@@ -6,7 +6,6 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 readonly TARBALL_PATH="tmp/db-dump.tar.gz"
 readonly DUMP_PATH="tmp/db-dump"
