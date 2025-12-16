@@ -3,11 +3,11 @@
 
   import logo from '$lib/assets/cargo.png';
   import LockIcon from '$lib/assets/lock.svg?component';
+  import SearchForm from './SearchForm.svelte';
 
   // TODO: import ColorSchemeMenu from './ColorSchemeMenu.svelte';
   // TODO: import Dropdown from './Dropdown.svelte';
   // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
-  // TODO: import SearchForm from './SearchForm.svelte';
   // TODO: import UserAvatar from './UserAvatar.svelte';
 
   // TODO: import session service
@@ -40,7 +40,7 @@
     <div class="search-form">
       <h1 class="hero-title">The Rust community's crate registry</h1>
 
-      <!-- TODO: <SearchForm size={hero ? 'big' : undefined} autofocus={hero} /> -->
+      <SearchForm size={hero ? 'big' : undefined} autofocus={hero} />
     </div>
 
     <nav class="nav">
