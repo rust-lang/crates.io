@@ -1,10 +1,10 @@
 <script lang="ts">
+  import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
 
   import '$lib/css/global.css';
 
   // TODO: import ProgressBar from '$lib/components/ProgressBar.svelte';
-  // TODO: import Footer from '$lib/components/Footer.svelte';
 
   let { children } = $props();
 
@@ -29,7 +29,7 @@
   </div>
 </main>
 
-<!-- TODO: <Footer /> -->
+<Footer />
 
 <style>
   .main {
