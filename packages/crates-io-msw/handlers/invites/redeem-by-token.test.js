@@ -14,12 +14,14 @@ test('can accept an invitation', async function () {
 
   let response = await fetch(`/api/v1/me/crate_owner_invitations/accept/${invite.token}`, { method: 'PUT' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    crate_owner_invitation: {
-      accepted: true,
-      crate_id: serde.id,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "crate_owner_invitation": {
+        "accepted": true,
+        "crate_id": 1,
+      },
+    }
+  `);
 
   let invites = db.crateOwnerInvitation.findMany(q =>
     q.where({ crate: { id: serde.id }, invitee: { id: invitee.id } }),

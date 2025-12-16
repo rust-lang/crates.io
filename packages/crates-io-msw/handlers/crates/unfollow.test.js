@@ -5,9 +5,15 @@ import { db } from '../../index.js';
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
@@ -16,7 +22,15 @@ test('returns 404 for unknown crates', async function () {
 
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('makes the authenticated user unfollow the crate', async function () {
@@ -30,8 +44,12 @@ test('makes the authenticated user unfollow the crate', async function () {
 
   let response = await fetch('/api/v1/crates/rand/follow', { method: 'DELETE' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
   user = db.user.findFirst(q => q.where({ id: user.id }));
-  expect(user.followedCrates).toEqual([]);
+  expect(user.followedCrates).toMatchInlineSnapshot(`[]`);
 });

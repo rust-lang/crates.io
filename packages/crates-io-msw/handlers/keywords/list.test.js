@@ -5,12 +5,14 @@ import { db } from '../../index.js';
 test('empty case', async function () {
   let response = await fetch('/api/v1/keywords');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    keywords: [],
-    meta: {
-      total: 0,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "keywords": [],
+      "meta": {
+        "total": 0,
+      },
+    }
+  `);
 });
 
 test('returns a paginated keywords list', async function () {
@@ -19,28 +21,30 @@ test('returns a paginated keywords list', async function () {
 
   let response = await fetch('/api/v1/keywords');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    keywords: [
-      {
-        id: 'api',
-        crates_cnt: 0,
-        keyword: 'api',
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "keywords": [
+        {
+          "crates_cnt": 0,
+          "id": "api",
+          "keyword": "api",
+        },
+        {
+          "crates_cnt": 0,
+          "id": "keyword-2",
+          "keyword": "keyword-2",
+        },
+        {
+          "crates_cnt": 0,
+          "id": "keyword-3",
+          "keyword": "keyword-3",
+        },
+      ],
+      "meta": {
+        "total": 3,
       },
-      {
-        id: 'keyword-2',
-        crates_cnt: 0,
-        keyword: 'keyword-2',
-      },
-      {
-        id: 'keyword-3',
-        crates_cnt: 0,
-        keyword: 'keyword-3',
-      },
-    ],
-    meta: {
-      total: 3,
-    },
-  });
+    }
+  `);
 });
 
 test('never returns more than 10 results', async function () {
@@ -64,6 +68,14 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.keywords.length).toBe(5);
-  expect(responsePayload.keywords.map(it => it.id)).toEqual(['k06', 'k07', 'k08', 'k09', 'k10']);
+  expect(responsePayload.keywords.map(it => it.id)).toMatchInlineSnapshot(`
+    [
+      "k06",
+      "k07",
+      "k08",
+      "k09",
+      "k10",
+    ]
+  `);
   expect(responsePayload.meta.total).toBe(25);
 });

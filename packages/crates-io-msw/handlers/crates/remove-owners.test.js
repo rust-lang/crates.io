@@ -7,9 +7,15 @@ const REMOVE_USER_BODY = JSON.stringify({ owners: ['john-doe'] });
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body: REMOVE_USER_BODY });
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
@@ -18,7 +24,15 @@ test('returns 404 for unknown crates', async function () {
 
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body: REMOVE_USER_BODY });
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('can remove a user owner', async function () {
@@ -34,7 +48,12 @@ test('can remove a user owner', async function () {
   let body = JSON.stringify({ owners: [user2.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true, msg: 'owners successfully removed' });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "msg": "owners successfully removed",
+      "ok": true,
+    }
+  `);
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   expect(owners.length).toBe(1);
@@ -57,7 +76,12 @@ test('can remove a team owner', async function () {
   let body = JSON.stringify({ owners: [team.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true, msg: 'owners successfully removed' });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "msg": "owners successfully removed",
+      "ok": true,
+    }
+  `);
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   expect(owners.length).toBe(1);
@@ -84,7 +108,12 @@ test('can remove multiple owners', async function () {
   let body = JSON.stringify({ owners: [user2.login, team.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true, msg: 'owners successfully removed' });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "msg": "owners successfully removed",
+      "ok": true,
+    }
+  `);
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
   expect(owners.length).toBe(1);

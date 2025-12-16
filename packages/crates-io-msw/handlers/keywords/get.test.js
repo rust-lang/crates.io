@@ -5,7 +5,15 @@ import { db } from '../../index.js';
 test('returns 404 for unknown keywords', async function () {
   let response = await fetch('/api/v1/keywords/foo');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns a keyword object for known keywords', async function () {
@@ -13,13 +21,15 @@ test('returns a keyword object for known keywords', async function () {
 
   let response = await fetch('/api/v1/keywords/cli');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    keyword: {
-      id: 'cli',
-      crates_cnt: 0,
-      keyword: 'cli',
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "keyword": {
+        "crates_cnt": 0,
+        "id": "cli",
+        "keyword": "cli",
+      },
+    }
+  `);
 });
 
 test('calculates `crates_cnt` correctly', async function () {
@@ -30,11 +40,13 @@ test('calculates `crates_cnt` correctly', async function () {
 
   let response = await fetch('/api/v1/keywords/test-cli-keyword');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    keyword: {
-      id: 'test-cli-keyword',
-      crates_cnt: 7,
-      keyword: 'test-cli-keyword',
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "keyword": {
+        "crates_cnt": 7,
+        "id": "test-cli-keyword",
+        "keyword": "test-cli-keyword",
+      },
+    }
+  `);
 });

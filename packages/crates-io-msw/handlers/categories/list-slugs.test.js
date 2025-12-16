@@ -5,9 +5,11 @@ import { db } from '../../index.js';
 test('empty case', async function () {
   let response = await fetch('/api/v1/category_slugs');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    category_slugs: [],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "category_slugs": [],
+    }
+  `);
 });
 
 test('returns a category slugs list', async function () {
@@ -19,25 +21,27 @@ test('returns a category slugs list', async function () {
 
   let response = await fetch('/api/v1/category_slugs');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    category_slugs: [
-      {
-        description: 'This is the description for the category called "Category 2"',
-        id: 'category-2',
-        slug: 'category-2',
-      },
-      {
-        description: 'This is the description for the category called "Category 3"',
-        id: 'category-3',
-        slug: 'category-3',
-      },
-      {
-        description: 'Crates that are able to function without the Rust standard library.',
-        id: 'no-std',
-        slug: 'no-std',
-      },
-    ],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "category_slugs": [
+        {
+          "description": "This is the description for the category called "Category 2"",
+          "id": "category-2",
+          "slug": "category-2",
+        },
+        {
+          "description": "This is the description for the category called "Category 3"",
+          "id": "category-3",
+          "slug": "category-3",
+        },
+        {
+          "description": "Crates that are able to function without the Rust standard library.",
+          "id": "no-std",
+          "slug": "no-std",
+        },
+      ],
+    }
+  `);
 });
 
 test('has no pagination', async function () {

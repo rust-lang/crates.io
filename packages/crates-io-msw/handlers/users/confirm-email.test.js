@@ -8,7 +8,11 @@ test('returns `ok: true` for a known token (unauthenticated)', async function ()
 
   let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
   user = db.user.findFirst(q => q.where({ id: user.id }));
   expect(user.emailVerified).toBe(true);
@@ -22,7 +26,11 @@ test('returns `ok: true` for a known token (authenticated)', async function () {
 
   let response = await fetch('/api/v1/confirm/foo', { method: 'PUT' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
   user = db.user.findFirst(q => q.where({ id: user.id }));
   expect(user.emailVerified).toBe(true);
@@ -31,7 +39,13 @@ test('returns `ok: true` for a known token (authenticated)', async function () {
 test('returns an error for unknown tokens', async function () {
   let response = await fetch('/api/v1/confirm/unknown', { method: 'PUT' });
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'Email belonging to token not found.' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Email belonging to token not found.",
+        },
+      ],
+    }
+  `);
 });

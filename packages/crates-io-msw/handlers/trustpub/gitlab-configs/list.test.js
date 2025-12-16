@@ -16,7 +16,7 @@ test('happy path', async function () {
   });
 
   // Create GitLab configs
-  let config1 = await db.trustpubGitlabConfig.create({
+  await db.trustpubGitlabConfig.create({
     crate,
     namespace: 'rust-lang',
     namespace_id: null,
@@ -25,7 +25,7 @@ test('happy path', async function () {
     created_at: '2023-01-01T00:00:00Z',
   });
 
-  let config2 = await db.trustpubGitlabConfig.create({
+  await db.trustpubGitlabConfig.create({
     crate,
     namespace: 'rust-lang',
     namespace_id: '12345',
@@ -37,30 +37,32 @@ test('happy path', async function () {
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs?crate=${crate.name}`);
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    gitlab_configs: [
-      {
-        id: Number(config1.id),
-        crate: crate.name,
-        namespace: 'rust-lang',
-        namespace_id: null,
-        project: 'crates.io',
-        workflow_filepath: '.gitlab-ci.yml',
-        environment: null,
-        created_at: '2023-01-01T00:00:00Z',
-      },
-      {
-        id: Number(config2.id),
-        crate: crate.name,
-        namespace: 'rust-lang',
-        namespace_id: '12345',
-        project: 'cargo',
-        workflow_filepath: '.gitlab/ci.yml',
-        environment: 'production',
-        created_at: '2023-02-01T00:00:00Z',
-      },
-    ],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "gitlab_configs": [
+        {
+          "crate": "test-crate",
+          "created_at": "2023-01-01T00:00:00Z",
+          "environment": null,
+          "id": 1,
+          "namespace": "rust-lang",
+          "namespace_id": null,
+          "project": "crates.io",
+          "workflow_filepath": ".gitlab-ci.yml",
+        },
+        {
+          "crate": "test-crate",
+          "created_at": "2023-02-01T00:00:00Z",
+          "environment": "production",
+          "id": 2,
+          "namespace": "rust-lang",
+          "namespace_id": "12345",
+          "project": "cargo",
+          "workflow_filepath": ".gitlab/ci.yml",
+        },
+      ],
+    }
+  `);
 });
 
 test('happy path with no configs', async function () {
@@ -78,17 +80,25 @@ test('happy path with no configs', async function () {
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs?crate=${crate.name}`);
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    gitlab_configs: [],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "gitlab_configs": [],
+    }
+  `);
 });
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs?crate=test-crate`);
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 400 if query params are missing', async function () {
@@ -97,9 +107,15 @@ test('returns 400 if query params are missing', async function () {
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs`);
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'missing or invalid filter' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "missing or invalid filter",
+        },
+      ],
+    }
+  `);
 });
 
 test("returns 404 if crate can't be found", async function () {
@@ -108,9 +124,15 @@ test("returns 404 if crate can't be found", async function () {
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs?crate=nonexistent`);
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'Not Found' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 400 if user is not an owner of the crate', async function () {
@@ -122,7 +144,13 @@ test('returns 400 if user is not an owner of the crate', async function () {
 
   let response = await fetch(`/api/v1/trusted_publishing/gitlab_configs?crate=${crate.name}`);
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'You are not an owner of this crate' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "You are not an owner of this crate",
+        },
+      ],
+    }
+  `);
 });

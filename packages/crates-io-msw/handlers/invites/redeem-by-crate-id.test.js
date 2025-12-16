@@ -21,12 +21,14 @@ test('can accept an invitation', async function ({ serde }) {
   let body = JSON.stringify({ crate_owner_invite: { crate_id: serde.id, accepted: true } });
   let response = await fetch('/api/v1/me/crate_owner_invitations/serde', { method: 'PUT', body });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    crate_owner_invitation: {
-      accepted: true,
-      crate_id: serde.id,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "crate_owner_invitation": {
+        "accepted": true,
+        "crate_id": 1,
+      },
+    }
+  `);
 
   let invites = db.crateOwnerInvitation.findMany(q =>
     q.where({ crate: { id: serde.id }, invitee: { id: invitee.id } }),
@@ -46,12 +48,14 @@ test('can decline an invitation', async function ({ serde }) {
   let body = JSON.stringify({ crate_owner_invite: { crate_id: serde.id, accepted: false } });
   let response = await fetch('/api/v1/me/crate_owner_invitations/serde', { method: 'PUT', body });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    crate_owner_invitation: {
-      accepted: false,
-      crate_id: serde.id,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "crate_owner_invitation": {
+        "accepted": false,
+        "crate_id": 1,
+      },
+    }
+  `);
 
   let invites = db.crateOwnerInvitation.findMany(q =>
     q.where({ crate: { id: serde.id }, invitee: { id: invitee.id } }),
@@ -86,7 +90,13 @@ test('returns an error if unauthenticated', async function ({ serde }) {
   let body = JSON.stringify({ crate_owner_invite: { crate_id: serde.id, accepted: true } });
   let response = await fetch('/api/v1/me/crate_owner_invitations/serde', { method: 'PUT', body });
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });

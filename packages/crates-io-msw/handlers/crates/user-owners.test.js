@@ -5,7 +5,15 @@ import { db } from '../../index.js';
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/owner_user');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('empty case', async function () {
@@ -13,9 +21,11 @@ test('empty case', async function () {
 
   let response = await fetch('/api/v1/crates/rand/owner_user');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    users: [],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "users": [],
+    }
+  `);
 });
 
 test('returns the list of users that own the specified crate', async function () {
@@ -25,16 +35,18 @@ test('returns the list of users that own the specified crate', async function ()
 
   let response = await fetch('/api/v1/crates/rand/owner_user');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    users: [
-      {
-        id: 1,
-        avatar: 'https://avatars1.githubusercontent.com/u/14631425?v=4',
-        kind: 'user',
-        login: 'john-doe',
-        name: 'John Doe',
-        url: 'https://github.com/john-doe',
-      },
-    ],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "users": [
+        {
+          "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
+          "id": 1,
+          "kind": "user",
+          "login": "john-doe",
+          "name": "John Doe",
+          "url": "https://github.com/john-doe",
+        },
+      ],
+    }
+  `);
 });
