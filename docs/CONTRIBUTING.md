@@ -268,7 +268,7 @@ postgres`). Generally, the problem is that by default the postgres server is
 > we'll help fix the problem and will add the solution to these
 > instructions!
 
-Another options is to use a standalone Docker container for Postgres.
+Another option is to use a standalone Docker container for Postgres:
 
 ```sh
 # example using postgres 16
@@ -399,6 +399,7 @@ example:
 
 ```console
 RUST_LOG=debug cargo run --bin background-worker
+```
 Then start a frontend that uses this backend by running this command in another
 terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
