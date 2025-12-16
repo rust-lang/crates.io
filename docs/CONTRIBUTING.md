@@ -1,14 +1,14 @@
 # Contributing to crates.io
 
-* [Attending the weekly team meetings](#attending-the-weekly-team-meetings)
-* [Finding an issue to work on](#finding-an-issue-to-work-on)
-* [Submitting a Pull Request](#submitting-a-pull-request)
-* [Reviewing Pull Requests](#)
-* [Checking Release State](#)
-* [Setting up a development environment](#setting-up-a-development-environment)
-  * [Working on the Frontend](#working-on-the-frontend)
-  * [Working on the Backend](#working-on-the-backend)
-  * [Running crates.io with Docker](#running-cratesio-with-docker)
+- [Attending the weekly team meetings](#attending-the-weekly-team-meetings)
+- [Finding an issue to work on](#finding-an-issue-to-work-on)
+- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Reviewing Pull Requests](#reviewing-pull-requests)
+- [Checking Release State](#checking-release-state)
+- [Setting up a development environment](#setting-up-a-development-environment)
+  - [Working on the Frontend](#working-on-the-frontend)
+  - [Working on the Backend](#working-on-the-backend)
+  - [Running crates.io with Docker](#running-cratesio-with-docker)
 
 ## Attending the weekly team meetings
 
@@ -79,7 +79,7 @@ There you will find the commits involved in the current release.
 If you are only interested on the commit hash, you can also hit the site
 metadata endpoint available on `/api/v1/site_metadata`.
 
-# Setting up a development environment
+## Setting up a development environment
 
 First, you'll need git to clone the repo. [GitHub has help pages about setting
 up git](https://help.github.com/articles/set-up-git/), and once you've done
@@ -268,6 +268,15 @@ postgres`). Generally, the problem is that by default the postgres server is
 > we'll help fix the problem and will add the solution to these
 > instructions!
 
+Another option is to use a standalone Docker container for Postgres:
+
+```sh
+# example using postgres 16
+docker run -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:16
+# database URL will be
+# DATABASE_URL=postgres://postgres:password@localhost:5432/cargo_registry
+```
+
 #### OpenSSL
 
 - macOS: you can also install with homebrew by using `brew install openssl`
@@ -361,6 +370,14 @@ Set up the git repo for the crate index by running:
 ./script/init-local-index.sh
 ```
 
+#### Importing a database dump
+
+You can then import the database with
+
+```console
+./script/import-database-dump.sh
+```
+
 #### Starting the server and the frontend
 
 Build and start the server by running this command (you'll need to stop this
@@ -376,6 +393,13 @@ Then start the background worker (which will process uploaded READMEs):
 cargo run --bin background-worker
 ```
 
+Since crates.io is using the `tracing` crate, you can enable debug logging by
+setting the `RUST_LOG` environment variable to `debug` before running them, for
+example:
+
+```console
+RUST_LOG=debug cargo run --bin background-worker
+```
 Then start a frontend that uses this backend by running this command in another
 terminal session (the frontend picks up frontend changes using live reload
 without a restart needed, and you can leave the frontend running while you
