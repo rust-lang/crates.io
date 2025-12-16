@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 # Downloads the database dump tarball from crates.io and imports it
 # into the `cargo_registry` database. If the database already exists it
