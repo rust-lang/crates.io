@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../index.js';
 
 test('empty case', async function () {
   let response = await fetch('/api/v1/summary');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     just_updated: [],
     most_downloaded: [],
     most_recently_downloaded: [],
@@ -24,12 +24,12 @@ test('returns the data for the front page', async function () {
   await Promise.all(crates.map(crate => db.version.create({ crate })));
 
   let response = await fetch('/api/v1/summary');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
 
-  assert.strictEqual(responsePayload.just_updated.length, 10);
-  assert.deepEqual(responsePayload.just_updated[0], {
+  expect(responsePayload.just_updated.length).toBe(10);
+  expect(responsePayload.just_updated[0]).toEqual({
     id: 'crate-1',
     badges: [],
     categories: null,
@@ -60,8 +60,8 @@ test('returns the data for the front page', async function () {
     yanked: false,
   });
 
-  assert.strictEqual(responsePayload.most_downloaded.length, 10);
-  assert.deepEqual(responsePayload.most_downloaded[0], {
+  expect(responsePayload.most_downloaded.length).toBe(10);
+  expect(responsePayload.most_downloaded[0]).toEqual({
     id: 'crate-4',
     badges: [],
     categories: null,
@@ -92,8 +92,8 @@ test('returns the data for the front page', async function () {
     yanked: false,
   });
 
-  assert.strictEqual(responsePayload.most_recently_downloaded.length, 10);
-  assert.deepEqual(responsePayload.most_recently_downloaded[0], {
+  expect(responsePayload.most_recently_downloaded.length).toBe(10);
+  expect(responsePayload.most_recently_downloaded[0]).toEqual({
     id: 'crate-11',
     badges: [],
     categories: null,
@@ -124,8 +124,8 @@ test('returns the data for the front page', async function () {
     yanked: false,
   });
 
-  assert.strictEqual(responsePayload.new_crates.length, 10);
-  assert.deepEqual(responsePayload.new_crates[0], {
+  expect(responsePayload.new_crates.length).toBe(10);
+  expect(responsePayload.new_crates[0]).toEqual({
     id: 'crate-20',
     badges: [],
     categories: null,
@@ -156,11 +156,11 @@ test('returns the data for the front page', async function () {
     yanked: false,
   });
 
-  assert.strictEqual(responsePayload.num_crates, 20);
-  assert.strictEqual(responsePayload.num_downloads, 1_518_435);
+  expect(responsePayload.num_crates).toBe(20);
+  expect(responsePayload.num_downloads).toBe(1_518_435);
 
-  assert.strictEqual(responsePayload.popular_categories.length, 10);
-  assert.deepEqual(responsePayload.popular_categories[0], {
+  expect(responsePayload.popular_categories.length).toBe(10);
+  expect(responsePayload.popular_categories[0]).toEqual({
     id: 'category-1',
     category: 'Category 1',
     crates_cnt: 0,
@@ -169,8 +169,8 @@ test('returns the data for the front page', async function () {
     slug: 'category-1',
   });
 
-  assert.strictEqual(responsePayload.popular_keywords.length, 10);
-  assert.deepEqual(responsePayload.popular_keywords[0], {
+  expect(responsePayload.popular_keywords.length).toBe(10);
+  expect(responsePayload.popular_keywords[0]).toEqual({
     id: 'keyword-1',
     crates_cnt: 0,
     keyword: 'keyword-1',

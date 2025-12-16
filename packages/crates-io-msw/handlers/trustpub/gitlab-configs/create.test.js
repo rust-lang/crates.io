@@ -1,4 +1,4 @@
-import { afterEach, assert, beforeEach, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { db } from '../../../index.js';
 
@@ -37,8 +37,8 @@ test('happy path', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     gitlab_config: {
       id: 1,
       crate: crate.name,
@@ -80,8 +80,8 @@ test('happy path with environment', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     gitlab_config: {
       id: 1,
       crate: crate.name,
@@ -108,8 +108,8 @@ test('returns 403 if unauthenticated', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -123,8 +123,8 @@ test('returns 400 if request body is invalid', async function () {
     body: JSON.stringify({}),
   });
 
-  assert.strictEqual(response.status, 400);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'invalid request body' }],
   });
 });
@@ -142,8 +142,8 @@ test('returns 400 if required fields are missing', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 400);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'missing required fields' }],
   });
 });
@@ -164,8 +164,8 @@ test("returns 404 if crate can't be found", async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'Not Found' }],
   });
 });
@@ -189,8 +189,8 @@ test('returns 400 if user is not an owner of the crate', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 400);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'You are not an owner of this crate' }],
   });
 });
@@ -220,8 +220,8 @@ test('returns 403 if user email is not verified', async function () {
     }),
   });
 
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'You must verify your email address to create a Trusted Publishing config' }],
   });
 });

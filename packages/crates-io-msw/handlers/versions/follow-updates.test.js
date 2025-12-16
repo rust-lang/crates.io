@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 403 for unauthenticated user', async function () {
   let response = await fetch('/api/v1/me/updates');
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -21,8 +21,8 @@ test('returns latest versions of followed crates', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     versions: [
       {
         id: 1,
@@ -74,8 +74,8 @@ test('empty case', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     versions: [],
     meta: { more: false },
   });
@@ -89,13 +89,10 @@ test('supports pagination', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates?page=2');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.versions.length, 10);
-  assert.deepEqual(
-    responsePayload.versions.map(it => it.id),
-    [15, 14, 13, 12, 11, 10, 9, 8, 7, 6],
-  );
-  assert.deepEqual(responsePayload.meta, { more: true });
+  expect(responsePayload.versions.length).toBe(10);
+  expect(responsePayload.versions.map(it => it.id)).toEqual([15, 14, 13, 12, 11, 10, 9, 8, 7, 6]);
+  expect(responsePayload.meta).toEqual({ more: true });
 });

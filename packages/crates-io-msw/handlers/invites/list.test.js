@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -29,8 +29,8 @@ test('happy path (invitee_id)', async function () {
   });
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crate_owner_invitations: [
       {
         crate_id: Number(nanomsg.id),
@@ -83,8 +83,8 @@ test('happy path with empty response (invitee_id)', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crate_owner_invitations: [],
     users: [],
     meta: {
@@ -106,16 +106,16 @@ test('happy path with pagination (invitee_id)', async function () {
   }
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
   let responseJSON = await response.json();
-  assert.strictEqual(responseJSON['crate_owner_invitations'].length, 10);
-  assert.ok(responseJSON.meta['next_page']);
+  expect(responseJSON['crate_owner_invitations'].length).toBe(10);
+  expect(responseJSON.meta['next_page']).toBeTruthy();
 
   response = await fetch(`/api/private/crate_owner_invitations${responseJSON.meta['next_page']}`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
   responseJSON = await response.json();
-  assert.strictEqual(responseJSON['crate_owner_invitations'].length, 5);
-  assert.strictEqual(responseJSON.meta['next_page'], null);
+  expect(responseJSON['crate_owner_invitations'].length).toBe(5);
+  expect(responseJSON.meta['next_page']).toBe(null);
 });
 
 test('happy path (crate_name)', async function () {
@@ -145,8 +145,8 @@ test('happy path (crate_name)', async function () {
   });
 
   let response = await fetch(`/api/private/crate_owner_invitations?crate_name=ember-rs`);
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crate_owner_invitations: [
       {
         crate_id: Number(ember.id),
@@ -181,8 +181,8 @@ test('happy path (crate_name)', async function () {
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=42`);
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -192,8 +192,8 @@ test('returns 400 if query params are missing', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations`);
-  assert.strictEqual(response.status, 400);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'missing or invalid filter' }],
   });
 });
@@ -203,8 +203,8 @@ test("returns 404 if crate can't be found", async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?crate_name=foo`);
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'Not Found' }],
   });
 });
@@ -214,8 +214,8 @@ test('returns 403 if requesting for other user', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id + 1}`);
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });

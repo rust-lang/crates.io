@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('empty case', async function () {
   let response = await fetch('/api/v1/category_slugs');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     category_slugs: [],
   });
 });
@@ -18,8 +18,8 @@ test('returns a category slugs list', async function () {
   await Promise.all(Array.from({ length: 2 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/category_slugs');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     category_slugs: [
       {
         description: 'This is the description for the category called "Category 2"',
@@ -44,6 +44,6 @@ test('has no pagination', async function () {
   await Promise.all(Array.from({ length: 25 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/category_slugs');
-  assert.strictEqual(response.status, 200);
-  assert.strictEqual((await response.json()).category_slugs.length, 25);
+  expect(response.status).toBe(200);
+  expect((await response.json()).category_slugs.length).toBe(25);
 });

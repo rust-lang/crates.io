@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -6,8 +6,8 @@ const ADD_USER_BODY = JSON.stringify({ owners: ['john-doe'] });
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body: ADD_USER_BODY });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -17,8 +17,8 @@ test('returns 404 for unknown crates', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body: ADD_USER_BODY });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('can add new owner', async function () {
@@ -32,20 +32,20 @@ test('can add new owner', async function () {
 
   let body = JSON.stringify({ owners: [user2.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     ok: true,
     msg: 'user user-2 has been invited to be an owner of crate foo',
   });
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(owners.length, 1);
-  assert.strictEqual(owners[0].user.id, user.id);
+  expect(owners.length).toBe(1);
+  expect(owners[0].user.id).toBe(user.id);
 
   let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(invites.length, 1);
-  assert.strictEqual(invites[0].inviter.id, user.id);
-  assert.strictEqual(invites[0].invitee.id, user2.id);
+  expect(invites.length).toBe(1);
+  expect(invites[0].inviter.id).toBe(user.id);
+  expect(invites[0].invitee.id).toBe(user2.id);
 });
 
 test('can add team owner', async function () {
@@ -59,21 +59,21 @@ test('can add team owner', async function () {
 
   let body = JSON.stringify({ owners: [team.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     ok: true,
     msg: 'team github:rust-lang:team-1 has been added as an owner of crate foo',
   });
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(owners.length, 2);
-  assert.strictEqual(owners[0].user.id, user.id);
-  assert.strictEqual(owners[0].team, null);
-  assert.strictEqual(owners[1].user, null);
-  assert.strictEqual(owners[1].team.id, user.id);
+  expect(owners.length).toBe(2);
+  expect(owners[0].user.id).toBe(user.id);
+  expect(owners[0].team).toBe(null);
+  expect(owners[1].user).toBe(null);
+  expect(owners[1].team.id).toBe(user.id);
 
   let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(invites.length, 0);
+  expect(invites.length).toBe(0);
 });
 
 test('can add multiple owners', async function () {
@@ -89,23 +89,23 @@ test('can add multiple owners', async function () {
 
   let body = JSON.stringify({ owners: [user2.login, team.login, user3.login] });
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     ok: true,
     msg: 'user user-2 has been invited to be an owner of crate foo,team github:rust-lang:team-1 has been added as an owner of crate foo,user user-3 has been invited to be an owner of crate foo',
   });
 
   let owners = db.crateOwnership.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(owners.length, 2);
-  assert.strictEqual(owners[0].user.id, user.id);
-  assert.strictEqual(owners[0].team, null);
-  assert.strictEqual(owners[1].user, null);
-  assert.strictEqual(owners[1].team.id, user.id);
+  expect(owners.length).toBe(2);
+  expect(owners[0].user.id).toBe(user.id);
+  expect(owners[0].team).toBe(null);
+  expect(owners[1].user).toBe(null);
+  expect(owners[1].team.id).toBe(user.id);
 
   let invites = db.crateOwnerInvitation.findMany(q => q.where({ crate: { id: crate.id } }));
-  assert.strictEqual(invites.length, 2);
-  assert.strictEqual(invites[0].inviter.id, user.id);
-  assert.strictEqual(invites[0].invitee.id, user2.id);
-  assert.strictEqual(invites[1].inviter.id, user.id);
-  assert.strictEqual(invites[1].invitee.id, user3.id);
+  expect(invites.length).toBe(2);
+  expect(invites[0].inviter.id).toBe(user.id);
+  expect(invites[0].invitee.id).toBe(user2.id);
+  expect(invites[1].inviter.id).toBe(user.id);
+  expect(invites[1].invitee.id).toBe(user3.id);
 });

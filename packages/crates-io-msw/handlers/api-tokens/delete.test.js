@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -9,11 +9,11 @@ test('revokes an API token', async function () {
   let token = await db.apiToken.create({ user });
 
   let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {});
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({});
 
   let tokens = db.apiToken.findMany(null);
-  assert.strictEqual(tokens.length, 0);
+  expect(tokens.length).toBe(0);
 });
 
 test('returns an error if unauthenticated', async function () {
@@ -21,8 +21,8 @@ test('returns an error if unauthenticated', async function () {
   let token = await db.apiToken.create({ user });
 
   let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });

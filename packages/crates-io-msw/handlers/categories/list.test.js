@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('empty case', async function () {
   let response = await fetch('/api/v1/categories');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     categories: [],
     meta: {
       total: 0,
@@ -21,8 +21,8 @@ test('returns a paginated categories list', async function () {
   await Promise.all(Array.from({ length: 2 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/categories');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     categories: [
       {
         id: 'category-2',
@@ -59,11 +59,11 @@ test('never returns more than 10 results', async function () {
   await Promise.all(Array.from({ length: 25 }, () => db.category.create()));
 
   let response = await fetch('/api/v1/categories');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.categories.length, 10);
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.categories.length).toBe(10);
+  expect(responsePayload.meta.total).toBe(25);
 });
 
 test('supports `page` and `per_page` parameters', async function () {
@@ -76,13 +76,10 @@ test('supports `page` and `per_page` parameters', async function () {
   );
 
   let response = await fetch('/api/v1/categories?page=2&per_page=5');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.categories.length, 5);
-  assert.deepEqual(
-    responsePayload.categories.map(it => it.id),
-    ['cat-06', 'cat-07', 'cat-08', 'cat-09', 'cat-10'],
-  );
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.categories.length).toBe(5);
+  expect(responsePayload.categories.map(it => it.id)).toEqual(['cat-06', 'cat-07', 'cat-08', 'cat-09', 'cat-10']);
+  expect(responsePayload.meta.total).toBe(25);
 });

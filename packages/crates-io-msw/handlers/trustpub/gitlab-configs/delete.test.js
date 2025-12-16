@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../../index.js';
 
@@ -28,12 +28,12 @@ test('happy path', async function () {
     method: 'DELETE',
   });
 
-  assert.strictEqual(response.status, 204);
-  assert.strictEqual(await response.text(), '');
+  expect(response.status).toBe(204);
+  expect(await response.text()).toBe('');
 
   // Verify the config was deleted
   let deletedConfig = db.trustpubGitlabConfig.findFirst(q => q.where({ id: config.id }));
-  assert.strictEqual(deletedConfig, undefined);
+  expect(deletedConfig).toBe(undefined);
 });
 
 test('returns 403 if unauthenticated', async function () {
@@ -41,8 +41,8 @@ test('returns 403 if unauthenticated', async function () {
     method: 'DELETE',
   });
 
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -55,8 +55,8 @@ test('returns 404 if config ID is invalid', async function () {
     method: 'DELETE',
   });
 
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'Not Found' }],
   });
 });
@@ -69,8 +69,8 @@ test("returns 404 if config can't be found", async function () {
     method: 'DELETE',
   });
 
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'Not Found' }],
   });
 });
@@ -102,8 +102,8 @@ test('returns 400 if user is not an owner of the crate', async function () {
     method: 'DELETE',
   });
 
-  assert.strictEqual(response.status, 400);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'You are not an owner of this crate' }],
   });
 });

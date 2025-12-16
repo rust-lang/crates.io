@@ -1,19 +1,19 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/1.0.0/downloads');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('returns 404 for unknown versions', async function () {
   await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
 });
 
 test('empty case', async function () {
@@ -21,8 +21,8 @@ test('empty case', async function () {
   await db.version.create({ crate, num: '1.0.0' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     version_downloads: [],
   });
 });
@@ -35,8 +35,8 @@ test('returns a list of version downloads belonging to the specified crate versi
   await db.versionDownload.create({ version, date: '2020-01-15' });
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     version_downloads: [
       {
         date: '2020-01-13',
