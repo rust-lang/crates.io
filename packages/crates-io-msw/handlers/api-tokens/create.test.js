@@ -1,4 +1,4 @@
-import { afterEach, assert, beforeEach, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -17,12 +17,12 @@ test('creates a new API token', async function () {
 
   let body = JSON.stringify({ api_token: { name: 'foooo' } });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let token = db.apiToken.findMany(null)[0];
-  assert.ok(token);
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
+  expect(await response.json()).toEqual({
     api_token: {
       id: 1,
       crate_scopes: null,
@@ -49,12 +49,12 @@ test('creates a new API token with scopes', async function () {
     },
   });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let token = db.apiToken.findMany(null)[0];
-  assert.ok(token);
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
+  expect(await response.json()).toEqual({
     api_token: {
       id: 1,
       crate_scopes: ['serde', 'serde-*'],
@@ -80,12 +80,12 @@ test('creates a new API token with expiry date', async function () {
     },
   });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let token = db.apiToken.findMany(null)[0];
-  assert.ok(token);
+  expect(token).toBeTruthy();
 
-  assert.deepEqual(await response.json(), {
+  expect(await response.json()).toEqual({
     api_token: {
       id: 1,
       crate_scopes: null,
@@ -103,8 +103,8 @@ test('creates a new API token with expiry date', async function () {
 test('returns an error if unauthenticated', async function () {
   let body = JSON.stringify({ api_token: {} });
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });

@@ -1,4 +1,4 @@
-import { afterEach, assert, beforeEach, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -26,8 +26,8 @@ test('returns the list of API token for the authenticated `user`', async functio
   await db.apiToken.create({ user, createdAt: '2017-11-19T15:59:22Z', expiredAt: '2017-11-20T10:59:22Z' });
 
   let response = await fetch('/api/v1/me/tokens');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     api_tokens: [
       {
         id: 3,
@@ -65,14 +65,14 @@ test('empty list case', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/tokens');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { api_tokens: [] });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ api_tokens: [] });
 });
 
 test('returns an error if unauthenticated', async function () {
   let response = await fetch('/api/v1/me/tokens');
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });

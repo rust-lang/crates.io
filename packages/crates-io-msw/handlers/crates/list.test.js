@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('empty case', async function () {
   let response = await fetch('/api/v1/crates');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crates: [],
     meta: {
       total: 0,
@@ -29,8 +29,8 @@ test('returns a paginated crates list', async function () {
   });
 
   let response = await fetch('/api/v1/crates');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crates: [
       {
         id: 'rand',
@@ -75,11 +75,11 @@ test('never returns more than 10 results', async function () {
   await Promise.all(crates.map(crate => db.version.create({ crate })));
 
   let response = await fetch('/api/v1/crates');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 10);
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.crates.length).toBe(10);
+  expect(responsePayload.meta.total).toBe(25);
 });
 
 test('supports `page` and `per_page` parameters', async function () {
@@ -89,15 +89,12 @@ test('supports `page` and `per_page` parameters', async function () {
   await Promise.all(crates.map(crate => db.version.create({ crate })));
 
   let response = await fetch('/api/v1/crates?page=2&per_page=5');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 5);
-  assert.deepEqual(
-    responsePayload.crates.map(it => it.id),
-    ['crate-06', 'crate-07', 'crate-08', 'crate-09', 'crate-10'],
-  );
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.crates.length).toBe(5);
+  expect(responsePayload.crates.map(it => it.id)).toEqual(['crate-06', 'crate-07', 'crate-08', 'crate-09', 'crate-10']);
+  expect(responsePayload.meta.total).toBe(25);
 });
 
 test('supports a `letter` parameter', async function () {
@@ -109,15 +106,12 @@ test('supports a `letter` parameter', async function () {
   await db.version.create({ crate: baz });
 
   let response = await fetch('/api/v1/crates?letter=b');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 2);
-  assert.deepEqual(
-    responsePayload.crates.map(it => it.id),
-    ['bar', 'BAZ'],
-  );
-  assert.strictEqual(responsePayload.meta.total, 2);
+  expect(responsePayload.crates.length).toBe(2);
+  expect(responsePayload.crates.map(it => it.id)).toEqual(['bar', 'BAZ']);
+  expect(responsePayload.meta.total).toBe(2);
 });
 
 test('supports a `q` parameter', async function () {
@@ -129,19 +123,13 @@ test('supports a `q` parameter', async function () {
   await db.version.create({ crate: crate3 });
 
   let response = await fetch('/api/v1/crates?q=123');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 2);
-  assert.deepEqual(
-    responsePayload.crates.map(it => it.id),
-    ['123456', '123'],
-  );
-  assert.deepEqual(
-    responsePayload.crates.map(it => it.exact_match),
-    [false, true],
-  );
-  assert.strictEqual(responsePayload.meta.total, 2);
+  expect(responsePayload.crates.length).toBe(2);
+  expect(responsePayload.crates.map(it => it.id)).toEqual(['123456', '123']);
+  expect(responsePayload.crates.map(it => it.exact_match)).toEqual([false, true]);
+  expect(responsePayload.meta.total).toBe(2);
 });
 
 test('supports a `user_id` parameter', async function () {
@@ -158,12 +146,12 @@ test('supports a `user_id` parameter', async function () {
   await db.version.create({ crate: baz });
 
   let response = await fetch(`/api/v1/crates?user_id=${user1.id}`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 1);
-  assert.strictEqual(responsePayload.crates[0].id, 'bar');
-  assert.strictEqual(responsePayload.meta.total, 1);
+  expect(responsePayload.crates.length).toBe(1);
+  expect(responsePayload.crates[0].id).toBe('bar');
+  expect(responsePayload.meta.total).toBe(1);
 });
 
 test('supports a `team_id` parameter', async function () {
@@ -180,12 +168,12 @@ test('supports a `team_id` parameter', async function () {
   await db.version.create({ crate: baz });
 
   let response = await fetch(`/api/v1/crates?team_id=${team1.id}`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 1);
-  assert.strictEqual(responsePayload.crates[0].id, 'bar');
-  assert.strictEqual(responsePayload.meta.total, 1);
+  expect(responsePayload.crates.length).toBe(1);
+  expect(responsePayload.crates[0].id).toBe('bar');
+  expect(responsePayload.meta.total).toBe(1);
 });
 
 test('supports a `following` parameter', async function () {
@@ -198,12 +186,12 @@ test('supports a `following` parameter', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/crates?following=1`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 1);
-  assert.strictEqual(responsePayload.crates[0].id, 'bar');
-  assert.strictEqual(responsePayload.meta.total, 1);
+  expect(responsePayload.crates.length).toBe(1);
+  expect(responsePayload.crates[0].id).toBe('bar');
+  expect(responsePayload.meta.total).toBe(1);
 });
 
 test('supports multiple `ids[]` parameters', async function () {
@@ -217,12 +205,12 @@ test('supports multiple `ids[]` parameters', async function () {
   await db.version.create({ crate: other });
 
   let response = await fetch(`/api/v1/crates?ids[]=foo&ids[]=bar&ids[]=baz&ids[]=baz&ids[]=unknown`);
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.crates.length, 3);
-  assert.strictEqual(responsePayload.crates[0].id, 'foo');
-  assert.strictEqual(responsePayload.crates[1].id, 'bar');
-  assert.strictEqual(responsePayload.crates[2].id, 'baz');
-  assert.strictEqual(responsePayload.meta.total, 3);
+  expect(responsePayload.crates.length).toBe(3);
+  expect(responsePayload.crates[0].id).toBe('foo');
+  expect(responsePayload.crates[1].id).toBe('bar');
+  expect(responsePayload.crates[2].id).toBe('baz');
+  expect(responsePayload.meta.total).toBe(3);
 });

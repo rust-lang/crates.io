@@ -1,19 +1,19 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('empty case', async function () {
   await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/reverse_dependencies');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     dependencies: [],
     versions: [],
     meta: {
@@ -40,8 +40,8 @@ test('returns a paginated list of crate versions depending to the specified crat
   });
 
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     dependencies: [
       {
         id: 2,
@@ -167,12 +167,12 @@ test('never returns more than 10 results', async function () {
   );
 
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.dependencies.length, 10);
-  assert.strictEqual(responsePayload.versions.length, 10);
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.dependencies.length).toBe(10);
+  expect(responsePayload.versions.length).toBe(10);
+  expect(responsePayload.meta.total).toBe(25);
 });
 
 test('supports `page` and `per_page` parameters', async function () {
@@ -185,13 +185,16 @@ test('supports `page` and `per_page` parameters', async function () {
   await Promise.all(versions.map(version => db.dependency.create({ crate, version })));
 
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies?page=2&per_page=5');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.strictEqual(responsePayload.dependencies.length, 5);
-  assert.deepEqual(
-    responsePayload.versions.map(it => it.crate),
-    ['crate-24', 'crate-02', 'crate-15', 'crate-06', 'crate-19'],
-  );
-  assert.strictEqual(responsePayload.meta.total, 25);
+  expect(responsePayload.dependencies.length).toBe(5);
+  expect(responsePayload.versions.map(it => it.crate)).toEqual([
+    'crate-24',
+    'crate-02',
+    'crate-15',
+    'crate-06',
+    'crate-19',
+  ]);
+  expect(responsePayload.meta.total).toBe(25);
 });

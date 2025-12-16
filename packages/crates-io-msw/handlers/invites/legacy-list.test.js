@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -7,8 +7,8 @@ test('empty case', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/crate_owner_invitations');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { crate_owner_invitations: [], users: [] });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ crate_owner_invitations: [], users: [] });
 });
 
 test('returns the list of invitations for the authenticated user', async function () {
@@ -38,8 +38,8 @@ test('returns the list of invitations for the authenticated user', async functio
   });
 
   let response = await fetch('/api/v1/me/crate_owner_invitations');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     crate_owner_invitations: [
       {
         crate_id: Number(nanomsg.id),
@@ -86,8 +86,8 @@ test('returns the list of invitations for the authenticated user', async functio
 
 test('returns an error if unauthenticated', async function () {
   let response = await fetch('/api/v1/me/crate_owner_invitations');
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });

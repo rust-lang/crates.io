@@ -1,19 +1,19 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/owner_team');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('empty case', async function () {
   await db.crate.create({ name: 'rand' });
 
   let response = await fetch('/api/v1/crates/rand/owner_team');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     teams: [],
   });
 });
@@ -24,8 +24,8 @@ test('returns the list of teams that own the specified crate', async function ()
   await db.crateOwnership.create({ crate, team });
 
   let response = await fetch('/api/v1/crates/rand/owner_team');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     teams: [
       {
         id: 1,

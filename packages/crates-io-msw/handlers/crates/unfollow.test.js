@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 403 if unauthenticated', async function () {
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -15,8 +15,8 @@ test('returns 404 for unknown crates', async function () {
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'DELETE' });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('makes the authenticated user unfollow the crate', async function () {
@@ -25,13 +25,13 @@ test('makes the authenticated user unfollow the crate', async function () {
   let user = await db.user.create({ followedCrates: [crate] });
   await db.mswSession.create({ user });
 
-  assert.equal(user.followedCrates.length, 1);
-  assert.equal(user.followedCrates[0].name, crate.name);
+  expect(user.followedCrates.length).toBe(1);
+  expect(user.followedCrates[0].name).toBe(crate.name);
 
   let response = await fetch('/api/v1/crates/rand/follow', { method: 'DELETE' });
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ ok: true });
 
   user = db.user.findFirst(q => q.where({ id: user.id }));
-  assert.deepEqual(user.followedCrates, []);
+  expect(user.followedCrates).toEqual([]);
 });

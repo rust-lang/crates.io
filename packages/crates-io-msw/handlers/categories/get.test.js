@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 404 for unknown categories', async function () {
   let response = await fetch('/api/v1/categories/foo');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('returns a category object for known categories', async function () {
@@ -15,8 +15,8 @@ test('returns a category object for known categories', async function () {
   });
 
   let response = await fetch('/api/v1/categories/no-std');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     category: {
       id: 'no-std',
       category: 'no-std',
@@ -35,8 +35,8 @@ test('calculates `crates_cnt` correctly', async function () {
   await Promise.all(Array.from({ length: 3 }, () => db.crate.create({ categories: [notTestCli] })));
 
   let response = await fetch('/api/v1/categories/test-cli-category');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     category: {
       category: 'test-cli-category',
       crates_cnt: 7,

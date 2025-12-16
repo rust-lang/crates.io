@@ -1,11 +1,11 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo');
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'Not Found' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
 });
 
 test('returns a crate object for known crates', async function () {
@@ -13,8 +13,8 @@ test('returns a crate object for known crates', async function () {
   await db.version.create({ crate, num: '1.0.0-beta.1' });
 
   let response = await fetch('/api/v1/crates/rand');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     categories: [],
     crate: {
       badges: [],
@@ -95,8 +95,8 @@ test('works for non-canonical names', async function () {
   await db.version.create({ crate, num: '1.0.0-beta.1' });
 
   let response = await fetch('/api/v1/crates/foo_bar');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
     categories: [],
     crate: {
       badges: [],
@@ -179,11 +179,11 @@ test('includes related versions', async function () {
   await db.version.create({ crate, num: '1.2.0' });
 
   let response = await fetch('/api/v1/crates/rand');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.deepEqual(responsePayload.crate.versions, [1, 2, 3]);
-  assert.deepEqual(responsePayload.versions, [
+  expect(responsePayload.crate.versions).toEqual([1, 2, 3]);
+  expect(responsePayload.versions).toEqual([
     {
       id: 3,
       crate: 'rand',
@@ -308,11 +308,11 @@ test('includes related categories', async function () {
   await db.version.create({ crate });
 
   let response = await fetch('/api/v1/crates/rand');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.deepEqual(responsePayload.crate.categories, ['no-std']);
-  assert.deepEqual(responsePayload.categories, [
+  expect(responsePayload.crate.categories).toEqual(['no-std']);
+  expect(responsePayload.categories).toEqual([
     {
       id: 'no-std',
       category: 'no-std',
@@ -331,11 +331,11 @@ test('includes related keywords', async function () {
   await db.version.create({ crate });
 
   let response = await fetch('/api/v1/crates/rand');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.deepEqual(responsePayload.crate.keywords, ['no-std']);
-  assert.deepEqual(responsePayload.keywords, [
+  expect(responsePayload.crate.keywords).toEqual(['no-std']);
+  expect(responsePayload.keywords).toEqual([
     {
       crates_cnt: 1,
       id: 'no-std',
@@ -358,10 +358,10 @@ test('without versions included', async function () {
   let expected = await req.json();
 
   let response = await fetch('/api/v1/crates/rand?include=keywords,categories');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
-  assert.deepEqual(responsePayload, {
+  expect(responsePayload).toEqual({
     ...expected,
     crate: {
       ...expected.crate,
@@ -384,11 +384,11 @@ test('includes default_version', async function () {
   let expected = await req.json();
 
   let response = await fetch('/api/v1/crates/rand?include=default_version');
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let responsePayload = await response.json();
   let default_version = expected.versions.find(it => it.num === responsePayload.crate.default_version);
-  assert.deepEqual(responsePayload, {
+  expect(responsePayload).toEqual({
     ...expected,
     crate: {
       ...expected.crate,
@@ -405,8 +405,8 @@ test('includes default_version', async function () {
   });
 
   let resp_both = await fetch('/api/v1/crates/rand?include=versions,default_version');
-  assert.strictEqual(response.status, 200);
-  assert.deepEqual(await resp_both.json(), {
+  expect(response.status).toBe(200);
+  expect(await resp_both.json()).toEqual({
     ...expected,
     crate: {
       ...expected.crate,

@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { db } from '../../index.js';
 
@@ -8,8 +8,8 @@ test('returns 403 if unauthenticated', async function () {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ crate: { trustpub_only: true } }),
   });
-  assert.strictEqual(response.status, 403);
-  assert.deepEqual(await response.json(), {
+  expect(response.status).toBe(403);
+  expect(await response.json()).toEqual({
     errors: [{ detail: 'must be logged in to perform that action' }],
   });
 });
@@ -23,8 +23,8 @@ test('returns 404 for unknown crates', async function () {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ crate: { trustpub_only: true } }),
   });
-  assert.strictEqual(response.status, 404);
-  assert.deepEqual(await response.json(), { errors: [{ detail: 'crate `foo` does not exist' }] });
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ errors: [{ detail: 'crate `foo` does not exist' }] });
 });
 
 test('updates trustpub_only flag', async function () {
@@ -32,7 +32,7 @@ test('updates trustpub_only flag', async function () {
   await db.mswSession.create({ user });
 
   let crate = await db.crate.create({ name: 'foo', trustpubOnly: false });
-  assert.strictEqual(crate.trustpubOnly, false);
+  expect(crate.trustpubOnly).toBe(false);
 
   await db.version.create({ crate, num: '1.0.0' });
   await db.crateOwnership.create({ crate, user });
@@ -42,11 +42,11 @@ test('updates trustpub_only flag', async function () {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ crate: { trustpub_only: true } }),
   });
-  assert.strictEqual(response.status, 200);
+  expect(response.status).toBe(200);
 
   let json = await response.json();
-  assert.strictEqual(json.crate.trustpub_only, true);
+  expect(json.crate.trustpub_only).toBe(true);
 
   let updatedCrate = db.crate.findFirst(q => q.where({ name: 'foo' }));
-  assert.strictEqual(updatedCrate.trustpubOnly, true);
+  expect(updatedCrate.trustpubOnly).toBe(true);
 });
