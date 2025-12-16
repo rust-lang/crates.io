@@ -1,0 +1,196 @@
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    boxed?: boolean;
+    children: Snippet;
+    [key: string]: unknown;
+  }
+
+  let { boxed = false, children, ...others }: Props = $props();
+</script>
+
+<div class="wrapper" class:boxed {...others}>
+  {@render children()}
+</div>
+
+<style>
+  .boxed {
+    padding: var(--space-m);
+    background-color: light-dark(white, #141413);
+    margin-bottom: var(--space-s);
+    border-radius: 5px;
+  }
+
+  .wrapper {
+    line-height: 1.5;
+    overflow-wrap: break-word;
+
+    > :global(:first-child) {
+      margin-top: 0;
+    }
+
+    > :global(:last-child) {
+      margin-bottom: 0;
+    }
+
+    :global(img) {
+      max-width: 100%;
+    }
+
+    :global(pre) {
+      display: block;
+      overflow-x: auto;
+      padding: var(--space-xs);
+      background-color: light-dark(#f6f8fa, #161b22);
+      font-size: 85%;
+      border-radius: var(--space-3xs);
+    }
+
+    :global(p),
+    :global(li) {
+      :global(code) {
+        background-color: light-dark(#f6f8fa, #383836);
+        border-radius: var(--space-3xs);
+        font-size: 85%;
+        margin: 0;
+        padding: var(--space-4xs) var(--space-3xs);
+      }
+    }
+
+    :global(code) {
+      font-family: var(--font-monospace);
+      tab-size: 4;
+    }
+
+    :global(kbd) {
+      font-family: var(--font-monospace);
+      font-size: 11px;
+
+      padding: 2px 5px 3px 5px;
+
+      border-radius: 7px;
+
+      position: relative;
+      bottom: 2px;
+
+      border: 1px solid var(--grey700);
+      box-shadow: inset 0 -2px 0 var(--grey600);
+    }
+
+    :global(table) {
+      border-collapse: collapse;
+      display: block;
+      overflow-x: auto;
+
+      :global(th),
+      :global(td) {
+        border: 1px solid #dfe2e5;
+        padding: var(--space-2xs) var(--space-s);
+      }
+    }
+
+    :global(section.footnotes) {
+      color: var(--main-color-light);
+      font-size: 80%;
+      border-top: 1px solid var(--gray-border);
+
+      :global(a) {
+        color: var(--main-color-light);
+
+        &:hover {
+          color: var(--main-color);
+        }
+      }
+    }
+
+    /* Reset background color, padding and font-size for syntax-highlighted code blocks. */
+    /* See: https://github.com/rust-lang/crates.io/issues/8866 */
+    :global(.hljs) {
+      background: unset;
+      padding: 0;
+      font-size: unset;
+    }
+
+    /*
+     * This is a combination of the `github.css` and `github-dark.css` themes,
+     * but merged together using the `light-dark` function.
+     *
+     * see https://github.com/highlightjs/highlight.js/blob/11.9.0/src/styles/github.css
+     * and https://github.com/highlightjs/highlight.js/blob/11.9.0/src/styles/github-dark.css
+     */
+    :global(.hljs-doctag),
+    :global(.hljs-keyword),
+    :global(.hljs-meta) :global(.hljs-keyword),
+    :global(.hljs-template-tag),
+    :global(.hljs-template-variable),
+    :global(.hljs-type),
+    :global(.hljs-variable.language_) {
+      color: light-dark(#d73a49, #ff7b72);
+    }
+    :global(.hljs-title),
+    :global(.hljs-title.class_),
+    :global(.hljs-title.class_.inherited__),
+    :global(.hljs-title.function_) {
+      color: light-dark(#6f42c1, #d2a8ff);
+    }
+    :global(.hljs-attr),
+    :global(.hljs-attribute),
+    :global(.hljs-literal),
+    :global(.hljs-meta),
+    :global(.hljs-number),
+    :global(.hljs-operator),
+    :global(.hljs-variable),
+    :global(.hljs-selector-attr),
+    :global(.hljs-selector-class),
+    :global(.hljs-selector-id) {
+      color: light-dark(#005cc5, #79c0ff);
+    }
+    :global(.hljs-regexp),
+    :global(.hljs-string),
+    :global(.hljs-meta) :global(.hljs-string) {
+      color: light-dark(#032f62, #a5d6ff);
+    }
+    :global(.hljs-built_in),
+    :global(.hljs-symbol) {
+      color: light-dark(#e36209, #ffa657);
+    }
+    :global(.hljs-comment),
+    :global(.hljs-code),
+    :global(.hljs-formula) {
+      color: light-dark(#6a737d, #8b949e);
+    }
+    :global(.hljs-name),
+    :global(.hljs-quote),
+    :global(.hljs-selector-tag),
+    :global(.hljs-selector-pseudo) {
+      color: light-dark(#22863a, #7ee787);
+    }
+    :global(.hljs-subst) {
+      color: light-dark(#24292e, #c9d1d9);
+    }
+    :global(.hljs-section) {
+      color: light-dark(#005cc5, #1f6feb);
+      font-weight: bold;
+    }
+    :global(.hljs-bullet) {
+      color: light-dark(#735c0f, #f2cc60);
+    }
+    :global(.hljs-emphasis) {
+      color: light-dark(#24292e, #c9d1d9);
+      font-style: italic;
+    }
+    :global(.hljs-strong) {
+      color: light-dark(#24292e, #c9d1d9);
+      font-weight: bold;
+    }
+    :global(.hljs-addition) {
+      color: light-dark(#22863a, #aff5b4);
+      background-color: light-dark(#f0fff4, #033a16);
+    }
+    :global(.hljs-deletion) {
+      color: light-dark(#b31d28, #ffdcd7);
+      background-color: light-dark(#ffeef0, #67060c);
+    }
+  }
+</style>
