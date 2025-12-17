@@ -1,19 +1,19 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../../utils/defaults.js';
 import { preCreateExtension } from '../../utils/pre-create-extension.js';
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  crate: z.any().nullable(),
-  repository_owner: z.string(),
-  repository_owner_id: z.number(),
-  repository_name: z.string(),
-  workflow_filename: z.string(),
-  environment: z.string().nullable(),
-  created_at: z.string(),
+  crate: v.any(),
+  repository_owner: v.string(),
+  repository_owner_id: v.number(),
+  repository_name: v.string(),
+  workflow_filename: v.string(),
+  environment: v.nullable(v.string()),
+  created_at: v.string(),
 });
 
 function preCreate(attrs, counter) {

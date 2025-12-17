@@ -1,5 +1,5 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
@@ -8,25 +8,25 @@ const LICENSES = ['MIT/Apache-2.0', 'MIT', 'Apache-2.0'];
 
 const LANGUAGES = ['Rust', 'JavaScript', 'TypeScript', 'Python', 'CSS', 'HTML', 'Shell'];
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  num: z.string(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  yanked: z.boolean(),
-  yank_message: z.string().nullable(),
-  license: z.string(),
-  downloads: z.number(),
-  features: z.record(z.string(), z.any()).default(() => ({})),
-  crate_size: z.number(),
-  readme: z.string().nullable(),
-  rust_version: z.string().nullable(),
-  trustpub_data: z.any().nullable(),
-  linecounts: z.any().nullable(),
+  num: v.string(),
+  created_at: v.string(),
+  updated_at: v.string(),
+  yanked: v.boolean(),
+  yank_message: v.nullable(v.string()),
+  license: v.string(),
+  downloads: v.number(),
+  features: v.optional(v.record(v.string(), v.any()), () => ({})),
+  crate_size: v.number(),
+  readme: v.nullable(v.string()),
+  rust_version: v.nullable(v.string()),
+  trustpub_data: v.any(),
+  linecounts: v.any(),
 
-  crate: z.any(),
-  publishedBy: z.any().nullable().default(null),
+  crate: v.any(),
+  publishedBy: v.optional(v.any(), null),
 });
 
 function preCreate(attrs, counter) {

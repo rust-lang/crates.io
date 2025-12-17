@@ -1,24 +1,24 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 import { dasherize } from '../utils/strings.js';
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  name: z.string().nullable(),
-  login: z.string(),
-  url: z.string(),
-  avatar: z.string(),
-  email: z.string().nullable(),
-  emailVerificationToken: z.string().nullable(),
-  emailVerified: z.boolean(),
-  isAdmin: z.boolean(),
-  publishNotifications: z.boolean(),
+  name: v.nullable(v.string()),
+  login: v.string(),
+  url: v.string(),
+  avatar: v.string(),
+  email: v.nullable(v.string()),
+  emailVerificationToken: v.nullable(v.string()),
+  emailVerified: v.boolean(),
+  isAdmin: v.boolean(),
+  publishNotifications: v.boolean(),
 
-  followedCrates: z.array(z.any()).default(() => []),
+  followedCrates: v.optional(v.array(v.any()), () => []),
 });
 
 function preCreate(attrs, counter) {

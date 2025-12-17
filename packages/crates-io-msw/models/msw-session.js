@@ -1,5 +1,5 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
@@ -12,10 +12,10 @@ import { preCreateExtension } from '../utils/pre-create-extension.js';
  * This mock implementation means that there can only ever exist one
  * session at a time.
  */
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  user: z.any(),
+  user: v.any(),
 });
 
 function preCreate(attrs, counter) {

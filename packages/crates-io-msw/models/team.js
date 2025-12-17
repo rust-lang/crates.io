@@ -1,19 +1,19 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
 const ORGS = ['rust-lang', 'emberjs', 'rust-random', 'georust', 'actix'];
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  name: z.string(),
-  org: z.string(),
-  login: z.string(),
-  url: z.string(),
-  avatar: z.string(),
+  name: v.string(),
+  org: v.string(),
+  login: v.string(),
+  url: v.string(),
+  avatar: v.string(),
 });
 
 function preCreate(attrs, counter) {

@@ -1,18 +1,18 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 import { dasherize } from '../utils/strings.js';
 
-const schema = z.object({
-  id: z.string(),
+const schema = v.object({
+  id: v.string(),
 
-  category: z.string(),
-  slug: z.string(),
-  description: z.string(),
-  created_at: z.string(),
-  crates_cnt: z.number().nullable(),
+  category: v.string(),
+  slug: v.string(),
+  description: v.string(),
+  created_at: v.string(),
+  crates_cnt: v.nullable(v.number()),
 });
 
 function preCreate(attrs, counter) {

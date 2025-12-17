@@ -1,16 +1,16 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  date: z.string(),
-  downloads: z.number(),
+  date: v.string(),
+  downloads: v.number(),
 
-  version: z.any(),
+  version: v.any(),
 });
 
 function preCreate(attrs, counter) {

@@ -1,23 +1,23 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
 const REQS = ['^0.1.0', '^2.1.3', '0.3.7', '~5.2.12'];
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  default_features: z.boolean(),
-  features: z.array(z.any()),
-  kind: z.string(),
-  optional: z.boolean(),
-  req: z.string(),
-  target: z.string().nullable(),
+  default_features: v.boolean(),
+  features: v.array(v.any()),
+  kind: v.string(),
+  optional: v.boolean(),
+  req: v.string(),
+  target: v.nullable(v.string()),
 
-  crate: z.any(),
-  version: z.any(),
+  crate: v.any(),
+  version: v.any(),
 });
 
 function preCreate(attrs, counter) {

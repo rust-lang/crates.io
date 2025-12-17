@@ -1,28 +1,28 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
-const schema = z.object({
-  // `z.string()` is used to support some of our old fixture that use strings here for some reason
-  id: z.number().or(z.string()),
+const schema = v.object({
+  // `v.string()` is used to support some of our old fixtures that use strings here for some reason
+  id: v.union([v.number(), v.string()]),
 
-  name: z.string(),
-  description: z.string(),
-  downloads: z.number(),
-  recent_downloads: z.number(),
-  documentation: z.string().nullable(),
-  homepage: z.string().nullable(),
-  repository: z.string().nullable(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  badges: z.array(z.any()),
-  _extra_downloads: z.array(z.any()),
-  trustpubOnly: z.boolean(),
+  name: v.string(),
+  description: v.string(),
+  downloads: v.number(),
+  recent_downloads: v.number(),
+  documentation: v.nullable(v.string()),
+  homepage: v.nullable(v.string()),
+  repository: v.nullable(v.string()),
+  created_at: v.string(),
+  updated_at: v.string(),
+  badges: v.array(v.any()),
+  _extra_downloads: v.array(v.any()),
+  trustpubOnly: v.boolean(),
 
-  categories: z.array(z.any()).default(() => []),
-  keywords: z.array(z.any()).default(() => []),
+  categories: v.optional(v.array(v.any()), () => []),
+  keywords: v.optional(v.array(v.any()), () => []),
 });
 
 function preCreate(attrs, counter) {
