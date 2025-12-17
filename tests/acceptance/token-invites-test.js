@@ -47,8 +47,8 @@ module('Acceptance | /accept-invite/:token', function (hooks) {
   });
 
   test('shows success for known token', async function (assert) {
-    let inviter = await this.db.user.create();
-    let invitee = await this.db.user.create();
+    let inviter = await this.db.user.create({});
+    let invitee = await this.db.user.create({});
 
     let crate = await this.db.crate.create({ name: 'nanomsg' });
     await this.db.version.create({ crate });

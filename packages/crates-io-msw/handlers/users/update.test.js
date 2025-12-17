@@ -22,7 +22,7 @@ test('updates the user with a new email address', async function () {
 });
 
 test('updates the `publish_notifications` settings', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
   expect(user.publishNotifications).toBe(true);
 

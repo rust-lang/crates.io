@@ -12,8 +12,8 @@ let test = _test.extend({
 });
 
 test('can accept an invitation', async function ({ serde }) {
-  let inviter = await db.user.create();
-  let invitee = await db.user.create();
+  let inviter = await db.user.create({});
+  let invitee = await db.user.create({});
   await db.mswSession.create({ user: invitee });
 
   await db.crateOwnerInvitation.create({ crate: serde, invitee, inviter });
@@ -39,8 +39,8 @@ test('can accept an invitation', async function ({ serde }) {
 });
 
 test('can decline an invitation', async function ({ serde }) {
-  let inviter = await db.user.create();
-  let invitee = await db.user.create();
+  let inviter = await db.user.create({});
+  let invitee = await db.user.create({});
   await db.mswSession.create({ user: invitee });
 
   await db.crateOwnerInvitation.create({ crate: serde, invitee, inviter });
@@ -66,7 +66,7 @@ test('can decline an invitation', async function ({ serde }) {
 });
 
 test('returns 404 if invite does not exist', async function ({ serde }) {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let body = JSON.stringify({ crate_owner_invite: { crate_id: serde.id, accepted: true } });
@@ -75,8 +75,8 @@ test('returns 404 if invite does not exist', async function ({ serde }) {
 });
 
 test('returns 404 if invite is for another user', async function ({ serde }) {
-  let inviter = await db.user.create();
-  let invitee = await db.user.create();
+  let inviter = await db.user.create({});
+  let invitee = await db.user.create({});
   await db.mswSession.create({ user: inviter });
 
   await db.crateOwnerInvitation.create({ crate: serde, invitee, inviter });

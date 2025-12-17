@@ -3,13 +3,13 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `user` is not set', async ({ expect }) => {
-  await expect(() => db.mswSession.create()).rejects.toThrowErrorMatchingInlineSnapshot(
+  await expect(() => db.mswSession.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`user\` relationship]`,
   );
 });
 
 test('happy path', async ({ expect }) => {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let session = await db.mswSession.create({ user });
   expect(session).toMatchInlineSnapshot(`
     {

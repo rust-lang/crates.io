@@ -20,7 +20,7 @@ test('returns a paginated categories list', async function () {
     category: 'no-std',
     description: 'Crates that are able to function without the Rust standard library.',
   });
-  await Promise.all(Array.from({ length: 2 }, () => db.category.create()));
+  await Promise.all(Array.from({ length: 2 }, () => db.category.create({})));
 
   let response = await fetch('/api/v1/categories');
   expect(response.status).toBe(200);
@@ -60,7 +60,7 @@ test('returns a paginated categories list', async function () {
 });
 
 test('never returns more than 10 results', async function () {
-  await Promise.all(Array.from({ length: 25 }, () => db.category.create()));
+  await Promise.all(Array.from({ length: 25 }, () => db.category.create({})));
 
   let response = await fetch('/api/v1/categories');
   expect(response.status).toBe(200);

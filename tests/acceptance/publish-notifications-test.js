@@ -11,7 +11,7 @@ module('Acceptance | publish notifications', function (hooks) {
   setupApplicationTest(hooks);
 
   test('unsubscribe and resubscribe', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
 
     await this.authenticateAs(user);
     assert.true(user.publishNotifications);
@@ -36,7 +36,7 @@ module('Acceptance | publish notifications', function (hooks) {
   });
 
   test('loading and error state', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
 
     let deferred = defer();
     this.worker.use(http.put('/api/v1/users/:user_id', () => deferred.promise));

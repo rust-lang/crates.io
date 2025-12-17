@@ -19,7 +19,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/owners', { method: 'DELETE', body: REMOVE_USER_BODY });
@@ -36,13 +36,13 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('can remove a user owner', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let crate = await db.crate.create({ name: 'foo' });
   await db.crateOwnership.create({ crate, user });
 
-  let user2 = await db.user.create();
+  let user2 = await db.user.create({});
   await db.crateOwnership.create({ crate, user: user2 });
 
   let body = JSON.stringify({ owners: [user2.login] });
@@ -64,13 +64,13 @@ test('can remove a user owner', async function () {
 });
 
 test('can remove a team owner', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let crate = await db.crate.create({ name: 'foo' });
   await db.crateOwnership.create({ crate, user });
 
-  let team = await db.team.create();
+  let team = await db.team.create({});
   await db.crateOwnership.create({ crate, team });
 
   let body = JSON.stringify({ owners: [team.login] });
@@ -93,16 +93,16 @@ test('can remove a team owner', async function () {
 });
 
 test('can remove multiple owners', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let crate = await db.crate.create({ name: 'foo' });
   await db.crateOwnership.create({ crate, user });
 
-  let team = await db.team.create();
+  let team = await db.team.create({});
   await db.crateOwnership.create({ crate, team });
 
-  let user2 = await db.user.create();
+  let user2 = await db.user.create({});
   await db.crateOwnership.create({ crate, user: user2 });
 
   let body = JSON.stringify({ owners: [user2.login, team.login] });

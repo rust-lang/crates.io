@@ -75,7 +75,7 @@ test('returns a paginated crates list', async function () {
 });
 
 test('never returns more than 10 results', async function () {
-  let crates = await Promise.all(Array.from({ length: 25 }, () => db.crate.create()));
+  let crates = await Promise.all(Array.from({ length: 25 }, () => db.crate.create({})));
   await Promise.all(crates.map(crate => db.version.create({ crate })));
 
   let response = await fetch('/api/v1/crates');
@@ -160,8 +160,8 @@ test('supports a `q` parameter', async function () {
 });
 
 test('supports a `user_id` parameter', async function () {
-  let user1 = await db.user.create();
-  let user2 = await db.user.create();
+  let user1 = await db.user.create({});
+  let user2 = await db.user.create({});
 
   let foo = await db.crate.create({ name: 'foo' });
   await db.version.create({ crate: foo });
@@ -182,8 +182,8 @@ test('supports a `user_id` parameter', async function () {
 });
 
 test('supports a `team_id` parameter', async function () {
-  let team1 = await db.team.create();
-  let team2 = await db.team.create();
+  let team1 = await db.team.create({});
+  let team2 = await db.team.create({});
 
   let foo = await db.crate.create({ name: 'foo' });
   await db.version.create({ crate: foo });

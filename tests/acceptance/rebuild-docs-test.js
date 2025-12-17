@@ -9,7 +9,7 @@ module('Acceptance | rebuild docs page', function (hooks) {
   setupApplicationTest(hooks);
 
   test('navigates to rebuild docs confirmation page', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     let crate = await this.db.crate.create({ name: 'nanomsg' });
@@ -34,7 +34,7 @@ module('Acceptance | rebuild docs page', function (hooks) {
   });
 
   test('rebuild docs confirmation page shows crate info and allows confirmation', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     let crate = await this.db.crate.create({ name: 'nanomsg' });
@@ -57,7 +57,7 @@ module('Acceptance | rebuild docs page', function (hooks) {
   });
 
   test('rebuilds docs confirmation page redirects non-owners to error page', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     let crate = await this.db.crate.create({ name: 'nanomsg' });

@@ -19,7 +19,7 @@ module('Model | Version', function (hooks) {
   test('isNew', async function (assert) {
     let { db, store } = this;
 
-    let crate = await db.crate.create();
+    let crate = await db.crate.create({});
     await db.version.create({ crate, created_at: '2010-06-16T21:30:45Z' });
 
     let crateRecord = await store.findRecord('crate', crate.name);
@@ -77,7 +77,7 @@ module('Model | Version', function (hooks) {
     async function prepare(context, { num }) {
       let { db, store } = context;
 
-      let crate = await db.crate.create();
+      let crate = await db.crate.create({});
       await db.version.create({ crate, num });
 
       let crateRecord = await store.findRecord('crate', crate.name);
@@ -167,7 +167,7 @@ module('Model | Version', function (hooks) {
         '0.1.1',
       ];
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       for (let num of nums.toReversed()) {
         await this.db.version.create({ crate, num });
       }
@@ -199,7 +199,7 @@ module('Model | Version', function (hooks) {
     });
 
     test('ignores yanked versions', async function (assert) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate, num: '0.4.0' });
       await this.db.version.create({ crate, num: '0.4.1' });
       await this.db.version.create({ crate, num: '0.4.2', yanked: true });
@@ -219,7 +219,7 @@ module('Model | Version', function (hooks) {
     });
 
     test('handles newly released versions correctly', async function (assert) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate, num: '0.4.0' });
       await this.db.version.create({ crate, num: '0.4.1' });
 
@@ -257,7 +257,7 @@ module('Model | Version', function (hooks) {
     async function prepare(context, { features }) {
       let { db, store } = context;
 
-      let crate = await db.crate.create();
+      let crate = await db.crate.create({});
       await db.version.create({ crate, features });
 
       let crateRecord = await store.findRecord('crate', crate.name);
@@ -337,7 +337,7 @@ module('Model | Version', function (hooks) {
   test('`published_by` relationship is assigned correctly', async function (assert) {
     let user = await this.db.user.create({ name: 'JD' });
 
-    let crate = await this.db.crate.create();
+    let crate = await this.db.crate.create({});
     await this.db.version.create({ crate, publishedBy: user });
 
     let crateRecord = await this.store.findRecord('crate', crate.name);

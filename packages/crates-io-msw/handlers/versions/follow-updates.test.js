@@ -78,7 +78,7 @@ test('returns latest versions of followed crates', async function () {
 });
 
 test('empty case', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/updates');

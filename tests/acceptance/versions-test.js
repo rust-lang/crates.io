@@ -38,7 +38,7 @@ module('Acceptance | crate versions page', function (hooks) {
   });
 
   test('shows correct release tracks label after yanking/unyanking', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     let crate = await this.db.crate.create({ name: 'nanomsg' });

@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 test('creates a new API token', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let body = JSON.stringify({ api_token: { name: 'foooo' } });
@@ -40,7 +40,7 @@ test('creates a new API token', async function () {
 });
 
 test('creates a new API token with scopes', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let body = JSON.stringify({
@@ -79,7 +79,7 @@ test('creates a new API token with scopes', async function () {
 });
 
 test('creates a new API token with expiry date', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let body = JSON.stringify({

@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('default are applied', async ({ expect }) => {
-  let crate = await db.crate.create();
+  let crate = await db.crate.create({});
   expect(crate).toMatchInlineSnapshot(`
     {
       "_extra_downloads": [],
@@ -26,9 +26,9 @@ test('default are applied', async ({ expect }) => {
 });
 
 test('attributes can be set', async ({ expect }) => {
-  let category = await db.category.create();
-  let keyword1 = await db.keyword.create();
-  let keyword2 = await db.keyword.create();
+  let category = await db.category.create({});
+  let keyword1 = await db.keyword.create({});
+  let keyword2 = await db.keyword.create({});
 
   let crate = await db.crate.create({
     name: 'crates-io',

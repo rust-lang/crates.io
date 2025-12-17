@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
 
     let crate = await msw.db.crate.create({ name: 'foo' });
     await msw.db.version.create({ crate });

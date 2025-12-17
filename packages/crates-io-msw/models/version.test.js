@@ -3,13 +3,13 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `crate` is not set', async ({ expect }) => {
-  await expect(() => db.version.create()).rejects.toThrowErrorMatchingInlineSnapshot(
+  await expect(() => db.version.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`crate\` relationship on \`version:1.0.0\`]`,
   );
 });
 
 test('happy path', async ({ expect }) => {
-  let crate = await db.crate.create();
+  let crate = await db.crate.create({});
   let version = await db.version.create({ crate });
   expect(version).toMatchInlineSnapshot(`
     {

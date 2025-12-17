@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('default are applied', async ({ expect }) => {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   expect(user).toMatchInlineSnapshot(`
     {
       "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",

@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns the requested token', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let token = await db.apiToken.create({
@@ -35,7 +35,7 @@ test('returns the requested token', async function () {
 });
 
 test('returns 404 if token not found', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/tokens/42');

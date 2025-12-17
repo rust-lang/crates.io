@@ -42,7 +42,7 @@ module('Acceptance | /crates/:crate_id/reverse_dependencies', function (hooks) {
     let { foo } = await prepare(this);
 
     for (let i = 0; i < 20; i++) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       let version = await this.db.version.create({ crate });
       await this.db.dependency.create({ crate: foo, version });
     }

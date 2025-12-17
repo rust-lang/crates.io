@@ -15,10 +15,10 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('query()', function () {
     test('fetches GitHub configs for a crate', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user });
 
@@ -39,7 +39,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       await assert.rejects(this.store.query('trustpub-github-config', { crate: crate.name }), function (error) {
@@ -49,10 +49,10 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       await assert.rejects(this.store.query('trustpub-github-config', { crate: crate.name }), function (error) {
@@ -67,7 +67,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
       let user = await this.db.user.create({ emailVerified: true });
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user });
 
@@ -86,7 +86,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       let config = this.store.createRecord('trustpub-github-config', {
@@ -106,7 +106,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
       let user = await this.db.user.create({ emailVerified: true });
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       let config = this.store.createRecord('trustpub-github-config', {
@@ -126,7 +126,7 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
       let user = await this.db.user.create({ emailVerified: false });
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user });
 
@@ -147,10 +147,10 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
 
   module('deleteRecord()', function () {
     test('deletes a GitHub config', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user });
 
@@ -172,9 +172,9 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not authenticated', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user });
 
@@ -199,10 +199,10 @@ module('Model | TrustpubGitHubConfig', function (hooks) {
     });
 
     test('returns an error if the user is not an owner of the crate', async function (assert) {
-      let user1 = await this.db.user.create();
-      let user2 = await this.db.user.create();
+      let user1 = await this.db.user.create({});
+      let user2 = await this.db.user.create({});
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
       await this.db.crateOwnership.create({ crate, user: user1 });
 

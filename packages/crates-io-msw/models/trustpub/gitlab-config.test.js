@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { db } from '../../index.js';
 
 test('defaults are applied', async ({ expect }) => {
-  let crate = await db.crate.create();
+  let crate = await db.crate.create({});
   let config = await db.trustpubGitlabConfig.create({ crate });
   expect(config).toMatchInlineSnapshot(`
     {

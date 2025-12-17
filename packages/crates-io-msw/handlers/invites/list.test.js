@@ -9,7 +9,7 @@ test('happy path (invitee_id)', async function () {
   let ember = await db.crate.create({ name: 'ember-rs' });
   await db.version.create({ crate: ember });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let inviter = await db.user.create({ name: 'janed' });
@@ -81,7 +81,7 @@ test('happy path (invitee_id)', async function () {
 });
 
 test('happy path with empty response (invitee_id)', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id}`);
@@ -98,13 +98,13 @@ test('happy path with empty response (invitee_id)', async function () {
 });
 
 test('happy path with pagination (invitee_id)', async function () {
-  let inviter = await db.user.create();
+  let inviter = await db.user.create({});
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   for (let i = 0; i < 15; i++) {
-    let crate = await db.crate.create();
+    let crate = await db.crate.create({});
     await db.version.create({ crate });
     await db.crateOwnerInvitation.create({ crate, invitee: user, inviter });
   }
@@ -129,7 +129,7 @@ test('happy path (crate_name)', async function () {
   let ember = await db.crate.create({ name: 'ember-rs' });
   await db.version.create({ crate: ember });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let inviter = await db.user.create({ name: 'janed' });
@@ -200,7 +200,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 400 if query params are missing', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations`);
@@ -217,7 +217,7 @@ test('returns 400 if query params are missing', async function () {
 });
 
 test("returns 404 if crate can't be found", async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?crate_name=foo`);
@@ -234,7 +234,7 @@ test("returns 404 if crate can't be found", async function () {
 });
 
 test('returns 403 if requesting for other user', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/private/crate_owner_invitations?invitee_id=${user.id + 1}`);

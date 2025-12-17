@@ -54,7 +54,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 if config ID is invalid', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/trusted_publishing/github_configs/invalid', {
@@ -74,7 +74,7 @@ test('returns 404 if config ID is invalid', async function () {
 });
 
 test("returns 404 if config can't be found", async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/trusted_publishing/github_configs/999999', {
@@ -97,7 +97,7 @@ test('returns 400 if user is not an owner of the crate', async function () {
   let crate = await db.crate.create({ name: 'test-crate-not-owner' });
   await db.version.create({ crate });
 
-  let owner = await db.user.create();
+  let owner = await db.user.create({});
   await db.crateOwnership.create({
     crate,
     user: owner,
@@ -113,7 +113,7 @@ test('returns 400 if user is not an owner of the crate', async function () {
   });
 
   // Login as a different user
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs/${config.id}`, {

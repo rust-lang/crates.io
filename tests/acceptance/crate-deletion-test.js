@@ -9,7 +9,7 @@ module('Acceptance | crate deletion', function (hooks) {
   setupApplicationTest(hooks);
 
   test('happy path', async function (assert) {
-    let user = await this.db.user.create();
+    let user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     let crate = await this.db.crate.create({ name: 'foo' });

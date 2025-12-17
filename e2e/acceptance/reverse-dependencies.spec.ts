@@ -37,7 +37,7 @@ test.describe('Acceptance | /crates/:crate_id/reverse_dependencies', { tag: '@ac
     let { foo } = await prepare(msw);
 
     for (let i = 0; i < 20; i++) {
-      let crate = await msw.db.crate.create();
+      let crate = await msw.db.crate.create({});
       let version = await msw.db.version.create({ crate });
       await msw.db.dependency.create({ crate: foo, version });
     }

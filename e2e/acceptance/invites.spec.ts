@@ -15,7 +15,7 @@ test.describe('Acceptance | /me/pending-invites', { tag: '@acceptance' }, () => 
     let inviter = await msw.db.user.create({ name: 'janed' });
     let inviter2 = await msw.db.user.create({ name: 'wycats' });
 
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
 
     let nanomsg = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate: nanomsg });

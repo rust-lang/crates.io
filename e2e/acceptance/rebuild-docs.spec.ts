@@ -2,7 +2,7 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   test('navigates to rebuild docs confirmation page', async ({ page, msw }) => {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
@@ -29,7 +29,7 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   });
 
   test('rebuild docs confirmation page shows crate info and allows confirmation', async ({ page, msw }) => {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
@@ -52,7 +52,7 @@ test.describe('Acceptance | rebuild docs page', { tag: '@acceptance' }, () => {
   });
 
   test('rebuild docs confirmation page redirects non-owners to error page', async ({ page, msw }) => {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
     let crate = await msw.db.crate.create({ name: 'nanomsg' });

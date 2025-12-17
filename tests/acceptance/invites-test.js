@@ -15,7 +15,7 @@ module('Acceptance | /me/pending-invites', function (hooks) {
     let inviter = await context.db.user.create({ name: 'janed' });
     let inviter2 = await context.db.user.create({ name: 'wycats' });
 
-    let user = await context.db.user.create();
+    let user = await context.db.user.create({});
 
     let nanomsg = await context.db.crate.create({ name: 'nanomsg' });
     await context.db.version.create({ crate: nanomsg });
