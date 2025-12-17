@@ -9,9 +9,15 @@ test('returns 403 if unauthenticated', async function () {
     body: JSON.stringify({ crate: { trustpub_only: true } }),
   });
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown crates', async function () {
@@ -24,7 +30,15 @@ test('returns 404 for unknown crates', async function () {
     body: JSON.stringify({ crate: { trustpub_only: true } }),
   });
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'crate `foo` does not exist' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "crate \`foo\` does not exist",
+        },
+      ],
+    }
+  `);
 });
 
 test('updates trustpub_only flag', async function () {

@@ -42,9 +42,15 @@ test('returns 403 if unauthenticated', async function () {
   });
 
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 if config ID is invalid', async function () {
@@ -56,9 +62,15 @@ test('returns 404 if config ID is invalid', async function () {
   });
 
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'Not Found' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test("returns 404 if config can't be found", async function () {
@@ -70,9 +82,15 @@ test("returns 404 if config can't be found", async function () {
   });
 
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'Not Found' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 400 if user is not an owner of the crate', async function () {
@@ -103,7 +121,13 @@ test('returns 400 if user is not an owner of the crate', async function () {
   });
 
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'You are not an owner of this crate' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "You are not an owner of this crate",
+        },
+      ],
+    }
+  `);
 });

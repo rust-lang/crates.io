@@ -10,7 +10,7 @@ test('revokes an API token', async function () {
 
   let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({});
+  expect(await response.json()).toMatchInlineSnapshot(`{}`);
 
   let tokens = db.apiToken.findMany(null);
   expect(tokens.length).toBe(0);
@@ -22,7 +22,13 @@ test('returns an error if unauthenticated', async function () {
 
   let response = await fetch(`/api/v1/me/tokens/${token.id}`, { method: 'DELETE' });
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });

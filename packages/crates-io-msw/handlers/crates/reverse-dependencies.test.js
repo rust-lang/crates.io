@@ -5,7 +5,15 @@ import { db } from '../../index.js';
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('empty case', async function () {
@@ -13,13 +21,15 @@ test('empty case', async function () {
 
   let response = await fetch('/api/v1/crates/rand/reverse_dependencies');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    dependencies: [],
-    versions: [],
-    meta: {
-      total: 0,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "dependencies": [],
+      "meta": {
+        "total": 0,
+      },
+      "versions": [],
+    }
+  `);
 });
 
 test('returns a paginated list of crate versions depending to the specified crate', async function () {
@@ -41,118 +51,120 @@ test('returns a paginated list of crate versions depending to the specified crat
 
   let response = await fetch('/api/v1/crates/foo/reverse_dependencies');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    dependencies: [
-      {
-        id: 2,
-        crate_id: 'foo',
-        default_features: false,
-        features: [],
-        kind: 'normal',
-        optional: true,
-        req: '0.3.7',
-        target: null,
-        version_id: 2,
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "dependencies": [
+        {
+          "crate_id": "foo",
+          "default_features": false,
+          "features": [],
+          "id": 2,
+          "kind": "normal",
+          "optional": true,
+          "req": "0.3.7",
+          "target": null,
+          "version_id": 2,
+        },
+        {
+          "crate_id": "foo",
+          "default_features": false,
+          "features": [],
+          "id": 1,
+          "kind": "normal",
+          "optional": true,
+          "req": "^2.1.3",
+          "target": null,
+          "version_id": 1,
+        },
+      ],
+      "meta": {
+        "total": 2,
       },
-      {
-        id: 1,
-        crate_id: 'foo',
-        default_features: false,
-        features: [],
-        kind: 'normal',
-        optional: true,
-        req: '^2.1.3',
-        target: null,
-        version_id: 1,
-      },
-    ],
-    versions: [
-      {
-        id: 2,
-        crate: 'baz',
-        crate_size: 325_926,
-        created_at: '2010-06-16T21:30:45Z',
-        dl_path: '/api/v1/crates/baz/1.0.1/download',
-        downloads: 7404,
-        features: {},
-        license: 'Apache-2.0',
-        linecounts: {
-          languages: {
-            CSS: {
-              code_lines: 503,
-              comment_lines: 42,
-              files: 2,
+      "versions": [
+        {
+          "crate": "baz",
+          "crate_size": 325926,
+          "created_at": "2010-06-16T21:30:45Z",
+          "dl_path": "/api/v1/crates/baz/1.0.1/download",
+          "downloads": 7404,
+          "features": {},
+          "id": 2,
+          "license": "Apache-2.0",
+          "linecounts": {
+            "languages": {
+              "CSS": {
+                "code_lines": 503,
+                "comment_lines": 42,
+                "files": 2,
+              },
+              "Python": {
+                "code_lines": 284,
+                "comment_lines": 91,
+                "files": 3,
+              },
+              "TypeScript": {
+                "code_lines": 332,
+                "comment_lines": 83,
+                "files": 7,
+              },
             },
-            Python: {
-              code_lines: 284,
-              comment_lines: 91,
-              files: 3,
-            },
-            TypeScript: {
-              code_lines: 332,
-              comment_lines: 83,
-              files: 7,
-            },
+            "total_code_lines": 1119,
+            "total_comment_lines": 216,
           },
-          total_code_lines: 1119,
-          total_comment_lines: 216,
-        },
-        links: {
-          dependencies: '/api/v1/crates/baz/1.0.1/dependencies',
-          version_downloads: '/api/v1/crates/baz/1.0.1/downloads',
-        },
-        num: '1.0.1',
-        published_by: null,
-        readme_path: '/api/v1/crates/baz/1.0.1/readme',
-        rust_version: null,
-        trustpub_data: null,
-        updated_at: '2017-02-24T12:34:56Z',
-        yanked: false,
-        yank_message: null,
-      },
-      {
-        id: 1,
-        crate: 'bar',
-        crate_size: 162_963,
-        created_at: '2010-06-16T21:30:45Z',
-        dl_path: '/api/v1/crates/bar/1.0.0/download',
-        downloads: 3702,
-        features: {},
-        license: 'MIT',
-        linecounts: {
-          languages: {
-            JavaScript: {
-              code_lines: 325,
-              comment_lines: 80,
-              files: 8,
-            },
-            TypeScript: {
-              code_lines: 195,
-              comment_lines: 10,
-              files: 2,
-            },
+          "links": {
+            "dependencies": "/api/v1/crates/baz/1.0.1/dependencies",
+            "version_downloads": "/api/v1/crates/baz/1.0.1/downloads",
           },
-          total_code_lines: 520,
-          total_comment_lines: 90,
+          "num": "1.0.1",
+          "published_by": null,
+          "readme_path": "/api/v1/crates/baz/1.0.1/readme",
+          "rust_version": null,
+          "trustpub_data": null,
+          "updated_at": "2017-02-24T12:34:56Z",
+          "yank_message": null,
+          "yanked": false,
         },
-        links: {
-          dependencies: '/api/v1/crates/bar/1.0.0/dependencies',
-          version_downloads: '/api/v1/crates/bar/1.0.0/downloads',
+        {
+          "crate": "bar",
+          "crate_size": 162963,
+          "created_at": "2010-06-16T21:30:45Z",
+          "dl_path": "/api/v1/crates/bar/1.0.0/download",
+          "downloads": 3702,
+          "features": {},
+          "id": 1,
+          "license": "MIT",
+          "linecounts": {
+            "languages": {
+              "JavaScript": {
+                "code_lines": 325,
+                "comment_lines": 80,
+                "files": 8,
+              },
+              "TypeScript": {
+                "code_lines": 195,
+                "comment_lines": 10,
+                "files": 2,
+              },
+            },
+            "total_code_lines": 520,
+            "total_comment_lines": 90,
+          },
+          "links": {
+            "dependencies": "/api/v1/crates/bar/1.0.0/dependencies",
+            "version_downloads": "/api/v1/crates/bar/1.0.0/downloads",
+          },
+          "num": "1.0.0",
+          "published_by": null,
+          "readme_path": "/api/v1/crates/bar/1.0.0/readme",
+          "rust_version": null,
+          "trustpub_data": null,
+          "updated_at": "2017-02-24T12:34:56Z",
+          "yank_message": null,
+          "yanked": false,
         },
-        num: '1.0.0',
-        published_by: null,
-        readme_path: '/api/v1/crates/bar/1.0.0/readme',
-        rust_version: null,
-        trustpub_data: null,
-        updated_at: '2017-02-24T12:34:56Z',
-        yanked: false,
-        yank_message: null,
-      },
-    ],
-    meta: {
-      total: 2,
-    },
-  });
+      ],
+    }
+  `);
 });
 
 test('never returns more than 10 results', async function () {
@@ -189,12 +201,14 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.dependencies.length).toBe(5);
-  expect(responsePayload.versions.map(it => it.crate)).toEqual([
-    'crate-24',
-    'crate-02',
-    'crate-15',
-    'crate-06',
-    'crate-19',
-  ]);
+  expect(responsePayload.versions.map(it => it.crate)).toMatchInlineSnapshot(`
+    [
+      "crate-24",
+      "crate-02",
+      "crate-15",
+      "crate-06",
+      "crate-19",
+    ]
+  `);
   expect(responsePayload.meta.total).toBe(25);
 });

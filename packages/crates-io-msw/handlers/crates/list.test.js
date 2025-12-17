@@ -5,12 +5,14 @@ import { db } from '../../index.js';
 test('empty case', async function () {
   let response = await fetch('/api/v1/crates');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    crates: [],
-    meta: {
-      total: 0,
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "crates": [],
+      "meta": {
+        "total": 0,
+      },
+    }
+  `);
 });
 
 test('returns a paginated crates list', async function () {
@@ -30,44 +32,46 @@ test('returns a paginated crates list', async function () {
 
   let response = await fetch('/api/v1/crates');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    crates: [
-      {
-        id: 'rand',
-        badges: [],
-        categories: null,
-        created_at: '2010-06-16T21:30:45Z',
-        default_version: '1.0.0',
-        description: 'This is the description for the crate called "rand"',
-        documentation: null,
-        downloads: 37_035,
-        exact_match: false,
-        homepage: null,
-        keywords: null,
-        links: {
-          owner_team: '/api/v1/crates/rand/owner_team',
-          owner_user: '/api/v1/crates/rand/owner_user',
-          reverse_dependencies: '/api/v1/crates/rand/reverse_dependencies',
-          version_downloads: '/api/v1/crates/rand/downloads',
-          versions: '/api/v1/crates/rand/versions',
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "crates": [
+        {
+          "badges": [],
+          "categories": null,
+          "created_at": "2010-06-16T21:30:45Z",
+          "default_version": "1.0.0",
+          "description": "This is the description for the crate called "rand"",
+          "documentation": null,
+          "downloads": 37035,
+          "exact_match": false,
+          "homepage": null,
+          "id": "rand",
+          "keywords": null,
+          "links": {
+            "owner_team": "/api/v1/crates/rand/owner_team",
+            "owner_user": "/api/v1/crates/rand/owner_user",
+            "reverse_dependencies": "/api/v1/crates/rand/reverse_dependencies",
+            "version_downloads": "/api/v1/crates/rand/downloads",
+            "versions": "/api/v1/crates/rand/versions",
+          },
+          "max_stable_version": "1.0.0",
+          "max_version": "2.0.0-beta.1",
+          "name": "rand",
+          "newest_version": "2.0.0-beta.1",
+          "num_versions": 2,
+          "recent_downloads": 321,
+          "repository": null,
+          "trustpub_only": false,
+          "updated_at": "2017-02-24T12:34:56Z",
+          "versions": null,
+          "yanked": false,
         },
-        max_version: '2.0.0-beta.1',
-        max_stable_version: '1.0.0',
-        name: 'rand',
-        newest_version: '2.0.0-beta.1',
-        num_versions: 2,
-        repository: null,
-        recent_downloads: 321,
-        trustpub_only: false,
-        updated_at: '2017-02-24T12:34:56Z',
-        versions: null,
-        yanked: false,
+      ],
+      "meta": {
+        "total": 1,
       },
-    ],
-    meta: {
-      total: 1,
-    },
-  });
+    }
+  `);
 });
 
 test('never returns more than 10 results', async function () {
@@ -93,7 +97,15 @@ test('supports `page` and `per_page` parameters', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(5);
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['crate-06', 'crate-07', 'crate-08', 'crate-09', 'crate-10']);
+  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+    [
+      "crate-06",
+      "crate-07",
+      "crate-08",
+      "crate-09",
+      "crate-10",
+    ]
+  `);
   expect(responsePayload.meta.total).toBe(25);
 });
 
@@ -110,7 +122,12 @@ test('supports a `letter` parameter', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(2);
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['bar', 'BAZ']);
+  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+    [
+      "bar",
+      "BAZ",
+    ]
+  `);
   expect(responsePayload.meta.total).toBe(2);
 });
 
@@ -127,8 +144,18 @@ test('supports a `q` parameter', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.crates.length).toBe(2);
-  expect(responsePayload.crates.map(it => it.id)).toEqual(['123456', '123']);
-  expect(responsePayload.crates.map(it => it.exact_match)).toEqual([false, true]);
+  expect(responsePayload.crates.map(it => it.id)).toMatchInlineSnapshot(`
+    [
+      "123456",
+      "123",
+    ]
+  `);
+  expect(responsePayload.crates.map(it => it.exact_match)).toMatchInlineSnapshot(`
+    [
+      false,
+      true,
+    ]
+  `);
   expect(responsePayload.meta.total).toBe(2);
 });
 

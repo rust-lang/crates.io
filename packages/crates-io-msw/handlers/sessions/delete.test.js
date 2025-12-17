@@ -8,7 +8,11 @@ test('returns 200 when authenticated', async function () {
 
   let response = await fetch('/api/private/session', { method: 'DELETE' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
   expect(db.mswSession.findFirst(null)).toBeFalsy();
 });
@@ -16,7 +20,11 @@ test('returns 200 when authenticated', async function () {
 test('returns 200 when unauthenticated', async function () {
   let response = await fetch('/api/private/session', { method: 'DELETE' });
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ ok: true });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "ok": true,
+    }
+  `);
 
   expect(db.mswSession.findFirst(null)).toBeFalsy();
 });

@@ -5,7 +5,15 @@ import { db } from '../../index.js';
 test('returns 404 for unknown categories', async function () {
   let response = await fetch('/api/v1/categories/foo');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns a category object for known categories', async function () {
@@ -16,16 +24,18 @@ test('returns a category object for known categories', async function () {
 
   let response = await fetch('/api/v1/categories/no-std');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    category: {
-      id: 'no-std',
-      category: 'no-std',
-      crates_cnt: 0,
-      created_at: '2010-06-16T21:30:45Z',
-      description: 'Crates that are able to function without the Rust standard library.',
-      slug: 'no-std',
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "category": {
+        "category": "no-std",
+        "crates_cnt": 0,
+        "created_at": "2010-06-16T21:30:45Z",
+        "description": "Crates that are able to function without the Rust standard library.",
+        "id": "no-std",
+        "slug": "no-std",
+      },
+    }
+  `);
 });
 
 test('calculates `crates_cnt` correctly', async function () {
@@ -36,14 +46,16 @@ test('calculates `crates_cnt` correctly', async function () {
 
   let response = await fetch('/api/v1/categories/test-cli-category');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    category: {
-      category: 'test-cli-category',
-      crates_cnt: 7,
-      created_at: '2010-06-16T21:30:45Z',
-      description: 'This is the description for the category called "test-cli-category"',
-      id: 'test-cli-category',
-      slug: 'test-cli-category',
-    },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "category": {
+        "category": "test-cli-category",
+        "crates_cnt": 7,
+        "created_at": "2010-06-16T21:30:45Z",
+        "description": "This is the description for the category called "test-cli-category"",
+        "id": "test-cli-category",
+        "slug": "test-cli-category",
+      },
+    }
+  `);
 });

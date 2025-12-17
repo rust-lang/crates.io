@@ -5,7 +5,15 @@ import { db } from '../../index.js';
 test('returns 404 for unknown crates', async function () {
   let response = await fetch('/api/v1/crates/foo/1.0.0/downloads');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'Not Found' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "Not Found",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns 404 for unknown versions', async function () {
@@ -13,7 +21,15 @@ test('returns 404 for unknown versions', async function () {
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ errors: [{ detail: 'crate `rand` does not have a version `1.0.0`' }] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "crate \`rand\` does not have a version \`1.0.0\`",
+        },
+      ],
+    }
+  `);
 });
 
 test('empty case', async function () {
@@ -22,9 +38,11 @@ test('empty case', async function () {
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    version_downloads: [],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "version_downloads": [],
+    }
+  `);
 });
 
 test('returns a list of version downloads belonging to the specified crate version', async function () {
@@ -36,23 +54,25 @@ test('returns a list of version downloads belonging to the specified crate versi
 
   let response = await fetch('/api/v1/crates/rand/1.0.0/downloads');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    version_downloads: [
-      {
-        date: '2020-01-13',
-        downloads: 7035,
-        version: 1,
-      },
-      {
-        date: '2020-01-14',
-        downloads: 14_070,
-        version: 1,
-      },
-      {
-        date: '2020-01-15',
-        downloads: 21_105,
-        version: 1,
-      },
-    ],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "version_downloads": [
+        {
+          "date": "2020-01-13",
+          "downloads": 7035,
+          "version": 1,
+        },
+        {
+          "date": "2020-01-14",
+          "downloads": 14070,
+          "version": 1,
+        },
+        {
+          "date": "2020-01-15",
+          "downloads": 21105,
+          "version": 1,
+        },
+      ],
+    }
+  `);
 });

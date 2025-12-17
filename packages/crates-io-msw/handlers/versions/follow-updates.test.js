@@ -5,9 +5,15 @@ import { db } from '../../index.js';
 test('returns 403 for unauthenticated user', async function () {
   let response = await fetch('/api/v1/me/updates');
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
 
 test('returns latest versions of followed crates', async function () {
@@ -22,51 +28,53 @@ test('returns latest versions of followed crates', async function () {
 
   let response = await fetch('/api/v1/me/updates');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    versions: [
-      {
-        id: 1,
-        crate: 'foo',
-        crate_size: 162_963,
-        created_at: '2010-06-16T21:30:45Z',
-        dl_path: '/api/v1/crates/foo/1.2.3/download',
-        downloads: 3702,
-        features: {},
-        license: 'MIT',
-        linecounts: {
-          languages: {
-            JavaScript: {
-              code_lines: 325,
-              comment_lines: 80,
-              files: 8,
-            },
-            TypeScript: {
-              code_lines: 195,
-              comment_lines: 10,
-              files: 2,
-            },
-          },
-          total_code_lines: 520,
-          total_comment_lines: 90,
-        },
-        links: {
-          dependencies: '/api/v1/crates/foo/1.2.3/dependencies',
-          version_downloads: '/api/v1/crates/foo/1.2.3/downloads',
-        },
-        num: '1.2.3',
-        published_by: null,
-        readme_path: '/api/v1/crates/foo/1.2.3/readme',
-        rust_version: null,
-        trustpub_data: null,
-        updated_at: '2017-02-24T12:34:56Z',
-        yanked: false,
-        yank_message: null,
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "meta": {
+        "more": false,
       },
-    ],
-    meta: {
-      more: false,
-    },
-  });
+      "versions": [
+        {
+          "crate": "foo",
+          "crate_size": 162963,
+          "created_at": "2010-06-16T21:30:45Z",
+          "dl_path": "/api/v1/crates/foo/1.2.3/download",
+          "downloads": 3702,
+          "features": {},
+          "id": 1,
+          "license": "MIT",
+          "linecounts": {
+            "languages": {
+              "JavaScript": {
+                "code_lines": 325,
+                "comment_lines": 80,
+                "files": 8,
+              },
+              "TypeScript": {
+                "code_lines": 195,
+                "comment_lines": 10,
+                "files": 2,
+              },
+            },
+            "total_code_lines": 520,
+            "total_comment_lines": 90,
+          },
+          "links": {
+            "dependencies": "/api/v1/crates/foo/1.2.3/dependencies",
+            "version_downloads": "/api/v1/crates/foo/1.2.3/downloads",
+          },
+          "num": "1.2.3",
+          "published_by": null,
+          "readme_path": "/api/v1/crates/foo/1.2.3/readme",
+          "rust_version": null,
+          "trustpub_data": null,
+          "updated_at": "2017-02-24T12:34:56Z",
+          "yank_message": null,
+          "yanked": false,
+        },
+      ],
+    }
+  `);
 });
 
 test('empty case', async function () {
@@ -75,10 +83,14 @@ test('empty case', async function () {
 
   let response = await fetch('/api/v1/me/updates');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    versions: [],
-    meta: { more: false },
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "meta": {
+        "more": false,
+      },
+      "versions": [],
+    }
+  `);
 });
 
 test('supports pagination', async function () {
@@ -93,6 +105,23 @@ test('supports pagination', async function () {
 
   let responsePayload = await response.json();
   expect(responsePayload.versions.length).toBe(10);
-  expect(responsePayload.versions.map(it => it.id)).toEqual([15, 14, 13, 12, 11, 10, 9, 8, 7, 6]);
-  expect(responsePayload.meta).toEqual({ more: true });
+  expect(responsePayload.versions.map(it => it.id)).toMatchInlineSnapshot(`
+    [
+      15,
+      14,
+      13,
+      12,
+      11,
+      10,
+      9,
+      8,
+      7,
+      6,
+    ]
+  `);
+  expect(responsePayload.meta).toMatchInlineSnapshot(`
+    {
+      "more": true,
+    }
+  `);
 });

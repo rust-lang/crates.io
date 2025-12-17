@@ -27,37 +27,44 @@ test('returns the list of API token for the authenticated `user`', async functio
 
   let response = await fetch('/api/v1/me/tokens');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({
-    api_tokens: [
-      {
-        id: 3,
-        crate_scopes: null,
-        created_at: '2017-11-19T14:59:22.000Z',
-        endpoint_scopes: null,
-        expired_at: null,
-        last_used_at: null,
-        name: 'API Token 3',
-      },
-      {
-        id: 2,
-        crate_scopes: null,
-        created_at: '2017-11-19T13:59:22.000Z',
-        endpoint_scopes: null,
-        expired_at: '2023-11-20T10:59:22.000Z',
-        last_used_at: null,
-        name: 'API Token 2',
-      },
-      {
-        id: 1,
-        crate_scopes: ['serde', 'serde-*'],
-        created_at: '2017-11-19T12:59:22.000Z',
-        endpoint_scopes: ['publish-update'],
-        expired_at: null,
-        last_used_at: null,
-        name: 'API Token 1',
-      },
-    ],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "api_tokens": [
+        {
+          "crate_scopes": null,
+          "created_at": "2017-11-19T14:59:22.000Z",
+          "endpoint_scopes": null,
+          "expired_at": null,
+          "id": 3,
+          "last_used_at": null,
+          "name": "API Token 3",
+        },
+        {
+          "crate_scopes": null,
+          "created_at": "2017-11-19T13:59:22.000Z",
+          "endpoint_scopes": null,
+          "expired_at": "2023-11-20T10:59:22.000Z",
+          "id": 2,
+          "last_used_at": null,
+          "name": "API Token 2",
+        },
+        {
+          "crate_scopes": [
+            "serde",
+            "serde-*",
+          ],
+          "created_at": "2017-11-19T12:59:22.000Z",
+          "endpoint_scopes": [
+            "publish-update",
+          ],
+          "expired_at": null,
+          "id": 1,
+          "last_used_at": null,
+          "name": "API Token 1",
+        },
+      ],
+    }
+  `);
 });
 
 test('empty list case', async function () {
@@ -66,13 +73,23 @@ test('empty list case', async function () {
 
   let response = await fetch('/api/v1/me/tokens');
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ api_tokens: [] });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "api_tokens": [],
+    }
+  `);
 });
 
 test('returns an error if unauthenticated', async function () {
   let response = await fetch('/api/v1/me/tokens');
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({
-    errors: [{ detail: 'must be logged in to perform that action' }],
-  });
+  expect(await response.json()).toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "detail": "must be logged in to perform that action",
+        },
+      ],
+    }
+  `);
 });
