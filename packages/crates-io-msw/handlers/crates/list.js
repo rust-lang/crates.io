@@ -10,7 +10,7 @@ export default http.get('/api/v1/crates', async ({ request }) => {
 
   const { start, end } = pageParams(request);
 
-  let crates = db.crate.findMany(null);
+  let crates = db.crate.findMany();
 
   if (url.searchParams.get('following') === '1') {
     let { user } = getSession();

@@ -19,7 +19,7 @@ test('creates a new API token', async function () {
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany(null)[0];
+  let token = db.apiToken.findMany()[0];
   expect(token).toBeTruthy();
 
   expect(await response.json()).toMatchInlineSnapshot(`
@@ -53,7 +53,7 @@ test('creates a new API token with scopes', async function () {
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany(null)[0];
+  let token = db.apiToken.findMany()[0];
   expect(token).toBeTruthy();
 
   expect(await response.json()).toMatchInlineSnapshot(`
@@ -91,7 +91,7 @@ test('creates a new API token with expiry date', async function () {
   let response = await fetch('/api/v1/me/tokens', { method: 'PUT', body });
   expect(response.status).toBe(200);
 
-  let token = db.apiToken.findMany(null)[0];
+  let token = db.apiToken.findMany()[0];
   expect(token).toBeTruthy();
 
   expect(await response.json()).toMatchInlineSnapshot(`

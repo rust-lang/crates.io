@@ -14,7 +14,7 @@ test('returns 200 when authenticated', async function () {
     }
   `);
 
-  expect(db.mswSession.findFirst(null)).toBeFalsy();
+  expect(db.mswSession.findFirst()).toBeFalsy();
 });
 
 test('returns 200 when unauthenticated', async function () {
@@ -26,5 +26,5 @@ test('returns 200 when unauthenticated', async function () {
     }
   `);
 
-  expect(db.mswSession.findFirst(null)).toBeFalsy();
+  expect(db.mswSession.findFirst()).toBeFalsy();
 });

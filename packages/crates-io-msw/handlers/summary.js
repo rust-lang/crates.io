@@ -8,7 +8,7 @@ import { compareDates } from '../utils/dates.js';
 
 export default [
   http.get('/api/v1/summary', () => {
-    let crates = db.crate.findMany(null);
+    let crates = db.crate.findMany();
 
     let just_updated = crates.sort((a, b) => compareDates(b.updated_at, a.updated_at)).slice(0, 10);
     let most_downloaded = crates.sort((a, b) => b.downloads - a.downloads).slice(0, 10);
@@ -18,8 +18,8 @@ export default [
     let num_crates = crates.length;
     let num_downloads = crates.reduce((sum, crate) => sum + crate.downloads, 0);
 
-    let popularCategories = db.category.findMany(null, { take: 10 });
-    let popularKeywords = db.keyword.findMany(null, { take: 10 });
+    let popularCategories = db.category.findMany(undefined, { take: 10 });
+    let popularKeywords = db.keyword.findMany(undefined, { take: 10 });
 
     return HttpResponse.json({
       just_updated: just_updated.map(c => serializeCrate(c)),

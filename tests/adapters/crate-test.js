@@ -33,7 +33,7 @@ module('Adapter | crate', function (hooks) {
     await this.db.version.create({ crate: _foo, num: '0.0.2' });
     await this.db.version.create({ crate: _foo, num: '0.0.3' });
 
-    let versions = this.db.version.findMany(null).reverse();
+    let versions = this.db.version.findMany().reverse();
     let default_version = versions.find(it => it.num === '0.0.3');
 
     let store = this.owner.lookup('service:store');
