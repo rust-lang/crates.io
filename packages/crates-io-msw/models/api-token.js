@@ -1,23 +1,23 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 import { seededRandom } from '../utils/random.js';
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  crateScopes: z.array(z.any()).nullable(),
-  createdAt: z.string(),
-  endpointScopes: z.array(z.any()).nullable(),
-  expiredAt: z.string().nullable(),
-  lastUsedAt: z.string().nullable(),
-  name: z.string(),
-  token: z.string(),
-  revoked: z.boolean(),
+  crateScopes: v.nullable(v.array(v.any())),
+  createdAt: v.string(),
+  endpointScopes: v.nullable(v.array(v.any())),
+  expiredAt: v.nullable(v.string()),
+  lastUsedAt: v.nullable(v.string()),
+  name: v.string(),
+  token: v.string(),
+  revoked: v.boolean(),
 
-  user: z.any(),
+  user: v.any(),
 });
 
 function preCreate(attrs, counter) {

@@ -1,17 +1,17 @@
 import { Collection } from '@msw/data';
-import { z } from 'zod';
+import * as v from 'valibot';
 
 import { applyDefault } from '../utils/defaults.js';
 import { preCreateExtension } from '../utils/pre-create-extension.js';
 
-const schema = z.object({
-  id: z.number(),
+const schema = v.object({
+  id: v.number(),
 
-  emailNotifications: z.boolean(),
+  emailNotifications: v.boolean(),
 
-  crate: z.any(),
-  team: z.any().nullable(),
-  user: z.any().nullable(),
+  crate: v.any(),
+  team: v.any(),
+  user: v.any(),
 });
 
 function preCreate(attrs, counter) {
