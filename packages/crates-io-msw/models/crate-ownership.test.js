@@ -4,6 +4,7 @@ import { db } from '../index.js';
 
 test('throws if `crate` is not set', async ({ expect }) => {
   let user = await db.user.create({});
+  // @ts-expect-error
   await expect(() => db.crateOwnership.create({ user })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );

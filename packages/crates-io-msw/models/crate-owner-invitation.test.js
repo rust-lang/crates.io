@@ -5,6 +5,7 @@ import { db } from '../index.js';
 test('throws if `crate` is not set', async ({ expect }) => {
   let inviter = await db.user.create({});
   let invitee = await db.user.create({});
+  // @ts-expect-error
   await expect(() => db.crateOwnerInvitation.create({ inviter, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
@@ -13,6 +14,7 @@ test('throws if `crate` is not set', async ({ expect }) => {
 test('throws if `inviter` is not set', async ({ expect }) => {
   let crate = await db.crate.create({});
   let invitee = await db.user.create({});
+  // @ts-expect-error
   await expect(() => db.crateOwnerInvitation.create({ crate, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
@@ -21,6 +23,7 @@ test('throws if `inviter` is not set', async ({ expect }) => {
 test('throws if `invitee` is not set', async ({ expect }) => {
   let crate = await db.crate.create({});
   let inviter = await db.user.create({});
+  // @ts-expect-error
   await expect(() => db.crateOwnerInvitation.create({ crate, inviter })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );

@@ -3,6 +3,7 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `user` is not set', async ({ expect }) => {
+  // @ts-expect-error
   await expect(() => db.mswSession.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
