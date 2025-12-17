@@ -34,8 +34,8 @@ env:
   ZIZMOR_VERSION: 1.18.0
 
 jobs:
-  changed-files:
-    name: Changed Files
+  filter-jobs:
+    name: Filter Jobs
     runs-on: ubuntu-24.04
 
     steps:
@@ -47,67 +47,27 @@ jobs:
           fetch-depth: 0
 
       - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
-        id: changed-files-non-js
+        id: changed-files
         with:
-          files_ignore: |
-            app/**
-            e2e/**
-            packages/**
-            public/**
-            svelte/**
-            tests/**
-            eslint.config.mjs
-            .template-lintrc.js
-            ember-cli-build.js
-            package.json
-            pnpm-lock.yaml
-            testem.js
-
-      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
-        id: changed-files-non-rust
-        with:
-          files_ignore: |
-            crates/**
-            migrations/**
-            src/**
-            build.rs
-            Cargo.lock
-            Cargo.toml
-            rust-toolchain.toml
-
-      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
-        id: changed-files-rust-lockfile
-        with:
-          files: Cargo.lock
-
-      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
-        id: changed-files-migrations
-        with:
-          files: migrations/**
-
-      - uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
-        id: changed-files-ci
-        with:
-          files: .github/workflows/**
-
-      - uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
-        id: changed-files-svelte
-        with:
-          files: svelte/**
+          files_yaml_from_source_file: .github/changed-files.yml
 
     outputs:
-      non-js: ${{ steps.changed-files-non-js.outputs.any_modified }}
-      non-rust: ${{ steps.changed-files-non-rust.outputs.any_modified }}
-      rust-lockfile: ${{ steps.changed-files-rust-lockfile.outputs.any_modified }}
-      migrations: ${{ steps.changed-files-migrations.outputs.any_modified }}
-      ci: ${{ steps.changed-files-ci.outputs.any_modified }}
-      svelte: ${{ steps.changed-files-svelte.outputs.any_modified }}
+      backend-lint: ${{ steps.changed-files.outputs.backend_lint_any_modified }}
+      backend-deps: ${{ steps.steps.changed-files.outputs.backend_deps_any_modified || github.event_name == 'push' }}
+      backend-migrations: ${{ steps.changed-files.outputs.backend_migrations_any_modified }}
+      backend-test: ${{ steps.changed-files.outputs.backend_test_any_modified }}
+      frontend-lint: ${{ steps.changed-files.outputs.frontend_lint_any_modified }}
+      frontend-test: ${{ steps.changed-files.outputs.frontend_test_any_modified }}
+      msw-test: ${{ steps.changed-files.outputs.msw_test_any_modified }}
+      e2e-test: ${{ steps.changed-files.outputs.e2e_test_any_modified }}
+      svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
+      zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
 
   percy-nonce:
     name: Frontend / Percy Nonce
     runs-on: ubuntu-latest
-    needs: changed-files
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.frontend-test == 'true' || needs.filter-jobs.outputs.e2e-test == 'true'
 
     # persist job results to other jobs in the workflow
     outputs:
@@ -122,8 +82,8 @@ jobs:
   backend-lint:
     name: Backend / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-js == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-lint == 'true'
 
     env:
       RUSTFLAGS: "-D warnings"
@@ -148,8 +108,8 @@ jobs:
   backend-deps:
     name: Backend / dependencies
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: github.event_name != 'pull_request' || needs.changed-files.outputs.rust-lockfile == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-deps == 'true'
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -169,8 +129,8 @@ jobs:
   backend-migrations:
     name: Backend / migrations
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.migrations == 'true' || needs.changed-files.outputs.ci == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-migrations == 'true'
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -187,8 +147,8 @@ jobs:
   backend-test:
     name: Backend / Test
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-js == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.backend-test == 'true'
 
     env:
       RUST_BACKTRACE: 1
@@ -245,8 +205,8 @@ jobs:
   frontend-lint:
     name: Frontend / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.frontend-lint == 'true'
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -272,8 +232,8 @@ jobs:
   frontend-test:
     name: Frontend / Test
     runs-on: ubuntu-24.04
-    needs: [changed-files, percy-nonce]
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: [ filter-jobs, percy-nonce ]
+    if: needs.filter-jobs.outputs.frontend-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
@@ -309,8 +269,8 @@ jobs:
   msw-test:
     name: Frontend / Test (@crates-io/msw)
     runs-on: ubuntu-24.04
-    needs: [changed-files]
-    if: needs.changed-files.outputs.non-rust == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.msw-test == 'true'
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -333,9 +293,9 @@ jobs:
   e2e-test:
     name: Frontend / Test (playwright)
     runs-on: ubuntu-24.04
-    needs: [changed-files, percy-nonce]
+    needs: [ filter-jobs, percy-nonce ]
     timeout-minutes: 60
-    if: needs.changed-files.outputs.non-rust == 'true'
+    if: needs.filter-jobs.outputs.e2e-test == 'true'
 
     env:
       JOBS: 1 # See https://git.io/vdao3 for details.
@@ -377,8 +337,8 @@ jobs:
   zizmor:
     name: CI / Lint
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.ci == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.zizmor == 'true'
     permissions:
       security-events: write
     steps:
@@ -399,8 +359,8 @@ jobs:
   svelte:
     name: Svelte (experimental)
     runs-on: ubuntu-24.04
-    needs: changed-files
-    if: needs.changed-files.outputs.svelte == 'true'
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.svelte == 'true'
 
     defaults:
       run:
