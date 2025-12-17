@@ -1,7 +1,13 @@
+/**
+ * @param {number} seed
+ */
 export function seededRandom(seed) {
   return mulberry32(seed)();
 }
 
+/**
+ * @param {number} a
+ */
 function mulberry32(a) {
   return function () {
     let t = (a += 0x6d_2b_79_f5);
