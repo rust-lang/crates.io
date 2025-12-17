@@ -102,7 +102,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 400 if query params are missing', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs`);
@@ -119,7 +119,7 @@ test('returns 400 if query params are missing', async function () {
 });
 
 test("returns 404 if crate can't be found", async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs?crate=nonexistent`);
@@ -139,7 +139,7 @@ test('returns 400 if user is not an owner of the crate', async function () {
   let crate = await db.crate.create({ name: 'test-crate-not-owner' });
   await db.version.create({ crate });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch(`/api/v1/trusted_publishing/github_configs?crate=${crate.name}`);

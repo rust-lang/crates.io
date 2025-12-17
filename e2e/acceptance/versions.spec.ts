@@ -33,7 +33,7 @@ test.describe('Acceptance | crate versions page', { tag: '@acceptance' }, () => 
   });
 
   test('shows correct release tracks label after yanking/unyanking', async ({ page, msw, percy }) => {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
     let crate = await msw.db.crate.create({ name: 'nanomsg' });

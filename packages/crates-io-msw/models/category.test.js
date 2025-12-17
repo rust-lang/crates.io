@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('default are applied', async ({ expect }) => {
-  let category = await db.category.create();
+  let category = await db.category.create({});
   expect(category).toMatchInlineSnapshot(`
     {
       "category": "Category 1",

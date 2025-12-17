@@ -33,7 +33,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('unprivileged block is shown to a logged in user without access', async function (assert) {
-    const user = await this.db.user.create();
+    const user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     await this.renderComponent(false);
@@ -43,7 +43,7 @@ module('Component | PrivilegedAction', hooks => {
   });
 
   test('privileged block is shown to a logged in user with access', async function (assert) {
-    const user = await this.db.user.create();
+    const user = await this.db.user.create({});
     await this.authenticateAs(user);
 
     await this.renderComponent(true);

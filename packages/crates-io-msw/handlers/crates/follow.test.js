@@ -17,7 +17,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/follow', { method: 'PUT' });
@@ -36,7 +36,7 @@ test('returns 404 for unknown crates', async function () {
 test('makes the authenticated user follow the crate', async function () {
   let crate = await db.crate.create({ name: 'rand' });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   expect(user.followedCrates).toMatchInlineSnapshot(`[]`);

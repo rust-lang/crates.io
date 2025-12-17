@@ -36,7 +36,7 @@ module('Acceptance | Login', function (hooks) {
         assert.strictEqual(url.searchParams.get('code'), '901dd10e07c7e9fa1cd5');
         assert.strictEqual(url.searchParams.get('state'), 'fYcUY3FMdUUz00FC7vLT7A');
 
-        let user = await db.user.create();
+        let user = await db.user.create({});
         await db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
       }),

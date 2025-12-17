@@ -19,7 +19,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
         expect(url.searchParams.get('code')).toBe('901dd10e07c7e9fa1cd5');
         expect(url.searchParams.get('state')).toBe('fYcUY3FMdUUz00FC7vLT7A');
 
-        let user = await msw.db.user.create();
+        let user = await msw.db.user.create({});
         await msw.db.mswSession.create({ user });
         return HttpResponse.json({ ok: true });
       }),

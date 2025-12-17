@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns 200 when authenticated', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/private/session', { method: 'DELETE' });

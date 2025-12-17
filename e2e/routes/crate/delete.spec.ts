@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 test.describe('Route: crate.delete', { tag: '@routes' }, () => {
   async function prepare(msw) {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
 
     let crate = await msw.db.crate.create({ name: 'foo' });
     await msw.db.version.create({ crate });
@@ -24,10 +24,10 @@ test.describe('Route: crate.delete', { tag: '@routes' }, () => {
   });
 
   test('not an owner', async ({ msw, page }) => {
-    let user1 = await msw.db.user.create();
+    let user1 = await msw.db.user.create({});
     await msw.authenticateAs(user1);
 
-    let user2 = await msw.db.user.create();
+    let user2 = await msw.db.user.create({});
     let crate = await msw.db.crate.create({ name: 'foo' });
     await msw.db.version.create({ crate });
     await msw.db.crateOwnership.create({ crate, user: user2 });

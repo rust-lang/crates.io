@@ -6,7 +6,6 @@ export function preCreateExtension(preCreate) {
 
       collection.__originalCreate = collection.create;
       collection.create = async function (attrs) {
-        attrs = attrs ?? {};
         preCreate(attrs, ++collection.__counter);
         return await collection.__originalCreate(attrs);
       };

@@ -14,7 +14,7 @@ module('Route: crate.delete', function (hooks) {
   setupApplicationTest(hooks);
 
   async function prepare(context) {
-    let user = await context.db.user.create();
+    let user = await context.db.user.create({});
 
     let crate = await context.db.crate.create({ name: 'foo' });
     await context.db.version.create({ crate });
@@ -36,10 +36,10 @@ module('Route: crate.delete', function (hooks) {
   });
 
   test('not an owner', async function (assert) {
-    let user1 = await this.db.user.create();
+    let user1 = await this.db.user.create({});
     await this.authenticateAs(user1);
 
-    let user2 = await this.db.user.create();
+    let user2 = await this.db.user.create({});
     let crate = await this.db.crate.create({ name: 'foo' });
     await this.db.version.create({ crate });
     await this.db.crateOwnership.create({ crate, user: user2 });

@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('empty case', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/crate_owner_invitations');
@@ -23,7 +23,7 @@ test('returns the list of invitations for the authenticated user', async functio
   let ember = await db.crate.create({ name: 'ember-rs' });
   await db.version.create({ crate: ember });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let inviter = await db.user.create({ name: 'janed' });

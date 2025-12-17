@@ -2,7 +2,7 @@ import { expect, test } from '@/e2e/helper';
 
 test.describe('Acceptance | crate deletion', { tag: '@acceptance' }, () => {
   test('happy path', async ({ page, msw }) => {
-    let user = await msw.db.user.create();
+    let user = await msw.db.user.create({});
     await msw.authenticateAs(user);
 
     let crate = await msw.db.crate.create({ name: 'foo' });

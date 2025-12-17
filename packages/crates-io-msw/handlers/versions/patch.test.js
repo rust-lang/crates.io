@@ -30,7 +30,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0', { method: 'PATCH', body: YANK_BODY });
@@ -49,7 +49,7 @@ test('returns 404 for unknown crates', async function () {
 test('returns 404 for unknown versions', async function () {
   await db.crate.create({ name: 'foo' });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0', { method: 'PATCH', body: YANK_BODY });
@@ -71,7 +71,7 @@ test('yanks the version', async function () {
   expect(version.yanked).toBe(false);
   expect(version.yank_message).toBe(null);
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0', { method: 'PATCH', body: YANK_BODY });

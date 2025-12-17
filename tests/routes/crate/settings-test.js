@@ -14,7 +14,7 @@ module('Route | crate.settings', hooks => {
   setupApplicationTest(hooks);
 
   async function prepare(context) {
-    const user = await context.db.user.create();
+    const user = await context.db.user.create({});
 
     const crate = await context.db.crate.create({ name: 'foo' });
     await context.db.version.create({ crate });
@@ -36,7 +36,7 @@ module('Route | crate.settings', hooks => {
   test('not an owner', async function (assert) {
     const { crate } = await prepare(this);
 
-    const otherUser = await this.db.user.create();
+    const otherUser = await this.db.user.create({});
     await this.authenticateAs(otherUser);
 
     await visit(`/crates/${crate.name}/settings`);

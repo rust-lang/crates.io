@@ -15,7 +15,7 @@ module('Model | Crate', function (hooks) {
 
   module('setTrustpubOnlyTask', function () {
     test('enables trustpub_only', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
       let crate = await this.db.crate.create({ trustpubOnly: false });
@@ -31,7 +31,7 @@ module('Model | Crate', function (hooks) {
     });
 
     test('disables trustpub_only', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
       let crate = await this.db.crate.create({ trustpubOnly: true });
@@ -47,7 +47,7 @@ module('Model | Crate', function (hooks) {
     });
 
     test('requires authentication', async function (assert) {
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
@@ -61,13 +61,13 @@ module('Model | Crate', function (hooks) {
 
   module('inviteOwner()', function () {
     test('happy path', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
-      let user2 = await this.db.user.create();
+      let user2 = await this.db.user.create({});
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
 
@@ -76,10 +76,10 @@ module('Model | Crate', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
@@ -93,13 +93,13 @@ module('Model | Crate', function (hooks) {
 
   module('removeOwner()', function () {
     test('happy path', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
-      let user2 = await this.db.user.create();
+      let user2 = await this.db.user.create({});
       await this.db.crateOwnership.create({ crate, user: user2 });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);
@@ -109,10 +109,10 @@ module('Model | Crate', function (hooks) {
     });
 
     test('error handling', async function (assert) {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
-      let crate = await this.db.crate.create();
+      let crate = await this.db.crate.create({});
       await this.db.version.create({ crate });
 
       let crateRecord = await this.store.findRecord('crate', crate.name);

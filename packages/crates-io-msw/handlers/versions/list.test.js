@@ -33,7 +33,7 @@ test('empty case', async function () {
 });
 
 test('returns all versions belonging to the specified crate', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '1.0.0' });
   await db.version.create({ crate, num: '1.1.0', publishedBy: user });
@@ -174,7 +174,7 @@ test('returns all versions belonging to the specified crate', async function () 
 });
 
 test('supports `sort` parameters', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '1.0.0' });
   await db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
@@ -222,7 +222,7 @@ test('supports `sort` parameters', async function () {
 });
 
 test('supports multiple `ids[]` parameters', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '1.0.0' });
   await db.version.create({ crate, num: '1.1.0', publishedBy: user });
@@ -239,7 +239,7 @@ test('supports multiple `ids[]` parameters', async function () {
 });
 
 test('supports seek pagination', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '1.0.0' });
   await db.version.create({ crate, num: '2.0.0-alpha', publishedBy: user });
@@ -350,7 +350,7 @@ test('supports seek pagination', async function () {
 });
 
 test('include `release_tracks` meta', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   let crate = await db.crate.create({ name: 'rand' });
   await db.version.create({ crate, num: '0.0.1' });
   await db.version.create({ crate, num: '0.0.2', yanked: true });

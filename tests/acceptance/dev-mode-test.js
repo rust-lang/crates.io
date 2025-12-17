@@ -14,7 +14,7 @@ if (s.has('devmode')) {
     setupApplicationTest(hooks);
 
     test('authenticated', async function () {
-      let user = await this.db.user.create();
+      let user = await this.db.user.create({});
       await this.authenticateAs(user);
 
       let crate = await this.db.crate.create({ name: 'foo' });

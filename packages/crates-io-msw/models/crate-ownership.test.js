@@ -3,31 +3,31 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `crate` is not set', async ({ expect }) => {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await expect(() => db.crateOwnership.create({ user })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`crate\` relationship on \`crate-ownership\`]`,
   );
 });
 
 test('throws if `team` and `user` are not set', async ({ expect }) => {
-  let crate = await db.crate.create();
+  let crate = await db.crate.create({});
   await expect(() => db.crateOwnership.create({ crate })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`team\` or \`user\` relationship on \`crate-ownership\`]`,
   );
 });
 
 test('throws if `team` and `user` are both set', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let team = await db.team.create();
-  let user = await db.user.create();
+  let crate = await db.crate.create({});
+  let team = await db.team.create({});
+  let user = await db.user.create({});
   await expect(() => db.crateOwnership.create({ crate, team, user })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: \`team\` and \`user\` on a \`crate-ownership\` are mutually exclusive]`,
   );
 });
 
 test('can set `team`', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let team = await db.team.create();
+  let crate = await db.crate.create({});
+  let team = await db.team.create({});
   let ownership = await db.crateOwnership.create({ crate, team });
   expect(ownership).toMatchInlineSnapshot(`
     {
@@ -64,8 +64,8 @@ test('can set `team`', async ({ expect }) => {
 });
 
 test('can set `user`', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let user = await db.user.create();
+  let crate = await db.crate.create({});
+  let user = await db.user.create({});
   let ownership = await db.crateOwnership.create({ crate, user });
   expect(ownership).toMatchInlineSnapshot(`
     {

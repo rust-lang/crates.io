@@ -21,7 +21,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo', {
@@ -42,7 +42,7 @@ test('returns 404 for unknown crates', async function () {
 });
 
 test('updates trustpub_only flag', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let crate = await db.crate.create({ name: 'foo', trustpubOnly: false });

@@ -17,7 +17,7 @@ test('empty case', async function () {
 
 test('returns a paginated keywords list', async function () {
   await db.keyword.create({ keyword: 'api' });
-  await Promise.all(Array.from({ length: 2 }, () => db.keyword.create()));
+  await Promise.all(Array.from({ length: 2 }, () => db.keyword.create({})));
 
   let response = await fetch('/api/v1/keywords');
   expect(response.status).toBe(200);
@@ -48,7 +48,7 @@ test('returns a paginated keywords list', async function () {
 });
 
 test('never returns more than 10 results', async function () {
-  await Promise.all(Array.from({ length: 25 }, () => db.keyword.create()));
+  await Promise.all(Array.from({ length: 25 }, () => db.keyword.create({})));
 
   let response = await fetch('/api/v1/keywords');
   expect(response.status).toBe(200);

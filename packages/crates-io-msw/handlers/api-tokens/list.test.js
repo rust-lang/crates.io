@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 test('returns the list of API token for the authenticated `user`', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   await db.apiToken.create({
@@ -68,7 +68,7 @@ test('returns the list of API token for the authenticated `user`', async functio
 });
 
 test('empty list case', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me/tokens');

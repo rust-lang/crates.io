@@ -17,7 +17,7 @@ test('returns 403 if unauthenticated', async function () {
 });
 
 test('returns 404 for unknown crates', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/rebuild_docs', { method: 'POST' });
@@ -36,7 +36,7 @@ test('returns 404 for unknown crates', async function () {
 test('returns 404 for unknown versions', async function () {
   await db.crate.create({ name: 'foo' });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/rebuild_docs', { method: 'POST' });
@@ -56,7 +56,7 @@ test('triggers a rebuild for the crate documentation', async function () {
   let crate = await db.crate.create({ name: 'foo' });
   await db.version.create({ crate, num: '1.0.0' });
 
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/crates/foo/1.0.0/rebuild_docs', { method: 'POST' });

@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { db } from '../../index.js';
 
 test('returns the `user` resource including the private fields', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
   let response = await fetch('/api/v1/me');
@@ -28,10 +28,10 @@ test('returns the `user` resource including the private fields', async function 
 });
 
 test('returns a list of `owned_crates`', async function () {
-  let user = await db.user.create();
+  let user = await db.user.create({});
   await db.mswSession.create({ user });
 
-  let [crate1, , crate3] = await Promise.all(Array.from({ length: 3 }, () => db.crate.create()));
+  let [crate1, , crate3] = await Promise.all(Array.from({ length: 3 }, () => db.crate.create({})));
 
   await db.crateOwnership.create({ crate: crate1, user });
   await db.crateOwnership.create({ crate: crate3, user });
@@ -57,7 +57,7 @@ test('returns a list of `owned_crates`', async function () {
 });
 
 test('returns an error if unauthenticated', async function () {
-  await db.user.create();
+  await db.user.create({});
 
   let response = await fetch('/api/v1/me');
   expect(response.status).toBe(403);

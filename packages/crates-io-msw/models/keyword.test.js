@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('default are applied', async ({ expect }) => {
-  let keyword = await db.keyword.create();
+  let keyword = await db.keyword.create({});
   expect(keyword).toMatchInlineSnapshot(`
     {
       "id": "keyword-1",

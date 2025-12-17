@@ -14,7 +14,7 @@ module('Route | crate.settings.new-trusted-publisher', hooks => {
   setupApplicationTest(hooks);
 
   async function prepare(context) {
-    let user = await context.db.user.create();
+    let user = await context.db.user.create({});
 
     let crate = await context.db.crate.create({ name: 'foo' });
     await context.db.version.create({ crate });

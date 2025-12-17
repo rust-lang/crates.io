@@ -3,33 +3,33 @@ import { test } from 'vitest';
 import { db } from '../index.js';
 
 test('throws if `crate` is not set', async ({ expect }) => {
-  let inviter = await db.user.create();
-  let invitee = await db.user.create();
+  let inviter = await db.user.create({});
+  let invitee = await db.user.create({});
   await expect(() => db.crateOwnerInvitation.create({ inviter, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`crate\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
 test('throws if `inviter` is not set', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let invitee = await db.user.create();
+  let crate = await db.crate.create({});
+  let invitee = await db.user.create({});
   await expect(() => db.crateOwnerInvitation.create({ crate, invitee })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`inviter\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
 test('throws if `invitee` is not set', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let inviter = await db.user.create();
+  let crate = await db.crate.create({});
+  let inviter = await db.user.create({});
   await expect(() => db.crateOwnerInvitation.create({ crate, inviter })).rejects.toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing \`invitee\` relationship on \`crate-owner-invitation\`]`,
   );
 });
 
 test('happy path', async ({ expect }) => {
-  let crate = await db.crate.create();
-  let inviter = await db.user.create();
-  let invitee = await db.user.create();
+  let crate = await db.crate.create({});
+  let inviter = await db.user.create({});
+  let invitee = await db.user.create({});
   let invite = await db.crateOwnerInvitation.create({ crate, inviter, invitee });
   expect(invite).toMatchInlineSnapshot(`
     {
