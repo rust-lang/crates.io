@@ -4,7 +4,7 @@ import { db } from '../index.js';
 
 test('throws if `version` is not set', async ({ expect }) => {
   await expect(() => db.versionDownload.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`version\` relationship on \`version-download\`]`,
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
 });
 

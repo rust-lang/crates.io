@@ -1,45 +1,35 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
-import { preCreateExtension } from '../utils/pre-create-extension.js';
+import * as counters from '../utils/counters.js';
 
 const REQS = ['^0.1.0', '^2.1.3', '0.3.7', '~5.2.12'];
 
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  default_features: v.boolean(),
-  features: v.array(v.any()),
-  kind: v.string(),
-  optional: v.boolean(),
-  req: v.string(),
-  target: v.nullable(v.string()),
+    default_features: v.optional(v.boolean()),
+    features: v.optional(v.array(v.any()), []),
+    kind: v.optional(v.string()),
+    optional: v.optional(v.boolean()),
+    req: v.optional(v.string()),
+    target: v.optional(v.nullable(v.string()), null),
 
-  crate: v.any(),
-  version: v.any(),
-});
+    crate: v.any(),
+    version: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('dependency');
+    let id = input.id ?? counter;
+    let default_features = input.default_features ?? counter % 4 === 3;
+    let kind = input.kind ?? (counter % 3 === 0 ? 'dev' : 'normal');
+    let optional = input.optional ?? counter % 4 !== 3;
+    let req = input.req ?? REQS[counter % REQS.length];
+    return { ...input, id, default_features, kind, optional, req };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'default_features', () => counter % 4 === 3);
-  applyDefault(attrs, 'features', () => []);
-  applyDefault(attrs, 'kind', () => (counter % 3 === 0 ? 'dev' : 'normal'));
-  applyDefault(attrs, 'optional', () => counter % 4 !== 3);
-  applyDefault(attrs, 'req', () => REQS[counter % REQS.length]);
-  applyDefault(attrs, 'target', () => null);
-
-  if (!attrs.crate) {
-    throw new Error(`Missing \`crate\` relationship on \`dependency:${attrs.id}\``);
-  }
-  if (!attrs.version) {
-    throw new Error(`Missing \`version\` relationship on \`dependency:${attrs.id}\``);
-  }
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;

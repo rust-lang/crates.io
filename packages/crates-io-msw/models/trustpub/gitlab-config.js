@@ -1,35 +1,28 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../../utils/defaults.js';
-import { preCreateExtension } from '../../utils/pre-create-extension.js';
+import * as counters from '../../utils/counters.js';
 
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  crate: v.any(),
-  namespace: v.string(),
-  namespace_id: v.nullable(v.string()),
-  project: v.string(),
-  workflow_filepath: v.string(),
-  environment: v.nullable(v.string()),
-  created_at: v.string(),
-});
+    crate: v.optional(v.any(), null),
+    namespace: v.optional(v.string(), 'rust-lang'),
+    namespace_id: v.optional(v.nullable(v.string()), null),
+    project: v.optional(v.string()),
+    workflow_filepath: v.optional(v.string(), '.gitlab-ci.yml'),
+    environment: v.optional(v.nullable(v.string()), null),
+    created_at: v.optional(v.string(), '2023-01-01T00:00:00Z'),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('trustpubGitlabConfig');
+    let id = input.id ?? counter;
+    let project = input.project ?? `repo-${id}`;
+    return { ...input, id, project };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'namespace', () => 'rust-lang');
-  applyDefault(attrs, 'namespace_id', () => null);
-  applyDefault(attrs, 'project', () => `repo-${attrs.id}`);
-  applyDefault(attrs, 'workflow_filepath', () => '.gitlab-ci.yml');
-  applyDefault(attrs, 'environment', () => null);
-  applyDefault(attrs, 'created_at', () => '2023-01-01T00:00:00Z');
-  applyDefault(attrs, 'crate', () => null);
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;

@@ -1,35 +1,28 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../../utils/defaults.js';
-import { preCreateExtension } from '../../utils/pre-create-extension.js';
+import * as counters from '../../utils/counters.js';
 
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  crate: v.any(),
-  repository_owner: v.string(),
-  repository_owner_id: v.number(),
-  repository_name: v.string(),
-  workflow_filename: v.string(),
-  environment: v.nullable(v.string()),
-  created_at: v.string(),
-});
+    crate: v.optional(v.any(), null),
+    repository_owner: v.optional(v.string(), 'rust-lang'),
+    repository_owner_id: v.optional(v.number(), 5_430_905),
+    repository_name: v.optional(v.string()),
+    workflow_filename: v.optional(v.string(), 'ci.yml'),
+    environment: v.optional(v.nullable(v.string()), null),
+    created_at: v.optional(v.string(), '2023-01-01T00:00:00Z'),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('trustpubGithubConfig');
+    let id = input.id ?? counter;
+    let repository_name = input.repository_name ?? `repo-${id}`;
+    return { ...input, id, repository_name };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'repository_owner', () => 'rust-lang');
-  applyDefault(attrs, 'repository_owner_id', () => 5_430_905);
-  applyDefault(attrs, 'repository_name', () => `repo-${attrs.id}`);
-  applyDefault(attrs, 'workflow_filename', () => 'ci.yml');
-  applyDefault(attrs, 'environment', () => null);
-  applyDefault(attrs, 'created_at', () => '2023-01-01T00:00:00Z');
-  applyDefault(attrs, 'crate', () => null);
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;

@@ -1,31 +1,25 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
-import { preCreateExtension } from '../utils/pre-create-extension.js';
+import * as counters from '../utils/counters.js';
 
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  date: v.string(),
-  downloads: v.number(),
+    date: v.optional(v.string(), '2019-05-21'),
+    downloads: v.optional(v.number()),
 
-  version: v.any(),
-});
+    version: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('versionDownload');
+    let id = input.id ?? counter;
+    let downloads = input.downloads ?? (((id + 13) * 42) % 13) * 2345;
+    return { ...input, id, downloads };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'date', () => '2019-05-21');
-  applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 2345);
-
-  if (!attrs.version) {
-    throw new Error('Missing `version` relationship on `version-download`');
-  }
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;

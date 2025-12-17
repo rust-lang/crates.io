@@ -4,7 +4,7 @@ import { db } from '../index.js';
 
 test('throws if `user` is not set', async ({ expect }) => {
   await expect(() => db.apiToken.create({})).rejects.toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing \`user\` relationship on \`api-token\`]`,
+    `[Error: Failed to create a new record with initial values: does not match the schema. Please see the schema validation errors above.]`,
   );
 });
 

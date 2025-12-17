@@ -1,49 +1,40 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
-import { preCreateExtension } from '../utils/pre-create-extension.js';
+import * as counters from '../utils/counters.js';
 
-const schema = v.object({
-  // `v.string()` is used to support some of our old fixtures that use strings here for some reason
-  id: v.union([v.number(), v.string()]),
+const schema = v.pipe(
+  v.object({
+    // `v.string()` is used to support some of our old fixtures that use strings here for some reason
+    id: v.optional(v.union([v.number(), v.string()])),
 
-  name: v.string(),
-  description: v.string(),
-  downloads: v.number(),
-  recent_downloads: v.number(),
-  documentation: v.nullable(v.string()),
-  homepage: v.nullable(v.string()),
-  repository: v.nullable(v.string()),
-  created_at: v.string(),
-  updated_at: v.string(),
-  badges: v.array(v.any()),
-  _extra_downloads: v.array(v.any()),
-  trustpubOnly: v.boolean(),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    downloads: v.optional(v.number()),
+    recent_downloads: v.optional(v.number()),
+    documentation: v.optional(v.nullable(v.string()), null),
+    homepage: v.optional(v.nullable(v.string()), null),
+    repository: v.optional(v.nullable(v.string()), null),
+    created_at: v.optional(v.string(), '2010-06-16T21:30:45Z'),
+    updated_at: v.optional(v.string(), '2017-02-24T12:34:56Z'),
+    badges: v.optional(v.array(v.any()), []),
+    _extra_downloads: v.optional(v.array(v.any()), []),
+    trustpubOnly: v.optional(v.boolean(), false),
 
-  categories: v.optional(v.array(v.any()), () => []),
-  keywords: v.optional(v.array(v.any()), () => []),
-});
+    categories: v.optional(v.array(v.any()), []),
+    keywords: v.optional(v.array(v.any()), []),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('crate');
+    let id = input.id ?? counter;
+    let name = input.name ?? `crate-${id}`;
+    let description = input.description ?? `This is the description for the crate called "${name}"`;
+    let downloads = input.downloads ?? (((id + 13) * 42) % 13) * 12_345;
+    let recent_downloads = input.recent_downloads ?? (((id + 7) * 31) % 13) * 321;
+    return { ...input, id, name, description, downloads, recent_downloads };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'name', () => `crate-${attrs.id}`);
-  applyDefault(attrs, 'description', () => `This is the description for the crate called "${attrs.name}"`);
-  applyDefault(attrs, 'downloads', () => (((attrs.id + 13) * 42) % 13) * 12_345);
-  applyDefault(attrs, 'recent_downloads', () => (((attrs.id + 7) * 31) % 13) * 321);
-  applyDefault(attrs, 'documentation', () => null);
-  applyDefault(attrs, 'homepage', () => null);
-  applyDefault(attrs, 'repository', () => null);
-  applyDefault(attrs, 'created_at', () => '2010-06-16T21:30:45Z');
-  applyDefault(attrs, 'updated_at', () => '2017-02-24T12:34:56Z');
-  applyDefault(attrs, 'badges', () => []);
-  applyDefault(attrs, '_extra_downloads', () => []);
-  applyDefault(attrs, 'trustpubOnly', () => false);
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;
