@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/state';
+
   import Footer from '$lib/components/Footer.svelte';
   import Header from '$lib/components/Header.svelte';
 
@@ -7,6 +9,8 @@
   // TODO: import ProgressBar from '$lib/components/ProgressBar.svelte';
 
   let { children } = $props();
+
+  let isIndex = $derived(page.route.id === '/');
 
   // TODO: implement color scheme support
   // TODO: implement notification container
@@ -20,8 +24,7 @@
 <!-- TODO: <NotificationContainer position='top-right' /> -->
 <div id="tooltip-container"></div>
 
-<!-- TODO: pass `hero` prop based on whether we're on the index route -->
-<Header />
+<Header hero={isIndex} />
 
 <main class="main">
   <div class="inner-main width-limit">
