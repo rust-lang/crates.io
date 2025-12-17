@@ -1,8 +1,7 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
-import { preCreateExtension } from '../utils/pre-create-extension.js';
+import * as counters from '../utils/counters.js';
 
 /**
  * This is a MSW-only model, that is used to keep track of the current
@@ -12,23 +11,19 @@ import { preCreateExtension } from '../utils/pre-create-extension.js';
  * This mock implementation means that there can only ever exist one
  * session at a time.
  */
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  user: v.any(),
-});
+    user: v.any(),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('mswSession');
+    let id = input.id ?? counter;
+    return { ...input, id };
+  }),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-
-  if (!attrs.user) {
-    throw new Error('Missing `user` relationship');
-  }
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;

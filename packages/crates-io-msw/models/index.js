@@ -1,3 +1,4 @@
+import * as counters from '../utils/counters.js';
 import apiTokens from './api-token.js';
 import categories from './category.js';
 import crateOwnerInvitations from './crate-owner-invitation.js';
@@ -82,14 +83,10 @@ export const db = {
   version: versions,
 
   reset() {
-    for (let collection of Object.values(this)) {
-      if (collection?.deleteMany) {
-        collection.deleteMany(null);
-      }
+    counters.reset();
 
-      if (collection?.__counter) {
-        collection.__counter = 0;
-      }
+    for (let collection of Object.values(this)) {
+      collection.clear?.();
     }
   },
 };

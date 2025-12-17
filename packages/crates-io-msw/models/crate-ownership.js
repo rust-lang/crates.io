@@ -1,39 +1,28 @@
 import { Collection } from '@msw/data';
 import * as v from 'valibot';
 
-import { applyDefault } from '../utils/defaults.js';
-import { preCreateExtension } from '../utils/pre-create-extension.js';
+import * as counters from '../utils/counters.js';
 
-const schema = v.object({
-  id: v.number(),
+const schema = v.pipe(
+  v.object({
+    id: v.optional(v.number()),
 
-  emailNotifications: v.boolean(),
+    emailNotifications: v.optional(v.boolean(), true),
 
-  crate: v.any(),
-  team: v.any(),
-  user: v.any(),
-});
+    crate: v.any(),
+    team: v.optional(v.nullable(v.any()), null),
+    user: v.optional(v.nullable(v.any()), null),
+  }),
+  v.transform(function (input) {
+    let counter = counters.increment('crateOwnership');
+    let id = input.id ?? counter;
+    return { ...input, id };
+  }),
+  v.check(input => input.crate != null, 'Missing `crate` relationship on `crate-ownership`'),
+  v.check(input => input.team != null || input.user != null, 'Missing `team` or `user` relationship on `crate-ownership`'),
+  v.check(input => !(input.team != null && input.user != null), '`team` and `user` on a `crate-ownership` are mutually exclusive'),
+);
 
-function preCreate(attrs, counter) {
-  applyDefault(attrs, 'id', () => counter);
-  applyDefault(attrs, 'emailNotifications', () => true);
-  applyDefault(attrs, 'team', () => null);
-  applyDefault(attrs, 'user', () => null);
-
-  if (!attrs.crate) {
-    throw new Error('Missing `crate` relationship on `crate-ownership`');
-  }
-  if (!attrs.team && !attrs.user) {
-    throw new Error('Missing `team` or `user` relationship on `crate-ownership`');
-  }
-  if (attrs.team && attrs.user) {
-    throw new Error('`team` and `user` on a `crate-ownership` are mutually exclusive');
-  }
-}
-
-const collection = new Collection({
-  schema,
-  extensions: [preCreateExtension(preCreate)],
-});
+const collection = new Collection({ schema });
 
 export default collection;
