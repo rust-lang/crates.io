@@ -140,7 +140,7 @@ tokio-util = "=0.7.17"
 toml = "=0.9.8"
 tower = "=0.5.2"
 tower-http = { version = "=0.6.8", features = ["add-extension", "fs", "catch-panic", "timeout", "compression-full"] }
-tracing = "=0.1.43"
+tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.22", features = ["env-filter", "json"] }
 typomania = { version = "=0.1.2", default-features = false }
 url = "=2.5.7"
