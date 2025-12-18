@@ -19,8 +19,14 @@ const schema = v.pipe(
     return { ...input, id };
   }),
   v.check(input => input.crate != null, 'Missing `crate` relationship on `crate-ownership`'),
-  v.check(input => input.team != null || input.user != null, 'Missing `team` or `user` relationship on `crate-ownership`'),
-  v.check(input => !(input.team != null && input.user != null), '`team` and `user` on a `crate-ownership` are mutually exclusive'),
+  v.check(
+    input => input.team != null || input.user != null,
+    'Missing `team` or `user` relationship on `crate-ownership`',
+  ),
+  v.check(
+    input => !(input.team != null && input.user != null),
+    '`team` and `user` on a `crate-ownership` are mutually exclusive',
+  ),
 );
 
 const collection = new Collection({ schema });
