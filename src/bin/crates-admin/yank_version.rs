@@ -67,12 +67,12 @@ async fn yank(opts: Opts, conn: &mut AsyncPgConnection) -> anyhow::Result<()> {
         .execute(conn)
         .await?;
 
-    let git_index_job = SyncToGitIndex::new(&krate.name);
+    let git_index_job = SyncToGitIndex.enqueue_crate(conn, &krate.name);
     let sparse_index_job = SyncToSparseIndex::new(&krate.name);
     let update_default_version_job = UpdateDefaultVersion::new(krate.id);
 
     tokio::try_join!(
-        git_index_job.enqueue(conn),
+        git_index_job,
         sparse_index_job.enqueue(conn),
         update_default_version_job.enqueue(conn),
     )?;

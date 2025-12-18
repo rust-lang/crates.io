@@ -163,7 +163,7 @@ pub async fn run(command: Command) -> Result<()> {
             jobs::rss::SyncCratesFeed.enqueue(&mut conn).await?;
         }
         Command::SyncToGitIndex { name } => {
-            jobs::SyncToGitIndex::new(name).enqueue(&mut conn).await?;
+            jobs::SyncToGitIndex.enqueue_crate(&mut conn, &name).await?;
         }
         Command::SyncToSparseIndex { name } => {
             jobs::SyncToSparseIndex::new(name)
