@@ -1,0 +1,6 @@
+# `.tool-versions` file for asdf version manager
+#
+# This file specifies the versions of various tools to be used in this project.
+# These versions are also used by our Heroku buildpack setup.
+pnpm 10.26.0
+nodejs 24.12.0
