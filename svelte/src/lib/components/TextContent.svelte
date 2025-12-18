@@ -7,10 +7,10 @@
     children: Snippet;
   }
 
-  let { boxed = false, children, ...others }: Props = $props();
+  let { boxed = false, children, class: className, ...others }: Props = $props();
 </script>
 
-<div class="wrapper" class:boxed {...others}>
+<div class={['wrapper', className, { boxed }]} {...others}>
   {@render children()}
 </div>
 

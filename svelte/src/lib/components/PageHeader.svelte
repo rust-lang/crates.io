@@ -11,10 +11,10 @@
     children?: Snippet;
   }
 
-  let { title, suffix, showSpinner = false, children, ...others }: Props = $props();
+  let { title, suffix, showSpinner = false, children, class: className, ...others }: Props = $props();
 </script>
 
-<div data-test-page-header class="header" {...others}>
+<div data-test-page-header class={['header', className]} {...others}>
   {#if children}
     {@render children()}
   {:else}
