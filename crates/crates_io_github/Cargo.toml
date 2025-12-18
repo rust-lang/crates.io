@@ -18,7 +18,7 @@ oauth2 = { version = "=5.0.0", default-features = false }
 reqwest = { version = "=0.12.26", features = ["json"] }
 serde = { version = "=1.0.228", features = ["derive"] }
 thiserror = "=2.0.17"
-tracing = "=0.1.43"
+tracing = "=0.1.44"
 
 [dev-dependencies]
 clap = { version = "=4.5.53", features = ["derive", "env", "unicode", "wrap_help"] }
