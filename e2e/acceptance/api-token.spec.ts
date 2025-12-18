@@ -79,7 +79,7 @@ test.describe('Acceptance | api-tokens', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-api-token]')).toHaveCount(3);
 
     await page.click('[data-test-api-token="1"] [data-test-revoke-token-button]');
-    expect(msw.db.apiToken.findMany(null).length, 'API token has been deleted from the backend database').toBe(2);
+    expect(msw.db.apiToken.findMany().length, 'API token has been deleted from the backend database').toBe(2);
 
     await expect(page.locator('[data-test-api-token]')).toHaveCount(2);
     await expect(page.locator('[data-test-api-token="2"]')).toBeVisible();

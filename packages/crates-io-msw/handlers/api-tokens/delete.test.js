@@ -12,7 +12,7 @@ test('revokes an API token', async function () {
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchInlineSnapshot(`{}`);
 
-  let tokens = db.apiToken.findMany(null);
+  let tokens = db.apiToken.findMany();
   expect(tokens.length).toBe(0);
 });
 

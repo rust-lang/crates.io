@@ -1,7 +1,7 @@
 import { db } from '../index.js';
 
 export function getSession() {
-  let session = db.mswSession.findFirst(null);
+  let session = db.mswSession.findFirst();
   if (!session) {
     return {};
   }
