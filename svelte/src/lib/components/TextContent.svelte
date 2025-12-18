@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
 
-  interface Props {
+  interface Props extends HTMLAttributes<HTMLDivElement> {
     boxed?: boolean;
     children: Snippet;
-    [key: string]: unknown;
   }
 
   let { boxed = false, children, ...others }: Props = $props();

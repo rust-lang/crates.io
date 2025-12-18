@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
 
   // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
 
-  interface Props {
+  interface Props extends HTMLAttributes<HTMLDivElement> {
     title?: string;
     suffix?: string;
     showSpinner?: boolean;
     children?: Snippet;
-    [key: string]: unknown;
   }
 
   let { title, suffix, showSpinner = false, children, ...others }: Props = $props();
