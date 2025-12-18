@@ -55,6 +55,7 @@
   class="form"
   class:size-big={size === 'big'}
   onsubmit={search}
+  data-sveltekit-keepfocus
 >
   <!-- Large screen input with keyboard shortcut hint -->
   <input
