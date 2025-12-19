@@ -4,7 +4,7 @@ ARG RUST_VERSION=1.92.0
 FROM rust:$RUST_VERSION
 
 # renovate: datasource=crate depName=diesel_cli versioning=semver
-ARG DIESEL_CLI_VERSION=2.3.4
+ARG DIESEL_CLI_VERSION=2.3.5
 
 RUN apt-get update \
     && apt-get install -y postgresql \
