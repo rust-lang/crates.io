@@ -1,20 +1,20 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
 
   // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
 
-  interface Props {
+  interface Props extends HTMLAttributes<HTMLDivElement> {
     title?: string;
     suffix?: string;
     showSpinner?: boolean;
     children?: Snippet;
-    [key: string]: unknown;
   }
 
-  let { title, suffix, showSpinner = false, children, ...others }: Props = $props();
+  let { title, suffix, showSpinner = false, children, class: className, ...others }: Props = $props();
 </script>
 
-<div data-test-page-header class="header" {...others}>
+<div data-test-page-header class={['header', className]} {...others}>
   {#if children}
     {@render children()}
   {:else}

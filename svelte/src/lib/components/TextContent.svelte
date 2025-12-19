@@ -1,16 +1,16 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
 
-  interface Props {
+  interface Props extends HTMLAttributes<HTMLDivElement> {
     boxed?: boolean;
     children: Snippet;
-    [key: string]: unknown;
   }
 
-  let { boxed = false, children, ...others }: Props = $props();
+  let { boxed = false, children, class: className, ...others }: Props = $props();
 </script>
 
-<div class="wrapper" class:boxed {...others}>
+<div class={['wrapper', className, { boxed }]} {...others}>
   {@render children()}
 </div>
 
