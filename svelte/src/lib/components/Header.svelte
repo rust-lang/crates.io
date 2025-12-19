@@ -46,11 +46,8 @@
     <nav class="nav">
       <!-- TODO: <ColorSchemeMenu class="color-scheme-menu" /> -->
 
-      <!-- TODO: add `/crates` route -->
-      <!--
       <a href={resolve('/crates')} data-test-all-crates-link> Browse All Crates </a>
       <span class="sep">|</span>
-      -->
 
       <!-- TODO: implement authenticated user menu -->
       <!-- {#if currentUser} -->
