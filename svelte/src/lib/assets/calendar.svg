@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   fill="currentColor"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg910"
+   sodipodi:docname="calendar.svg"
+   width="100"
+   height="100"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <!--! Font Awesome Free 5.15.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) -->
+  <metadata
+     id="metadata916">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs914" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1792"
+     inkscape:window-height="1075"
+     id="namedview912"
+     showgrid="false"
+     inkscape:zoom="1.4355469"
+     inkscape:cx="224"
+     inkscape:cy="256"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg910" />
+  <path
+     fill="currentColor"
+     d="m 35.15625,56.25 h -7.8125 C 26.054687,56.25 25,55.195313 25,53.90625 v -7.8125 C 25,44.804687 26.054687,43.75 27.34375,43.75 h 7.8125 c 1.289062,0 2.34375,1.054687 2.34375,2.34375 v 7.8125 C 37.5,55.195313 36.445312,56.25 35.15625,56.25 Z M 56.25,53.90625 v -7.8125 C 56.25,44.804687 55.195312,43.75 53.90625,43.75 h -7.8125 c -1.289063,0 -2.34375,1.054687 -2.34375,2.34375 v 7.8125 c 0,1.289063 1.054687,2.34375 2.34375,2.34375 h 7.8125 c 1.289062,0 2.34375,-1.054687 2.34375,-2.34375 z m 18.75,0 v -7.8125 C 75,44.804687 73.945312,43.75 72.65625,43.75 h -7.8125 C 63.554687,43.75 62.5,44.804687 62.5,46.09375 v 7.8125 c 0,1.289063 1.054687,2.34375 2.34375,2.34375 h 7.8125 C 73.945312,56.25 75,55.195313 75,53.90625 Z m -18.75,18.75 v -7.8125 C 56.25,63.554687 55.195312,62.5 53.90625,62.5 h -7.8125 C 44.804687,62.5 43.75,63.554687 43.75,64.84375 v 7.8125 C 43.75,73.945312 44.804687,75 46.09375,75 h 7.8125 C 55.195312,75 56.25,73.945312 56.25,72.65625 Z m -18.75,0 v -7.8125 C 37.5,63.554687 36.445312,62.5 35.15625,62.5 h -7.8125 C 26.054687,62.5 25,63.554687 25,64.84375 v 7.8125 C 25,73.945312 26.054687,75 27.34375,75 h 7.8125 C 36.445312,75 37.5,73.945312 37.5,72.65625 Z m 37.5,0 v -7.8125 C 75,63.554687 73.945312,62.5 72.65625,62.5 h -7.8125 C 63.554687,62.5 62.5,63.554687 62.5,64.84375 v 7.8125 C 62.5,73.945312 63.554687,75 64.84375,75 h 7.8125 C 73.945312,75 75,73.945312 75,72.65625 Z M 93.75,21.875 v 68.75 c 0,5.175781 -4.199219,9.375 -9.375,9.375 H 15.625 C 10.449219,100 6.25,95.800781 6.25,90.625 v -68.75 c 0,-5.175781 4.199219,-9.375 9.375,-9.375 H 25 V 2.34375 C 25,1.0546875 26.054687,0 27.34375,0 h 7.8125 C 36.445312,0 37.5,1.0546875 37.5,2.34375 V 12.5 h 25 V 2.34375 C 62.5,1.0546875 63.554687,0 64.84375,0 h 7.8125 C 73.945312,0 75,1.0546875 75,2.34375 V 12.5 h 9.375 c 5.175781,0 9.375,4.199219 9.375,9.375 z M 84.375,89.453125 V 31.25 h -68.75 v 58.203125 c 0,0.644531 0.527344,1.171875 1.171875,1.171875 h 66.40625 c 0.644531,0 1.171875,-0.527344 1.171875,-1.171875 z"
+     id="path908"
+     style="stroke-width:0.195312" />
+</svg>
