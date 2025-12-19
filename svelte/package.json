@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "dev:docker": "API_HOST=http://backend:8888 vite dev",
+    "dev:live": "vite dev",
+    "dev:local": "API_HOST=http://127.0.0.1:8888 vite dev",
+    "dev:staging": "API_HOST=https://staging.crates.io vite dev",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",

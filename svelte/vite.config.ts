@@ -3,8 +3,16 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
+const API_HOST = process.env.API_HOST ?? 'https://crates.io';
+
 export default defineConfig({
   plugins: [sveltekit(), svg()],
+
+  server: {
+    proxy: {
+      '/api': API_HOST,
+    },
+  },
 
   test: {
     expect: { requireAssertions: true },
