@@ -347,7 +347,7 @@ importers:
   svelte:
     devDependencies:
       '@chromatic-com/storybook':
-        specifier: ^4.1.3
+        specifier: 4.1.3
         version: 4.1.3(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@eslint/compat':
         specifier: 2.0.0
@@ -362,19 +362,19 @@ importers:
         specifier: 6.0.1
         version: 6.0.1(svelte@5.46.0)(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))
       '@storybook/addon-a11y':
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@storybook/addon-docs':
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(@types/react@19.2.7)(esbuild@0.27.2)(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))(webpack@5.103.0(esbuild@0.27.2))
       '@storybook/addon-svelte-csf':
-        specifier: ^5.0.10
+        specifier: 5.0.10
         version: 5.0.10(@storybook/svelte@10.1.10(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(svelte@5.46.0))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.46.0)(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)))(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(svelte@5.46.0)(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))
       '@storybook/addon-vitest':
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(msw@2.12.4(@types/node@24.10.4)(typescript@5.9.3))(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vitest@4.0.16)
       '@storybook/sveltekit':
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.46.0)(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2)))(esbuild@0.27.2)(msw@2.12.4(@types/node@24.10.4)(typescript@5.9.3))(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(svelte@5.46.0)(vite@7.3.0(@types/node@24.10.4)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.2))(webpack@5.103.0(esbuild@0.27.2))
       '@sveltejs/adapter-static':
         specifier: 3.0.10
@@ -401,7 +401,7 @@ importers:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-storybook:
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(eslint@9.39.2(jiti@2.6.1))(storybook@10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
       eslint-plugin-svelte:
         specifier: 3.13.1
@@ -419,7 +419,7 @@ importers:
         specifier: 3.4.1
         version: 3.4.1(prettier@3.7.4)(svelte@5.46.0)
       storybook:
-        specifier: ^10.1.10
+        specifier: 10.1.10
         version: 10.1.10(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       svelte:
         specifier: 5.46.0
@@ -7500,6 +7500,7 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.14.0:
