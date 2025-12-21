@@ -8,8 +8,8 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-axum = { version = "=0.8.7", features = ["macros"] }
-axum-extra = { version = "=0.12.2", features = ["cookie-signed"] }
+axum = { version = "=0.8.8", features = ["macros"] }
+axum-extra = { version = "=0.12.3", features = ["cookie-signed"] }
 base64 = "=0.22.1"
 cookie = { version = "=0.18.1", features = ["secure"] }
 parking_lot = "=0.12.5"
