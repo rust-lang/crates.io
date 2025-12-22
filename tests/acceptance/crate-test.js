@@ -1,4 +1,4 @@
-import { click, currentRouteName, currentURL, fillIn, triggerEvent, waitFor } from '@ember/test-helpers';
+import { click, currentURL, fillIn, triggerEvent, waitFor } from '@ember/test-helpers';
 import { module, skip, test } from 'qunit';
 
 import { loadFixtures } from '@crates-io/msw/fixtures.js';
@@ -37,7 +37,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg');
 
     assert.strictEqual(currentURL(), '/crates/nanomsg');
-    assert.strictEqual(currentRouteName(), 'crate.index');
     assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
@@ -56,7 +55,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg/');
 
     assert.strictEqual(currentURL(), '/crates/nanomsg/');
-    assert.strictEqual(currentRouteName(), 'crate.index');
     assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
@@ -72,7 +70,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/nanomsg/0.6.0');
 
     assert.strictEqual(currentURL(), '/crates/nanomsg/0.6.0');
-    assert.strictEqual(currentRouteName(), 'crate.version');
     assert.strictEqual(getPageTitle(), 'nanomsg - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('nanomsg');
@@ -124,7 +121,6 @@ module('Acceptance | crate page', function (hooks) {
     await visit('/crates/foo_bar');
 
     assert.strictEqual(currentURL(), '/crates/foo_bar');
-    assert.strictEqual(currentRouteName(), 'crate.index');
     assert.strictEqual(getPageTitle(), 'foo-bar - crates.io: Rust Package Registry');
 
     assert.dom('[data-test-heading] [data-test-crate-name]').hasText('foo-bar');

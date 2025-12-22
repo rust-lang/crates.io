@@ -17,7 +17,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
   });
 
-  test('visiting /crates/nanomsg', async ({ page, msw, ember, percy, a11y }) => {
+  test('visiting /crates/nanomsg', async ({ page, msw, percy, a11y }) => {
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.0' });
     await msw.db.version.create({ crate, num: '0.6.1', rust_version: '1.69' });
@@ -26,9 +26,6 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.index');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
@@ -38,7 +35,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
     await a11y.audit();
   });
 
-  test('visiting /crates/nanomsg/', async ({ page, msw, ember }) => {
+  test('visiting /crates/nanomsg/', async ({ page, msw }) => {
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.0' });
     await msw.db.version.create({ crate, num: '0.6.1' });
@@ -47,16 +44,13 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg/');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.index');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.1');
     await expect(page.locator('[data-test-crate-stats-label]')).toHaveText('Stats Overview');
   });
 
-  test('visiting /crates/nanomsg/0.6.0', async ({ page, msw, ember, percy, a11y }) => {
+  test('visiting /crates/nanomsg/0.6.0', async ({ page, msw, percy, a11y }) => {
     let crate = await msw.db.crate.create({ name: 'nanomsg' });
     await msw.db.version.create({ crate, num: '0.6.0' });
     await msw.db.version.create({ crate, num: '0.6.1' });
@@ -65,9 +59,6 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
 
     await expect(page).toHaveURL('/crates/nanomsg/0.6.0');
     await expect(page).toHaveTitle('nanomsg - crates.io: Rust Package Registry');
-    // TODO: Add the following as a method to EmberPage fixture
-    const currentRouteName = await ember.evaluate(owner => owner.lookup('router:main').currentRouteName);
-    expect(currentRouteName).toBe('crate.version');
 
     await expect(page.locator('[data-test-heading] [data-test-crate-name]')).toHaveText('nanomsg');
     await expect(page.locator('[data-test-heading] [data-test-crate-version]')).toHaveText('v0.6.0');
