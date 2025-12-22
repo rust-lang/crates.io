@@ -245,7 +245,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
 
       // Mock the server to return an error
       let deferred = defer();
-      msw.worker.use(http.post('/api/v1/trusted_publishing/github_configs', () => deferred.promise));
+      await msw.worker.use(http.post('/api/v1/trusted_publishing/github_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);
@@ -463,7 +463,7 @@ test.describe('Route | crate.settings.new-trusted-publisher', { tag: '@routes' }
 
       // Mock the server to return an error
       let deferred = defer();
-      msw.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
+      await msw.worker.use(http.post('/api/v1/trusted_publishing/gitlab_configs', () => deferred.promise));
 
       await page.goto(`/crates/${crate.name}/settings/new-trusted-publisher`);
       await expect(page).toHaveURL(`/crates/${crate.name}/settings/new-trusted-publisher`);

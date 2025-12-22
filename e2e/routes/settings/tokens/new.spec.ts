@@ -235,7 +235,7 @@ test.describe('/settings/tokens/new', { tag: '@routes' }, () => {
     await prepare(msw);
 
     let deferred = defer();
-    msw.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
+    await msw.worker.use(http.put('/api/v1/me/tokens', () => deferred.promise));
 
     await page.goto('/settings/tokens/new');
     await expect(page).toHaveURL('/settings/tokens/new');

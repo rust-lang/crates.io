@@ -87,7 +87,7 @@ test.describe('Acceptance | crate page', { tag: '@acceptance' }, () => {
   });
 
   test('other crate loading error shows an error message', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/nanomsg');
     await expect(page).toHaveURL('/crates/nanomsg');

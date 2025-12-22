@@ -53,7 +53,7 @@ test.describe('Acceptance | front page', { tag: '@acceptance' }, () => {
     await msw.worker.resetHandlers();
 
     let deferred = defer();
-    msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
+    await msw.worker.use(http.get('/api/v1/summary', () => deferred.promise));
 
     const button = page.locator('[data-test-try-again-button]');
     await button.click();

@@ -82,7 +82,7 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
   });
 
   test('shows an error page if crate fails to load', async ({ page, msw }) => {
-    msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
@@ -111,7 +111,7 @@ test.describe('Route | crate.range', { tag: '@routes' }, () => {
     let crate = await msw.db.crate.create({ name: 'foo' });
     await msw.db.version.create({ crate, num: '3.2.1' });
 
-    msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
+    await msw.worker.use(http.get('/api/v1/crates/:crate_name/versions', () => HttpResponse.json({}, { status: 500 })));
 
     await page.goto('/crates/foo/range/^3');
     await expect(page).toHaveURL('/crates/foo/range/%5E3');
