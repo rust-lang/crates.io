@@ -506,7 +506,7 @@ test.describe('Route | crate.settings', { tag: '@routes' }, () => {
         });
 
         let deferred = defer();
-        msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
+        await msw.worker.use(http.patch('/api/v1/crates/:name', () => deferred.promise));
 
         await page.goto('/crates/foo/settings');
 

@@ -11,7 +11,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
       http.get('/api/private/session/authorize', async ({ request }) => {
         let url = new URL(request.url);
@@ -69,7 +69,7 @@ test.describe('Acceptance | Login', { tag: '@acceptance' }, () => {
       };
     });
 
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/private/session/begin', () => HttpResponse.json({ url: 'url-to-github-including-state-secret' })),
       http.get('/api/private/session/authorize', () =>
         HttpResponse.json({ errors: [{ detail: 'Forbidden' }] }, { status: 403 }),

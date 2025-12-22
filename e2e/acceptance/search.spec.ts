@@ -163,7 +163,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('passes query parameters to the backend', async ({ page, msw }) => {
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({
@@ -182,7 +182,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('supports `keyword:bla` filters', async ({ page, msw }) => {
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({
@@ -201,7 +201,7 @@ test.describe('Acceptance | search', { tag: '@acceptance' }, () => {
   });
 
   test('`all_keywords` query parameter takes precedence over `keyword` filters', async ({ page, msw }) => {
-    msw.worker.use(
+    await msw.worker.use(
       http.get('/api/v1/crates', function ({ request }) {
         let url = new URL(request.url);
         expect(Object.fromEntries(url.searchParams.entries())).toEqual({

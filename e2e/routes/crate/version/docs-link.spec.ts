@@ -18,7 +18,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.text('not found', { status: 404 });
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
 
     await page.goto('/crates/foo');
     await expect(page.getByRole('link', { name: 'crates.io', exact: true })).toHaveCount(1);
@@ -37,7 +37,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
       doc_status: true,
       version: '1.0.0',
     });
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-docs-link] a')).toHaveAttribute('href', 'https://docs.rs/foo/1.0.0');
@@ -51,7 +51,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.text('not found', { status: 404 });
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-docs-link] a')).toHaveAttribute('href', 'https://docs.rs/foo/0.6.2');
@@ -68,7 +68,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
       doc_status: true,
       version: '1.0.0',
     });
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-docs-link] a')).toHaveAttribute('href', 'https://docs.rs/foo/1.0.0');
@@ -79,7 +79,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
     await msw.db.version.create({ crate, num: '1.0.0' });
 
     let error = HttpResponse.text('error', { status: 500 });
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => error));
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-docs-link] a')).toHaveAttribute('href', 'https://docs.rs/foo/0.6.2');
@@ -90,7 +90,7 @@ test.describe('Route | crate.version | docs link', { tag: '@routes' }, () => {
     await msw.db.version.create({ crate, num: '0.6.2' });
 
     let response = HttpResponse.json({});
-    msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
+    await msw.worker.use(http.get('https://docs.rs/crate/:crate/:version/status.json', () => response));
 
     await page.goto('/crates/foo');
     await expect(page.locator('[data-test-docs-link] a')).toHaveAttribute('href', 'https://docs.rs/foo/0.6.2');
