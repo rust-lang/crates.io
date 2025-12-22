@@ -1,4 +1,7 @@
-import type _Ember from 'ember';
+/// <reference types="ember-source/types" />
+
+import type Application from '@ember/application';
+import type ApplicationInstance from '@ember/application/instance';
 
 import { APP_HOOK_CUSTOM_EVENTS, APP_HOOK_KEY, SENTRY_HOOK_KEY } from '@/app/consts';
 import { Page } from '@playwright/test';
@@ -30,7 +33,7 @@ export class EmberPage {
     await this.page.addInitScript(`(${fn})('${HOOK_MAPPING.hook}', ${hook.toString()});`);
   }
 
-  async evaluate<R>(fn: (owner: _Ember.ApplicationInstance) => R | Promise<R>) {
+  async evaluate<R>(fn: (owner: ApplicationInstance) => R | Promise<R>) {
     const handle = await this.page.evaluateHandle(async () => {
       let key = Symbol.for(await window.__emberHookMapping('owner'));
       return window[key];
@@ -47,9 +50,10 @@ export class EmberPage {
       ({ event, ownerKey, testing }) => {
         window.addEventListener(
           `${event}`,
-          async ({ detail: { owner } }: CustomEvent<{ owner: _Ember.ApplicationInstance }>) => {
+          async ({ detail: { owner } }: CustomEvent<{ owner: ApplicationInstance }>) => {
             if (testing) {
-              owner.lookup('service:testing').setTesting(true);
+              let testingService = owner.lookup('service:testing') as { setTesting: (testing: boolean) => void };
+              testingService.setTesting(true);
             }
             window[Symbol.for(`${ownerKey}`)] = owner;
           },
@@ -60,7 +64,7 @@ export class EmberPage {
     if (mockSentry) {
       await this.addHook(async owner => {
         let key = await window.__emberHookMapping('sentry');
-        owner.register('service:sentry', owner.lookup(key));
+        owner.register('service:sentry', owner.lookup(key) as object);
       });
     }
   }
@@ -71,8 +75,7 @@ export class EmberPage {
   }
 }
 
-type _Ember = typeof _Ember;
-type HookFn = (owner: _Ember.ApplicationInstance, app: _Ember.Application) => void | Promise<void>;
+type HookFn = (owner: ApplicationInstance, app: Application) => void | Promise<void>;
 type HookScript = Exclude<Parameters<Page['addInitScript']>[0], Function>;
 
 declare global {
