@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
-  // TODO: import LoadingSpinner from './LoadingSpinner.svelte';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
   interface Props extends HTMLAttributes<HTMLDivElement> {
     title?: string;
@@ -24,8 +24,7 @@
         <small class="suffix">{suffix}</small>
       {/if}
       {#if showSpinner}
-        <!-- TODO: <LoadingSpinner class="loading-spinner" data-test-spinner /> -->
-        <span class="loading-spinner" data-test-spinner>Loading...</span>
+        <LoadingSpinner style="margin-left: var(--space-2xs)" data-test-spinner />
       {/if}
     </h1>
   {/if}
@@ -48,9 +47,5 @@
   .suffix {
     color: var(--main-color-light);
     padding-left: var(--space-2xs);
-  }
-
-  .loading-spinner {
-    margin: 0 var(--space-2xs);
   }
 </style>
