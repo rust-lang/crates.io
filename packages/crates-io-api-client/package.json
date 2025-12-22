@@ -1,0 +1,29 @@
+{
+  "name": "@crates-io/api-client",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "main": "index.ts",
+  "homepage": "https://github.com/rust-lang/crates.io#readme",
+  "bugs": {
+    "url": "https://github.com/rust-lang/crates.io/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-lang/crates.io.git"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "scripts": {
+    "regenerate": "vitest schema.test.ts --run --update",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.15.0"
+  },
+  "devDependencies": {
+    "@crates-io/msw": "workspace:*",
+    "msw": "2.12.4",
+    "openapi-typescript": "7.10.1",
+    "vitest": "4.0.15"
+  }
+}

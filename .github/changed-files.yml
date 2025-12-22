@@ -52,6 +52,13 @@ msw_test:
   - packages/crates-io-msw/**
   - pnpm-lock.yaml
 
+api_client_test:
+  - .github/workflows/**
+  - packages/crates-io-msw/**
+  - packages/crates-io-api-client/**
+  - src/tests/snapshots/integration__openapi__openapi_snapshot-2.snap
+  - pnpm-lock.yaml
+
 e2e_test:
   - .github/workflows/**
   - app/**

@@ -1,2 +1,3 @@
 dist/
+packages/crates-io-api-client/schema.d.ts
 svelte/

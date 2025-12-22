@@ -59,6 +59,7 @@ jobs:
       frontend-lint: ${{ steps.changed-files.outputs.frontend_lint_any_modified }}
       frontend-test: ${{ steps.changed-files.outputs.frontend_test_any_modified }}
       msw-test: ${{ steps.changed-files.outputs.msw_test_any_modified }}
+      api-client-test: ${{ steps.changed-files.outputs.api_client_test_any_modified }}
       e2e-test: ${{ steps.changed-files.outputs.e2e_test_any_modified }}
       svelte: ${{ steps.changed-files.outputs.svelte_any_modified }}
       zizmor: ${{ steps.changed-files.outputs.zizmor_any_modified }}
@@ -289,6 +290,30 @@ jobs:
       - run: pnpm install
 
       - run: pnpm --filter "@crates-io/msw" test
+
+  api-client-test:
+    name: Frontend / Test (@crates-io/api-client)
+    runs-on: ubuntu-24.04
+    needs: filter-jobs
+    if: needs.filter-jobs.outputs.api-client-test == 'true'
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          cache: pnpm
+          node-version-file: package.json
+
+      - run: pnpm install
+
+      - run: pnpm --filter "@crates-io/api-client" test
 
   e2e-test:
     name: Frontend / Test (playwright)
