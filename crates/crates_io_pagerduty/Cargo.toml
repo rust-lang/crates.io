@@ -10,7 +10,7 @@ workspace = true
 [dependencies]
 anyhow = "=1.0.100"
 crates_io_version = { path = "../crates_io_version" }
-reqwest = { version = "=0.12.26", features = ["gzip", "json"] }
+reqwest = { version = "=0.12.27", features = ["gzip", "json"] }
 secrecy = "=0.10.3"
 serde = { version = "=1.0.228", features = ["derive"] }
 
