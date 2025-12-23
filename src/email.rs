@@ -2,8 +2,8 @@ use crate::Env;
 use crate::config;
 use lettre::address::Envelope;
 use lettre::message::Mailbox;
+use lettre::message::MultiPart;
 use lettre::message::header::ContentType;
-use lettre::message::{MultiPart, SinglePart};
 use lettre::transport::file::AsyncFileTransport;
 use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
@@ -215,11 +215,7 @@ impl Emails {
             .subject(subject);
 
         let message = if self.html_emails_enabled {
-            builder.multipart(
-                MultiPart::alternative()
-                    .singlepart(SinglePart::plain(body_text))
-                    .singlepart(SinglePart::html(body_html)),
-            )?
+            builder.multipart(MultiPart::alternative_plain_html(body_text, body_html))?
         } else {
             builder.header(ContentType::TEXT_PLAIN).body(body_text)?
         };
