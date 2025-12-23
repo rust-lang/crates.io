@@ -30,11 +30,11 @@ module('Acceptance | Email Confirmation', function (hooks) {
     assert.strictEqual(currentURL(), '/');
     assert.dom('[data-test-notification-message="success"]').exists();
 
-    let { currentUser } = this.owner.lookup('service:session');
-    assert.true(currentUser.email_verified);
-
     user = this.db.user.findFirst(q => q.where({ id: user.id }));
     assert.true(user.emailVerified);
+
+    await visit('/settings/profile');
+    assert.dom('[data-test-verified]').exists();
   });
 
   test('error case', async function (assert) {
