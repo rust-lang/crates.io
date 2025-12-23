@@ -11,7 +11,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of foo crate was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+A new version of the foo crate was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
 
 View v1.0.0 here: https://crates.io/crates/foo/1.0.0
 
@@ -51,7 +51,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of foo crate was published by GitLab CI/CD (https://gitlab.com/rust-lang/foo-rs/-/jobs/11530106120) at [0000-00-00T00:00:00Z].
+A new version of the foo crate was published by GitLab CI/CD (https://gitlab.com/rust-lang/foo-rs/-/jobs/11530106120) at [0000-00-00T00:00:00Z].
 
 View v1.1.0 here: https://crates.io/crates/foo/1.1.0
 

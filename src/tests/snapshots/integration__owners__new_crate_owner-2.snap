@@ -11,7 +11,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of foo_owner crate was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
+A new version of the foo_owner crate was published by your account (https://crates.io/users/foo) at [0000-00-00T00:00:00Z].
 
 View v1.0.0 here: https://crates.io/crates/foo_owner/1.0.0
 
@@ -47,7 +47,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello foo!
 
-A new version of foo_owner crate was published by Bar (https://crates.io/users/Bar) at [0000-00-00T00:00:00Z].
+A new version of the foo_owner crate was published by Bar (https://crates.io/users/Bar) at [0000-00-00T00:00:00Z].
 
 View v2.0.0 here: https://crates.io/crates/foo_owner/2.0.0
 
@@ -66,7 +66,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Hello Bar!
 
-A new version of foo_owner crate was published by your account (https://crates.io/users/Bar) at [0000-00-00T00:00:00Z].
+A new version of the foo_owner crate was published by your account (https://crates.io/users/Bar) at [0000-00-00T00:00:00Z].
 
 View v2.0.0 here: https://crates.io/crates/foo_owner/2.0.0
 
