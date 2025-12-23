@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo@1.0.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -19,11 +24,32 @@ If you have questions or security concerns, you can contact us at help@crates.io
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>A new version of the <strong>foo</strong> crate was published by your account (https:&#x2f;&#x2f;crates.io&#x2f;users&#x2f;foo) at [0000-00-00T00:00:00Z].</p>
+
+<p>View v1.0.0 here: <a href="https://crates.io/crates/foo/1.0.0">https://crates.io/crates/foo/1.0.0</a></p>
+
+<p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Unsubscribed from publish notifications
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -36,11 +62,30 @@ If you would like to resubscribe, please visit https://crates.io/settings/profil
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>You have been unsubscribed from publish notifications.</p>
+
+<p>If you would like to resubscribe, please visit <a href="https://crates.io/settings/profile">https://crates.io/settings/profile</a>.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo@1.2.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -55,3 +100,18 @@ If you have questions or security concerns, you can contact us at help@crates.io
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>A new version of the <strong>foo</strong> crate was published by your account (https:&#x2f;&#x2f;crates.io&#x2f;users&#x2f;foo) at [0000-00-00T00:00:00Z].</p>
+
+<p>View v1.2.0 here: <a href="https://crates.io/crates/foo/1.2.0">https://crates.io/crates/foo/1.2.0</a></p>
+
+<p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--

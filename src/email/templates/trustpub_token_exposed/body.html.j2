@@ -1,0 +1,23 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>{{ reporter }} has notified us that one of your crates.io Trusted Publishing tokens has been exposed publicly. We have revoked this token as a precaution.</p>
+
+{% if crate_names | length == 1 -%}
+<p>This token was only authorized to publish the "<strong>{{ crate_names[0] }}</strong>" crate.</p>
+{%- else -%}
+<p>This token was authorized to publish the following crates: "<strong>{{ crate_names | join('</strong>", "<strong>') }}</strong>".</p>
+{%- endif %}
+
+<p>Please review your account at <a href="https://{{ domain }}">https://{{ domain }}</a> and your GitHub repository settings to confirm that no unexpected changes have been made to your crates or trusted publishing configurations.</p>
+
+<p>Source type: {{ source }}</p>
+
+{% if url -%}
+<p>URL where the token was found: <a href="{{ url }}">{{ url }}</a></p>
+{%- else -%}
+<p>We were not provided with the URL where the token was found.</p>
+{%- endif %}
+
+<p>Trusted Publishing tokens are temporary and used for automated publishing from GitHub Actions. If this exposure was unexpected, please review your repository's workflow files and secrets.</p>
+{% endblock %}

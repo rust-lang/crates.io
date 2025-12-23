@@ -1,0 +1,25 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hello {{ recipient }}!</p>
+
+{% if recipient == auth_user.gh_login -%}
+<p>You changed the publishing method restriction for your crate "<strong>{{ krate.name }}</strong>".</p>
+{%- else -%}
+<p>crates.io user {{ auth_user.gh_login }} changed the publishing method restriction for a crate that you manage ("<strong>{{ krate.name }}</strong>").</p>
+{%- endif %}
+
+{% if trustpub_only -%}
+<p><strong>This crate can now ONLY be published via Trusted Publishing.</strong> Publishing with API tokens has been disabled.</p>
+
+<p>This means that only trusted publishers (like GitHub Actions or GitLab CI workflows) that you have configured will be able to publish new versions of this crate. API tokens will no longer work for publishing.</p>
+{%- else -%}
+<p>This crate can now be published via both Trusted Publishing and API tokens.</p>
+
+<p>This means that both trusted publishers (like GitHub Actions or GitLab CI workflows) and users with API tokens will be able to publish new versions of this crate.</p>
+{%- endif %}
+
+<p>If you did not make this change and you think it was made maliciously, you can revert the setting from the "Settings" tab on the crate's page.</p>
+
+<p>If you are unable to revert the change and need to do so, you can email <a href="mailto:help@crates.io">help@crates.io</a> for assistance.</p>
+{% endblock %}

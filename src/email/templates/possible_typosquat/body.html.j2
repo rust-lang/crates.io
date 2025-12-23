@@ -1,0 +1,15 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>New crate <strong>{{ crate_name }}</strong> may be typosquatting one or more other crates.</p>
+
+<p>Visit <a href="https://{{ domain }}/crates/{{ crate_name }}">https://{{ domain }}/crates/{{ crate_name }}</a> to see the offending crate.</p>
+
+<p>Specific squat checks that triggered:</p>
+
+<ul>
+{% for squat in squats -%}
+<li>{{ squat.display }} (<a href="https://{{ domain }}/crates/{{ squat.package }}">https://{{ domain }}/crates/{{ squat.package }}</a>)</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: user2@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Ownership invitation for "owners_multiple"
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -17,11 +22,30 @@ You can also go to https://crates.io/me/pending-invites to manage all of your cr
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>foo has invited you to become an owner of the crate <strong>owners_multiple</strong>!</p>
+
+<p>Visit <a href="https://crates.io/accept-invite/[invite-token]">https://crates.io/accept-invite/[invite-token]</a> to accept this invitation.</p>
+
+<p>You can also go to <a href="https://crates.io/me/pending-invites">https://crates.io/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: user3@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Ownership invitation for "owners_multiple"
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -34,11 +58,30 @@ You can also go to https://crates.io/me/pending-invites to manage all of your cr
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>foo has invited you to become an owner of the crate <strong>owners_multiple</strong>!</p>
+
+<p>Visit <a href="https://crates.io/accept-invite/[invite-token]">https://crates.io/accept-invite/[invite-token]</a> to accept this invitation.</p>
+
+<p>You can also go to <a href="https://crates.io/me/pending-invites">https://crates.io/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: user2@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Ownership invitation for "owners_multiple"
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -51,11 +94,30 @@ You can also go to https://crates.io/me/pending-invites to manage all of your cr
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>foo has invited you to become an owner of the crate <strong>owners_multiple</strong>!</p>
+
+<p>Visit <a href="https://crates.io/accept-invite/[invite-token]">https://crates.io/accept-invite/[invite-token]</a> to accept this invitation.</p>
+
+<p>You can also go to <a href="https://crates.io/me/pending-invites">https://crates.io/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: user3@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Ownership invitation for "owners_multiple"
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -68,3 +130,16 @@ You can also go to https://crates.io/me/pending-invites to manage all of your cr
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>foo has invited you to become an owner of the crate <strong>owners_multiple</strong>!</p>
+
+<p>Visit <a href="https://crates.io/accept-invite/[invite-token]">https://crates.io/accept-invite/[invite-token]</a> to accept this invitation.</p>
+
+<p>You can also go to <a href="https://crates.io/me/pending-invites">https://crates.io/me/pending-invites</a> to manage all of your crate ownership invitations.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--

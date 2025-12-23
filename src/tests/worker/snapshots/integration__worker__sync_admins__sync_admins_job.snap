@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: existing-admin@crates.io
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Admin account changes
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
@@ -19,11 +24,36 @@ Revoked admin access:
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+<p>Granted admin access:</p>
+
+<ul>
+<li>new-admin (github_id: 3)</li>
+
+</ul>
+<p>Revoked admin access:</p>
+<ul>
+<li>obsolete-admin (github_id: 2)</li>
+</ul>
+
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: obsolete-admin@crates.io
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Admin account changes
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
@@ -38,3 +68,22 @@ Revoked admin access:
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+
+<p>Granted admin access:</p>
+
+<ul>
+<li>new-admin (github_id: 3)</li>
+
+</ul>
+<p>Revoked admin access:</p>
+<ul>
+<li>obsolete-admin (github_id: 2)</li>
+</ul>
+
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--

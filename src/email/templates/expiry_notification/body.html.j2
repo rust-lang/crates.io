@@ -1,0 +1,9 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<p>Hi {{ name }},</p>
+
+<p>We noticed that your token "<strong>{{ token_name }}</strong>" will expire on {{ expiry_date }}.</p>
+
+<p>If this token is still needed, visit <a href="https://crates.io/settings/tokens/new?from={{ token_id }}">https://crates.io/settings/tokens/new?from={{ token_id }}</a> to generate a new one.</p>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html.j2" %}
+
+{% if config.type == "GitHub" %}
+    {% set ci_provider = "GitHub Actions" %}
+{% elif config.type == "GitLab" %}
+    {% set ci_provider = "GitLab CI" %}
+{% endif %}
+
+{% block content %}
+<p>Hello {{ recipient }}!</p>
+
+{% if recipient == auth_user.gh_login -%}
+<p>You removed a "Trusted Publishing" configuration for {{ ci_provider }} from your crate "<strong>{{ krate.name }}</strong>".</p>
+{%- else -%}
+<p>crates.io user {{ auth_user.gh_login }} removed a "Trusted Publishing" configuration for {{ ci_provider }} from a crate that you manage ("<strong>{{ krate.name }}</strong>").</p>
+{%- endif %}
+
+{% if config.type == "GitHub" -%}
+<p>The removed configuration was for the workflow file at <a href="https://github.com/{{ config.repository_owner }}/{{ config.repository_name }}/blob/HEAD/.github/workflows/{{ config.workflow_filename }}">https://github.com/{{ config.repository_owner }}/{{ config.repository_name }}/blob/HEAD/.github/workflows/{{ config.workflow_filename }}</a>
+{%- if config.environment %} using the <code>{{ config.environment }}</code> environment
+{%- endif -%}
+.</p>
+{% elif config.type == "GitLab" -%}
+<p>The removed configuration was for the workflow file at <a href="https://gitlab.com/{{ config.namespace }}/{{ config.project }}/-/blob/HEAD/{{ config.workflow_filepath }}">https://gitlab.com/{{ config.namespace }}/{{ config.project }}/-/blob/HEAD/{{ config.workflow_filepath }}</a>
+{%- if config.environment %} using the <code>{{ config.environment }}</code> environment
+{%- endif -%}
+.</p>
+{% endif %}
+<p>If you did not make this change and you think it was made maliciously, you can email <a href="mailto:help@crates.io">help@crates.io</a> for assistance.</p>
+{% endblock %}

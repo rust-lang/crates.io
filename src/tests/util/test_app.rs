@@ -189,6 +189,10 @@ impl TestApp {
         static INVITE_TOKEN_REGEX: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"/accept-invite/\w+").unwrap());
 
+        // MIME boundary strings are randomly generated alphanumeric strings
+        static MIME_BOUNDARY_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"[A-Za-z0-9]{32,}").unwrap());
+
         static SEPARATOR: &str = "\n----------------------------------------\n\n";
 
         self.emails()
@@ -204,6 +208,7 @@ impl TestApp {
                 let email = DATE_TIME_REGEX.replace_all(&email, "[0000-00-00T00:00:00Z]");
                 let email = EMAIL_CONFIRM_REGEX.replace_all(&email, "/confirm/[confirm-token]");
                 let email = INVITE_TOKEN_REGEX.replace_all(&email, "/accept-invite/[invite-token]");
+                let email = MIME_BOUNDARY_REGEX.replace_all(&email, "[boundary]");
                 email.to_string()
             })
             .collect::<Vec<_>>()

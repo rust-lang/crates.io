@@ -5,6 +5,11 @@ expression: app.emails_snapshot().await
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo@1.0.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -19,11 +24,32 @@ If you have questions or security concerns, you can contact us at help@crates.io
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>A new version of the <strong>foo</strong> crate was published by your account (https:&#x2f;&#x2f;crates.io&#x2f;users&#x2f;foo) at [0000-00-00T00:00:00Z].</p>
+
+<p>View v1.0.0 here: <a href="https://crates.io/crates/foo/1.0.0">https://crates.io/crates/foo/1.0.0</a></p>
+
+<p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Trusted Publishing configuration added to foo
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -40,11 +66,34 @@ If you are unable to revert the change and need to do so, you can email help@cra
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>You added a new "Trusted Publishing" configuration for GitLab CI to your crate "<strong>foo</strong>". Trusted publishers act as trusted users and can publish new versions of the crate automatically.</p>
+
+<p>This configuration allows the workflow file at <a href="https://gitlab.com/rust-lang/foo-rs/-/blob/HEAD/.gitlab-ci.yml">https://gitlab.com/rust-lang/foo-rs/-/blob/HEAD/.gitlab-ci.yml</a> to publish new versions of this crate.</p>
+
+<p>If you did not make this change and you think it was made maliciously, you can remove the configuration from the crate via the "Settings" tab on the crate's page.</p>
+
+<p>If you are unable to revert the change and need to do so, you can email <a href="mailto:help@crates.io">help@crates.io</a> for assistance.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
+
 ----------------------------------------
 
 To: foo@example.com
 From: crates.io <noreply@crates.io>
 Subject: crates.io: Successfully published foo@1.1.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="[boundary]"
+
+--[boundary]
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -59,3 +108,18 @@ If you have questions or security concerns, you can contact us at help@crates.io
 
 --
 The crates.io Team
+--[boundary]
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+<p>Hello foo!</p>
+
+<p>A new version of the <strong>foo</strong> crate was published by GitLab CI&#x2f;CD (https:&#x2f;&#x2f;gitlab.com&#x2f;rust-lang&#x2f;foo-rs&#x2f;-&#x2f;jobs&#x2f;11530106120) at [0000-00-00T00:00:00Z].</p>
+
+<p>View v1.1.0 here: <a href="https://crates.io/crates/foo/1.1.0">https://crates.io/crates/foo/1.1.0</a></p>
+
+<p>If you have questions or security concerns, you can contact us at <a href="mailto:help@crates.io">help@crates.io</a>. If you would like to stop receiving these security notifications, you can disable them in your account settings.</p>
+
+<p>--<br>The crates.io Team</p>
+--[boundary]--
