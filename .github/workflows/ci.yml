@@ -244,6 +244,7 @@ jobs:
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
       PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
       PERCY_PARALLEL_TOTAL: 2
+      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -330,6 +331,7 @@ jobs:
       PERCY_TOKEN: web_0a783d8086b6f996809f3e751d032dd6d156782082bcd1423b9b860113c75054
       PERCY_PARALLEL_NONCE: ${{ needs.percy-nonce.outputs.nonce }}
       PERCY_PARALLEL_TOTAL: 2
+      PERCY_CLIENT_ERROR_LOGS: "false"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
