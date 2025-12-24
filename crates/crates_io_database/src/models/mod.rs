@@ -10,7 +10,7 @@ pub use self::dependency::{Dependency, DependencyKind, ReverseDependency};
 pub use self::download::VersionDownload;
 pub use self::email::{Email, NewEmail};
 pub use self::follow::Follow;
-pub use self::git_index_sync_queue::{GitIndexSyncQueueItem, NewGitIndexSyncQueueItem};
+pub use self::git_index_sync_queue::GitIndexSyncQueueItem;
 pub use self::keyword::{CrateKeyword, Keyword};
 pub use self::krate::{Crate, CrateName, NewCrate};
 pub use self::owner::{CrateOwner, Owner, OwnerKind};

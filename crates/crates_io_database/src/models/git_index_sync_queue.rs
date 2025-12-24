@@ -11,7 +11,7 @@ pub struct GitIndexSyncQueueItem {
 
 #[derive(Debug, Insertable)]
 #[diesel(table_name = git_index_sync_queue, check_for_backend(diesel::pg::Pg))]
-pub struct NewGitIndexSyncQueueItem<'a> {
+struct NewGitIndexSyncQueueItem<'a> {
     pub crate_name: &'a str,
 }
 
